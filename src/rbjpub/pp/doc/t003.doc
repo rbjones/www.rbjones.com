@@ -1,0 +1,1098 @@
+=IGN
+open_theory "diffgeom";
+set_merge_pcs["basic_hol1", "'sets_alg", "'¯", "xl_cs_¶_conv"];
+set_flag ("pp_use_alias", false);
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Mathematical Case Studies: \\ --- \\ Some Differential Geometry}
+\author{Rob Arthan, Roger Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+The theory of real vector spaces, norms and derivatives of functions between normed vector spaces as required for formal modelling of some physical theories.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+%%%%
+\subsection*{To Do}
+\begin{itemize}
+
+\item
+
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj}
+} %\raggedright
+
+\section{INTRODUCTION}
+Create new theory ``diffgeom'', parents being ``group\_egs'' from \cite{LEMMA1/HOL/WRK068} and ``analysis'' from \cite{LEMMA1/HOL/WRK066}.
+=SML
+open_theory "rbjmisc";
+force_new_theory "diffgeom";
+set_merge_pcs["basic_hol1", "'sets_alg", "'¯", "xl_cs_¶_conv"];
+set_flag ("pp_use_alias", false);
+=TEX
+
+\ignore{
+=SML
+=TEX
+}%ignore
+
+\section{MISCELLANEA}
+
+\subsection{The Schwartz Inequality and Triangle Theorems}
+
+\ignore{
+=SML
+set_goal([], ¬µa b x y A B C: ¯·
+	A = a^2 + b^2
+±	B = x^2 + y^2
+±	C = a *‰R x + b *‰R y
+´	B *‰R (A *‰R B -‰R C^2) = (B *‰R a -‰R C *‰R x)^2 + (B *‰R b -‰R C *‰R y)^2
+®);
+a (REPEAT strip_tac
+	THEN asm_rewrite_tac[¯_î_exp_square_thm]);
+a (conv_tac (ONCE_MAP_C ¯_anf_conv) THEN strip_tac);
+val Ûschwartz_2d_lemma1İ = pop_thm();
+=TEX
+
+=SML
+set_goal([], ¬µu v x y A B C: ¯·
+	A = u^2 +‰R v^2
+±	B = x^2 +‰R y^2
+±	C = u *‰R x +‰R v *‰R y
+´	C^2 ¼ A *‰R B
+®);
+a (REPEAT strip_tac THEN all_fc_tac [schwartz_2d_lemma1]);
+a(lemma_tac¬î¯ 0 ¼ B® THEN1 asm_rewrite_tac[¯_sum_square_pos_thm]);
+a(strip_asm_tac (list_µ_elim[¬B®, ¬î¯ 0®]¯_less_cases_thm));
+(* *** Goal "1" *** *)
+a(PC_T1 "¯_lin_arith" asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a(var_elim_nth_asm_tac 1);
+a(DROP_NTH_ASM_T 3 (ante_tac o eq_sym_rule));
+a (rewrite_tac [¯_sum_square_zero_thm] THEN strip_tac);
+a(all_var_elim_asm_tac1 THEN rewrite_tac[]);
+(* *** Goal "3" *** *)
+a(lemma_tac ¬î¯ 0 ¼ B*(A * B -‰R C ^ 2) ® THEN1
+	(GET_NTH_ASM_T 3 rewrite_thm_tac THEN 
+		rewrite_tac[¯_sum_square_pos_thm]));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule[¯_prod_sign_iff_clauses]))
+	THEN PC_T1 "¯_lin_arith" asm_prove_tac[]);
+val schwartz_2nd_thm = save_pop_thm "schwartz_2nd_thm";
+=TEX
+
+=SML
+declare_infix (310, ".‰i");
+declare_infix (310, "+‰V");
+set_goal([], ¬
+	let (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y
+	in µu v: ¯ ¸ ¯· (u .‰i v) ^ 2 ¼ (u .‰i u) * (v .‰i v)®);
+a (rewrite_tac[let_def, ¯_î_exp_square_thm] THEN REPEAT strip_tac);
+a (rewrite_tac [rewrite_rule [¯_î_exp_square_thm]
+	(list_µ_elim [¬Fst u®, ¬Snd u®, ¬Fst v®, ¬Snd v®,
+		¬Fst u ^‰N 2 +‰R Snd u ^‰N 2®, ¬Fst v ^‰N 2 +‰R Snd v ^‰N 2®,
+		¬Fst u *‰R Fst v +‰R Snd u *‰R Snd v®] schwartz_2nd_thm)]);
+val schwartz_2nd_thm1 = save_pop_thm "schwartz_2nd_thm1";
+=TEX
+
+=SML
+set_goal([], ¬
+	µ $.‰i· (µ u v x y:¯· (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y)
+	´ µu v: ¯ ¸ ¯· (u .‰i v) ^ 2 ¼ (u .‰i u) * (v .‰i v)®);
+a (rewrite_tac[¯_î_exp_square_thm] THEN REPEAT strip_tac);
+a (once_rewrite_tac [prove_rule [] ¬u = (Fst u, Snd u) ± v = (Fst v, Snd v)®]);
+a (asm_rewrite_tac [rewrite_rule [¯_î_exp_square_thm]
+	(list_µ_elim [¬Fst u®, ¬Snd u®, ¬Fst v®, ¬Snd v®,
+		¬Fst u ^‰N 2 +‰R Snd u ^‰N 2®, ¬Fst v ^‰N 2 +‰R Snd v ^‰N 2®,
+		¬Fst u *‰R Fst v +‰R Snd u *‰R Snd v®] schwartz_2nd_thm)]);
+val schwartz_2nd_thm1b = save_pop_thm "schwartz_2nd_thm1b";
+=TEX
+
+=SML
+set_goal([], ¬
+	µ $.‰i· (µ u v x y:¯· (u,v) .‰i (x,y) = (u *‰R x) +‰R (v *‰R y))
+	±	(µu v x y:¯·(u,v) +‰V (x,y) = (u +‰R x, v +‰R y))
+	´ µx y: ¯ ¸ ¯· (x +‰V y) .‰i (x +‰V y) = (x .‰i x) +‰R (î¯ 2 *‰R (x .‰i y)) +‰R (y .‰i y)®);
+a (REPEAT strip_tac);
+a (once_rewrite_tac [prove_rule [] ¬x = (Fst x, Snd x) ± y = (Fst y, Snd y)®]);
+a (asm_rewrite_tac []);
+a (¯_top_anf_tac THEN strip_tac);
+val ip_distrib_thm = save_pop_thm "ip_distrib_thm";
+=TEX
+=SML
+set_goal([], ¬
+	let (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y
+	in let n (v: ¯ ¸ ¯) = Sqrt(v .‰i v)
+	in µu v: ¯ ¸ ¯· Abs(u .‰i v) ¼ (n u) *‰R (n v)®);
+a (rewrite_tac[let_def] THEN REPEAT strip_tac);
+a (rewrite_tac [top_eq_sym_rule ¯_sqrt_prod_thm]);
+a (bc_tac [¯_square_¼_¼_thm]
+	THEN TRY (rewrite_tac [
+		¯_Abs_Norm_clauses,
+		¯_prod_sign_iff_clauses,
+		get_spec ¬Sqrt®]));
+a (rewrite_tac [	top_eq_sym_rule ¯_abs_prod_thm,
+		rewrite_rule [¯_î_exp_square_thm]¯_abs_square_thm2,
+		top_eq_sym_rule ¯_sqrt_prod_thm,
+		¯_sqrt_square_thm1]);
+a (LEMMA_T ¬Abs‰R
+               ((Fst u *‰R Fst u +‰R Snd u *‰R Snd u)
+                   *‰R (Fst v *‰R Fst v +‰R Snd v *‰R Snd v)) =
+	     ((Fst u *‰R Fst u +‰R Snd u *‰R Snd u)
+                   *‰R (Fst v *‰R Fst v +‰R Snd v *‰R Snd v))®
+		rewrite_thm_tac
+	THEN_LIST [
+		rewrite_tac [¯_abs_prod_thm],		
+		rewrite_tac [rewrite_rule [let_def, ¯_î_exp_square_thm] schwartz_2nd_thm1]]);
+a (lemma_tac ¬î¯ 0 ¼‰R Fst u *‰R Fst u +‰R Snd u *‰R Snd u®
+	THEN1 rewrite_tac [rewrite_rule [¯_î_exp_square_thm] ¯_sum_square_pos_thm]);
+a (lemma_tac ¬î¯ 0 ¼‰R Fst v *‰R Fst v +‰R Snd v *‰R Snd v®
+	THEN1 rewrite_tac [rewrite_rule [¯_î_exp_square_thm] ¯_sum_square_pos_thm]);
+a (asm_rewrite_tac [get_spec ¬Abs‰R®]);
+val schwartz_2nd_thm2 = save_pop_thm "schwartz_2nd_thm2";
+=TEX
+
+=SML
+set_goal([], ¬
+	µ $.‰i n· (µ u v x y:¯· (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y)
+	´ µu: ¯ ¸ ¯· î¯ 0 ¼‰R (u .‰i u)®);
+a (REPEAT strip_tac
+	THEN once_rewrite_tac [prove_rule [] ¬u = (Fst u, Snd u)®]
+	THEN asm_rewrite_tac []
+	THEN bc_tac [¯_sum_pos_thm]
+	THEN rewrite_tac [rewrite_rule [¯_î_exp_square_thm] ¯_square_pos_thm]);
+val ip_pos_lemma = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¬
+	µ $.‰i n· (µ u v x y:¯· (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y)
+	± (µv:¯ ¸ ¯· n v = Sqrt(v .‰i v))
+	´ µu: ¯ ¸ ¯· î¯ 0 ¼‰R n u®);
+a (REPEAT strip_tac THEN asm_rewrite_tac [get_spec ¬Sqrt®]);
+val n_pos_lemma = pop_thm();
+=TEX
+
+=SML
+set_goal([], ¬
+	µ $.‰i n· (µ u v x y:¯· (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y)
+	± (µv:¯ ¸ ¯· n v = Sqrt(v .‰i v))
+	´ µu v: ¯ ¸ ¯· (u .‰i v) ¼ (n u) * (n v)®);
+a (REPEAT strip_tac);
+a (all_fc_tac [schwartz_2nd_thm1b]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [¯_î_exp_square_thm]
+	THEN GET_NTH_ASM_T 1 rewrite_thm_tac
+	THEN strip_tac);
+a (LEMMA_T ¬Sqrt((u .‰i v) *‰R u .‰i v) ¼‰R Sqrt((u .‰i u) *‰R v .‰i v)® ante_tac);
+(* *** Goal "1" *** *)
+a (bc_tac [¯_sqrt_mono_thm]
+	THEN1 rewrite_tac [rewrite_rule [¯_î_exp_square_thm] ¯_square_pos_thm]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [¯_sqrt_square_thm1] THEN rewrite_tac [¯_sqrt_prod_thm]);
+a (lemma_tac ¬u .‰i v ¼‰R Abs‰R (u .‰i v)® THEN1 rewrite_tac[¯_¼_abs_thm]);
+a (strip_tac THEN all_fc_tac [¯_¼_trans_thm]);
+val schwartz_2nd_thm2b = save_pop_thm "schwartz_2nd_thm2b";
+=TEX
+
+=SML
+set_goal([],
+	¬µ$.‰i $+‰V n·
+		(µu v x y:¯· (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y)
+	±	(µu v x y:¯·(u,v) +‰V (x,y) = (u +‰R x, v +‰R y))
+	±	(µv:¯ ¸ ¯· n v = Sqrt(v .‰i v))
+	´	µu v: ¯ ¸ ¯· n (u +‰V v)  ¼ (n u) + (n v)®);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (LEMMA_T ¬Sqrt (u .‰i u) +‰R Sqrt (v .‰i v)
+	= Sqrt (u .‰i u +‰R î¯ 2 *‰R (Sqrt (u .‰i u)) *‰R (Sqrt (v .‰i v)) +‰R v .‰i v)®
+	rewrite_thm_tac);
+(* *** Goal "1" *** *)
+a (bc_tac [¯_square_eq_thm2]
+	THEN TRY (rewrite_tac [get_spec ¬Sqrt®]));
+(* *** Goal "1.1" *** *)
+a (bc_tac [¯_sum_pos_thm] THEN rewrite_tac [get_spec ¬Sqrt®]);
+(* *** Goal "1.2" *** *)
+a (rewrite_tac [top_eq_sym_rule ¯_sqrt_prod_thm, ¯_sqrt_square_thm1]);
+a (rewrite_tac [¯_sqrt_prod_thm, ¯_times_plus_distrib_thm]);
+a (lemma_tac ¬î¯ 0 ¼‰R u .‰i u ± î¯ 0 ¼‰R v .‰i v
+	± î¯ 0 ¼‰R Sqrt (u .‰i u) ± î¯ 0 ¼‰R Sqrt (v .‰i v)®
+	THEN1 (all_asm_fc_tac [ip_pos_lemma]
+		THEN asm_rewrite_tac [get_spec ¬Sqrt®]));
+a (LEMMA_T ¬Abs‰R (u .‰i u +‰R î¯ 2 *‰R Sqrt (u .‰i u) *‰R Sqrt (v .‰i v) +‰R v .‰i v) =
+	u .‰i u +‰R î¯ 2 *‰R Sqrt (u .‰i u) *‰R Sqrt (v .‰i v) +‰R v .‰i v®
+	rewrite_thm_tac
+	THEN1 (bc_tac [¯_abs_pos_id_thm, ¯_sum_pos_thm, ¯_sum_pos_thm, ¯_sum_pos_thm]
+		THEN TRY (asm_rewrite_tac[¯_prod_sign_iff_clauses])));
+a (rewrite_tac [rewrite_rule [¯_î_exp_square_thm] (get_spec ¬Sqrt®)]);
+a (LEMMA_T ¬Abs‰R (u .‰i u) = u .‰i u ± Abs‰R (v .‰i v) = v .‰i v® rewrite_thm_tac
+	THEN1 (strip_tac THEN bc_tac [¯_abs_pos_id_thm]
+		THEN all_asm_fc_tac [ip_pos_lemma]));
+a (¯_top_anf_tac THEN strip_tac);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬î¯ 0 ¼‰R (u +‰V v) .‰i (u +‰V v)®
+	THEN1 ALL_FC_T rewrite_tac [ip_pos_lemma]);
+a (bc_tac [¯_sqrt_mono_thm] THEN TRY strip_tac);
+a (LEMMA_T  ¬(u +‰V v) .‰i (u +‰V v) ¼‰R u .‰i u +‰R î¯ 2 *‰R (u .‰i v) +‰R v .‰i v
+	± u .‰i u +‰R î¯ 2 *‰R (u .‰i v) +‰R v .‰i v
+		¼‰R u .‰i u +‰R î¯ 2 *‰R Sqrt (u .‰i u) *‰R Sqrt (v .‰i v) +‰R v .‰i v®
+	((MAP_EVERY asm_tac) o strip_±_rule)
+	THEN_LIST [strip_tac, all_asm_fc_tac [¯_¼_trans_thm]]);
+(* *** Goal "2.1" *** *)
+a (ALL_FC_T rewrite_tac [ip_distrib_thm]);
+(* *** Goal "2.2" *** *)
+a (rewrite_tac[]);
+a (bc_tac [¯_times_mono_thm2] THEN1 rewrite_tac[]);
+a (all_fc_tac [schwartz_2nd_thm2b]);
+a (LIST_SPEC_NTH_ASM_T 1 [¬u®, ¬v®] ante_tac);
+a (GET_NTH_ASM_T 3 pure_rewrite_thm_tac);
+a (REPEAT strip_tac);
+val triangle_ineq_thm = save_pop_thm "triangle_ineq_thm";
+=TEX
+
+=SML
+set_goal([], ¬
+	let (u,v) .‰i (x,y) = u *‰R x +‰R v *‰R y
+	and (u,v) +‰V (x,y) = (u +‰R x, v +‰R y)
+	in let n v = Sqrt(v .‰i v)
+	in µu v: ¯ ¸ ¯· n (u +‰V v)  ¼ (n u) + (n v)®);
+a (rewrite_tac [let_def] THEN REPEAT strip_tac);
+a (strip_asm_tac (
+	list_µ_elim [¬Ì(u, v) (x, y)· u *‰R x +‰R v *‰R y®,
+	¬Ì(u, v) (x, y)· (u +‰R x, v +‰R y)®,
+	¬Ì(u, v)· Sqrt(u *‰R u +‰R v *‰R v)®] triangle_ineq_thm)
+	THEN TRY(swap_nth_asm_concl_tac 1
+		THEN rewrite_tac[]
+		THEN swap_nth_asm_concl_tac 1));
+a (asm_rewrite_tac[]);
+val triangle_ineq_thm2 = save_pop_thm "triangle_ineq_thm2";
+=TEX
+
+}%ignore
+
+\section{VECTOR SPACES}
+
+\subsection{Signature for Real Vector Spaces}
+
+A candidate for being a vector space is something with the signature of a group together with an ¯-action on the elements.
+
+¹HOLLABPROD RVSüüüüüüüüüüüüüüüüü
+Ü	Group‰RVS	:'a GROUP;
+Ü	Scale‰RVS	:¯ ­ 'a ­ 'a
+°üüüüüüüüüüüüüüüüüüüüüüüüü
+
+=SML
+declare_alias("Grp", ¬Group‰RVS®);
+declare_alias("Scale", ¬Scale‰RVS®);
+=TEX
+
+\ignore{
+=SML
+val Ûgrp_defİ = get_spec¬Grp®;
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛPlus‰Vİ :  'a ­ 'a ­ 'a RVS ­ 'a;
+Ü ÛMinus‰Vİ :  'a ­ 'a RVS ­ 'a;
+Ü ÛSubtract‰Vİ :  'a ­ 'a ­ 'a RVS ­ 'a;
+Ü Û0‰Vİ :  'a RVS ­ 'a;
+Ü ÛScale‰Vİ :  ¯ ­ 'a ­ 'a RVS ­ 'a
+÷üüüüüü
+Ü µ R·	  (µv w· Plus‰V v w R = (v.w)(Grp R))
+Ü 	± (µv· Minus‰V v R = (v ›~)(Grp R))
+Ü	± (µv w· Subtract‰V v w R = (v.(w ›~)(Grp R))(Grp R))
+Ü	± 0‰V R = Unit (Grp R)
+Ü	± (µx v· Scale‰V x v R = (Scale R) x v)
+°
+
+=SML
+declare_infix(310, "*‰s");
+declare_alias("+", ¬Plus‰V®);
+declare_alias("~", ¬Minus‰V®);
+declare_alias("-", ¬Subtract‰V®);
+declare_alias("*‰s", ¬Scale‰V®);
+=TEX
+
+\subsection{Vector Space Laws}
+
+For simplicity in using the theory, we ignore the carrier set of the group component and require the carrier set of a real vector space to be the universe of the type of the elements.
+This makes working with subspaces harder theoretically, but that shouldn't matter much for RBJ's application.
+
+¹HOLCONST
+Ü ÛVS‰Rİ : 'a RVS SET
+÷üüüüüü
+Ü µ V·
+Ü	V  VS‰R
+Ü ¤	Grp V  AbelianGroup
+Ü ±	Car (Grp V) = Universe
+Ü ±	(µx v w·  ((x*‰s v)V + (x*‰s w)V)V = (x*‰s(v + w) V) V)
+Ü ±	(µx y v· ((x*‰s v)V + (y*‰s v)V)V  = ((x + y) *‰s v) V)
+Ü ±	(µx y:¯; v· (x*‰s(y*‰s v)V)V = ((x*y)*‰s v)V)
+Ü ±	(µv· (î¯ 1*‰s v)V = v)
+°
+
+\ignore{
+=SML
+val Ûvs_ops_defİ = get_spec¬Plus‰V®;
+val Ûvs_defİ = get_spec¬VS‰R®;
+val Ûrvs_defİ = get_spec¬MkRVS®;
+=TEX
+=SML
+set_goal([], ¬µ R: 'a RVS
+     · (µ v w:'a· (v + w) R = (v . w) (Grp R))
+         ± (µ v· ~ v R:'a = ($›~: 'a ­ 'a GROUP ­ 'a) v (Grp R))
+         ± (µ v:'a; w:'a· (v - w) R:'a =
+		($.:'a­('a­((('a)SET¸(('a­('a­'a))¸('a¸('a­'a))))­'a)))
+		v
+		(($›~: 'a ­ 'a GROUP ­ 'a) w (Grp R)) (Grp R))
+         ± 0‰V R = Unit (Grp R)
+         ± (µ x v· (x *‰s v) R = (Scale R) x v)®);
+a (pure_once_rewrite_tac [
+	prove_rule [] ¬µ p· p = (Fst p, Snd p)®]
+	THEN (rewrite_tac [vs_ops_def]));
+val vs_ops_def1 = save_pop_thm "vs_ops_def1";
+=TEX
+}\ignore
+
+\subsection{Examples}
+
+¹HOLCONST
+Ü Û¯‰RVSİ : ¯ RVS
+÷üüüüüü
+Ü ¯‰RVS = MkRVS ¯_plus (Ìx y· x * y) 
+°
+
+\ignore{
+=SML
+val Û¯_v_defİ = get_spec¬¯‰RVS®;
+set_goal([], ¬¯‰RVS  VS‰R®);
+a (rewrite_tac[
+	get_spec ¬¯‰RVS®,
+	get_spec ¬VS‰R®,
+	get_spec ¬MkRVS®,
+	get_spec ¬Scale‰V®,
+	¯_plus_abelian_thm,
+	¯_plus_ops_thm,
+	¯_times_assoc_thm,
+	¯_times_plus_distrib_thm
+	]);
+val ¯‰RVS_VS‰R_thm = save_pop_thm "¯‰RVS_VS‰R_thm";
+=TEX
+}%\ignore
+
+\subsection{Product Spaces}
+
+¹HOLCONST
+Ü ÛVectorSpaceProductİ : 'a RVS ­ 'b RVS ­ ('a ¸ 'b) RVS
+÷üüüüüü
+Ü µ V:'a RVS; W:'b RVS· VectorSpaceProduct V W =
+Ü 	let group = (Grp V) * (Grp W)
+Ü	and action (r:¯) (ga, gb) = ((r *‰s ga) V, (r *‰s gb) W)
+Ü	in MkRVS group action
+°
+
+=SML
+declare_alias ("*", ¬VectorSpaceProduct®);
+=TEX
+
+\ignore{
+=SML
+val Ûvsp_defİ = get_spec¬VectorSpaceProduct®;
+set_goal([], ¬µV:'a RVS; U:'b RVS·
+	V  VS‰R ± U  VS‰R ´ V * U  VS‰R®);
+a(rewrite_tac [	vs_def,
+		vsp_def,
+		vs_ops_def,
+		rvs_def,
+		let_def,
+		grp_def]
+	THEN REPEAT strip_tac
+	THEN TRY (all_asm_fc_tac[
+		abelian_group_product_thm,
+		abelian_group_product_lemma])
+	THEN TRY (asm_rewrite_tac[
+		vs_ops_def,
+		group_prod_prod_thm,
+		rvs_def]));
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 16 ante_tac
+	THEN GET_NTH_ASM_T 10 ante_tac);
+a (REPEAT strip_tac
+	THEN asm_rewrite_tac[group_prod_prod_thm1]);
+(* *** Goal "2" *** *)
+a (GET_NTH_ASM_T 15 ante_tac
+	THEN GET_NTH_ASM_T 9 ante_tac);
+a (REPEAT strip_tac
+	THEN asm_rewrite_tac[group_prod_prod_thm1]);
+val vector_product_thm = save_pop_thm "vector_product_thm";
+=TEX
+}%\ignore
+
+\subsection{Linear Mappings}
+
+A homomorphism between vector spaces is called a linear mapping and is defined as follows:
+
+¹HOLCONST
+Ü ÛLinİ : 'a RVS ¸ 'b RVS­ ('a ­ 'b) SET
+÷üüüüüü
+Ü µ V W f·
+Ü	f  Lin(V, W)
+Ü ¤	f  Homomorphism(Grp V, Grp W)
+Ü ±	(µx v· f((x *‰s v) V) = (x *‰s f v)W)
+°
+
+\ignore{
+=SML
+set_goal([], ¬µr:¯· $*‰R r  Lin(¯‰RVS, ¯‰RVS)®);
+a (rewrite_tac (td_thml[Spec ¬Lin®, Spec ¬¯‰RVS®,
+	Spec ¬Grp®, Spec ¬$*‰s®])
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac (td_thml[Spec ¬Homomorphism®,
+	Spec ¬¯_plus®, Spec ¬Car®,
+	Thm ("\175", "\175_times_plus_distrib_thm")]));
+(* *** Goal "2" *** *)
+a (PC_T1 "¯_lin_arith" prove_tac[]);
+val ¯_Lin_thm1 = save_pop_thm "¯_Lin_thm1";
+=TEX
+
+=SML
+set_goal([], ¬µV:'a RVS; l: ¯ ­ 'a· V  VS‰R
+	 ´ (l  Lin(¯‰RVS, V)
+	¤l (î¯ 1)  Car (Grp V)
+	± µr:¯· l r = (r *‰s (l (î¯ 1))) V)®);
+a (rewrite_tac (td_thml[Spec ¬Lin®, Spec ¬¯‰RVS®,
+	Spec ¬Homomorphism®, Spec ¬Car®,
+	Spec ¬Grp®,
+	Spec ¬$*‰s®,
+	Spec ¬¯_plus®,
+	Spec ¬VS‰R®]));
+a (LEMMA_T ¬µV l·(µ x v· l (x * v) = Scale V x (l v))
+	¤ (µ x v· Scale V x (l v) = l (x * v))®
+	rewrite_thm_tac);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac
+	THEN once_asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (rewrite_tac[]);
+(* *** Goal "2.3" *** *)
+a (once_asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 rewrite_thm_tac);
+(* *** Goal "2.4" *** *)
+a (once_asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 rewrite_thm_tac);
+val ¯_Lin_thm2 = save_pop_thm "¯_Lin_thm2";
+=TEX
+}%\ignore
+
+¹HOLCONST
+Ü ÛFun‰Gİ : ('a ­ ¯) GROUP
+÷üüüüüü
+Ü Fun‰G = (Universe, (Ìf g a·f a + g a), (Ìa·î¯ 0), (Ìf a·~(f a))) 
+°
+
+\ignore{
+=SML
+val Ûfun_g_defİ = get_spec¬Fun‰G®;
+set_goal([], ¬Fun‰G  Group®);
+a(rewrite_tac[fun_g_def, abelian_group_def, group_def, group_ops_def]  THEN PC_T1 "¯_lin_arith" prove_tac[]);
+val Ûfun_g_group_thmİ = save_pop_thm "fun_g_group_thm";
+=TEX
+}\ignore
+
+¹HOLCONST
+Ü ÛFun‰RVSİ : ('a ­ ¯) RVS
+÷üüüüüü
+Ü Fun‰RVS = MkRVS Fun‰G (Ìx:¯; f· Ìa:'a·x * f a)
+°
+
+\ignore{
+=SML
+val Ûfun_v_defİ = get_spec¬Fun‰RVS®;
+set_goal([], ¬Fun‰RVS  VS‰R®);
+a(rewrite_tac[fun_v_def, vs_def, vs_ops_def, grp_def]);
+a(REPEAT strip_tac THEN TRY
+	(rewrite_tac[fun_g_def, group_ops_def, vs_ops_def, abelian_group_def, group_def])
+	THEN (PC_T1 "¯_lin_arith" prove_tac[]));
+val Ûfun_v_vs_thmİ = save_pop_thm "fun_v_vs_thm";
+=TEX
+}%\ignore
+
+¹HOLCONST
+Ü Û¯›2‰RVSİ : (¯ ¸ ¯) RVS
+÷üüüüüü
+Ü	¯›2‰RVS = ¯‰RVS * ¯‰RVS
+°
+¹HOLCONST
+Ü Û¯›3‰RVSİ : (¯ ¸ ¯ ¸ ¯) RVS
+÷üüüüüü
+Ü	¯›3‰RVS = ¯‰RVS * ¯‰RVS * ¯‰RVS
+°
+
+\ignore{
+=SML
+val Û¯_1_defİ = get_spec¬¯‰RVS®;
+val Û¯_2_defİ = get_spec¬¯›2‰RVS®;
+val Û¯_3_defİ = get_spec¬¯›3‰RVS®;
+set_goal([], ¬¯‰RVS  VS‰R ± ¯›2‰RVS  VS‰R ± ¯›3‰RVS  VS‰R®);
+a(rewrite_tac[¯‰RVS_VS‰R_thm, ¯_2_def, ¯_3_def]
+	THEN (strip_asm_tac ¯‰RVS_VS‰R_thm)
+	THEN REPEAT_N 2 (all_asm_fc_tac [vector_product_thm])
+	THEN asm_rewrite_tac[]);
+val Û¯_123_vs_thmİ = save_pop_thm "¯_123_vs_thm";
+=TEX
+}%\ignore
+
+Triples of reals are used for spatial coordinates and various vectors, a type abbreviation is used to make the specifications a little more readable.
+
+=SML
+declare_type_abbrev ("¯›3", [], ”¯¸¯¸¯®);
+=TEX
+
+The following definition names the zero 3-tuple.
+¹HOLCONST
+Ü Û0‰R3İ : ¯›3
+÷üüüüüü
+Ü 0‰R3 = (0‰R, 0‰R, 0‰R)
+°
+This is aliased to permit omission of the subscript where this can be done without ambiguity.
+=SML
+declare_alias("0", ¬0‰R3®);
+=TEX
+
+The following function yeilds the square of the distance between two points in a three dimensional Euclidean space.
+
+=SML
+declare_infix (300, "-‰tr");
+=TEX
+¹HOLCONST
+Ü $Û-‰trİ : ¯›3 ­ ¯›3 ­ ¯›3
+÷üüüüüü
+Ü µx‰1 y‰1 z‰1 x‰2 y‰2 z‰2 ·
+Ü	(x‰1, y‰1, z‰1) -‰tr (x‰2, y‰2, z‰2) = (x‰1 - x‰2, y‰1 - y‰2, z‰1 - z‰2)		
+°
+=SML
+declare_alias ("-", ¬$-‰tr®);
+=SML
+declare_infix (300, "+‰tr");
+=TEX
+¹HOLCONST
+Ü $Û+‰trİ : ¯›3 ­ ¯›3 ­ ¯›3
+÷üüüüüü
+Ü µx‰1 y‰1 z‰1 x‰2 y‰2 z‰2 ·
+Ü	(x‰1, y‰1, z‰1) +‰tr (x‰2, y‰2, z‰2) = (x‰1 + x‰2, y‰1 + y‰2, z‰1 + z‰2)		
+°
+=SML
+declare_alias ("+", ¬$-‰tr®);
+declare_infix (310, "*‰trs");
+=TEX
+¹HOLCONST
+Ü $Û*‰trsİ : ¯›3 ­ ¯ ­ ¯›3
+÷üüüüüü
+Ü µx‰1 y‰1 z‰1 r ·
+Ü	(x‰1, y‰1, z‰1) *‰trs r = (x‰1 * r, y‰1 * r, z‰1 * r)		
+°
+=SML
+declare_alias ("*", ¬$*‰trs®);
+declare_infix (310, "/‰trs");
+=TEX
+¹HOLCONST
+Ü $Û/‰trsİ : ¯›3 ­ ¯ ­ ¯›3
+÷üüüüüü
+Ü µx‰1 y‰1 z‰1 r ·
+Ü	(x‰1, y‰1, z‰1) /‰trs r = (x‰1 / r, y‰1 / r, z‰1 / r)		
+°
+=SML
+declare_alias ("/", ¬$/‰trs®);
+=TEX
+
+\section{NORMED VECTOR SPACES}
+\subsection{Norms}
+=SML
+declare_type_abbrev("NORM", ["'a"], ”'a ­ ¯®);
+=TEX
+
+¹HOLCONST
+Ü ÛNormİ : 'a RVS ­ 'a NORM SET
+÷üüüüüü
+Ü µ V norm·
+Ü	norm  Norm V
+Ü ¤	(µv·î¯ 0 ¼ norm v)
+Ü ±	(µv·norm v = î¯ 0 ¤ v = 0‰V V)
+Ü ±	(µx v·norm ((x *‰s v)V) = Abs x * norm v)
+Ü ±	(µv w·norm ((v + w)V) ¼ norm v + norm w)
+°
+
+¹HOLCONST
+Ü ÛNormProductİ : 'a NORM ­ 'b NORM ­ ('a ¸ 'b) NORM
+÷üüüüüü
+Ü µ n:'a NORM; m:'b NORM; a:'a; b:'b·
+Ü	NormProduct n m (a, b) = Abs(Sqrt((n a) ^ 2 + (m b) ^ 2))
+°
+=SML
+declare_alias("*", ¬NormProduct®);
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¬µ n:'a NORM; m:'b NORM; a1 a2 :'a; b1 b2:'b·
+	a1 *‰V a2 + b1 *‰V b2 ¼ (NormProduct n m (a1, b1)) *‰VW (NormProduct n m (a2, b2))®);
+
+a (REPEAT strip_tac THEN rewrite_tac [¯_î_exp_square_thm, ¯_times_plus_distrib_thm]);
+a (¯_top_anf_tac);
+=TEX
+
+=IGN
+set_goal([], ¬µ nfv nfw msv msw·
+	Sqrt ((nfv +‰R nfw) ^‰N 2 +‰R (msv +‰R msw) ^‰N 2)
+             ¼‰R Sqrt (nfv ^‰N 2 +‰R msv ^‰N 2) +‰R Sqrt (nfw ^‰N 2 +‰R msw ^‰N 2)®);
+a (REPEAT strip_tac THEN rewrite_tac [¯_î_exp_square_thm, ¯_times_plus_distrib_thm]);
+a (¯_top_anf_tac);
+=TEX
+
+=SML
+set_goal([], ¬µV:'a RVS; W:'b RVS; n:'a NORM; m:'b NORM·
+	V  VS‰R ± W  VS‰R ± n  Norm V ± m  Norm W ´ n * m  Norm (V * W)®);
+a (rewrite_tac [get_spec ¬NormProduct®, get_spec ¬Norm®, get_spec ¬VectorSpaceProduct®,
+	¯_Abs_Norm_clauses]);
+a (pure_once_rewrite_tac [
+	prove_rule [] ¬NormProduct n m v = NormProduct n m (Fst v, Snd v)®]);
+a (pure_rewrite_tac [get_spec ¬NormProduct®]);
+a (rewrite_tac [¯_Abs_Norm_clauses, let_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [vs_ops_def1, get_spec ¬Grp®,
+	get_spec ¬Grp®, get_spec ¬Sqrt®,
+	get_spec ¬Unit®, get_spec ¬GroupProduct®, let_def]);
+a (fc_tac [sqrt_square_thm]);
+a (LEMMA_T ¬Fst v = 0‰V V® rewrite_thm_tac THEN1 asm_fc_tac[]);
+a (LEMMA_T ¬Snd v = 0‰V W® rewrite_thm_tac THEN1 asm_fc_tac[]);
+a (rewrite_tac[get_spec ¬0‰V®]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac [sqrt_square_thm, get_spec ¬0‰V®,
+	get_spec ¬Group‰RVS®, get_spec ¬Unit®, get_spec ¬GroupProduct®, let_def]);
+(* *** Goal "3" *** *)
+a (once_rewrite_tac [get_spec ¬Scale‰V®]);
+a (asm_rewrite_tac [sqrt_square_thm, get_spec ¬NormProduct®,
+	get_spec ¬Scale‰RVS®, ¯_abs_clauses]);
+a (LEMMA_T ¬(Abs‰R x *‰R n (Fst v)) ^‰N 2 +‰R (Abs‰R x *‰R m (Snd v)) ^‰N 2
+	= ((Abs‰R x) ^‰N 2) *‰R ((n (Fst v)) ^‰N 2 +‰R (m (Snd v)) ^‰N 2)®
+	rewrite_thm_tac
+	THEN1 rewrite_tac [¯_times_plus_distrib_thm, ¯_î_exp_times_thm]);
+a (rewrite_tac [¯_sqrt_prod_thm, ¯_sqrt_square_thm1, ¯_î_exp_square_thm,
+	¯_abs_clauses, rewrite_rule [¯_î_exp_square_thm] (get_spec ¬Sqrt®)]);
+(* *** Goal "4" *** *)
+a (pure_once_rewrite_tac [
+	prove_rule [] ¬µw· NormProduct n m w = NormProduct n m (Fst w, Snd w)®]);
+a (asm_rewrite_tac [sqrt_square_thm, get_spec ¬NormProduct®, get_spec ¬Scale‰V®,
+	get_spec ¬Scale‰RVS®, get_spec ¬Car®, get_spec ¬GroupProduct®, ¯_abs_clauses, let_def]);
+a (lemma_tac ¬n ((Fst v . Fst w) (Group‰RVS V)) ¼‰R n (Fst v) +‰R n (Fst w)®
+	THEN1 GET_NTH_ASM_T 5 (rewrite_thm_tac o (rewrite_rule[get_spec ¬Plus‰V®])));
+a (lemma_tac ¬m ((Snd v . Snd w) (Group‰RVS W)) ¼‰R m (Snd v) +‰R m (Snd w)®
+	THEN1 GET_NTH_ASM_T 2 (rewrite_thm_tac o (rewrite_rule[get_spec ¬Plus‰V®])));
+a (all_asm_ante_tac);
+a (LEMMA_T ¬¶A· A = n ((Fst v . Fst w) (Group‰RVS V))®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶B· B = m ((Snd v . Snd w) (Group‰RVS W))®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶nfv· nfv = n (Fst v)®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶msv· msv = m (Snd v)®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶nfw· nfw = n (Fst w)®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶msw· msw = m (Snd w)®
+	(fn x=> strip_asm_tac x THEN GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule))
+	THEN1 prove_¶_tac);
+a (REPEAT strip_tac);
+
+(* Now following Rob's outline proof *)
+
+a (lemma_tac ¬Sqrt (A ^‰N 2 +‰R B ^‰N 2) ¼‰R Sqrt((nfv +‰R nfw)^2 +‰R (msv +‰R msw)^2)®
+	THEN1 (bc_tac [¯_sqrt_mono_thm]
+		THEN TRY (rewrite_tac [¯_sum_square_pos_thm, ¯_î_exp_square_thm])
+		THEN bc_tac [¯_plus_mono_thm, ¯_square_mono_thm1]
+		THEN asm_rewrite_tac[]));
+a (lemma_tac ¬Sqrt((nfv +‰R nfw)^2 +‰R (msv +‰R msw)^2)
+	¼‰R Sqrt (nfv ^‰N 2 +‰R msv ^‰N 2) +‰R Sqrt (nfw ^‰N 2 +‰R msw ^‰N 2)®);
+(* *** Goal "4.1" *** *)
+a (bc_tac [¯_square_¼_¼_thm, ¯_sum_pos_thm]
+	THEN TRY (rewrite_tac [rewrite_rule [¯_î_exp_square_thm] (get_spec ¬Sqrt®),
+		¯_abs_sum_square_thm,
+		¯_times_plus_distrib_thm,
+		¯_î_exp_square_thm]));
+a (¯_top_anf_tac THEN rewrite_tac[µ_elim ¬msw *‰R msw® ¯_plus_order_thm]);
+a (rewrite_tac[µ_elim ¬nfv *‰R nfv® ¯_plus_order_thm]);
+a (rewrite_tac[µ_elim ¬nfw *‰R nfw® ¯_plus_order_thm]);
+a (LEMMA_T ¬î¯ 2 *‰R msv *‰R msw +‰R î¯ 2 *‰R nfv *‰R nfw
+	= î¯ 2 *‰R (msv *‰R msw +‰R nfv *‰R nfw)® rewrite_thm_tac
+	THEN1 rewrite_tac [¯_times_plus_distrib_thm]);
+a (bc_tac [¯_¼_times_mono_thm] THEN1 TRY (rewrite_tac[]));
+a (lemma_tac ¬msv *‰R msw +‰R nfv *‰R nfw ¼‰R Abs‰R (msv *‰R msw +‰R nfv *‰R nfw)®
+	THEN1 rewrite_tac [¯_¼_abs_thm]);
+a (lemma_tac ¬Abs(msv *‰R msw +‰R nfv *‰R nfw)
+             ¼‰R Sqrt (nfv *‰R nfv +‰R msv *‰R msv) *‰R Sqrt (nfw *‰R nfw +‰R msw *‰R msw)®);
+(* *** Goal "4.1.1" *** *)
+a (lemma_tac ¬Sqrt (nfv *‰R nfv +‰R msv *‰R msv) *‰R Sqrt (nfw *‰R nfw +‰R msw *‰R msw)
+	= Sqrt (msv *‰R msv +‰R nfv *‰R nfv)
+         *‰R Sqrt (msw *‰R msw +‰R nfw *‰R nfw)®
+	THEN1 (¯_top_anf_tac THEN strip_tac));
+a (once_rewrite_tac [¯_plus_comm_thm]);
+a (once_rewrite_tac [µ_elim ¬nfv *‰R nfw® ¯_plus_comm_thm]);
+a (accept_tac (rewrite_rule [] (list_µ_elim [¬(msv, nfv)®, ¬(msw, nfw)®]
+	(rewrite_rule [let_def] schwartz_2nd_thm2))));
+(* *** Goal "4.1.2" *** *)
+a (all_fc_tac [¯_¼_trans_thm]);
+(* *** Goal "4.2" *** *)
+a (all_fc_tac [¯_¼_trans_thm]);
+val NormProduct_thm = save_pop_thm "NormProduct_thm";
+=TEX
+
+}%\ignore
+
+¹HOLCONST
+Ü ÛD‰Rİ : ¯ NORM;
+Ü ÛD‰R2İ : (¯ ¸ ¯) NORM;
+Ü ÛD‰R3İ : (¯ ¸ ¯ ¸ ¯) NORM
+÷üüüüüü
+Ü (µr:¯· D‰R r = Abs r)
+Ü ± D‰R2 = NormProduct D‰R D‰R
+Ü ± D‰R3 = NormProduct D‰R D‰R2
+°
+
+\ignore{
+=SML
+set_goal([], ¬D‰R  (Norm ¯‰RVS)®);
+a (rewrite_tac [get_spec ¬D‰R®, get_spec ¬Norm®, get_spec ¬¯‰RVS®,
+	get_spec ¬Scale‰V®, get_spec ¬Group‰RVS®,
+	get_spec ¬¯_plus®, get_spec ¬Unit®,
+	¯_Abs_Norm_clauses]);
+val D‰R_Norm_thm = save_pop_thm "D‰R_Norm_thm";
+=TEX
+}%\ignore
+
+\subsection{Normed Vector Spaces}
+
+¹HOLLABPROD NVSüüüüüüüüüüüüüüüüü
+Ü	Rvs‰NVS		:'a RVS;
+Ü	Norm‰NVS		:'a ­ ¯
+°üüüüüüüüüüüüüüüüüüüüüüüüüüüüü
+¹HOLCONST
+Ü ÛNvsİ : 'a NVS SET
+÷üüüüüü
+Ü µ N· N  Nvs
+Ü ¤ Rvs‰NVS N  VS‰R ± (Norm‰NVS N)  Norm (Rvs‰NVS N)  
+°
+¹HOLCONST
+Ü ÛPlus‰Nİ :  'a ­ 'a ­ 'a NVS ­ 'a;
+Ü ÛMinus‰Nİ :  'a ­ 'a NVS ­ 'a;
+Ü ÛSubtract‰Nİ :  'a ­ 'a ­ 'a NVS ­ 'a;
+Ü Û0‰Nİ :  'a NVS ­ 'a;
+Ü ÛScale‰Nİ :  ¯ ­ 'a ­ 'a NVS ­ 'a;
+Ü ÛNorm‰Nİ :  'a ­ 'a NVS ­ ¯
+÷üüüüüü
+Ü µ N·
+Ü 	(µv w· Plus‰N v w N = Plus‰V v w (Rvs‰NVS N))
+Ü ±	(µv· Minus‰N v N = Minus‰V v (Rvs‰NVS N))
+Ü ±	(µv w· Subtract‰N v w N = Plus‰V v (Minus‰V w (Rvs‰NVS N)) (Rvs‰NVS N))
+Ü ±	0‰N N = 0‰V (Rvs‰NVS N)
+Ü ±	(µx v·Scale‰N x v N = Scale‰V x v (Rvs‰NVS N))
+Ü ±	(µv·Norm‰N v N = Norm‰NVS N v)
+°
+=SML
+declare_alias("+", ¬Plus‰N®);
+declare_alias("~", ¬Minus‰N®);
+declare_alias("-", ¬Subtract‰N®);
+declare_alias("*", ¬Scale‰N®);
+=TEX
+
+¹HOLCONST
+Ü ÛNvsProductİ : 'a NVS ­ 'b NVS ­ ('a ¸ 'b) NVS
+÷üüüüüü
+Ü µ n:'a NVS; m:'b NVS·
+Ü	NvsProduct n m = MkNVS ((Rvs‰NVS n) * (Rvs‰NVS m)) ((Norm‰NVS n) * (Norm‰NVS m))
+°
+
+=SML
+declare_alias("*", ¬NvsProduct®);
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ¬µN:'a NVS; M:'b NVS· N  Nvs ± M  Nvs ´ N * M  Nvs®);
+a (rewrite_tac [get_spec ¬Nvs®, get_spec ¬Rvs‰NVS®,
+	get_spec ¬NvsProduct®] THEN REPEAT strip_tac);
+a (all_fc_tac [vector_product_thm]);
+a (all_fc_tac [NormProduct_thm]);
+val NvsProduct_thm = save_pop_thm "NvsProduct_thm";
+=TEX
+
+}%ignore
+
+¹HOLCONST
+Ü Û¯‰NVSİ : ¯ NVS;
+Ü Û¯›2‰NVSİ : (¯ ¸ ¯) NVS;
+Ü Û¯›3‰NVSİ : (¯ ¸ ¯ ¸ ¯) NVS;
+Ü Û¯›4‰NVSİ : (¯ ¸ ¯ ¸ ¯ ¸ ¯) NVS
+÷üüüüüü
+Ü   ¯‰NVS = MkNVS ¯‰RVS D‰R
+Ü ± ¯›2‰NVS = ¯‰NVS * ¯‰NVS
+Ü ± ¯›3‰NVS = ¯‰NVS * ¯›2‰NVS
+Ü ± ¯›4‰NVS = ¯‰NVS * ¯›3‰NVS
+°
+
+\ignore{
+=SML
+val Ûnorm_defİ = get_spec¬Norm®;
+set_goal([], ¬¯‰NVS  Nvs®);
+a (rewrite_tac[
+	get_spec ¬¯‰NVS®,
+	get_spec ¬Nvs®,
+	get_spec ¬MkNVS®,
+	D‰R_Norm_thm,
+	¯‰RVS_VS‰R_thm]);
+val ¯‰NVS_Nvs_lemma = pop_thm ();
+
+set_goal([], ¬¯›2‰NVS  Nvs®);
+a (once_rewrite_tac [get_spec ¬¯‰NVS®]);
+a (asm_tac ¯‰NVS_Nvs_lemma THEN all_fc_tac [NvsProduct_thm]);
+val ¯‰NVS_Nvs_lemma2 = pop_thm ();
+
+set_goal([], ¬¯›3‰NVS  Nvs®);
+a (once_rewrite_tac [get_spec ¬¯‰NVS®]);
+a (asm_tac ¯‰NVS_Nvs_lemma THEN asm_tac ¯‰NVS_Nvs_lemma2
+	THEN all_fc_tac [NvsProduct_thm]);
+val ¯‰NVS_Nvs_lemma3 = pop_thm ();
+
+set_goal([], ¬¯›4‰NVS  Nvs®);
+a (once_rewrite_tac [get_spec ¬¯‰NVS®]);
+a (asm_tac ¯‰NVS_Nvs_lemma THEN asm_tac ¯‰NVS_Nvs_lemma3
+	THEN all_fc_tac [NvsProduct_thm]);
+val ¯‰NVS_Nvs_lemma4 = pop_thm ();
+
+set_goal([], ¬¯‰NVS  Nvs ± ¯›2‰NVS  Nvs ± ¯›3‰NVS  Nvs ± ¯›4‰NVS  Nvs®);
+a (rewrite_tac [¯‰NVS_Nvs_lemma, ¯‰NVS_Nvs_lemma2,  ¯‰NVS_Nvs_lemma3, ¯‰NVS_Nvs_lemma4]);
+val ¯‰NVS_Nvs_thm = save_pop_thm "¯‰NVS_Nvs_thm";
+=TEX
+}%\ignore
+
+\subsection{Frechet Derivative}
+
+In the following read, as so often, $\in$ as ``is a'': the set in question will have at most one element.
+In ordinary notation, the last inequality here amounts to 
+$|((f(v+h) - f(v) - D(h))/|h|) < e$.
+
+¹HOLCONST
+Ü ÛFrechetDerivİ : ('a NVS) ¸ ('b NVS) ­ ('a ­ 'b) ­ 'a ­ ('a ­ 'b) SET
+÷üüüüüü
+Ü µ (M:'a NVS) (N:'b NVS) f (v:'a) (D: 'a ­ 'b)·
+Ü	D  FrechetDeriv(M, N) f v
+Ü ¤	D  Lin(Rvs‰NVS M, Rvs‰NVS N)
+Ü ±	(µe:¯· î¯ 0 < e ´¶d·
+Ü		î¯ 0 < d
+Ü 	±	(µh:'a· î¯ 0 < Norm‰N h M ± Norm‰N h M < d ´ 
+Ü		Norm‰N ((((Norm‰N h M)›-›1) * (((f((v + h)M) - (f v))N) - (D h))N) N) N < e))
+°
+
+¹HOLCONST
+Ü ÛFDifferentiableİ : ('a NVS) ¸ ('b NVS) ­ ('a ­ 'b) ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ (M:'a NVS) (N:'b NVS) f (v:'a) ·
+Ü	FDifferentiable (M, N) f v
+Ü ¤	³ FrechetDeriv(M, N) f v = {}
+°
+
+The special case of the derivative in which the domain of the function is $¯‰NVS$ (representing time perhaps) is defined here.
+A different convention is adopted for representation of a possibly not everywhere defined derivative.
+
+\ignore{
+=SML
+set_flag ("pp_use_alias", false);
+set_goal ([],¬¶VDeriv·
+	 µ (N:'a NVS); f:¯ ­ 'a; r·
+	let D = FrechetDeriv (¯‰NVS, N) f r
+	in ³D = {} ´ (Ìr'· (r' * (VDeriv N f r)) N)  D®);
+a (rewrite_tac [let_def]);
+a (¶_tac ¬Ì(N:'b NVS) f r· Åb· (Ìr'· (r' * b) N)  FrechetDeriv (¯‰NVS, N) f r®
+	THEN rewrite_tac[sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¬x  Lin(¯‰RVS, Rvs‰NVS N)®
+	THEN1 (all_asm_ante_tac
+		THEN rewrite_tac [
+			get_spec ¬FrechetDeriv®,
+			get_spec ¬Rvs‰NVS®,
+			get_spec ¬¯‰NVS®
+			]
+		THEN REPEAT strip_tac));
+a (all_asm_fc_tac[get_spec ¬Lin®]);
+a (LEMMA_T ¬x =  Ìr'· (r' * (x (î¯ 1))) N® asm_tac
+	THEN1 (asm_rewrite_tac []
+		THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (rewrite_tac (td_thml [Spec ¬Scale‰N®]));
+a (list_spec_nth_asm_tac 1 [¬x'®, ¬î¯ 1®]);
+a (POP_ASM_T (rewrite_thm_tac o eq_sym_rule));
+a (rewrite_tac (td_thml [Spec ¬Scale‰V®, Spec ¬¯‰RVS®, Spec ¬Scale‰RVS®]));
+(* *** Goal "2" *** *)
+a (Å_tac ¬Å b· (Ì r'· Scale‰N r' b N)  FrechetDeriv (¯‰NVS, N) f r®);
+a (¶_tac ¬x (î¯ 1)®);
+a (POP_ASM_T (asm_tac o eq_sym_rule));
+a (asm_rewrite_tac[]);
+xl_set_cs_¶_thm (pop_thm());
+=TEX
+}%\ignore
+
+¹HOLCONST
+Ü ÛVDerivİ : 'a NVS ­ (¯ ­ 'a) ­ (¯ ­ 'a)
+÷üüüüüü
+Ü µ (N:'a NVS) f r·
+Ü	let D = FrechetDeriv (¯‰NVS, N) f r
+Ü	in ³D = {} ´ (Ìr'· (r' * (VDeriv N f r)) N)  D
+°
+
+¹HOLCONST
+Ü ÛVNthDerivİ : î ­ ('b NVS) ­ (¯ ­ 'b) ­ (¯ ­ 'b)
+÷üüüüüü
+Ü µ (n:î); N:'b NVS; f :¯ ­ 'b·
+Ü	 VNthDeriv 0 N f = f
+Ü± 	 VNthDeriv (n+1) N f =
+Ü		let f' = VDeriv N f
+Ü		in VNthDeriv n N f'
+°
+
+¹HOLCONST
+Ü ÛEDiffİ : ('a NVS) ¸ ('b NVS) ­ ('a ­ 'b) ­ ('a ­ 'a ­ 'b) ­ BOOL
+÷üüüüüü
+Ü µ N M f df·
+Ü	EDiff (N, M) f df
+Ü ¤	µv· df v  FrechetDeriv (N, M) f v
+°
+
+\section{INNER PRODUCT SPACES}
+
+\subsection{Inner Products}
+=SML
+declare_type_abbrev("IP", ["'a"], ”'a ­ 'a ­ ¯®);
+=TEX
+
+=SML
+declare_infix(310, "*‰V");
+declare_infix(300, "+‰V");
+declare_infix(310, ".‰i");
+=TEX
+
+¹HOLCONST
+Ü ÛInnerProductİ : 'a RVS ­ 'a IP SET
+÷üüüüüüüüüüüü
+Ü µ V:'a RVS; $.‰i: 'a ­ 'a ­ ¯·
+Ü	$.‰i  InnerProduct V
+Ü ¤	let x *‰V y = Scale‰V x y V
+Ü	and $+‰V = (Ìx y· Plus‰V x y V) in
+Ü	(µ a b p q r· (a *‰V p +‰V b *‰V q) .‰i r = (a *‰V p) .‰i r +‰R (b *‰V q) .‰i r)
+Ü ±	(µ p q· p .‰i q = q .‰i p)
+Ü ±	(µ p:'a· p .‰i p ¾ 0‰R)
+Ü ±	(µ p:'a· p .‰i p = 0‰R ´ p = 0‰V V)
+°
+
+\subsection{Inner Product Spaces}
+
+¹HOLLABPROD IPSüüüüüüüüüüüüüüüüü
+Ü	Rvs‰IPS		:'a RVS;
+Ü	Ip‰IPS		:'a ­ 'a ­ ¯
+°üüüüüüüüüüüüüüüüüüüüüüüüüü
+¹HOLCONST
+Ü ÛIpsİ : 'a IPS SET
+÷üüüüüü
+Ü µ I:'a IPS· I  Ips
+Ü ¤ Rvs‰IPS I  VS‰R ± (Ip‰IPS I)  InnerProduct (Rvs‰IPS I) 
+°
+
+¹HOLCONST
+Ü ÛPlus‰Iİ :  'a ­ 'a ­ 'a IPS ­ 'a;
+Ü ÛMinus‰Iİ :  'a ­ 'a IPS ­ 'a;
+Ü ÛSubtract‰Iİ :  'a ­ 'a ­ 'a IPS ­ 'a;
+Ü Û0‰Iİ :  'a IPS ­ 'a;
+Ü ÛScale‰Iİ :  ¯ ­ 'a ­ 'a IPS ­ 'a;
+Ü ÛIp‰Iİ :  'a ­ 'a ­ 'a IPS ­ ¯;
+Ü ÛNorm‰Iİ :  'a ­ 'a IPS ­ ¯
+÷üüüüüü
+Ü µ I:'a IPS·
+Ü 	(µv w· Plus‰I v w I = Plus‰V v w (Rvs‰IPS I))
+Ü ±	(µv· Minus‰I v I = Minus‰V v (Rvs‰IPS I))
+Ü ±	(µv w· Subtract‰I v w I = Plus‰V v (Minus‰V w (Rvs‰IPS I)) (Rvs‰IPS I))
+Ü ±	0‰I I = 0‰V (Rvs‰IPS I)
+Ü ±	(µx v·Scale‰I x v I = Scale‰V x v (Rvs‰IPS I))
+Ü ±	(µv w·Ip‰I v w I = Ip‰IPS I v w)
+Ü ±	(µv·Norm‰I v I = Sqrt(Ip‰IPS I v v))
+°
+
+\section{MANIFOLDS}
+
+A manifold is a collection of coordinate patches over a topological space.
+Since the available notion of topology recovers the ``carrier'' of the topology from the topology, it seems appropriate here to do likewise.
+Further, we can recover the topology from the domains of the coordinate maps.
+
+Though it seems normal to expect the coordinate space to be in some power of the real line, its easier at this stage to allow an arbitrary normed vector space.
+
+¹HOLLABPROD MANIFOLDüüüüüüüüüüüüüüüüü
+Ü	Top‰M	:'a SET SET;
+Ü	Rvs‰M	:'b RVS;
+Ü	Cmap‰M	: ('a SET ¸ ('a ­ 'b)) SET
+°üüüüüüüüüüüüüüüüüüüüüüüüüü
+
+¹HOLCONST
+Ü ÛManifoldİ : ('a, 'b) MANIFOLD SET
+÷üüüüüü
+Ü µ M: ('a, 'b) MANIFOLD· M  Manifold
+Ü ¤	Rvs‰M M  VS‰R
+Ü ±	Top‰M M  Topology
+°
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{diffgeom.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+set_flag ("pp_use_alias", true);
+output_theory{out_file="diffgeom.th.doc", theory="diffgeom"};
+set_flag ("pp_use_alias", false);
+=TEX

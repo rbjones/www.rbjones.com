@@ -1,0 +1,502 @@
+=IGN
+$Id: t007.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Fixed Points, Closure, Induction}
+\author{Roger Bishop Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+Some fixed point results, and some closure principles.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{fmu}
+} %\raggedright
+
+\section{Introduction}
+
+Create new theory ``fixp''.
+
+=SML
+open_theory "rbjmisc";
+force_new_theory "fixp";
+set_pc "hol";
+=IGN
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "xl_cs_∂_conv"];
+set_flag ("pp_use_alias", false);
+=TEX
+
+\section{Definitions}
+
+Definition of the notion of a bounded monotonic function and of least and greatest fixed points.
+
+πHOLCONST
+monotonic : ('a SET ≠ 'b SET) ≠ BOOL
+˜
+µf∑ monotonic f § µx y∑ x Ä y ¥ f(x) Ä f(y)
+∞
+
+πHOLCONST
+lfp : ('a SET ≠ 'a SET) ≠ 'a SET
+˜
+µf∑ lfp f = •{X | f X Ä X}
+∞
+
+πHOLCONST
+gfp : ('a SET ≠ 'a SET) ≠ 'a SET
+˜
+µf∑ gfp f = ﬁ{X | X Ä f X}
+∞
+
+\section{Least Fixed Points}
+
+Proofs that "lfp" gives a fixed point and that it is the least fixed point.
+
+\ignore{
+=IGN
+set_goal([],¨µh∑ monotonic h ¥ ∂ s∑ h s = sÆ);
+a (REPEAT strip_tac);
+a (∂_tac ¨gfp hÆ);
+a (all_fc_tac [least_fixpoint_thm1]);
+val fixpoint_thm2 = save_pop_thm "fixpoint_thm2";
+=SML
+
+undeclare_alias ("ç", ¨$çâLÆ);
+
+set_goal([],¨µh∑ monotonic h ¥ h (lfp h) = lfp hÆ);
+a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨h(•{X|h X Ä X}) Ä •{X|h X Ä X}Æ);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (lemma_tac ¨(•{X|h X Ä X}) Ä sÆ);
+(* *** Goal "1.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨sÆ);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (all_fc_tac[get_spec ¨$ÄÆ]);
+a (all_fc_tac[get_spec ¨$ÄÆ]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨•{X|h X Ä X} Ä h(•{X|h X Ä X})Æ);
+(* *** Goal "2.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (spec_asm_tac ¨µ s∑ s ç {X|h X Ä X} ¥ x ç sÆ ¨h (• {X|h X Ä X})Æ);
+a (fc_tac [get_spec ¨monotonicÆ]);
+a (list_spec_asm_tac ¨µ x y∑ x Ä y ¥ h x Ä h yÆ [¨h(• {X|h X Ä X})Æ, ¨• {X|h X Ä X}Æ]);
+(* *** Goal "2.2" *** *)
+a (all_asm_fc_tac [pc_rule "sets_ext" (prove_rule []) ¨µA B∑ A Ä B ± B Ä A ¥ A = BÆ]);
+val least_fixpoint_thm = save_pop_thm "least_fixpoint_thm";
+=TEX
+}%ignore
+
+\subsection{lfp Gives the Least Fixed Point}
+
+\ignore{
+=SML
+set_goal([],¨µh∑ monotonic h ¥ µg∑ h g = g ¥ (lfp h) Ä gÆ);
+a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (spec_asm_tac ¨µ s∑ s ç {X|h X Ä X} ¥ x ç sÆ ¨gÆ);
+a (DROP_ASM_T ¨≥ h g Ä gÆ ante_tac THEN asm_rewrite_tac []);
+val lfp_min_thm = save_pop_thm "lfp_min_thm";
+=TEX
+}%ignore
+
+\subsection{Induction}
+
+I'm not whether the following really counts as an induction principle, but I expect it will help in deriving induction principles.
+It may be read as saying that if the functional preserves some property then that property holds everywhere in the least fixed point.
+
+\ignore{
+=SML
+set_goal([],¨µh∑ monotonic h ¥ µs∑ h s Ä s ¥ (lfp h) Ä sÆ);
+a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val lfp_induction_thm = save_pop_thm "lfp_induction_thm";
+=TEX
+}%ignore
+
+\section{Greatest Fixed Points}
+
+Proofs that "gfp" gives a fixed point and that it is the greatest fixed point.
+
+\subsection{gfp Gives Fixed Points}
+
+\ignore{
+=SML
+set_goal([],¨µh∑ monotonic h ¥ h (gfp h) = gfp hÆ);
+a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨ﬁ {X|X Ä h X} Ä h (ﬁ {X|X Ä h X})Æ);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (lemma_tac ¨s Ä ﬁ {X|X Ä h X}Æ);
+(* *** Goal "1.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (∂_tac ¨sÆ THEN REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (lemma_tac ¨s ç {X|X Ä h X}Æ);
+(* *** Goal "1.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (all_asm_fc_tac [get_spec ¨$ÄÆ]);
+a (all_asm_fc_tac [get_spec ¨$ÄÆ]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨h (ﬁ {X|X Ä h X}) ç {X|X Ä h X}Æ);
+(* *** Goal "2.1" *** *)
+a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (asm_rewrite_tac [ç_in_clauses]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨h (ﬁ {X|X Ä h X}) Ä ﬁ {X|X Ä h X}Æ);
+(* *** Goal "2.2.1" *** *)
+a (once_rewrite_tac [sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (∂_tac ¨h (ﬁ {X|X Ä h X})Æ);
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2" *** *)
+a (rewrite_tac [pc_rule "sets_ext" (prove_rule []) ¨µA B∑ A = B § B Ä A ± A Ä BÆ]
+	THEN asm_rewrite_tac[]);
+val greatest_fixpoint_thm = save_pop_thm "greatest_fixpoint_thm";
+=TEX
+}%ignore
+
+\subsection{gfp Gives the Greatest Fixed Point}
+
+\ignore{
+=SML
+set_goal([],¨µh∑ monotonic h ¥ µg∑ h g = g ¥ g Ä (gfp h)Æ);
+a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨gÆ THEN asm_rewrite_tac[]);
+val gfp_max_thm = save_pop_thm "gfp_max_thm";
+=TEX
+}%ignore
+
+\subsection{C0-Induction}
+
+This is the corresponding theorem for greatest fixed point to the "induction" principle for least fixed points.
+I don't know whether its any use and am including it for the sake of symmetry!
+
+\ignore{
+=SML
+set_goal([],¨µh∑ monotonic h ¥ µs∑ s Ä h s ¥ s Ä (gfp h)Æ);
+a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN contr_tac);
+a (asm_fc_tac[]);
+val gfp_coinduction_thm = save_pop_thm "gfp_coinduction_thm";
+=TEX
+}%ignore
+
+\section{Inductive Definitions}
+
+Taking a closure of constructors for an inductive datatype definition.
+
+The simplest example of interest here is the natural numbers, which can be defined (in HOL) as the smallest set of individuals which includes zero (the individual which is not in the range of the one-one function whose existence is asserted by the usual axiom of infinity) and is closed under the successor function (which is that same one-one function).
+
+We can think of this as forming the natural numbers by starting with some set ({0}) and then adding the additional values following some prescription until no more can be added.
+Because we are always adding values, the operation on the set-of-values-so-far is monotonic.
+If the closure is supplied in a suitable manner then a completely general proof of monotonicity will suffice.
+
+There is a little difficulty in doing this automatically because the operators under which closure is wanted (counting the starting points as 0-ary operators) will be of diverse types.
+
+We keep the constructor exactly as it is required on the representation type.
+This is combined with an "immediate content" function on the domain of the constructor to give a relation which indicates which values are immediate constituents of a constructed value, and then we close up the empty set on the principle of adding a constructed value whenever its immediate constituents are available.
+
+In addition to the constructor function and the content information we want to allow some constraint on values which are acceptable for the construction so that it need not be defined over the entire representation type.
+In fact this can be coded into the content function by making it reflexive for values which we wish to exclude from the domain.
+Actually its type doesn't allow reflexive, but mapping these to the universe of the representation type will do the trick.
+
+\subsection{Monotonicity}
+
+The following function converts such a relationship into a monotonic function.
+The initial "cc" in the name stands for "constructor and content (functions)".
+
+πHOLCONST
+‹	cc2monof: ('a ≠ 'b) ∏ ('a ≠ 'b SET) ≠ ('b SET ≠ 'b SET)
+˜
+‹	µtor tent∑ cc2monof (tor, tent) = Ãs∑ s ¿ {t | ∂u v∑ u = tent v ± u Ä s ± t = tor v}
+∞
+
+We prove that this is the case:
+=SML
+set_goal([], ¨µtor tent∑ monotonic (cc2monof (tor, tent))Æ);
+=TEX
+\ignore{
+=SML
+a (rewrite_tac [get_spec ¨cc2monofÆ] THEN REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨monotonicÆ]);
+a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨uÆ);
+a (∂_tac ¨vÆ THEN REPEAT strip_tac);
+a (DROP_ASM_T ¨u Ä xÆ ante_tac
+	THEN DROP_ASM_T ¨µ x'∑ x' ç x ¥ x' ç yÆ ante_tac
+	THEN PC_T1 "sets_ext" prove_tac []);
+val mono_cc2monof_thm = save_pop_thm "mono_cc2monof_thm";
+=TEX
+}%ignore
+
+\subsection{Closure}
+
+The following function defines the least fixed point of such an operator:
+
+πHOLCONST
+‹	closure: ('a ≠ 'b) ∏ ('a ≠ 'b SET) ≠ 'b SET
+˜
+‹	µtor tent∑ closure (tor, tent) = lfp (cc2monof (tor, tent))
+∞
+
+We now prove that the result is indeed closed under the operations.
+
+\ignore{
+=SML
+set_goal([], ¨µtor tent s x y∑
+	  tent x = s
+	± s Ä (closure (tor, tent))
+	± y = tor x
+	¥ y ç (closure (tor, tent))Æ);
+a (rewrite_tac [get_spec ¨closureÆ] THEN REPEAT strip_tac);
+a (asm_tac (list_µ_elim [¨torÆ, ¨tentÆ] mono_cc2monof_thm));
+a (ALL_FC_T (once_rewrite_tac o (map eq_sym_rule)) [least_fixpoint_thm]);
+a (rewrite_tac[get_spec ¨cc2monofÆ]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+a (DROP_ASM_T ¨s Ä lfp (cc2monof (tor, tent))Æ ante_tac
+	THEN rewrite_tac[get_spec ¨cc2monofÆ]);
+val closure_thm1 = save_pop_thm "closure_thm1";
+=TEX
+}%ignore
+
+\subsection{Induction}
+
+We prove an induction theorem for sets defined as closures.
+
+\ignore{
+=SML
+set_goal([], ¨µtor tent p∑
+	(µx∑ (∂y∑ tor y = x ± tent y Ä p) ¥ x ç p)
+	¥ closure (tor, tent) Ä pÆ);
+a (rewrite_tac [get_spec ¨closureÆ]);
+a (REPEAT strip_tac);
+a (asm_tac (list_µ_elim [¨torÆ, ¨tentÆ] mono_cc2monof_thm));
+a (fc_tac [lfp_induction_thm]);
+a (spec_asm_tac ¨µ s∑ cc2monof (tor, tent) s Ä s ¥ lfp (cc2monof (tor, tent)) Ä sÆ ¨pÆ);
+a (swap_asm_concl_tac ¨≥ cc2monof (tor, tent) p Ä pÆ);
+a (rewrite_tac [get_spec ¨cc2monofÆ]);
+a (once_rewrite_tac [sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (spec_asm_tac ¨µ x∑ (∂ y∑ tor y = x ± tent y Ä p) ¥ x ç pÆ ¨xÆ);
+a (spec_asm_tac ¨µ y∑ ≥ (tor y = x ± tent y Ä p)Æ ¨vÆ);
+(* *** Goal "1" *** *)
+a (DROP_ASM_T ¨≥ tor v = xÆ ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (DROP_ASM_T ¨u Ä pÆ ante_tac
+	THEN once_asm_rewrite_tac[]
+	THEN strip_tac);
+val closure_induction_thm = save_pop_thm "closure_induction_thm";
+=TEX
+}%ignore
+
+\section{Coding Constructors}
+
+Definitions of constructors for products and lists, and injections for disjoint unions.
+
+I'm triying to make this a general as possible, the idea is to allow for the construction of inductive datatypes based on arbitrary trees.
+
+Then constructions may are therefore be thought of as parameterised by:
+
+\begin{enumerate}
+\item a well-ordering
+\item a set of node tags
+\item a set of arc tags
+\end{enumerate}
+
+And the tree we construct is a tree whose paths may be as long as the well-ordering and whose nodes and arcs have the appropriate kinds of tags.
+
+A tree is then ``implemented'' as a function from paths to node tags, where a path is itself a function from an initial segment of the domain of the well-ordering into the arc tags.
+Both of these kinds of function are partial and are therefore represented as relations.
+
+The fact that we are dealing with sets and partial function is here immaterial to the definition of the constructor function, and can be taken account of later in the process of constructing the inductive datatype, so the parameterisation is evident at this point only by the presence of three type variables.
+
+I can't see how to make use of a well-ordering larger than the natural numbers so that's fixed, and that makes a path into a list of arcs.
+
+\subsection{Some Types, Some Properties}
+
+To make the type information in the theory listing less cluttered I will use some labelled product definitions to introduce types.
+
+πHOLLABPROD TREE¸¸¸¸¸
+‹ tree: 'arc LIST ≠ 'node ≠ BOOL
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+One could make a proper subtype here by incorporating the necessary conditions on the relations involved, but in the construction of an inductive datatype there will almost invariably be another subtyping involved and one will probably suffice.
+However, it may be helpful at this point to define the conditions for a ``TREE'' to be a tree.
+The conditions depend upon chosing a well-ordering of the index types, and are therefore parameterised by such a well-ordering.
+There may not be to allow for this to be a well-ordering of a subset of the type, but since the definition of well-ordering we have is defined in such terms (i.e. as a property of set/relation pairs) we will define the well-formedness condition as accepting such a well-ordering.
+
+πHOLCONST
+‹ many_one : ('a ≠ 'b ≠ BOOL) ≠ BOOL
+˜
+‹ µr∑ many_one r § µx y z∑ r x y ± r x z ¥ y = z
+∞
+
+πHOLCONST
+‹ domain : ('a ≠ 'b ≠ BOOL) ≠ 'a SET
+˜
+‹ µr∑ domain r = {x | ∂y∑ r x y}
+∞
+
+πHOLCONST
+‹ is_tree : ('arc, 'node)TREE ≠ BOOL
+˜
+‹ µ t:('arc, 'node)TREE∑
+‹	is_tree t §
+‹	many_one (tree t)
+‹	± (µp∑ p ç domain (tree t) ¥
+‹		(µq r∑ p = Append q r ¥ q ç domain (tree t)))
+∞
+
+\subsection{The Constructor}
+
+We have a single constructor function which takes a 'arc indexed set of trees and a 'node value.
+This constructs a new tree from whose root node has the supplied value and whose children are the supplied trees, placed on the arc names used to index them.
+
+The paths through the tree are therefore the paths of the original trees with a new element slotted in at the beginning.
+
+πHOLCONST
+‹ MkTree : 'node ≠ ('arc ≠ ('arc, 'node)TREE ≠ BOOL) ≠ ('arc, 'node)TREE
+˜
+‹ µn c∑ MkTree n c = MkTREE (Ã path node∑
+‹	path = [] ± node = n
+‹	≤ ∂ hd tl tr∑ path = (Cons hd tl) ± c hd tr ± tree tr tl node)
+∞
+
+\subsection{Definitions}
+
+In the following constructor definitions the first argument is expected to be an injection from a preferred indexing type for this constructor to some actual indexing type.
+
+πHOLCONST
+IndPair : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) ∏ ('a LIST ≠ (ONE + 'b))
+	≠ ('a LIST ≠ (ONE + 'b))
+˜
+µi l r h t∑
+	IndPair i (l, r) Nil = InL One
+±	IndPair i (l, r) (Cons h t) =
+		if h = i F then l t
+		else if h = i T then r t
+		else InL One
+∞
+
+πHOLCONST
+IndInL : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b))
+	≠ ('a LIST ≠ (ONE + 'b))
+˜
+µi j h t∑
+	IndInL i j Nil = InL One
+±	IndInL i j (Cons h t) =
+		if h = i F then j t
+		else InL One
+∞
+
+πHOLCONST
+IndInR : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b))
+	≠ ('a LIST ≠ (ONE + 'b))
+˜
+µi j h t∑
+	IndInR i j Nil = InL One
+±	IndInR i j (Cons h t) =
+		if h = i T then j t
+		else InL One
+∞
+
+πHOLCONST
+IndSum : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) + ('a LIST ≠ (ONE + 'b))
+	≠ ('a LIST ≠ (ONE + 'b))
+˜
+µi j h t∑
+	(IndSum i j Nil = InL One)
+±	(IndSum i j (Cons h t) =
+		if IsL j
+		then	if h = i F
+			then OutL j t
+			else InL One
+		else	if h = i T
+			then OutR j t
+			else InL One)
+∞
+
+πHOLCONST
+IndList : (Ó ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) LIST
+	≠ ('a LIST ≠ (ONE + 'b))
+˜
+µi ha ta hb tb∑
+	IndList i Nil tb = InL One
+±	IndList i (Cons ha ta) Nil = InL One
+±	IndList i (Cons ha ta) (Cons hb tb) = 
+		if (∂j∑ hb = i j ± j < Length ta) then IndList i ta (Cons hb tb)
+		else if hb = i (Length ta) then (ha tb)
+		else InL One
+∞
+
+\ignore{
+<subsec title="Computing a Constructor">
+The following function takes a HOL type and a list of constructors and computes a compound constructor.
+The HOL type should have a sum of any finite number of distinct type variables as its codomain
+The constructors should include one for each type constructor which is involved in the recursion.
+
+=IGN
+dest_simple_type î'a + 'b + 'cÆ;
+fun ind_constructor scs cc =
+ let 
+
+ in
+
+ end;
+=TEX
+
+}%ignore
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{fixp.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+set_flag ("pp_use_alias", true);
+output_theory{out_file="fixp.th.doc", theory="fixp"};
+set_flag ("pp_use_alias", false);
+=TEX

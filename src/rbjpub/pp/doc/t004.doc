@@ -1,0 +1,531 @@
+=IGN
+$Id: t004.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Membership Structures}
+\author{Roger Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+A queer way of doing set theory in HOL.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+%%%%
+\subsection*{To Do}
+\begin{itemize}
+
+\item
+
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj}
+} %\raggedright
+
+%%%%
+%%%%
+\section{INTRODUCTION}
+Create new theory ``membership''.
+=SML
+open_theory "€rbjmisc›";
+force_new_theory "€membership›";
+new_parent "ordered_sets";
+set_merge_pcs["hol1", "xl_cs_∂_conv"];
+=TEX
+
+\section{Some Basic Properties of Membership Relations}
+The following types are used:
+\begin{itemize}
+\item[MS] membership structure
+\item[PMS] property of membership structure
+\end{itemize}
+
+A membership structure is a set together with a binary relation over that set.
+This constitues an interpretation of the language of first order set theory, though not necessarily (and here not often) a model for any axiomatisation of set theory.
+
+We are interested in properties of membership structures.
+We are not exclusively interested in any particular kinds of properties, but we will introduce various classifications of these properties, the first of which will be those which are captured by sentences of first order set theory.
+
+=SML
+declare_type_abbrev ("€MS›", ["'a"], î'a SET ∏ ('a ≠ 'a ≠ BOOL)Æ);
+declare_type_abbrev ("€PMS›", ["'a"], î'a MS ≠ BOOLÆ);
+=TEX
+=SML
+declare_infix (305, "çâr");
+=TEX
+
+The term ``membership relation'' is use purely to indicate motivation, this is not a non trivial subclass of binary relationships.
+
+The following are key properties which yield our broadest classification of membersip relations:
+
+\begin{enumerate}
+\item extensionality
+\item purity
+\item well-foundedness
+\end{enumerate}
+
+None of these properties is essential for a membership relation.
+The one which is perhaps most conspiciously characteristic of set membership is extensionality, but constructive set theories are likely not to be extensional.
+
+A set theory is ``pure'' if everything in the domain of discourse is a set.
+
+We are concerned here only with relations whose type is some instance of $î'a ≠ 'a ≠ BOOLÆ$ and so there is only one type of entity in the domain of discourse, and so in some sense everything is a set.
+However, if extensionality is weakened there may be any number of sets which have no members, and we may think of the extra ones as urelements.
+If well-foundedness is absent or qualified then Quine's trick of treating urlements as their own unit set allows full extensionality to be retained in a system in which some things are not thought of as sets.
+
+πHOLCONST
+‹ €extensional›: 'a PMS
+˜¸¸¸¸¸¸
+‹ µ (X, $çâr)∑ extensional (X, $çâr) § µs t∑ s ç X ± t ç X ¥
+‹	(s = t § (µ u∑ u ç X ¥ (u çâr s § u çâr t)))
+∞
+
+\ignore{
+=SML
+val extensional_def = get_spec ¨extensionalÆ;
+set_goal([], ¨µ ms:'a MS∑ extensional ms § µs t:'a∑ s ç Fst ms ± t ç Fst ms ¥
+	(s = t § µ u:'a∑ u ç Fst ms ¥ (Snd ms u s § Snd ms u t))Æ);
+a (strip_tac THEN once_rewrite_tac [prove_rule [] ¨ms = (Fst ms, Snd ms)Æ]
+	THEN rewrite_tac[extensional_def]
+	THEN REPEAT strip_tac
+	THEN TRY (all_asm_fc_tac[]));
+val extensional_thm = save_pop_thm "extensional_thm";
+=TEX
+}%ignore
+
+The definition of well-foundedness used here is the concept {\it WellFounded} from the theory ``ordered\_sets''.
+
+Set theories whose intuition is based in the cumulative or iterative heirarchy are both extensional and well-founded, and I will be concerned for the time being with just these kinds of membersbip relation.
+These two properties can be thought of as telling us what kind of thing a set is, and the rest of the axioms in a systems like ZFC, possibly with large cardinal axioms, are trying to maximise the how many of the things with these properties can be shown to be in the domain of discourse.
+
+This explanation connects with the usual description of the cumulative heirarchy, in which the formation of the domain of discourse of set theory is presented as occurring in stages.
+At each stage one adds to the cumulative hierarchy all the sets which can be formed from those already obtained (the first ``all'') and then we are to understand that one goes through as many stages as one possibly can (the second ``all''), thereby aggregating all the pure well-founded collections.
+Unfortunately, if one ever could complete this process the result would be a well-founded collection which would not contain itself, and so we must suppose that the construction cannot be completed.
+
+My present interest is therefore, at present, in considering how to formalise the description of larger and larger parts of this incompletable construction.
+
+The decomposition of the ``all'' in the intuitive concept suggests that the formalisation may be able to treat these two ``all''s separately.
+The idea is that we can say that at each stage all possible new subsets are created, and then consider how to say that the number of stages is very large, separating questions of width and height.
+A clean separation turns out not to be possible in a first order axiomatisation, but in the present context, i.e. in a higher order logic construed under the standard semantics, it is possible (though perhaps more by theft than honest toil, the relevant notion of ``all'' being readily expressed under the standard semantics).
+
+However, there are some preliminaries which seem to be necessary to adeqately address either ``all''.
+To get ``full-width'' we want to say that at each stage all the subsets of the previous stage become sets.
+For this we need to be able to talk about the stages.
+The stages can be ordered using ordinals, and so first we need a concept of ordinal number.
+In fact, we can think of ordinals in terms of width, for the ordinals are among the membership relations of least width (which are those in which only one new set is introduced at each stage).
+
+There are two kinds of ordinals of interest here.
+The first kind of ordinal is an element in the domain of a membership relation.
+The second is a membership relation of which the domain as a whole is an ordinal (and may be thought of as the class of ordinals in its domain).
+
+Throughout the treatment of ordinals and cardinals adopted here we want to talk both about relations as being ordinals and about elements in the domain of relations as being ordinals.
+These notions are connected in that an element is an ordinal element iff the restriction of the membership relation in whose domain it appears to the members of that relation is an ordinal relation, and these two entities may be thought of as representing the same ordinal.
+
+Postfix subscripts are used to distinguish properties of ordinal relations from the corresponding property of ordinal elements.
+
+πHOLCONST
+‹ €ordinal_relation›: 'a MS ≠ 'a ≠ 'a MS
+˜¸¸¸¸¸¸
+‹ µ (X, $çâr):'a MS; a:'a∑ ordinal_relation (X, $çâr) a = ({x:'a | x çâr a} ° X, $çâr)
+∞
+
+A {\it relation} is ``ordinal'' iff it is a transitive strict well-ordering.
+The concept of {\it WellOrdering} in $ordered\_sets$ does not require strictness so we define an ordinal using $WellFounded$ and $LinearOrder$
+
+πHOLCONST
+‹ €ordinal›: 'a PMS
+˜¸¸¸¸¸¸
+‹ µ mr∑ ordinal mr § LinearOrder mr ± Trans mr ± WellFounded mr
+∞
+
+We now introduce the idea that a membership relation is in the domain of some other membership domain, which may be though of as asserting that the class of sets under one membership relation is a set in the domain of the other.
+
+=SML
+declare_infix (305, "çâa");
+declare_infix (305, "çâb");
+=TEX
+πHOLCONST
+‹ €homomorphism›: ('a MS ∏ ('b MS)) ≠ ('a ≠ 'b) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $çâa):'a MS; (Y, $çâb):'b MS; f:'a ≠ 'b∑
+‹	homomorphism ((X, $çâa), (Y, $çâb)) f §  µs t:'a∑ s çâa t ¥ (f s) çâb (f t)
+∞
+πHOLCONST
+‹ €embedding›: ('a MS ∏ 'b MS) ≠ ('a ≠ 'b) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ msa msb f∑ embedding (msa, msb) f § 
+‹	homomorphism (msa, msb) f
+‹	± OneOne f
+∞
+
+=SML
+declare_infix (310, "Úâm");
+=TEX
+
+πHOLCONST
+‹ $€Úâm›: ('a ≠ BOOL) ≠ 'a MS ≠ 'a MS
+˜¸¸¸¸¸¸
+‹ µ P (X, $çâa) ∑ P Úâm (X, $çâa) = (X ° {x | P x}, $çâa)
+∞
+
+\section{First Order Properties}
+
+In order to define the notion of a ``first order property'' we need to mimic the satisfaction relation.
+Sentences define sets of interpretations, but formulae only do so in the context of an assignment to the free variables in the formula.
+The operators we define therefore operate over parameterised properties of interpretations.
+An assignment to free variables is modelled as a function from strings to elements in the domain of the relation.
+
+=SML
+declare_type_abbrev ("€VA›", ["'a"], îSTRING ≠ 'aÆ);
+=TEX
+
+πHOLLABPROD PPMS¸¸¸¸¸
+‹ pms : 'a VA ≠ 'a PMS
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+=IGN
+declare_type_abbrev ("€VA›", ["'a"], îSTRING ≠ 'aÆ);
+declare_type_abbrev ("€PPMS›", ["'a"], î'a VA ≠ 'a PMSÆ);
+=TEX
+
+Various operators over properties of membership relations are now defined.
+
+The language of set theory which we consider has the following simplifying characteristics:
+
+\begin{enumerate}
+\item the only terms are variables
+\item the relations are equality and membership
+\item the propositional connectives are conjunction and negation
+\item there is just one, existential, quantifier
+\end{enumerate}
+
+Membership statements are parameterised by the names of the two variables between which membership is predicated, and the parameterised property of membership relations which they denote is:
+
+=SML
+declare_infix (305, "çâp");
+=TEX
+
+πHOLCONST
+‹ $€çâp›: STRING ≠ STRING ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ s t:STRING∑ (s çâp t) = MkPPMS (Ãva: 'a VA; (X, $çâr):'a MS∑
+‹	(va s) çâr (va t))
+∞
+
+Equality is defined similarly.
+
+=SML
+declare_infix (305, "=âp");
+=TEX
+
+πHOLCONST
+‹ $€=âp›: STRING ≠ STRING ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ s t:STRING∑ s =âp t = MkPPMS(Ã va:'a VA; (X, $çâr): 'a MS∑
+‹	(va s) = (va t))
+∞
+
+Conjunction denotes a binary operation over PPMS's.
+
+=SML
+declare_infix (302, "±âp");
+=TEX
+
+πHOLCONST
+‹ $€±âp›: 'a PPMS ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ l r∑ l ±âp r = MkPPMS(Ãva (X, $çâr)∑ (pms l va (X, $çâr)) ± (pms r va (X, $çâr)))
+∞
+
+Negation denotes a monadic operator.
+
+πHOLCONST
+‹ €≥âp›: 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ f∑ ≥âp f = MkPPMS(Ãva (X, $çâr)∑ ≥ (pms f va (X, $çâr)))
+∞
+
+The existential quantifier binds a variable and its value depends upon assigning values to that variable in a variable assignment.
+The following function modifies a variable assignment.
+
+πHOLCONST
+‹ €assign›:  'a ≠ STRING ≠ 'a VA ≠ 'a VA
+˜¸¸¸¸¸¸
+‹ µ a s va t ∑ assign a s va t = if t = s then a else va t
+∞
+
+Finally the existential quantifier, which is parameterised by the name of the variable it binds and the value of the formula it quantifies over.
+
+πHOLCONST
+‹ €∂âp›: STRING ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ s f∑ ∂âp s f = MkPPMS(Ãva (X, $çâr)∑ ∂a∑ a ç X ± pms f (assign a s va) (X, $çâr))
+∞
+
+\ignore{
+=SML
+val PPMS_def = get_spec ¨MkPPMSÆ;
+val eqâp_def = get_spec ¨$=âpÆ;
+val eqâp_def = get_spec ¨$=âpÆ;
+val çâp_def = get_spec ¨$çâpÆ;
+val ≥âp_def = get_spec ¨≥âpÆ;
+val ±âp_def = get_spec ¨$±âpÆ;
+val assign_def = get_spec ¨assignÆ;
+val ∂âp_def = get_spec ¨∂âpÆ;
+=TEX
+}%ignore
+
+Next we define the set of parameterised properties which can be constructed by these operators and then take their closures to eliminate the parameters.
+
+πHOLCONST
+‹ €fof›: 'a PPMS ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µppms∑ fof ppms §
+‹	µpppms∑ (µs1 s2 p1 p2 ∑
+‹		pppms (s1 çâp s2)
+‹		± pppms (s1 =âp s2)
+‹		± 
+‹		(pppms p1 ± pppms p2
+‹		¥ pppms (p1 ±âp p2)
+‹		± pppms (≥âp p1)
+‹		± pppms (∂âp s1 p1)))
+‹	¥ pppms ppms
+∞
+
+Finally we define the property of properties of membership structures which consists in being definable by a set of sentences of first order set theory.
+
+First we define the closure of a first order formula.
+Note that this function serves to convert a paramaterised property of membership structures into a plain property of membership structures, and this is its primary purpose.
+The fact that it also effectively undertakes a universal closure is a side effect (though this will simplify some demonstrations), since it is primarily intended for application to closed formulae.
+
+An awkwardness arises here in dealing with the possibility of empty structures.
+An interpretation of a first order language must be non-empty, but for present purposes it is convenient for the notion of a first order property of structures to take into account the possibility of empty structures.
+
+πHOLCONST
+‹ €foc›: 'a PPMS ≠ 'a PMS
+˜¸¸¸¸¸¸
+‹ µppms (X, $çâm)∑ foc ppms (X, $çâm) = µva∑ X = {} ≤ (µv∑ va v ç X) ¥ pms ppms va (X, $çâm)
+∞
+
+
+The concept of first order sentence, as here presented using semantic rather than syntactic entities, is in fact the property of being a property of membership structures which can be expressed by a sentence in the language of first order set theory.
+The name {\it fop} for {\it first order property} is therefore chosen rather than {\it fos} for {\it first order sentence}.
+
+πHOLCONST
+‹ €fop›: 'a PMS ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µpmr∑ fop pmr § ∂f∑ fof f ± pmr = foc f
+∞
+
+For convenience the following derived constructors are defined:
+
+=SML
+declare_infix (298, "≤âp");
+declare_infix (295, "¥âp");
+declare_infix (290, "§âp");
+=TEX
+
+πHOLCONST
+‹ $€≤âp› : 'a PPMS ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹  µl r∑ l ≤âp r = ≥âp (≥âp l ±âp ≥âp r)
+∞
+
+πHOLCONST
+‹ $€¥âp› : 'a PPMS ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹  µl r∑ l ¥âp r = r ≤âp ≥âp l
+∞
+
+πHOLCONST
+‹ $€§âp› : 'a PPMS ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹  µl r∑ l §âp r = (l ¥âp r) ±âp (r ¥âp l)
+∞
+
+πHOLCONST
+‹ €µâp›: STRING ≠ 'a PPMS ≠ 'a PPMS
+˜¸¸¸¸¸¸
+‹ µ s p ∑ µâp s p = ≥âp (∂âp s (≥âp p))
+∞
+
+\ignore{
+=SML
+val fof_def = get_spec ¨fofÆ;
+val foc_def = get_spec ¨focÆ;
+val fop_def = get_spec ¨fopÆ;
+val ≤âp_def = get_spec ¨$≤âpÆ;
+val ¥âp_def = get_spec ¨$¥âpÆ;
+val §âp_def = get_spec ¨$§âpÆ;
+val µâp_def = get_spec ¨µâpÆ;
+=TEX
+
+=SML
+set_goal([], ¨µppms ms∑ foc ppms ms § µva∑ Fst ms = {} ≤ (µv∑ va v ç Fst ms) ¥ pms ppms va msÆ);
+a (once_rewrite_tac [prove_rule [] ¨ms = (Fst ms, Snd ms)Æ]
+	THEN rewrite_tac [foc_def]);
+val foc_thm = save_pop_thm "foc_thm";
+=TEX
+
+=SML
+set_goal([], ¨µs1 s2: STRING ∑
+‹	  fof (s1 =âp s2)
+‹	± fof (s1 çâp s2)Æ);
+a (REPEAT strip_tac THEN TRY (rewrite_tac [fof_def]
+	THEN REPEAT strip_tac
+	THEN all_fc_tac [fof_def]
+	THEN asm_rewrite_tac[]));
+val fof_base_clauses = save_pop_thm "fof_base_clauses";
+=TEX
+=SML
+set_goal([], ¨µs s1; p1 p2: 'a PPMS ∑
+‹	  (fof p1 ¥ fof (≥âp p1)
+‹		± fof (∂âp s p1)
+‹		± fof (µâp s p1))
+‹	 ± (fof p1 ± fof p2 ¥
+‹		  fof (p1 ±âp p2)
+‹		± fof (p1 ≤âp p2)
+‹		± fof (p1 ¥âp p2)
+‹		± fof (p1 §âp p2))Æ);
+a (REPEAT strip_tac THEN TRY (rewrite_tac
+	[fof_def, ≤âp_def, ¥âp_def, §âp_def, µâp_def]
+	THEN REPEAT strip_tac
+	THEN all_fc_tac [fof_def]));
+(* *** Goal "1" *** *)
+a (REPEAT (all_asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [¨sÆ, ¨""Æ, ¨p1Æ, ¨p1Æ]);
+(* *** Goal "3" *** *)
+a (lemma_tac ¨pppms (≥âp p1)Æ 
+	THEN1 list_spec_nth_asm_tac 2 [¨sÆ, ¨""Æ, ¨p1Æ, ¨p1Æ]);
+a (lemma_tac ¨pppms (∂âp s (≥âp p1))Æ 
+	THEN1 list_spec_nth_asm_tac 3 [¨sÆ, ¨""Æ, ¨≥âp p1Æ, ¨p1Æ]);
+a (REPEAT (all_asm_fc_tac[]));
+(* *** Goal "4" *** *)
+a (REPEAT (all_asm_fc_tac[]));
+(* *** Goal "5" *** *)
+a (lemma_tac ¨pppms (≥âp p1) ± pppms (≥âp p2)Æ
+	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
+a (lemma_tac ¨pppms (≥âp p1 ±âp ≥âp p2)Æ
+	THEN1 (REPEAT (all_asm_fc_tac[])));
+a (REPEAT (all_asm_fc_tac[]));
+(* *** Goal "6" *** *)
+a (lemma_tac ¨pppms (≥âp p1) ± pppms (≥âp p2)Æ
+	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
+a (lemma_tac ¨pppms (≥âp (≥âp p1))Æ
+	THEN1 (REPEAT (all_asm_fc_tac[])));
+a (list_spec_nth_asm_tac 6 [¨""Æ, ¨""Æ, ¨≥âp p2Æ, ¨≥âp (≥âp p1)Æ]);
+a (list_spec_nth_asm_tac 11 [¨""Æ, ¨""Æ, ¨(≥âp p2) ±âp (≥âp (≥âp p1))Æ, ¨≥âp p2Æ]);
+(* *** Goal "7" *** *)
+a (lemma_tac ¨pppms (≥âp p1) ± pppms (≥âp p2)Æ
+	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
+a (lemma_tac ¨pppms (≥âp (≥âp p1)) ± pppms (≥âp (≥âp p2))Æ
+	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
+a (lemma_tac ¨pppms (≥âp p2 ±âp ≥âp (≥âp p1))Æ 
+	THEN1 list_spec_nth_asm_tac 7 [¨""Æ, ¨""Æ, ¨≥âp p2Æ, ¨≥âp (≥âp p1)Æ]);
+a (lemma_tac ¨pppms (≥âp p1 ±âp ≥âp (≥âp p2))Æ 
+	THEN1 list_spec_nth_asm_tac 8 [¨""Æ, ¨""Æ, ¨≥âp p1Æ, ¨≥âp (≥âp p2)Æ]);
+a (lemma_tac ¨pppms (≥âp (≥âp p2 ±âp ≥âp (≥âp p1)))Æ 
+	THEN1 list_spec_nth_asm_tac 9 [¨""Æ, ¨""Æ, ¨≥âp p2 ±âp ≥âp (≥âp p1)Æ, ¨≥âp p2Æ]);
+a (lemma_tac ¨pppms (≥âp (≥âp p1 ±âp ≥âp (≥âp p2)))Æ 
+	THEN1 list_spec_nth_asm_tac 10 [¨""Æ, ¨""Æ, ¨≥âp p1 ±âp ≥âp (≥âp p2)Æ, ¨≥âp p2Æ]);
+a (list_spec_nth_asm_tac 11 [¨""Æ, ¨""Æ, ¨≥âp (≥âp p2 ±âp ≥âp (≥âp p1))Æ,
+	¨≥âp (≥âp p1 ±âp ≥âp (≥âp p2))Æ]);
+val fof_step_clauses = save_pop_thm "fof_step_clauses";
+=TEX
+
+=SML
+set_goal ([], ¨fof (µâp "x" (µâp "y" ("x" =âp "y" §âp µâp "z" ("z" çâp "x" §âp "z" çâp "y"))))Æ);
+a (abc_tac [fof_step_clauses, fof_base_clauses]);
+val fof_extensionality_lemma1 = pop_thm ();
+=TEX
+
+=SML
+set_goal ([], ¨fof (µâp "x" (µâp "y" ( µâp "z" ("z" çâp "x" §âp "z" çâp "y") ¥âp "x" =âp "y")))Æ);
+a (REPEAT (CHANGED_T (bc_tac (bc_canon fof_step_clauses)))
+	THEN rewrite_tac [fof_base_clauses]);
+val fof_extensionality_lemma1b = pop_thm ();
+=TEX
+
+=SML
+set_goal ([], ¨fop (foc(µâp "x" (µâp "y" ("x" =âp "y" §âp µâp "z" ("z" çâp "x" §âp "z" çâp "y")))))Æ);
+a (rewrite_tac [fop_def, foc_def]);
+a (∂_tac ¨(µâp "x" (µâp "y" ("x" =âp "y" §âp µâp "z" ("z" çâp "x" §âp "z" çâp "y"))))Æ
+	THEN rewrite_tac [fof_extensionality_lemma1]);
+val fof_extensionality_lemma2 = pop_thm ();
+=TEX
+
+=SML
+set_goal ([], ¨fop (foc(µâp "x" (µâp "y" (µâp "z" ("z" çâp "x" §âp "z" çâp "y") ¥âp "x" =âp "y"))))Æ);
+a (rewrite_tac [fop_def, foc_def]);
+a (∂_tac ¨µâp "x" (µâp "y" ( µâp "z" ("z" çâp "x" §âp "z" çâp "y") ¥âp "x" =âp "y"))Æ
+	THEN rewrite_tac [fof_extensionality_lemma1b]);
+val fof_extensionality_lemma2b = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨fop extensionalÆ);
+a (rewrite_tac [fop_def]);
+a (∂_tac ¨µâp "x" (µâp "y" ( µâp "z" ("z" çâp "x" §âp "z" çâp "y") ¥âp "x" =âp "y"))Æ
+	THEN rewrite_tac [fof_extensionality_lemma1b]);
+a (rewrite_tac[extensional_thm, foc_thm, eqâp_def, ∂âp_def, ≥âp_def,
+	±âp_def, ≤âp_def, µâp_def, ¥âp_def, §âp_def, çâp_def, PPMS_def,
+	assign_def]);
+a (REPEAT strip_tac
+	THEN TRY all_var_elim_asm_tac
+	THEN TRY (list_spec_nth_asm_tac 5 [¨aÆ, ¨a'Æ]
+		THEN (list_spec_nth_asm_tac 4 [¨uÆ])));
+a (list_spec_nth_asm_tac 4 [¨Ãv:STRING∑ ≈y∑ y ç Fst xÆ]);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN ≈_tac ¨≈ y∑ y ç Fst xÆ
+	THEN1 (∂_tac ¨x'Æ THEN asm_rewrite_tac[]));
+a (asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨sÆ);
+a (spec_nth_asm_tac 1 ¨tÆ);
+(* *** Goal "2.1" *** *)
+a (all_asm_fc_tac []);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 6 ¨a''Æ);
+val fop_extensional_thm = save_pop_thm "fop_extensional_thm";
+=TEX
+
+}%ignore
+
+%%%%
+%%%%
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{membership.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+output_theory{theory="membership", out_file="membership.th.doc"};
+=IGN

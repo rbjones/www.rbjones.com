@@ -1,0 +1,964 @@
+=IGN
+$Id: t005.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Well Founded Relations}
+\author{Roger Bishop Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+Fixed Points and Well Founded Relations
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj}
+} %\raggedright
+
+\section{Introduction}
+
+\subsection{The Theory wfrel}
+
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+=SML
+open_theory "hol";
+force_new_theory "wfrel";
+force_new_pc "wfrel";
+merge_pcs ["xl_cs_¶_conv"] "wfrel";
+set_merge_pcs ["hol", "wfrel"];
+=TEX
+
+\section{Transitive Relations}
+
+Elementary results about transitive relations and transitive closure.
+
+\subsection{Definitions}
+¹HOLCONST
+trans: ('a  ­ 'a ­ BOOL) ­ BOOL
+÷
+µ r ·
+ trans r ¤ µ s t u· r s t ± r t u ´ r s u
+°
+¹HOLCONST
+tc: ('a  ­ 'a ­ BOOL) ­  ('a  ­ 'a ­ BOOL)
+÷
+µ r ·
+ tc r = Ì s t· µtr· trans tr ± (µv u· r v u ´ tr v u) ´ tr s t
+°
+
+\subsection{Theorems}
+
+=GFT
+
+=TEX
+
+\ignore{
+=SML
+set_goal([],¬µr· trans (tc r)®);
+a (rewrite_tac(map get_spec [¬tc®,¬trans®]));
+a (REPEAT strip_tac);
+a (all_asm_fc_tac []);
+a (all_asm_fc_tac []);
+val tran_tc_thm = save_pop_thm("tran_tc_thm");
+
+set_goal([],¬µ r x y z· tc r x y ± tc r y z ´ tc r x z®);
+a (prove_tac [rewrite_rule [get_spec ¬trans®] tran_tc_thm]);
+val tran_tc_thm2 = save_pop_thm("tran_tc_thm2");
+
+set_goal([],¬µr x y · r x y ´ tc r x y®);
+a (rewrite_tac [get_spec ¬tc®, sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+val tc_incr_thm = save_pop_thm("tc_incr_thm");
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µ r x y· tc r x y ± ³ r x y ´ ¶z· tc r x z ± r z y®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬µq· trans q ± (µv w· r v w ´ q v w) ´ q x y®);
+a (asm_ante_tac ¬tc r x y®);
+a (rewrite_tac [get_spec ¬tc®,
+	get_spec ¬trans®]);
+a (spec_nth_asm_tac 1 ¬Ìv w· r v w ² ¶u· tc r v u ± r u w®);
+=GFT
+(* *** Goal "2.1" *** *)
+
+(*  4 *)  ¬tc r x y®
+(*  3 *)  ¬³ r x y®
+(*  2 *)  ¬µ q· trans q ± (µ v w· r v w ´ q v w) ´ q x y®
+(*  1 *)  ¬³ trans (Ì v w· r v w ² (¶ u· tc r v u ± r u w))®
+
+(* ?ô *)  ¬¶ z· tc r x z ± r z y®
+=SML
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac [get_spec ¬trans®]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (¶_tac ¬t®
+	THEN asm_rewrite_tac[]);
+a (all_fc_tac [tc_incr_thm]);
+(* *** Goal "2.1.2" *** *)
+a (¶_tac ¬u'®
+	THEN asm_rewrite_tac[]);
+a (REPEAT (all_asm_fc_tac [tran_tc_thm2,tc_incr_thm]));
+(* *** Goal "2.1.3" *** *)
+a (¶_tac ¬t®
+	THEN asm_rewrite_tac[]);
+a (REPEAT(all_asm_fc_tac [tran_tc_thm2,tc_incr_thm]));
+(* *** Goal "2.1.4" *** *)
+a (¶_tac ¬u''®
+	THEN asm_rewrite_tac[]);
+a (REPEAT(all_asm_fc_tac [tran_tc_thm2,tc_incr_thm]));
+(* *** Goal "2.2" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN asm_rewrite_tac []);
+(* *** Goal "2.3" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN asm_rewrite_tac []);
+val tc_decomp_thm = save_pop_thm "tc_decomp_thm";
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µ r1 r2· (µ x y· r1 x y ´ r2 x y)
+	´ (µ x y· tc r1 x y ´ tc r2 x y)®);
+a (rewrite_tac [get_spec ¬tc®]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 3 ¬tr®);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+val tc_mono_thm = save_pop_thm "tc_mono_thm";
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µ r p· (µ x y· r x y ´ p x)
+	´ (µ x y· tc r x y ´ p x)®);
+a (rewrite_tac [get_spec ¬tc®]);
+a (REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 1 ¬Ìx y:'a · (p x):BOOL®
+	(fn x => strip_asm_tac (rewrite_rule[] x))
+	THEN_TRY all_asm_fc_tac[]);
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac [get_spec ¬trans®]
+	THEN REPEAT strip_tac);
+val tc_p_thm = save_pop_thm "tc_p_thm";
+=TEX
+}%\ignore
+
+\section{Well-Founded Relations}
+
+Definition of well-founded and transitive-well-founded and proof that the transitive closure of a well-founded relation is transitive-well-founded.
+
+\subsection{Definitions}
+¹HOLCONST
+well_founded: ('a ­ 'a ­ BOOL) ­ BOOL
+÷
+µ r ·
+ well_founded r ¤ µ s · (µ x · (µ y · r y x ´ s y) ´ s x) ´ µ x · s x
+°
+¹HOLCONST
+twfp: ('a ­ 'a ­ BOOL) ­ BOOL
+÷
+µ r ·
+ twfp r ¤ well_founded r ± trans r
+°
+=TEX
+
+\subsection{Theorems}
+The first thing I need to prove here is that the transitive closure of a well-founded relation is also well-founded.
+This provides a form of induction with a stronger induction hypothesis.
+Naturally we would expect this to be proven inductively and the question is therefore what property to use in the inductive proof, the observation that the transitive closure of a relation is well-founded is not explicitly the ascription of a property to the field of the relation.
+The obvious method is to relativise the required result to the transitive closure of a set, giving a property of sets, and then to prove that this property is hereditary if the relation is well-founded.
+
+\ignore{
+=SML
+
+set_goal([],¬µs r· well_founded r ´ µx· (µy· tc r y x ´ (µz· tc r z y ´ s z) ´ s y)
+	´ (µy· tc r y x ´ s y)®);
+a (rewrite_tac [get_spec ¬well_founded®]);
+a (REPEAT_N 3 strip_tac);
+a (SPEC_NTH_ASM_T 1 ¬Ìx · (µy· tc r y x ´ (µz· tc r z y ´ s z) ´ s y)
+	´ (µy· tc r y x ´ s y)® ante_tac
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (fc_tac [list_µ_elim [¬r®,¬y®,¬x®] tc_decomp_thm]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 7 ¬y®);
+(* *** Goal "1.1" *** *)
+a (all_fc_tac [tran_tc_thm2]);
+a (spec_nth_asm_tac 10 ¬y''®);
+a (asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 7 ¬y®);
+a (spec_nth_asm_tac 3 ¬z®);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 8 ¬z®);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬tc r z x®
+	THEN1 fc_tac [tc_incr_thm]);
+a (lemma_tac ¬tc r y'' x®
+	THEN1 strip_asm_tac (list_µ_elim [¬r®,¬y''®,¬z®,¬x®] tran_tc_thm2));
+a (spec_nth_asm_tac 12 ¬y''®);
+a (spec_nth_asm_tac 6 ¬z'®);
+(* *** Goal "2.2" *** *)
+a (asm_fc_tac[]);
+val tcwf_lemma1 = save_pop_thm "tcwf_lemma1";
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µr· well_founded r ´ µs· (µt· (µu· tc r u t ´ s u) ´ s t) ´ (µe· s e)®);
+a (REPEAT strip_tac THEN fc_tac [tcwf_lemma1]);
+a (spec_nth_asm_tac 2 ¬e®);
+a (list_spec_nth_asm_tac 3 [¬e®,¬s®,¬u®]);
+a (spec_nth_asm_tac 7 ¬y®);
+a (spec_nth_asm_tac 4 ¬u'®);
+val tcwf_lemma2 = save_pop_thm "tcwf_lemma2";
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µr· well_founded r ´ well_founded (tc r)®);
+a (strip_tac THEN strip_tac
+	THEN fc_tac [tcwf_lemma1]);
+a (rewrite_tac [get_spec ¬well_founded®]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (list_spec_nth_asm_tac 4 [¬x®,¬s®,¬y®]);
+a (spec_nth_asm_tac 6 ¬y'®);
+a (spec_nth_asm_tac 4 ¬y''®);
+val wf_tc_wf_thm = save_pop_thm "wf_tc_wf_thm";
+=TEX
+}%\ignore
+Now we prove that if the transitive closure of a relation is well-founded then so must be the relation.
+\ignore{
+=SML
+
+set_goal([], ¬µr· well_founded (tc r) ´ well_founded r®);
+a (rewrite_tac [get_spec ¬well_founded®]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬s®);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¬x'®);
+a (all_asm_fc_tac [tc_incr_thm]);
+a (all_asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+val tc_wf_wf_thm = save_pop_thm "tc_wf_wf_thm";
+=TEX
+}%\ignore
+
+\ignore{
+=SML
+
+set_goal([],¬µr· well_founded r ´ twfp (tc r)®);
+a (REPEAT strip_tac);
+a (fc_tac [wf_tc_wf_thm]);
+a (asm_rewrite_tac [get_spec ¬twfp®, tran_tc_thm]);
+val tc_wf_twf_thm = save_pop_thm "tc_wf_twf_thm";
+=TEX
+}%\ignore
+
+\subsection{Induction Tactics etc.}
+
+We here define a general tactic for performing induction using some well-founded relation.
+The following function (I think these things are called "THM-TACTICAL"s) must be given a theorem which asserts that some relation is well-founded, and then a THM-TACTIC (which determines what is done with the induction assumption), and then a term which is the variable to induct over, and will then facilitate an inductive proof of the current goal using that theorem.
+=SML
+fun WF_INDUCTION_T (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC = (
+	let	fun bad_thm thm = thm_fail "WF_INDUCTION_T" 29021 [thm];
+		val (wf, r) = (dest_app (concl thm))
+			handle Fail _ => bad_thm thm;
+		val sthm = µ_elim r tcwf_lemma2
+			handle Fail _ => bad_thm thm;
+		val ithm = ´_elim sthm thm
+			handle Fail _ => bad_thm thm;
+	in GEN_INDUCTION_T ithm ttac
+	end
+);
+=TEX
+
+And now we make a tactic out of that (basically by saying "strip the induction hypothesis into the assumptions").
+
+=SML
+fun wf_induction_tac (thm : THM) : TERM -> TACTIC = (
+	let	val ttac = (WF_INDUCTION_T thm strip_asm_tac)
+			handle ex => reraise ex "wf_induction_tac";
+	in
+	fn tm =>
+	let	val tac = (ttac tm) handle ex => reraise ex "wf_induction_tac";
+	in	fn gl => ((tac gl) handle ex => reraise ex "wf_induction_tac")
+	end
+	end
+);
+=TEX
+
+\subsection{Well-foundedness and Induction}
+
+The following proof shows how the above induction tactic can be used.
+The theorem can be paraphrased loosely along the lines that there are no bottomless descending chains in a well-founded relation.
+We think of a bottomless descending chain as a non-empty set (represented by a property called "p") every element of which is preceded by an element under the transitive closure of r.
+
+\ignore{
+=SML
+
+set_goal([], ¬µr· well_founded r ´ µx· ³¶p v· p v ± µy· p y ´ tc r y x ± ¶z· p z ± r z y®);
+a (strip_tac THEN strip_tac THEN strip_tac);
+a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a contr_tac;
+a (all_asm_fc_tac[]);
+a (spec_nth_asm_tac 6 ¬v®);
+a (SPEC_NTH_ASM_T 1 ¬Ìx· p x ± tc r x v® ante_tac
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (¶_tac ¬z®
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 7 ¬y®);
+a (¶_tac ¬z'® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬tc r z' y® THEN1 fc_tac [tc_incr_thm]);
+a (all_fc_tac [tran_tc_thm2]);
+val wf_nochain_thm = save_pop_thm "wf_nochain_thm";
+=TEX
+}%\ignore
+
+Now a shorter formulation of bottomless pits.
+
+\ignore{
+=SML
+
+set_goal([], ¬µr· well_founded r ´ ³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y®);
+a (contr_tac);
+a (lemma_tac ¬µx· ³ p x® THEN1 (strip_tac
+	THEN wf_induction_tac (asm_rule ¬well_founded r®) ¬x®));
+(* *** Goal "1" *** *)
+a (contr_tac
+	THEN REPEAT (all_asm_fc_tac[tc_incr_thm]));
+(* *** Goal "2" *** *)
+a (REPEAT (all_asm_fc_tac[]));
+val wf_wf_thm = save_pop_thm "wf_wf_thm";
+=TEX
+}%\ignore
+
+Next we prove the converse, that the lack of bottomless pits entails well-foundedness.
+
+\ignore{
+=SML
+
+set_goal([], ¬µr· (µx· ³¶p v· p v ± µy· p y ´ tc r y x ± ¶z· p z ± r z y) ´ well_founded r®);
+a (rewrite_tac [get_spec ¬well_founded®]);
+a contr_tac;
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac[]
+	THEN strip_tac);
+a (¶_tac ¬x®
+	THEN rewrite_tac[]);
+a (lemma_tac ¬¶rel· rel = Ì v w· ³ s v ± ³ s w ± r v w®
+	THEN1 prove_¶_tac);
+a (¶_tac ¬Ìq· tc rel q x®	THEN rewrite_tac[]);
+a (spec_nth_asm_tac 3 ¬x®);
+a (¶_tac ¬y® THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬rel y x® THEN1 asm_rewrite_tac[]);
+a (all_asm_fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬µx y· rel x y ´ r x y®
+	THEN1 (strip_tac THEN strip_tac
+	THEN asm_rewrite_tac[] THEN REPEAT strip_tac));
+a (all_fc_tac [tc_mono_thm]);
+(* *** Goal "3" *** *)
+a (lemma_tac ¬³ s y'®);
+(* *** Goal "3.1" *** *)
+a (lemma_tac ¬µ x y· rel x y ´ ³ s x®
+	THEN1
+	(REPEAT µ_tac
+	THEN asm_rewrite_tac []
+	THEN REPEAT strip_tac));
+a (all_asm_fc_tac[rewrite_rule[](list_µ_elim [¬rel®, ¬Ìx·³ s x®] tc_p_thm)]);
+(* *** Goal "3.2" *** *)
+a (spec_nth_asm_tac 7 ¬y'®);
+a (¶_tac ¬y''® THEN REPEAT strip_tac);
+a (lemma_tac ¬tc rel y'' y'®);
+(* *** Goal "3.2.1" *** *)
+a (lemma_tac ¬rel y'' y'®
+	THEN1 asm_rewrite_tac[]);
+a (all_asm_fc_tac[tc_incr_thm]);
+(* *** Goal "3.2.2" *** *)
+a (all_asm_fc_tac[tran_tc_thm2]);
+val nochain_wf_thm = save_pop_thm "nochain_wf_thm";
+=TEX
+}%\ignore
+Now with second order foundation.
+\ignore{
+=SML
+
+set_goal([], ¬(³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y) ´ well_founded r®);
+a (rewrite_tac [get_spec ¬well_founded®]
+	THEN REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 2 ¬Ìx· ³ s x® ante_tac
+	THEN rewrite_tac[] THEN strip_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (spec_nth_asm_tac 4 ¬y®);
+a (spec_nth_asm_tac 3 ¬y'®);
+val wf_induct_thm = save_pop_thm "wf_induct_thm";
+=TEX
+}%\ignore
+
+Try a weaker hypothesis.
+
+\ignore{
+=SML
+
+set_goal([], ¬µr· (µx· ³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y) ´ well_founded r®);
+a (rewrite_tac [get_spec ¬well_founded®]);
+a contr_tac;
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac[]
+	THEN strip_tac);
+a (lemma_tac ¬¶rel· rel = Ì v w· ³ s v ± ³ s w ± r v w®
+	THEN1 prove_¶_tac);
+a (¶_tac ¬Ìq· tc rel q x®	THEN rewrite_tac[]);
+a (spec_nth_asm_tac 3 ¬x®);
+a (¶_tac ¬y® THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬rel y x® THEN1 asm_rewrite_tac[]);
+a (all_asm_fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬µ x y· rel x y ´ ³ s x®
+	THEN1
+	(REPEAT µ_tac
+	THEN asm_rewrite_tac []
+	THEN REPEAT strip_tac));
+a (all_asm_fc_tac[rewrite_rule[](list_µ_elim [¬rel®, ¬Ìx·³ s x®] tc_p_thm)]);
+a (spec_nth_asm_tac 8 ¬y'®);
+a (¶_tac ¬y''® THEN REPEAT strip_tac);
+a (lemma_tac ¬rel y'' y'® THEN1 asm_rewrite_tac[]);
+a (lemma_tac ¬tc rel y'' y'® THEN1 all_asm_fc_tac[tc_incr_thm]);
+a (all_asm_fc_tac[tran_tc_thm2]);
+val nochain_wf_thm2 = save_pop_thm "nochain_wf_thm2";
+=TEX
+}%\ignore
+
+\subsection{Bottomless Pits and Minimal Elements}
+The following theorem states something like that if there are no unending downward chains then every "set" has a minimal element.
+\ignore{
+=SML
+
+set_goal([], ¬µr·(µx· ³¶p v· p v ± µy· p y ´ tc r y x ± ¶z· p z ± r z y)
+	´ µx· (¶y· r y x) ´ ¶z· r z x ± ³¶v· r v z ± r v x®);
+a contr_tac;
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN rewrite_tac[]
+);
+a (¶_tac ¬x®
+	THEN ¶_tac ¬Ìw· r w x®
+	THEN ¶_tac ¬y®
+	THEN asm_rewrite_tac[]);
+a (strip_tac THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2  ¬y'®);
+a (¶_tac ¬v® THEN asm_rewrite_tac[]);
+val nochain_min_thm = save_pop_thm "nochain_min_thm";
+=TEX
+}%\ignore
+A second order version with the weaker bottomless pits can be formulated as follows:
+\ignore{
+=SML
+
+set_goal([], ¬µr·(µx· ³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y)
+	´ µp· (¶y· p y) ´ ¶z· p z ± ³¶v· r v z ± p v®);
+a contr_tac;
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+);
+a (¶_tac ¬p®
+	THEN ¶_tac ¬y®
+	THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬y'®);
+a (¶_tac ¬v® THEN asm_rewrite_tac[]);
+val nochain_min_thm2 = save_pop_thm "nochain_min_thm2";
+=TEX
+}%\ignore
+It follows that all non-empty collections of predecessors under a well-founded relation have minimal elements.
+\ignore{
+=SML
+
+set_goal([], ¬µr· well_founded r ´ µx· (¶y· r y x) ´ ¶z· r z x ± ³¶v· r v z ± r v x®);
+a (REPEAT_N 2 strip_tac);
+a (strip_asm_tac ( µ_elim ¬r® wf_nochain_thm));
+a (ante_tac (µ_elim ¬r® nochain_min_thm));
+a (GET_NTH_ASM_T 1 ante_tac);
+a (rewrite_tac [prove_rule [] ¬µa b· a ´ (a ´ b) ´ b® ]);
+val wf_min_thm = save_pop_thm "wf_min_thm";
+=TEX
+}%\ignore
+
+But the converse does not hold.
+
+\ignore{
+=SML
+set_goal([], ¬¶r: BOOL­BOOL­BOOL·(µx· (¶y· r y x) ´ ¶z· r z x ± ³¶v· r v z ± r v x)
+	± ³ well_founded r®);
+a (¶_tac ¬Ìx y:BOOL· y®
+	THEN rewrite_tac [get_spec ¬well_founded®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (¶_tac ¬F® THEN asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (¶_tac ¬$³® THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 1  ¬x®);
+(* *** Goal "2.2" *** *)
+a (¶_tac ¬T® THEN rewrite_tac[]);
+val minr_not_wf_thm = save_pop_thm "minr_not_wf_thm";
+=TEX
+}%\ignore
+
+\section{Restrictions of Well-Founded Relations}
+
+In this section we show that a restriction of a well-founded relation is well-founded.
+
+\subsection{Restriction of Well-Founded Relation}
+\ignore{
+=SML
+
+set_goal([], ¬µr· well_founded r ´ µr2· well_founded (Ìx y· r2 x y ± r x y)®);
+a (REPEAT strip_tac);
+a (bc_tac [nochain_wf_thm]);
+a (fc_tac [wf_nochain_thm]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [¬p®, ¬x®, ¬v®]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¬y®);
+a (lemma_tac ¬µ x y· (Ì x y· r2 x y ± r x y) x y ´ r x y®
+	THEN1 (rewrite_tac[] THEN REPEAT strip_tac));
+a (FC_T fc_tac [tc_mono_thm]);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 3 ¬y® ante_tac
+	THEN (rewrite_tac []) THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 5 ¬z®);
+val wf_restrict_wf_thm = save_pop_thm "wf_restrict_wf_thm";
+=IGN
+set_goal([], ¬µr· well_founded r ´ µr2· well_founded (Ìx y· r2 x y ± r x y)®);
+a (REPEAT strip_tac);
+a (bc_tac [wf_induct_thm]);
+a (fc_tac [wf_nochain_thm]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [¬p®, ¬x®, ¬v®]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¬y®);
+a (lemma_tac ¬µ x y· (Ì x y· r2 x y ± r x y) x y ´ r x y®
+	THEN1 (rewrite_tac[] THEN REPEAT strip_tac));
+a (FC_T fc_tac [tc_mono_thm]);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 3 ¬y® ante_tac
+	THEN (rewrite_tac []) THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 5 ¬z®);
+val wf_restrict_wf_thm = save_pop_thm "wf_restrict_wf_thm";
+=TEX
+}%\ignore
+
+
+
+\section{Well Founded Recursion}
+
+\subsection{Introduction}
+
+I have already proved a recursion theorem fairly closely following the formulation and proof devised by Tobias Nipkow for Isabelle-HOL.
+There are two reasons for my wanting a different version of this result.
+The Nipkow derived version works with relations rather than functions, and in my version the relations are ProofPower sets of pairs (I think in the original they were probably properties of pairs).
+This is probably all easily modded into one which works directly with functions but I though it should be possible also to do a neater proof (the "proof" of the recursion theorem in Kunen is just a couple of lines).
+
+The end result certainly looks nicer, we'll have to see whether it works out well in practice.
+In particular the fixpoint operator simply takes a functional as an argument and delivers the fixed point as a result.
+The functional which you give it as an argument, in the simple cases, is just what you get by abstracting the right hand side of a recursive definition on the name of the function (more complicated of course if a pattern matching definition is used).
+The relation with respect to which the recursion is well-founded need only be mentioned when attempting to prove that this does yield a fixed point.
+
+Another minor improvement is that I do not require the relation to be transitive.
+
+The proof is shorter than (my version of) the original, but by less than 20 percent.
+I'm sure there's lots of scope for improvement.
+(The isabelle version is much shorter than either.)
+
+\section{Defining the Fixed Point Operator}
+
+The main part of this is the proof that functionals which are well-founded with respect to some well-founded relation have fixed points.
+This done, the operator "fix" is defined, which yields such a fixed point.
+\subsection{Definitions}
+=SML
+declare_infix (240, "respects");
+¹HOLCONST
+$respects: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ BOOL
+÷
+µ f r · f respects r ¤ µg h x· (µy· (tc r) y x ´ g y = h y) ´ f g x = f h x
+°
+¹HOLCONST
+fixed_below: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
+÷
+µf r g x· fixed_below f r g x ¤ µy· tc r y x ´ f g y = g y
+°
+¹HOLCONST
+fixed_at: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
+÷
+µf r g x· fixed_at f r g x ¤ fixed_below f r g x ± f g x = g x
+°
+\ignore{
+=SML
+
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx g y· fixed_below f r g x ± tc r y x ´ fixed_below f r g y®);
+a (rewrite_tac [get_spec ¬fixed_below®, get_spec ¬$respects®]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+val fixed_below_lemma1 = save_pop_thm "fixed_below_lemma1";
+=TEX
+} % \ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx g· fixed_below f r g x ´ fixed_at f r (f g) x®);
+a (rewrite_tac [get_spec ¬fixed_below®, get_spec ¬fixed_at®, get_spec ¬$respects®]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 3 [¬f g®, ¬g®]);
+a (spec_nth_asm_tac 1 ¬y®);
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [¬f g®, ¬g®]);
+a (all_asm_fc_tac []);
+val fixed_at_lemma1 = save_pop_thm "fixed_at_lemma1";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx g· fixed_below f r g x ´ µy· tc r y x ´ fixed_at f r g y®);
+a (rewrite_tac [get_spec ¬fixed_below®, get_spec ¬fixed_at®, get_spec ¬$respects®]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac []);
+val fixed_at_lemma2 = save_pop_thm "fixed_at_lemma2";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx g· (µy· tc r y x ´ fixed_at f r g y) ´ fixed_below f r g x®);
+a (REPEAT_N 4 strip_tac);
+a (rewrite_tac [get_spec ¬fixed_at®, get_spec ¬fixed_below®]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac []);
+val fixed_at_lemma3 = save_pop_thm "fixed_at_lemma3";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx g h· fixed_below f r g x ± fixed_below f r h x ´ µz· tc r z x ´ h z = g z®);
+a (REPEAT_N 4 strip_tac);
+a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 4 ¬z®);
+a (all_asm_fc_tac [fixed_below_lemma1]);
+a (list_spec_nth_asm_tac 3 [¬g®, ¬h®]);
+a (all_asm_fc_tac [fixed_at_lemma2]);
+a (all_asm_fc_tac [get_spec ¬fixed_at®]);
+a (all_asm_fc_tac [fixed_at_lemma1]);
+a (all_asm_fc_tac [get_spec ¬$respects®]);
+a (GET_ASM_T ¬f h z = h z® (rewrite_thm_tac o eq_sym_rule));
+a (GET_ASM_T ¬f h z = f g z® rewrite_thm_tac);
+a strip_tac;
+val fixed_below_lemma2 =  save_pop_thm "fixed_below_lemma2";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µg x· fixed_at f r g x ´ µy· tc r y x ´ fixed_at f r g y®);
+a (REPEAT strip_tac);
+a (all_fc_tac [get_spec ¬fixed_at®]);
+a (all_fc_tac[fixed_at_lemma2]);
+val fixed_at_lemma4 = save_pop_thm "fixed_at_lemma4";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µg h x· fixed_at f r g x ± fixed_at f r h x ´ g x = h x®);
+a (REPEAT strip_tac);
+a (fc_tac[get_spec ¬$respects®]);
+a (all_fc_tac[get_spec ¬fixed_at®]);
+a (all_asm_fc_tac[get_spec ¬$respects®]);
+a (fc_tac[get_spec ¬fixed_below®]);
+a (fc_tac[fixed_below_lemma2]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (eq_sym_nth_asm_tac 14);
+a (eq_sym_nth_asm_tac 13);
+a (asm_rewrite_tac[]);
+val fixed_at_lemma5 = save_pop_thm "fixed_at_lemma5";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx· (µy· tc r y x ´ ¶g· fixed_at f r g y) ´ ¶g· fixed_below f r g x®);
+a (REPEAT strip_tac);
+a (¶_tac ¬Ìz· (Åh· fixed_at f r h z) z®);
+a (rewrite_tac [get_spec ¬fixed_below®]
+	THEN REPEAT strip_tac);
+a (GET_ASM_T ¬f respects r® ante_tac
+	THEN rewrite_tac [list_µ_elim [¬f®, ¬r®] (get_spec ¬$respects®)]
+	THEN strip_tac);
+a (list_spec_nth_asm_tac 1 [¬Ì z· (Å h· fixed_at f r h z) z®, ¬Å h· fixed_at f r h y®]);
+a (spec_nth_asm_tac 1 ¬y®);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1 THEN rewrite_tac[]);
+a (asm_fc_tac[fixed_at_lemma4]);
+a (list_spec_nth_asm_tac 2 [¬f®, ¬g®, ¬y®, ¬y'®]);
+a (asm_fc_tac[]);
+a (all_Å_tac);
+(* *** Goal "1.1" *** *)
+a (¶_tac ¬g® THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (¶_tac ¬g® THEN asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (¶_tac ¬g® THEN asm_rewrite_tac[]);
+(* *** Goal "1.4" *** *)
+a (asm_tac fixed_at_lemma4);
+a (list_spec_nth_asm_tac 1 [¬f®, ¬r®]);
+a (list_spec_nth_asm_tac 1 [¬Å h· fixed_at f r h y®, ¬y®]);
+a (list_spec_nth_asm_tac 1 [¬y'®]);
+a (all_asm_fc_tac[fixed_at_lemma5]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+a (all_Å_tac);
+(* *** Goal "2.1" *** *)
+a (¶_tac ¬g® THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_fc_tac[get_spec ¬fixed_at®]);
+val fixed_below_lemma3 = save_pop_thm "fixed_below_lemma3";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µr f· well_founded r ± f respects r
+	´ µx· ¶g· fixed_below f r g x ®);
+a (REPEAT_N 4 strip_tac);
+a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (lemma_tac ¬µ u· tc r u t ´ (¶ g· fixed_at f r g u)®
+	THEN1 (REPEAT strip_tac
+	THEN all_asm_fc_tac[]
+	THEN all_fc_tac[fixed_at_lemma1]
+	THEN ¶_tac ¬f g®
+	THEN asm_rewrite_tac[]));
+a (all_fc_tac[fixed_below_lemma3]);
+a (¶_tac ¬g® THEN strip_tac);
+val fixed_below_lemma4 = save_pop_thm "fixed_below_lemma4";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r
+	´ µx· ¶g· fixed_at f r g x ®);
+a (REPEAT_N 4 strip_tac);
+a (all_fc_tac[fixed_below_lemma4]);
+a (spec_nth_asm_tac 1 ¬x®);
+a (¶_tac ¬f g®);
+a (all_fc_tac[fixed_at_lemma1]);
+val fixed_at_lemma6 = save_pop_thm "fixed_at_lemma6";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r ´
+	µx· fixed_at f r (Ì x· (Å h· fixed_at f r h x) x) x®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬¶g· (Ì x· (Å h· fixed_at f r h x) x) = g® THEN1 prove_¶_tac);
+a (asm_rewrite_tac[]);
+a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (rewrite_tac[get_spec ¬fixed_at®] THEN strip_tac);
+(* *** Goal "1" *** *)
+a (asm_fc_tac [list_µ_elim [¬f®, ¬r®] fixed_at_lemma3]);
+a (asm_fc_tac []);
+a (list_spec_nth_asm_tac 1 [¬t®, ¬g®]);
+a (asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (fc_tac [list_µ_elim [¬f®, ¬r®] fixed_at_lemma6]);
+a (list_spec_nth_asm_tac 1 [¬f®, ¬t®]);
+a (fc_tac [get_spec ¬fixed_at®]);
+a (lemma_tac ¬g t = g' t® THEN1 (GET_NTH_ASM_T 6 (rewrite_thm_tac o eq_sym_rule)));
+(* *** Goal "2.1" *** *)
+a (Å_tac ¬Å h· fixed_at f r h t®);
+(* *** Goal "2.1.1" *** *)
+a (¶_tac ¬g'®  THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (fc_tac [get_spec ¬fixed_at®]);
+a (fc_tac [fixed_at_lemma5]);
+a (list_spec_nth_asm_tac 1 [¬f®, ¬Å h· fixed_at f r h t®, ¬t®, ¬g'®]);
+(* *** Goal "2.2" *** *)
+a (fc_tac [get_spec ¬$respects®]);
+a (list_spec_nth_asm_tac 1 [¬t®, ¬g®, ¬g'®]);
+(* *** Goal "2.2.1" *** *)
+a (asm_fc_tac []);
+a (asm_fc_tac [fixed_at_lemma4]);
+a (list_spec_nth_asm_tac 1 [¬f®, ¬g'®, ¬t®, ¬y®]);
+a (asm_fc_tac [fixed_at_lemma5]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2.2.2" *** *)
+a (asm_rewrite_tac[]);
+val fixed_lemma1 = save_pop_thm "fixed_lemma1";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬µf r· well_founded r ± f respects r ´ ¶g· f g = g®);
+a (REPEAT strip_tac);
+a (¶_tac ¬Ìx· (Åh· fixed_at f r h x) x®
+	THEN rewrite_tac [ext_thm]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [list_µ_elim [¬f®, ¬r®] fixed_lemma1]);
+a (spec_nth_asm_tac 1 ¬x®);
+a (all_fc_tac [get_spec ¬fixed_at®]);
+a (asm_rewrite_tac[]);
+val fixp_thm1 = save_pop_thm "fixp_thm1";
+=TEX
+} %\ignore
+
+\ignore{
+=SML
+set_goal ([],¬¶fix· µf r·	well_founded r ± f respects r
+	´ f (fix f) = (fix f)®);
+a (¶_tac ¬Ìf· Åg· f g = g®);
+a (REPEAT strip_tac THEN rewrite_tac[]);
+a (all_Å_tac);
+a (all_fc_tac [fixp_thm1]);
+a (¶_tac ¬g® THEN strip_tac);
+val _ = xl_set_cs_¶_thm (pop_thm ());
+=TEX
+} %\ignore
+
+¹HOLCONST
+fix: (('a ­ 'b) ­ ('a ­ 'b)) ­ 'a ­ 'b
+÷
+µf r· well_founded r ± f respects r ´ f (fix f) = fix f
+°
+=TEX
+
+\section{Respect Theorems}
+
+Some theorems which help to prove that functions respect relations.
+
+\subsection{Introduction}
+
+My first applications of the recursion theorem are in set theory, typically involving recursion which respects membership or its transitive closure.
+
+\subsection{The Inverse of a Relation}
+
+The following function takes a relation and a function and returns a function which maps each element in the domain of the relation to the relation which holds between a predecessor of that element and its value under the function.
+i.e. it maps the function over the predecessors of the element and returns the result as a relation.
+It may therefore be used to rephrase primitive recursive definitions, and so the result which follows may be used to establish the existence of functions defined by primitive recursion.
+¹HOLCONST
+ relmap : ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ ('a ­ ('a ­ 'b ­ BOOL))
+÷
+  µr f· relmap r f = Ìx y z· r y x ± z = f y
+°
+
+\ignore{
+=SML
+set_goal ([],¬µr g· (Ìf· g o (relmap r f)) respects r®);
+a (rewrite_tac[get_spec ¬$respects®, get_spec ¬relmap®, get_spec ¬$o®]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¬(Ì y z· r y x ± z = g' y) = (Ì y z· r y x ± z = h y)®
+	THEN1 rewrite_tac[ext_thm]);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[tc_incr_thm]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac []);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[tc_incr_thm]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac []);
+val relmap_respect_thm = save_pop_thm "relmap_respect_thm";
+=TEX
+}%\ignore
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{wfrel.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+output_theory{theory="wfrel", out_file="wfrel.th.doc"};
+=IGN

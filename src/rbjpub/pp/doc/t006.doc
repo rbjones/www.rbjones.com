@@ -1,0 +1,1664 @@
+=IGN
+$Id: t006.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Miscellaneous SML}
+\author{Roger Bishop Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+This document contains things used by my other theories which do not particularly belong in them.
+Some are bits of SML not associated with a theory.
+Some are definitions or theorems which arguably belong in a theory already produced by someone else.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{fmu}
+} %\raggedright
+
+\section{Some SML procedures}
+
+\subsection{Force New Theory}
+
+This is just to save the exception handling which otherwise has to appear at the top of every document which creates a \Product theory.
+
+First for deleting the old theory (from your previous build) and starting the theory afresh.
+
+=SML
+fun €force_new_theory› name =
+  let val _ = force_delete_theory name handle _ => ();
+  in new_theory name
+end;
+=TEX
+
+Then something similar for an associated proof context.
+
+=SML
+fun €force_new_pc› name =
+  let val _ = delete_pc name handle _ => ();
+  in new_pc name
+end;
+=TEX
+
+=IGN
+fun add_pc_thms pc thms =
+		(add_rw_thms thms pc;
+		add_sc_thms thms pc;
+ 		add_st_thms thms pc);
+=TEX
+
+\subsection{Doing Consistency Proofs before Axiomatic Descriptions}
+
+To avoid getting theory listings in which the definitions of some constants are given using $ConstSpec$ I like to do any necessary consistency proofs before introducing the definition which needs them.
+For this to do any good, the automatic consistency prover has to know that I done it.
+
+I therefore introduce a new value of type $ref THM$ called $xl\_consistency\_result$.
+When I do a consistency proof, I store the resulting theorem in this location.
+
+=SML
+val xl_consistency_result = ref t_thm;
+=TEX
+
+When I do a consistency proof, I store the resulting theorem in this location.
+I use the following function to do that, to hide the implementation details.
+
+=SML
+fun xl_set_cs_∂_thm thm = (xl_consistency_result := thm);
+=TEX
+
+I also have a special partial proof context with a consistency prover which knows to look for the consistency proof in this special place.
+This is the consistency prover:
+
+=SML
+open_theory "basic_hol";
+set_pc "basic_hol";
+
+local fun eq_refl_conv t = prove_rule [] (mk_eq (t,t))
+in 
+ fun xl_cs_∂_conv x =
+	if x =$ (concl(!xl_consistency_result))
+	then (§_t_intro (!xl_consistency_result)) handle _ => eq_refl_conv x
+	else eq_refl_conv x
+end;
+=TEX
+
+and here's the proof context containing it:
+
+=SML
+force_new_pc "xl_cs_∂_conv";
+set_cs_∂_convs [xl_cs_∂_conv] "xl_cs_∂_conv";
+set_pr_conv basic_prove_conv "xl_cs_∂_conv";
+set_pr_tac basic_prove_tac "xl_cs_∂_conv";
+commit_pc "xl_cs_∂_conv";
+=TEX
+
+Then we go back to the $hol$ theory.
+
+=SML
+open_theory "hol";
+set_pc "hol";
+=TEX
+
+\subsection{Tacticals etc.}
+
+Some functions which turn round equations before using them.
+
+=SML
+fun list_eq_sym_rule thms = map (fn th => eq_sym_rule th handle _=> th) thms;
+fun SYM_ASMS_T tltt = GET_ASMS_T (tltt o list_eq_sym_rule);
+
+fun top_eq_sym_rule thm = conv_rule (ONCE_MAP_C eq_sym_conv) thm;
+=TEX
+
+Some functions for chaining with equivalence theorems.
+
+=SML
+fun ALL_FC_§_T tt = ALL_FC_T1 fc_§_canon tt;
+fun FC_§_T tt = FC_T1 fc_§_canon tt;
+fun all_fc_§_tac thms = ALL_FC_§_T (MAP_EVERY strip_asm_tac) thms;
+fun fc_§_tac thms = FC_§_T (MAP_EVERY strip_asm_tac) thms;
+=TEX
+
+A (rather crude) function for stripping theorems for backward chaining.
+Beware, the result is closed.
+
+=SML
+fun list_concat l = foldr (op @) [] l;
+
+fun (rule_canon: (THM -> THM) -> CANON) rule thm = [rule thm];
+fun (nail_canon:CANON) thm =
+	if is_¥ ((snd o strip_µ) (concl thm))
+	then [thm]
+	else [¥_intro ¨TÆ thm];
+val (all_¥_intro_canon:CANON) = rule_canon all_¥_intro;
+val bc_canon =
+	REPEAT_CAN (
+		simple_µ_rewrite_canon
+		ORELSE_CAN (rule_canon undisch_rule)
+		ORELSE_CAN ±_rewrite_canon)
+	THEN_CAN all_¥_intro_canon
+	THEN_CAN nail_canon
+	THEN_CAN (rule_canon all_µ_intro);
+fun abc_tac thml =
+	let val thms = list_concat (map bc_canon thml)
+	in REPEAT (accept_tac t_thm ORELSE (bc_tac thms))
+	end;
+=TEX
+
+A tactic for normal form conversion of real expressions.
+=SML
+val Ø_anf_tac = conv_tac (TOP_MAP_C Ø_anf_conv);
+=TEX
+
+=IGN
+strip_¥_rule;
+strip_±_rule;
+all_µ_elim;
+THEN_CAN;
+ORELSE_CAN;
+REPEAT_CAN;
+=TEX
+Normal form conversion tactic for real expressions:
+
+=SML
+val Ø_top_anf_tac = conv_tac (TOP_MAP_C Ø_anf_conv);
+=TEX
+
+\subsection{Trawling for Useful Theorems}
+
+The following functions search the ancestors of the current theory for theorems which do something with the current goal, i.e. which rewrite the conclusion, backward chain from it, or forward chain from the assumptions.
+
+I will supply some details here if I ever get these into a state fit for anyone else.
+
+\ignore{
+=IGN
+set_goal([¨x º y:ÓÆ], ¨µx y∑ Suc x > x + yÆ);
+=SML
+val avoid_theories = ref ["min", "log", "misc", "sets", "combin", "pair", "list"];
+val avoid_constants = ref [""];
+val avoid_specs: string list ref = ref [""];
+
+datatype THMDET =
+		Spec of TERM
+	|	Thm of (string * string);
+
+fun is_defined_constant s =
+	let val theoryname = get_const_theory s;
+	    val defn = get_defn theoryname s
+	in true
+	end
+	handle _ => false;
+
+fun defined_consts t =
+	let val consts = term_consts t
+	in filter
+		(fn x => not ((fst x) mem !avoid_constants)
+		andalso is_defined_constant (fst x))
+	   consts
+	end;
+
+fun defined_const_names t = map fst (defined_consts t);
+
+fun on_conc f = f (snd (top_goal()));
+
+fun on_asms f =
+	let val (asms, concl) = top_goal()
+	in f asms
+	end;
+
+fun on_goal f =
+	let val (asms, concl) = top_goal()
+	in  list_concat(map f (concl :: asms))
+	end;
+
+fun term_const_specs t =
+	let fun gs (s,t) =
+		let val c = mk_const (s,t)
+		in (if	s mem !avoid_specs orelse
+			(get_const_theory s) mem !avoid_theories
+		   then []
+		   else [(Spec c, get_spec c)]) handle _ => []
+		end
+	in list_concat (map gs (term_consts t))
+	end;
+
+fun const_theories t = list_cup (map (fn x => [get_const_theory x]) (defined_const_names t));
+
+fun ancestor_theories t = filter (fn x => not (x mem !avoid_theories)) (get_ancestors t);
+
+fun thy_thms t = map (fn (s,thm) => (Thm(t, hd s), thm)) (get_thms t);
+
+fun const_thms t = list_concat(map thy_thms (const_theories t));
+
+fun ancestor_thms t = list_concat(map thy_thms (ancestor_theories t));
+
+fun rewriting_thm t thm =
+	let val t' = pure_once_rewrite_conv [thm] t
+	in true
+	end handle _ => false;
+
+fun srewriting_thm t thm = rewriting_thm t (top_eq_sym_rule thm) handle _ => false;
+
+fun fc_thm ts thm =
+	let val thms = fc_rule (fc_canon thm) (map asm_rule ts)
+	in (fn [] => false | _ => true) thms
+	end handle _ => false;
+
+fun all_fc_thm ts thm =
+	let val (gl, pr) = all_fc_tac [thm] (ts, ¨FÆ)
+	in if length gl = 1 andalso length (fst (hd gl)) = length ts
+		then false else true
+	end handle _ => false;
+
+fun bc_thm c thm =
+	let val (gl, pr) = bc_tac [thm] ([], c)
+	in if length gl = 1 andalso (snd (hd gl)) =$ c
+		then false else true
+	end handle _ => false;
+
+fun numthms n [] = []
+|   numthms n ((thmdets, thm)::t) = ((n, thmdets), thm):: (numthms (n+1) t);
+
+fun rew_specs t =
+	let val thms = term_const_specs t
+	in numthms 1 (filter ((rewriting_thm t) o snd) thms)
+	end;
+
+fun terml_const_specs tl = list_concat (map term_const_specs tl);
+
+fun fc_specs ts =
+	let val thms = terml_const_specs ts
+	in numthms 1 (filter ((fc_thm ts) o snd) thms)
+	end;
+
+fun bc_specs t =
+	let val thms = term_const_specs t
+	in numthms 1 (filter ((bc_thm t) o snd) thms)
+	end;
+
+fun rew_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((rewriting_thm t) o snd) thms)
+	end;
+
+fun srew_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((srewriting_thm t) o snd) thms)
+	end;
+
+fun fc_thms tl =
+	let val thms = (ancestor_thms "-") @ (terml_const_specs tl)
+	in numthms 1 (filter ((fc_thm tl) o snd) thms)
+	end;
+
+fun all_fc_thms tl =
+	let val thms = (ancestor_thms "-") @ (terml_const_specs tl)
+	in numthms 1 (filter ((all_fc_thm tl) o snd) thms)
+	end;
+
+fun bc_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((bc_thm t) o snd) thms)
+	end;
+
+fun rew_thms2 t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (list_concat (map (fn (sl, th) =>
+		[(sl, (th, (snd o dest_eq)(concl (pure_once_rewrite_conv [th] t))))]
+		handle _ => []) thms))
+	end;
+
+fun rew_thms3 t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (list_concat (map (fn (sl, th) =>
+		[(sl, (snd o dest_eq)(concl (pure_once_rewrite_conv [th] t)))]
+		handle _ => []) thms))
+	end;
+
+fun const_rewrite_conv t =
+	let val thms = map snd (rew_thms t)
+	in rewrite_conv thms t
+	end;
+
+fun with_conc_thms f =
+	let fun ff t = f (map snd (rew_thms t))
+	in on_conc ff
+	end;
+
+fun with_conc_specs f =
+	let fun ff t = f (map snd (rew_specs t))
+	in on_conc ff
+	end;
+
+fun td_thm (Thm (thyn, thmn)) = get_thm thyn thmn
+|   td_thm (Spec s) = get_spec s;
+
+fun td_thml tdl = map td_thm tdl;
+
+fun numl2tdl tdsl nl =
+ map (fn chose => (snd o fst o chose) tdsl) (map (fn n=> nth (n-1)) nl);
+
+fun todo () =
+	let val rw = length (on_conc rew_thms)
+	    val bc = length (on_conc bc_thms)
+	    val fc = length (on_asms fc_thms)
+	in {rw = rw, bc = bc, fc = fc}
+	end;
+=TEX
+}%ignore
+
+\section{The Theory rbjmisc}
+
+All the theorems are placed in the one temporary location, which therefore must have as ancestors all the theories which are being extended.
+
+There is one section in this document, following this one, for each theory to which an addition is being made so new parents may be added in those sections, or new proof contexts used.
+
+=SML
+open_theory "hol";
+force_new_theory "rbjmisc";
+=TEX
+
+\section{Real numbers and Analysis}
+
+=SML
+new_parent"analysis";
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "xl_cs_∂_conv"];
+=TEX
+
+\subsection{Products}
+
+=GFT
+Ø_prod_sign_iff_clauses 
+Ù (µ x y∑ ÓØ 0 <âR x *âR y		§ ÓØ 0 <âR x ± ÓØ 0 <âR y ≤ x <âR ÓØ 0 ± y <âR ÓØ 0)
+± (µ x y∑ x *âR y <âR ÓØ 0		§ ÓØ 0 <âR x ± y <âR ÓØ 0 ≤ x <âR ÓØ 0 ± ÓØ 0 <âR y)
+± (µ x y∑ ÓØ 0 ºâR x *âR y		§ ÓØ 0 ºâR x ± ÓØ 0 ºâR y ≤ x ºâR ÓØ 0 ± y ºâR ÓØ 0)
+± (µ x y∑ x *âR y ºâR ÓØ 0		§ ÓØ 0 ºâR x ± y ºâR ÓØ 0 ≤ x ºâR ÓØ 0 ± ÓØ 0 ºâR y)
+± (µ x y∑ x *âR y = ÓØ 0		§ x = ÓØ 0 ≤ y = ÓØ 0)
+± (µ x y∑ ÓØ 0 = x *âR y		§ x = ÓØ 0 ≤ y = ÓØ 0)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ x y∑
+	(ÓØ 0 <âR x ± ÓØ 0 <âR y ¥ ÓØ 0 <âR x *âR y)
+	± (x <âR ÓØ 0 ± y <âR ÓØ 0 ¥ ÓØ 0 <âR x *âR y)
+	± (x <âR ÓØ 0 ± ÓØ 0 <âR y ¥ x *âR y <âR ÓØ 0)
+	± (ÓØ 0 <âR x ± y <âR ÓØ 0 ¥ x *âR y <âR ÓØ 0)
+	± (x = ÓØ 0 ≤ y = ÓØ 0 ¥ x *âR y = ÓØ 0)
+Æ);
+a (REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [Ø_0_less_0_less_times_thm]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac [Ø_less_0_less_thm]);
+a (LEMMA_T ¨ÓØ 0 <âR (~âR x) *âR (~âR y)Æ ante_tac
+	THEN1 all_asm_fc_tac [Ø_0_less_0_less_times_thm]);
+a (rewrite_tac(td_thml[Thm ("\175", "\175_times_minus_thm")]));
+(* *** Goal "3" *** *)
+a (once_rewrite_tac [Ø_less_0_less_thm]);
+a (rewrite_tac[]);
+a (lemma_tac ¨ÓØ 0 <âR (~âR x)Æ
+	THEN1 (ALL_ASM_FC_T (MAP_EVERY ante_tac) [Ø_less_0_less_thm]
+		THEN rewrite_tac[]
+		THEN REPEAT strip_tac));
+a (all_asm_fc_tac [Ø_0_less_0_less_times_thm]);
+a (lemma_tac ¨~âR (x *âR y) = ~âR x *âR yÆ
+	THEN1 (PC_T1 "Ø_lin_arith" prove_tac[]));
+a (asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (once_rewrite_tac [Ø_less_0_less_thm]);
+a (rewrite_tac[]);
+a (lemma_tac ¨ÓØ 0 <âR (~âR y)Æ
+	THEN1 (ALL_ASM_FC_T (MAP_EVERY ante_tac) [Ø_less_0_less_thm]
+		THEN rewrite_tac[]
+		THEN REPEAT strip_tac));
+a (all_asm_fc_tac [Ø_0_less_0_less_times_thm]);
+a (lemma_tac ¨~âR (x *âR y) = x *âR ~âR yÆ
+	THEN1 (PC_T1 "Ø_lin_arith" prove_tac[]));
+a (asm_rewrite_tac[]);
+val Ø_product_sign_lemma = pop_thm ();
+=TEX
+=SML
+set_goal([], ¨µ x y∑
+	(ÓØ 0 <âR x *âR y ¥ ÓØ 0 <âR x ± ÓØ 0 <âR y ≤ x <âR ÓØ 0 ± y <âR ÓØ 0)
+	± (x *âR y <âR ÓØ 0 ¥ ÓØ 0 <âR x ± y <âR ÓØ 0 ≤ ÓØ 0 <âR y ± x <âR ÓØ 0)
+	± (x *âR y = ÓØ 0 ¥ x = ÓØ 0 ≤ y = ÓØ 0)
+Æ);
+a contr_tac;
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "2.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "2.1.1" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (all_asm_fc_tac[Ø_less_trans_thm]);
+(* *** Goal "2.2" *** *)
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "3.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "3.1.1" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3.1.2" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (all_asm_fc_tac[Ø_less_trans_thm]);
+(* *** Goal "3.2" *** *)
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "5.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "5.1.1" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (all_asm_fc_tac[Ø_less_trans_thm]);
+(* *** Goal "5.1.2" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "5.2" *** *)
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "7" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "8" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "8.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "8.1.1" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "8.1.2" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "8.2" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "8.2.1" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "8.2.2" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (all_asm_fc_tac[Ø_less_trans_thm]);
+(* *** Goal "9" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "9.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "9.1.1" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "9.1.2" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "9.2" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨ÓØ 0Æ] Ø_less_cases_thm));
+(* *** Goal "9.2.1" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "9.2.2" *** *)
+a (all_asm_fc_tac[Ø_product_sign_lemma]);
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+val Ø_product_sign_cp_lemma = pop_thm ();
+=TEX
+=SML
+set_goal([], ¨(µ x y∑ ÓØ 0 <âR x *âR y § ÓØ 0 <âR x ± ÓØ 0 <âR y
+		≤ x <âR ÓØ 0 ± y <âR ÓØ 0)
+	± (µ x y∑ x *âR y <âR ÓØ 0 § ÓØ 0 <âR x ± y <âR ÓØ 0
+		≤ x <âR ÓØ 0 ± ÓØ 0 <âR y)
+	± (µ x y∑ x *âR y = ÓØ 0 § x = ÓØ 0 ≤ y = ÓØ 0)
+	± (µ x y∑ ÓØ 0 = x *âR y § x = ÓØ 0 ≤ y = ÓØ 0)Æ);
+a (REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac [])
+	THEN TRY (all_fc_tac [Ø_product_sign_lemma,
+	Ø_product_sign_cp_lemma]));
+a (DROP_NTH_ASM_T 2 (asm_tac o (conv_rule eq_sym_conv))
+	THEN fc_tac [Ø_product_sign_cp_lemma]
+	THEN asm_rewrite_tac[]);
+val Ø_prod_sign_iff_lemma = pop_thm ();
+=TEX
+=SML
+set_goal([], ¨(µ x y∑ ÓØ 0 ºâR x *âR y § ÓØ 0 ºâR x ± ÓØ 0 ºâR y
+		≤ x ºâR ÓØ 0 ± y ºâR ÓØ 0)
+	± (µ x y∑ x *âR y ºâR ÓØ 0 § ÓØ 0 ºâR x ± y ºâR ÓØ 0
+		≤ x ºâR ÓØ 0 ± ÓØ 0 ºâR y)
+	± (µ x y∑ x *âR y = ÓØ 0 § x = ÓØ 0 ≤ y = ÓØ 0)
+	± (µ x y∑ ÓØ 0 = x *âR y § x = ÓØ 0 ≤ y = ÓØ 0)Æ);
+a (rewrite_tac [get_spec ¨$ºâRÆ, Ø_prod_sign_iff_lemma]
+	THEN (PC_T1 "Ø_lin_arith" prove_tac[]));
+val Ø_prod_sign_iff_lemma2 = pop_thm ();
+=TEX
+=SML
+set_goal([], ¨(µ x y∑ ÓØ 0 <âR x *âR y § ÓØ 0 <âR x ± ÓØ 0 <âR y
+		≤ x <âR ÓØ 0 ± y <âR ÓØ 0)
+	± (µ x y∑ x *âR y <âR ÓØ 0 § ÓØ 0 <âR x ± y <âR ÓØ 0
+		≤ x <âR ÓØ 0 ± ÓØ 0 <âR y)
+	± (µ x y∑ ÓØ 0 ºâR x *âR y § ÓØ 0 ºâR x ± ÓØ 0 ºâR y
+		≤ x ºâR ÓØ 0 ± y ºâR ÓØ 0)
+	± (µ x y∑ x *âR y ºâR ÓØ 0 § ÓØ 0 ºâR x ± y ºâR ÓØ 0
+		≤ x ºâR ÓØ 0 ± ÓØ 0 ºâR y)
+	± (µ x y∑ x *âR y = ÓØ 0 § x = ÓØ 0 ≤ y = ÓØ 0)
+	± (µ x y∑ ÓØ 0 = x *âR y § x = ÓØ 0 ≤ y = ÓØ 0)Æ);
+a (rewrite_tac [Ø_prod_sign_iff_lemma, Ø_prod_sign_iff_lemma2]
+	THEN (PC_T1 "Ø_lin_arith" prove_tac[]));
+val Ø_prod_sign_iff_clauses = save_pop_thm "Ø_prod_sign_iff_clauses";
+=TEX
+}%ignore
+
+\ignore{
+
+=SML
+set_goal([], ¨µ x y z∑ ÓØ 0 <âR x ± y <âR z ¥ y *âR x <âR z *âR xÆ);
+a (REPEAT strip_tac);
+a (all_fc_tac [Ø_times_mono_thm]);
+a (PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+val Ø_times_mono_thm1 = save_pop_thm "Ø_times_mono_thm1";
+=TEX
+
+=SML
+
+set_goal([], ¨µ x y z∑ ÓØ 0 ºâR x ± y ºâR z ¥ x *âR y ºâR x *âR zÆ);
+a (rewrite_tac [get_spec ¨$ºâRÆ]
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[])
+	THEN TRY (SYM_ASMS_T rewrite_tac)
+	THEN TRY (all_fc_tac
+	[Ø_times_mono_thm, Ø_times_mono_thm1, Ø_less_trans_thm]));
+val Ø_times_mono_thm2 = save_pop_thm "Ø_times_mono_thm2";
+
+set_goal([], ¨µ x y z∑ ÓØ 0 ºâR x ± y ºâR z ¥ y *âR x ºâR z *âR xÆ);
+a (rewrite_tac [get_spec ¨$ºâRÆ]
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[])
+	THEN TRY (SYM_ASMS_T rewrite_tac)
+	THEN TRY (all_fc_tac
+	[Ø_times_mono_thm, Ø_times_mono_thm1, Ø_less_trans_thm]));
+val Ø_times_mono_thm3 = save_pop_thm "Ø_times_mono_thm3";
+=TEX
+
+=SML
+set_goal([], ¨µ w x y z∑ ÓØ 0 <âR w ± ÓØ 0 <âR y ± w <âR x ± y <âR z ¥ w *âR y <âR x *âR zÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 <âR z ± ÓØ 0 <âR xÆ
+	THEN1 (all_asm_fc_tac[Ø_less_trans_thm])
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨w *âR y <âR w *âR zÆ
+	THEN1 (all_asm_fc_tac[Ø_times_mono_thm, Ø_times_mono_thm1, Ø_less_trans_thm]));
+a (lemma_tac ¨w *âR z <âR x *âR zÆ
+	THEN1 (strip_asm_tac (list_µ_elim [¨zÆ, ¨wÆ, ¨xÆ] Ø_times_mono_thm1)));
+a (strip_asm_tac (list_µ_elim [¨w *âR yÆ, ¨w *âR zÆ, ¨x *âR zÆ] Ø_less_trans_thm));
+val Ø_times_mono_thm4 = save_pop_thm "Ø_times_mono_thm4";
+=TEX
+
+=SML
+set_goal([], ¨µ w x y z∑ ÓØ 0 ºâR w ± ÓØ 0 ºâR y ± w ºâR x ± y ºâR z ¥ w *âR y ºâR x *âR zÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR z ± ÓØ 0 ºâR xÆ
+	THEN1 (all_asm_fc_tac[Ø_º_trans_thm])
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨w *âR y ºâR w *âR zÆ
+	THEN1 (all_asm_fc_tac[Ø_times_mono_thm2, Ø_times_mono_thm3, Ø_º_trans_thm]));
+a (lemma_tac ¨w *âR z ºâR x *âR zÆ
+	THEN1 (strip_asm_tac (list_µ_elim [¨zÆ, ¨wÆ, ¨xÆ] Ø_times_mono_thm3)));
+a (strip_asm_tac (list_µ_elim [¨w *âR yÆ, ¨w *âR zÆ, ¨x *âR zÆ] Ø_º_trans_thm));
+val Ø_times_mono_thm5 = save_pop_thm "Ø_times_mono_thm5";
+=TEX
+}%ignore
+
+\subsection{Squares}
+
+\ignore{
+=SML
+set_goal([], ¨µ x y∑ ÓØ 0 <âR x ± x <âR y ¥ x *âR x <âR y *âR yÆ);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac [Ø_less_trans_thm]);
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨yÆ, ¨xÆ, ¨yÆ] Ø_times_mono_thm4));
+val Ø_square_mono_thm = save_pop_thm "Ø_square_mono_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ ÓØ 0 ºâR x ± x ºâR y ¥ x *âR x ºâR y *âR yÆ);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac [Ø_º_trans_thm]);
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨yÆ, ¨xÆ, ¨yÆ] Ø_times_mono_thm5));
+val Ø_square_mono_thm1 = save_pop_thm "Ø_square_mono_thm1";
+=TEX
+
+=SML
+set_goal([], ¨µ x y z∑ ÓØ 0 <âR x ± ÓØ 0 <âR y ± x *âR x <âR y *âR y ¥ x <âR yÆ);
+a (REPEAT strip_tac);
+a (strip_asm_tac (all_µ_elim Ø_less_cases_thm));
+(* *** Goal "1" *** *)
+a (DROP_ASM_T ¨x *âR x <âR y *âR yÆ ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨xÆ] Ø_square_mono_thm));
+a (all_fc_tac [Ø_less_antisym_thm]);
+val Ø_square_less_less_thm = save_pop_thm "Ø_square_less_less_thm";
+=TEX
+
+-SML
+set_goal([], ¨µ x y∑ ÓØ 0 <âR x ± ÓØ 0 <âR y ¥ (x *âR x <âR y *âR y § x <âR y)Æ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [Ø_square_less_less_thm]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [Ø_square_mono_thm]);
+val Ø_square_less_iff_less_thm = save_pop_thm "Ø_square_less_iff_less_thm";
+=TEX
+
+-SML
+set_goal([], ¨µ x y∑ ÓØ 0 ºâR x ± ÓØ 0 ºâR y ¥ (x *âR x ºâR y *âR y § x ºâR y)Æ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [Ø_square_º_º_thm]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [Ø_square_mono_thm1]);
+val Ø_square_º_iff_º_thm = save_pop_thm "Ø_square_º_iff_º_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 <âR x ± ÓØ 0 <âR y ± y *âR y = x *âR x ¥ x = yÆ);
+a (REPEAT strip_tac);
+a (strip_asm_tac (all_µ_elim Ø_less_cases_thm)
+	THEN (fc_tac [Ø_times_mono_thm]));
+(* *** Goal "1" *** *)
+a (lemma_tac ¨x *âR x <âR x *âR yÆ
+	THEN1 asm_fc_tac []);
+a (lemma_tac ¨x *âR y <âR y *âR yÆ
+	THEN1 all_fc_tac [list_µ_elim [¨yÆ, ¨xÆ, ¨yÆ] Ø_times_mono_thm1]);
+a (ALL_FC_T (MAP_EVERY ante_tac) [Ø_less_trans_thm]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨x *âR y <âR x *âR xÆ
+	THEN1 asm_fc_tac []);
+a (lemma_tac ¨y *âR y <âR x *âR yÆ
+	THEN1 all_fc_tac [list_µ_elim [¨yÆ, ¨yÆ, ¨xÆ] Ø_times_mono_thm1]);
+a (ALL_FC_T (MAP_EVERY ante_tac) [Ø_less_trans_thm]
+	THEN asm_rewrite_tac[]);
+val Ø_square_eq_thm1 = save_pop_thm "Ø_square_eq_thm1";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 ºâR x ± ÓØ 0 ºâR y ± y *âR y = x *âR x ¥ x = yÆ);
+a (rewrite_tac[get_spec ¨$ºâRÆ]);
+a (rewrite_tac (map eq_sym_conv [¨ÓØ 0 = xÆ, ¨ÓØ 0 = yÆ])
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "1" *** *)
+a (all_fc_tac [Ø_square_eq_thm1]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[Ø_prod_sign_iff_clauses]);
+(* *** Goal "3" *** *)
+a (POP_ASM_T ante_tac
+	THEN asm_rewrite_tac[Ø_prod_sign_iff_clauses]
+	THEN STRIP_T rewrite_thm_tac);
+val Ø_square_eq_thm2 = save_pop_thm "Ø_square_eq_thm2";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ ÓØ 0 <âR x ± ÓØ 0 <âR y ¥ (x *âR x = y *âR y § x = y)Æ);
+a (REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[]));
+a (strip_asm_tac (all_µ_elim Ø_less_cases_thm)
+	THEN (ALL_FC_T (MAP_EVERY ante_tac) [Ø_square_mono_thm])
+	THEN TRY (asm_rewrite_tac[]));
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨xÆ] Ø_square_mono_thm)
+	THEN POP_ASM_T ante_tac
+	THEN TRY (asm_rewrite_tac[]));
+val Ø_square_eq_eq_thm = save_pop_thm "Ø_square_eq_eq_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ ÓØ 0 ºâR x ± ÓØ 0 ºâR y ¥ (x *âR x = y *âR y § x = y)Æ);
+a (rewrite_tac[get_spec ¨$ºâRÆ]
+	THEN REPEAT strip_tac
+	THEN TRY (SYM_ASMS_T rewrite_tac));
+(* *** Goal "1" *** *)
+a (all_fc_tac [Ø_square_eq_eq_thm]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac
+	THEN SYM_ASMS_T rewrite_tac
+	THEN rewrite_tac [Ø_prod_sign_iff_clauses]);
+(* *** Goal "3" *** *)
+a (POP_ASM_T ante_tac
+	THEN SYM_ASMS_T rewrite_tac
+	THEN rewrite_tac [Ø_prod_sign_iff_clauses]
+	THEN strip_tac
+	THEN asm_rewrite_tac[]);
+val Ø_square_eq_eq_thm2 = save_pop_thm "Ø_square_eq_eq_thm2";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ ÓØ 0 ºâR x ± ÓØ 0 ºâR y ± x *âR x ºâR y *âR y ¥ x ºâR yÆ);
+a (REPEAT strip_tac);
+a (strip_asm_tac (all_µ_elim Ø_less_cases_thm));
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[get_spec ¨$ºâRÆ]);
+(* *** Goal "2" *** *)
+a (DROP_ASM_T ¨x *âR x ºâR y *âR yÆ ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨xÆ] Ø_square_mono_thm1));
+(* *** Goal "3.1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨$ºâRÆ]);
+(* *** Goal "3.2" *** *)
+a (all_fc_tac [pc_rule1 "Ø_lin_arith"
+	prove_rule [] ¨µx y:Ø∑ x ºâR y ± y ºâR x ¥ x = yÆ]);
+a (all_fc_tac [Ø_square_eq_eq_thm2]);
+a (asm_rewrite_tac [get_spec ¨$ºâRÆ]);
+val Ø_square_º_º_thm = save_pop_thm "Ø_square_º_º_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ x *âR x = y *âR y § Abs x = Abs yÆ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]
+	THEN cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN TRY (asm_rewrite_tac[])
+	);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (all_µ_elim Ø_square_eq_eq_thm2)
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "2" *** *)
+a (all_asm_ante_tac
+	THEN lemma_tac ¨∂ z∑ y = ~âR zÆ
+	THEN1 (∂_tac ¨~âR yÆ
+		THEN rewrite_tac[])
+	THEN asm_rewrite_tac [Ø_times_minus_thm]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac []));
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨zÆ] Ø_square_eq_eq_thm2)
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac []));
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨zÆ] Ø_square_eq_eq_thm2)
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "3" *** *)
+a (all_asm_ante_tac
+	THEN lemma_tac ¨∂ z∑ x = ~âR zÆ
+	THEN1 (∂_tac ¨~âR xÆ
+		THEN rewrite_tac[])
+	THEN asm_rewrite_tac [Ø_times_minus_thm]);
+a (strip_tac THEN strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac []));
+a (strip_asm_tac (list_µ_elim [¨zÆ, ¨yÆ] Ø_square_eq_eq_thm2)
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "4" *** *)
+a (all_asm_ante_tac
+	THEN lemma_tac ¨∂ z∑ x = ~âR zÆ
+	THEN1 (∂_tac ¨~âR xÆ
+		THEN rewrite_tac[])
+	THEN lemma_tac ¨∂ v∑ y = ~âR vÆ
+	THEN1 (∂_tac ¨~âR yÆ
+		THEN rewrite_tac[])
+	THEN asm_rewrite_tac[]
+	THEN strip_tac THEN strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac []));
+a (lemma_tac ¨ÓØ 0 ºâR vÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac []));
+a (strip_asm_tac (list_µ_elim [¨zÆ, ¨vÆ] Ø_square_eq_eq_thm2)
+	THEN TRY (asm_rewrite_tac[Ø_times_minus_thm]));
+val Ø_square_eq_iff_abs_eq_thm = save_pop_thm "Ø_square_eq_iff_abs_eq_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ ÓØ 0 º x ^ 2Æ);
+a (rewrite_tac [Ø_Ó_exp_square_thm, Ø_prod_sign_iff_clauses]);
+a (PC_T1 "Ø_lin_arith" prove_tac[]);
+val Ø_square_pos_thm = save_pop_thm "Ø_square_pos_thm";
+=TEX
+}%ignore
+
+\subsection{Sums}
+
+\ignore{
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 º x ± ÓØ 0 º y ¥ ÓØ 0 º x + yÆ);
+a (PC_T1 "Ø_lin_arith" prove_tac[]);
+val Ø_sum_pos_thm = save_pop_thm "Ø_sum_pos_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y:Ø∑ ÓØ 0 º x ^âN 2 +âR y ^âN 2Æ);
+a (REPEAT µ_tac);
+a (lemma_tac ¨ÓØ 0 º x ^ 2 ± ÓØ 0 º y ^ 2Æ
+	THEN1 rewrite_tac [Ø_square_pos_thm]);
+a (all_fc_tac [Ø_sum_pos_thm]);
+val Ø_sum_square_pos_thm = save_pop_thm "Ø_sum_square_pos_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y: Ø∑ x^2 + y^2 = ÓØ 0 § x = ÓØ 0 ± y = ÓØ 0Æ);
+a (REPEAT_N 5 strip_tac THEN TRY (asm_rewrite_tac[]));
+a (lemma_tac ¨ÓØ 0 º x ^ 2 ± ÓØ 0 º y ^ 2Æ
+	THEN1 rewrite_tac [Ø_square_pos_thm]);
+a (ALL_FC_T (MAP_EVERY (asm_tac o (rewrite_rule [Ø_Ó_exp_square_thm, Ø_prod_sign_iff_clauses])))
+	[pc_rule1 "Ø_lin_arith" prove_rule []
+	¨µx y: Ø∑ÓØ 0 º x ± ÓØ 0 º y ¥ x + y = ÓØ 0 ¥ x = ÓØ 0 ± y = ÓØ 0Æ]
+	THEN asm_rewrite_tac[]);
+val Ø_sum_square_zero_thm = save_pop_thm "Ø_sum_square_zero_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 º x ± ÓØ 0 º y
+	¥ (x + y = ÓØ 0 § x = ÓØ 0 ± y = ÓØ 0)Æ);
+a (PC_T1 "Ø_lin_arith" prove_tac[]);
+val Ø_sum_zero_thm = save_pop_thm "Ø_sum_zero_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y:Ø∑ Abs (x ^âN 2 +âR y ^âN 2) = x ^âN 2 +âR y ^âN 2Æ);
+a (REPEAT µ_tac);
+a (asm_rewrite_tac [get_spec ¨AbsâRÆ, Ø_sum_square_pos_thm]);
+val Ø_abs_sum_square_thm = save_pop_thm "Ø_abs_sum_square_thm";
+=TEX
+
+
+=SML
+val Ø_plus_mono_thm = save_thm ("Ø_plus_mono_thm", pc_rule1 "Ø_lin_arith" prove_rule []
+	¨µu v x y∑ u ºâR v ± x ºâR y ¥ u +âR x ºâR v +âR yÆ);
+=TEX
+
+}%ignore
+
+\subsection{Abs}
+
+The following arithmetic results are obtained for reasoning about norms on real vector spaces, in particular to prove that $Abs$ is a norm over the reals and that the defined product operation over norms yields a norm.
+
+=GFT
+Ø_Abs_Norm_clauses 
+Ù (µ v∑ ÓØ 0 ºâR AbsâR v)
+± (µ v∑ (AbsâR v = ÓØ 0) § v = ÓØ 0)
+± (µ x v∑ AbsâR (x *âR v) = AbsâR x *âR AbsâR v)
+± (µ v w∑ AbsâR (v +âR w) ºâR AbsâR v +âR AbsâR w)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨(µ v∑ ÓØ 0 ºâR AbsâR v)
+             ± (µ v∑ (AbsâR v = ÓØ 0) = v = ÓØ 0)
+             ± (µ x v∑ AbsâR (x *âR v) = AbsâR x *âR AbsâR v)
+             ± (µ v w∑ AbsâR (v +âR w) ºâR AbsâR v +âR AbsâR w)Æ);
+a (rewrite_tac [get_spec ¨AbsâRÆ, get_spec ¨$ºâRÆ, Ø_prod_sign_iff_clauses]);
+a (REPEAT ±_tac THEN REPEAT µ_tac);
+(* *** Goal "1" *** *)
+a (CASES_T ¨ÓØ 0 < v ≤ ÓØ 0 = vÆ asm_tac
+	THEN TRY (asm_rewrite_tac[]));
+a (PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (CASES_T ¨ÓØ 0 < v ≤ ÓØ 0 = vÆ asm_tac
+	THEN TRY (asm_rewrite_tac[])
+	THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+(* *** Goal "3" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨ÓØ 0Æ] Ø_less_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN (strip_asm_tac (list_µ_elim [¨vÆ, ¨ÓØ 0Æ] Ø_less_cases_thm))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "3.1" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 < x ≤ ÓØ 0 = x)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¨≥(ÓØ 0 < v ≤ ÓØ 0 = v)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "3.2" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 < x ≤ ÓØ 0 = x)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¨≥(v < ÓØ 0 ≤ x = ÓØ 0 ≤ v = ÓØ 0)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "3.3" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 < v ≤ ÓØ 0 = v)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (asm_rewrite_tac[Ø_times_minus_thm]);
+a (LEMMA_T ¨≥(x < ÓØ 0 ≤ x = ÓØ 0 ≤ v = ÓØ 0)Æ asm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "4" *** *)
+a (strip_asm_tac (list_µ_elim [¨wÆ, ¨ÓØ 0Æ] Ø_less_cases_thm)
+	THEN TRY (asm_rewrite_tac[])
+	THEN (strip_asm_tac (list_µ_elim [¨vÆ, ¨ÓØ 0Æ] Ø_less_cases_thm))
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "4.1" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 <âR v ≤ ÓØ 0 = v)Æ rewrite_thm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¨≥(ÓØ 0 <âR w ≤ ÓØ 0 = w)Æ rewrite_thm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¨≥(ÓØ 0 <âR v +âR w ≤ ÓØ 0 = v +âR w)Æ rewrite_thm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+(* *** Goal "4.2" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 <âR w ≤ ÓØ 0 = w)Æ rewrite_thm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (CASES_T ¨ÓØ 0 <âR v +âR w ≤ ÓØ 0 = v +âR wÆ rewrite_thm_tac
+	THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+(* *** Goal "4.3" *** *)
+a (LEMMA_T ¨≥(ÓØ 0 <âR v ≤ ÓØ 0 = v)Æ rewrite_thm_tac
+	THEN1 PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+a (CASES_T ¨ÓØ 0 <âR v +âR w ≤ ÓØ 0 = v +âR wÆ rewrite_thm_tac
+	THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+(* *** Goal "4.4" *** *)
+a (CASES_T ¨ÓØ 0 <âR v +âR w ≤ ÓØ 0 = v +âR wÆ rewrite_thm_tac
+	THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+val Ø_Abs_Norm_clauses = save_pop_thm "Ø_Abs_Norm_clauses";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ x ºâR Abs xÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]
+	THEN cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+val Ø_º_abs_thm = save_pop_thm "Ø_º_abs_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ ÓØ 0 ºâR x ¥ Abs x = xÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]
+	THEN asm_rewrite_tac []);
+val Ø_abs_pos_id_thm = save_pop_thm "Ø_abs_pos_id_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 ºâR x ± x ºâR y ¥ Abs x ºâR Abs yÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]
+	THEN cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+val Ø_abs_mono_thm = save_pop_thm "Ø_abs_mono_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ x ^ 2 = y ^ 2 ¥ Abs x = Abs yÆ);
+a (rewrite_tac [Ø_Ó_exp_square_thm, get_spec ¨AbsâRÆ]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨xÆ] Ø_square_eq_thm2)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (all_asm_ante_tac);
+a (lemma_tac ¨∂z∑ y = ~âR zÆ
+	THEN1 (∂_tac ¨~âR yÆ THEN rewrite_tac[])
+	THEN asm_rewrite_tac[Ø_times_minus_thm]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+a (all_fc_tac [Ø_square_eq_thm2]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_ante_tac);
+a (lemma_tac ¨∂z∑ x = ~âR zÆ
+	THEN1 (∂_tac ¨~âR xÆ THEN rewrite_tac[])
+	THEN asm_rewrite_tac[Ø_times_minus_thm]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR zÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+a (cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨yÆ, ¨zÆ] Ø_square_eq_thm2)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_asm_ante_tac);
+a (lemma_tac ¨∂v∑ y = ~âR vÆ
+	THEN1 (∂_tac ¨~âR yÆ THEN rewrite_tac[])
+	THEN asm_rewrite_tac[Ø_times_minus_thm]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR vÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+a (strip_asm_tac (list_µ_elim [¨vÆ, ¨zÆ] Ø_square_eq_thm2)
+	THEN asm_rewrite_tac[]);
+val Ø_square_eq_abs_thm = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Abs x = Abs y ¥ x ^ 2 = y ^ 2Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]
+	THEN cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN asm_rewrite_tac[]
+	THEN strip_tac
+	THEN TRY (asm_rewrite_tac[Ø_Ó_exp_square_thm, Ø_times_minus_thm]));
+(* *** Goal "1" *** *)
+a (POP_ASM_T (rewrite_thm_tac o eq_sym_rule));
+a (asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "2" *** *)
+a (LEMMA_T ¨~âR (~âR x) = ~âR (~âR y)Æ (asm_tac o (rewrite_rule[]))
+	THEN1 (pure_asm_rewrite_tac[]
+		THEN rewrite_tac[])
+	THEN asm_rewrite_tac[]);
+val Ø_abs_eq_square_thm = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ x ^ 2 = y ^ 2 § Abs x = Abs yÆ);
+a (REPEAT strip_tac
+	THEN all_fc_tac [Ø_square_eq_abs_thm, Ø_abs_eq_square_thm]
+	THEN asm_rewrite_tac[]);
+val Ø_square_eq_abs_thm = save_pop_thm "Ø_square_eq_abs_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Abs (x *âR x) = x *âR xÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]);
+a (LEMMA_T ¨ÓØ 0 ºâR x *âR xÆ rewrite_thm_tac
+	THEN1 (rewrite_tac [Ø_prod_sign_iff_clauses]
+		THEN PC_T1 "Ø_lin_arith" prove_tac[]));
+val Ø_abs_square_thm1 = save_pop_thm "Ø_abs_square_thm1";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ x *âR x ºâR y *âR y ¥ Abs x ºâR Abs yÆ);
+a (REPEAT strip_tac
+	THEN bc_tac [Ø_square_º_º_thm]
+	THEN TRY (rewrite_tac [Ø_Abs_Norm_clauses]));
+a (asm_rewrite_tac [top_eq_sym_rule Ø_Abs_Norm_clauses,
+	Ø_abs_square_thm1]);
+val Ø_square_º_abs_º_thm = save_pop_thm "Ø_square_º_abs_º_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ Abs x ºâR Abs y ¥ x *âR x ºâR y *âR yÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨ÓØ 0 ºâR Abs xÆ
+	THEN1 rewrite_tac [Ø_Abs_Norm_clauses]);
+a (ALL_FC_T (MAP_EVERY ante_tac) [Ø_square_mono_thm1]);
+a (rewrite_tac [top_eq_sym_rule Ø_Abs_Norm_clauses,
+	Ø_abs_square_thm1]);
+val Ø_abs_º_square_º_thm = save_pop_thm "Ø_abs_º_square_º_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ x *âR x ºâR y *âR y § Abs x ºâR Abs yÆ);
+a (REPEAT µ_tac THEN strip_tac
+	THEN rewrite_tac [Ø_abs_º_square_º_thm, Ø_square_º_abs_º_thm]);
+val Ø_square_º_iff_abs_º_thm = save_pop_thm "Ø_square_º_iff_abs_º_thm";
+=TEX
+
+=SML
+set_goal([], ¨µ x y∑ x *âR x <âR y *âR y § Abs x <âR Abs yÆ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨AbsâR x ºâR AbsâR yÆ);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨x *âR x ºâR y *âR yÆ
+	THEN1 asm_rewrite_tac [get_spec ¨$ºâRÆ]);
+a (bc_tac [Ø_square_º_iff_abs_º_thm] THEN strip_tac);
+(* *** Goal "1.2" *** *)
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨$ºâRÆ]
+	THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac
+	THEN LEMMA_T ¨x *âR x = y *âR yÆ rewrite_thm_tac
+	THEN1 asm_rewrite_tac [Ø_square_eq_iff_abs_eq_thm]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨x *âR x ºâR y *âR yÆ);
+a (lemma_tac ¨Abs x ºâR Abs yÆ
+	THEN1 asm_rewrite_tac [get_spec ¨$ºâRÆ]);
+a (bc_tac [Ø_abs_º_square_º_thm] THEN strip_tac);
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨$ºâRÆ]
+	THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac
+	THEN LEMMA_T ¨Abs x = Abs yÆ rewrite_thm_tac
+	THEN1 asm_rewrite_tac [top_eq_sym_rule Ø_square_eq_iff_abs_eq_thm]);
+val Ø_square_less_iff_abs_less_thm = save_pop_thm "Ø_square_less_iff_abs_less_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Abs (x ^âN 2) = x ^âN 2Æ);
+a (rewrite_tac [Ø_Ó_exp_square_thm, Ø_abs_square_thm1]);
+val Ø_abs_square_thm2 = save_pop_thm "Ø_abs_square_thm2";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Abs (x *âR y) = (Abs x) *âR (Abs y)Æ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨AbsâRÆ]);
+a (cases_tac ¨ÓØ 0 ºâR xÆ THEN cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "1" *** *)
+a (lemma_tac ¨ÓØ 0 ºâR x *âR yÆ
+	THEN1 (rewrite_tac [Ø_prod_sign_iff_clauses]
+		THEN contr_tac)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (cases_tac ¨x = ÓØ 0Æ THEN TRY (asm_rewrite_tac[]));
+a (lemma_tac ¨≥ ÓØ 0 ºâR x *âR yÆ
+	THEN1 (rewrite_tac [Ø_prod_sign_iff_clauses]
+		THEN REPEAT strip_tac
+		THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]))
+	THEN asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "3" *** *)
+a (cases_tac ¨y = ÓØ 0Æ THEN TRY (asm_rewrite_tac[]));
+a (lemma_tac ¨≥ ÓØ 0 ºâR x *âR yÆ
+	THEN1 (rewrite_tac [Ø_prod_sign_iff_clauses]
+		THEN REPEAT strip_tac
+		THEN TRY (PC_T1 "Ø_lin_arith" asm_prove_tac[]))
+	THEN asm_rewrite_tac[Ø_times_minus_thm]);
+(* *** Goal "4" *** *)
+a (lemma_tac ¨ÓØ 0 ºâR x *âR yÆ
+	THEN1 (rewrite_tac [Ø_prod_sign_iff_clauses]
+		THEN (PC_T1 "Ø_lin_arith" asm_prove_tac[]))
+	THEN asm_rewrite_tac[Ø_times_minus_thm]);
+val Ø_abs_prod_thm = save_pop_thm "Ø_abs_prod_thm";
+=TEX
+
+}%ignore
+
+\subsection{Square Root}
+
+\ignore{
+=SML
+push_goal ([], ¨∂Sqrt∑ µ x∑ ÓØ 0 º Sqrt x ± (Sqrt x)^2 = Abs xÆ);
+a(prove_∂_tac THEN strip_tac);
+a (lemma_tac ¨ÓØ 0 º Abs x'Æ
+	THEN1 (rewrite_tac [Ø_0_º_abs_thm]));
+a (all_fc_tac [square_root_thm1]);
+a(∂_tac ¨yÆ THEN asm_rewrite_tac[]);
+val _ = xl_set_cs_∂_thm (pop_thm());
+=TEX
+}%\ignore
+
+πHOLCONST
+‹ €Sqrt› :Ø ≠ Ø
+˜¸¸¸¸¸¸
+‹ µ x∑ ÓØ 0 º Sqrt x 
+‹ ± (Sqrt x)^2 = Abs x
+∞
+
+\ignore{
+
+=SML
+set_goal([], ¨µx y:Ø∑ Sqrt x = Sqrt y ¥ Abs x = Abs yÆ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨(Sqrt x) ^âN 2 = (Sqrt y) ^âN 2Æ ante_tac
+	THEN1 asm_rewrite_tac[]);
+a (rewrite_tac [get_spec ¨SqrtÆ]);
+val Ø_sqrt_abs_thm1 = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt x = ÓØ 0 § x = ÓØ 0Æ);
+a (REPEAT strip_tac THEN TRY (asm_rewrite_tac[]));
+a (contr_tac THEN lemma_tac ¨ÓØ 0 <âR Sqrt x ^âN 2Æ
+	THEN1 rewrite_tac[get_spec ¨SqrtÆ,
+	get_spec ¨AbsâRÆ,
+	get_spec ¨$ºâRÆ]);
+(* *** Goal "1.1" *** *)
+a (cases_tac ¨ÓØ 0 <âR x ≤ ÓØ 0 = xÆ
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "Ø_lin_arith" asm_prove_tac[]);
+(* *** Goal "1.2" *** *)
+a (POP_ASM_T ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (rewrite_rule [Ø_Ó_exp_square_thm, Ø_prod_sign_iff_clauses]
+	(µ_elim ¨ÓØ 0Æ (get_spec ¨SqrtÆ))));
+val sqrt_thm1 = save_pop_thm "sqrt_thm1";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Sqrt (x ^ 2 + y ^ 2) = ÓØ 0 § x = ÓØ 0 ± y = ÓØ 0Æ);
+a (REPEAT µ_tac THEN rewrite_tac [sqrt_thm1]);
+a (lemma_tac ¨ÓØ 0 º x ^ 2 ± ÓØ 0 º y ^ 2Æ
+	THEN1 (rewrite_tac [Ø_square_pos_thm]));
+a (lemma_tac ¨ÓØ 0 º x ^ 2 + y ^ 2Æ
+	THEN1 (all_fc_tac [Ø_sum_pos_thm]));
+a (LEMMA_T ¨(x ^âN 2 + y ^âN 2 = ÓØ 0)
+		= (x ^âN 2 = ÓØ 0 ± y ^âN 2 = ÓØ 0)Æ
+	rewrite_thm_tac
+	THEN1 (ALL_FC_T1 fc_§_canon rewrite_tac [Ø_sum_zero_thm]));
+a (rewrite_tac[Ø_Ó_exp_square_thm, Ø_prod_sign_iff_clauses]);
+val sqrt_square_thm = save_pop_thm "sqrt_square_thm";
+=TEX
+}%\ignore
+
+\ignore{
+
+=SML
+set_goal([], ¨µx:Ø∑ Abs(Sqrt x) = Sqrt x
+	± Abs (Abs x) = Abs x
+	± Abs (ÓØ 0) = ÓØ 0
+	± Abs (~âR  x) = Abs xÆ);
+a (REPEAT strip_tac
+	THEN TRY (rewrite_tac [get_spec ¨AbsâRÆ, get_spec ¨SqrtÆ]));
+(* *** Goal "1" *** *)
+a (cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨ÓØ 0 ºâR ~âR xÆ
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨$ºâRÆ]);
+a (strip_asm_tac (list_µ_elim [¨ÓØ 0Æ, ¨xÆ] Ø_less_cases_thm)
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "2.1" *** *)
+a (LEMMA_T ¨≥ (ÓØ 0 <âR ~âR x ≤ ÓØ 0 = ~âR x)Æ rewrite_thm_tac
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+(* *** Goal "2.2" *** *)
+a (LEMMA_T ¨x = ÓØ 0Æ rewrite_thm_tac
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+(* *** Goal "2.3" *** *)
+a (LEMMA_T ¨ÓØ 0 <âR ~âR xÆ rewrite_thm_tac
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+a (LEMMA_T ¨≥ (ÓØ 0 <âR x ≤ ÓØ 0 = x)Æ rewrite_thm_tac
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+val Ø_abs_clauses1 = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt (~âR x) = Sqrt xÆ);
+a (strip_tac);
+a (lemma_tac ¨Sqrt (~âR x) ^âN 2 = AbsâR xÆ
+	THEN1 (strip_asm_tac (µ_elim ¨~âR xÆ (get_spec ¨SqrtÆ))
+		THEN asm_rewrite_tac[Ø_abs_clauses1]));
+a (lemma_tac ¨(Sqrt x) ^âN 2 = AbsâR xÆ
+	THEN1 (strip_asm_tac (µ_elim ¨xÆ (get_spec ¨SqrtÆ))
+		THEN asm_rewrite_tac[Ø_abs_clauses1]));
+a (lemma_tac ¨Sqrt (~âR x) ^âN 2 = Sqrt x ^âN 2Æ
+	THEN1 asm_rewrite_tac[]);
+a (ALL_FC_T (MAP_EVERY ante_tac) [Ø_square_eq_abs_thm]
+	THEN rewrite_tac [Ø_abs_clauses1]
+	THEN strip_tac);
+val Ø_sqrt_minus_thm = save_pop_thm "Ø_sqrt_minus_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt(Abs x) = Sqrt xÆ);
+a (REPEAT strip_tac
+	THEN TRY (rewrite_tac [get_spec ¨AbsâRÆ, get_spec ¨SqrtÆ]));
+a (cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN asm_rewrite_tac[Ø_sqrt_minus_thm]);
+val Ø_sqrt_abs_thm = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt(Abs x) = Sqrt x
+	± Abs(Sqrt x) = Sqrt x
+	± Abs (Abs x) = Abs x
+	± Abs (ÓØ 0) = ÓØ 0
+	± Abs (~âR  x) = Abs xÆ);
+a (rewrite_tac[Ø_abs_clauses1, Ø_sqrt_abs_thm]);
+val Ø_abs_clauses = save_pop_thm "Ø_abs_clauses";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Abs x = Abs y ¥ Sqrt x = Sqrt yÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨AbsâRÆ]);
+a (cases_tac ¨ÓØ 0 ºâR xÆ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[Ø_sqrt_minus_thm]);
+(* *** Goal "2" *** *)
+a (cases_tac ¨ÓØ 0 ºâR yÆ
+	THEN (asm_rewrite_tac[])
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[Ø_sqrt_minus_thm]));
+(* *** Goal "2.1" *** *)
+a (LEMMA_T ¨y = ~âR xÆ rewrite_thm_tac
+	THEN1 asm_rewrite_tac[]);
+a (rewrite_tac[Ø_sqrt_minus_thm]);
+(* *** Goal "2.2" *** *)
+a (LEMMA_T ¨x = yÆ rewrite_thm_tac
+	THEN1 (PC_T1 "Ø_lin_arith" asm_prove_tac[]));
+val Ø_sqrt_abs_thm2 = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Sqrt x = Sqrt y § Abs x = Abs yÆ);
+a (REPEAT strip_tac THEN all_fc_tac [Ø_sqrt_abs_thm1, Ø_sqrt_abs_thm2]);
+val Ø_sqrt_abs_thm = save_pop_thm "Ø_sqrt_abs_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ ÓØ 0 ºâR x ± x ºâR y ¥ Sqrt x ºâR Sqrt yÆ);
+a (REPEAT strip_tac
+	THEN bc_tac [Ø_square_º_º_thm]
+	THEN TRY (rewrite_tac [rewrite_rule [Ø_Ó_exp_square_thm] (get_spec ¨SqrtÆ)])
+	THEN all_fc_tac [Ø_abs_mono_thm]);
+val Ø_sqrt_mono_thm = save_pop_thm "Ø_sqrt_mono_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt (x * x) = Abs xÆ);
+a (strip_tac
+	THEN lemma_tac ¨Sqrt (x *âR x) ^âN 2 = (AbsâR x) ^âN 2Æ
+	THEN1 (rewrite_tac [rewrite_conv [Ø_Ó_exp_square_thm] ¨(AbsâR x) ^âN 2Æ,
+		get_spec ¨SqrtÆ, get_spec ¨AbsâRÆ, Ø_abs_square_thm1]
+		THEN cases_tac ¨ÓØ 0 ºâR xÆ
+		THEN asm_rewrite_tac[Ø_times_minus_thm]));
+a (ALL_ASM_FC_T
+	(MAP_EVERY (strip_asm_tac o (rewrite_rule [Ø_abs_clauses1])))
+	[Ø_square_eq_abs_thm]);
+val Ø_sqrt_square_thm1 = save_pop_thm "Ø_sqrt_square_thm1";
+=TEX
+
+=SML
+set_goal([], ¨µx:Ø∑ Sqrt (x ^ 2) = Abs xÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [Ø_sqrt_square_thm1, Ø_Ó_exp_square_thm]);
+val Ø_sqrt_square_thm2 = save_pop_thm "Ø_sqrt_square_thm2";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Sqrt (x * y) = Sqrt x * Sqrt yÆ);
+a (REPEAT strip_tac
+	THEN lemma_tac ¨(Sqrt x *âR Sqrt y) *âR (Sqrt x *âR Sqrt y)
+	 = (Sqrt x *âR Sqrt x) *âR (Sqrt y *âR Sqrt y)Æ
+	THEN1 rewrite_tac [µ_elim ¨Sqrt xÆ Ø_times_order_thm]);
+a (lemma_tac ¨Sqrt x *âR Sqrt x = AbsâR xÆ
+	THEN1 (rewrite_tac [rewrite_rule [Ø_Ó_exp_square_thm]
+			(µ_elim ¨xÆ (get_spec ¨SqrtÆ))]));
+a (lemma_tac ¨Sqrt y *âR Sqrt y = AbsâR yÆ
+	THEN1 (rewrite_tac [rewrite_rule [Ø_Ó_exp_square_thm]
+			(µ_elim ¨yÆ (get_spec ¨SqrtÆ))]));
+a (DROP_NTH_ASM_T 3 ante_tac);
+a (once_asm_rewrite_tac[]);
+a (rewrite_tac[eq_sym_rule(rewrite_rule [Ø_Abs_Norm_clauses, Ø_Ó_exp_square_thm]
+	((±_right_elim o (µ_elim ¨x *âR yÆ)) (get_spec ¨SqrtÆ))),
+	rewrite_rule [Ø_Ó_exp_square_thm] Ø_square_eq_abs_thm,
+	Ø_abs_clauses]);
+a (once_rewrite_tac [eq_sym_conv ¨AbsâR (Sqrt x *âR Sqrt y) = Sqrt (x *âR y)Æ]
+	THEN STRIP_T rewrite_thm_tac);
+a (rewrite_tac [Ø_abs_clauses, Ø_Abs_Norm_clauses]);
+val Ø_sqrt_prod_thm = save_pop_thm "Ø_sqrt_prod_thm";
+=TEX
+
+=SML
+set_goal([], ¨µx y:Ø∑ Sqrt(x + y) º (Sqrt x) +âR (Sqrt y)Æ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨Sqrt(x + y) = Abs (Sqrt(x + y))
+	± (Sqrt x) +âR (Sqrt y) = Abs((Sqrt x) +âR (Sqrt y))Æ
+	once_rewrite_thm_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨ÓØ 0 ºâR Sqrt (x +âR y) ± ÓØ 0 ºâR Sqrt x +âR Sqrt yÆ
+	THEN1 (rewrite_tac [get_spec ¨SqrtÆ]
+		THEN bc_tac [Ø_sum_pos_thm]
+		THEN rewrite_tac [get_spec ¨SqrtÆ])
+	THEN ALL_FC_T rewrite_tac [Ø_abs_pos_id_thm]);
+(* *** Goal "2" *** *)
+a (bc_tac [Ø_square_º_abs_º_thm]);
+a (rewrite_tac[rewrite_rule [Ø_Ó_exp_square_thm] (get_spec ¨SqrtÆ),
+	Ø_times_plus_distrib_thm]);
+a (Ø_anf_tac);
+a (lemma_tac ¨AbsâR (x +âR y) ºâR (AbsâR x) +âR (AbsâR y)Æ
+	THEN1 rewrite_tac [Ø_Abs_Norm_clauses]);
+a (LEMMA_T ¨(AbsâR x) +âR (AbsâR y) ºâR AbsâR x +âR AbsâR y +âR ÓØ 2 *âR Sqrt x *âR Sqrt yÆ
+	asm_tac
+	THEN1 rewrite_tac [Ø_prod_sign_iff_clauses, get_spec ¨SqrtÆ]);
+a (all_fc_tac [Ø_º_trans_thm]);
+val sqrt_plus_thm = save_pop_thm "sqrt_plus_thm"; 
+=TEX
+
+}% \ignore
+
+\subsection{List Membership}
+
+=SML
+declare_infix(300, "çâL");
+=TEX
+πHOLCONST
+‹ $€çâL›: 'a ≠ 'a  LIST ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ a b al∑ (a çâL [] § F)
+‹	± (a çâL (Cons b al) § a = b ≤ a çâL al)
+∞
+=SML
+declare_alias("ç", ¨$çâLÆ);
+=TEX
+
+\subsection{Sums of Countable Collections of Reals}
+
+In evaluating the cosmological consequences of Newton's Laws it is desirable to formulate them as cosmological theories in ways which do not prejudge such questions as whether the cardinality of the universe is finite.
+To do this it is necessary to be able, where possible, to form the sum of an infinite set of reals, possibly even an uncountably infinite set of real numbers.
+
+For the most general formulations it seems possible that the use of non-standard reals might be needed.
+We are concerned here with what can be done with standard reals, i.e. with formalising the notion that some collection of real numbers has a finite sum.
+
+The following definition gives the sum of a possibly finite or countable collection of real numbers.
+
+=SML
+declare_infix (300, "è>");
+=TEX
+πHOLCONST
+‹ $€è>› : ('a ≠ Ø + ONE) ≠ Ø ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µc r∑ c è> r §
+‹	∂s∑ (µ a n m∑ IsL (c a) ¥ s n = s m ¥ n = m)
+‹	¥ (Series (Ãn∑ if IsR (c (s n)) then 0âR else OutL (c (s n)))) -> r
+∞
+
+\section{Group Theory}
+
+=SML
+new_parent "group_egs";
+=TEX
+
+\subsection{Group Products}
+
+πHOLCONST
+‹ €GroupProduct› : 'a GROUP ≠ 'b GROUP ≠ ('a ∏ 'b) GROUP
+˜¸¸¸¸¸¸
+‹ µ G H∑ GroupProduct G H =
+‹	let car = (Car G ∏ Car H)
+‹	and prod	(la, lb) (ra, rb) = ((la.ra) G, (lb.rb) H)
+‹	and unit = (Unit G, Unit H)
+‹	and inv (a, b) = ((a õ~) G, (b õ~) H)
+‹	in (car, prod, unit, inv)
+∞
+=SML
+declare_alias ("*", ¨GroupProductÆ);
+=TEX
+\ignore{
+=SML
+val €group_def› = get_spec¨GroupÆ;
+val €group_unit_def› = get_spec¨UnitÆ;
+val €gp_def› = get_spec¨GroupProductÆ;
+=TEX
+=SML
+set_goal([], ¨µg:'a GROUP; h:'b GROUP∑
+	g ç Group ± h ç Group ¥ g * h ç GroupÆ);
+a(rewrite_tac [get_spec ¨GroupÆ,
+	gp_def,
+	group_unit_def,
+	get_spec ¨$∏Æ,
+	let_def]
+	THEN REPEAT strip_tac
+	THEN TRY (all_asm_fc_tac[]));
+val €group_product_thm› = save_pop_thm "group_product_thm";
+=TEX
+}%ignore
+
+=GFT
+group_product_thm = Ù µg:'a GROUP; h:'b GROUP∑
+	g ç Group ± h ç Group ¥ g * h ç Group
+=TEX
+
+\subsection{Abelian Groups}
+
+πHOLCONST
+‹ €AbelianGroup› : 'a GROUP SET
+˜¸¸¸¸¸¸
+‹ µ G∑ G ç AbelianGroup § G ç Group
+‹	± µ u v:'a∑ u ç Car G ± v ç Car G
+‹	         ¥ (u.v) G = (v.u) G
+∞
+
+\ignore{
+=SML
+val €abelian_group_def› = get_spec¨AbelianGroupÆ;
+set_goal([], ¨µg:'a GROUP; h:'b GROUP∑
+	g ç AbelianGroup ± h ç AbelianGroup ±
+	Car g = Universe ± Car h = Universe
+	¥ Car (g * h) = UniverseÆ);
+a(rewrite_tac [abelian_group_def,
+	group_def,
+	gp_def,
+	group_unit_def,
+	get_spec ¨$∏Æ,
+	let_def]
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[sets_ext_clauses]));
+val €abelian_group_product_lemma› = save_pop_thm "abelian_group_product_lemma";
+=TEX
+
+=SML
+set_goal([], ¨µg:'a GROUP; h:'b GROUP∑
+	g ç AbelianGroup ± h ç AbelianGroup 
+	¥ (g * h) ç AbelianGroupÆ);
+a (rewrite_tac [abelian_group_def]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[group_product_thm]);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (asm_rewrite_tac [
+	gp_def,
+	let_def,
+	group_unit_def,
+	get_spec ¨$∏Æ]);
+a (REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val €abelian_group_product_thm› = save_pop_thm "abelian_group_product_thm";
+=TEX
+
+=SML
+set_goal([], ¨µG:'g GROUP; H:'h GROUP; x y:'g; v w:'h∑
+	((x,v) . (y, w)) (G * H)
+	= ((x . y)G, (v . w)H)Æ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [gp_def, let_def, group_unit_def]
+	THEN REPEAT strip_tac);
+val group_prod_prod_thm = save_pop_thm "group_prod_prod_thm";
+=TEX
+=SML
+set_goal([], ¨µG:'g GROUP; H:'h GROUP; x y:'g ∏ 'h∑
+	(x . y) (G * H)
+	= ((Fst x . Fst y)G, (Snd x . Snd y)H)Æ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [gp_def, let_def, group_unit_def]
+	THEN REPEAT strip_tac);
+val group_prod_prod_thm1 = save_pop_thm "group_prod_prod_thm1";
+=TEX
+
+}%ignore
+
+=GFT
+abelian_group_product_thm = Ù µg:'a GROUP; h:'b GROUP∑
+	g ç AbelianGroup ± h ç AbelianGroup ¥ (g * h) ç AbelianGroup
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨Ø_plus ç AbelianGroupÆ);
+a (rewrite_tac [
+	get_spec ¨AbelianGroupÆ,
+	Ø_plus_ops_thm,
+	Ø_plus_group_thm
+	]);
+val Ø_plus_abelian_thm = save_pop_thm "Ø_plus_abelian_thm";
+=TEX
+} %\ignore
+
+=GFT
+Ø_plus_abelian_thm = Ù Ø_plus ç AbelianGroup
+=TEX
+
+\section{Topology}
+
+=SML
+new_parent "topology";
+=TEX
+
+\subsection{Bases etc.}
+
+The following definitions belong properly in the theory ``topology''.
+
+First we define the relationship between a $base$ and the topology of which it is a base.
+
+=SML
+declare_infix (300, "BaseOf");
+=TEX
+
+πHOLCONST
+‹ $€BaseOf› :  'a SET SET ≠ 'a SET SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ base topology∑ base BaseOf topology §
+‹	µs∑ s ç topology ¥ ∂ ss∑ ss Ä base ± s = ﬁ ss
+∞
+
+However, what we really need here is the construction of a topology from an arbitrary set of sets, which is done as follows:
+
+πHOLCONST
+‹ $€TopologyFrom› :  'a SET SET ≠ 'a SET SET
+˜¸¸¸¸¸¸
+‹ µ sets∑ TopologyFrom sets =
+‹	• {topology | topology ç Topology ± sets Ä topology}
+∞
+
+\ignore{
+
+Prove that $TopologyFrom$ yields a topology.
+
+}%ignore
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{rbjmisc.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+set_flag ("pp_use_alias", true);
+output_theory{out_file="rbjmisc.th.doc", theory="rbjmisc"};
+set_flag ("pp_use_alias", false);
+=TEX
