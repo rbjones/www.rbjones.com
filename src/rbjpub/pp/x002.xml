@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: x002.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       id="$Id: x002.xml,v 1.2 2003/01/02 13:41:11 rbj Exp $"
        name="x002"
        title="Transitive and Well-Founded Relations as Properties"
        description="A theory of transitive and well-founded relations in ProofPower HOL"
@@ -197,34 +197,12 @@ Definition of well-founded and transitive-well-founded and proof that the transi
 <secbody>
 <sbcol>
 <subsec title="Definitions">
-<ft lang="xl-sml" rest="">
-declare_infix (230,"hered_at");
-</ft>
-<holconst><holsig>
-$hered_at: ('a &rarr; 'a &rarr; BOOL) &rarr; 'a &rarr; ('a &rarr; BOOL) &rarr; BOOL
-</holsig>
-<holpred>
-&forall; r x p &bull;
- (r hered_at x) p &equiv; (&forall; y &bull; r y x &rArr; p y) &rArr; p x
-</holpred>
-</holconst>
-<ft lang="xl-sml" rest="">
-declare_infix (230,"hereditary");
-</ft>
-<holconst><holsig>
-$hereditary: ('a &rarr; 'a &rarr; BOOL) &rarr; ('a &rarr; BOOL) &rarr; BOOL
-</holsig>
-<holpred>
-&forall; r p &bull;
- r hereditary p &equiv; &forall; x &bull; (r hered_at x) p
-</holpred>
-</holconst>
 <holconst><holsig>
 well_founded: ('a &rarr; 'a &rarr; BOOL) &rarr; BOOL
 </holsig>
 <holpred>
 &forall; r &bull;
- well_founded r &equiv; &forall; s &bull; r hereditary s &rArr; &forall; x &bull; s x
+ well_founded r &equiv; &forall; s &bull; (&forall; x &bull; (&forall; y &bull; r y x &rArr; s y) &rArr; s x) &rArr; &forall; x &bull; s x
 </holpred>
 </holconst>
 <holconst><holsig>
@@ -244,28 +222,9 @@ The obvious method is to relativise the required result to the transitive closur
 <p/>
 The following definitions are not essential but perhaps make the argument clearer.
 <ft lang="xl-sml" rest="">
-declare_infix (230,"hered_in");
-</ft>
-<holconst><holsig>
-$hered_in: ('a &rarr; 'a &rarr; BOOL) &rarr; 'a &rarr; ('a &rarr; BOOL) &rarr; BOOL
-</holsig>
-<holpred>
-&forall; r x p &bull;
- (r hered_in x) p &equiv; &forall; y &bull; (tc r) y x &rArr; ((tc r) hered_at x) p
-</holpred>
-</holconst>
-<holconst><holsig>
-$wf_in: 'a &rarr; ('a &rarr; 'a &rarr; BOOL) &rarr; BOOL
-</holsig>
-<holpred>
-&forall; x r &bull;
- (wf_in x) r &equiv; &forall; p&bull; (&forall; y&bull; (tc r) y x &or; y = x &rArr; (r hered_at y) p) &rArr; (&forall; y&bull; (tc r) y x &rArr; p y) &and; p x
-</holpred>
-</holconst>
-<ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;s r&bull; well_founded r &rArr; &forall;x&bull; (&forall;y&bull; tc r y x &rArr; (&forall;z&bull; tc r z y &rArr; s z) &rArr; s y)
 	&rArr; (&forall;y&bull; tc r y x &rArr; s y)&qqter;);
-a (rewrite_tac [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;]);
+a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]);
 a (REPEAT_N 3 strip_tac);
 a (SPEC_NTH_ASM_T 1 &qqtel;&lambda;x &bull; (&forall;y&bull; tc r y x &rArr; (&forall;z&bull; tc r z y &rArr; s z) &rArr; s y)
 	&rArr; (&forall;y&bull; tc r y x &rArr; s y)&qqter; ante_tac
@@ -307,7 +266,7 @@ val tcwf_lemma2 = save_pop_thm "tcwf_lemma2";
 set_goal([],&qqtel;&forall;r&bull; well_founded r &rArr; well_founded (tc r)&qqter;);
 a (strip_tac THEN strip_tac
 	THEN fc_tac [tcwf_lemma1]);
-a (rewrite_tac [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;]);
+a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]);
 a (REPEAT strip_tac);
 a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
 a (list_spec_nth_asm_tac 4 [&qqtel;x&qqter;,&qqtel;s&qqter;,&qqtel;y&qqter;]);
@@ -317,7 +276,7 @@ val wf_tc_wf_thm = save_pop_thm "wf_tc_wf_thm";
 </ft>
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&forall;r&bull; well_founded (tc r) &rArr; well_founded r&qqter;);
-a (rewrite_tac [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;]
+a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]
 	THEN REPEAT strip_tac);
 a (spec_nth_asm_tac 2 &qqtel;s&qqter;);
 (* *** Goal "1" *** *)
@@ -429,7 +388,7 @@ val wf_nochain_thm = save_pop_thm "wf_nochain_thm";
 
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&forall;r&bull; (&forall;x&bull; &not;&exist;p v&bull; p v &and; &forall;y&bull; p y &rArr; tc r y x &and; &exist;z&bull; p z &and; r z y) &rArr; well_founded r&qqter;);
-a (rewrite_tac [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;]);
+a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]);
 a contr_tac;
 a (DROP_NTH_ASM_T 3 ante_tac
 	THEN rewrite_tac[]
@@ -507,7 +466,7 @@ val wf_min_thm = save_pop_thm "wf_min_thm";
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&exist;r: BOOL&rarr;BOOL&rarr;BOOL&bull;(&forall;x&bull; (&exist;y&bull; r y x) &rArr; &exist;z&bull; r z x &and; &not;&exist;v&bull; r v z &and; r v x) &and; &not; well_founded r&qqter;);
 a (&exist;_tac &qqtel;&lambda;x y:BOOL&bull; y&qqter;
-	THEN rewrite_tac [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;]
+	THEN rewrite_tac [get_spec &qqtel;well_founded&qqter;]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (&exist;_tac &qqtel;F&qqter; THEN asm_rewrite_tac []);
