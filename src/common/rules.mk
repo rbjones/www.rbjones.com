@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.3 2004/03/11 10:44:05 rbj Exp $
+# $Id: rules.mk,v 1.4 2004/04/14 15:56:58 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -34,7 +34,7 @@ PPTHDXLD=$(PPTHDOC:.th.doc=.xml)
 
 # DVI, Postscript, PDF
 
-TEX=$(PPPDOC:.doc=.tex)
+TEX=$(PPPDOC:.doc=.tex) $(KLUTEX)
 DVI=$(TEX:.tex=.dvi)
 PS=$(DVI:.dvi=.ps)
 PDF=$(PS:.ps=.pdf)
