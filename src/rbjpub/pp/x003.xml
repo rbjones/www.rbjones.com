@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: x003.xml,v 1.2 2004/04/28 15:13:17 rbj Exp $"
+       id="$Id: x003.xml,v 1.3 2005/01/26 20:53:38 rbj Exp $"
        name="x003"
        title="Analyticity and Deduction"
        description="A proof of an elementary connection between alalyticity and deduction"
@@ -25,10 +25,12 @@ This is done twice using two slightly different models, the first very simple bu
 <secref title="Introduction"/>
 <secref title="Model 1"/>
 <secref title="Model 2"/>
+<secref title="Model 3"/>
 </sbcol>
 <sbcol>
 <subsec title="Listing of Theory x003t (model 1)" href="x003t.html" />
 <subsec title="Listing of Theory x003u (model 2)" href="x003u.html" />
+<subsec title="Listing of Theory x003v (model 3)" href="x003v.html" />
 </sbcol>
 </secbody>
 </section>
@@ -160,7 +162,7 @@ This is a weaker condition than is normally proved in a soundness proof, but it 
 </subsec>
 <subsec title="Demonstrative">
 <p>
-<i>demonstrative</i> is a relation between sentences and semantics (that a sentence when interpreted under that semantics is demonstative).
+<i>demonstrative</i> is a relation between sentences and semantics (that the sentence is derivable in a deductive system which is sound with respect to that semantics).
 A sentence is demonstrative under a semantics if there is a deductive system, sound with respect to that semantics, under which the sentence is derivable from the empty set of premises.
 The "empty set of premises" is modelled as an always false (contradictory) predicate, which is written as the lambda abstraction &qqtel;&lambda;s&bull;F&qqter;, the function which always returns "false".
 </p>
@@ -287,7 +289,7 @@ What a "circumstance" is depends upon the language, but for a language talking a
 </p><p>
 As far as this model is concerned the structure of a circumstance is immaterial and the type variable &qqco;'c&qqter; is used.
 A semantics, for the purposes of this model is therefore something of type &qqco;'s &rarr; 'c &rarr; BOOL&qqter;.
-This is a higher order function which takes two arguments, first a sentence then a "circumstance", an yields the truth value of the sentence under those circumstances.
+This is a higher order function which takes two arguments, first a sentence then a "circumstance", and yields the truth value of the sentence under those circumstances.
 In other words, a semantics is a function which assigns to each sentence of the language the set of conditions under which it is true.
 </p><p>
 This change has only very minor consequences for the model and the proof.
@@ -295,7 +297,7 @@ It does permits a more informative definition of analyticity and a more realisti
 One extra step is needed in the proof script.
 </p>
 <p>
-Note that the use of the term sentence here differs from the usage specific to the first order predicate calculus in that a sentence is not required to be closed.
+Note that the use of the term <i>sentence</i> here differs from the usage specific to the first order predicate calculus in that a sentence is not required to be closed.
 </p>
 </subsec>
 <subsec title="Analytic">
@@ -331,7 +333,7 @@ i.e. if &qqtel;(prem, conc)&qqter; is a derivation under the deductive system, t
 </subsec>
 <subsec title="Demonstrative">
 <p>
-<i>demonstrative</i> is a relation between sentences and semantics (that a sentence when interpreted under that semantics is demonstrative).
+<i>demonstrative</i> is a relation between sentences and semantics (that the sentence is derivable in a deductive system which is sound with respect to that semantics).
 This definition is unchanged from the first model, though it now uses the revised soundness predicate and consequently has a different type.
 </p>
 <holconst><holsig>
@@ -440,10 +442,234 @@ save_pop_thm "Theorem1";
 </secbody>
 </section>
 
+<section title="Model 3">
+<abstract>
+The treatment of the deductive system is refined by modelling a deductive system as an immediate derivability relation.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory x003v">
+The new theory is first created.
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+force_new_theory "x003v";
+set_pc "hol";
+</ft>
+</subsec>
+<subsec title="Language and Semantics">
+<p>
+This is unchanged from model 2.
+</p>
+</subsec>
+<subsec title="Analytic">
+<p>
+Unchanged.
+</p>
+<holconst><holsig>
+&tvb;	analytic : 's &cross; ('s &rarr; 'c &rarr; BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;sen sem&bull; analytic (sen, sem) &equiv; &forall;c&bull; sem sen c
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Sound Deductive System">
+<p>
+The definition of soundness remains formally unchanged, but the deductive system is now to be understood as an immediate derivability relation.
+</p>
+<holconst><holsig>
+&tvb;	sound : (('s &rarr;  BOOL) &cross; 's &rarr;  BOOL)
+&tvb;		&cross; ('s &rarr; 'c &rarr;  BOOL)
+&tvb;		&rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;ds sem&bull;
+&tvb;	  sound (ds, sem) &equiv;
+&tvb;		&forall;prem conc&bull;
+&tvb;			ds (prem, conc)
+&tvb;	  		&rArr; &forall;c&bull; ((&forall;s&bull; prem s &rArr; sem s c) &rArr; sem conc c)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Derivation">
+<p>
+We now define a function which lifts an immediate derivability relation to a derivability relation.
+</p>
+<p>
+The following defines the property of properties of sets of sentences of being closed under an immediate inference relation.
+</p>
+<holconst><holsig>
+&tvb;	iiclosed : (('s &rarr;  BOOL) &cross; 's &rarr;  BOOL)
+&tvb;		&rarr; ('s &rarr;  BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;ds ss&bull;
+&tvb;	  iiclosed ds ss &equiv;
+&tvb;		&forall;prems conc&bull;
+&tvb;			ds (prems, conc) &and; (&forall;s&bull; prems s &rArr; ss s)
+&tvb;			&rArr; ss conc
+</holpred>
+</holconst>
+<p>
+The closure of a relation of immediate inference is now defined, i.e. the corresponding notion of derived inference.
+</p>
+<holconst><holsig>
+&tvb;	close_ds : (('s &rarr;  BOOL) &cross; 's &rarr;  BOOL)
+&tvb;		&rarr; (('s &rarr;  BOOL) &cross; 's &rarr;  BOOL)
+</holsig>
+<holpred>
+&tvb;	&forall;ds prems conc&bull;
+&tvb;	  close_ds ds (prems, conc) &equiv;
+&tvb;	 	&forall;css&bull; iiclosed ds css &and; (&forall;t&bull; prems t &rArr; css t) &rArr; css conc
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Demonstrative">
+<p>
+<i>demonstrative</i> is a relation between sentences and semantics (that a sentence is derivable in a deductive system which is sound with respect to that semantics).
+The definition now reflects that a deductive system is represented by an immediate inference relation, and that sentences are provable if they are reachable by the corresponding derived inference relation.
+</p>
+<holconst><holsig>
+&tvb;	demonstrative : 's &cross; ('s &rarr; 'c &rarr;  BOOL)  &rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;sen sem&bull;
+&tvb;	  demonstrative (sen, sem) &equiv;
+&tvb;		&exist; ds&bull; sound (ds, sem) &and; (close_ds ds) ((&lambda;s&bull;F), sen)
+</holpred>
+</holconst>
+</subsec>
+
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec title="The Proof">
+<p>
+The proof now must effectively incorporate the demonstration that if an immediate inference relation is sound then so is the derived inference relation obtained from it.
+</p>
+First I proved a lemma stating that the derived inference rules are sound iff the immediate inference rules are sound, viz: 
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;ds&bull; sound (ds, sem) &equiv; sound (close_ds ds, sem)&qqter;);
+</ft>
+But then I didn't use it in the main proof so the proof of the lemma is not listed.
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac(map get_spec [
+		&qqtel;sound&qqter;,
+		&qqtel;close_ds&qqter;]));
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;iiclosed ds (&lambda;s&bull; sem s c)&qqter;);
+a (rewrite_tac [get_spec &qqtel;iiclosed&qqter;]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (SPEC_NTH_ASM_T 3 &qqtel;&lambda;s&bull; sem s c&qqter; ante_tac
+	THEN rewrite_tac[]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 3 [&qqtel;prem&qqter;, &qqtel;conc&qqter;]);
+(* *** Goal "2.1" *** *)
+a (DROP_NTH_ASM_T 3 ante_tac);
+a (asm_rewrite_tac[get_spec &qqtel;iiclosed&qqter;]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_asm_fc_tac[]);
+val closure_soundness_lemma = save_pop_thm "closure_soundness_lemma";
+</ft>
+</hide>
+The following is the proof that analytic and demonstrative are coextensive.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;sen sem&bull; analytic (sen, sem) &equiv; demonstrative (sen, sem)&qqter;);
+a (rewrite_tac(map get_spec [
+		&qqtel;analytic&qqter;,
+		&qqtel;demonstrative&qqter;,
+		&qqtel;sound&qqter;])
+	THEN REPEAT strip_tac);
+</ft>
+<ft lang="xl-gft" rest="">
+(* *** Goal "2" *** *)
+
+(*  2 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; c&bull; (&forall; s&bull; prem s &rArr; sem s c) &rArr; sem conc c)&qqter;
+(*  1 *)  &qqtel;close_ds ds ((&lambda; s&bull; F), sen)&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen c&qqter;
+
+(* *** Goal "1" *** *)
+
+(*  1 *)  &qqtel;&forall; c&bull; sem sen c&qqter;
+
+(* ?&turnstil; *)  &qqtel;&exist; ds
+           &bull; (&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; c&bull; (&forall; s&bull; prem s &rArr; sem s c) &rArr; sem conc c))
+               &and; close_ds ds ((&lambda; s&bull; F), sen)&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;&lambda;(ss, s)&bull; s = sen&qqter;
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+(*  1 *)  &qqtel;&forall; c&bull; sem sen c&qqter;
+
+(* ?&turnstil; *)  &qqtel;close_ds (&lambda; (ss, s)&bull; s = sen) ((&lambda; s&bull; F), sen)&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (asm_rewrite_tac[get_spec &qqtel;close_ds&qqter;,
+	get_spec &qqtel;iiclosed&qqter;]
+	THEN REPEAT strip_tac);
+</ft>
+<ft lang="xl-gft" rest="">
+(*  2 *)  &qqtel;&forall; c&bull; sem sen c&qqter;
+(*  1 *)  &qqtel;&forall; prems conc&bull; conc = sen &and; (&forall; s&bull; prems s &rArr; css s) &rArr; css conc&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (LIST_SPEC_NTH_ASM_T 1 [&qqtel;(&lambda; s&bull; F)&qqter;, &qqtel;sen&qqter;] ante_tac
+	THEN rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+Current goal achieved, next goal is:
+
+(* *** Goal "2" *** *)
+
+(*  2 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; c&bull; (&forall; s&bull; prem s &rArr; sem s c) &rArr; sem conc c)&qqter;
+(*  1 *)  &qqtel;close_ds ds ((&lambda; s&bull; F), sen)&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen c&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [
+		get_spec &qqtel;close_ds&qqter;,
+		get_spec &qqtel;iiclosed&qqter;]
+	THEN REPEAT strip_tac);
+</ft>
+<ft lang="xl-gft" rest="">
+(*  2 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; c&bull; (&forall; s&bull; prem s &rArr; sem s c) &rArr; sem conc c)&qqter;
+(*  1 *)  &qqtel;&forall; css
+           &bull; (&forall; prems conc&bull; ds (prems, conc) &and; (&forall; s&bull; prems s &rArr; css s) &rArr; css conc) &rArr; css sen&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen c&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (SPEC_NTH_ASM_T 1 &qqtel;&lambda; s&bull; sem s c&qqter; ante_tac
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+Tactic produced 0 subgoals:
+Current and main goal achieved
+</ft>
+<ft lang="xl-sml" rest="">
+val Theorem1 = save_pop_thm "Theorem1";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
 </xldoc>
-
-
-
-
-
-

@@ -1,23 +1,27 @@
-# $Id: Makefile.in,v 1.6 2004/04/28 15:13:17 rbj Exp $
+# $Id: Makefile.in,v 1.7 2005/01/26 20:53:38 rbj Exp $
 
 BUILDFIRST=pp-smlxtras.lds strong_infinity.lds WfRecp.lds x002.lds
 TOPSRCDIR=@top_srcdir@
 RELSRCDIR=src/rbjpub/pp
 RELWEBDIR=rbjpub/pp
 WEBROOTDIR=../../
-SUBDIRS= gst
+SUBDIRS= gst doc
 
+PPBASEDB=maths_egs
 PPDB=pp
 PPDBDIR=
 PPXML=pp-smlxtras.xml strong_infinity.xml WfRel.xml WfRec.xml x001.xml x002.xml \
 	x003.xml pure_categories.xml WfRecp.xml
 PPDOC=$(PPXML:.xml=.doc)
-PPDOCSML=$(PPXML:.xml=.sml)
-PPLDS=$(PPXML:.xml=.lds)
+PPDOCDOC=
+PPTEXDOC=pp_theories.doc $(PPDOCDOC)
+PPTEXSML=$(PPTEXDOC:.doc=.sml)
+PPLDS=$(PPXML:.xml=.lds) $(PPDOCDOC:.doc=.lds)
 PPPPTH= basic_hol.th char.th hol.th init.th list.th log.th min.th misc.th pair.th
 PPTH=$(PPPPTH) fixp.th wf_rel.th wf_relp.th wf_rec.th wf_recp.th si.th pc.th \
-	x003t.th x003u.th
-PPTHD=$(PPTH:.th=.thd)
+	x003t.th x003u.th x003v.th
+PPTHTO= diffgeom.th membership.th wfrel.th t001a.th t002a.th
+#PPTHD=$(PPTH:.th=.thd) t001a.thd t002a.thd analysis.thd diffgeom.thd membership.thd
 
 XML005=$(PPXML) index.xml pptheories.xml
 #HTML004=$(XML004:.xml=.html)
@@ -31,13 +35,15 @@ HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
 ENTFILES=pp-symbol.ent
 
 XLDPDIRCPY=$(ENTFILES)
-SRCDIRCPY=$(PPDOCXML) pp_theories.doc
+SRCDIRCPY=$(PPDOCXML) $(PPTEXDOC)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-#WEBFILES=$(HTML005)
+PPDOCSML=$(PPXML:.xml=.sml) $(PPTEXSML)
 
-WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm) pp_theories.pdf.gz
+WEBPDFFILES=$(PPDOCDOC:.doc=.pdf)
+
+WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm) $(WEBPDFFILES)
 
 BUILDEXTRAS=pp_theories.pdf
 
@@ -56,13 +62,16 @@ vpath %.xsl $(XLCOMDIR)
 
 # Rules
 
-$(PPPPTH): $(PPDB).dbts 
-	touch $@
+pp-smlxtras.lds: pp-smlxtras.sml $(PPDB).dbts
+
+$(PPPPTH): pp-smlxtras.lds
 
 index.html: pp-smlxtras.xmlt pptheories.xmlt strong_infinity.xmlt x002.xmlt \
 	x003.xmlt WfRec.xmlt WfRecp.xmlt WfRel.xmlt pure_categories.xmlt gst/index.xmlt
 
-wf_relp.th: x002.lds $(PPDB).dbts
+x002.lds: pp-smlxtras.lds
+
+wf_relp.th: x002.lds
 	touch wf_relp.th
 
 wf_rel.th: WfRel.lds
@@ -87,8 +96,11 @@ si.th: strong_infinity.lds
 pc.th: pure_categories.lds
 	touch pc.th
 
-x003t.th x003u.th: x003.lds
-	touch x003t.th x003u.th
+analysis.th: $(PPDB).dbts
+	touch analysis.th
+
+x003t.th x003u.th x003v.th: x003.lds
+	touch x003t.th x003u.th x003v.th
 
 pp_theories.th.tex: $(PPTHTEX)
 	cat $(PPTHTEX) > pp_theories.th.tex
@@ -98,8 +110,8 @@ pp_theories.tex: pp_theories.doc $(PPTHTEX) gst/gst_theories.th.tex
 
 pp_theories.dvi: pp_theories.tex $(PPTHTEX)
 	texdvi pp_theories
-	texdvi pp_theories
 
 pp_theories.ps: pp_theories.dvi
 	dvips $< -o pp_theories.ps
+
 

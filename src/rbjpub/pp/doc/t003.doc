@@ -1,5 +1,5 @@
 =IGN
-$Id: t003.doc,v 1.2 2004/10/03 19:42:39 rbj Exp $
+$Id: t003.doc,v 1.3 2005/01/26 20:53:38 rbj Exp $
 open_theory "diffgeom";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_conv"];
 set_flag ("pp_use_alias", false);
@@ -451,6 +451,7 @@ a (REPEAT strip_tac
 val vector_product_thm = save_pop_thm "vector_product_thm";
 =TEX
 }%\ignore
+
 
 \subsection{Linear Mappings}
 
@@ -1002,6 +1003,15 @@ save_cs_∂_thm (pop_thm());
 ‹ §	µv∑ df v ç FrechetDeriv (N, M) f v
 ∞
 
+\subsection{The Natural Topology Over a Normed Vector Space}
+
+πHOLCONST
+‹ NVSTopology: 'a NVS ≠ 'a SET SET
+˜¸¸¸¸¸¸
+‹ µv:'a NVS∑ NVSTopology v = {vs: 'a SET | µx:'a∑ x ç vs ¥
+‹	∂ÿ∑ µy:'a∑ NormâN ((SubtractâN y x) v) v <âR ÿ ¥ y ç vs}
+∞
+
 \section{INNER PRODUCT SPACES}
 
 \subsection{Inner Products}
@@ -1062,25 +1072,64 @@ declare_infix(310, ".âi");
 
 \section{MANIFOLDS}
 
-A manifold is a collection of coordinate patches over a topological space.
-Since the available notion of topology recovers the ``carrier'' of the topology from the topology, it seems appropriate here to do likewise.
-Further, we can recover the topology from the domains of the coordinate maps.
+In order to reason about space-time and the nature of the physical universe it is necessary to have mathematical structures which abstract away from the specific coordinate systems of pre-relativistic physics.
 
-Though it seems normal to expect the coordinate space to be in some power of the real line, its easier at this stage to allow an arbitrary normed vector space.
+My objective is to use formalisation as way of analysing the various arguments which are presented to justify moving from Aristotelian to Gallilean to special and general relativistic models of space-time.
 
-πHOLLABPROD MANIFOLD¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-‹	TopâM	:'a SET SET;
-‹	RvsâM	:'b RVS;
+According to \cite{Hawking73} a manifold is a collection of coordinate patches over a topological space.
+This however, they recognise contains too much specific information about coordinate systems,
+An atlas of coordinate patches is necessary in defining the concept of differentiability, but is not itself a part of the manifold.
+
+We therefore approach the definition of manifolds as the definition of certain properties of topologies, where a topology is itself just a set of sets satisfying certain properties.
+
+\subsection{Topology for Manifolds}
+
+A topological manifold is a topology which is:
+\begin{itemize}
+\item locally homeomorphic to $Ø^n$ for some positive integer n
+\end{itemize}
+
+Sometimes it is required to be hausdorff, connected or paracompact but I don't propose to include any of these properties in the definition of a topological manifold.
+Presumably, if it is locally homeomorphic to $Ø^n$ it will be hausdorff.
+
+The concept ``locally homeomorphic'' can be defined without specific reference to $Ø^n$, as a relationship between two topologies, or as here, by defining for any topology V the equivalence class of topologies with which it is locally homemorphic.
+
+πHOLCONST
+‹ LocallyHomeomorphicTo: 'a SET SET ≠ 'b SET SET SET
+˜¸¸¸¸¸¸
+‹ µU V∑ U ç LocallyHomeomorphicTo V §
+‹ µx∑ x ç Space U ¥ ∂y z f∑ x ç y ± y ç U ± z ç V ±  f ç (y ÚâT U, z ÚâT V) Homeomorphism 
+∞
+
+A topological manifold:
+
+πHOLCONST
+‹ TopologicalManifold: 'a SET SET ≠ 'b SET SET SET
+˜¸¸¸¸¸¸
+‹ µU V∑ U ç TopologicalManifold V §
+‹	U ç Topology ± V ç Topology ± U ç LocallyHomeomorphicTo V
+∞
+
+Normally the topology V will be the usual topology on $Ø^n$ for some n.
+
+There are two further steps in the definition of the kind of manifold we need.
+The first is the requirement of differentiability.
+It turns out that differentiability is a property not just of the topological manifold, but rather of the topology together with some system of coordinate patches.
+Such a collection of coordinate patches is called an atlas, and an atlas is differentiable if translations between the different coordinate systems it encompasses are all differentiable.
+
+In order to define differentiable manifolds we seem to need to introduce coordinate systems, even though our definition of differentiability above is coordinate free.
+However, because we have a coordinate free definition of differentiability I can indulge in a modest (but probably not actually useful) ``generalisation''.
+
+Though it seems normal to expect the coordinate space to be in some power of the positive real line, its easier at this stage to allow an arbitrary normed vector space.
+
+Differentiability is asserted using an atlas of coordinate patches.
+In this presentation a coordinate patch is an open set in some vector space.
+
+πHOLLABPROD ATLAS¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+‹	NvsâM	:'b NVS;
 ‹	CmapâM	: ('a SET ∏ ('a ≠ 'b)) SET
 ∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
 
-πHOLCONST
-‹ €Manifold› : ('a, 'b) MANIFOLD SET
-˜¸¸¸¸¸¸
-‹ µ M: ('a, 'b) MANIFOLD∑ M ç Manifold
-‹ §	RvsâM M ç VSâR
-‹ ±	TopâM M ç Topology
-∞
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}

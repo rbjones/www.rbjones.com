@@ -1,5 +1,5 @@
 =IGN
-$Id: t011.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+$Id: t011.doc,v 1.2 2005/01/26 20:53:38 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -42,6 +42,58 @@ open_theory "basic_hol";
 set_pc "basic_hol";
 =TEX
 
+\section{LISTS}
+
+The dictionary facilities provided below are given with a simple implementation using lists of pairs for a dictionary.
+The operations over these dictionaries often may be applicable for other kinds of lists.
+The following signature therefore provides a supplementary selection of operations over lists which are used to implement the dictionary facilities which appear in the next section.
+
+\subsection{Signature ListUtilities2}
+=DOC
+signature €ListUtilities2› = sig
+=DESCRIBE
+
+=ENDDOC
+
+=DOC
+val €l_app› : ('a -> 'a) -> string -> (string * 'a) list -> (string * 'a) list;
+val €l_app2› : (string * 'a -> 'a) -> string -> (string * 'a) list -> (string * 'a) list;
+=DESCRIBE
+=ENDDOC
+
+=SML
+end; (* of signature ListUtilities2 *)
+=TEX
+
+\subsection{Structure ListUtilities2}
+
+=SML
+structure ListUtilities2 : ListUtilities2 = struct
+=TEX
+=SML
+fun €l_app› f x [] = fail "ListUtilities2" 100111 [fn y => x]
+| l_app f x ((hi, hv)::t) = if hi = x then ((hi, f hv)::t) else (hi, hv)::(l_app f x t);
+
+fun €l_app2› f x [] = fail "ListUtilities2" 100111 [fn y => x]
+| l_app2 f x ((h as (hi, hv))::t) = if hi = x then ((hi, f h)::t) else h::(l_app2 f x t);
+
+=IGN
+fun (abs : (''a * 'b) list) €modify› ((xy as (x, y)) : ''a * 'b) : (''a * 'b) list = (
+	let	fun aux acc [] = rev (xy :: acc)
+		|   aux acc ((ab as (a, b)) :: moreabs) = (
+			if	a = x
+			then	rev acc @ (xy :: moreabs)
+			else	aux (ab :: acc) moreabs
+		);
+	in	aux [] abs
+	end
+);
+=TEX
+
+=SML
+end; (* of structure ListUtilities2 *)
+=TEX
+
 \section{DICTIONARIES}
 
 \subsection{Mapping Dictionary}
@@ -61,6 +113,8 @@ signature €MappingDictionary› = sig
 This is a signature for dictionaries which associate values with string keys and which provide facilities for filtering the dictionary and or mapping functions over the dictionary.
 =SEEALSO
 $Simple_Dictionary$, $EfficientDictionary$.
+=FAILURE
+100111	Failed to find key ?0.
 =ENDDOC
 
 =DOC
@@ -68,31 +122,43 @@ type 'a €M_DICT›;
 val €initial_m_dict› : 'a M_DICT;
 val €m_lookup› : string -> 'a M_DICT -> 'a OPT;
 val €m_enter› : string -> 'a -> 'a M_DICT -> 'a M_DICT;
+val €m_list_enter› : (string * 'a) list -> 'a M_DICT -> 'a M_DICT;
 val €m_extend› : string -> 'a -> 'a M_DICT -> 'a M_DICT;
+val €m_list_extend› : (string * 'a) list -> 'a M_DICT -> 'a M_DICT;
 val €m_delete› : string -> 'a M_DICT -> 'a M_DICT;
-val €m_app› : string -> ('a -> 'a) -> 'a M_DICT -> 'a M_DICT;
-val €m_mapfilter› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b M_DICT;
-val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> (string * 'b) list;
-val €m_list› : 'a M_DICT -> (string * 'a) list;
-val €m_override› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
-val €m_merge› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
 =DESCRIBE
 \begin{description}
 \item $initial\_m\_dict$ is the empty dictionary which associates nothing with any key value.
 \item $m\_lookup$ $key$ $dict$ retrieves value, if any, stored in $dict$ under key $key$.
 \item $m\_enter$ $key$ $val$ $dict$ gives a dictionary which associates $val$ with the key $key$ and otherwise is the same as the original dictionary $dict$.
 \item $m\_extend$ $key$ $val$ $dict$ is similar to $m\_enter$ except that it will raise an exception if $key$ is already associated with a value in $dict$.
+\item $list\_m\_enter$ and $list\_m\_extend$ enter into or extend by a list of string value pairs.
 \item $m\_delete$ $key$ $dict$ gives a dictionary which associates no value with the key $key$ and otherwise is the same as the original dictionary $dict$.
+\end{description}
+=ENDDOC
+
+=DOC
+val €m_app› : string -> ('a -> 'a) -> 'a M_DICT -> 'a M_DICT;
+val €m_mapfilter› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b M_DICT;
+val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b list;
+val €m_list› : 'a M_DICT -> (string * 'a) list;
+=GFT
+val €m_combine› : ('a OPT * 'b OPT -> 'c OPT)
+		-> 'a M_DICT -> 'b M_DICT -> 'c M_DICT;
+=SML
+val €m_override› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
+val €m_merge› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
+=DESCRIBE
+\begin{description}
 \item $m\_app$ $key$ $f$ gives a dictionary which associates with the key $key$ the result of applying the function $f$ to the value associated with key $key$ in dictionary $dict$, and is otherwise the same as $dict$.
 \item $m\_mapfilter$ maps a function over the contents of a dictionary.
 If the function raises exception Fail this is caught and causes the relevant entry to be omitted from the new dictionary.
-\item $m\_mapfilter\_list$ is the same as $m\_mapfilter$ except that it returns a list rather than a dictionary.
-\item $m\_list$ is the same as $m\_mapfilter\_list$ applied to the function $snd$.
+\item $m\_mapfilter\_list$ is the simlar to $m\_mapfilter$ except that it returns a list rather than a dictionary.
+\item $m\_list$ is the same as $m\_mapfilter\_list$ applied to the function $fn  x => x$.
+\item $m\_combine$ $fun$ $dict1$ $dict2$ gives the dictionary obtained by combining using $fun$ the entries in each dictionary for every key which occurs in either.
 \item $m\_override$ $dict1$ $dict2$ gives the dictionary obtained by entering (as $m\_enter$) into $dict1$ every $key$ $value$ pair present in $dict2$.
-\item $m\_merge$ $dict1$ $dict2$ gives the dictionary obtained by exgending (as $m\_extend$) into $dict1$ every $key$ $value$ pair present in $dict2$.
+\item $m\_merge$ $dict1$ $dict2$ gives the dictionary obtained by extending (as $m\_extend$) into $dict1$ every $key$ $value$ pair present in $dict2$.
 \end{description}
-=FAILURE
-100111	Failed to find key ?0.
 =ENDDOC
 
 =SML
@@ -172,15 +238,48 @@ val €initial_m_dict› : 'a M_DICT = [];
 The additional functions are implemented as follows:
 
 =SML
-fun €m_app› tag f ([]: 'a M_DICT) : 'a M_DICT = fail "MappingDictionary" 100111 [fn _ => tag]
-|   m_app tag f ((he as (ht,hv))::t) =
-		if ht = tag
+fun €m_list_enter› l = fold (fn ((s, v), d) => m_enter s v d) l;
+fun €m_list_extend› l = fold (fn ((s, v), d) => m_extend s v d) l;
+=TEX
+
+=SML
+fun €m_app› tag f ([]: 'a M_DICT) : 'a M_DICT
+	= fail "MappingDictionary" 100111 [fn _ => tag]
+|   m_app tag f ((he as (ht,hv))::t)
+	=	if ht = tag
 		then (ht, f hv)::t
 		else (he :: m_app tag f t);
 fun mfa f (k,v) = (k, f(k,v));
 fun €m_mapfilter› f (d: 'a M_DICT) : 'b M_DICT = mapfilter (mfa f) d;
-val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> (string * 'b) list = m_mapfilter;
+val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b list
+	= mapfilter;
 fun €m_list› (dict: 'a M_DICT) : (string * 'a) list = dict;
+=IGN
+fun €m_combine› f d1 d2 =
+ let fun	aux acc ((s,v)::t) [] =
+		let val acc' = case f (Value v, Nil) of
+				  Value v' => ((s, v')::acc)
+				| Nil => acc
+		in aux acc' t []
+		end
+     |	 aux acc [] ((s,v)::t) =  
+ 		let val acc' = case f (Nil, Value v) of
+				  Value v' => ((s, v')::acc)
+				| Nil => acc
+		in aux acc' t []
+		end
+     |	 aux acc ((s1,v1)::t1) ((s2,v2)::t2) =
+		if s1 = s2
+		then	let val acc' = case f (Value v1, Value v2) of
+				  Value v' => ((s1, v')::acc)
+				| Nil => acc
+			in aux acc' t1 t2
+			end
+		else	aux acc ((s1,v1)::t1) t2
+     |	aux acc [] [] = acc
+ in aux [] d1 d2
+ end;
+=SML
 fun €m_override› (dict1 : 'a M_DICT) (dict2 : 'a M_DICT) : 'a M_DICT = (
 	fold (uncurry(uncurry m_enter)) dict1 dict2);
 =TEX
@@ -217,35 +316,54 @@ $MappingDictionary$.
 
 =DOC
 type €'a LI_DICT›;
-datatype ('a, 'b) LIDFUN = LIDFun of {
-	linode	: string -> ('a, 'b) LIDFUN,
-	lileaf	: ('a list) -> 'b};
-val €empty_li_dict› : 'a LI_DICT;
-val €li_lookup› : string list -> 'a LI_DICT -> 'b list;
+val €initial_li_dict› : 'a LI_DICT;
+val €li_lookup› : string list -> 'a LI_DICT -> 'a list;
 val €li_enter› : string list -> 'a -> 'a LI_DICT -> 'a LI_DICT;
 val €li_enter_list› : string list -> 'a list -> 'a LI_DICT -> 'a LI_DICT;
 val €li_delete› : string list -> 'a LI_DICT -> 'a LI_DICT;
 val €li_replace› : string list -> 'a list -> 'a LI_DICT -> 'a LI_DICT;
-val €li_mapfilter› : ('a,'b list) LIDFUN -> 'a LI_DICT -> 'b LI_DICT;
-val €li_mapfilter_list› : ('a,'b) LIDFUN -> 'a LI_DICT -> 'b list;
 val €li_list› : 'a LI_DICT -> (string list * 'a list) list;
+=GFT
 val €li_merge› : 'a LI_DICT -> 'a LI_DICT -> 'a LI_DICT;
 =DESCRIBE
 \begin{description}
-\item [$empty\_li\_dict$] is the empty list indexed dictionary.
+\item [$initial\_li\_dict$] is the empty list indexed dictionary.
 \item [$li\_lookup$ $taglist$ $dict$] returns the values held in $dict$ under the index $taglist$.
 \item [$li\_enter$ $taglist$ $value$ $dict$] adds $value$ to the front of the list of elements held in $dict$ under the index $taglist$.
 \item [$li\_enter\_list$ $taglist$ $valuelist$ $dict$] appends $valuelist$ to the front of the list of elements held in $dict$ under the index $taglist$.
 \item [$li\_delete$ $taglist$ $dict$] removes all the values associated with $taglist$ in $dict$.
 \item [$li\_replace$ $taglist$ $valuelist$ $dict$] replaces the list of values associated with $taglist$ in $dict$ with $valuelist$.
+\item [$li\_list$ $dict$] returns a list of pairs of tag lists and value lists corresponding to the entire content of the dictionary.
+\item [$li\_merge$ $dict1$ $dict2$] constructs a dict in which the list of values associated with any taglist is the list of values associate with that taglist in $dict1$ appended to the list of values associated with that taglist in $dict2$.
+\end{description}
+=ENDDOC
+
+=DOC
+datatype ('a, 'b) LIDFUN =	LidRetain
+		|	LidDiscard
+		|	LidFun of {linode	: string -> ('a, 'b) LIDFUN,
+				lileaf	: ('a list) -> 'b};
+val €li_mapfilter› : ('a,'b list) LIDFUN -> 'a LI_DICT -> 'b LI_DICT;
+val €li_mapfilter2› : ('a,'a list) LIDFUN -> 'a LI_DICT -> 'a LI_DICT;
+val €li_mapfilter_list› : ('a,'b) LIDFUN -> 'a LI_DICT -> 'b list;
+=DESCRIBE
+These functions are designed to support efficient processing of the entire dictionary using functions which process a stream of tag values.
+The datatype {\it LIDFUN} is concocted to support such applications, and the generic trawling/mapping/filtering operations expect a {\it LIDFUN} as a parameter.
+To have a non-trivial effect a {\it LidFun} would be supplied and the tags would be sucessively applied to the {\it linode} components of a succession of {\it LIDFUN}s until a leaf is found which is then transformed by the {\it lileaf} component of the last {\it LidFun}.
+This process is effectively repeated for each path in the dictionary, except that paths sharing an initial segment will also share the computation associated with that initial segment (side effects are not intended).
+The two other kinds of {\it LIDFUN} allow this process to be curtailed.
+When a {\it LidFun} {\it linode} returns a {\it LidDiscard} then the result is as if there were no paths in the original dictionary with that initial path segment.
+When a {\it LidFun} {\it linode} is given a tag and returns a {\it LidRetain} then the entire subtree with that initial path segment is to be retained unchanged (the only operator whose type is compatible with the use of {\it LidRetain} is {\it li\_mapfilter2}, others will raise an exception it is arises).
+
+\begin{description}
 \item [$li\_mapfilter$ $lidfun$ $dict$] yields a new dictionary in which, against any taglist is held the value obtained by submitting the first value in each taglist to the $linode$ component of the $lidfun$ argument yeilding a new {\it LIDFUN}, submitting the next string to the $linode$ component of that $LIDFUN$ and so on until reaching a leaf, at which point the $'a list$ stored under that taglist is supplied to the $lileaf$ component of the current $LIDFUN$.
 If at any point an application of a $LIDFUN$ raises a {\it Fail} exception then no values with a $taglist$ which has an initial segment corresponding to the tags so far processed will appear in the resulting dictionary.
 If any other exception is raised it will not be trapped.
 For a pure filtering operation the {\it lileaf} component of the {\it LIDFUN} argument should be the identity function.
 \item [$li\_mapfilter\_list$ $lidfun$ $dict$] is similar to {\it li\_mapfilter} except that the results of applying the {\it lileaf} components of the {\it LIDFUN} are returned as a list rather than a dictionary.
-\item [$li\_list$ $dict$] returns a list of pairs of tag lists and value lists corresponding to the entire content of the dictionary.
-\item [$li\_merge$ $dict1$ $dict2$] constructs a dict in which the list of values associated with any taglist is the list of values associate with that taglist in $dict1$ appended to the list of values associated with that taglist in $dict2$.
 \end{description}
+=FAILURE
+100112	LidRetain encountered by {\it li\_mapfilter}
 =ENDDOC
 
 =SML
@@ -253,13 +371,19 @@ end (* of ListIndexDictionary signature *);
 =TEX
 
 =SML
-structure €SimpleLIStore› (* : ListIndexDictionary *) = struct
+structure €SimpleLIDictionary› : ListIndexDictionary = struct
 open SimpleMDictionary;
 =TEX
+
+\ignore{
 
 =SML
 datatype 'a €LI_DICT› = LiDict of {leaf: 'a list, mdict: ('a LI_DICT) M_DICT};
 val €initial_li_dict› = LiDict {leaf = [], mdict = initial_m_dict};
+datatype ('a, 'b) LIDFUN =	LidRetain
+		|	LidDiscard
+		|	LidFun of {linode	: string -> ('a, 'b) LIDFUN,
+				lileaf	: ('a list) -> 'b};
 =TEX
 
 =SML
@@ -277,8 +401,6 @@ fun €li_enter_list› ([]:string list) (vl:'a list) (LiDict {leaf, mdict}) =
 fun €li_enter› (sl:string list) (v:'a) = li_enter_list sl [v];
 =TEX
 
-$sl\_delete$ deletes an element of the domain of a dictionary.
-If the element is not in the domain it returns the dictionary unchanged.
 =SML
 fun €li_delete› ([]:string list) (LiDict {leaf, mdict}) =
 		LiDict {leaf = [], mdict = mdict}
@@ -292,1031 +414,58 @@ fun €li_replace› ([]:string list) (vl:'a list) (LiDict {leaf, mdict}) =
  |  li_replace (tagl as (tagh::tagt)) vl (LiDict {leaf, mdict}) =
 		LiDict {leaf = leaf, mdict = m_app tagh (li_replace tagt vl) mdict};
 =TEX
-$sl\_merge$ extends one dictionary by another.
-An exception will be raised if the domains of the two dictionaries have elements in common.
-=SML
-fun €sl_merge› (dict1 : 'a S_DICT) (dict2 : 'a S_DICT) : 'a S_DICT = (
-	fold (uncurry(uncurry sl_extend)) dict1 dict2
-);
-=TEX
-The initial value of the dictionary is just the empty mapping dictionary.
-=SML
-val €initial_li_dict› : 'a LI_DICT = initial_m_dict;
-=TEX
-=SML
-end (* of SimpleLIStore *);
-=TEX
-
-\section{Generic Nets}
-
-This material is a generalisation of parts of the structure $NetTools$ \cite{ds/fmu/ied/dtd008,ds/fmu/ied/imp008} which arises from making the tag type into a parameter.
-
-\subsection{First Signature}
-
-=DOC
-signature €GenericNets› = sig
-=DESCRIBE
-This provides the discrimination net tools that will be used to maintain and use
-databases of values indexed by various kinds of value.
-=ENDDOC
-
-The following design error messages are for functions not visible in this
-document, and will be given the ``area'' $GenericNets$.
-The user should never see them: they are present as an act of ``defensive programming''.
-
-=FAILURE
-100111	DESIGN_ERROR : generic net design error: ?0
-=TEX
-
-=DOC
-type ('i, ''t) GDEST = 'i -> ''t * 'i list;
-type ('i, ''t) GCON = ''t * 'i list -> 'i;
-type ('i, 'v, ''t) GNET;
-datatype ('v, ''t, 'w) GNRFUN = GNRFun of {
-	gnode	: ''t -> ('v, ''t, 'w) GNRFUN,
-	gend	: unit -> ('v, ''t, 'w) GNRFUN,
-	gleaf	: ('v list) -> ('w list)};
-val €empty_gnet› : ('i, ''t) GCON * ('i, ''t) GDEST -> ('i, 'v, ''t) GNET;
-val €gnet_enter› : ('i * 'v) -> ('i, 'v, ''t) GNET -> ('i, 'v, ''t) GNET;
-val €list_gnet_enter› : ('i * 'v) list -> ('i, 'v, ''t) GNET -> ('i, 'v, ''t) GNET;
-val €make_gnet› : (('i, ''t)GCON * ('i, ''t)GDEST) -> ('i * 'v)list -> ('i, 'v, ''t)GNET;
-val €gnet_mapfilter› : ('v, ''t, 'w) GNRFUN -> ('i, 'v, ''t) GNET -> ('i, 'w, ''t) GNET;
-val €gnet_filteredlist› : ('v, ''t, 'w) GNRFUN -> ('i, 'v, ''t) GNET -> 'w list;
-=DESCRIBE
-This is the type of a discrimination net.
-The type parameters are:
-\begin{itemize}
-\item['i] the type of values used as indexes in the net
-\item['v] the type of leaves
-\item['t] the type of edge tags
-\end{itemize}
-
-A gnet stores values of type $'b$ indexed by values of type $'c$ in a tree structure whose leaves are tagged by values of type $'a$.
-
-The functions are parameterised by a path function which takes apart a value of the index type and returns, in effect, a lazy list of arc tags.
-Given such a function:
-\begin{description}
-\item[$gnet\_enter$] will enter an index/value pair into a gnet
-\item[$list\_gnet\_enter$] will enter a list of index/value pair into a gnet
-\item[$make\_gnet$] will enter a list of index/value pair into an empty gnet
-\item[$gnet\_lookup$] will retrieve from a gnet the values associated with a particular index
-\end{description}
-=ENDDOC
 
 =SML
-end; (* signature of GenericNets *)
+fun €li_mapfilter› LidRetain lid = fail "SimpleLIDictionary" 100112 []
+| li_mapfilter LidDiscard lid = initial_li_dict
+| li_mapfilter (lidf as LidFun {linode, lileaf}) (lid as LiDict {leaf, mdict})
+	= let	val leaf' = lileaf leaf
+		fun aux (tag, lid2) = li_mapfilter (linode tag) lid2 
+		val mdict' = m_mapfilter aux mdict
+	in LiDict {leaf = leaf', mdict = mdict'}
+	end;
 =TEX
 
 =SML
-structure €GenericNets› (* : GenericNets *) = struct
+fun €li_mapfilter2› LidRetain lid = lid
+| li_mapfilter2 LidDiscard lid = initial_li_dict
+| li_mapfilter2 (lidf as LidFun {linode, lileaf}) (lid as LiDict {leaf, mdict}) =
+	let	val leaf' = lileaf leaf
+		fun aux (tag, lid2) = li_mapfilter (linode tag) lid2 
+		val mdict' = m_mapfilter aux mdict
+	in LiDict {leaf = leaf', mdict = mdict'}
+	end;
 =TEX
-
-\ignore{
-
-$GNET$s will have the following type.
-
-A $GNET$ is a structure comprising a constructor function, a destructor function and a $GTREE$.
-The destructor function is applied to an index to obtain tags which are used to label the arcs of the tree, in which a value is held at a leaf whose arc path represents the index.
-
-A net is an $n$-ary
-tree with edges labelled by values of type
-$'a$ and with leaves labelled with lists
-of values of type $'b$. We will arrange things so that
-for each internal node the labels on the edges leading
-from that node are pairwise distinct (i.e. thinking
-of this type as a disjoint union, the first summand
-can be thought of as a partial function from $'a$
-to $('a\,'b)GNET$).
-
 =SML
-type ('i, ''t) GDEST = 'i -> ''t * 'i list;
-type ('i, ''t) GCON = ''t * 'i list -> 'i;
-datatype (''t, 'v) €GTREE› =
-	€MkGNode› of (''t * (''t,'v) GTREE) list
- | 	€MkGEnd› of (''t,'v) GTREE
- | 	€MkGLeaf› of ('v list)
-datatype ('v, ''t, 'w) GNRFUN = GNRFun of {
-	gnode	: ''t -> ('v, ''t, 'w) GNRFUN,
-	gend	: unit -> ('v, ''t, 'w) GNRFUN,
-	gleaf	: ('v list) -> ('w list)};
-type ('i, 'v, ''t) GNET = {con: ('i, ''t) GCON, dest: ('i, ''t) GDEST, tree:(''t, 'v) GTREE};
-=TEX
-
-We take as the empty net the tree with an internal node
-and no edges (rather than the tree with one tip labelled
-with an empty list).
-
+fun €li_mapfilter_list› LidRetain lid = fail "SimpleLIDictionary" 100112 []
+| li_mapfilter_list LidDiscard lid = []
+| li_mapfilter_list (lidf as LidFun {linode, lileaf}) (lid as LiDict {leaf, mdict}) =
+	let	val leaf' = lileaf leaf
+		fun aux (tag, lid2) = li_mapfilter_list (linode tag) lid2 
+		val mdict' = flat (m_mapfilter_list aux mdict)
+	in	leaf' :: mdict'
+	end;
 =SML
-val €empty_gtree› : (''t, 'v) GTREE = MkGNode [];
-fun €empty_gnet› (c : ('i, ''t) GCON, d: ('i, ''t) GDEST) : ('i, 'v, ''t) GNET =
-	{con = c, dest = d, tree = empty_gtree};
-=TEX
-
-Given an edge label and an internal node of a net
-$get\_edge$ returns the subtree hanging from the edge
-with that label. There will be at most one such edge
-given the above remarks on our use of the net data type.
-If there is no such edge the empty net is returned.
-The function should never be applied to a leaf.
-
-=SML
-fun €get_edge› class ((tag, st)::tail) =
-	if tag = class then Value st else get_edge class tail
-|    get_edge _ _ = Nil;
-=TEX
-
-Given a leaf, $get\_leaves$ returns its value,
-given an internal node it returns the empty list.
-In the use of this function in $update$ below,
-the latter situation arises when the first entry
-with a particular index term is made, the former
-if subsequent entries with that same index (modulo
-types and variable structure) are made.  
-
-=SML
-fun €get_leaves› (MkGLeaf leaves) = leaves
-|   get_leaves (_) = [];
-=TEX
-
-Given a term and a net, the function
-$follow$ below returns a list
-of nets. The concatenation of the labels of the leaves
-in this list is the list of entries in the net with
-index terms which match the given term.
-
-To understand the algorithm it may be helpful to
-invent some terminology. Let us say that the {\em primary
-list} of a term is the list of values of type
-$TERM\_CLASS$ we encounter by recursively applying
-$classify$ to the sub-terms of the term ignoring
-the operators of combinations. Let us say that the
-{\em secondary list} is the list of terms which we
-ignored when we constructed the primary list taken
-in the reverse of the order in which we encountered them.
-Thus, for example, ``$Ãx∑f(g\,x)$'' has primary list
-$[TCsimpleÃ$, $TCapp$, $TCapp$, $TCvar]$ and secondary list
-$[$``$g$'', ``$f$''].
-
-In essence,
-the idea is that $follow$ steers a path through
-the net guided by the primary list of the term and
-finds a new net at the end of this path.
-If the secondary list is empty, then the leaves of
-the new net are the values we want.
-If not then the process is repeated, essentially
-using the first element of the secondary list and the
-new net as arguments for a recursive call of $follow$
-to produce another net to be used as an argument to
-another recursive call of $follow$  together with
-the second element of the secondary list, if any.
-
-The actual coding of $follow$ is more straightforward,
-or at least shorter,
-than the above description might suggest.
-Since we are looking for entries whose indexing terms
-match the argument up to variable instantiation,
-$follow$ actually returns a list of nets.
-We also use $dest\_simple\_term$ to directly classify terms and get the
-sub-components of interest, rather than using $classify$.
-
-By our positioning of $varnet$ we will return values matching structures befores values matching variables at any particular level.
-This is not noted in the specification of nets, as the precise rules for ordering are not simple, and it seems inappropriate to rely on them. 
-This way round pays a small extra cost over matching variables first, and then structures, and could be reversed.
+fun €list_lidfun› path =
+	LidFun {	linode = fn tag => list_lidfun (tag::path),
+		lileaf = fn leaf => (rev path, leaf)};
+fun €li_list› lid = li_mapfilter_list (list_lidfun []) lid;
 
 =IGN
-fun €is_empty› (MkGNode []) = true
-|   is_empty _ = false;
-
-fun €is_end› (MkGEnd _) = true
-|   is_end _ = false;
-
-fun €next› (MkGEnd t) = Value t
-|    next _ = error "GenericNets" 100111 [fn _ => "next"];
-=TEX
-
-The remaining problem is that of constructing nets in
-such a way that $follow$ will have the desired effect.
-The function $update$ is used to add an entry to a net.
-Its algorithm is perhaps best understood by considering
-the ideas of the primary and secondary lists of a term
-discussed above. The parameter $deferred$ of update
-is used to remember successive entries of the secondary
-list as combinations are encountered, during a process which
-can be thought of as setting up a net which can be used
-to map the primary list of a term to a net which can be
-used to map the secondary list of the term to the desired
-value ($elem:\ 'a$). The latter net is built by the recursive
-call of $update$ in $exec\_deferred$ made when the end of
-the primary list has been encountered.
-
-Note that given our representation for an empty net
-$update$ is never required to make an entry in a net
-of the form $MkGLeaf\,X$.
-
-By the first clause of $exec\_deferred$ the value associated with last entered instance of a pattern will be returned first.
-This is according to specification.
-=SML
-fun €update› (elem:'v) (deferred: 'i list list) (i: 'i) 
-		((gnet as {con, dest, tree = tree1 as (MkGNode cltrees)}):('i, 'v, ''t) GNET)
-		: ('i, 'v, ''t) GNET= (
-	let
-		fun exec_deferred deferred tree2 = (
-			case deferred of
-				[] => MkGLeaf (elem :: get_leaves tree2)
-			|	([] :: t) => (MkGEnd (exec_deferred t tree2))
-			|	((h :: t1) :: t2) => #tree(update elem (t1 :: t2) h
-					{con = con, dest = dest, tree = tree2})
-		);
-		val (tag, il) = dest i;
-		val child = case get_edge tag cltrees of Value x => x | Nil => empty_gtree;
-		val newchild = exec_deferred (il :: deferred) child
-	in	{con = con, dest = dest, tree = MkGNode(cltrees overwrite (tag, newchild))}
-	end
-) | update _ _ _ _ = error "NetTools" 100111 [fn _ => "update"];
-=TEX
-
-$net\_enter$ applies $update$ with an empty second argument.
-
-=SML
-fun €gnet_enter› ((i, v): 'i * 'v) (gnet: ('i, 'v, ''t)GNET) : ('i, 'v, ''t)GNET
-	= update v [] i gnet;
-=TEX
-
-Two obvious derivatives of $net\_enter$:
-
-=SML
-fun €list_gnet_enter› (ivl : ('i * 'v) list) (gnet : ('i, 'v, ''t)GNET): ('i, 'v, ''t)GNET =
-	fold (uncurry gnet_enter) ivl gnet;
-fun €make_gnet› (cd : ('i, ''t) GCON * ('i, ''t) GDEST)
-	(ivl : ('i * 'v) list) : ('i, 'v, ''t)GNET =
-	fold (uncurry gnet_enter) ivl (empty_gnet cd);
-=TEX
-
-Ways of retrieving data from a net.
-Retrieval from or processing of a net can be undertaken using any function which can select or compute from a stream of tags.
-The idea is that processing is not repeated {\it ab initio} for each path in the tree, partial computations for some initial segment of a path being reused for all paths which start with that initial segment.
-
-=IGN
-fun €gtree_mapfilter› (GNRFun f) (MkGNode gtl)
-	= MkGNode (mapfilter (fn (t, gt) => (t, gtree_mapfilter (#gnode f t) gt)) gtl)
-|   gtree_mapfilter (GNRFun f) (MkGEnd gt)
-	= gtree_mapfilter (#gend f ()) gt
-|   gtree_mapfilter (GNRFun f) (MkGLeaf vl)
-	= MkGLeaf (#gleaf f vl);
-
-fun €gnet_mapfilter› (f :('v, ''t, 'w)GNRFUN) (gnet :('i, 'v, ''t)GNET) :('i, 'w, ''t)GNET =
- let	val tree = #tree gnet;
-	val tree' = gtree_mapfilter f tree;
- in  {con = #con gnet, dest = #dest gnet, tree = tree'}
- end;
-
-fun €gtree_filteredlist› (GNRFun f) (MkGNode gtl)
-	= flat (mapfilter (fn (t, gt) => gtree_filteredlist (#gnode f t) gt) gtl)
-|   gtree_filteredlist (GNRFun f) (MkGEnd gt)
-	= gtree_filteredlist (#gend f ()) gt
-|   gtree_filteredlist (GNRFun f) (MkGLeaf vl)
-	= (#gleaf f vl);
-
-fun €gnet_filteredlist› (f :('v, ''t, 'w)GNRFUN) (gnet :('i, 'v, ''t)GNET) : 'w list =
-	gtree_filteredlist f (#tree gnet);
+fun €li_merge› (lid1 as LiDict {leaf, mdict}) (lid2 as LiDict {leaf, mdict}) =
+	let val leaf' = leaf1 @ leaf2
+	    fun aux tag = 
+		LiDict {leaf = vl, mdict = mdict}
 =TEX
 
 }%ignore
 
 =SML
-end; (* structure GenericNets *)
-open GenericNets;
+end (* of SimpleLIDictionary *);
+open SimpleLIDictionary;
 =TEX
 
-\section{Type Nets}
-
-The material in this document is derived from the design and implementation of type unification and anti-unification in \Product.
-The material in \cite{ds/fmu/ied/dtd014,ds/fmu/ied/dtd011,ds/fmu/ied/imp014,ds/fmu/ied/imp011}
-has been freely plundered and integrated around an implementation of unifying lookup nets for values indexed by HOL types.
-
-=DOC
-signature €TypeNet› = sig
-=DESCRIBE
-$TypeNet$ is the signature of a structure providing facilities for efficient storage and lookup of information indexed by HOL types.
-The lookup facilities will return all the data indexed by types which are unifiable with a supplied target type, together with a most general ante-unifier for all their keys.
-=ENDDOC
-
-\subsection{Tag Type}
-
-To use the generic net package we have to determine a type tags which can be used to represent unifiable (HOL) types (i.e. types with instantiable variables).
-
-=DOC
-datatype €TYPETAG› = TTInstVar of int | TTFixedVar of string | TTTypeCon of string;
-val €type_dest› : TYPE -> TYPETAG * TYPE list;
-val €type_con› : TYPETAG * TYPE list -> TYPE;
-type 'v TYPENET = (TYPE, 'v, TYPETAG) GNET;
-=DESCRIBE
-$TYPETAG$ is the type of tags used for storing types in a generic net.
-
-\begin{description}
-\item[TTInstVar] is an instantiable type variable
-\item[TTFixedVar] is a fixed type variable
-\item[TTTypeCon] is a type constructor
-\end{description}
-
-$type\_dest$ disassembles a type yielding its tag and constituent types.
-$type\_con$ reassembles a type.
-
-$TYPENET$ is the type of a unifying type net.
-=ENDDOC
-
-\subsection{Substitutions}
-
-Unification is carried out by using a substitution function.
-This is a partial finite function mapping a type unknown
-to an extended type.
-
-=DOC
-type €SUBS›
-=DESCRIBE
-$SUBS$ denotes the type of a substitution function.
-$SUBS$ is a data structure allocated by $new\_subs$, updated by $unify$ and $list\_unify$.
-=ENDDOC
-
-=DOC
-val €sub_type› : SUBS -> TYPE -> TYPE
-=DESCRIBE
-$sub\_type$ takes a type and uses the substitution given by the finite function
-$SUBS$ to yield a new type.
-The effect is as if the substitution is repeatedly applied until no further substitution is made.
-=ENDDOC
-
-=DOC
-val €null_subs› : SUBS
-=DESCRIBE
-$null\_subs$ is the substitution which changes nothing.
-=ENDDOC
-
-\subsection{Unification functions}
-
-The function $unify$ computes the unifier of two
-extended types and modifies the substitution as
-a side-effect. This new substitution
-can later be applied to type unknowns in a term to
-find out what they are. If the unification fails then
-an exception is raised.
-
-=DOC
-val €unify› : SUBS -> TYPE * TYPE -> SUBS
-=DESCRIBE
-$unify$ computes the unifier of two types with respect to a substitution function.
-The unifier is in the form of a substitution function.
-=FAILURE
-100113	Failed to unify type constructors ?0 with ?1. 
-100114	Unification fails occurs check. 
-=ENDDOC
-
-It will also be useful to have a function which computes
-the unifier of a list of types.
-
-=DOC
-val €list_unify› : SUBS -> EXTYPE list -> unit
-=DESCRIBE
-The function $list\_unify$ computes the unifier of
-a list of extended types and changes the substitution as
-a side-effect.
-=ENDDOC
-
-\subsection{Further Utilities}
-
-The process of unifying two types requires a supply
-of unique names. The utilities $start\_again$,
-$next\_name$ and $new\_name$ serve this purpose.
-
-=DOC
-	val €start_again› : unit -> unit
-	val €next_name› : unit -> int
-=DESCRIBE
-$start\_again$ resets the internal record of the
-next number to be generated to zero.
-$next\_name$ will generate the next number in a sequence.
-=ENDDOC
-
-=DOC
-	val €new_name› : 'a list -> ('a * int) list
-=DESCRIBE
-$new\_name$ associates each item in the argument list
-with a unique number. It returns a list of pairs. The
-first of each pair is item and the second is the
-unique number.
-=USES
-$new\_name$ is used when converting types to extended
-types to supply a list of distinct type unknown names.
-=ENDDOC
-
-=DOC
-	val €replaced› : TYPE -> EXTYPE
-=DESCRIBE
-$replaced$ is used whenever a constant is encountered
-to give an extended type for the constant. Since the
-same constant may have its type instantiated differently
-at different instances in the same term, we replace all the
-type variables in the new type by type unknowns using a
-different set of type unknowns on every invocation.
-=ENDDOC
-
-=DOC
-	val €antiunify› : (TYPE * TYPE) -> TYPE
-=DESCRIBE
-The antiunifier of a set of one or more types is the least general
-type which has each type in the set as an instance. Given a pair
-of types, $(\tau_1, \tau_2)$, $antiunify\,(\tau_1, \tau_2)$ is the
-antifunifier of $\{\tau_1, \tau_2\}$.
-=USES
-This is used in the implementation of the aliasing facility.
-=ENDDOC
-
-This completes the signature for the structure TypeNet.
-=SML
-end; (* of signature TypeNet *)
-=TEX
-
-=SML
-structure €TypeNet› (* : TypeNet *) = struct
-=TEX
-
-%\ignore{
-
-The substitution supporting functions and the substitution
-type use the structure $DynamicArray$.
-=SML
-open DynamicArray;
-open GenericNets;
-=TEX
-
-\subsection{The type $TYPE_TAG$}
-
-=SML
-datatype €TYPE_TAG› = TTInstVar of int | TTFixedVar of string | TTTypeCon of string;
-
-fun €type_dest› (t : TYPE) : TYPE_TAG * TYPE list =
-	case dest_simple_type t of
-		Vartype s => (TTInstVar (integer_of_string s) handle _ => TTFixedVar s, [])
-	|	Ctype (s, tl) => (TTTypeCon s, tl);
-
-fun €type_con› ((tt,tl): TYPE_TAG * TYPE list) : TYPE =
-	case tt of
-		TTInstVar i => mk_vartype (string_of_integer i)
-	|	TTFixedVar s => mk_vartype s
-	|	TTTypeCon s => mk_ctype (s, tl);
-=TEX
-
-\subsection{The Type $TYNET$}
-
-This is the type of a polymorphic store indexed by types an accessed by type unification.
-Because lookup is by unification it is essential to know which types variables are instantiable.
-
-We might need to have some extra information at the nodes, but pro-tem this is omitted.
-
-=IGN
-datatype ('a, 'b) €GNET› =
-	€GNLeaf› of 'a
-|	€GNNode› of 'b * ('a, 'b) GNET list;
-datatype ('a €GNET› =
-	€ITyVars› of int list (* instantiable type variables *)
-|	€FTyVars› of string list (* fixed type variables *)
-|	€TyCons› of (string * 'a GNET list) list (* type constructors *);
-=TEX
-
-\subsection{Substitution}
-
-The substitution is represented by a sparse array of
-extended types. The substitution which takes a type unknown
-onto an extended type is implemented as an array of
-extended types, the array index
-corresponding to the type unknown (a natural number).
-A substitution which does not take a type unknown onto anything
-is represented by an empty cell. The sparse array function
-$sub\_opt$ returns $Nil$ when an empty cell is encountered.
-
-=SML
-type €SUBS› = EXTYPE DYNAMIC_ARRAY;
-=TEX
-The following function is needed to detect an error
-case during unification. It detects whether or not the
-type unknown occurs in any of the extended types which
-repeated application of the substitution  gives, returning
-true or false.
-=SML
-fun €tyvars_set› (phi:SUBS) (ExVartype(Known _)) (tvn : int) = false
-|   tyvars_set phi (ExVartype(Unknown tvn')) (tvn : int) = (
-	case sub_opt (phi, tvn') of
-		Nil => (tvn = tvn')
-	|	Value ty => tyvars_set phi ty tvn
-) | tyvars_set phi (ExType(_, tyl)) (tvn : int) = any tyl (fn ty => tyvars_set phi ty tvn);
-=TEX
-\subsection{Substitutions}
-
-The unification algorithm works using so-called
-substitutions. These are functions from
-type unknowns to (extended) types.
-They have the property that they differ from
-the identity function (on the set of all type unknowns)
-in only finitely many places.
-
-When the type inference process is complete (and also
-for formatting error messages), we need to be able
-to convert extended types back into types using the
-most general typing which has been computed as a
-substitution.
-
-=SML
-fun €extype_to_type› (phi : SUBS) (namemap : (int * string) list)
-	 (ExVartype(Known x)) = (
-	mk_vartype x
-) | extype_to_type phi namemap (ExVartype(Unknown x)) = (
-	case sub_opt (phi, x) of
-		Nil => (mk_vartype (lassoc3 namemap x)
-			handle Fail msg =>
-				fail "extype_to_type" 14003 [fn () => string_of_int x])
-		| Value y => extype_to_type phi namemap y
-) | extype_to_type phi namemap (ExType(s, l)) = (
-	mk_ctype(s, map (extype_to_type phi namemap) l)
-);
-=TEX
-The inverse of this function is $type\_to\_extype$.
-=SML
-fun €type_to_extype› (ty : TYPE) : EXTYPE = (
-	let	fun aux ty = (
-		if is_vartype ty
-		then
-			let	val x = dest_vartype ty
-			in
-				ExVartype(Known x)
-			end
-		else
-			let	val (s,tyl) = dest_ctype ty
-			in
-				 ExType(s, map aux tyl)
-			end
-		)
-	in
-		aux ty
-	end
-);
-=TEX
-$sub\_type$ applies a substitution to a type repeatedly until
-the substitution ceases to change the type.
-
-=SML
-fun €sub_type› (phi : SUBS) (ExVartype(Known ty)) = ExVartype(Known ty)
-|   sub_type (phi : SUBS) (ty as (ExVartype(Unknown tvn))) = (
-	case sub_opt (phi, tvn) of
-		Nil => ty
-		| Value ty => sub_type phi ty)
-|   sub_type (phi : SUBS) (ExType(s, tyl)) = ExType(s, map (sub_type phi) tyl);
-
-=TEX
-$new\_subs$ creates a new substitution array. The size
-$sz$ is passed to the sparse array package and determines
-the array size. The array is an indexed array of
-lists. The larger the array, the shorter the lists in the
-array, and hence the faster the lookup time. If the
-array is too large, then space is wasted. A value of
-100 for $sz$ gives reasonable performance for the ICL HOL
-type inferrer. $init\_subs$ returns a substitution to the
-identity function.
-
-=SML
-fun €new_subs› (sz:int) : SUBS = array sz;
-val €init_subs›  : SUBS -> unit = scratch;
-=TEX
-
-The substitution array implements a form of structure sharing.
-For example, a substitution $\{?1 \mapsto ?3, ?2 \mapsto ?3\}$ extended by $?3 \mapsto (?4≠?5≠?6)$, yields $\{?1 \mapsto ?3, ?2 \mapsto ?3, ?3 \mapsto (?4≠?5≠?6)\}$, whereas
-without structure sharing (which was the case in the previous
-version of this algorithm and the HOL prototype), the
-substitution was represented as $\{?1 \mapsto (?4≠?5≠?6), ?2 \mapsto (?4≠?5≠?6)\}$.
-
-Each occurrence of the unknown is substituted during unification.
-With structure sharing, the substitution is deferred.
-To find what $?1$ maps to, two look-ups to
-the substitution array are required, the first look-up yields
-$?3$, the second, $(?4≠?5≠?6)$. Further look-ups using
-$?4$, $?5$, and $?6$ will fail (yielding Nil). This gives
-$(?4≠?5≠?6)$ as the type which $?1$ maps to.
-
-In the prototype, it was possible and valid to have the
-substitution $\{?1 \mapsto ?2, ?2 \mapsto ?1\}$. This
-situation is undesirable since loop detection is difficult.
-A solution is to represent type unknowns which are equivalent
-by an equivalence class. The nominated
-representative of an equivalence
-class is the terminal of the the graph. e.g., the representative
-of $\{?1 \mapsto ?3, ?2 \mapsto ?3\}$ is $?3$.
-So the extension of this substitution by $\{?4 \mapsto ?1\}$ is represented as $\{?1 \mapsto ?3, ?2 \mapsto ?3, ?4 \mapsto ?3\}$.
-
-Note that the substitution is not extended when the type unknown is
-the same as the equivalence class representative.
-
-As a happy side-effect of the above functional considerations,
-{\it look\_up\_eq\_class} and {\it extend} together implement a special
-case of Tarjan's path-compression algorithm and this ensures that the
-$\mapsto$-chains in the substitution never have more than one edge.
-
-=SML
-fun €look_up_eq_class› (phi : SUBS) (tvn : int) : int OPT = (
-	case sub_opt (phi, tvn) of 
-		Value (ExVartype(Unknown tvn')) =>
-			look_up_eq_class phi tvn'
-		|Value Other => Nil
-		|Nil => Value tvn
-);
-=TEX
-$extend\,\phi\,tvn\,ty$ is $\phi$ modified to send
-$tvn$ to $ty$.
-An exception is raised when solving equations
-of the form $?1≠?1=?1$ which arise from
-terms like ``$f f$'' (for $f$ a variable).
-This is the so-called ``occurs check''. Note that it guarantees
-that the substitution array contains no loops. i.e., that if
-$R : Ó \leftrightarrow Ó$ denotes the relation between
-type unknown names such that $x\  R\  y\  \leftrightarrow\  y$ occurs somewhere
-in $sub\_opt (\phi,\  x)$, then the transitive closure $R^+$ of $R$
-is irreflexive, i.e., $≥ x\  R^+\  x$ for all x.
-To see this note that $extend\  \phi\  tvn$ is never called when
-tvn already has an entry in $\phi$. (See the use of
-$extend$ in $unify$).
-This gives us Tarjan's path-compression algorithm without having
-to change any links when reading the data structure that represents
-the substitution.
-=SML
-fun €extend› (phi : SUBS) (tvn : int) (ty : EXTYPE) : unit = (
-	case ty of
-	ExVartype(Unknown tvn') => (
-		case look_up_eq_class phi tvn' of
-		Value tvn'' =>
-			if tvn = tvn'' then ()
-			else update (phi, tvn, ExVartype(Unknown tvn''))
-		|Nil =>	if tyvars_set phi ty tvn
-			then fail "unify" 14002 []
-			else update (phi, tvn, ty))
-	| ExVartype(Known s) => (update (phi, tvn, ty))
-	| ExType (ty', tyl) => (
-		if tyvars_set phi ty tvn
-		then fail "unify" 14002 []
-		else update (phi, tvn, ty))
-);
-=TEX
-
-\subsection{The Unification Algorithm}
-
-The work of unification is done by the function
-$unify$ below.
-Given a substitution, $\phi$, which is an idempotent
-substitution giving the most general solution
-of some system, $S$, of type equations,
-and a pair of types, $ty$ and $ty'$, $unify$ computes
-an idempotent substitution
-which is the most general solution of
-$S\,¿\,\{ty = ty'\}$, provided such a solution exists.
-
-The algorithm is fairly straightforward.
-If either type argument is a type unknown then if that unknown is not
-changed by $\phi$ we simply extend $\phi$ to send
-that type unknown to the other type argument.
-If one of the arguments is a type unknown and it is
-changed by $\phi$ we must recursively unify its
-image under $\phi$ with the other argument.
-If neither argument is a type unknown then they must
-both have the same top-level structure and we
-recursively examine the corresponding
-subtypes of the two arguments (if any) to find
-the solution.
-
-If the types cannot be unified, fail is called which
-raises an exception with the constructor ``Fail''.
-=SML
-fun €unify› (phi : SUBS) ((ty, ty') : EXTYPE * EXTYPE) : unit = (
-	case ty of
-		ExVartype(Unknown tvn) => (
-			case sub_opt (phi, tvn) of
-				Nil => (
-					extend phi tvn ty'
-				) |Value phitvn => (
-					unify phi (phitvn, ty'))
-	) |	ExVartype(Known kty) => (
-			case ty' of
-				ExVartype(Known kty') => (
-					if kty = kty'
-					then ()
-					else fail "unify" 14001 [fn () => kty,
-								 fn () => kty']
-			) |	ExVartype(Unknown _ ) => unify phi (ty', ty)
-			|	ExType(s, _) => fail "unify" 14001 [fn () => kty,
-								    fn () => s]
-	) |	ExType(s, tyl) => (
-			case ty' of
-				ExVartype _ => unify phi (ty', ty)
-			|	ExType(s', tyl') => (
-					if s = s' andalso length tyl = length tyl'
-					then ((map (unify phi) (combine tyl tyl'));())
-					else fail "unify" 14001 [fn () => s,
-								 fn () => s']
-			)
-	)
-);
-=TEX
-
-The function $list\_unify$ applied to a list $[t1,t2,...,tn]$
-finds the unification $t1$ and $t2$, the unification of
-$t2$ with $t3$, and so on, folding in the substitution.
-At the end of the process, the substitution function
-yielded is the unification of all the types in the list.
-The substitution $phi$ is yielded as a side-effect of
-unify, and the function returns $unit$.
-
-=SML
-fun €list_unify› (phi : SUBS) (tyl : EXTYPE list) : unit = (
-let	fun aux (x1::x2::xs) = (
-		let	val sd = unify phi (x1, x2);
-		in
-			aux (x2::xs)
-		end)
-	  | aux _ = ();
-in
-	aux tyl
-end);
-=TEX
-\subsection{Further Utilities}
-
-The following two utilities support a supply of unique names.
-
-=SML
-local
-	val name_supply : int ref = ref 0;
-in
-	fun €start_again›() = name_supply := 0;
-	fun €next_name› () = (
-		let	val x = !name_supply
-		in	(name_supply := x+1; x)
-		end
-	);
-end;
-=TEX
-
-=SML
-fun €new_name› (names : 'a list) : ('a * int) list = (
-	map (fn x => (x, next_name())) names
-);
-=TEX
-
-=SML
-fun €replaced› (ty : TYPE) : EXTYPE = (
-	let	val rename = lassoc3(new_name (type_tyvars ty));
-		fun aux ty = (
-			if is_vartype ty
-			then
-				let	val x = dest_vartype ty;
-				in
-					ExVartype(Unknown(rename x))
-				end
-			else
-				let	val	(s,tyl) = dest_ctype ty;
-				in
-					ExType(s, map aux tyl)
-				end)
-	in
-		aux ty
-	end
-);
-=TEX
-
-\subsection{Generation of Unique Names}
-
-The antiunification of two completely different types yields
-a new type which must be unique with respect to the two types
-and all the types constructing those two types.
-
-A list of all type constructors forming the two types is produced.
-A count of the maximum number of ``\/\'\/'' characters preceding
-each type constructor name is made. New type constructor
-names are then formed by the concatentation of the number of
-``\/\'\/'' characters plus one extra one for uniqueness with
-a number. The number starts at 0 and is incremented for each
-new type constructor name required. The name is unique with
-respect to names of the two types since the number
-of preceding ``\/\'\/'' characters in a new constructor name will always exceed
-the number of ``\/\'\/'' characters in the constructor names of the
-two types. The name is unique with respect to other newly
-generated constructor names because the number part of the name
-will be different for each name produced.
-
-For example, consider two types, t1 and t2 such that
-
-	val t1 = mk\_vartype ``\/\'\/\'\/TY1'';
-	val t2 = mk\_vartype ``\/\'\/\'\/\'\/TY2'';
-
-Then the name generated will be ``\/\'\/\'\/\'\/\'\/0''. The antiunification of
-t1 and t2 is therefore
-
-	val it = mk\_vartype ``\/\'\/\'\/\'\/\'\/0'';
-
-Were there to be more than one new name generated for this example,
-then they would be ``\/\'\/\'\/\'\/\'\/1'', ``\/\'\/\'\/\'\/\'\/2'' and so on.
-	
-The function $ext\_constr$ extracts all type constructor names
-from a list of types of type $TYPE$. For a type variable, this yields
-a list containing
-one constructor name. For a type formed by the Standard ML constructor
-$Type$, the constructor is extracted; then $ext\_constr$ is
-applied recursively to each element in the type list to
-extract each constructor. 
-
-=SML
-fun €ext_constr› (nil : TYPE list) : string list = nil
-  | ext_constr (t::tlist) = (
-	if is_vartype t
-	then
-		(dest_vartype t)::(ext_constr tlist)
-	else
-		let	val constr = (fst o dest_ctype) t;
-			val args   = (snd o dest_ctype) t;
-		in
-			constr::(ext_constr (tlist@args))
-   		end);
-=TEX
-
-$count\_primes$ counts the number of primes (``\/\'\/``
-characters) at the beginning of a string.
-
-=SML
-fun €count_primes› (s : string) : int = (
-	let fun aux n nil = n
-	      | aux n (c::cs) = (
-		if c = "'"
-		then
-			aux (n+1) cs
-		else
-			n);
-	in
-		aux 0 (explode s)
-	end);
-=TEX
-
-$maxl$ delivers the highest integer in a list of integers.
-=SML
-fun €maxl› (nlst : int list) : int = (
-	let fun aux n (nil : int list) = n
-	      | aux n (x::xs) = (
-		if x > n
-		then
-			aux x xs
-		else
-			aux n xs)
-	in
-		aux ~1 nlst
-	end);
-=TEX
-
-$max\_mcp$ delivers a count of the highest number of primes in
-the type constructor names of a list of types. This is used
-to ensure that all new names constructed have at least this
-many leading primes.
-
-=SML
-fun €max_mcp› (tl : TYPE list) : int =
-	(maxl (map count_primes (ext_constr tl)));
-=TEX
-
-$au\_string$ will generate names which are the concatenation
-of $nprimes$ number of leading primes, and a string representation
-of a number.
-
-=SML
-fun €au_string› (nprimes : int) (n : int) : string = (
-	let fun aux 0 = ""
-	      | aux n = "'"^(aux (n - 1));
-	in
-		(aux nprimes)^(string_of_int n)
-	end);
-=TEX
-
-The function $gen$ generates unique names for antiunify.
-The names are unique with respect to the names of the
-types being antiunified ($f$), and with respect to
-new names already generated during the process of
-antiunification ($tp$). The last name produced is
-given by the function $pren$.
-
-=SML
-fun €gen› (f : (TYPE * 'a) list) (tp : ('b * 'b) as (t1,t2))
-    (pren : int -> string) : string = (
-	let fun aux i f tl pren = (
-		if any f (fn (x,_) => x =: (mk_vartype (pren i)))
-		then
-			aux (i+1) f tl pren
-		else
-			pren i);
-	in
-		aux 0 f [t1,t2] pren
-	end);
-=TEX
-
-\subsection{Implementation of antiunify}
-
-The implementation of antiunify follows closely the
-algorithm specified in \cite{ds/fmu/ied/dtd011}. Most of the
-functionality is contained in the function $au$. Two
-useful functions $apply$ and $easy$ are introduced first.
-
-$apply$ repeatedly applies a finite function $f$ to arguments.
-This is described in \cite{ds/fmu/ied/dtd011}, Section 2.1 (Method),
-and the reader is referred to that description.
-
-=SML
-fun €apply› (f : 'a * 'b -> 'c -> 'b * 'd) (nil : 'a list)
-    (g : 'b) (p : 'c) : ('b * 'd) list = nil
-  | apply f (x::xs) g p = (
-	let val (a,b) = f(x,g) p;
-	in
-		(a,b)::(apply f xs a p)
-	end);
-=TEX
-
-$easy$ determines whether the antiunification of two
-types is going to be easy.
-
-=SML
-fun €easy› (t1 : TYPE,t2 : TYPE) : bool = (
-	not (is_ctype t1 andalso is_ctype t2 andalso
-		let val cns = (fst o dest_ctype);
-		    val len = (length o snd o dest_ctype);
-		in
-			cns t1 = cns t2 andalso
-				len t1 > 0 andalso
-					len t1 = len t2
-		end));
-=TEX
-
-$au$ implements the antiunification algorithm described
-in the design document. The code closely follows the
-algorithm of the detailed design.
-=SML
-fun €local_rassoc3› ((x, (y1,y2)) :: rest : ('a * (TYPE * TYPE)) list)((what1,what2)
-		: (TYPE * TYPE)) : 'a = (
-	if (y1 =: what1) andalso (y2 =: what2)
-	then x
-	else local_rassoc3 rest (what1,what2)
-) | local_rassoc3 [] _ = fail "local_rassoc3" 1005 [];
-=TEX
-
-=SML
-fun €au› ((tp : (TYPE * TYPE) as (t1,t2)), f : (TYPE * (TYPE * TYPE)) list)
-    (pren : int -> string) : (TYPE * (TYPE * TYPE)) list * TYPE = (
-	if t1 =: t2
-	then
-		(f, t1)
-	else if easy tp
-	then
-		if any f (fn (_,(y1,y2)) => (y1 =: t1) andalso (y2 =: t2))
-		then
-			(f,local_rassoc3 f tp)
-		else
-			let val beta = mk_vartype(gen f tp pren);
-			in
-				((beta,tp)::f, beta)
-			end
-	else
-		let val constr = (fst o dest_ctype) t1;
-		    val cl1 = (snd o dest_ctype) t1;
-		    val cl2 = (snd o dest_ctype) t2;
-	     	    val ll = apply au (combine cl1 cl2) f pren;
-		    val (fs,ss) = split ll;
-		    val last = (hd o rev);
-		in
-			(last fs,mk_ctype (constr,ss))
-		end);
-=TEX
-
-$antiunify$ is the only public interface in this structure.
-It calculates a function which, given a number will produce
-a unique name with respect to type constructor names of
-$t1$ and $t2$. It calls $au$ which returns a new finite
-function as the first of a pair. However, we are interested
-in the second of the pair which is the antiunifier of $t1$ and
-$t2$.
-
-=SML
-fun €antiunify› (tp : TYPE * TYPE as (t1,t2)) : TYPE = (
-	let	val prename = au_string (max_mcp [t1,t2] + 1);
-	in
-		snd (au (tp,nil) prename)
-	end);
-=TEX
-
-%}
-
-=SML
-end; (* of structure TypeNet *)
-=TEX
-
-\section{Term Nets}
+\section{UNIFYING TERM NETS}
 
 =DOC
 signature €TermNet› = sig

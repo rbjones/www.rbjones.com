@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.4 2004/04/14 15:56:58 rbj Exp $
+# $Id: rules.mk,v 1.5 2005/01/26 20:53:23 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -13,7 +13,8 @@ Makefile: $(MKDEPS)
 
 # variable definitions
 # the following variables should be defined in the makefile if required
-# PPTH	= (.th) names of proofpower theories for listing 
+# PPTHTO = (.th) names of proofpower theories for listing in TEX only
+# PPTH	= (.th) names of proofpower theories for listing in HTML
 # HTML001	= (.html) HTML documents
 # HTML004	= (.html) HTML documents
 
@@ -32,12 +33,24 @@ PPTHTEX=$(PPTHDOC:.doc=.tex)
 HTMLTHLS=$(PPTHDOC:.th.doc=.html)
 PPTHDXLD=$(PPTHDOC:.th.doc=.xml)
 
+# Tex only theory listings
+
+PPTHTOD=$(PPTHTO:.th=.thd)
+PPTHTODOC=$(PPTHTO:.th=.th.doc)
+PPTHTOTEX=$(PPTHTODOC:.doc=.tex)
+
 # DVI, Postscript, PDF
 
-TEX=$(PPPDOC:.doc=.tex) $(KLUTEX)
+DOCTEX=$(PPPDOC:.doc=.tex) $(PPTHTEX) $(PPTHTOTEX)
+TEX=$(KLUTEX) $(DOCTEX)
+KLUDVI=$(KLUTEX:.tex=.dvi)
 DVI=$(TEX:.tex=.dvi)
 PS=$(DVI:.dvi=.ps)
 PDF=$(PS:.ps=.pdf)
+
+# Qualified dependencies
+
+$(KLUDVI): rbj.bib
 
 # Qualified rules
 
@@ -100,20 +113,20 @@ $(PPTHDXLD): %.xml: %.thd
 
 $(PPDB).dbts:
 	if test "$(PPDBDIR)" != ""; then ln -s $(PPDBDIR)$(PPDB).$(PPDBARCH); fi
-	cd ./$(PPDBDIR); if test ! -f $(PPDB).$(PPDBARCH); then pp_make_database -p hol $(PPDB); fi
+	cd ./$(PPDBDIR); if test ! -f $(PPDB).$(PPDBARCH); then pp_make_database -p $(PPBASEDB) $(PPDB); fi
 	touch $(PPDB).dbts
 
 $(PPLDS): %.lds: %.sml $(PPDB).dbts
 	echo "save_and_quit();" | pp -d $(PPDB) -f $< > $*.log
 	touch $@
 
-$(PPTHD): %.thd: %.th
+$(PPTHD) $(PPTHTOD): %.thd: %.th
 	pp_list -d $(PPDB) $* > $*.thd
 
-$(PPTHDOC): %.th.doc: %.thd
+$(PPTHDOC) $(PPTHTODOC): %.th.doc: %.thd
 	cp $< $*.th.doc
 
-$(PPTHTEX): %.tex: %.doc
+$(DOCTEX): %.tex: %.doc
 	doctex $*
 
 $(BASHBIN): % : %.sh
@@ -130,15 +143,15 @@ $(PERLBIN): % : %.pl
 	doctex $*
 
 %.dvi: %.tex
-	latex $*.tex
-	latex $*.tex
-	latex $*.tex
+	texdvi -b $*
+	texdvi $*
+	texdvi $*
 
 %.ps: %.dvi
 	dvips $*.dvi -o $*.ps
 
-%.pdf: %.ps
-	ps2pdf $<
+%.pdf: %.dvi
+	dvipdf -sPAPERSIZE=a4  $*
 
 %.gz: %
 	gzip --best --stdout $< > $<.gz
@@ -197,9 +210,9 @@ $(XFTFILES): %.xft: %.xml stripfile.xsl
 	$(JAVA) com.jclark.xsl.sax.Driver $< $(XLCOMDIR)/stripfile.xsl
 	touch $*.xft
 
-$(HTML005i): %-i.html : %.html
+$(HTML005i) $(HTMLTHLSi): %-i.html : %.html
 
-$(HTML005m): %-m.html : %.html
+$(HTML005m) $(HTMLTHLSm): %-m.html : %.html
 
 $(XMLT006): %.xmlt: %.xml
 	addftl <$<  | xxml2xml >$*.xmlt

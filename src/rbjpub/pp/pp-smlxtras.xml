@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: pp-smlxtras.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       id="$Id: pp-smlxtras.xml,v 1.2 2005/01/26 20:53:38 rbj Exp $"
        name="pp-smlxtras"
        title="Extra sml procedures for ProofPower"
        description="A collection of small extras to facilitate the RBJones.com methods of working with ProofPower"
@@ -80,6 +80,78 @@ set_pr_conv basic_prove_conv "xl_cs_&exist;_conv";
 set_pr_tac basic_prove_tac "xl_cs_&exist;_conv";
 commit_pc "xl_cs_&exist;_conv";
 fun xl_set_cs_&exist;_thm thm = (xl_consistency_result := thm);
+</ft>
+</subsec>
+<subsec title="Trawling for helpful theorems and definitions">
+To make it easier to find things relevant to the current goal.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;0=1 &and; F&qqter;);
+
+val avoid_theories = ref ["min", "log"];
+val avoid_constants = ref ["=", "&and;"];
+val avoid_specs = ref ["=", "&and;"];
+
+fun defined_consts t =
+	let val consts = term_consts t
+	in filter (fn x =&gt;  (fst x) mem ["=", "&epsilon;", "&rArr;"]) consts
+	end;
+
+fun on_goal_conc f = f (snd (top_goal()));
+
+fun term_const_defns t =
+ let	val consts = defined_consts t;
+	fun cd c = get_defn (get_const_theory c) c
+ in map (cd o fst) consts
+ end;
+
+fun goal_defns void =
+ term_const_defns(snd(top_goal()));
+
+fun term_const_specs t =
+ let	val consts = defined_consts t
+ in map (get_spec o mk_const) consts
+ end;
+
+fun goal_specs void =
+ term_const_specs(snd(top_goal()));
+
+fun const_thms c =
+ let val allthms = get_thms (get_const_theory c)
+ in allthms
+ end;
+
+fun goal_const_thms void =
+ let val consts = term_consts (snd(top_goal()))
+ in map (const_thms o fst) consts
+ end; 
+
+fun get_thml th kl = map (get_thm th) kl;
+
+fun get_thml2 thkl =
+ foldl (op @) [] (map (fn (th, kl) =&gt; get_thml th kl) thkl);
+
+fun get_keys th l =
+ let val thms = get_thms th
+ in map (fn chose =&gt; (hd o fst o chose) thms) (map nth l) 
+ end;
+
+fun no_map f l =
+ let fun g n f [] = []
+     | g n f (h::t) = f n h :: (g (n+1) f t)
+ in g 0 f l
+ end;
+
+fun get_num_thms th =
+ no_map (fn x =&gt; fn t =&gt; (x,t)) (get_thms th);
+
+(* get_thml "-" ["tc_mono_thm", "tran_tc_thm2"];
+get_thml2 [("-", ["tc_mono_thm", "tran_tc_thm2"])];
+*)
+
+fun term_const_thms t =
+ let	val consts = term_consts t
+ in map (get_spec o mk_const) consts
+ end;
 </ft>
 </subsec>
 </sbcol>
