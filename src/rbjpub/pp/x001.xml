@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: x001.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       id="$Id: x001.xml,v 1.2 2003/04/30 19:26:51 rbj Exp $"
        name="x001"
        title="A theory of fixed points"
        description="A proof of the Knaster-Tarski fixed point theorem."
@@ -21,15 +21,13 @@ In this document I prove the Knaster-Tarski fixedpoint theorem in a general form
 <secbody>
 <sbcol>
 <secref title="Introduction"/>
-<secref title="Monotonicity and Closure Definitions"/>
-<secref title="Least Closure and Fixed Point Definitions"/>
-<secref title="Monotonicity and Closure Lemmas"/>
+<secref title="Definitions"/>
+<secref title="Least Fixed Points"/>
 </sbcol>
 <sbcol>
-<secref title="Least Fixed Point Lemmas"/>
-<secref title="Least Fixed Point Theorem and Definition"/>
-<secref title="Induction"/>
-<subsec title="Listing of Theory gst-fixp" href="gst-fixp.html" />
+<secref title="Greatest Fixed Points"/>
+<secref title="Inductive Definitions"/>
+<subsec title="Listing of Theory fixp" href="fixp.html" />
 </sbcol>
 </secbody>
 </section>
@@ -41,8 +39,7 @@ set_flag("pp_show_HOL_types", false);
 
 <section title="Introduction">
 <abstract>
-A new "fixp" theory is created as a child of "basic-hol".
-Probably 
+A new "fixp" theory is created as a child of "hol".
 </abstract>
 <secbody>
 <sbcol>
@@ -50,6 +47,11 @@ Probably
 The new theory is first created, together with a proof context which we will build up as we develop the theory.
 <ft lang="xl-sml" rest="">
 open_theory "hol";
+</ft>
+<ft lang="xl-ign" rest="">
+new_parent "one";
+</ft>
+<ft lang="xl-sml" rest="">
 force_new_theory "fixp";
 force_new_pc "fixp";
 merge_pcs ["xl_cs_&exist;_conv"] "fixp";
@@ -60,9 +62,9 @@ set_merge_pcs ["hol", "fixp"];
 </secbody>
 </section>
 
-<section title="Monotonicity and Closure Definitions">
+<section title="Definitions">
 <abstract>
-Definitions of the notion of a bounded monotonic function, and of the closure of a set under such a function.
+Definition of the notion of a bounded monotonic function and of least and greatest fixed points.
 </abstract>
 <secbody>
 <sbcol>
@@ -74,66 +76,387 @@ Definitions of the notion of a bounded monotonic function, and of the closure of
 The property of being a monotonic function.
 
 <holconst><holsig>
-monotonic : ('a SET &rarr; 'a SET) &rarr; BOOL
+monotonic : ('a SET &rarr; 'b SET) &rarr; BOOL
 </holsig>
 <holpred>
 &forall;f&bull; monotonic f &equiv; &forall;x y&bull; x &sube; y &rArr; f(x) &sube; f(y)
 </holpred>
 </holconst>
+<holconst><holsig>
+lfp : ('a SET &rarr; 'a SET) &rarr; 'a SET
+</holsig>
+<holpred>
+&forall;f&bull; lfp f = &lcap;{X | f X &sube; X}
+</holpred>
+</holconst>
+<holconst><holsig>
+gfp : ('a SET &rarr; 'a SET) &rarr; 'a SET
+</holsig>
+<holpred>
+&forall;f&bull; gfp f = &lcup;{X | X &sube; f X}
+</holpred>
+</holconst>
 </subsec>
 </sbcol>
+</secbody>
+</section>
+
+<section title="Least Fixed Points">
+<abstract>
+Proofs that "lfp" gives a fixed point and that it is the least fixed point.
+</abstract>
+<secbody>
 <sbcol>
-<subsec title="The Fixpoint Conjecture">
-<ft lang="xl-sml" rest="">
+<subsec title="Introduction">
+<p>
+</p>
+</subsec>
+<subsec title="lfp Gives Fixed Points">
+<ft lang="xl-ign" rest="">
 set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &exist; s&bull; h s = s&qqter;);
 a (REPEAT strip_tac);
-a (lemma_tac &qqtel;&exist;T<sub>0</sub>&bull; T<sub>0</sub>={X | X &sube; h X}&qqter;
-	THEN1 prove_&exist;_tac);
-a (lemma_tac &qqtel;&exist;S&bull; S=&lcup;T<sub>0</sub>&qqter;
-	THEN1 prove_&exist;_tac);
-a (&exist;_tac &qqtel;S&qqter;);
-a (lemma_tac &qqtel;S &sube; h(S)&qqter;);
+a (&exist;_tac &qqtel;gfp h&qqter;);
+a (all_fc_tac [least_fixpoint_thm1]);
+val fixpoint_thm2 = save_pop_thm "fixpoint_thm2";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; h (lfp h) = lfp h&qqter;);
+a (rewrite_tac [get_spec &qqtel;lfp&qqter;] THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;h(&lcap;{X|h X &sube; X}) &sube; &lcap;{X|h X &sube; X}&qqter;);
 (* *** Goal "1" *** *)
-a (rewrite_tac[sets_ext_clauses]);
-a (asm_rewrite_tac []
-	THEN REPEAT strip_tac);
-a (lemma_tac &qqtel;x &isin; h s&qqter;
-	THEN1 all_fc_tac[&sube;_def]);
-a (lemma_tac &qqtel;h s &sube; h (&lcup; {X|X &sube; h X})&qqter;);
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;(&lcap;{X|h X &sube; X}) &sube; s&qqter;);
 (* *** Goal "1.1" *** *)
-a (lemma_tac &qqtel;s &sube; &lcup; {X|X &sube; h X}&qqter;);
-(* *** Goal "1.1.1" *** *)
-a (lemma_tac &qqtel;s &sube; &lcup; {X|X &sube; h X}&qqter;);
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;s&qqter;);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+a (all_fc_tac[get_spec &qqtel;$&sube;&qqter;]);
+a (all_fc_tac[get_spec &qqtel;$&sube;&qqter;]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;&lcap;{X|h X &sube; X} &sube; h(&lcap;{X|h X &sube; X})&qqter;);
+(* *** Goal "2.1" *** *)
 a (once_rewrite_tac[sets_ext_clauses]);
 a (REPEAT strip_tac);
-a (&exist;_tac &qqtel;s&qqter;
-	THEN asm_rewrite_tac[]);
-(* *** Goal "1.1.2" *** *)
-a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
-(* *** Goal "1.2" *** *)
-a (all_asm_fc_tac [&sube;_def]);
-(* *** Goal "2" *** *)
-a (lemma_tac &qqtel;h S &isin; T<sub>0</sub>&qqter;);
-(* *** Goal "2.1" *** *)
-a (GET_ASM_T &qqtel;T<sub>0</sub> = {X|X &sube; h X}&qqter; rewrite_thm_tac);
-a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+a (spec_asm_tac &qqtel;&forall; s&bull; s &isin; {X|h X &sube; X} &rArr; x &isin; s&qqter; &qqtel;h (&lcap; {X|h X &sube; X})&qqter;);
+a (fc_tac [get_spec &qqtel;monotonic&qqter;]);
+a (list_spec_asm_tac &qqtel;&forall; x y&bull; x &sube; y &rArr; h x &sube; h y&qqter; [&qqtel;h(&lcap; {X|h X &sube; X})&qqter;, &qqtel;&lcap; {X|h X &sube; X}&qqter;]);
 (* *** Goal "2.2" *** *)
-a (lemma_tac &qqtel;h S &sube; S&qqter;);
-(* *** Goal "2.2.1" *** *)
-a (rewrite_tac [sets_ext_clauses]);
-a (REPEAT strip_tac);
-a (once_asm_rewrite_tac[]);
-a strip_tac;
-a (&exist;_tac &qqtel;h S&qqter;
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (GET_NTH_ASM_T 1 ante_tac);
-a (GET_NTH_ASM_T 3 ante_tac);
-a (rewrite_tac [sets_ext_clauses]
-	THEN REPEAT strip_tac
-	THEN all_asm_fc_tac[]);
-val fixpoint_thm = save_pop_thm "fixpoint_thm";
+a (all_asm_fc_tac [pc_rule "sets_ext" (prove_rule []) &qqtel;&forall;A B&bull; A &sube; B &and; B &sube; A &rArr; A = B&qqter;]);
+val least_fixpoint_thm = save_pop_thm "least_fixpoint_thm";
 </ft>
+</subsec>
+<subsec title="lfp Gives the Least Fixed Point">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &forall;g&bull; h g = g &rArr; (lfp h) &sube; g&qqter;);
+a (rewrite_tac [get_spec &qqtel;lfp&qqter;] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (spec_asm_tac &qqtel;&forall; s&bull; s &isin; {X|h X &sube; X} &rArr; x &isin; s&qqter; &qqtel;g&qqter;);
+a (DROP_ASM_T &qqtel;&not; h g &sube; g&qqter; ante_tac THEN asm_rewrite_tac []);
+val lfp_min_thm = save_pop_thm "lfp_min_thm";
+</ft>
+</subsec>
+<subsec title="Induction">
+I'm not whether the following really counts as an induction principle, but I expect it will help in deriving induction principles.
+It may be read as saying that if the functional preserves some property then that property holds everywhere in the least fixed point.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &forall;s&bull; h s &sube; s &rArr; (lfp h) &sube; s&qqter;);
+a (rewrite_tac [get_spec &qqtel;lfp&qqter;] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val lfp_induction_thm = save_pop_thm "lfp_induction_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Greatest Fixed Points">
+<abstract>
+Proofs that "gfp" gives a fixed point and that it is the greatest fixed point.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+</p>
+</subsec>
+<subsec title="gfp Gives Fixed Points">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; h (gfp h) = gfp h&qqter;);
+a (rewrite_tac [get_spec &qqtel;gfp&qqter;] THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;&lcup; {X|X &sube; h X} &sube; h (&lcup; {X|X &sube; h X})&qqter;);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;s &sube; &lcup; {X|X &sube; h X}&qqter;);
+(* *** Goal "1.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;s&qqter; THEN REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (lemma_tac &qqtel;s &isin; {X|X &sube; h X}&qqter;);
+(* *** Goal "1.1" *** *)
+a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+a (all_asm_fc_tac [get_spec &qqtel;$&sube;&qqter;]);
+a (all_asm_fc_tac [get_spec &qqtel;$&sube;&qqter;]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;h (&lcup; {X|X &sube; h X}) &isin; {X|X &sube; h X}&qqter;);
+(* *** Goal "2.1" *** *)
+a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+a (asm_rewrite_tac [&isin;_in_clauses]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;h (&lcup; {X|X &sube; h X}) &sube; &lcup; {X|X &sube; h X}&qqter;);
+(* *** Goal "2.2.1" *** *)
+a (once_rewrite_tac [sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (&exist;_tac &qqtel;h (&lcup; {X|X &sube; h X})&qqter;);
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2" *** *)
+a (rewrite_tac [pc_rule "sets_ext" (prove_rule []) &qqtel;&forall;A B&bull; A = B &equiv; B &sube; A &and; A &sube; B&qqter;]
+	THEN asm_rewrite_tac[]);
+val greatest_fixpoint_thm = save_pop_thm "greatest_fixpoint_thm";
+</ft>
+</subsec>
+<subsec title="gfp Gives the Greatest Fixed Point">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &forall;g&bull; h g = g &rArr; g &sube; (gfp h)&qqter;);
+a (rewrite_tac [get_spec &qqtel;gfp&qqter;] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac[]);
+val gfp_max_thm = save_pop_thm "gfp_max_thm";
+</ft>
+</subsec>
+<subsec title="C0-Induction">
+This is the corresponding theorem for greatest fixed point to the "induction" principle for least fixed points.
+I don't know whether its any use and am including it for the sake of symmetry!
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &forall;s&bull; s &sube; h s &rArr; s &sube; (gfp h)&qqter;);
+a (rewrite_tac [get_spec &qqtel;gfp&qqter;] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN contr_tac);
+a (asm_fc_tac[]);
+val gfp_coinduction_thm = save_pop_thm "gfp_coinduction_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Inductive Definitions">
+<abstract>
+Taking a closure of constructors for an inductive datatype definition.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+The simplest example of interest here is the natural numbers, which can be defined (in HOL) as the smallest set of individuals which includes zero (the individual which is not in the range of the one-one function whose existence is asserted by the usual axiom of infinity) and is closed under the successor function (which is that same one-one function).
+</p>
+<p>
+We can think of this as forming the natural numbers by starting with some set ({0}) and then adding the additional values following some prescription until no more can be added.
+Because we are always adding values, the operation on the set-of-values-so-far is monotonic.
+If the closure is supplied in a suitable manner then a completely general proof of monotonicity will suffice.
+</p>
+<p>
+There is a little difficulty in doing this automatically because the operators under which closure is wanted (counting the starting points as 0-ary operators) will be of diverse types.
+</p><p>
+We keep the constructor exactly as it is required on the representation type.
+This is combined with an "immediate content" function on the domain of the constructor to give a relation which indicates which values are immediate constituents of a constructed value, and then we close up the empty set on the principle of adding a constructed value whenever its immediate constituents are available.
+</p>
+<p>
+In addition to the constructor function and the content information we want to allow some constraint on values which are acceptable for the construction so that it need not be defined over the entire representation type.
+In fact this can be coded into the content function by making it reflexive for values which we wish to exclude from the domain.
+Actually its type doesn't allow reflexive, but mapping these to the universe of the representation type will do the trick.
+</p>
+</subsec>
+<subsec title="Monotonicity">
+<p>
+The following function converts such a relationship into a monotonic function.
+The initial "cc" in the name stands for "constructor and content (functions)".
+</p>
+<holconst><holsig>
+&tvb;	cc2monof: ('a &rarr; 'b) &cross; ('a &rarr; 'b SET) &rarr; ('b SET &rarr; 'b SET)
+</holsig>
+<holpred>
+&tvb;	&forall;tor tent&bull; cc2monof (tor, tent) = &lambda;s&bull; s &cup; {t | &exist;u v&bull; u = tent v &and; u &sube; s &and; t = tor v}
+</holpred>
+</holconst>
+We prove that this is the case:
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;tor tent&bull; monotonic (cc2monof (tor, tent))&qqter;);
+a (rewrite_tac [get_spec &qqtel;cc2monof&qqter;] THEN REPEAT strip_tac);
+a (rewrite_tac [get_spec &qqtel;monotonic&qqter;]);
+a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;u&qqter;);
+a (&exist;_tac &qqtel;v&qqter; THEN REPEAT strip_tac);
+a (DROP_ASM_T &qqtel;u &sube; x&qqter; ante_tac
+	THEN DROP_ASM_T &qqtel;&forall; x'&bull; x' &isin; x &rArr; x' &isin; y&qqter; ante_tac
+	THEN PC_T1 "sets_ext" prove_tac []);
+val mono_cc2monof_thm = save_pop_thm "mono_cc2monof_thm";
+</ft>
+</subsec>
+<subsec title="Closure">
+The following function defines the least fixed point of such an operator:
+<holconst><holsig>
+&tvb;	closure: ('a &rarr; 'b) &cross; ('a &rarr; 'b SET) &rarr; 'b SET
+</holsig>
+<holpred>
+&tvb;	&forall;tor tent&bull; closure (tor, tent) = lfp (cc2monof (tor, tent))
+</holpred>
+</holconst>
+We now prove that the result is indeed closed under the operations:
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;tor tent s x y&bull;
+	  tent x = s
+	&and; s &sube; (closure (tor, tent))
+	&and; y = tor x
+	&rArr; y &isin; (closure (tor, tent))&qqter;);
+a (rewrite_tac [get_spec &qqtel;closure&qqter;] THEN REPEAT strip_tac);
+a (asm_tac (list_&forall;_elim [&qqtel;tor&qqter;, &qqtel;tent&qqter;] mono_cc2monof_thm));
+a (ALL_FC_T (once_rewrite_tac o (map eq_sym_rule)) [least_fixpoint_thm]);
+a (rewrite_tac[get_spec &qqtel;cc2monof&qqter;]
+	THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;s&qqter; THEN asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;x&qqter; THEN asm_rewrite_tac[]);
+a (DROP_ASM_T &qqtel;s &sube; lfp (cc2monof (tor, tent))&qqter; ante_tac
+	THEN rewrite_tac[get_spec &qqtel;cc2monof&qqter;]);
+val closure_thm1 = save_pop_thm "closure_thm1";
+</ft>
+</subsec>
+<subsec title="Induction">
+We prove an induction theorem for sets defined as closures.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;tor tent p&bull;
+	(&forall;x&bull; (&exist;y&bull; tor y = x &and; tent y &sube; p) &rArr; x &isin; p)
+	&rArr; closure (tor, tent) &sube; p&qqter;);
+a (rewrite_tac [get_spec &qqtel;closure&qqter;]);
+a (REPEAT strip_tac);
+a (asm_tac (list_&forall;_elim [&qqtel;tor&qqter;, &qqtel;tent&qqter;] mono_cc2monof_thm));
+a (fc_tac [lfp_induction_thm]);
+a (spec_asm_tac &qqtel;&forall; s&bull; cc2monof (tor, tent) s &sube; s &rArr; lfp (cc2monof (tor, tent)) &sube; s&qqter; &qqtel;p&qqter;);
+a (swap_asm_concl_tac &qqtel;&not; cc2monof (tor, tent) p &sube; p&qqter;);
+a (rewrite_tac [get_spec &qqtel;cc2monof&qqter;]);
+a (once_rewrite_tac [sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (spec_asm_tac &qqtel;&forall; x&bull; (&exist; y&bull; tor y = x &and; tent y &sube; p) &rArr; x &isin; p&qqter; &qqtel;x&qqter;);
+a (spec_asm_tac &qqtel;&forall; y&bull; &not; (tor y = x &and; tent y &sube; p)&qqter; &qqtel;v&qqter;);
+(* *** Goal "1" *** *)
+a (DROP_ASM_T &qqtel;&not; tor v = x&qqter; ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (DROP_ASM_T &qqtel;u &sube; p&qqter; ante_tac
+	THEN once_asm_rewrite_tac[]
+	THEN strip_tac);
+val closure_induction_thm = save_pop_thm "closure_induction_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Coding Constructors">
+<abstract>
+Definitions of constructors for products and lists, and injections for disjoint unions.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Definitions">
+In the following constructor definitions the first argument is expected to be an injection from a preferred indexing type for this constructor to some actual indexing type.
+<holconst><holsig>
+IndPair : (BOOL &rarr; 'a) &rarr; ('a LIST &rarr; (ONE + 'b)) &cross; ('a LIST &rarr; (ONE + 'b))
+	&rarr; ('a LIST &rarr; (ONE + 'b))
+</holsig>
+<holpred>
+&forall;i l r h t&bull;
+	IndPair i (l, r) Nil = InL One
+&and;	IndPair i (l, r) (Cons h t) =
+		if h = i F then l t
+		else if h = i T then r t
+		else InL One
+</holpred>
+</holconst>
+<holconst><holsig>
+IndInL : (BOOL &rarr; 'a) &rarr; ('a LIST &rarr; (ONE + 'b))
+	&rarr; ('a LIST &rarr; (ONE + 'b))
+</holsig>
+<holpred>
+&forall;i j h t&bull;
+	IndInL i j Nil = InL One
+&and;	IndInL i j (Cons h t) =
+		if h = i F then j t
+		else InL One
+</holpred>
+</holconst>
+<holconst><holsig>
+IndInR : (BOOL &rarr; 'a) &rarr; ('a LIST &rarr; (ONE + 'b))
+	&rarr; ('a LIST &rarr; (ONE + 'b))
+</holsig>
+<holpred>
+&forall;i j h t&bull;
+	IndInR i j Nil = InL One
+&and;	IndInR i j (Cons h t) =
+		if h = i T then j t
+		else InL One
+</holpred>
+</holconst>
+<holconst><holsig>
+IndSum : (BOOL &rarr; 'a) &rarr; ('a LIST &rarr; (ONE + 'b)) + ('a LIST &rarr; (ONE + 'b))
+	&rarr; ('a LIST &rarr; (ONE + 'b))
+</holsig>
+<holpred>
+&forall;i j h t&bull;
+	(IndSum i j Nil = InL One)
+&and;	(IndSum i j (Cons h t) =
+		if IsL j
+		then	if h = i F
+			then OutL j t
+			else InL One
+		else	if h = i T
+			then OutR j t
+			else InL One)
+</holpred>
+</holconst>
+<holconst><holsig>
+IndList : (&nat; &rarr; 'a) &rarr; ('a LIST &rarr; (ONE + 'b)) LIST
+	&rarr; ('a LIST &rarr; (ONE + 'b))
+</holsig>
+<holpred>
+&forall;i ha ta hb tb&bull;
+	IndList i Nil tb = InL One
+&and;	IndList i (Cons ha ta) Nil = InL One
+&and;	IndList i (Cons ha ta) (Cons hb tb) = 
+		if (&exist;j&bull; hb = i j &and; j &lt; Length ta) then IndList i ta (Cons hb tb)
+		else if hb = i (Length ta) then (ha tb)
+		else InL One
+</holpred>
+</holconst>
+<ft lang="xl-tex" rest="">
+&lt;/subsec&gt;
+&lt;subsec title="Computing a Constructor"&gt;
+The following function takes a HOL type and a list of constructors and computes a compound constructor.
+The HOL type should have a sum of any finite number of distinct type variables as its codomain
+The constructors should include one for each type constructor which is involved in the recursion.
+</ft>
+<ft lang="xl-ign" rest="">
+dest_simple_type &qqco;'a + 'b + 'c&qqter;;
+fun ind_constructor scs cc =
+ let 
+
+ in
+
+ end;
+
+
+
+</ft>
+</subsec>
+<subsec title="Computing a Constructor">
 </subsec>
 </sbcol>
 </secbody>

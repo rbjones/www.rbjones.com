@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: x002.xml,v 1.3 2003/02/01 14:29:54 rbj Exp $"
+       id="$Id: x002.xml,v 1.4 2003/04/30 19:26:51 rbj Exp $"
        name="x002"
        title="Transitive and Well-Founded Relations as Properties"
        description="A theory of transitive and well-founded relations in ProofPower HOL"
@@ -220,7 +220,6 @@ This provides a form of induction with a stronger induction hypothesis.
 Naturally we would expect this to be proven inductively and the question is therefore what property to use in the inductive proof, the observation that the transitive closure of a relation is well-founded is not explicitly the ascription of a property to the field of the relation.
 The obvious method is to relativise the required result to the transitive closure of a set, giving a property of sets, and then to prove that this property is hereditary if the relation is well-founded.
 <p/>
-The following definitions are not essential but perhaps make the argument clearer.
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;s r&bull; well_founded r &rArr; &forall;x&bull; (&forall;y&bull; tc r y x &rArr; (&forall;z&bull; tc r z y &rArr; s z) &rArr; s y)
 	&rArr; (&forall;y&bull; tc r y x &rArr; s y)&qqter;);
@@ -253,6 +252,7 @@ a (spec_nth_asm_tac 6 &qqtel;z'&qqter;);
 a (asm_fc_tac[]);
 val tcwf_lemma1 = save_pop_thm "tcwf_lemma1";
 </ft>
+
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;r&bull; well_founded r &rArr; &forall;s&bull; (&forall;t&bull; (&forall;u&bull; tc r u t &rArr; s u) &rArr; s t) &rArr; (&forall;e&bull; s e)&qqter;);
 a (REPEAT strip_tac THEN fc_tac [tcwf_lemma1]);
@@ -262,6 +262,7 @@ a (spec_nth_asm_tac 7 &qqtel;y&qqter;);
 a (spec_nth_asm_tac 4 &qqtel;u'&qqter;);
 val tcwf_lemma2 = save_pop_thm "tcwf_lemma2";
 </ft>
+
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;r&bull; well_founded r &rArr; well_founded (tc r)&qqter;);
 a (strip_tac THEN strip_tac
@@ -274,6 +275,7 @@ a (spec_nth_asm_tac 6 &qqtel;y'&qqter;);
 a (spec_nth_asm_tac 4 &qqtel;y''&qqter;);
 val wf_tc_wf_thm = save_pop_thm "wf_tc_wf_thm";
 </ft>
+Now we prove that if the transitive closure of a relation is well-founded then so must be the relation.
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&forall;r&bull; well_founded (tc r) &rArr; well_founded r&qqter;);
 a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]
@@ -287,6 +289,7 @@ a (all_asm_fc_tac []);
 a (asm_rewrite_tac[]);
 val tc_wf_wf_thm = save_pop_thm "tc_wf_wf_thm";
 </ft>
+
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;r&bull; well_founded r &rArr; twfp (tc r)&qqter;);
 a (REPEAT strip_tac);
@@ -295,7 +298,7 @@ a (asm_rewrite_tac [get_spec &qqtel;twfp&qqter;, tran_tc_thm]);
 val tc_wf_twf_thm = save_pop_thm "tc_wf_twf_thm";
 </ft>
 </subsec>
-<subsec title="Tactics etc.">
+<subsec title="Induction Tactics etc.">
 We here define a general tactic for performing induction using some well-founded relation.
 The following function (I think these things are called "THM-TACTICAL"s) must be given a theorem which asserts that some relation is well-founded, and then a THM-TACTIC (which determines what is done with the induction assumption), and then a term which is the variable to induct over, and will then facilitate an inductive proof of the current goal using that theorem.
 <ft lang="xl-sml" rest="">
@@ -325,7 +328,7 @@ fun wf_induction_tac (thm : THM) : TERM -&gt; TACTIC = (
 );
 </ft>
 </subsec>
-<subsec title="Well-foundedness and Bottomless Pits">
+<subsec title="Well-foundedness and Induction">
 The following proof shows how the above induction tactic can be used.
 The theorem can be paraphrased loosely along the lines that there are no bottomless descending chains in a well-founded relation.
 We think of a bottomless descending chain as a non-empty set (represented by a property called "p") every element of which is preceded by an element under the transitive closure of r.
@@ -351,34 +354,17 @@ a (all_fc_tac [tran_tc_thm2]);
 val wf_nochain_thm = save_pop_thm "wf_nochain_thm";
 </ft>
 Now a shorter formulation of bottomless pits.
-<ft lang="xl-ign" rest="">
+<ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&forall;r&bull; well_founded r &rArr; &not;&exist;p v&bull; p v &and; &forall;y&bull; p y &rArr; &exist;z&bull; p z &and; r z y&qqter;);
 a (contr_tac);
-a (all_asm_fc_tac[]);
-
-
-a (REPEAT_N 7 strip_tac);
-a (REPEAT strip_tac);
-
-
-a (strip_tac THEN strip_tac THEN strip_tac);
-a (wf_induction_tac (asm_rule &qqtel;well_founded r&qqter;) &qqtel;x&qqter;);
-a contr_tac;
-a (all_asm_fc_tac[]);
-a (spec_nth_asm_tac 6 &qqtel;v&qqter;);
-a (SPEC_NTH_ASM_T 1 &qqtel;&lambda;x&bull; p x &and; tc r x v&qqter; ante_tac
-	THEN rewrite_tac[]
-	THEN REPEAT strip_tac);
-a (&exist;_tac &qqtel;z&qqter;
-	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;&forall;x&bull; &not; p x&qqter; THEN1 (strip_tac
+	THEN wf_induction_tac (asm_rule &qqtel;well_founded r&qqter;) &qqtel;x&qqter;));
 (* *** Goal "1" *** *)
-a (fc_tac [tc_incr_thm]);
+a (contr_tac
+	THEN REPEAT (all_asm_fc_tac[tc_incr_thm]));
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 7 &qqtel;y&qqter;);
-a (&exist;_tac &qqtel;z'&qqter; THEN asm_rewrite_tac[]);
-a (lemma_tac &qqtel;tc r z' y&qqter; THEN1 fc_tac [tc_incr_thm]);
-a (all_fc_tac [tran_tc_thm2]);
-val wf_nochain_thm = save_pop_thm "wf_nochain_thm";
+a (REPEAT (all_asm_fc_tac[]));
+val wf_wf_thm = save_pop_thm "wf_wf_thm";
 </ft>
 Next we prove the converse, that the lack of bottomless pits entails well-foundedness.
 <ft lang="xl-sml" rest="">
@@ -423,6 +409,18 @@ a (all_asm_fc_tac[tc_incr_thm]);
 (* *** Goal "3.2.2" *** *)
 a (all_asm_fc_tac[tran_tc_thm2]);
 val nochain_wf_thm = save_pop_thm "nochain_wf_thm";
+</ft>
+Now with second order foundation.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;(&not;&exist;p v&bull; p v &and; &forall;y&bull; p y &rArr; &exist;z&bull; p z &and; r z y) &rArr; well_founded r&qqter;);
+a (rewrite_tac [get_spec &qqtel;well_founded&qqter;]
+	THEN REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 2 &qqtel;&lambda;x&bull; &not; s x&qqter; ante_tac
+	THEN rewrite_tac[] THEN strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+a (spec_nth_asm_tac 4 &qqtel;y&qqter;);
+a (spec_nth_asm_tac 3 &qqtel;y'&qqter;);
+val wf_induct_thm = save_pop_thm "wf_induct_thm";
 </ft>
 Try a weaker hypothesis.
 <ft lang="xl-sml" rest="">
@@ -522,16 +520,6 @@ a (spec_nth_asm_tac 1  &qqtel;x&qqter;);
 a (&exist;_tac &qqtel;T&qqter; THEN rewrite_tac[]);
 val minr_not_wf_thm = save_pop_thm "minr_not_wf_thm";
 </ft>
-However we can also prove the stronger result that well founded relations have the second order minimal elements condition:
-<ft lang="xl-ign" rest="">
-set_goal([], &qqtel;&forall;r&bull; well_founded r &rArr; &forall;p&bull; (&exist;y&bull; p y) &rArr; &exist;z&bull; p z &and; &not;&exist;v&bull; r v z &and; p v&qqter;);
-a (REPEAT_N 2 strip_tac);
-a (strip_asm_tac ( &forall;_elim &qqtel;r&qqter; wf_nochain_thm2));
-a (ante_tac (&forall;_elim &qqtel;r&qqter; nochain_min_thm2));
-a (GET_NTH_ASM_T 1 ante_tac);
-a (rewrite_tac [prove_rule [] &qqtel;&forall;a b&bull; a &rArr; (a &rArr; b) &rArr; b&qqter; ]);
-val wf_min_thm = save_pop_thm "wf_min_thm";
-</ft>
 </subsec>
 </sbcol>
 </secbody>
@@ -548,6 +536,24 @@ In this section we show that a restriction of a well-founded relation is well-fo
 set_goal([], &qqtel;&forall;r&bull; well_founded r &rArr; &forall;r2&bull; well_founded (&lambda;x y&bull; r2 x y &and; r x y)&qqter;);
 a (REPEAT strip_tac);
 a (bc_tac [nochain_wf_thm]);
+a (fc_tac [wf_nochain_thm]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [&qqtel;p&qqter;, &qqtel;x&qqter;, &qqtel;v&qqter;]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 &qqtel;y&qqter;);
+a (lemma_tac &qqtel;&forall; x y&bull; (&lambda; x y&bull; r2 x y &and; r x y) x y &rArr; r x y&qqter;
+	THEN1 (rewrite_tac[] THEN REPEAT strip_tac));
+a (FC_T fc_tac [tc_mono_thm]);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 3 &qqtel;y&qqter; ante_tac
+	THEN (rewrite_tac []) THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 5 &qqtel;z&qqter;);
+val wf_restrict_wf_thm = save_pop_thm "wf_restrict_wf_thm";
+</ft>
+<ft lang="xl-ign" rest="">
+set_goal([], &qqtel;&forall;r&bull; well_founded r &rArr; &forall;r2&bull; well_founded (&lambda;x y&bull; r2 x y &and; r x y)&qqter;);
+a (REPEAT strip_tac);
+a (bc_tac [wf_induct_thm]);
 a (fc_tac [wf_nochain_thm]);
 a (REPEAT strip_tac);
 a (list_spec_nth_asm_tac 2 [&qqtel;p&qqter;, &qqtel;x&qqter;, &qqtel;v&qqter;]);

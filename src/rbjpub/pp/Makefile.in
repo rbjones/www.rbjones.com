@@ -1,6 +1,6 @@
-# $Id: Makefile.in,v 1.2 2003/02/01 14:29:54 rbj Exp $
+# $Id: Makefile.in,v 1.3 2003/04/30 19:26:51 rbj Exp $
 
-BUILDFIRST=pp-smlxtras.lds x002.lds
+BUILDFIRST=pp-smlxtras.lds strong_infinity.lds WfRecp.lds x002.lds
 TOPSRCDIR=@top_srcdir@
 RELSRCDIR=src/rbjpub/pp
 RELWEBDIR=rbjpub/pp
@@ -9,12 +9,12 @@ SUBDIRS= gst
 
 PPDB=pp
 PPDBDIR=
-PPXML=pp-smlxtras.xml WfRel.xml WfRec.xml x001.xml x002.xml
+PPXML=pp-smlxtras.xml strong_infinity.xml WfRel.xml WfRec.xml x001.xml x002.xml WfRecp.xml
 PPDOC=$(PPXML:.xml=.doc)
 PPDOCSML=$(PPXML:.xml=.sml)
 PPLDS=$(PPXML:.xml=.lds)
-PPPPTH= min.th log.th init.th misc.th pair.th list.th char.th
-PPTH=$(PPPPTH) wf_relp.th wf_rec.th fixp.th
+PPPPTH= basic_hol.th char.th hol.th init.th list.th log.th min.th misc.th pair.th
+PPTH=$(PPPPTH) fixp.th wf_rel.th wf_relp.th wf_rec.th wf_recp.th si.th
 PPTHD=$(PPTH:.th=.thd)
 
 XML005=$(PPXML) index.xml pptheories.xml
@@ -29,15 +29,20 @@ HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
 ENTFILES=pp-symbol.ent
 
 XLDPDIRCPY=$(ENTFILES)
-SRCDIRCPY=$(PPDOCXML)
+SRCDIRCPY=$(PPDOCXML) pp_theories.doc
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
 #WEBFILES=$(HTML005)
 
-WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm)
+WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm) pp_theories.pdf.gz
+
+BUILDEXTRAS=pp_theories.pdf
 
 include $(TOPSRCDIR)/src/common/rules.mk
+
+nat.thd: nat.th
+	pp_list -d $(PPDB) î > nat.thd
 
 # directories
 
@@ -52,16 +57,40 @@ vpath %.xsl $(XLCOMDIR)
 $(PPPPTH): $(PPDB).dbts 
 	touch $@
 
-index.html: pp-smlxtras.xmlt pptheories.xmlt x002.xmlt WfRec.xmlt WfRel.xmlt gst/index.xmlt
+index.html: pp-smlxtras.xmlt pptheories.xmlt strong_infinity.xmlt x002.xmlt \
+	WfRec.xmlt WfRecp.xmlt WfRel.xmlt gst/index.xmlt
 
 wf_relp.th: x002.lds $(PPDB).dbts
 	touch wf_relp.th
+
+wf_rel.th: WfRel.lds
+	touch wf_rel.th
 
 WfRec.lds: WfRel.lds
 
 wf_rec.th: WfRec.lds
 	touch wf_rec.th
 
+WfRecp.lds: x002.lds
+
+wf_recp.th: WfRecp.lds
+	touch wf_recp.th
+
 fixp.th: x001.lds
 	touch fixp.th
 
+si.th: strong_infinity.lds
+	touch si.th
+
+pp_theories.th.tex: $(PPTHTEX)
+	cat $(PPTHTEX) > pp_theories.th.tex
+
+pp_theories.tex: pp_theories.doc $(PPTHTEX) gst/gst_theories.th.tex
+	doctex pp_theories
+
+pp_theories.dvi: pp_theories.tex $(PPTHTEX)
+	texdvi pp_theories
+	texdvi pp_theories
+
+pp_theories.ps: pp_theories.dvi
+	dvips $< -o pp_theories.ps

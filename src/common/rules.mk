@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.1 2002/12/24 16:02:49 rbj Exp $
+# $Id: rules.mk,v 1.2 2003/04/30 19:26:32 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -11,17 +11,34 @@ vpath *.xsl $(COMDIR)
 Makefile: $(MKDEPS)
 	cd $(TOPSRCDIR); ./configure --prefix=$(prefix)
 
-# Qualified rules
+# variable definitions
+# the following variables should be defined in the makefile if required
+# PPTH	= (.th) names of proofpower theories for listing 
+# HTML001	= (.html) HTML documents
+# HTML004	= (.html) HTML documents
+
+# The following variables are derived from the above names.
+
+# HTML from XML
 
 XMLT001=$(HTML001:.html=.xmlt)
+XMLT004=$(HTML004:.html=.xmlt)
+
+# Theory listings
+
+PPTHD=$(PPTH:.th=.thd)
+PPTHDOC=$(PPTH:.th=.th.doc)
+PPTHTEX=$(PPTHDOC:.doc=.tex)
+HTMLTHLS=$(PPTHDOC:.th.doc=.html)
+PPTHDXLD=$(PPTHDOC:.th.doc=.xml)
+
+# Qualified rules
 
 $(XMLT001): %.xmlt: %.xml
 	cp $<  $*.xmlt
 
 $(HTML003): %.html: %.xml xslt003$(XSLTSUFF).xsl xslt002.xsl X-Logic.xsl
 	$(JAVA) $(XSLTPROC) $< $(XLCOMDIR)/xslt003$(XSLTSUFF).xsl
-
-XMLT004=$(HTML004:.html=.xmlt)
 
 $(XMLT004): %.xmlt: %.xml
 	addftl <$<  >$*.xmlx
@@ -36,8 +53,6 @@ $(HTML004): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl pp-sym
 $(HTML004i) $(HTML001i): %-i.html : %.html
 
 $(HTML004m) $(HTML001m): %-m.html : %.html
-
-HTMLTHLS=$(PPTHD:.thd=.html)
 
 $(HTMLTHLS): %.html: %.xml xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl pp-symbol.ent ppft.xsl X-Logic.xsl
 	xxml2xml <$*.xml >$*.xmlt
@@ -73,8 +88,6 @@ $(PPDOCXDOC): %.xdoc:
 %.xmldoc: %.doc
 	sieve -f $(DOCPREPDATA)/sieveview xmldoc <$*.doc >$*.xmldoc
 
-PPTHDXLD=$(PPTHD:.thd=.xml)
-
 $(PPTHDXLD): %.xml: %.thd
 	ppthd2xml $* $(WEBROOTDIR)
 
@@ -90,6 +103,12 @@ $(PPLDS): %.lds: %.sml $(PPDB).dbts
 $(PPTHD): %.thd: %.th
 	pp_list -d $(PPDB) $* > $*.thd
 
+$(PPTHDOC): %.th.doc: %.thd
+	cp $< $*.th.doc
+
+$(PPTHTEX): %.tex: %.doc
+	doctex $*
+
 $(BASHBIN): % : %.sh
 	cp $< $*
 	chmod +x $*
@@ -100,6 +119,11 @@ $(PERLBIN): % : %.pl
 
 # Unqualified rules
 
+%.pdf: %.ps
+	ps2pdf $<
+
+%.gz: %
+	gzip --best --stdout $< > $<.gz
 
 # specific rules
 
@@ -134,7 +158,7 @@ THISINSTALL=installweb installdata installbins installlibs installperllibs insta
 ppthds: $(PPTHD)
 
 build: $(BUILDFIRST) $(SUBBUILDS) $(BINFILES) $(DATAFILES) $(LIBFILES) $(PERLLIBFILES) \
-	$(SMLLIBFILES) $(WEBFILES)
+	$(SMLLIBFILES) $(WEBFILES) $(BUILDEXTRAS)
 
 install: build $(THISINSTALL) $(SUBINSTALLS)
 

@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: ordinals.xml,v 1.2 2003/02/01 14:30:08 rbj Exp $"
+       id="$Id: ordinals.xml,v 1.3 2003/04/30 19:26:51 rbj Exp $"
        name="ordinals"
        title="The theory of ordinals in GST"
        description="Definition of ordinals and the development of the theory of ordinals in Galactic Set Theory."
@@ -24,11 +24,12 @@ This document introduces definitions and derives results relating to ordinal num
 <secref title="Definitions 2.1 and 2.3"/>
 <secref title="Theorem 2.2"/>
 <secref title="Theorem 2.4"/>
+<secref title="Definition 2.6"/>
 </sbcol>
 <sbcol>
-<secref title="Definition 2.6"/>
 <secref title="Theorem 2.7"/>
 <secref title="Theorem 2.8"/>
+<secref title="The Definition of Rank"/>
 <secref title="Proof Context"/>
 <subsec title="Listing of Theory ord" href="ord.html" />
 </sbcol>
@@ -78,7 +79,7 @@ The new theory is first created, together with a proof context which we will bui
 <ft lang="xl-sml" rest="">
 open_theory "gst-ax";
 force_new_theory "ord";
-new_parent "wf_relp";
+new_parent "wf_recp";
 force_new_pc "ord";
 merge_pcs ["xl_cs_&exist;_conv"] "ord";
 set_merge_pcs ["basic_hol", "gst-ax", "ord"];
@@ -860,6 +861,67 @@ a (asm_tac (&forall;_elim &qqtel;&empty;<sub>g</sub>&qqter; galaxy_Gx));
 a (all_asm_fc_tac[G&empty;<sub>g</sub>C]);
 val w_exists_thm = save_pop_thm "w_exists_thm";
 </ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The Definition of Rank">
+<abstract>
+We define the rank of a set.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Consistency Proof">
+Before introducing the definition of rank we undertake the proof necessary to establish that the definition is conservative.
+The key lemma in this proof is the proof that the relevant functional "respects" the membership relation.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;(&lambda;f&bull; &lambda;x&bull; &lcup;<sub>g</sub> (Imagep (suc<sub>o</sub> o f) x)) respects $&isin;<sub>g</sub>&qqter;);
+a (rewrite_tac [get_spec &qqtel;$respects&qqter;]
+	THEN REPEAT strip_tac);
+a (once_rewrite_tac [gst_relext_clauses]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;e'&qqter; THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;e''&qqter; THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac[get_spec&qqtel;$o&qqter;]
+	THEN strip_tac);
+a (lemma_tac &qqtel;h e'' = g e''&qqter;
+	THEN1 (REPEAT_N 2 (asm_fc_tac[tc_incr_thm])
+		THEN asm_rewrite_tac[]));
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;e'&qqter; THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;e''&qqter; THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac[get_spec&qqtel;$o&qqter;]
+	THEN strip_tac);
+a (lemma_tac &qqtel;h e'' = g e''&qqter;
+	THEN1 (REPEAT_N 2 (asm_fc_tac[tc_incr_thm])
+		THEN asm_rewrite_tac[]));
+a (asm_rewrite_tac[]);
+val respect_lemma = pop_thm();
+</ft>
+Armed with that lemma we can now prove that the function which we will call "rank" exists.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;rank&bull; &forall;x&bull; rank x = &lcup;<sub>g</sub> (Imagep (suc<sub>o</sub> o rank) x)&qqter;);
+a (&exist;_tac &qqtel;fix (&lambda;f&bull; &lambda;x&bull; &lcup;<sub>g</sub> (Imagep (suc<sub>o</sub> o f) x))&qqter;
+	THEN strip_tac);
+a (asm_tac gs_wf_axiom);
+a (asm_tac respect_lemma);
+a (fc_tac [&forall;_elim &qqtel;&lambda;f&bull; &lambda;x&bull; &lcup;<sub>g</sub> (Imagep (suc<sub>o</sub> o f) x)&qqter; (get_spec &qqtel;fix&qqter;)]);
+a (asm_fc_tac []);
+a (POP_ASM_T (rewrite_thm_tac o rewrite_rule [ext_thm]));
+val _ = xl_set_cs_&exist;_thm (pop_thm());
+</ft>
+<holconst><holsig>
+ rank : GS &rarr; GS
+</holsig>
+<holpred>
+  &forall;x&bull; rank x = &lcup;<sub>g</sub> (Imagep (suc<sub>o</sub> o rank) x)
+</holpred>
+</holconst>
 </subsec>
 </sbcol>
 </secbody>

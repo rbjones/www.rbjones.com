@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.3 2003/02/01 14:30:08 rbj Exp $
+# $Id: Makefile.in,v 1.4 2003/04/30 19:26:51 rbj Exp $
 
 TOPSRCDIR=@top_srcdir@
 RELSRCDIR=src/rbjpub/pp/gst
@@ -14,8 +14,10 @@ PPDOC=$(PPXML:.xml=.doc)
 PPDOCSML=$(PPXML:.xml=.sml)
 PPLDS=$(PPXML:.xml=.lds)
 PPTH= gst-ax.th gst-fun.th gst-sumprod.th gst-fixp.th gst-lists.th gst.th gst-misc.th \
-	pcf-defs.th refl-defs.th ord.th
-PPTHD=$(PPTH:.th=.thd)
+	pcf-defs.th refl-defs.th ord.th surreal.th
+#PPTHD=$(PPTH:.th=.thd)
+#PPTHDOC=$(PPTH:.th=.th.doc)
+#PPTHTEX=$(PPTH:.th=.th.tex)
 
 XML005=$(PPXML)
 #HTML004=$(XML004:.xml=.html)
@@ -25,7 +27,7 @@ XML005=$(PPXML)
 HTMLTHLSi=$(HTMLTHLS:.html=-i.html)
 HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
 
-SRCDIRCPY=$(XML005)
+SRCDIRCPY=$(XML005) gst_theories.doc
 
 ENTFILES=pp-symbol.ent
 
@@ -34,6 +36,8 @@ XLDPDIRCPY=$(ENTFILES)
 include $(TOPSRCDIR)/build/common/vars.mk
 
 WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm)
+
+BUILDEXTRAS=gst_theories.th.tex
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -80,6 +84,9 @@ gst-miscellany.lds: gst-axioms.lds
 gst-misc.th: gst-miscellany.lds
 	touch gst-misc.th
 
+surreal.th: gst-miscellany.lds
+	touch surreal.th
+
 gst-functions.lds: gst-axioms.lds
 
 gst-lists.th: gst-thlists.lds
@@ -113,4 +120,15 @@ gst-sumprod.th: SumsAndProducts.lds
 
 #tok.build: gst-final.lds
 
+gst_theories.th.tex: $(PPTHTEX)
+	cat $(PPTHTEX) > gst_theories.th.tex
 
+gst_theories.tex: gst_theories.doc $(PPTHTEX)
+	doctex gst_theories
+
+gst_theories.dvi: gst_theories.tex $(PPTHTEX)
+	texdvi gst_theories
+	texdvi gst_theories
+
+gst_theories.ps: gst_theories.dvi
+	dvips $< -o gst_theories.ps

@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: gst-miscellany.xml,v 1.1 2003/02/01 14:30:08 rbj Exp $"
+       id="$Id: gst-miscellany.xml,v 1.2 2003/04/30 19:26:51 rbj Exp $"
        name="gst-miscellany"
        title="Miscellaneous work using gst."
        description="Miscellaneous work using gst."
@@ -24,6 +24,7 @@ Miscellaneous proof work using the gst axioms.
 <secref title="Strong Infinity in HOL"/>
 </sbcol>
 <sbcol>
+<secref title="Axioms for the Surreal Numbers"/>
 <subsec title="Listing of Theory gst-misc" href="gst-misc.html" />
 </sbcol>
 </secbody>
@@ -62,6 +63,9 @@ This section demonstrates the truth of a proposed strong infinity principle.
 <secbody>
 <sbcol>
 <subsec title="Strong Infinity using Sets">
+The purpose of this section is to verify the consistency of a proposed axiom of infinity relative to the axioms of GST in HOL by proving that the axiom is true of the type GS.
+(It is intended to be asserted of IND).
+The axiom will then be asserted in a theory higher up the tree, and eventually the axiomatization of GST will be replaced by a conservative extension of that theory.
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&exist;e: GS &rarr; GS &rarr; BOOL&bull; &forall;p&bull; &exist;q&bull; (e p q &and; (&forall;x&bull; e x q &rArr; (
         (&exist;y&bull; e y q &and; &forall;Z&bull; &exist;z&bull; e z y &and; &forall;v&bull; e v z &equiv; e v x &and; (Z v))
@@ -96,11 +100,84 @@ val strong_infinity_thm = save_pop_thm "strong_infinity_thm";
 </ft>
 </subsec>
 <subsec title="Strong Infinity using Ordinals">
-This is here for the record, I have no plans at present to do the proof.
-<ft lang="xl-gft" rest="">
-set_goal([], &qqtel;&exist;&lt;&bull;&forall;p&bull;&exist;q&bull; (p&lt;q /\ (&forall;x&lt;q&bull; (
-      (&exist;y&lt;q, e&bull; (&forall;Z&bull; &exist;u&lt;y&bull; (&forall;v&lt;x&bull;(v e u &lt;=&gt; Z v))))
-      /\ (&forall;F&bull;(&forall;u&lt;x&bull;(F u)&lt;q) =&gt; &exist;y&lt;q&bull; &forall;u&lt;x&bull;(F u)&lt;y))))
+A version of the strong infinity axiom phrase as if about ordinal numbers has also been formulated, and may be found documented but not asserted in the theory "strong_infinity".
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Axioms for the Surreal Numbers" tag="AS">
+<abstract>
+This section supplies an axiomatisation of surreal numbers independent of set theory.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+</subsec>
+<subsec title="Primitive Types and Constants">
+<ft lang="xl-sml" rest="">
+new_theory "surreal";
+new_parent "wf_relp";
+new_type ("No", 0);
+new_const ("&empty;<sub>s</sub>", &qqco;No&qqter;);
+declare_alias ("&empty;", &qqtel;&empty;<sub>s</sub>&qqter;);
+new_const ("&lt;<sub>s</sub>", &qqco;No &rarr; No &rarr; BOOL&qqter;);
+declare_alias ("&lt;", &qqtel;&lt;<sub>s</sub>&qqter;);
+new_const ("IC", &qqco;(No &rarr; BOOL) &rarr; No &rarr; No&qqter;);
+declare_infix (240, "&lt;&lt;");
+</ft>
+</subsec>
+<subsec title="Definitions">
+<holconst><holsig>
+&tvb;	rank: No &rarr; No
+</holsig>
+<holpred>
+&tvb;	&forall;n&bull; rank n = IC (&lambda;x&bull;T) n
+</holpred>
+</holconst>
+<holconst><holsig>
+&tvb;	$&lt;&lt;: No &rarr; No &rarr; BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;n m&bull; n &lt;&lt; m = rank n &lt; rank m
+</holpred>
+</holconst>
+</subsec>
+<subsec title="The Zero Axiom">
+<ft lang="xl-sml" rest="">
+new_axiom (["SZeroAx"], &qqtel;&forall;x&bull; rank x = &empty; &equiv; x = &empty;&qqter; );
+</ft>
+</subsec>
+<subsec title="The Cut Axiom">
+The following axiom states that for any property p of surreals and surreal n such that p is downward closed on the surreals of lower rank than n there exists a surreal number (IC p n) which is inbetween the surreals of rank less than n with the property and those of rank less than n without the property, and that where p and q define the same cut on the surreals of rank less than n then IC p n is the same surreal as IC q n.  
+<ft lang="xl-sml" rest="">
+new_axiom (["SCutAx"],
+&qqtel;&forall;p: No &rarr; BOOL; n: No&bull;
+	(&forall;x y: No&bull; x &lt;&lt; n &and; y &lt;&lt; n &and; x &lt; y &and; p y &rArr; p x)
+	&rArr; (&forall;x: No&bull; x &lt;&lt; n &rArr; (p x &equiv; x &lt; (IC p n)) &and; (&not; p x &equiv; (IC p n) &lt; x))
+	&and; (&forall;q: No &rarr; BOOL&bull; (&forall;x&bull; x &lt;&lt; n &rArr; p x &equiv; q x) &equiv; (IC p n) = (IC q n))
+&qqter;);
+</ft>
+</subsec>
+<subsec title="The Induction Axiom">
+<p>
+The following axiom states that for any property p of surreals, if hold for a surreal n whenever it holds for all the surreals of lower rank then it holds for all surreals.
+</p><p>
+This is the same as Conways induction axiom since the union of the two sides of the cannonical cuts ("games") on which this axiomatization is based is the set of all numbers of lower rank.
+</p>
+<ft lang="xl-sml" rest="">
+new_axiom (["SIndAx"], &qqtel;well_founded $&lt;&lt;&qqter;);
+</ft>
+</subsec>
+<subsec title="Strong Infinity">
+This is the ordinal version of my strong infinity for HOL axiom, asserted of the surreals rather than the individuals.
+I have a fairly low level of confidence in this as yet.
+I don't know whether its best to assert it of "&lt;&lt;", or of "&lt;&lt;" restricted to ordinals.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "e");
+new_axiom (["SInfAx"], &qqtel;&forall;p:No&bull; &exist;q&bull; (p &lt;&lt; q &and; (&forall;x&bull; x &lt;&lt; q &rArr; (
+      (&exist;y $e&bull; y &lt;&lt; q &and; (&forall;Z&bull; &exist;u&bull; u &lt;&lt; y &and; (&forall;v&bull; v &lt;&lt; x &rArr; (v e u &equiv; Z v))))
+      &and; (&forall;G&bull;(&forall;u&bull; u &lt;&lt; x &rArr; (G u) &lt;&lt; q) &rArr; &exist;y&bull; y &lt;&lt; q &and; &forall;u&bull; u &lt;&lt; x &rArr; (G u) &lt;&lt; y))))
 &qqter;);
 </ft>
 </subsec>
