@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: strong_infinity.xml,v 1.1 2004/03/11 10:44:05 rbj Exp $"
+       name="strong_infinity"
+       title="A strong axiom of infinity for HOL"
+       description="A stronger than usual axioms of infinity for HOL"
+       keywords="logic proofpower hol infinity"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+A strong axiom of infinity is asserted to enable conservative development of classical set theory and its metatheory, and other foundational work for which a strong metalanguage is convenient.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+</sbcol>
+<sbcol>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory si" href="si.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "si" theory is created as a child of "hol" and an axiom of strong infinity is asserted of type IND.
+Probably 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory si">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+This is hung off "hol", but in an ideal world the axiom would live much higher, replacing the usual axiom of infinity in theory "init".
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+force_new_theory "si";
+force_new_pc "si";
+merge_pcs ["xl_cs_&exist;_conv"] "si";
+set_merge_pcs ["hol", "si"];
+</ft>
+</subsec>
+<subsec title="Strong Infinity Axioms">
+<p>
+The idea is, to make HOL stronger so that more things, in particular so that quite strong set theories, can be developed in HOL by conservative extension.
+This is intended to allow me to assert just one axiom of strong infinity and then use definitions for working with foundational systems rather than axiomatising each foundational system.
+It is intended to enable the replacement of the axiomatic development for "GST" for example, with a convervative development.
+</p>
+<p>
+This is done by instead of (though in fact it is as well as) asserting that there are infinitely many individuals, we assert that the cardinality of the individuals is at least as large as the smallest cardinal which is greater than infinitely many inacessible cardinals, or by a similar kind of effect in terms of ordinals.
+</p>
+<p>
+The axiom asserted talks as if the individuals were a kind of proto-set-theory, an alternative axiom mentioned but not asserted talks as if the individuals were proto-ordinals.
+The "proto" but means that they have no properties which are not essential to being able to state that there are sufficiently many of them (e.g. there is no mention of extensionality), and also that there may also be lots of other individuals of wholly mysterious character.
+The idea is to get expression of cardinality down to its simplest form.
+</p>
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&isin;<sub>i</sub>");
+val strong_infinity_axiom = new_axiom (["strong_infinity_axiom"], &qqtel;
+	&exist;$&isin;<sub>i</sub>: IND &rarr; IND &rarr; BOOL&bull; &forall;p&bull; &exist;q&bull; (p &isin;<sub>i</sub> q &and; (&forall;x&bull; x &isin;<sub>i</sub> q &rArr; (
+        (&exist;y&bull; y &isin;<sub>i</sub> q &and; &forall;Z&bull; &exist;z&bull; z &isin;<sub>i</sub> y &and; &forall;v&bull; v &isin;<sub>i</sub> z &equiv; v &isin;<sub>i</sub> x &and; (Z v))
+        &and; (&forall;f&bull;(&forall;u&bull; u &isin;<sub>i</sub> x &rArr; (f u) &isin;<sub>i</sub> q) &rArr; &exist;y&bull; y &isin;<sub>i</sub> q &and; &forall;u&bull; u &isin;<sub>i</sub> x &rArr;(f u) &isin;<sub>i</sub> y))))
+&qqter;);
+</ft>
+The following is the ordinal version, which is noted but not asserted.
+<ft lang="xl-gft" rest="">
+declare_infix (240, "&lt;<sub>o</sub>");
+</ft>
+<ft lang="xl-gft" rest="">
+new_axiom (["strong_infinity_axiom_o"], &qqtel;
+ &exist;$&lt;<sub>o</sub>&bull;&forall;p&bull;&exist;q&bull; (p &lt;<sub>o</sub> q &and; (&forall;x&bull; x &lt;<sub>o</sub> q &rArr; (
+      (&exist;y $&isin;<sub>i</sub>&bull; y &lt;<sub>o</sub> q &and; (&forall;Z&bull; &exist;u&bull; u &lt;<sub>o</sub> y &and; (&forall;v&bull; v &lt;<sub>o</sub> x &rArr; (v &isin;<sub>i</sub> u &equiv; Z v))))
+      &and; (&forall;G&bull;(&forall;u&bull; u &lt;<sub>o</sub> x &rArr; (G u) &lt;<sub>o</sub> q) &rArr; &exist;y&bull; y &lt;<sub>o</sub> q &and; &forall;u&bull; u &lt;<sub>o</sub> x &rArr; (G u) &lt;<sub>o</sub> y))))
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Representation of Ordinals">
+<abstract>
+A subset of the individuals is defined to serve as ordinals.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Zero">
+The infinity axiom does not distinguish any element to serve as an empty set or as the ordinal zero.
+The obvious thing to do is to take some element which has no members, but the axiom does not guarantee that there is one.
+In fact, any element will do, so we define zero as follows:
+<holconst><holsig>
+&tvb;	&empty;<sub>i</sub> : IND
+</holsig>
+<holpred>
+&tvb;	T
+</holpred>
+</holconst>
+<ft lang="xl-tex" rest="">
+It is convenient also to have a name for one of the relationships whose existence is asserted by the axiom of infinity.
+</ft>
+<ft lang="xl-sml" rest="">
+val _ = xl_set_cs_&exist;_thm strong_infinity_axiom;
+</ft>
+<holconst><holsig>
+&tvb;	$&isin;<sub>i</sub> : IND &rarr; IND &rarr; BOOL
+</holsig>
+<holpred>
+&tvb; &forall;p&bull; &exist;q&bull;
+&tvb;	(p &isin;<sub>i</sub> q
+&tvb;	&and; (&forall;x&bull; x &isin;<sub>i</sub> q &rArr; (
+&tvb;       		(&exist;y&bull; y &isin;<sub>i</sub> q &and; &forall;Z&bull; &exist;z&bull; z &isin;<sub>i</sub> y &and; &forall;v&bull; v &isin;<sub>i</sub> z &equiv; v &isin;<sub>i</sub> x &and; (Z v))
+&tvb;       		&and; (&forall;f&bull;(&forall;u&bull; u &isin;<sub>i</sub> x &rArr; (f u) &isin;<sub>i</sub> q)
+&tvb;			&rArr; &exist;y&bull; y &isin;<sub>i</sub> q
+&tvb;			&and; &forall;u&bull; u &isin;<sub>i</sub> x &rArr;(f u) &isin;<sub>i</sub> y))))
+</holpred>
+</holconst>
+And then we alias the names without the subscripts:
+<ft lang="xl-sml" rest="">
+declare_alias ("&empty;", &qqtel;&empty;<sub>i</sub>&qqter;);
+declare_alias ("&isin;", &qqtel;$&isin;<sub>i</sub>&qqter;);
+</ft>
+Next we define a successor relation.
+<holconst><holsig>
+&tvb;	suc<sub>i</sub> : IND &rarr; IND
+</holsig>
+<holpred>
+&tvb;	&forall;or:IND&bull; suc<sub>i</sub> or = &epsilon;or':IND&bull; &forall;x&bull; x &isin; or &or; x = or &equiv; x &isin; or'
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+declare_alias ("suc", &qqtel;suc<sub>i</sub>&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+This is a place holder.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-ign" rest="">
+commit_pc "si";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

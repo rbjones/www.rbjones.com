@@ -1,0 +1,405 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: WfRecp.xml,v 1.1 2004/03/11 10:44:05 rbj Exp $"
+       name="WfRecp"
+       title="Recursion Theorem for Well-Founded Relations as Properties"
+       description="A theory of justifying definition by transfinite recursion."
+       keywords="logic proofpower hol relations transitive well-founded recursion"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document contains the proof of a recursion theorem asserting the existence of a fixed point for any functional which "respects" some well-founded relation.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Defining the Fixed Point Operator"/>
+</sbcol>
+<sbcol>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory wf_recp" href="wf_recp.html" />
+</sbcol>
+</secbody>
+</section>
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+<section title="Introduction">
+<abstract>
+A new "wf_recp" theory is created as a child of "wf_relp".
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+I have already proved a recursion theorem fairly closely following the formulation and proof devised by Tobias Nipkow for Isabelle-HOL.
+There are two reasons for my wanting a different version of this result.
+The Nipkow derived version works with relations rather than functions, and in my version the relations are ProofPower sets of pairs (I think in the original they were probably properties of pairs).
+This is probably all easily modded into one which works directly with functions but I though it should be possible also to do a neater proof (the "proof" of the recursion theorem in Kunen is just a couple of lines).
+</p><p>
+The end result certainly looks nicer, we'll have to see whether it works out well in practice.
+In particular the fixpoint operator simply takes a functional as an argument and delivers the fixed point as a result.
+The functional which you give it as an argument, in the simple cases, is just what you get by abstracting the right hand side of a recursive definition on the name of the function (more complicated of course if a pattern matching definition is used).
+The relation with respect to which the recursion is well-founded need only be mentioned when attempting to prove that this does yield a fixed point.
+</p><p>
+Another minor improvement is that I do not require the relation to be transitive.
+</p><p>
+The proof is shorter than (my version of) the original, but by less than 20 percent.
+I'm sure there's lots of scope for improvement.
+(The isabelle version is much shorter than either.)
+</p>
+</subsec>
+<subsec title="The Theory wf_recp">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "wf_relp";
+force_new_theory "wf_recp";
+force_new_pc "wf_recp";
+merge_pcs ["xl_cs_&exist;_conv"] "wf_recp";
+set_merge_pcs ["hol", "wf_relp", "wf_recp"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Defining the Fixed Point Operator">
+<abstract>
+The main part of this is the proof that functionals which are well-founded with respect to some well-founded relation have fixed points.
+This done, the operator "fix" is defined, which yields such a fixed point.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Definitions">
+<ft lang="xl-sml" rest="">
+declare_infix (240, "respects");
+</ft>
+<holconst><holsig>
+$respects: (('a &rarr; 'b) &rarr; ('a &rarr; 'b)) &rarr; ('a &rarr; 'a &rarr; BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&forall; f r &bull; f respects r &equiv; &forall;g h x&bull; (&forall;y&bull; (tc r) y x &rArr; g y = h y) &rArr; f g x = f h x
+</holpred>
+</holconst>
+<holconst><holsig>
+fixed_below: (('a &rarr; 'b) &rarr; ('a &rarr; 'b)) &rarr; ('a &rarr; 'a &rarr; BOOL) &rarr; ('a &rarr; 'b) &rarr; 'a &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f r g x&bull; fixed_below f r g x &equiv; &forall;y&bull; tc r y x &rArr; f g y = g y
+</holpred>
+</holconst>
+<holconst><holsig>
+fixed_at: (('a &rarr; 'b) &rarr; ('a &rarr; 'b)) &rarr; ('a &rarr; 'a &rarr; BOOL) &rarr; ('a &rarr; 'b) &rarr; 'a &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f r g x&bull; fixed_at f r g x &equiv; fixed_below f r g x &and; f g x = g x
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x g y&bull; fixed_below f r g x &and; tc r y x &rArr; fixed_below f r g y&qqter;);
+a (rewrite_tac [get_spec &qqtel;fixed_below&qqter;, get_spec &qqtel;$respects&qqter;]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+val fixed_below_lemma1 = save_pop_thm "fixed_below_lemma1";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x g&bull; fixed_below f r g x &rArr; fixed_at f r (f g) x&qqter;);
+a (rewrite_tac [get_spec &qqtel;fixed_below&qqter;, get_spec &qqtel;fixed_at&qqter;, get_spec &qqtel;$respects&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 3 [&qqtel;f g&qqter;, &qqtel;g&qqter;]);
+a (spec_nth_asm_tac 1 &qqtel;y&qqter;);
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [&qqtel;f g&qqter;, &qqtel;g&qqter;]);
+a (all_asm_fc_tac []);
+val fixed_at_lemma1 = save_pop_thm "fixed_at_lemma1";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x g&bull; fixed_below f r g x &rArr; &forall;y&bull; tc r y x &rArr; fixed_at f r g y&qqter;);
+a (rewrite_tac [get_spec &qqtel;fixed_below&qqter;, get_spec &qqtel;fixed_at&qqter;, get_spec &qqtel;$respects&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [tran_tc_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac []);
+val fixed_at_lemma2 = save_pop_thm "fixed_at_lemma2";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x g&bull; (&forall;y&bull; tc r y x &rArr; fixed_at f r g y) &rArr; fixed_below f r g x&qqter;);
+a (REPEAT_N 4 strip_tac);
+a (rewrite_tac [get_spec &qqtel;fixed_at&qqter;, get_spec &qqtel;fixed_below&qqter;]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac []);
+val fixed_at_lemma3 = save_pop_thm "fixed_at_lemma3";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x g h&bull; fixed_below f r g x &and; fixed_below f r h x &rArr; &forall;z&bull; tc r z x &rArr; h z = g z&qqter;);
+a (REPEAT_N 4 strip_tac);
+a (wf_induction_tac (asm_rule &qqtel;well_founded r&qqter;) &qqtel;x&qqter;);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 4 &qqtel;z&qqter;);
+a (all_asm_fc_tac [fixed_below_lemma1]);
+a (list_spec_nth_asm_tac 3 [&qqtel;g&qqter;, &qqtel;h&qqter;]);
+a (all_asm_fc_tac [fixed_at_lemma2]);
+a (all_asm_fc_tac [get_spec &qqtel;fixed_at&qqter;]);
+a (all_asm_fc_tac [fixed_at_lemma1]);
+a (all_asm_fc_tac [get_spec &qqtel;$respects&qqter;]);
+a (GET_ASM_T &qqtel;f h z = h z&qqter; (rewrite_thm_tac o eq_sym_rule));
+a (GET_ASM_T &qqtel;f h z = f g z&qqter; rewrite_thm_tac);
+a strip_tac;
+val fixed_below_lemma2 =  save_pop_thm "fixed_below_lemma2";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;g x&bull; fixed_at f r g x &rArr; &forall;y&bull; tc r y x &rArr; fixed_at f r g y&qqter;);
+a (REPEAT strip_tac);
+a (all_fc_tac [get_spec &qqtel;fixed_at&qqter;]);
+a (all_fc_tac[fixed_at_lemma2]);
+val fixed_at_lemma4 = save_pop_thm "fixed_at_lemma4";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;g h x&bull; fixed_at f r g x &and; fixed_at f r h x &rArr; g x = h x&qqter;);
+a (REPEAT strip_tac);
+a (fc_tac[get_spec &qqtel;$respects&qqter;]);
+a (all_fc_tac[get_spec &qqtel;fixed_at&qqter;]);
+a (all_asm_fc_tac[get_spec &qqtel;$respects&qqter;]);
+a (fc_tac[get_spec &qqtel;fixed_below&qqter;]);
+a (fc_tac[fixed_below_lemma2]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (eq_sym_nth_asm_tac 14);
+a (eq_sym_nth_asm_tac 13);
+a (asm_rewrite_tac[]);
+val fixed_at_lemma5 = save_pop_thm "fixed_at_lemma5";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x&bull; (&forall;y&bull; tc r y x &rArr; &exist;g&bull; fixed_at f r g y) &rArr; &exist;g&bull; fixed_below f r g x&qqter;);
+a (REPEAT strip_tac);
+a (&exist;_tac &qqtel;&lambda;z&bull; (&epsilon;h&bull; fixed_at f r h z) z&qqter;);
+a (rewrite_tac [get_spec &qqtel;fixed_below&qqter;]
+	THEN REPEAT strip_tac);
+a (GET_ASM_T &qqtel;f respects r&qqter; ante_tac
+	THEN rewrite_tac [list_&forall;_elim [&qqtel;f&qqter;, &qqtel;r&qqter;] (get_spec &qqtel;$respects&qqter;)]
+	THEN strip_tac);
+a (list_spec_nth_asm_tac 1 [&qqtel;&lambda; z&bull; (&epsilon; h&bull; fixed_at f r h z) z&qqter;, &qqtel;&epsilon; h&bull; fixed_at f r h y&qqter;]);
+a (spec_nth_asm_tac 1 &qqtel;y&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1 THEN rewrite_tac[]);
+a (asm_fc_tac[fixed_at_lemma4]);
+a (list_spec_nth_asm_tac 2 [&qqtel;f&qqter;, &qqtel;g&qqter;, &qqtel;y&qqter;, &qqtel;y'&qqter;]);
+a (asm_fc_tac[]);
+a (all_&epsilon;_tac);
+(* *** Goal "1.1" *** *)
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "1.4" *** *)
+a (asm_tac fixed_at_lemma4);
+a (list_spec_nth_asm_tac 1 [&qqtel;f&qqter;, &qqtel;r&qqter;]);
+a (list_spec_nth_asm_tac 1 [&qqtel;&epsilon; h&bull; fixed_at f r h y&qqter;, &qqtel;y&qqter;]);
+a (list_spec_nth_asm_tac 1 [&qqtel;y'&qqter;]);
+a (all_asm_fc_tac[fixed_at_lemma5]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+a (all_&epsilon;_tac);
+(* *** Goal "2.1" *** *)
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_fc_tac[get_spec &qqtel;fixed_at&qqter;]);
+val fixed_below_lemma3 = save_pop_thm "fixed_below_lemma3";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;r f&bull; well_founded r &and; f respects r
+	&rArr; &forall;x&bull; &exist;g&bull; fixed_below f r g x &qqter;);
+a (REPEAT_N 4 strip_tac);
+a (wf_induction_tac (asm_rule &qqtel;well_founded r&qqter;) &qqtel;x&qqter;);
+a (lemma_tac &qqtel;&forall; u&bull; tc r u t &rArr; (&exist; g&bull; fixed_at f r g u)&qqter;
+	THEN1 (REPEAT strip_tac
+	THEN all_asm_fc_tac[]
+	THEN all_fc_tac[fixed_at_lemma1]
+	THEN &exist;_tac &qqtel;f g&qqter;
+	THEN asm_rewrite_tac[]));
+a (all_fc_tac[fixed_below_lemma3]);
+a (&exist;_tac &qqtel;g&qqter; THEN strip_tac);
+val fixed_below_lemma4 = save_pop_thm "fixed_below_lemma4";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r
+	&rArr; &forall;x&bull; &exist;g&bull; fixed_at f r g x &qqter;);
+a (REPEAT_N 4 strip_tac);
+a (all_fc_tac[fixed_below_lemma4]);
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+a (&exist;_tac &qqtel;f g&qqter;);
+a (all_fc_tac[fixed_at_lemma1]);
+val fixed_at_lemma6 = save_pop_thm "fixed_at_lemma6";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r &rArr;
+	&forall;x&bull; fixed_at f r (&lambda; x&bull; (&epsilon; h&bull; fixed_at f r h x) x) x&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&exist;g&bull; (&lambda; x&bull; (&epsilon; h&bull; fixed_at f r h x) x) = g&qqter; THEN1 prove_&exist;_tac);
+a (asm_rewrite_tac[]);
+a (wf_induction_tac (asm_rule &qqtel;well_founded r&qqter;) &qqtel;x&qqter;);
+a (rewrite_tac[get_spec &qqtel;fixed_at&qqter;] THEN strip_tac);
+(* *** Goal "1" *** *)
+a (asm_fc_tac [list_&forall;_elim [&qqtel;f&qqter;, &qqtel;r&qqter;] fixed_at_lemma3]);
+a (asm_fc_tac []);
+a (list_spec_nth_asm_tac 1 [&qqtel;t&qqter;, &qqtel;g&qqter;]);
+a (asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (fc_tac [list_&forall;_elim [&qqtel;f&qqter;, &qqtel;r&qqter;] fixed_at_lemma6]);
+a (list_spec_nth_asm_tac 1 [&qqtel;f&qqter;, &qqtel;t&qqter;]);
+a (fc_tac [get_spec &qqtel;fixed_at&qqter;]);
+a (lemma_tac &qqtel;g t = g' t&qqter; THEN1 (GET_NTH_ASM_T 6 (rewrite_thm_tac o eq_sym_rule)));
+(* *** Goal "2.1" *** *)
+a (&epsilon;_tac &qqtel;&epsilon; h&bull; fixed_at f r h t&qqter;);
+(* *** Goal "2.1.1" *** *)
+a (&exist;_tac &qqtel;g'&qqter;  THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (fc_tac [get_spec &qqtel;fixed_at&qqter;]);
+a (fc_tac [fixed_at_lemma5]);
+a (list_spec_nth_asm_tac 1 [&qqtel;f&qqter;, &qqtel;&epsilon; h&bull; fixed_at f r h t&qqter;, &qqtel;t&qqter;, &qqtel;g'&qqter;]);
+(* *** Goal "2.2" *** *)
+a (fc_tac [get_spec &qqtel;$respects&qqter;]);
+a (list_spec_nth_asm_tac 1 [&qqtel;t&qqter;, &qqtel;g&qqter;, &qqtel;g'&qqter;]);
+(* *** Goal "2.2.1" *** *)
+a (asm_fc_tac []);
+a (asm_fc_tac [fixed_at_lemma4]);
+a (list_spec_nth_asm_tac 1 [&qqtel;f&qqter;, &qqtel;g'&qqter;, &qqtel;t&qqter;, &qqtel;y&qqter;]);
+a (asm_fc_tac [fixed_at_lemma5]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2.2.2" *** *)
+a (asm_rewrite_tac[]);
+val fixed_lemma1 = save_pop_thm "fixed_lemma1";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;f r&bull; well_founded r &and; f respects r &rArr; &exist;g&bull; f g = g&qqter;);
+a (REPEAT strip_tac);
+a (&exist;_tac &qqtel;&lambda;x&bull; (&epsilon;h&bull; fixed_at f r h x) x&qqter;
+	THEN rewrite_tac [ext_thm]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [list_&forall;_elim [&qqtel;f&qqter;, &qqtel;r&qqter;] fixed_lemma1]);
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+a (all_fc_tac [get_spec &qqtel;fixed_at&qqter;]);
+a (asm_rewrite_tac[]);
+val fixp_thm1 = save_pop_thm "fixp_thm1";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&exist;fix&bull; &forall;f r&bull;	well_founded r &and; f respects r
+	&rArr; f (fix f) = (fix f)&qqter;);
+a (&exist;_tac &qqtel;&lambda;f&bull; &epsilon;g&bull; f g = g&qqter;);
+a (REPEAT strip_tac THEN rewrite_tac[]);
+a (all_&epsilon;_tac);
+a (all_fc_tac [fixp_thm1]);
+a (&exist;_tac &qqtel;g&qqter; THEN strip_tac);
+val _ = xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+fix: (('a &rarr; 'b) &rarr; ('a &rarr; 'b)) &rarr; 'a &rarr; 'b
+</holsig>
+<holpred>
+&forall;f r&bull; well_founded r &and; f respects r &rArr; f (fix f) = fix f
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Respect Theorems">
+<abstract>
+Some theorems which help to prove that functions respect relations.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+My first applications of the recursion theorem are in set theory, typically involving recursion which respects membership or its transitive closure.
+</p><p>
+</p>
+</subsec>
+<subsec title="The Inverse of a Relation">
+The following function takes a relation and a function and returns a function which maps each element in the domain of the relation to the relation which holds between a predecessor of that element and its value under the function.
+i.e. it maps the function over the predecessors of the element and returns the result as a relation.
+It may therefore be used to rephrase primitive recursive definitions, and so the result which follows may be used to establish the existence of functions defined by primitive recursion.
+<holconst><holsig>
+ relmap : ('a &rarr; 'a &rarr; BOOL) &rarr; ('a &rarr; 'b) &rarr; ('a &rarr; ('a &rarr; 'b &rarr; BOOL))
+</holsig>
+<holpred>
+  &forall;r f&bull; relmap r f = &lambda;x y z&bull; r y x &and; z = f y
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;r g&bull; (&lambda;f&bull; g o (relmap r f)) respects r&qqter;);
+a (rewrite_tac[get_spec &qqtel;$respects&qqter;, get_spec &qqtel;relmap&qqter;, get_spec &qqtel;$o&qqter;]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;(&lambda; y z&bull; r y x &and; z = g' y) = (&lambda; y z&bull; r y x &and; z = h y)&qqter;
+	THEN1 rewrite_tac[ext_thm]);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[tc_incr_thm]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac []);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[tc_incr_thm]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac []);
+val relmap_respect_thm = save_pop_thm "relmap_respect_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+In this section I will create a decent proof context for recursive definitions, eventually.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+(* commit_pc "wf_relp"; *)
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

@@ -1,0 +1,362 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: pure_categories.xml,v 1.1 2004/03/11 10:44:05 rbj Exp $"
+       name="pure_categories"
+       title="A Theory of Pure Categories"
+       description="An axiomatic presentation of a categorial foundation for mathematics in higher order logic."
+       keywords="logic proofpower category foundations"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+Two new types are introduced in HOL, C and F of pure categories and functors respectively.
+Axioms are asserted to make these into a foundation for mathematics with strength similar to ZFC + infinitely many inaccessibles.
+The initial stages of the development of mathematics in this system are presented.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+</sbcol>
+<sbcol>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory pc" href="pc.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "pc" theory is created as a child of "hol".
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory pc">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+force_new_theory "pc";
+force_new_pc "pc";
+merge_pcs ["xl_cs_&exist;_conv"] "pc";
+set_merge_pcs ["hol", "pc"];
+</ft>
+</subsec>
+<subsec title="New Types">
+<ft lang="xl-sml" rest="">
+new_type("C",0);
+new_type("F",0);
+</ft>
+</subsec>
+<subsec title="Composition and Application">
+<p>
+In this theory we have available both composition and application.
+Probably one can manage with only composition, but its easier for me to have both.
+</p>
+<ft lang="xl-sml" rest="">
+declare_infix (240, "<sub>o</sub>");
+new_const("<sub>o</sub>",&qqco;F &rarr; F &rarr; F&qqter;);
+declare_infix (240, "<sub>a</sub>");
+new_const("<sub>a</sub>",&qqco;F &rarr; F &rarr; F&qqter;);
+</ft>
+We also have a membership relation which asserts that a morphism is a member of a category.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&isin;<sub>f</sub>");
+new_const("&isin;<sub>f</sub>",&qqco;F &rarr; C &rarr; BOOL&qqter;);
+</ft>
+Before we can say much at all we also need the domain and codomain functions.
+These yield objects (categories) not morphisms (functors) and an injection morphism function is also provided.
+<ft lang="xl-sml" rest="">
+new_const("dom",&qqco;F &rarr; C&qqter;);
+new_const("cod",&qqco;F &rarr; C&qqter;);
+new_const("inj",&qqco;C &rarr; (F &rarr; BOOL) &rarr; F&qqter;);
+</ft>
+Identity functors are special cases of injections defined as follows:
+<holconst><holsig>
+&tvb; id: C &rarr; F
+</holsig>
+<holpred>
+&tvb; &forall;c: C&bull; id c = inj c (&lambda;f&bull;T)
+</holpred>
+</holconst>
+We are now in a position to give the first axioms.
+First we assert that functors and categories are extensional.
+<ft lang="xl-sml" rest="">
+val cat_ext_axiom = new_axiom (["cat_ext_axiom"], &qqtel;
+ &forall;c1 c2:C&bull; (&forall;f:F&bull; f &isin;<sub>f</sub> c1 &equiv; f &isin;<sub>f</sub> c2) &rArr; c1=c2 
+&qqter;);
+val fun_ext_axiom = new_axiom (["fun_ext_axiom"], &qqtel;
+ &forall;f1 f2:F&bull; dom f1 = dom f2 &and; cod f1 = cod f2
+	&and; (&forall;g:F&bull; g &isin;<sub>f</sub> dom f1 &rArr; f1 <sub>a</sub> g = f2 <sub>a</sub> g)
+	&rArr; f1=f2 
+&qqter;);
+</ft>
+Composition is given as a total function rather than a partial one.
+The axioms will however speak only about the values of the function in the cases where the partial composition we expect in categories would be defined.
+That is reflected first in the axiom which asserts that composition is associative.
+<ft lang="xl-sml" rest="">
+val comp_assoc_axiom = new_axiom (["comp_assoc_axiom"], &qqtel;
+ &forall;f1 f2 f3:F&bull; cod f1 = dom f2 &and; cod f2 = dom f3
+	&rArr; (f1 <sub>o</sub> f2) <sub>o</sub> f3 = f1 <sub>o</sub> (f2 <sub>o</sub> f3)
+&qqter;);
+</ft>
+Two key properties of categories and functors respectively are now asserted, viz. that categories are closed under composition and functors respect composition.
+<ft lang="xl-sml" rest="">
+val cat_comp_axiom = new_axiom (["cat_comp_axiom"], &qqtel;
+ &forall;c: C; f1 f2:F&bull; f1 &isin;<sub>f</sub> c &and; f2 &isin;<sub>f</sub> c &and; cod f1 = dom f2
+	&rArr; (f1 <sub>o</sub> f2) &isin;<sub>f</sub> c
+&qqter;);
+val func_comp_axiom = new_axiom (["func_comp_axiom"], &qqtel;
+ &forall;f f1 f2:F&bull; f1 &isin;<sub>f</sub> (dom f) &and; f2 &isin;<sub>f</sub> (dom f) &and; cod f1 = dom f2
+	&rArr; f <sub>a</sub> (f1 <sub>o</sub> f2) = (f <sub>a</sub> f1) <sub>o</sub> (f <sub>a</sub> f2) 
+&qqter;);
+</ft>
+Categories are also closed under left and right identity.
+First we define membership as a relation between categories.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&isin;<sub>c</sub>");
+</ft>
+<holconst><holsig>
+&tvb; $&isin;<sub>c</sub>: C &rarr; C &rarr; BOOL
+</holsig>
+<holpred>
+&tvb; &forall;c1 c2: C&bull; c1 &isin;<sub>c</sub> c2 &equiv; (id c1) &isin;<sub>f</sub> c2
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+val cat_id_axiom = new_axiom (["cat_id_axiom"], &qqtel;
+ &forall;c: C; f:F&bull; f &isin;<sub>f</sub> c 
+	&rArr; (dom f) &isin;<sub>c</sub> c &and; (cod f) &isin;<sub>c</sub> c
+&qqter;);
+</ft>
+The following axiom tells us that, given a category c and a predicate p over functors which defines a subcategory of c,  &qqtel;inj c p&qqter; is a functor which injects that subcategory into c.
+This is not only an injection in the sense of a one-one function, but also an identity functor.
+<ft lang="xl-sml" rest="">
+val injection_axiom = new_axiom (["injection_axiom"], &qqtel;
+ &forall;c: C; p: F &rarr; BOOL&bull;
+	(&forall;f g: F&bull; f &isin;<sub>f</sub> c &and; g &isin;<sub>f</sub> c &and; p f &and; p g &rArr; p (f <sub>o</sub> g))
+	&and; (&forall;f: F&bull; f &isin;<sub>f</sub> c &and; p f &rArr; p (id (dom f)) &and; p (id (cod f)))
+	&rArr; (&forall;f: F&bull; f &isin;<sub>f</sub> (dom (inj c p)) &equiv; p f)
+	&and; (&forall;f: F&bull; f &isin;<sub>f</sub> (dom (inj c p)) &rArr; (inj c p) <sub>a</sub> f = f)
+	&and; cod (inj c p) = c
+&qqter;);
+</ft>
+The next axiom asserts well-foundedness.
+It is probably unnecessary for the development of mathematics in this system, but is valuable in giving insight into the underlying model which has inspired the rest of the axioms.
+<ft lang="xl-sml" rest="">
+val well_founded_axiom = new_axiom (["well_founded_axiom"], &qqtel;
+ &forall;pc:C &rarr; BOOL; pf: F &rarr; BOOL&bull;
+	(&forall;c:C&bull; (&forall;f:F&bull; f &isin;<sub>f</sub> c &rArr; pf f) &rArr; pc c)
+   &and;	(&forall;f:F&bull; (pc (dom f) &and; pc (cod f)) &rArr; pf f)
+	&rArr; (&forall;c:C&bull; pc c) &and; (&forall;f:F&bull; pf f)
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Dependent Functor Spaces">
+<abstract>
+The "dependent functor space constructor" plays a key role in getting this theory up to a decent level of strength.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Constructor">
+<p>
+The dependent function space constructor is an operator which takes a category and a function over that category assigning to each morphism in the category a category.
+The operator yields a new category which contains just two objects.
+The first object is the original category.
+The second object is the union of the the image of that category (considered as a set of morphisms) under the function.
+The arrows in the new category are "dependent functions".
+</p>
+<ft lang="xl-sml" rest="">
+new_const("&lambda;<sub>c</sub>",&qqco;(F &rarr; F) &rarr; C &rarr; F&qqter;);
+new_const("&Lambda;<sub>c</sub>",&qqco;(F &rarr; C) &rarr; C &rarr; C&qqter;);
+</ft>
+<ft lang="xl-sml" rest="">
+val beta_axiom = new_axiom (["beta_axiom"], &qqtel;
+ &forall;c:C; lam: F &rarr; F; f:F&bull;
+	(&forall;g h:F&bull; g &isin;<sub>f</sub> c &and; g &isin;<sub>f</sub> c &and; cod g = dom h
+		&rArr; cod (lam f) = dom (lam h)
+		&and; lam (g <sub>o</sub> h) = (lam g) <sub>o</sub> (lam h))
+	&and; f &isin;<sub>f</sub> c &rArr; (&lambda;<sub>c</sub> lam c) <sub>a</sub> f = lam f
+&qqter;);
+</ft>
+<ft lang="xl-sml" rest="">
+val dfs_axiom = new_axiom (["dfs_axiom"], &qqtel;
+ &forall;c:C; l: F &rarr; F; L: F &rarr; C&bull;
+	(&forall;f:F&bull; f &isin;<sub>f</sub> c &rArr; (l f) &isin;<sub>f</sub> (L f))
+	&and; (&forall;g h:F&bull; g &isin;<sub>f</sub> c &and; h &isin;<sub>f</sub> c
+		&rArr; cod g = dom h &rArr; cod (l g) = dom (l h)
+		&and; l (g <sub>o</sub> h) = (l g) <sub>o</sub> (l h))
+	&rArr; (&lambda;<sub>c</sub> l c) &isin;<sub>f</sub> (&Lambda;<sub>c</sub> L c)
+&qqter;);
+</ft>
+The following infinity axiom incorporates a union axiom.
+<ft lang="xl-sml" rest="">
+val infinity_axiom = new_axiom (["infinity_axiom"], &qqtel;
+ &forall;f: F&bull; &exist;c:C&bull; f &isin;<sub>f</sub> c
+	&and; (&forall;L: F &rarr; C; g: F; d: C&bull;
+		d = dom g
+		&and; (&forall;g:F&bull; g &isin;<sub>f</sub> d &rArr; (L g) &isin;<sub>c</sub> c)
+		&rArr; (&Lambda;<sub>c</sub> L d) &isin;<sub>c</sub> c
+		&and; (&exist;uf:C&bull; uf &isin;<sub>c</sub> c
+			&and; &forall;h1 h2:F&bull; h1 &isin;<sub>f</sub> cod f
+			&and; h2 &isin;<sub>f</sub> dom h1
+			&rArr; h2 &isin;<sub>f</sub> uf)
+	)
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Definitions and Proofs">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Empty Category and Functor">
+<p>
+The empty category is obtainable by separation.
+</p>
+<holconst><holsig>
+&tvb; &empty;<sub>c</sub> :C
+</holsig>
+<holpred>
+&tvb; &empty;<sub>c</sub> = dom(inj (&epsilon;c&bull;T) (&lambda;f&bull;F))
+</holpred>
+</holconst>
+<ft lang="xl-tex" rest="">
+&lt;p&gt;
+The empty functor is the identity functor over the empty category.
+&lt;/p&gt;
+</ft>
+<holconst><holsig>
+&tvb; &empty;<sub>f</sub> :F
+</holsig>
+<holpred>
+&tvb; &empty;<sub>f</sub> = id &empty;<sub>c</sub>
+</holpred>
+</holconst>
+We may as well have the lambdas declared as binders.
+<ft lang="xl-sml" rest="">
+declare_binder "&lambda;<sub>c</sub>";
+declare_binder "&Lambda;<sub>c</sub>";
+</ft>
+We now prove that the empty category is indeed empty.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; f:F&bull; &not;f &isin;<sub>f</sub> &empty;<sub>c</sub>&qqter;);
+a (strip_tac
+	THEN rewrite_tac [get_spec &qqtel;&empty;<sub>c</sub>&qqter;]);
+a (strip_asm_tac injection_axiom);
+a (LIST_SPEC_NTH_ASM_T 1 [&qqtel;&epsilon; c:C&bull; T&qqter;, &qqtel;&lambda; f:F&bull; F&qqter;]
+	(fn x=&gt; strip_asm_tac (rewrite_rule[] x)));
+a (asm_rewrite_tac[]);
+val empty_cat_thm = save_pop_thm "empty_cat_thm";
+</ft>
+The following theorems permit the extensionality axioms to be used as rewrites.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;
+ &forall;c1 c2:C&bull; c1=c2 &equiv; (&forall;f:F&bull; f &isin;<sub>f</sub> c1 &equiv; f &isin;<sub>f</sub> c2) 
+&qqter;);
+a (REPEAT_N 4 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [cat_ext_axiom]);
+val cat_ext_thm = save_pop_thm "cat_ext_thm";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;
+ &forall;f1 f2:F&bull; f1=f2 &equiv; dom f1 = dom f2 &and; cod f1 = cod f2
+	&and; (&forall;g:F&bull; g &isin;<sub>f</sub> dom f1 &rArr; f1 <sub>a</sub> g = f2 <sub>a</sub> g)
+&qqter;);
+a (REPEAT_N 4 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [fun_ext_axiom]);
+val fun_ext_thm = save_pop_thm "fun_ext_thm";
+</ft>
+We now prove that the empty category is an initial object in our domain of categories.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;c:C&bull; &exist;<sub>1</sub> f:F&bull; dom f = &empty;<sub>c</sub> &and; cod f = c&qqter;);
+a (strip_tac THEN &exist;<sub>1</sub>_tac &qqtel;inj c (&lambda;f&bull;F)&qqter;);
+a (strip_asm_tac injection_axiom);
+a (LIST_SPEC_NTH_ASM_T 1 [&qqtel;c&qqter;, &qqtel;&lambda; f:F&bull; F&qqter;]
+	(fn x=&gt; strip_asm_tac (rewrite_rule[] x)));
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [cat_ext_thm]);
+a (REPEAT_N 2 strip_tac);
+a (asm_rewrite_tac[empty_cat_thm]);
+(* *** Goal "2" *** *)
+a (once_rewrite_tac [fun_ext_thm]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (asm_rewrite_tac [cat_ext_thm, empty_cat_thm]);
+(* *** Goal "2.2" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (GET_NTH_ASM_T 3 rewrite_thm_tac);
+a (rewrite_tac [empty_cat_thm]);
+val empty_cat_initial_thm = save_pop_thm "empty_cat_initial_thm";
+</ft>
+</subsec>
+<subsec title="Finite Discrete Categories">
+<p>
+Any finite collection of categories can be made into a discrete category.
+</p>
+<ft lang="xl-ign" rest="">
+set_goal ([], &qqtel;&forall;c:C&bull; (id<sub>c</sub> c) &isin;<sub>f</sub> ($&Lambda;<sub>c</sub> dom c)&qqter;);
+a ();
+</ft>
+<ft lang="xl-ign" rest="">
+ &circS;HOLCONST
+&tvb; fdc : C list &rarr; C
+ &turnstil;
+&tvb;  fdc Nil = &empty;<sub>c</sub>
+&tvb;&and; &forall;h t&bull; fdc (Cons h t) = 
+ &bbox;
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+This is a place holder.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-ign" rest="">
+commit_pc "pc";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.2 2003/04/30 19:26:32 rbj Exp $
+# $Id: rules.mk,v 1.3 2004/03/11 10:44:05 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -31,6 +31,13 @@ PPTHDOC=$(PPTH:.th=.th.doc)
 PPTHTEX=$(PPTHDOC:.doc=.tex)
 HTMLTHLS=$(PPTHDOC:.th.doc=.html)
 PPTHDXLD=$(PPTHDOC:.th.doc=.xml)
+
+# DVI, Postscript, PDF
+
+TEX=$(PPPDOC:.doc=.tex)
+DVI=$(TEX:.tex=.dvi)
+PS=$(DVI:.dvi=.ps)
+PDF=$(PS:.ps=.pdf)
 
 # Qualified rules
 
@@ -118,6 +125,17 @@ $(PERLBIN): % : %.pl
 	chmod +x $*
 
 # Unqualified rules
+
+%.tex: %.doc
+	doctex $*
+
+%.dvi: %.tex
+	latex $*.tex
+	latex $*.tex
+	latex $*.tex
+
+%.ps: %.dvi
+	dvips $*.dvi -o $*.ps
 
 %.pdf: %.ps
 	ps2pdf $<
