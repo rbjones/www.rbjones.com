@@ -1,0 +1,2693 @@
+=IGN
+$Id: t009.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+#
+# To process the document in batch:
+pp_make_database -f -p hol ordered_sets
+docsml t009
+pp -i t009 -d ordered_sets </dev/null >t009.run.log
+doctex t009 ordered_sets.th
+texdvi t009
+texdvi t009
+# That will give you a document "t009.dvi" to print off and read.
+# To process the document interactively:
+pp_make_database -f -p zed ordered_sets
+xpp -f t009.doc -c pp -d ordered_sets &
+# then either do use_file"t009" to load the lot and start interacting with
+# the results, or, select-and-execute your way through a chunk at a time.
+=TEX
+\documentclass[12pt]{article}
+\usepackage{ProofPower}
+\usepackage{A4}
+\usepackage{latexsym}
+\usepackage{epsf}
+\def\ZAxDesLabel{}
+\def\ZGenericLabel{}
+\def\ZOtherLabel{}
+\def\ZSchemaLabel{}
+\def\Hide#1{\relax}
+%Macros for references (to be converted to bibtex presently).
+
+\ftlinepenalty=9999
+
+% command used for hiding proofs (omits from listing but processes formal content)
+\newcommand{\ignore}[1]{}
+
+\title{Well-orderings and Well-foundedness}
+
+\author{R.D. Arthan and R.B. Jones}
+
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+
+\subsection{RBJ's Preface}
+
+For context and motivation see \cite{rbjt000}.
+
+This document has been produced by Roger Jones by hacking a document written by Rob Arthan called {\it ordered\_sets}.
+
+This preface contains my notes on what I have done to it:
+
+\begin{enumerate}
+\item Change the name of the document.
+\item Make sure theory listing uses aliases.
+\item Change so that the theory of orders is not incorporated by duplication.
+\item Change to suppress the listing of proofs and to include instead displays of key theorems and lemmas in the narrative.
+\item Messed about with the section structure.
+\item Put material on relations over a whole type and the independence proofs into a separate theory.
+\item Added the material on transitive closure, the well-founded part of a relationship, and the recursion theorem.
+\end{enumerate}
+
+\section{INTRODUCTION}\label{INTRODUCTION}
+
+This note contains various definitions and theorems, many of which are ultimately destined for
+the {\Product} theory {\it orders}, which, it is intended, will supply a generally
+useful collection of definitions and results relating to ordered sets of various kinds
+(including ordered sets accompanied by some finer structure, e.g., an ordered set given as the
+transitive closure of  a, not necessarily transitive, well-founded, relation, representing
+some pattern for defining functions by recursion).
+
+The significant mathematical facts that this note adds to the theory
+of ordered sets are: Zorn's lemma for relations viewed as propositional
+functions, the well-ordering principle and some useful equivalences to do with
+well-foundedness (e.g., we show that a set is well-founded iff. it has no
+infinite descending chains). These results and their proofs serve to validate
+the definitions.
+
+In part, the purpose of this note is to investigate relationships between various
+primitive notions that are commonly used in talking about ordered sets.  In particular,
+it is common in the literature for concepts such as well-foundedness or antisymmetry
+to be defined so that they entail other properties such as irreflexivity. The goal here
+is to fill out the list of primitive notions offered in the theory {\it orders} to give an
+adequate vocabulary to state the various definitions commonly given in the literature
+in terms of primitive notions that are independent. The result is a list of six primitive notions:
+reflexivity, irreflexivity, antisymmetry, transitivity, trichotomy and a notion
+we call the ``weak minimal condition'' which is an analogue of well-foundedness broadened
+so as not to entail reflexivity or antisymmetry.
+
+Where useful notions, like the customary
+definition of well-foundedness, entail more than one primitive notion, in this note,
+the notion is expressed in terms of the chosen primitive ones and the customary definition
+is proved as a theorem.
+
+Section~\ref{Independence} contains proofs that the chosen primitive notions are
+indeed independent, by proving that for each pair $P$ and $Q$ of primitive notions
+their are examples where both hold, where $P$ holds and not $Q$ and where
+$Q$ holds and not $P$. This material is not intended for inclusion in the theory {\it orders},
+but rather to serve as a check on the chosen formalisation (as, in a different way, do
+the proofs of Zorn's lemma and the well-ordering principle).
+It also provides an exercise in semi-automated
+bulk theorem-proving --- the challenge being to formulate and prove the desired results
+without having to type in all 45 cases and all 45 witnesses.
+
+For the convenience of anyone wanting to run this script on {\Product},
+this note is a {\Product} literate script including
+the code for all the proofs (most of which though present in the source is
+supressed in the printed document).
+
+The appendices include listings of the theory set up by the code in this document.
+The theory (optionally) includes the existing theorems from the theory {\it orders}.
+These comprise a body of results about down-sets which amount to the proof
+of the Dedekind-MacNeille completion theorem and a collection of facts about
+orders induced on a set equipped with a function mapping it to an ordered set.
+These are all there to support the original aim of constructing the type of real numbers.
+
+These existing theorems are followed by a couple of results that make our definition of
+the minimum condition and of well-foundedness easier to work with.
+Then come two lemmas leading up to Zorn's lemma (for which all the hard work
+has been done elsewhere). This is then used (together with some lemmas about
+subsets of ordered sets and extensions of well-ordered sets) to prove the
+well-ordering principle. This material is followed by a selection of facts about
+the minimum condition and well-foundedness to do with descending sequences
+and induction. This is then specialised to the case where the field of the relation
+in question is expected to be the universe of a type. Analogues of all the properties
+are introduced for this case and the main results are specialised to it.
+Finally come results that build up to the statement that our six
+primitive notions are logically independent as mentioned above.
+
+This document requires version 2.7.1 of {\Product} --- earlier versions of
+the theory {\it orders} defined constants {\it PartialOrder} and {\it LinearOrder}
+(now called {\it StrictPartialOrder} and {\it StrictLinearOrder}) which conflict
+with constants defined here; later versions are likely to include the definitions
+and many of the theorems already.
+
+\section{SOME PROPERTIES OF RELATIONS}\label{SOME PROPERTIES OF RELATIONS}
+
+The definitions below follow the spirit of the existing ones by not requiring
+reflexivity or irreflexivity except where necessary. The intention is to make
+the primitive notions logically independent of one another.
+
+\subsection{Definitions of Primitive Properties}
+
+The primitive notions that are there already are: irreflexivity, antisymmetry,
+transitivity and trichotomy together with other notions such as density that are
+more specific to the Dedekind-MacNeille completion construction and its
+use in constructing the real numbers.
+To these we add the notions of: reflexivity, and
+the ``weak minimum condition'' (which says that every non-empty set contains a
+minimal element in a certain sense).
+In terms of these primitives we define derived notions such as well-foundedness.
+
+\ignore{
+We begin with some ML red tape to make a new theory to hold the work, either as
+ a duplicate of the theory {\it orders} or as a child of it.
+=SML
+val make_a_duplicate = false;
+	(* set make_a_duplicate false to make a child of the existing theory orders *);
+force_delete_theory"ordered_sets" handle Fail _ => ();
+open_theory"orders";
+(if make_a_duplicate
+then curry duplicate_theory "orders"
+else new_theory) "ordered_sets";
+open_theory"ordered_sets";
+new_parent "set_thms";
+new_parent "rbjmisc";
+
+val existing_defs = map get_spec
+	(get_consts (if make_a_duplicate then "-" else "orders"));
+set_merge_pcs["basic_hol", "'sets_alg", "'savedthm_cs_∂_proof"];
+=TEX
+}%ignore
+
+Now we give definitions for the primitives not already defined.
+
+This one, we now abstain from providing since it is in theory $equiv\_rel$ which is now a parent.
+
+=GFTSHOW
+ πHOLCONST
+ ‹ €Refl› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+ ˜¸¸¸¸¸¸
+ ‹ µ (X, $<<)∑
+ ‹	Refl(X, $<<)
+ ‹ §	µx∑x ç X ¥ x <<  x
+ ∞
+=TEX
+
+We follow Cohn's Universal Algebra in using the term ``minimum condition''
+for the condition that gives
+well-foundedness of the ordered set formulated so that the ordering
+relation need not be irreflexive. This is intended to accommodate
+the varying conventions that are typically used in the literature for
+well-ordered sets on the one hand and recursion with respect to
+a well-founded relation on the other. However, this condition
+entails that the relation is antisymmetric, so we take as primitive the following
+weaker version.
+
+πHOLCONST
+‹ €WeakMinCond› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑
+‹	WeakMinCond(X, $<<)
+‹ §	µA∑ A Ä X ± ≥A = {} ¥
+‹	∂x∑ x ç A ± µy∑ y ç A ± y << x ± ≥ y = x ¥ x << y
+∞
+
+We now have our full set of primitives.
+
+\subsection{Definitions of Derived Properties}
+
+The following non-primitive properties are of interest.
+
+πHOLCONST
+‹ €PartialOrder› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑
+‹	PartialOrder(X, $<<)
+‹ §	Antisym(X, $<<) ± Trans(X, $<<)
+∞
+
+πHOLCONST
+‹ €LinearOrder› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑ LinearOrder(X, $<<) § PartialOrder(X, $<<) ± Trich(X, $<<)
+∞
+
+πHOLCONST
+‹ €MinCond› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑
+‹		MinCond(X, $<<)
+‹	§	Antisym(X, $<<)
+‹	±	WeakMinCond(X, $<<)
+∞
+
+πHOLCONST
+‹ €WellOrdering› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑
+‹	WellOrdering(X, $<<)
+‹ §	LinearOrder(X, $<<)  ± WeakMinCond(X, $<<) 
+∞
+
+πHOLCONST
+‹ €WellFounded› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑
+‹	WellFounded(X, $<<)
+‹ §	Irrefl(X, $<<)  ± MinCond(X, $<<) 
+∞
+
+\subsection{Using the Definitions}
+
+In this section we do a little preening on the definitions, including a
+recasting of the definitions for the minimum condition and well-foundedness.
+
+\ignore{
+If we're making a duplicate theory, we need to rebind the ML variables for the constants
+in the theory order. If we're not, it doesn't hurt to rebind them anyway.
+=SML
+val €down_sets_def› = get_spec ¨DownSetsÆ;
+val €down_set_def› = get_spec¨DownSetÆ;
+val €cuts_def› = get_spec¨CutsÆ;
+val €complete_def› = get_spec¨CompleteÆ;
+val €unbounded_below_def› = get_spec¨UnboundedBelowÆ;
+val €unbounded_above_def› = get_spec¨UnboundedAboveÆ;
+val €has_supremum_def› = get_spec¨$HasSupremumÆ;
+val €upper_bound_def› = get_spec¨UpperBoundÆ;
+val €dense_def› = get_spec¨DenseÆ;
+val €dense_in_def› = get_spec¨$DenseInÆ;
+val €strict_linear_order_def› = get_spec¨StrictLinearOrderÆ;
+val €trich_def› = get_spec¨TrichÆ;
+val €strict_partial_order_def› = get_spec¨StrictPartialOrderÆ;
+val €trans_def› = get_spec¨TransÆ;
+val €antisym_def› = get_spec¨AntisymÆ;
+val €irrefl_def› = get_spec¨IrreflÆ;
+
+=SML
+val €refl_def› = get_spec¨ReflÆ;
+val €partial_order_def› = get_spec¨PartialOrderÆ;
+val €linear_order_def› = get_spec¨LinearOrderÆ;
+val €weak_min_cond_def› = get_spec¨WeakMinCondÆ;
+val €min_cond_def› = get_spec¨MinCondÆ;
+val €well_ordering_def› = get_spec¨WellOrderingÆ;
+val €well_founded_def› = get_spec¨WellFoundedÆ;
+=TEX
+}%ignore
+
+A relation has the minimum condition iff. every non-empty subset has a minimal
+element (in the more usual sense).
+We will almost invariably use this formulation in the sequel.
+Well-foundedness can be rendered similarly, in this case expression of the minimality condition is simplfied by the fact that well-founded relations are by definition irreflexive.
+
+=GFT
+min_cond_def_thm = Ù µX $<<∑ MinCond(X, $<<) §
+	(µ A∑	A Ä X ± ≥ A = {}
+		¥ (∂ x∑ x ç A ± (µ y∑ y ç A ± ≥ y = x ¥ ≥ y << x)))
+
+well_founded_thm = Ù µX $<<∑ WellFounded(X, $<<) §
+	(µ A∑	A Ä X ± ≥ A = {}
+		¥ (∂ x∑ x ç A ± (µ y∑ y ç A ¥ ≥ y << x)))
+=TEX
+
+\ignore{
+=SML
+val €min_cond_def_thm› = (
+set_goal([], ¨µX $<<∑
+		MinCond(X, $<<)
+	§	(µ A∑	A Ä X ± ≥ A = {}
+		¥	(∂ x∑ x ç A ± (µ y∑ y ç A ± ≥ y = x ¥ ≥ y << x)))Æ);
+a(rewrite_tac [min_cond_def, antisym_def, weak_min_cond_def]);
+a(REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a(all_asm_ufc_tac[]);
+a(∂_tac¨xÆ THEN REPEAT strip_tac);
+a(contr_tac THEN all_asm_ufc_tac[]);
+a(lemma_tac¨x ç X  ± y ç XÆ THEN1
+	(REPEAT strip_tac THEN PC_T1 "sets_ext1" all_asm_ufc_tac[]));
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a(contr_tac);
+a(lemma_tac¨{x; y} Ä X ± ≥{x; y} = {}Æ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+(* *** Goal "2.1" *** *)
+a(spec_nth_asm_tac 1 ¨yÆ THEN all_var_elim_asm_tac);
+(* *** Goal "2.2" *** *)
+a(spec_nth_asm_tac 1 ¨xÆ THEN all_var_elim_asm_tac);
+(* *** Goal "3" *** *)
+a(all_asm_ufc_tac[]);
+a(lemma_tac¨x ç XÆ THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(∂_tac¨xÆ THEN REPEAT strip_tac);
+a(lemma_tac¨y ç XÆ THEN1 PC_T1 "sets_ext1" all_asm_ufc_tac[]);
+a(all_asm_ufc_tac[]);
+save_pop_thm "min_cond_def_thm"
+);
+=TEX
+
+=SML
+val €well_founded_thm› = (
+set_goal([], ¨µX $<<∑
+		WellFounded(X, $<<)
+	§	(µ A∑	A Ä X ± ≥ A = {}
+		¥	(∂ x∑ x ç A ± (µ y∑ y ç A ¥ ≥ y << x)))Æ);
+a(rewrite_tac [well_founded_def, irrefl_def, min_cond_def_thm]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a(all_asm_ufc_tac[]);
+a(∂_tac¨xÆ THEN REPEAT strip_tac THEN all_asm_ufc_tac[]);
+a(cases_tac ¨≥y = xÆ THEN1 all_asm_ufc_tac[]);
+a(rename_tac[(¨xÆ, "a")] THEN lemma_tac¨y ç XÆ THEN
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a(lemma_tac¨{x} Ä X ± ≥{x} = {}Æ THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+a(POP_ASM_T bc_thm_tac THEN REPEAT strip_tac);
+(* *** Goal "3" *** *)
+a(all_asm_ufc_tac[]);
+a(∂_tac¨xÆ THEN REPEAT strip_tac THEN all_asm_ufc_tac[]);
+save_pop_thm "well_founded_thm"
+);
+=TEX
+}%ignore
+
+The following is intended for use in conjunction with {\it min\_cond\_thm}.
+
+=GFT
+well_ordering_def_thm = Ù µX $<<∑ WellOrdering(X, $<<)
+	§ LinearOrder(X, $<<) ± MinCond(X, $<<)
+=TEX
+
+\ignore{
+=SML
+val €well_ordering_def_thm› = (
+set_goal([], ¨µX $<<∑
+		WellOrdering(X, $<<)
+	§	LinearOrder(X, $<<) ± MinCond(X, $<<)Æ);
+a(rewrite_tac [well_ordering_def, linear_order_def, min_cond_def, partial_order_def]
+	THEN taut_tac);
+save_pop_thm "well_ordering_def_thm"
+);
+=TEX
+
+=SML
+val €def_thms› = [
+	refl_def, partial_order_def, linear_order_def,
+	weak_min_cond_def, min_cond_def_thm,
+	well_ordering_def_thm, well_founded_thm]
+	@ existing_defs;
+=TEX
+}%
+
+\section{WELL-ORDERING}\label{WELL-ORDERING}
+
+\subsection{Zorn's Lemma for Properties of Relations}
+
+We already have Zorn's lemma in the special case where the ordered
+set is some subset of the lattice of subsets of a set (and the ordering
+relation is inclusion). We just need to ``interface'' with that theorem
+by looking at the chains contained in an arbitrary relation.
+
+=GFT
+zorn_thm2 = Ù µX $<<∑
+		Trans(X, $<<)
+	±	Antisym(X, $<<)
+	±	(µC∑	C Ä X ± Trich(C, $<<)
+		¥	∂x∑x ç X ± UpperBound(C, $<<, x))
+	¥	∂x∑	x ç X ± µy∑ y ç X ± ≥y = x ¥ ≥x << y
+=TEX
+
+\ignore{
+=SML
+val _ = set_merge_pcs["'sets_alg", "predicates", "'savedthm_cs_∂_proof"];
+=TEX
+
+=SML
+val €chain_extension_thm› = (
+set_goal([], ¨
+	µX $<< C D∑
+		Trans(X, $<<)
+	±	C Ä X
+	±	Trich(C, $<<)
+	±	D Ä X
+	±	Trich(D, $<<)
+	±	(µx y∑x ç C ± y ç D ¥ x << y)
+	¥	Trich(C ¿ D, $<<)
+Æ);
+a(rewrite_tac[get_spec¨TrichÆ, get_spec¨TransÆ] THEN REPEAT strip_tac
+	THEN rename_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm"chain_extension_thm"
+);
+=TEX
+
+=SML
+val €chain_singleton_thm› = (
+set_goal([], ¨
+	µ$<< x∑ Trich({x}, $<<)
+Æ);
+a(rewrite_tac[get_spec¨TrichÆ] THEN REPEAT strip_tac);
+a(all_var_elim_asm_tac);
+save_pop_thm"chain_singleton_thm"
+);
+=TEX
+
+=SML
+val €chain_singleton_extension_thm› = (
+set_goal([], ¨
+	µX $<< C x∑
+		Trans(X, $<<)
+	±	C Ä X
+	±	Trich(C, $<<)
+	±	x ç X
+	±	(µy∑y ç C ¥ y << x)
+	¥	Trich(C ¿ {x}, $<<)
+Æ);
+a(REPEAT strip_tac THEN bc_thm_tac chain_extension_thm);
+a(∂_tac¨XÆ THEN rewrite_tac[chain_singleton_thm]);
+a(all_asm_ante_tac);
+a(PC_T1 "sets_ext1" REPEAT strip_tac THEN_TRY all_var_elim_asm_tac
+	THEN all_asm_ufc_tac[]);
+save_pop_thm"chain_singleton_extension_thm"
+);
+=TEX
+
+=SML
+val €zorn_thm2› = (
+set_goal([], ¨
+	µX $<<∑
+		Trans(X, $<<)
+	±	Antisym(X, $<<)
+	±	(µC∑	C Ä X ± Trich(C, $<<)
+		¥	∂x∑x ç X ± UpperBound(C, $<<, x))
+	¥	∂x∑	x ç X ± µy∑ y ç X ± ≥y = x ¥ ≥x << y
+Æ);
+a(REPEAT strip_tac);
+a(lemma_tac ¨∂u∑ u = {C | C Ä X ± Trich(C, $<<) }Æ THEN1 prove_∂_tac);
+a(lemma_tac¨≥ u = {} ± SubsetClosed u ± NestClosed uÆ);
+(* *** Goal "1" *** *)
+a(REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a(asm_rewrite_tac[] THEN PC_T1 "sets_ext1" REPEAT strip_tac);
+a(∂_tac¨{}Æ THEN rewrite_tac[get_spec¨TrichÆ]);
+(* *** Goal "1.2" *** *)
+a(rewrite_tac[get_spec¨SubsetClosedÆ]
+	THEN asm_rewrite_tac[get_spec¨TrichÆ]);
+a(REPEAT strip_tac);
+(* *** Goal "1.2.1" *** *)
+a(PC_T1 "sets_ext1" asm_prove_tac[]);
+(* *** Goal "1.2.2" *** *)
+a(lemma_tac¨x ç a ± y ç aÆ THEN
+	REPEAT strip_tac THEN PC_T1 "sets_ext1" all_asm_ufc_tac[]);
+(* *** Goal "1.3" *** *)
+a(rewrite_tac[get_spec¨NestClosedÆ]
+	THEN asm_rewrite_tac[get_spec¨TrichÆ]);
+a(REPEAT strip_tac);
+(* *** Goal "1.3.1" *** *)
+a(PC_T1 "sets_ext1" asm_prove_tac[]);
+(* *** Goal "1.3.2" *** *)
+a(PC_T "sets_ext1"(DROP_ASM_T ¨Nest vÆ
+	(strip_asm_tac o list_µ_elim[¨sÆ, ¨s'Æ] o rewrite_rule[get_spec¨NestÆ])));
+(* *** Goal "1.3.2.1" *** *)
+a(PC_T "sets_ext1" (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]));
+(* *** Goal "1.3.2.2" *** *)
+a(PC_T "sets_ext1" (asm_ufc_tac[] THEN all_asm_ufc_tac[]));
+(* *** Goal "2" *** *)
+a(all_ufc_tac[zorn_thm1]);
+a(POP_ASM_T ante_tac THEN  asm_rewrite_tac[get_spec¨MaximalâÄÆ]
+	THEN REPEAT strip_tac);
+a(all_asm_ufc_tac[]);
+a(POP_ASM_T (strip_asm_tac o rewrite_rule[get_spec¨UpperBoundÆ]));
+a(∂_tac ¨xÆ THEN contr_tac);
+a(PC_T1 "sets_ext1" lemma_tac¨a Ä XÆ THEN1
+	(GET_NTH_ASM_T 7 ante_tac THEN rewrite_tac[get_spec¨TrichÆ]
+		THEN prove_tac[]));
+a(lemma_tac¨µz∑z ç a ¥ z << yÆ);
+(* *** Goal "2.1" *** *)
+a(REPEAT strip_tac);
+a(GET_NTH_ASM_T 17 (bc_thm_tac o rewrite_rule[get_spec¨TransÆ]));
+a(∂_tac¨xÆ THEN asm_rewrite_tac[]);
+a(all_asm_ufc_tac[] THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a(lemma_tac¨a ¿ {y} = aÆ THEN1 GET_NTH_ASM_T 8 bc_thm_tac);
+(* *** Goal "2.2.1" *** *)
+a(REPEAT strip_tac THEN_LIST
+	[PC_T1 "sets_ext1" asm_prove_tac[],
+	bc_thm_tac chain_singleton_extension_thm, PC_T1 "sets_ext1" prove_tac[]]);
+a(∂_tac ¨XÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a(lemma_tac¨y ç aÆ THEN1
+	(POP_ASM_T ante_tac THEN PC_T1 "sets_ext1" prove_tac[]));
+a(LIST_GET_NTH_ASM_T [8] all_ufc_tac);
+a(GET_NTH_ASM_T 19 (strip_asm_tac o rewrite_rule[get_spec¨AntisymÆ]));
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "zorn_thm2"
+);
+
+=SML
+val _ = set_pc "sets_ext1";
+=TEX
+}%ignore
+
+\subsection{Lemmas about Subsets of Ordered Sets}\label{Lemmas about Subsets of Ordered Sets}
+
+These lemmas build up to the fact that a subset of a well-ordered set is
+well-ordered (which we use in the proof of the well-ordering principle).
+
+=GFT
+subrel_well_ordering_thm = Ù µX Y $<<∑
+	Y Ä X ± WellOrdering(X, $<<) ¥ WellOrdering(Y, $<<)
+=TEX
+
+\ignore{
+=SML
+val €subrel_irrefl_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± Irrefl(X, $<<) ¥ Irrefl(Y, $<<)
+Æ);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_irrefl_thm"
+);
+=TEX
+
+=SML
+val €subrel_antisym_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± Antisym(X, $<<) ¥ Antisym(Y, $<<)
+Æ);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_antisym_thm"
+);
+=TEX
+
+=SML
+val €subrel_trans_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± Trans(X, $<<) ¥ Trans(Y, $<<)
+Æ);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_trans_thm"
+);
+=TEX
+
+=SML
+val €subrel_trich_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± Trich(X, $<<) ¥ Trich(Y, $<<)
+Æ);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_trich_thm"
+);
+=TEX
+
+=SML
+val €subrel_partial_order_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± PartialOrder(X, $<<) ¥ PartialOrder(Y, $<<)
+Æ);
+a(rewrite_tac [partial_order_def] THEN contr_tac
+	THEN all_ufc_tac[subrel_antisym_thm, subrel_trans_thm]);
+save_pop_thm "subrel_partial_order_thm"
+);
+=TEX
+
+=SML
+val €subrel_linear_order_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± LinearOrder(X, $<<) ¥ LinearOrder(Y, $<<)
+Æ);
+a(rewrite_tac [linear_order_def] THEN contr_tac
+	THEN all_ufc_tac[subrel_partial_order_thm, subrel_trich_thm]);
+save_pop_thm "subrel_linear_order_thm"
+);
+=TEX
+
+=SML
+val €subrel_min_cond_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± MinCond(X, $<<) ¥ MinCond(Y, $<<)
+Æ);
+a(rewrite_tac def_thms THEN contr_tac);
+a(lemma_tac¨µx∑x ç A ¥ x ç XÆ
+ THEN1 (REPEAT strip_tac)
+ THEN REPEAT (all_asm_ufc_tac[]));
+save_pop_thm "subrel_min_cond_thm"
+);
+=TEX
+
+=SML
+val €subrel_well_ordering_thm› = (
+set_goal([], ¨µX Y $<<∑
+	Y Ä X ± WellOrdering(X, $<<) ¥ WellOrdering(Y, $<<)
+Æ);
+a(rewrite_tac [well_ordering_def_thm] THEN contr_tac
+	THEN all_ufc_tac[subrel_linear_order_thm, subrel_min_cond_thm]);
+save_pop_thm "subrel_well_ordering_thm"
+);
+=TEX
+
+=SML
+val _ = set_merge_pcs["'sets_alg", "basic_hol", "'savedthm_cs_∂_proof"];
+=TEX
+
+}%ignore
+
+\subsection{The Well-Ordering Principle}
+
+The following lemma is needed in the proof of the well-ordering principle. It shows
+that extending a well-ordering by adding an extra element above all the existing
+elements gives a well-ordering.
+
+=GFT
+well_ordering_extension_lemma = Ù µA x y z $<<<∑
+	WellOrdering(A, $<<<)
+±	≥x ç A
+¥	WellOrdering(
+		A ¿ {x},
+		Ã a b∑ a ç A ± b ç A ± a <<< b ≤ a ç A ± b = x ≤ a = x ± b = x)Æ
+=TEX
+
+\ignore{
+=SML
+val €well_ordering_extension_lemma› = (
+set_goal([], ¨µA x y z $<<<∑
+	WellOrdering(A, $<<<)
+±	≥x ç A
+¥	WellOrdering(
+		A ¿ {x},
+		Ã a b∑ a ç A ± b ç A ± a <<< b ≤ a ç A ± b = x ≤ a = x ± b = x)Æ
+);
+a(PC_T1 "sets_ext1" rewrite_tac def_thms THEN contr_tac
+	THEN_TRY all_var_elim_asm_tac THEN_TRY SOLVED_T
+	(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]));
+a(swap_nth_asm_concl_tac 1 THEN REPEAT strip_tac THEN rewrite_tac[]);
+a(cases_tac¨∂a∑a ç A ± a ç A'Æ);
+(* *** Goal "1" *** *)
+a(spec_nth_asm_tac 6 ¨{b | b ç A'  ± b ç A ± (b <<< a ≤ b = a)}Æ);
+(* *** Goal "1.1" *** *)
+a(spec_nth_asm_tac 1 ¨aÆ);
+(* *** Goal "1.2" *** *)
+a(∂_tac¨x''Æ THEN contr_tac);
+(* *** Goal "1.2.1" *** *)
+a(spec_nth_asm_tac 5 ¨yÆ);
+a(list_spec_nth_asm_tac 17 [¨yÆ, ¨aÆ]);
+a(list_spec_nth_asm_tac 19 [¨aÆ, ¨yÆ, ¨x''Æ]);
+a(list_spec_nth_asm_tac 21 [¨x''Æ, ¨aÆ] THEN all_var_elim_asm_tac);
+(* *** Goal "1.2.2" *** *)
+a(all_var_elim_asm_tac);
+(* *** Goal "1.2.3" *** *)
+a(all_var_elim_asm_tac);
+(* *** Goal "1.3" *** *)
+a(all_var_elim_asm_tac);
+a(∂_tac¨aÆ THEN contr_tac);
+(* *** Goal "1.3.1" *** *)
+a(spec_nth_asm_tac 5 ¨yÆ);
+(* *** Goal "1.3.2" *** *)
+a(all_var_elim_asm_tac);
+(* *** Goal "1.3.3" *** *)
+a(all_var_elim_asm_tac);
+(* *** Goal "2" *** *)
+a(cases_tac¨µa∑≥a ç AÆ);
+(* *** Goal "2.1" *** *)
+a(∂_tac¨xÆ THEN contr_tac);
+(* *** Goal "2.1.1" *** *)
+a(spec_nth_asm_tac 5 ¨x'Æ THEN1 all_asm_ufc_tac[]);
+a(all_var_elim_asm_tac);
+(* *** Goal "2.1.2" *** *)
+a(spec_nth_asm_tac 5 ¨yÆ THEN1 all_asm_ufc_tac[]);
+(* *** Goal "2.2" *** *)
+a(spec_nth_asm_tac 4 ¨x'Æ THEN1 all_asm_ufc_tac[]);
+a(all_var_elim_asm_tac);
+a(∂_tac¨xÆ THEN contr_tac);
+a(spec_nth_asm_tac 5 ¨yÆ THEN1 all_asm_ufc_tac[]);
+save_pop_thm "well_ordering_extension_lemma"
+);
+=TEX
+}%ignore
+
+The proof of the well-ordering is much as per Halmos.
+Some care is needed to get the construction right and to avoid an embarrassment of case splits.
+We have to exhibit a well-ordering on some arbitrary set $X$. Since subsets of well-ordered
+sets are well-ordered it suffices to well-order the universe of the type of the elements of $X$.
+To do this we define $U$ to be the set of all relations that well-order their field and
+are reflexive on their field:
+
+=SML
+val u_def = ¨∂U∑
+	U =
+	{	R : 'a ≠ 'a ≠ BOOL
+	|	WellOrdering({a | R a a}, R) ± µa b∑ R a b ¥ R a a ± R b b}Æ;
+=TEX
+
+$U$ is partial ordered by saying $R {<<<} S$ iff. $R$ is an Initial segment of $S$:
+
+=SML
+val segment_def = ¨∂$<<<∑ µR S: 'a ≠ 'a ≠ BOOL∑ 
+		R <<< S
+	§	(µa b∑R a b ¥ S a b)
+	±	(µa b∑R a a ± ≥R b b ± S b b ¥ S a b)Æ;
+=TEX
+
+We then verify that $U$ and ${<<<}$ satisfy the hypotheses of Zorn's lemma:
+
+=SML
+val zorn_hyps =  ¨
+		Trans(U : ('a ≠ 'a ≠ BOOL) SET, $<<<)
+	±	Antisym(U, $<<<)
+	±	(µ C∑ C Ä U ± Trich (C, $<<<) ¥
+			(∂ x∑ x ç U ± UpperBound (C, $<<<, x)))Æ;
+=TEX
+
+This verification, done naively would involve a large number of case splits in the situation
+where we have two members $R$ and $S$ of a chain, so that either $R$ precedes $S$
+or $S$ precedes $R$ --- one part of the formal proof would branch into 16 cases, if we proceeded
+in the naive way. Instead, we use the following lemma which shows that any two elements, $R$ and $S$,
+of a chain are both contained (viewed as sets of pairs) in some other element, $Q$. Of course,
+$Q$ can be taken to be one or other of $R$ and $S$, but that does not matter for all but
+one of the properties we have to prove.. This property is that the upper bounds
+of chains satisfy the minimum condition, and the case split in question is unavoidable since the
+arguments are essentially different for the two cases. 
+
+=SML
+val key_lemma =¨µR S : 'a ≠ 'a ≠ BOOL∑
+		R ç C ± S ç C
+	¥ 	∂Q∑
+		Q ç C
+	±	(µa b∑R a b ¥ Q a b )
+	±	(µa b∑S a b ¥ Q a b )Æ;
+=TEX
+
+Once we have the hypotheses of Zorn's lemma, we apply it to produce a maximal element for
+the initial segment relation and then prove that the field of such a maximal element must be
+the whole set. Most of the work for this has been done in the previous theorem about
+single element extensions of well-orderings.
+
+=GFT
+well_ordering_thm = Ù µX :'a SET∑ ∂ $<<∑ WellOrdering(X, $<<)
+=TEX
+
+\ignore{
+=SML
+val €well_ordering_thm› = ( 
+set_goal([], ¨µX :'a SET∑ ∂ $<<∑ WellOrdering(X, $<<)Æ);
+a(REPEAT strip_tac);
+a(lemma_tac u_def THEN1 prove_∂_tac);
+a(lemma_tac segment_def THEN1 prove_∂_tac);
+a(lemma_tac zorn_hyps);
+(* *** Goal "1" *** *)
+a(REPEAT strip_tac);
+(* *** Goal "1.1" *** *) (* Transitivity *)
+a(asm_rewrite_tac[trans_def] THEN REPEAT strip_tac
+	THEN1 (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]));
+a(cases_tac¨y a a Æ THEN all_asm_ufc_tac[]);
+a(cases_tac¨y b b Æ THEN all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "1.2" *** *) (* Antisymmetry *)
+a(asm_rewrite_tac[antisym_def] THEN  contr_tac);
+a(LIST_GET_NTH_ASM_T [2, 4, 5] (MAP_EVERY ante_tac) THEN
+	rewrite_tac[ext_thm] THEN prove_tac[]);
+(* *** Goal "1.3" *** *) (* Upper bounds *)
+a(POP_ASM_T (strip_asm_tac o rewrite_rule[trich_def]));
+a(lemma_tac key_lemma);
+(* *** Goal "1.3.1" *** *)
+a(REPEAT strip_tac);
+a(cases_tac¨R = SÆ THEN1 (∂_tac¨RÆ THEN asm_rewrite_tac[]));
+a(lemma_tac¨µR S∑
+		R ç C ± S ç C ± R <<< S
+	¥ 	∂Q∑
+		Q ç C
+	±	(µa b∑R a b ¥ Q a b )
+	±	(µa b∑S a b ¥ Q a b )Æ);
+(* *** Goal "1.3.1.1" *** *)
+a(rename_tac [] THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨S'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "1.3.1.2" *** *)
+a(list_spec_nth_asm_tac 5 [¨RÆ, ¨SÆ] THEN rename_tac[] THEN all_asm_ufc_tac[]
+	THEN ∂_tac¨Q:'a ≠ 'a ≠ BOOLÆ THEN asm_rewrite_tac[]);
+(* *** Goal "1.3.2" *** *)
+a(lemma_tac¨µR∑
+	R ç C ¥ WellOrdering ({a|R a a}, R) ± (µ a b∑ R a b ¥ R a a ± R b b)Æ);
+(* *** Goal "1.3.2.1" *** *)
+a(REPEAT_N 2 strip_tac);
+a(LEMMA_T ¨R ç UÆ ante_tac THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(asm_rewrite_tac[] THEN PC_T1 "sets_ext1" prove_tac[]);
+(* *** Goal "1.3.2.2" *** *)
+a(rewrite_tac[upper_bound_def]);
+a(∂_tac¨Ãa b∑∂R∑ R ç C ± R a bÆ
+	THEN asm_rewrite_tac[] THEN REPEAT strip_tac
+	THEN_TRY (SOLVED_T 
+		(contr_tac THEN all_asm_ufc_tac[] THEN all_asm_ufc_tac[])));
+(* *** Goal "1.3.2.2.1" *** *) (* Union is a well-ordering *)
+a(POP_ASM_T ante_tac THEN rewrite_tac def_thms THEN REPEAT strip_tac);
+(* *** Goal "1.3.2.2.1.1" *** *)
+(* of the 4 subgoals for the well-ordering properties and the other property for U *)
+(* Antisymmetry *)
+a(contr_tac);
+a(list_spec_asm_tac key_lemma [¨RÆ, ¨R'Æ]);
+a(list_spec_asm_tac key_lemma [¨R''Æ, ¨QÆ]);
+a(list_spec_asm_tac key_lemma [¨R'''Æ, ¨Q'Æ]);
+a(LIST_GET_NTH_ASM_T [1, 2, 4, 5, 7, 8]
+	(fn ths => REPEAT (CHANGED_T(all_ufc_tac ths))));
+a(LIST_GET_NTH_ASM_T [28] all_ufc_tac);
+(* *** Goal "1.3.2.2.1.2" *** *)
+(* Transitivity *)
+a(list_spec_asm_tac key_lemma [¨RÆ, ¨R'Æ]);
+a(list_spec_asm_tac key_lemma [¨R''Æ, ¨QÆ]);
+a(list_spec_asm_tac key_lemma [¨R'''Æ, ¨Q'Æ]);
+a(list_spec_asm_tac key_lemma [¨R''''Æ, ¨Q''Æ]);
+a(lemma_tac¨Q''' x y ± Q''' y zÆ THEN1
+	(LIST_GET_NTH_ASM_T [1, 2, 4, 5, 7, 8]
+		(fn ths => REPEAT (CHANGED_T(all_ufc_tac ths))))
+	THEN REPEAT strip_tac);
+a(lemma_tac¨Q'''  x zÆ THEN1
+	(LIST_GET_NTH_ASM_T [25]
+		(fn ths => REPEAT (CHANGED_T(all_ufc_tac ths)))));
+a(CONTR_T (fn th => all_ufc_tac[th]));
+(* *** Goal "1.3.2.2.1.3" *** *)
+(* the other property in U: members of U are reflexive on their field: *)
+a(list_spec_asm_tac key_lemma [¨RÆ, ¨R'Æ]);
+a(lemma_tac¨Q x x ± Q y yÆ THEN1
+	(LIST_GET_NTH_ASM_T [1, 2]
+		(fn ths => REPEAT (CHANGED_T(all_ufc_tac ths))))
+	THEN REPEAT strip_tac);
+a(spec_nth_asm_tac 6 ¨QÆ);
+a(LIST_GET_NTH_ASM_T [13] all_ufc_tac);
+a(CONTR_T (fn th => all_ufc_tac[th]));
+(* *** Goal "1.3.2.2.1.4" *** *)
+(* Minimum condition *)
+a(POP_ASM_T ante_tac THEN POP_ASM_T ante_tac
+	THEN PC_T1 "sets_ext1" REPEAT strip_tac);
+a(PC_T1 "sets_ext1" all_asm_ufc_tac[]);
+a(lemma_tac¨
+	≥{a | R a a ± a ç A} = {} ± {a | R a a ± a ç A} Ä {a | R a a}
+Æ THEN1
+	(LIST_GET_NTH_ASM_T [1, 3] (MAP_EVERY ante_tac)
+		THEN PC_T1 "sets_ext1" prove_tac[]));
+a(LIST_GET_NTH_ASM_T [7] all_ufc_tac);
+a(∂_tac¨x'Æ THEN contr_tac);
+a(lemma_tac¨µR S x y∑ R ç C ± S ç C ± R x x ± S y x ¥ R y xÆ);
+(* *** Goal "1.3.2.2.1.4.1" *** *)
+a(LIST_DROP_NTH_ASM_T (interval 1 15) discard_tac THEN REPEAT strip_tac);
+a(cases_tac ¨R = SÆ THEN1 all_var_elim_asm_tac);
+a(LIST_SPEC_NTH_ASM_T 6 [¨RÆ, ¨SÆ]  ante_tac);
+a(LIST_GET_NTH_ASM_T [8] rewrite_tac THEN contr_tac);
+(* *** Goal "1.3.2.2.1.4.1.1" *** *)
+a(cases_tac¨R y yÆ);
+(* *** Goal "1.3.2.2.1.4.1.1.1" *** *)
+a(LEMMA_T ¨R ç UÆ ante_tac THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(asm_rewrite_tac def_thms THEN REPEAT strip_tac);
+a(cases_tac ¨x = yÆ THEN1 all_var_elim_asm_tac);
+a(LIST_SPEC_NTH_ASM_T 3 [¨xÆ, ¨yÆ]  ante_tac);
+a(LIST_GET_NTH_ASM_T [12, 6, 7, 1] rewrite_tac);
+a(strip_tac);
+a(LIST_GET_NTH_ASM_T [10] all_ufc_tac);
+a(LEMMA_T ¨S ç UÆ ante_tac THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(asm_rewrite_tac def_thms THEN REPEAT strip_tac);
+a(LIST_GET_NTH_ASM_T [5] all_ufc_tac);
+(* *** Goal "1.3.2.2.1.4.1.1.2" *** *)
+a(LEMMA_T ¨S ç UÆ ante_tac THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(asm_rewrite_tac def_thms THEN REPEAT strip_tac);
+a(LIST_GET_NTH_ASM_T [4] all_ufc_tac);
+a(LIST_GET_NTH_ASM_T [9] all_ufc_tac);
+a(cases_tac ¨x = yÆ THEN1 all_var_elim_asm_tac);
+a(contr_tac);
+a(LIST_GET_NTH_ASM_T [1] all_ufc_tac);
+(* *** Goal "1.3.2.2.1.4.1.2" *** *)
+a(LIST_GET_NTH_ASM_T [3] all_ufc_tac);
+(* *** Goal "1.3.2.2.1.4.2" *** *)
+a(LIST_GET_NTH_ASM_T [1] all_ufc_tac);
+a(LEMMA_T ¨R ç UÆ ante_tac THEN1 
+	(LIST_GET_NTH_ASM_T [19, 13] (MAP_EVERY ante_tac)
+		THEN PC_T1 "sets_ext1" prove_tac[]));
+a(LIST_GET_NTH_ASM_T [21] rewrite_tac THEN REPEAT strip_tac);
+a(LIST_GET_NTH_ASM_T [1] all_ufc_tac);
+a(LIST_GET_NTH_ASM_T [9] all_ufc_tac);
+(* *** Goal "1.3.2.2.2" *** *)
+a(rename_tac[(¨aÆ, "S")] THEN cases_tac ¨R = SÆ THEN1 all_var_elim_asm_tac);
+a(LIST_SPEC_NTH_ASM_T 9 [¨RÆ, ¨SÆ]  ante_tac);
+a(LIST_GET_NTH_ASM_T [11] rewrite_tac);
+a(REPEAT strip_tac THEN1 all_asm_ufc_tac[]);
+a(LIST_GET_NTH_ASM_T [1] all_ufc_tac);
+a(CONTR_T (fn th => all_ufc_tac[th]));
+(* *** Goal "2" *** *)
+a(all_ufc_tac[zorn_thm2]);
+a(LIST_DROP_NTH_ASM_T [3, 4, 5] discard_tac);
+a(∂_tac ¨xÆ THEN rename_tac[(¨xÆ, "<<")]);
+a(bc_thm_tac subrel_well_ordering_thm);
+a(∂_tac¨UniverseÆ THEN contr_tac);
+a(swap_nth_asm_concl_tac 3 THEN asm_rewrite_tac[] THEN contr_tac);
+a(lemma_tac¨≥{a | a << a} = UniverseÆ THEN1
+	(swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]));
+a(POP_ASM_T (PC_T1 "sets_ext1" strip_asm_tac));
+a(all_ufc_tac[µ_elim¨{a | a << a}Æ well_ordering_extension_lemma]);
+a(lemma_tac¨(Ã a b∑
+	a ç {a | a << a} ± b ç {a | a << a} ± a << b ≤ a ç {a | a << a} ± b = x
+≤	a = x ± b = x) ç UÆ);
+(* *** Goal "2.1" *** *)
+a(POP_ASM_T ante_tac THEN LIST_GET_NTH_ASM_T [7] rewrite_tac);
+a(rewrite_tac[pc_rule1 "sets_ext1" prove_rule[]
+	¨{a|a << a ≤ a << a ± a = x ≤ a = x} = {a | a << a} ¿ {x}Æ]);
+a(REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a(lemma_tac¨≥(Ã a b∑
+	a ç {a | a << a} ± b ç {a | a << a} ± a << b ≤ a ç {a | a << a} ± b = x
+≤	a = x ± b = x) = $<<Æ);
+(* *** Goal "2.2.1" *** *)
+a(rewrite_tac[ext_thm] THEN REPEAT strip_tac);
+a(∂_tac¨xÆ THEN REPEAT strip_tac);
+a(∂_tac¨xÆ THEN REPEAT strip_tac);
+(* *** Goal "2.2.2" *** *)
+a(lemma_tac¨$<< <<< (Ã a b∑
+	a ç {a | a << a} ± b ç {a | a << a} ± a << b ≤ a ç {a | a << a} ± b = x
+≤	a = x ± b = x) Æ);
+(* *** Goal "2.2.2.1" *** *)
+a(LIST_GET_NTH_ASM_T [9] rewrite_tac);
+a(REPEAT strip_tac THEN all_asm_ufc_tac[]);
+(* *** Goal "2.2.2.2" *** *)
+a(all_asm_ufc_tac[]);
+save_pop_thm "well_ordering_thm"
+);
+=TEX
+}%ignore
+
+\section{WELL-FOUNDEDNESS}\label{WELL-FOUNDEDNESS}
+
+\subsection{The Minimum Conditions and Well-Founded Relations}
+
+In this section we show the equivalence of our definitions with some other useful
+conditions. This selection of equivalences is currently just a sample. We could,
+for example, come up with induction principles characterising the minimum conditions.
+
+A relation has the minimum condition iff. every descending sequence stabilises:
+
+=GFT
+min_cond_descending_sequence_thm = Ù µX $<<∑
+		MinCond(X, $<<)
+	§	µf∑ (µn∑f n ç X) ± (µn∑f(n+1) << f n)
+			¥ ∂m∑µn∑m < n ¥ f n = f m
+=TEX
+
+\ignore{
+=SML
+val €min_cond_descending_sequence_thm› = (
+set_goal([], ¨µX $<<∑
+		MinCond(X, $<<)
+	§	µf∑ (µn∑f n ç X) ± (µn∑f(n+1) << f n)
+			¥ ∂m∑µn∑m < n ¥ f n = f mÆ);
+a(rewrite_tac [min_cond_def_thm] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a(lemma_tac¨{x | ∂n∑x = f n} Ä XÆ THEN1
+	(PC_T1 "sets_ext1" REPEAT strip_tac THEN asm_rewrite_tac[]));
+a(lemma_tac¨≥{x | ∂n∑x = f n} = {}Æ THEN1
+	(PC_T1 "sets_ext1" REPEAT strip_tac THEN ∂_tac¨f mÆ THEN prove_tac[]));
+a(all_asm_ufc_tac[]);
+a(∂_tac¨nÆ THEN µ_tac);
+a(induction_tac¨n'Æ THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a(lemma_tac ¨n' = nÆ THEN1 PC_T1 "lin_arith" asm_prove_tac[]);
+a(all_var_elim_asm_tac1);
+a(lemma_tac¨f(n+1) ç {x | ∂n∑x = f n}Æ THEN1
+	(PC_T1 "sets_ext1" REPEAT strip_tac THEN ∂_tac¨n+1Æ THEN prove_tac[]));
+a(contr_tac);
+a(spec_nth_asm_tac 3 ¨f(m+1)Æ THEN_TRY (SOLVED_T(asm_prove_tac[])));
+(* *** Goal "1.2" *** *)
+a(DROP_NTH_ASM_T 4 ante_tac THEN
+	GET_NTH_ASM_T 2 (rewrite_thm_tac o eq_sym_rule));
+a(REPEAT strip_tac THEN all_var_elim_asm_tac1);
+a(lemma_tac¨f(n'+1) ç {x | ∂n∑x = f n}Æ THEN1
+	(PC_T1 "sets_ext1" REPEAT strip_tac THEN
+		∂_tac¨n'+1Æ THEN prove_tac[]));
+a(contr_tac);
+a(spec_nth_asm_tac 5 ¨f(m+1)Æ THEN_TRY (SOLVED_T(asm_prove_tac[])));
+(* *** Goal "2" *** *)
+a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
+a(lemma_tac¨∂x∑x ç AÆ THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(lemma_tac¨∂f∑f 0 = x ± µm∑f(m+1) = ≈y∑ y ç A ± ≥y = f m ± y << f mÆ
+	THEN1 prove_∂_tac);
+a(lemma_tac¨µm∑f m ç A ± ≥f(m+1) = f m ± f(m+1) << f mÆ THEN1 µ_tac);
+(* *** Goal "2.1" *** *)
+a(induction_tac¨mÆ THEN1 asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+a(≈_tac¨≈ y∑ y ç A ± ≥y = x ±  y << xÆ THEN contr_tac);
+a(spec_nth_asm_tac 5 ¨xÆ THEN all_asm_ufc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a(≈_tac¨≈ y∑ y ç A ± ≥y = f m ±  y << f mÆ THEN1 contr_tac);
+(* *** Goal "2.1.2.1" *** *)
+a(spec_nth_asm_tac 8  ¨f mÆ THEN all_asm_ufc_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+a(≈_tac¨≈ y∑ y ç A ± ≥y = f (m+1) ±  y << f (m+1)Æ);
+(* *** Goal "2.1.2.2.1" *** *)
+a(asm_rewrite_tac[]);
+a(spec_nth_asm_tac 10 ¨≈ y∑ y ç A ± ≥y = f m ±  y << f mÆ
+	THEN  contr_tac THEN all_asm_ufc_tac[]);
+(* *** Goal "2.1.2.2.2" *** *)
+a(once_asm_rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "2.1.2.2.2.1" *** *)
+a(DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2.2.2.2" *** *)
+a(POP_ASM_T ante_tac THEN
+	spec_nth_asm_tac 12 ¨≈ y∑ y ç A ± ≥y = f (m+1) ± y << f (m+1)Æ );
+a(asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a(DROP_NTH_ASM_T 2 discard_tac THEN ∂_tac¨fÆ THEN REPEAT strip_tac);
+(* *** Goal "2.2.1" *** *)
+a(LEMMA_T ¨f n ç  AÆ ante_tac THEN1 asm_rewrite_tac[]);
+a(GET_NTH_ASM_T 6 ante_tac THEN PC_T1 "sets_ext1" prove_tac[]);
+(* *** Goal "2.2.2" *** *)
+a(asm_rewrite_tac[]);
+(* *** Goal "2.2.3" *** *)
+a(∂_tac¨m+1Æ THEN asm_rewrite_tac[]);
+save_pop_thm "min_cond_descending_sequence_thm"
+);
+=TEX
+}%ignore
+
+A relation is well-founded iff. there are no infinite descending sequences:
+
+=GFT
+well_founded_descending_sequence_thm = Ù µX $<<∑
+		WellFounded(X, $<<)
+	§	≥∂f∑ (µn∑f n ç X) ± (µn∑f(n+1) << f n)
+=TEX
+
+\ignore{
+=SML
+val €well_founded_descending_sequence_thm› = (
+set_goal([], ¨µX $<<∑
+		WellFounded(X, $<<)
+	§	≥∂f∑ (µn∑f n ç X) ± (µn∑f(n+1) << f n)Æ);
+a(REPEAT_UNTIL is_¥ strip_tac);
+(* *** Goal "1" *** *)
+a(rewrite_tac [well_founded_def, irrefl_def] THEN contr_tac);
+a(all_ufc_tac[min_cond_descending_sequence_thm]);
+a(lemma_tac¨f(m+1) = f mÆ THEN1
+	(POP_ASM_T bc_thm_tac THEN REPEAT strip_tac));
+a(lemma_tac¨f mç X ± f(m+1) << f mÆ THEN1 asm_rewrite_tac[]);
+a(POP_ASM_T ante_tac THEN GET_NTH_ASM_T 2 rewrite_thm_tac);
+a(all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a(rewrite_tac[well_founded_def] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a(rewrite_tac[irrefl_def] THEN contr_tac);
+a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
+a(∂_tac¨Ãm:Ó∑xÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a(POP_ASM_T ante_tac THEN rewrite_tac
+	[min_cond_descending_sequence_thm]);
+a(REPEAT strip_tac);
+a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
+a(∂_tac¨fÆ THEN asm_rewrite_tac[]);
+save_pop_thm "well_founded_descending_sequence_thm"
+);
+=TEX
+}%ignore
+
+A relation is well-founded iff. it enjoys the Noetherian induction principle:
+
+=GFT
+well_founded_induction_thm = Ù µX $<<∑
+		WellFounded(X, $<<)
+	§	µp∑ (µx∑x ç X ± (µy∑y ç X ± y << x ¥ p y) ¥ p x)
+			¥ (µx∑x ç X ¥ p x)
+=TEX
+
+\ignore{
+=SML
+val €well_founded_induction_thm› = (
+set_goal([], ¨µX $<<∑
+		WellFounded(X, $<<)
+	§	µp∑ (µx∑x ç X ± (µy∑y ç X ± y << x ¥ p y) ¥ p x)
+			¥ (µx∑x ç X ¥ p x)Æ);
+a(REPEAT_UNTIL is_¥ strip_tac);
+(* *** Goal "1" *** *)
+a(rewrite_tac [well_founded_def, min_cond_def_thm, irrefl_def] THEN contr_tac);
+a(lemma_tac ¨{x | x ç X ± ≥p x} Ä XÆ THEN1
+	PC_T1 "sets_ext1"prove_tac[]);
+a(lemma_tac ¨≥{x | x ç X ± ≥p x} = {}Æ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[]);
+a(lemma_tac¨µ y∑ y ç X ± y << x' ¥ p yÆ THEN contr_tac);
+(* *** Goal "1.1" *** *)
+a(cases_tac¨y = x'Æ THEN1 (all_var_elim_asm_tac THEN asm_prove_tac[]));
+a(all_asm_ufc_tac[]);
+(* *** Goal "1.2" *** *)
+a(all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a( rewrite_tac[well_founded_descending_sequence_thm] THEN contr_tac);
+a(LEMMA_T ¨µx∑
+	x ç X
+¥	(Ãa∑	 a ç X
+	±	µg∑ g 0 = a
+	±	(µy ∑g y ç X)
+	¥	∂m∑≥g(m+1)  << g m)
+	x
+Æ ante_tac);
+(* *** Goal "2.1" *** *)
+a(DROP_NTH_ASM_T 3 bc_thm_tac);
+a(rewrite_tac[] THEN contr_tac);
+a(SPEC_NTH_ASM_T 1 ¨0Æ (strip_asm_tac o rewrite_rule[]));
+a(DROP_NTH_ASM_T 5 (ante_tac o µ_elim¨g 1Æ) THEN 
+	all_var_elim_asm_tac1 THEN asm_rewrite_tac[] THEN strip_tac);
+a(∂_tac¨Ãm∑g(m+1)Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a(rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨f 0Æ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨fÆ THEN asm_rewrite_tac[]);
+save_pop_thm "well_founded_induction_thm"
+);
+=TEX
+}%ignore
+
+A relation is a reflexive well-ordering iff. every non-empty subset has a unique lower bound:
+
+=GFT
+refl_well_ordering_lower_bounds_thm = Ù µX $<<∑
+		Refl(X, $<<)
+	±	WellOrdering(X, $<<)
+	§	µA∑A Ä X ± ≥A = {} ¥ ∂â1 x∑ x ç A ± µy∑y ç A ¥ x << y
+=TEX
+
+\ignore{
+=SML
+val €refl_well_ordering_lower_bounds_thm› = (
+set_goal([], ¨µX $<<∑
+		Refl(X, $<<)
+	±	WellOrdering(X, $<<)
+	§	µA∑A Ä X ± ≥A = {} ¥ ∂â1 x∑ x ç A ± µy∑y ç A ¥ x << yÆ);
+a(REPEAT_UNTIL is_¥ strip_tac);
+(* *** Goal "1" *** *)
+a(rewrite_tac def_thms  THEN REPEAT strip_tac THEN all_asm_ufc_tac[]);
+a(∂â1_tac ¨xÆ THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a(lemma_tac¨x ç XÆ THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(cases_tac ¨y = xÆ  THEN1 (all_var_elim_asm_tac THEN all_asm_ufc_tac[]));
+a(LIST_GET_NTH_ASM_T[4] all_ufc_tac);
+a(lemma_tac¨x << y ≤ y << xÆ);
+a(GET_NTH_ASM_T 10 bc_thm_tac);
+a(lemma_tac¨y ç XÆ THEN1
+	(LIST_GET_NTH_ASM_T [4, 8] (MAP_EVERY ante_tac) THEN
+		PC_T1 "sets_ext1" prove_tac[]));
+a(contr_tac THEN all_var_elim_asm_tac);
+(* *** Goal "1.2" *** *)
+a(contr_tac THEN all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a(¥_tac THEN rewrite_tac[well_ordering_def_thm, linear_order_def, partial_order_def]);
+a(rewrite_tac[taut_rule¨µp1 p2 p3 p4 p5∑
+	p1 ± ((p2 ± p3) ± p4) ± p5 §
+	p1 ± (p1 ¥ p2) ± (p1 ± p2 ¥ p4) ±
+	(p1 ± p2 ± p4 ¥ p3) ± (p1 ± p2 ± p3 ± p4 ¥ p5)Æ]);
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *) (* Reflexivity *)
+a(lemma_tac¨{x} Ä X ± ≥{x} = {}Æ THEN1 PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+a(GET_NTH_ASM_T 2 bc_thm_tac THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *) (* Antisymmetry *)
+a(swap_nth_asm_concl_tac 2);
+a(lemma_tac¨{x; y} Ä X ± ≥{x; y} = {}Æ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+(* *** Goal "2.2.1" *** *)
+a(conv_tac eq_sym_conv THEN GET_NTH_ASM_T 3 bc_thm_tac);
+a(REPEAT strip_tac THEN all_var_elim_asm_tac);
+(* *** Goal "2.2.2" *** *)
+a(GET_NTH_ASM_T 3 bc_thm_tac);
+a(REPEAT strip_tac THEN all_var_elim_asm_tac);
+(* *** Goal "2.3" *** *) (* Trichotomy *)
+a(lemma_tac¨{x; y} Ä X ± ≥{x; y} = {}Æ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+(* *** Goal "2.3.1" *** *)
+a(swap_nth_asm_concl_tac 7);
+a(GET_NTH_ASM_T 5 bc_thm_tac THEN REPEAT strip_tac);
+(* *** Goal "2.3.2" *** *)
+a(GET_NTH_ASM_T 4 bc_thm_tac THEN REPEAT strip_tac);
+(* *** Goal "2.4" *** *) (* Transitivity *)
+a(lemma_tac¨{x; y; z} Ä X ± ≥{x; y; z} = {}Æ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[] THEN all_var_elim_asm_tac);
+(* *** Goal "2.4.1" *** *)
+a(GET_NTH_ASM_T 5 bc_thm_tac THEN REPEAT strip_tac);
+(* *** Goal "2.4.2" *** *)
+a(lemma_tac ¨y << xÆ THEN1
+	(GET_NTH_ASM_T 5 bc_thm_tac THEN REPEAT strip_tac));
+a(cases_tac ¨y = xÆ THEN1 all_var_elim_asm_tac);
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "2.4.3" *** *)
+a(lemma_tac ¨z << yÆ THEN1
+	(GET_NTH_ASM_T 5 bc_thm_tac THEN REPEAT strip_tac));
+a(cases_tac ¨y = zÆ THEN1 all_var_elim_asm_tac);
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "2.5" *** *) (* Minimum condition *)
+a(all_asm_ufc_tac[]);
+a(∂_tac¨xÆ THEN REPEAT strip_tac);
+a(swap_nth_asm_concl_tac 1);
+a(GET_NTH_ASM_T 3 bc_thm_tac THEN REPEAT strip_tac);
+a(lemma_tac¨x << y'Æ THEN1
+	(GET_NTH_ASM_T 5 bc_thm_tac THEN REPEAT strip_tac));
+a(lemma_tac¨x ç X ± y ç X ± y' ç XÆ THEN1 
+	(LIST_GET_NTH_ASM_T [2, 4, 7, 9]
+		(MAP_EVERY ante_tac)THEN PC_T1 "sets_ext1" prove_tac[]));
+a(rename_tac[] THEN LIST_GET_NTH_ASM_T [14] all_ufc_tac);
+save_pop_thm "refl_well_ordering_lower_bounds_thm"
+);
+=TEX
+}%ignore
+
+\subsection{Transitive Closure}
+
+First the definition:
+
+πHOLCONST
+‹ €TranClsr› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL))
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑ TranClsr (X, $<<) = (X, Ãx y∑ 
+‹	µr∑ (Trans (X, r) ± µv w∑ v ç X ± w ç X ± v << w ¥ r v w) ¥ r x y)
+∞
+
+πHOLCONST
+‹ €RefTranClsr› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL))
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑ RefTranClsr (X, $<<) = (X, Ãx y∑
+‹	x = y ≤ Snd (TranClsr (X, $<<)) x y)
+∞
+
+The following elementary facts about transitive closure prove useful:
+
+=GFT
+trans_tc_thm = 	Ù µ (X, $<<)∑ Trans (TranClsr (X, $<<))
+
+trans_tc_thm2 = 	Ù µ (X, $<<) x y z∑ x ç X ± y ç X ± z ç X
+	± Snd(TranClsr (X, $<<)) x y
+	± Snd(TranClsr (X, $<<)) y z
+	¥ Snd(TranClsr (X, $<<)) x z
+
+tc_incr_thm =	Ù µ (X, $<<) x y∑ x ç X ± y ç X
+	± x << y
+	¥ Snd(TranClsr (X, $<<)) x y
+
+tc_decomp_thm =	Ù µ (X, $<<) x y∑ x ç X ± y ç X
+	± Snd (TranClsr (X, $<<)) x y
+	± ≥ x << y
+	¥ ∂z∑ z ç X
+	± Snd (TranClsr (X, $<<)) x z
+	± z << y
+
+tc_mono_thm = Ù µ (X, r1) (X, r2)∑
+	  (µ x y∑ x ç X ± y ç X
+           ± r1 x y 
+	  ¥ r2 x y)
+	¥ (µ x y∑ x ç X ± y ç X
+	  ± Snd (TranClsr (X, r1)) x y
+	  ¥ Snd (TranClsr (X, r2)) x y)
+=TEX
+
+\ignore{
+=SML
+val tran_clsr_def = get_spec ¨TranClsrÆ;
+val ref_tran_clsr_def = get_spec ¨RefTranClsrÆ;
+
+=SML
+set_goal ([], ¨µ (X, $<<)∑ Trans (TranClsr (X, $<<))Æ);
+a (rewrite_tac [tran_clsr_def, trans_def]
+	THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val trans_tc_thm = save_pop_thm "trans_tc_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µ (X, $<<)∑ Fst (TranClsr (X, $<<)) = XÆ);
+a (rewrite_tac [tran_clsr_def]
+	THEN REPEAT strip_tac);
+val fst_tc_lemma = save_pop_thm "fst_tc_lemma";
+=TEX
+
+=SML
+set_goal ([], ¨µ r∑ TranClsr r = (Fst r, Ãx y∑ 
+	µs∑ (Trans (Fst r, s) ± µv w∑ v ç Fst r ± w ç Fst r ± Snd r v w ¥ s v w) ¥ s x y)Æ);
+a (strip_tac
+	THEN once_rewrite_tac [prove_rule [] ¨r = (Fst r, Snd r)Æ]
+	THEN pure_rewrite_tac [tran_clsr_def]
+	THEN rewrite_tac [ext_thm]);
+val tran_clsr_thm = save_pop_thm "tran_clsr_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µ (X, $<<) x y z∑ x ç X ± y ç X ± z ç X
+	± Snd(TranClsr (X, $<<)) x y ± Snd(TranClsr (X, $<<)) y z ¥ Snd(TranClsr (X, $<<)) x zÆ);
+a (rewrite_tac [tran_clsr_thm]
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac []
+	THEN all_ufc_tac [trans_def]);
+val trans_tc_thm2 = save_pop_thm "trans_tc_thm2";
+=TEX
+
+=SML
+set_goal([], ¨µ (X, $<<) x y∑ x ç X ± y ç X
+	± x << y ¥ Snd(TranClsr (X, $<<)) x yÆ);
+a (rewrite_tac [tran_clsr_def]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_ufc_tac[]));
+val tc_incr_thm = save_pop_thm "tc_incr_thm";
+=TEX
+
+=SML
+set_goal([],¨µ (X, $<<) x y∑ x ç X ± y ç X ± Snd (TranClsr (X, $<<)) x y ± ≥ x << y ¥
+	∂z∑ z ç X ± Snd (TranClsr (X, $<<)) x z ± z << yÆ);
+a (REPEAT strip_tac);
+a (GET_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [tran_clsr_thm])));
+a (lemma_tac ¨∂r∑ r = Ãv w∑ v << w ≤ ∂u∑ u ç X ± Snd (TranClsr (X, $<<)) v u ± u << wÆ
+	THEN1 prove_∂_tac);
+a (lemma_tac ¨Trans (X, r)Æ);
+(* *** Goal "1" *** *)
+a (rewrite_tac[trans_def]
+		THEN REPEAT µ_tac
+		THEN asm_rewrite_tac[]
+		THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (∂_tac ¨y'Æ THEN asm_rewrite_tac[]);
+a (rewrite_tac [tran_clsr_def]
+	THEN REPEAT strip_tac);
+a (all_asm_ufc_tac[]);
+(* *** Goal "1.2" *** *)
+a (∂_tac ¨uÆ THEN asm_rewrite_tac[]);
+a (all_ufc_tac [tc_incr_thm]);
+a (all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "1.3" *** *)
+a (∂_tac ¨y'Æ THEN asm_rewrite_tac[]);
+a (all_ufc_tac [tc_incr_thm]);
+a (all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "1.4" *** *)
+a (∂_tac ¨u'Æ THEN asm_rewrite_tac[]);
+a (all_ufc_tac [tc_incr_thm]);
+a (all_ufc_tac [trans_tc_thm2]);
+a (all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "2" *** *)
+a (asm_ufc_tac[]);
+(* *** Goal "2.1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+val tc_decomp_thm = save_pop_thm "tc_decomp_thm";
+=TEX
+
+=SML
+set_goal([],¨µ (X, r1) (X, r2)∑
+	(µ x y∑ x ç X ± y ç X ± r1 x y ¥ r2 x y)
+	¥ (µ x y∑ x ç X ± y ç X ± Snd (TranClsr (X, r1)) x y ¥ Snd (TranClsr (X, r2)) x y)Æ);
+a (rewrite_tac [tran_clsr_def]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µ v w∑ v ç X ± w ç X ± r1 v w ¥ r v wÆ
+	THEN1 REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val tc_mono_thm = save_pop_thm "tc_mono_thm";
+
+set_goal([], ¨µ(X,$<<) x y∑ Snd (TranClsr (X, $<<)) x y ¥ x ç X ± y ç XÆ);
+a (REPEAT µ_tac);
+a (split_pair_rewrite_tac [¨(X, $<<)Æ] [tran_clsr_def]
+	THEN rewrite_tac []
+	THEN REPEAT µ_tac THEN strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨Ãx y∑ x ç X ± y ç X ± Snd (TranClsr (X, $<<)) x yÆ
+	(strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "1" *** *)
+a (CONTR_T discard_tac THEN POP_ASM_T ante_tac
+	THEN rewrite_tac[trans_def]
+	THEN REPEAT strip_tac);
+a (all_asm_ufc_tac [trans_tc_thm2]);
+(* *** Goal "2" *** *)
+a (CONTR_T discard_tac
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac[tran_clsr_def]
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac []);
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac[]);
+val tran_clsr_lemma1 = save_pop_thm "tran_clsr_lemma1"; 
+=TEX
+}%ignore
+
+When reasoning using well-founded induction a primitive induction principle can be converted into ``course of values'' induction by using the theorem which states that a relation is well-founded iff its transitive closure is well-founded.
+
+In preparation for proving this theorem it is convenient to have a more general notion of inclusion of relations than that of section \ref{Lemmas about Subsets of Ordered Sets}.
+This is helpful because a relation is a subrelation of its transitive closure, not a restriction of it to a smaller field.
+This suffices to establish that it is well founded if its transitive closure is.
+One might as well get it via the general result that subrelations of well-founded relation is well-founded, but it can't be done using a subrel theorem of the kind presented in section \ref{Lemmas about Subsets of Ordered Sets} earlier.
+
+=SML
+declare_infix (300, "Äâr");
+=TEX
+
+πHOLCONST
+‹ €$Äâr›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, r1) (Y, r2)∑ (X, r1) Äâr (Y, r2) §
+‹	µ x y∑ x ç X ± y ç X ± r1 x y
+‹	¥ x ç Y ± y ç Y ± r2 x y
+∞
+
+Allowing us to state concisely (and prove) that a relation is contained in its transitive closure:
+
+=GFT
+r_Är_tcr_thm =	Ù µr∑ r Är TranClsr r
+=TEX
+
+And that various properties of relations also hold of their subrelations:
+
+=GFT
+subrel_irrefl_thm2 =		Ù µr s∑ s Äâr r ± Irrefl r ¥ Irrefl s
+subrel_antisym_thm2 =		Ù µr s∑ s Äâr r ± Antisym r ¥ Antisym s
+subrel_min_cond_thm2 =		Ù µr s∑ s Äâr r ± MinCond r ¥ MinCond s
+subrel_well_founded_thm2 =	Ù µr s∑ s Äâr r ± WellFounded r ¥ WellFounded s
+=TEX
+
+\ignore{
+=SML
+val Är_def = get_spec ¨$ÄârÆ;
+set_goal([], ¨µ r1 r2∑ r1 Äâr r2 §
+	µ x y∑ x ç Fst r1 ± y ç Fst r1 ± Snd r1 x y
+	¥ x ç Fst r2 ± y ç Fst r2 ± Snd r2 x yÆ);
+a (REPEAT µ_tac
+	THEN pure_once_rewrite_tac (map (prove_rule [])
+		[¨r1 = (Fst r1, Snd r1)Æ,
+		 ¨r2 = (Fst r2, Snd r2)Æ])
+	THEN pure_rewrite_tac [Är_def]
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+val Är_thm = save_pop_thm "Är_thm";
+
+set_goal ([], ¨µr∑ r Äâr TranClsr rÆ);
+a (rewrite_tac [Är_thm, tran_clsr_thm]
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac[]);
+val r_Ä_tcr_thm = save_pop_thm "r_Ä_tcr_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µr s∑ s Äâr r ± Irrefl r ¥ Irrefl sÆ);
+a (REPEAT µ_tac
+	THEN split_pair_rewrite_tac [¨rÆ, ¨sÆ] [irrefl_def, Är_def]
+	THEN contr_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val subrel_irrefl_thm2 = save_pop_thm "subrel_irrefl_thm2";
+
+set_goal ([], ¨µr s∑ s Äâr r ± Antisym r ¥ Antisym sÆ);
+a (REPEAT µ_tac
+	THEN split_pair_rewrite_tac [¨rÆ, ¨sÆ] [antisym_def, Är_def]
+	THEN contr_tac);
+a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
+a (list_spec_nth_asm_tac 10 [¨yÆ, ¨xÆ]);
+a (list_spec_nth_asm_tac 10 [¨xÆ, ¨yÆ]);
+val subrel_antisym_thm2 = save_pop_thm "subrel_antisym_thm2";
+=TEX
+
+=SML
+set_goal ([], ¨µr s∑ s Äâr r ± MinCond r ¥ MinCond sÆ);
+a (REPEAT µ_tac
+	THEN split_pair_rewrite_tac [¨rÆ, ¨sÆ] [min_cond_def, weak_min_cond_def]
+	THEN REPEAT strip_tac
+	THEN all_ufc_tac [subrel_antisym_thm2]);
+a (DROP_NTH_ASM_T 6 (fn x => strip_asm_tac (rewrite_rule [Är_def] x)));
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac [sets_ext_clauses]
+	THEN contr_tac);
+a (spec_nth_asm_tac 6 ¨A ° (Fst r)Æ);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [sets_ext_clauses, ç_in_clauses]
+	THEN contr_tac);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨xÆ);
+a (lemma_tac ¨x ç Fst s ± y ç Fst sÆ
+	THEN1 (strip_tac THEN GET_NTH_ASM_T 10
+	(fn x => (all_ufc_tac [rewrite_rule [sets_ext_clauses] x]))));
+a (lemma_tac ¨≥ x ç Fst rÆ
+	THEN1 (GET_NTH_ASM_T 7
+	(fn x => ((strip_asm_tac o (µ_elim ¨xÆ))
+	       (rewrite_rule [sets_ext_clauses, ç_in_clauses] x)))));
+a (list_spec_nth_asm_tac 11 [¨yÆ, ¨xÆ]);
+(* *** Goal "3" *** *)
+a (spec_nth_asm_tac 4 ¨x'Æ);
+a (lemma_tac ¨x' ç Fst s ± y ç Fst sÆ
+	THEN1 (strip_tac THEN GET_NTH_ASM_T 12
+	(fn x => (all_ufc_tac [rewrite_rule [sets_ext_clauses] x]))));
+a (list_spec_nth_asm_tac 12 [¨yÆ, ¨x'Æ]);
+a (spec_nth_asm_tac 9 ¨yÆ);
+a (DROP_NTH_ASM_T 19 ante_tac
+	THEN rewrite_tac [antisym_def]
+	THEN contr_tac);
+a (list_spec_nth_asm_tac 1 [¨yÆ, ¨x'Æ]);
+val subrel_min_cond_thm2 = save_pop_thm "subrel_min_cond_thm2";
+=TEX
+
+=SML
+set_goal ([], ¨µr s∑ s Äâr r ± WellFounded r ¥ WellFounded sÆ);
+a (REPEAT µ_tac
+	THEN split_pair_rewrite_tac [¨rÆ, ¨sÆ] [well_founded_def]
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac [subrel_irrefl_thm2, subrel_min_cond_thm2]);
+val subrel_well_founded_thm2 = save_pop_thm "subrel_well_founded_thm2";
+=TEX
+
+}%ignore
+
+A relation is well-founded iff its transitive closure is well-founded.
+
+In the right to left direction the result follows from the fact that a relation is a subrelation of its transitive closure and that a subrelation of a well-founded relation is well-founded.
+In the left to right direction the proof involves showing by well-founded induction that there is no descending sequence in the transitive closure.
+
+=GFT
+wf_iff_wftc_thm =	Ù µ (X, $<<)∑
+	WellFounded (X, $<<) § WellFounded (TranClsr (X, $<<))
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µ(X, $<<)∑ WellFounded (X, $<<) ¥ WellFounded (TranClsr (X, $<<))Æ);
+a (REPEAT strip_tac);
+a (GET_NTH_ASM_T 1 (fn x => asm_tac (rewrite_rule [well_founded_induction_thm] x)));
+a (spec_nth_asm_tac 1 ¨Ãv∑ v ç X ¥ ≥ (∂ f∑
+	  (µ n∑ f n ç X ± Snd (TranClsr (X, $<<)) (f n) v)
+	± (µ n∑ Snd (TranClsr (X, $<<)) (f (n + 1)) (f n)))Æ);
+(* *** Goal "1" *** *)
+a (CONTR_T discard_tac THEN POP_ASM_T (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 2 ¨0Æ);
+a (lemma_tac ¨µn∑ Snd (TranClsr (X, $<<)) (f (n + 1)) (f 0)Æ
+	THEN1 strip_tac);
+(* *** Goal "1.1" *** *)
+a (induction_tac ¨nÆ);
+(* *** Goal "1.1.1" *** *)
+a (SPEC_NTH_ASM_T 3 ¨0Æ rewrite_thm_tac);
+(* *** Goal "1.1.2" *** *)
+a (spec_nth_asm_tac 4 ¨n + 1Æ);
+a (lemma_tac ¨f (n+1) ç X ± f ((n + 1) + 1) ç XÆ
+	THEN1 (asm_rewrite_tac []));
+a (all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "1.2" *** *)
+a (cases_tac ¨f 0 << xÆ); 
+(* *** Goal "1.2.1" *** *)
+a (SPEC_NTH_ASM_T 7 ¨f 0Æ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 1 ¨Ãn∑ f (n+1)Æ (strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "1.2.1.1" *** *)
+a (spec_nth_asm_tac 8 ¨n+1Æ);
+(* *** Goal "1.2.1.2" *** *)
+a (spec_nth_asm_tac 4 ¨nÆ);
+(* *** Goal "1.2.1.3" *** *)
+a (spec_nth_asm_tac 7 ¨n+1Æ);
+(* *** Goal "1.2.2" *** *)
+a (all_ufc_tac [tc_decomp_thm]);
+a (SPEC_NTH_ASM_T 10 ¨zÆ (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 1 ¨fÆ);
+(* *** Goal "1.2.2.1" *** *)
+a (spec_nth_asm_tac 11 ¨nÆ);
+(* *** Goal "1.2.2.2" *** *)
+a (POP_ASM_T ante_tac
+	THEN strip_asm_tac (µ_elim ¨nÆ Ó_cases_thm)
+	THEN asm_rewrite_tac[]);
+a (spec_nth_asm_tac 7 ¨iÆ
+	THEN spec_nth_asm_tac 12 ¨i+1Æ
+	THEN all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "1.2.2.3" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (split_pair_rewrite_tac [¨TranClsr (X, $<<)Æ] [well_founded_descending_sequence_thm]);
+a (contr_tac);
+a (lemma_tac ¨µn∑ f n ç XÆ
+	THEN1 (GET_NTH_ASM_T 2 ante_tac
+		THEN rewrite_tac [tran_clsr_def]
+		THEN strip_tac));
+a (spec_nth_asm_tac 1 ¨0Æ);
+a (SPEC_NTH_ASM_T 5 ¨f 0Æ (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 1 ¨Ãn∑ f (n+1)Æ);
+(* *** Goal "2.1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (induction_tac ¨nÆ THEN TRY (asm_rewrite_tac[]));
+a (lemma_tac ¨f (n + 1) ç X ± f ((n + 1) + 1) ç XÆ THEN1 asm_rewrite_tac []);
+a (spec_nth_asm_tac 7 ¨n+1Æ THEN all_ufc_tac [trans_tc_thm2]);
+(* *** Goal "2.3" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (spec_nth_asm_tac 4 ¨n + 1Æ);
+val wf_wftc_lemma = pop_thm ();
+=TEX
+
+=SML
+set_goal([], ¨µ(X, $<<) x y∑ WellFounded (X, $<<) ± x ç X ¥ ≥ Snd (TranClsr (X, $<<)) x xÆ);
+a (contr_tac);
+a (ALL_FC_T (MAP_EVERY ante_tac) [wf_wftc_lemma]);
+a (split_pair_rewrite_tac [¨TranClsr (X, $<<)Æ] [well_founded_descending_sequence_thm]
+	THEN REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨Ãn:Ó∑xÆ ante_tac
+	THEN rewrite_tac [] THEN REPEAT strip_tac);
+a (asm_rewrite_tac [tran_clsr_def]);
+val tcwf_not_refl_thm = save_pop_thm "tcwf_not_refl_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µr∑ WellFounded r ¥ WellFounded (TranClsr r)Æ);
+a (split_pair_rewrite_tac [¨rÆ] [wf_wftc_lemma] THEN REPEAT strip_tac);
+val wf_wftc_thm = save_pop_thm "wf_wftc_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µr∑ WellFounded (TranClsr r) ¥ WellFounded rÆ);
+a (REPEAT strip_tac);
+a (asm_tac (all_µ_elim r_Ä_tcr_thm)
+	THEN all_ufc_tac [subrel_well_founded_thm2]);
+val wftc_wf_thm = save_pop_thm "wftc_wf_thm";
+=TEX
+
+=SML
+set_goal ([], ¨µr∑ WellFounded r § WellFounded (TranClsr r)Æ);
+a (REPEAT strip_tac
+	THEN all_ufc_tac [wftc_wf_thm, wf_wftc_thm]);
+val wf_iff_wftc_thm = save_pop_thm "wf_iff_wftc_thm";
+=TEX
+}%ignore
+
+\subsection{The Well-founded Part of a Relation}
+
+Relations which are not well-founded may have useful well-founded subrelations.
+
+The well-founded part of a relation is the restriction of the relation to the subdomain of elements which are not the first element of any infinite descending sequence.
+
+πHOLCONST
+‹ €WfPart›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL))
+˜¸¸¸¸¸¸
+‹ µ (X, $<<)∑ WfPart (X, $<<) = (
+‹	{x | x ç X ± ≥ ∂f∑ f 0 = x ± µn∑ (f n ç X ± (f (n+1)) << f n)},
+‹	$<<)
+∞
+
+The well-founded part of a relation is of course, well-founded.
+
+=GFT
+wf_part_wf_thm = Ù µr∑ WellFounded (WfPart r)
+=TEX
+
+\ignore{
+=SML
+val wf_part_def = get_spec ¨WfPartÆ;
+set_goal([], ¨µr∑ WellFounded (WfPart r)Æ);
+a (split_pair_rewrite_tac [¨rÆ]
+	[wf_part_def, well_founded_descending_sequence_thm]
+	THEN contr_tac);
+a (spec_nth_asm_tac 2 ¨0Æ);
+a (spec_nth_asm_tac 1 ¨fÆ);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 5 ¨nÆ);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 4 ¨nÆ);
+val wf_part_wf_thm = save_pop_thm "wfpart_wf_thm";
+=TEX
+}%ignore
+
+\subsection{The Recursion Theorem}
+
+The recursion theorem asserts the existence of fixed points of functionals under certain circumstances.
+This is helpful in establishing the consistency of inductive or recursive definitions of functions.
+The basic idea is that a recursive definition will be consistent if the recursion is well-founded.
+
+Exactly how the result is best formulated depends on how you want to use it.
+
+In HOL a suitable version of the recursion theorem will be of general applicability in consistency proofs for recursive definitions of HOL functions, which are of course, total over some type, so this is a prime application.
+
+A special variant on this is when a new type is being introduced, corresponding to a subset of some existing type) and one of the primitive operators on the new type is defined recursively.
+Since the operator is primitive, it must be defined over a subset of the representation type and a version of the recursion theorem which yields a partial fixedpoint will be useful (a partial fixedpoint in this context is a total function which is fixed under the functional over some subset of its domain type).
+Since this is a generalisation of the recursion theorem more commonly applicable, this is the version I prove here.
+
+A third case of interest is the recursive specification of functions in Z.
+In this case functions are represented as many-one relations.
+Its not sensible to address this variant here because it needs to be done in a context suitable for reasoning about Z, best done in a separate document.
+
+The existence of a fixed point of a functional depends upon the recursion embodied in the functional  being well-founded.
+The following two definitions allow us to talk about this formally.
+
+A functional ``FunctRespects'' (informally, respects) a relation over some set if it delivers a function whose value at some point in that set is dependent only on the values of the operand function at the points in the set related to x under the relation.
+
+πHOLCONST
+‹ €FunctRespects›: (('a ≠ 'b) ≠ ('a ≠ 'b))
+‹		≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µG (X, $<<)∑ FunctRespects G (X, $<<) §
+‹	µg h x∑ x ç X ¥ (µy∑ y ç X ± y << x ¥ g y = h y) ¥ G g x = G h x
+∞
+
+A functional is well-founded if it respects some well-founded relation, and in that case will have a fixed point.
+
+It would be nice if one could obtain from a functional a relation which that functional respects.
+I have unable to discover a way in which this can be done in the general case (other than the useless everywhere-true relationship, which has an empty well-founded part).
+
+=IGN
+A functional has a fixed point if its dependencies are well-founded (this is a sufficient but not a necessary condition).
+A functional always has a partial fixed point which is fixed over the well-founded part of its dependency relation, which may be defined:
+
+ πHOLCONST
+‹ €WfDomain›: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ 'a SET
+ ˜¸¸¸¸¸¸
+‹ µG∑ WfDomain G = Fst (WfPart (Universe, Dependencies G))
+ ∞
+=TEX
+
+To express a recursion theorem giving partial fixed points of a functional we define the notion of partial equivalence of functions.
+
+πHOLCONST
+‹ €PartFunEquiv›: 'a SET ≠ ('a ≠ 'b) ≠ ('a ≠ 'b) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µX f g∑ PartFunEquiv X f g § µx∑ x ç X ¥ f x = g x
+∞
+
+which has the elementary property:
+=GFT
+part_fun_equiv_lemma1 = Ù µX Y f g∑
+	PartFunEquiv X f g ± Y Ä X ¥ PartFunEquiv Y f g
+=TEX
+
+\ignore{
+=SML
+val funct_respects_def = get_spec ¨FunctRespectsÆ;
+val part_fun_equiv_def = get_spec ¨PartFunEquivÆ;
+=TEX
+=SML
+set_goal ([], ¨µX Y f g∑ PartFunEquiv X f g ± Y Ä X ¥ PartFunEquiv Y f gÆ);
+a (rewrite_tac [part_fun_equiv_def, sets_ext_clauses]
+	THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val part_fun_equiv_lemma1 = save_pop_thm "part_fun_equiv_lemma1";
+=TEX
+}%ignore
+
+The following variant of reflexive transitive closure (yielding a set from an element) proves useful:
+
+πHOLCONST
+‹ €TcUpTo›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ(X, $<<) x∑ TcUpTo (X, $<<) x =
+‹	{y |  y ç X ± x ç X ± x = y ≤ Snd (TranClsr (X, $<<)) y x}
+∞
+
+=GFT
+tcupto_inc_lemma1 = Ù µ(X, $<<) x y∑ x ç X ± y ç X ± y << x
+	¥ (TcUpTo (X, $<<) y) Ä (TcUpTo (X, $<<) x)
+
+tcupto_inc_lemma2 = Ù µ(X, $<<) x y∑ y ç X ± x ç (TcUpTo (X, $<<) y)
+	¥ (TcUpTo (X, $<<) x) Ä (TcUpTo (X, $<<) y)
+=TEX
+
+\ignore{
+=SML
+val tc_up_to_def = get_spec ¨TcUpToÆ;
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) x∑ x ç X ¥ TcUpTo (X, $<<) x = {y | Snd (RefTranClsr (X, $<<)) y x}Æ);
+a (rewrite_tac [sets_ext_clauses, tc_up_to_def, ref_tran_clsr_def]
+	THEN REPEAT strip_tac
+	THEN all_var_elim_asm_tac);
+val tc_up_to_eq_thm = save_pop_thm "tc_up_to_eq_thm";
+
+set_goal ([], ¨µ(X, $<<) x y∑ x ç X ± y ç X ± y << x
+	¥ (TcUpTo (X, $<<) y) Ä (TcUpTo (X, $<<) x)Æ);
+a (rewrite_tac [tc_up_to_def, sets_ext_clauses]
+	THEN REPEAT strip_tac
+	THEN TRY all_var_elim_asm_tac
+	THEN all_ufc_tac [tc_incr_thm]);
+(* *** Goal "1" *** *)
+a (all_ufc_tac [tran_clsr_lemma1]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨xÆ] tc_incr_thm));
+a (all_asm_ufc_tac [tran_clsr_lemma1]);
+a (all_ufc_tac [trans_tc_thm2]);
+val tcupto_inc_lemma1 = save_pop_thm "tcupto_inc_lemma1";
+
+set_goal ([], ¨µ(X, $<<) x y∑ y ç X ± x ç (TcUpTo (X, $<<) y)
+	¥ (TcUpTo (X, $<<) x) Ä (TcUpTo (X, $<<) y)Æ);
+a (rewrite_tac [tc_up_to_def, sets_ext_clauses]
+	THEN REPEAT strip_tac
+	THEN TRY all_var_elim_asm_tac
+	THEN REPEAT (all_ufc_tac [tran_clsr_lemma1, trans_tc_thm2]));
+val tcupto_inc_lemma2 = save_pop_thm "tcupto_inc_lemma2";
+=TEX
+}%ignore
+
+The following two lemmas about {\it PartFunEquiv} are then immediate:
+
+=GFT
+part_fun_equiv_lemma2 = Ù µX f g x y∑ x ç X ± y ç X
+	± PartFunEquiv (TcUpTo (X, $<<) y) f g
+	± x << y
+	¥ PartFunEquiv (TcUpTo (X, $<<) x) f g
+
+part_fun_equiv_lemma3 = Ù µX Y f g x y∑ y ç X
+	± PartFunEquiv (TcUpTo (X, $<<) y) f g
+	± x ç (TcUpTo (X, $<<) y)
+	¥ PartFunEquiv (TcUpTo (X, $<<) x) f g
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µX f g x y∑ x ç X ± y ç X
+	± PartFunEquiv (TcUpTo (X, $<<) y) f g
+	± x << y
+	¥ PartFunEquiv (TcUpTo (X, $<<) x) f gÆ);
+a (rewrite_tac [part_fun_equiv_def, sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨xÆ] tcupto_inc_lemma1));
+a (POP_ASM_T (asm_tac o (rewrite_rule [sets_ext_clauses])));
+a (all_asm_ufc_tac[]);
+a (all_asm_ufc_tac[]);
+val part_fun_equiv_lemma2 = save_pop_thm "part_fun_equiv_lemma2";
+
+set_goal ([], ¨µX Y f g x y∑ y ç X
+	± PartFunEquiv (TcUpTo (X, $<<) y) f g
+	± x ç (TcUpTo (X, $<<) y)
+	¥ PartFunEquiv (TcUpTo (X, $<<) x) f gÆ);
+a (rewrite_tac [part_fun_equiv_def, sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨xÆ, ¨yÆ] tcupto_inc_lemma2));
+a (POP_ASM_T (asm_tac o (rewrite_rule [sets_ext_clauses])));
+a (all_asm_ufc_tac[]);
+a (all_asm_ufc_tac[]);
+val part_fun_equiv_lemma3 = save_pop_thm "part_fun_equiv_lemma3";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €UniquePartFixp›:  'a SET ≠ (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ X  G∑ UniquePartFixp X G § ∂ f∑
+‹	PartFunEquiv X (G f) f
+‹	± µg∑ PartFunEquiv X (G g) g ¥ PartFunEquiv X f g
+∞
+
+\ignore{
+=SML
+val unique_part_fixp_def = get_spec ¨UniquePartFixpÆ;
+=SML
+set_goal([],¨∂UniqueVal:('a SET ∏ ('a ≠ 'a ≠ BOOL))
+		≠ (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ 'a ≠ 'b∑
+	µ(X, $<<) G x∑ x ç X
+	± UniquePartFixp (TcUpTo (X, $<<) x) G
+	¥ µ f∑ PartFunEquiv (TcUpTo (X, $<<) x) (G f) f
+	       ¥ UniqueVal (X, $<<) G x = f xÆ);
+a (∂_tac ¨Ã(X, $<<) G x∑ ≈z∑ x ç X
+	± UniquePartFixp (TcUpTo (X, $<<) x) G
+	¥ µ f∑ PartFunEquiv (TcUpTo (X, $<<) x) (G f) f
+	       ¥ z = f xÆ
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+a (≈_tac ¨≈ z∑ µ f∑ PartFunEquiv (TcUpTo (X, $<<) x) (G f) f ¥ z = f xÆ);
+(* *** Goal "1" *** *)
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [unique_part_fixp_def])));
+a (∂_tac ¨f' xÆ THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨f''Æ);
+a (GET_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule [part_fun_equiv_def])));
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (GET_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule [tc_up_to_def])));
+(* *** Goal "2" *** *)
+a (all_asm_ufc_tac[]);
+val unique_val_lemma = save_pop_thm "unique_val_lemma";
+=TEX
+}%ignore
+
+The proof of the recursion theorem is by well-founded induction on the transitive closure of a relation respected by the functional.
+The induction hypothesis is exposed in the following lemma:
+
+=GFT
+recursion_theorem_lemma1 = Ù µG (X, $<<)∑
+	FunctRespects G (X, $<<) ± WellFounded (X, $<<)
+	¥ µx∑ x ç X ¥ UniquePartFixp (TcUpTo (X, $<<) x) G
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µG (X, $<<)∑ FunctRespects G (X, $<<) ± WellFounded (X, $<<) ¥
+	µx∑ x ç X ¥ UniquePartFixp (TcUpTo (X, $<<) x) GÆ);
+a (once_rewrite_tac [wf_iff_wftc_thm, funct_respects_def]
+	THEN split_pair_rewrite_tac [¨TranClsr (X, $<<)Æ]
+		[well_founded_induction_thm, fst_tc_lemma]
+	THEN REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨Ãx∑ UniquePartFixp (TcUpTo (X, $<<) x) GÆ
+	(strip_asm_tac o (rewrite_rule[]))
+	THEN_LIST
+	  [CONTR_T discard_tac THEN POP_ASM_T ante_tac
+		THEN rewrite_tac[unique_part_fixp_def], 
+	   TRY (all_asm_ufc_tac[])]);
+a (strip_asm_tac unique_val_lemma);
+a (∂_tac ¨Ãx∑ if Snd (TranClsr (X,$<<)) x x'
+	then UniqueVal (X, $<<) G x
+	else G (UniqueVal (X, $<<) G) xÆ
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [part_fun_equiv_def, tc_up_to_def]
+	THEN REPEAT µ_tac);
+a (cases_tac ¨Snd (TranClsr (X, $<<)) x'' x'Æ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨x'' ç XÆ THEN1 (all_ufc_tac [tran_clsr_lemma1]));
+a (spec_nth_asm_tac 4 ¨x''Æ);
+a (GET_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule [unique_part_fixp_def])));
+a (list_spec_nth_asm_tac 6 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨x''Æ]);
+a (list_spec_nth_asm_tac 1 [¨fÆ]);
+a (asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 2 discard_tac);
+a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [part_fun_equiv_def])));
+a (lemma_tac ¨x'' ç TcUpTo (X, $<<) x''Æ
+	THEN1 asm_rewrite_tac [tc_up_to_def]);
+a (spec_nth_asm_tac 2 ¨x''Æ);
+a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+a (list_spec_nth_asm_tac 15 [
+	¨Ã x∑ if Snd (TranClsr (X, $<<)) x x'
+                   then UniqueVal (X, $<<) G x
+                   else G (UniqueVal (X, $<<) G) xÆ,
+	¨fÆ, ¨x''Æ]);
+a (CONTR_T discard_tac
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac[]);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm));
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ, ¨x'Æ] trans_tc_thm2));
+a (asm_rewrite_tac[]);
+a (spec_nth_asm_tac 15 ¨yÆ);
+a (list_spec_nth_asm_tac 15 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨yÆ]);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨G fÆ, ¨fÆ, ¨yÆ, ¨x''Æ] part_fun_equiv_lemma2));
+a (spec_nth_asm_tac 2 ¨fÆ);
+(* *** Goal "1.2" *** *)
+a (REPEAT strip_tac THEN all_var_elim_asm_tac);
+a (list_spec_nth_asm_tac 7 [¨Ã x
+                 ∑ if Snd (TranClsr (X, $<<)) x x''
+                   then UniqueVal (X, $<<) G x
+                   else G (UniqueVal (X, $<<) G) xÆ, ¨UniqueVal (X, $<<) GÆ, ¨x''Æ]);
+a (CONTR_T discard_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm)
+	THEN POP_ASM_T rewrite_thm_tac);
+(* *** Goal "2" *** *)
+a (rewrite_tac [part_fun_equiv_def] THEN REPEAT strip_tac);
+a (cases_tac ¨Snd (TranClsr (X, $<<)) x'' x'Æ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (ufc_tac [tran_clsr_lemma1]);
+a (spec_nth_asm_tac 6 ¨x''Æ);
+a (list_spec_nth_asm_tac 6 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨x''Æ]);
+a (all_ufc_tac [list_µ_elim [¨XÆ, ¨YÆ, ¨f:'a ≠ 'bÆ, ¨g:'a ≠ 'bÆ] part_fun_equiv_lemma3]);
+a (spec_nth_asm_tac 2 ¨gÆ);
+(* *** Goal "2.2" *** *)
+a (DROP_NTH_ASM_T 2 ante_tac
+	THEN rewrite_tac [tc_up_to_def]
+	THEN REPEAT strip_tac
+	THEN all_var_elim_asm_tac);
+a (list_spec_nth_asm_tac 8 [¨UniqueVal (X, $<<) GÆ, ¨gÆ, ¨x''Æ]);
+(* *** Goal "2.2.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm));
+a (spec_nth_asm_tac 8 ¨yÆ);
+a (list_spec_nth_asm_tac 8 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨yÆ]);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨G gÆ, ¨gÆ, ¨yÆ, ¨x''Æ] part_fun_equiv_lemma2));
+a (spec_nth_asm_tac 2 ¨gÆ);
+a (asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac [part_fun_equiv_def, tc_up_to_def]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨x''Æ);
+val recursion_theorem_lemma1 = save_pop_thm "recursion_theorem_lemma1";
+=TEX
+}%ignore
+\ignore{
+=IGN
+(* evaluation of ufc tactics *)
+set_goal([], ¨µG (X, $<<)∑ FunctRespects G (X, $<<) ± WellFounded (X, $<<) ¥
+	µx∑ x ç X ¥ UniquePartFixp (TcUpTo (X, $<<) x) GÆ);
+a (once_rewrite_tac [wf_iff_wftc_thm, funct_respects_def]
+	THEN split_pair_rewrite_tac [¨TranClsr (X, $<<)Æ]
+		[well_founded_induction_thm, fst_tc_lemma]
+	THEN REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨Ãx∑ UniquePartFixp (TcUpTo (X, $<<) x) GÆ
+	(strip_asm_tac o (rewrite_rule[]))
+	THEN_LIST
+	  [CONTR_T discard_tac THEN POP_ASM_T ante_tac
+		THEN rewrite_tac[unique_part_fixp_def], 
+	   TRY (all_asm_ufc_tac[])]);
+a (strip_asm_tac unique_val_lemma);
+a (∂_tac ¨Ãx∑ if Snd (TranClsr (X,$<<)) x x'
+	then UniqueVal (X, $<<) G x
+	else G (UniqueVal (X, $<<) G) xÆ
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [part_fun_equiv_def, tc_up_to_def]
+	THEN REPEAT µ_tac);
+a (cases_tac ¨Snd (TranClsr (X, $<<)) x'' x'Æ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨x'' ç XÆ THEN1 (all_ufc_tac [tran_clsr_lemma1]));
+a (lemma_tac ¨UniquePartFixp (TcUpTo (X, $<<) x'') GÆ THEN1 (all_asm_ufc_tac []));
+a (ufc_tac [unique_part_fixp_def]);
+a (LEMMA_T ¨UniqueVal (X, $<<) G x'' = f x''Æ rewrite_thm_tac
+	THEN1 (REPEAT (asm_ufc_tac [])));
+(*
+a (list_spec_nth_asm_tac 6 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨x''Æ]);
+a (list_spec_nth_asm_tac 1 [¨fÆ]);
+a (asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 2 discard_tac);
+*)
+a (ufc_tac [part_fun_equiv_def]);
+a (lemma_tac ¨x'' ç TcUpTo (X, $<<) x''Æ
+	THEN1 asm_rewrite_tac [tc_up_to_def]);
+a (LEMMA_T ¨G f x'' = f x''Æ (rewrite_thm_tac o eq_sym_rule)
+	THEN1 asm_fc_tac[]);
+(*
+a (spec_nth_asm_tac 2 ¨x''Æ);
+a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+*)
+a (list_spec_nth_asm_tac 15 [
+	¨Ã x∑ if Snd (TranClsr (X, $<<)) x x'
+                   then UniqueVal (X, $<<) G x
+                   else G (UniqueVal (X, $<<) G) xÆ,
+	¨fÆ, ¨x''Æ]);
+a (CONTR_T discard_tac
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac[]);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm));
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ, ¨x'Æ] trans_tc_thm2));
+a (asm_rewrite_tac[]);
+a (spec_nth_asm_tac 15 ¨yÆ);
+a (list_spec_nth_asm_tac 15 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨yÆ]);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨G fÆ, ¨fÆ, ¨yÆ, ¨x''Æ] part_fun_equiv_lemma2));
+a (spec_nth_asm_tac 2 ¨fÆ);
+(* *** Goal "1.2" *** *)
+a (REPEAT strip_tac THEN all_var_elim_asm_tac);
+a (list_spec_nth_asm_tac 7 [¨Ã x
+                 ∑ if Snd (TranClsr (X, $<<)) x x''
+                   then UniqueVal (X, $<<) G x
+                   else G (UniqueVal (X, $<<) G) xÆ, ¨UniqueVal (X, $<<) GÆ, ¨x''Æ]);
+a (CONTR_T discard_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm)
+	THEN POP_ASM_T rewrite_thm_tac);
+(* *** Goal "2" *** *)
+a (rewrite_tac [part_fun_equiv_def] THEN REPEAT strip_tac);
+a (cases_tac ¨Snd (TranClsr (X, $<<)) x'' x'Æ
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (ufc_tac [tran_clsr_lemma1]);
+a (spec_nth_asm_tac 6 ¨x''Æ);
+a (list_spec_nth_asm_tac 6 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨x''Æ]);
+a (all_ufc_tac [list_µ_elim [¨XÆ, ¨YÆ, ¨f:'a ≠ 'bÆ, ¨g:'a ≠ 'bÆ] part_fun_equiv_lemma3]);
+a (spec_nth_asm_tac 2 ¨gÆ);
+(* *** Goal "2.2" *** *)
+a (DROP_NTH_ASM_T 2 ante_tac
+	THEN rewrite_tac [tc_up_to_def]
+	THEN REPEAT strip_tac
+	THEN all_var_elim_asm_tac);
+a (list_spec_nth_asm_tac 8 [¨UniqueVal (X, $<<) GÆ, ¨gÆ, ¨x''Æ]);
+(* *** Goal "2.2.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨(X, $<<)Æ, ¨yÆ, ¨x''Æ] tc_incr_thm));
+a (spec_nth_asm_tac 8 ¨yÆ);
+a (list_spec_nth_asm_tac 8 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨yÆ]);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨G gÆ, ¨gÆ, ¨yÆ, ¨x''Æ] part_fun_equiv_lemma2));
+a (spec_nth_asm_tac 2 ¨gÆ);
+a (asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 ante_tac
+	THEN rewrite_tac [part_fun_equiv_def, tc_up_to_def]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨x''Æ);
+val recursion_theorem_lemma1 = save_pop_thm "recursion_theorem_lemma1";
+=TEX
+}%ignore
+
+The recursion theorem follows:
+
+=GFT
+recursion_theorem = Ù µ(X, $<<) G∑
+	FunctRespects G (X, $<<) ± WellFounded (X, $<<) ¥ UniquePartFixp X G
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ((X, $<<):'a SET ∏ ('a ≠ 'a ≠ BOOL)) (G:('a ≠ 'b) ≠ ('a ≠ 'b))∑
+	FunctRespects G (X, $<<) ± WellFounded (X, $<<) ¥
+	UniquePartFixp X GÆ);
+a (REPEAT strip_tac
+	THEN ufc_tac [recursion_theorem_lemma1, funct_respects_def]);
+a (rewrite_tac [unique_part_fixp_def]);
+a (strip_asm_tac unique_val_lemma);
+a (∂_tac ¨UniqueVal (X, $<<) GÆ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [part_fun_equiv_def]
+	THEN REPEAT strip_tac);
+a (all_asm_ufc_tac[]);
+a (all_asm_ufc_tac [unique_part_fixp_def]);
+a (lemma_tac ¨UniqueVal (X, $<<) G x = f xÆ
+	THEN1 all_asm_ufc_tac[]);
+a (asm_rewrite_tac[]);
+a (fc_tac [part_fun_equiv_def]);
+(* *** Goal "1.1" *** *)
+a (POP_ASM_T ante_tac
+	THEN asm_rewrite_tac [tc_up_to_def]);
+(* *** Goal "1.2" *** *)
+a (SYM_ASMS_T rewrite_tac);
+a (list_spec_nth_asm_tac 9 [¨fÆ, ¨UniqueVal (X, $<<) GÆ, ¨xÆ]);
+a (CONTR_T discard_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (spec_nth_asm_tac 10 ¨yÆ);
+a (list_spec_nth_asm_tac 10 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨yÆ]);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨G fÆ, ¨fÆ, ¨yÆ, ¨xÆ] part_fun_equiv_lemma2));
+a (spec_nth_asm_tac 2 ¨fÆ);
+(* *** Goal "2" *** *)
+a (rewrite_tac [part_fun_equiv_def] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 4 ¨xÆ);
+a (list_spec_nth_asm_tac 4 [¨XÆ, ¨$<<Æ, ¨GÆ, ¨xÆ]);
+a (lemma_tac ¨(TcUpTo (X, $<<) x) Ä XÆ
+	THEN1 (rewrite_tac [sets_ext_clauses, tc_up_to_def]
+		THEN REPEAT strip_tac
+		THEN ufc_tac[tran_clsr_lemma1]));
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨TcUpTo (X, $<<) xÆ, ¨G gÆ, ¨gÆ] part_fun_equiv_lemma1));
+a (spec_nth_asm_tac 3 ¨gÆ);
+val recursion_theorem = save_pop_thm "recursion_theorem";
+=TEX
+}%ignore
+
+from which is readily obtained the specialisation to total functions:
+
+=GFT
+tf_recursion_thm = Ù µ$<< G∑
+	FunctRespects G (Universe, $<<) ± WellFounded (Universe, $<<)
+	¥ ∂f∑ (G f) = f
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µ$<< G∑ FunctRespects G (Universe, $<<) ± WellFounded (Universe, $<<) ¥
+	∂â1 f∑ (G f) = fÆ);
+a (REPEAT strip_tac THEN all_ufc_tac [recursion_theorem]);
+a (POP_ASM_T ante_tac THEN rewrite_tac [unique_part_fixp_def, part_fun_equiv_def]
+	THEN REPEAT strip_tac);
+a (∂â1_tac ¨fÆ THEN asm_rewrite_tac [ext_thm]
+	THEN REPEAT strip_tac THEN asm_ufc_tac[]
+	THEN asm_rewrite_tac[]);
+val tf_recursion_thm = save_pop_thm "tf_recursion_thm";
+=TEX
+}%ignore
+
+\section{RELATIONS OVER A TYPE}\label{RELATIONSOVERATYPE}
+
+The material in the next two sections is placed in a new theory {\it U\_orders}.
+
+\ignore{
+=SML
+new_theory "U_orders";
+=TEX
+}%ignore
+
+All of our definitions are explicit about the ordered set $X$ on which the property of
+interest is required to hold. In many applications, $X$ will be the universe of a type
+and the definitions and the statements of some of the theorems simplify.
+The relevant definitions may be given concisely as follows:
+
+πHOLCONST
+‹	UIrrefl : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UAntisym : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UTrans : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UStrictPartialOrder : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UTrich : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UStrictLinearOrder : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UComplete : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	URefl : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UPartialOrder : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	ULinearOrder : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UWeakMinCond : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UMinCond : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UWellOrdering : ('a  ≠ 'a ≠ BOOL) ≠ BOOL;
+‹	UWellFounded : ('a  ≠ 'a ≠ BOOL) ≠ BOOL
+˜
+‹	UIrrefl = Curry Irrefl Universe 
+‹ ±	UAntisym = Curry Antisym Universe
+‹ ±	UTrans = Curry Trans Universe
+‹ ±	UStrictPartialOrder = Curry StrictPartialOrder Universe
+‹ ±	UTrich = Curry Trich Universe
+‹ ±	UStrictLinearOrder = Curry StrictLinearOrder Universe
+‹ ±	UComplete = Curry Complete Universe
+‹ ±	URefl = Curry Refl Universe
+‹ ±	UPartialOrder = Curry PartialOrder Universe
+‹ ±	ULinearOrder = Curry LinearOrder Universe
+‹ ±	UWeakMinCond = Curry WeakMinCond Universe
+‹ ±	UMinCond = Curry MinCond Universe
+‹ ±	UWellOrdering = Curry WellOrdering Universe
+‹ ±	UWellFounded = Curry WellFounded Universe
+∞
+
+Now we automatically derive the defining properties of all of these constants
+in terms of primitive notions or other constants in the set.
+
+\ignore{
+=SML
+val ext_thm_x = prove_rule[ext_thm]¨µ f g∑ f = g § (µ $<<∑ f $<< = g $<<) Æ;
+val u_thm1 = (rewrite_rule[ext_thm_x] o get_spec)¨UIrreflÆ;
+val u_thm2 =  (rewrite_rule[] o once_rewrite_rule def_thms) u_thm1;
+val u_thm3 = conv_rule (ONCE_MAP_C eq_sym_conv) u_thm1;
+val u_thm4 = rewrite_rule [u_thm3] u_thm2;
+
+val [
+€u_irrefl_def_thm›,
+€u_antisym_def_thm›,
+€u_trans_def_thm›,
+€u_strict_partial_order_def_thm›,
+€u_trich_def_thm›,
+€u_strict_linear_order_def_thm›,
+€u_complete_def_thm›,
+€u_refl_def_thm›,
+€u_partial_order_def_thm›,
+€u_linear_order_def_thm›,
+€u_weak_min_cond_def_thm›,
+€u_min_cond_def_thm›,
+€u_well_ordering_def_thm›,
+€u_well_founded_def_thm›] = strip_±_rule u_thm4;
+val _ = map save_thm [
+	("u_irrefl_def_thm", u_irrefl_def_thm),
+	("u_antisym_def_thm", u_antisym_def_thm),
+	("u_trans_def_thm", u_trans_def_thm),
+	("u_strict_partial_order_def_thm", u_strict_partial_order_def_thm),
+	("u_trich_def_thm", u_trich_def_thm),
+	("u_strict_linear_order_def_thm", u_strict_linear_order_def_thm),
+	("u_complete_def_thm", u_complete_def_thm),
+	("u_refl_def_thm", u_refl_def_thm),
+	("u_partial_order_def_thm", u_partial_order_def_thm),
+	("u_linear_order_def_thm", u_linear_order_def_thm),
+	("u_weak_min_cond_def_thm", u_weak_min_cond_def_thm),
+	("u_min_cond_def_thm", u_min_cond_def_thm),
+	("u_well_ordering_def_thm", u_well_ordering_def_thm),
+	("u_well_founded_def_thm", u_well_founded_def_thm)];
+=TEX
+
+The following code translates the relevant instances of the main theorems:
+
+=SML
+val €u_zorn_thm2› = save_thm
+	("u_zorn_thm2",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		zorn_thm2));
+val €u_well_ordering_thm› = save_thm
+	("u_well_ordering_thm",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		well_ordering_thm));
+val €u_min_cond_descending_sequence_thm› = save_thm
+	("u_min_cond_descending_sequence_thm",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		min_cond_descending_sequence_thm));
+val €u_well_founded_descending_sequence_thm› = save_thm
+	("u_well_founded_descending_sequence_thm",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		well_founded_descending_sequence_thm));
+val €u_well_founded_induction_thm› = save_thm
+	("u_well_founded_induction_thm",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		well_founded_induction_thm));
+val €u_refl_well_ordering_lower_bounds_thm› = save_thm
+	("u_refl_well_ordering_lower_bounds_thm",
+	rewrite_rule[u_thm3](µ_elim¨Universe:'a SETÆ
+		refl_well_ordering_lower_bounds_thm));
+=TEX
+}%ignore
+
+\section{INDEPENDENCE}\label{Independence}
+
+We want to show that for any pair of the primitive notions, $P$ and $Q$,
+there are relations for which both hold, $P$ holds but not $Q$ and $Q$ holds but not $P$.
+Somewhat more subtly, we want to do this without assuming that the primitive notions
+are distinct. (I.e., it is not good enough to assume that reflexivity and transitivity are
+distinct notions, for example, when exhibiting a relation that has one property but
+not the other).
+
+The examples will all use relations on the natural numbers. The weak minimum condition
+turns out to be the hardest property to prove in the examples; the following lemma serves
+in all but one case (viz. weak minimum condition and not antisymmetry, for which, happily,
+the relation that relates any two natural numbers does the job).
+
+\ignore{
+=SML
+val weak_min_cond_º_lemma = (
+set_goal ([], ¨µX; $<< ∑
+	(µi j:Ó∑  i << j ¥ i º j) ¥ WeakMinCond(X, $<<)
+Æ);
+a(rewrite_tac[weak_min_cond_def] THEN PC_T1 "sets_ext1" REPEAT strip_tac);
+a(POP_ASM_T ante_tac THEN cov_induction_tac¨xÆ);
+a(REPEAT strip_tac THEN cases_tac ¨µn∑n ç A ¥ x º nÆ);
+(* *** Goal "1" *** *)
+a(∂_tac ¨xÆ THEN REPEAT strip_tac);
+a(all_asm_ufc_tac[] THEN PC_T1 "lin_arith" asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a(lemma_tac¨n < xÆ THEN1 PC_T1 "lin_arith" asm_prove_tac[]);
+a(all_asm_ufc_tac[]);
+a(∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+save_pop_thm "weak_min_cond_º_lemma"
+);
+=TEX
+}%ignore
+
+For the cases where we need to show that the primitive properties are compatible,
+our example are be (with one exception), the usual order structure on the natural 
+numbers in its reflexive or irreflexive guise. The exception turns out to be when
+we have to exhibit a relation which is both reflexive and irreflexive.
+
+\ignore{
+=SML
+val º_less_lemma = (
+set_goal ([], ¨
+	Refl(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	Irrefl(Universe, ($<: Ó≠(Ó≠BOOL)))
+±	≥Irrefl(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	≥Refl(Universe, ($<: Ó≠(Ó≠BOOL)))
+±	Antisym(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	Antisym(Universe, ($<: Ó≠(Ó≠BOOL)))
+±	Trans(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	Trans(Universe, ($<: Ó≠(Ó≠BOOL)))
+±	Trich(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	Trich(Universe, ($<: Ó≠(Ó≠BOOL)))
+±	WeakMinCond(Universe, ($º: Ó≠(Ó≠BOOL)))
+±	WeakMinCond(Universe, ($<: Ó≠(Ó≠BOOL)))
+Æ);
+a(rewrite_tac [refl_def, irrefl_def, antisym_def, trans_def, trich_def]
+	THEN PC_T1 "sets_ext1" REPEAT strip_tac
+	THEN_TRY PC_T1 "lin_arith" asm_prove_tac[]
+	THEN bc_thm_tac weak_min_cond_º_lemma
+	THEN_TRY rewrite_tac[] THEN PC_T1 "lin_arith" asm_prove_tac[]);
+save_pop_thm "º_less_lemma"
+);
+=TEX
+
+Now we embark on a short series of portmanteau lemmas that will fit together
+to give the desired results. The first lemma is the one where we actually
+have to provide 20 specific witnesses to show that none of reflexivity,
+antisymmetry, transitivity, trichotomy or the weak minimum condition entails
+another. We formulate this as follows using numeric tags to avoid accidentally
+assuming that the primitive notions are pairwise distinct.
+
+=SML
+val _ = set_merge_pcs["'sets_alg", "basic_hol", "'savedthm_cs_∂_proof"];
+val €independence_lemma1› = (
+set_goal ([], ¨
+µm n∑ m ç {0; 1; 2; 3; 4} ± n ç {0; 1; 2; 3; 4} ± ≥m = n ¥
+let	props m =
+	if	m = 0
+	then	Refl
+	else if	m = 1
+	then	Antisym
+	else if	m = 2
+	then	Trans
+	else if	m = 3
+	then	Trich
+	else	WeakMinCond
+in	∂X : Ó SET; $<< ∑ props m (X, $<<) ± ≥props n (X, $<<)
+Æ);
+a(rewrite_tac[let_def]);
+a(PC_T1 "sets_ext1" REPEAT strip_tac THEN_TRY all_var_elim_asm_tac
+	THEN conv_tac (MAP_C Ó_eq_conv) THEN rewrite_tac[]
+	THEN DROP_ASMS_T discard_tac);
+(* *** Goal "1" *** *) (* Refl / Antisym *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j∑TÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN REPEAT strip_tac);
+(* *** Goal "2" *** *) (* Refl / Trans *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j∑i = j ≤ j = i + 1Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN strip_tac THEN ∂_tac¨2Æ
+	THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "3" *** *) (* Refl / Trich *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j∑i = jÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "4" *** *) (* Refl / WeakMinCond *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨$æ:Ó≠(Ó≠BOOL)Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨UniverseÆ THEN PC_T1 "sets_ext1" rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨x+1Æ THEN REPEAT strip_tac);
+(* *** Goal "5" *** *) (* Antisym / Refl *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑i < jÆ );
+a(rewrite_tac def_thms THEN PC_T1 "lin_arith" asm_prove_tac[]);
+(* *** Goal "6" *** *) (* Antisym / Trans *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑j = i + 1Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN1
+	asm_rewrite_tac[plus_assoc_thm]);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN strip_tac THEN ∂_tac¨2Æ
+	THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "7" *** *) (* Antisym / Trich *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑j = i + 1Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN1
+	asm_rewrite_tac[plus_assoc_thm]);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨2Æ  THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "8" *** *) (* Antisym / WeakMinCond *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨$>:(Ó≠(Ó≠BOOL))Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN1
+	PC_T1 "lin_arith" asm_prove_tac[]);
+a(∂_tac¨UniverseÆ THEN PC_T1 "sets_ext1" rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨x+1Æ THEN REPEAT strip_tac);
+(* *** Goal "9" *** *) (* Trans / Refl *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑FÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+(* *** Goal "10" *** *) (* Trans / Antisym *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑TÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN REPEAT strip_tac);
+(* *** Goal "11" *** *) (* Trans / Trich *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑FÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN REPEAT strip_tac);
+(* *** Goal "12" *** *) (* Trans / WeakMinCond *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑i >  jÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN_TRY
+	 PC_T1 "lin_arith" asm_prove_tac[]);
+a(∂_tac¨UniverseÆ THEN PC_T1 "sets_ext1" rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨x+1Æ THEN REPEAT strip_tac);
+(* *** Goal "13" *** *) (* Trich / Refl *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑i < jÆ );
+a(rewrite_tac def_thms THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "14" *** *) (* Trich / Antisym *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑TÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN REPEAT strip_tac);
+(* *** Goal "15" *** *) (* Trich / Trans *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j∑≥j = 0 ≤ ≥i = 0 ± j = 0 Æ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN1
+	PC_T1 "lin_arith" asm_prove_tac[]);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN strip_tac THEN ∂_tac¨0Æ
+	THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "16" *** *) (* Trich / WeakMinCond *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑i >  jÆ );
+a(rewrite_tac def_thms THEN REPEAT strip_tac THEN_TRY
+	 PC_T1 "lin_arith" asm_prove_tac[]);
+a(∂_tac¨UniverseÆ THEN PC_T1 "sets_ext1" rewrite_tac[] THEN REPEAT strip_tac);
+a(∂_tac¨x+1Æ THEN REPEAT strip_tac);
+(* *** Goal "17" *** *) (* WeakMinCond / Refl *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑i <  jÆ );
+a(strip_tac THEN1
+	(bc_thm_tac weak_min_cond_º_lemma
+	THEN rewrite_tac[] THEN PC_T1 "lin_arith" prove_tac[]));
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+(* *** Goal "18" *** *) (* WeakMinCond / Antisym *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑ TÆ );
+a(rewrite_tac def_thms THEN PC_T1 "sets_ext1" prove_tac[]);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "19" *** *) (* WeakMinCond / Trans *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑j = i + 1Æ );
+a(strip_tac THEN1
+	(bc_thm_tac weak_min_cond_º_lemma
+	THEN rewrite_tac[] THEN PC_T1 "lin_arith" prove_tac[]));
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨1Æ THEN strip_tac THEN ∂_tac¨2Æ
+	THEN PC_T1 "lin_arith" prove_tac[]);
+(* *** Goal "20" *** *)
+a(∂_tac¨UniverseÆ THEN ∂_tac¨Ãi j:Ó∑j = i + 1Æ );
+a(strip_tac THEN1
+	(bc_thm_tac weak_min_cond_º_lemma
+	THEN rewrite_tac[] THEN PC_T1 "lin_arith" prove_tac[]));
+a(rewrite_tac def_thms THEN REPEAT strip_tac);
+a(∂_tac¨0Æ THEN strip_tac THEN ∂_tac¨2Æ THEN PC_T1 "lin_arith" prove_tac[]);
+save_pop_thm"independence_lemma1"
+);
+=TEX
+
+We deal with irreflexive (resp. non-irreflexive) relations by reducing the required examples to a
+reflexive (resp. non-reflexive) case. This occupies the next two lemmas, the proofs of which
+show that this may be done by one construction in each case.
+In the next lemma, we derive an irreflexive relation from a reflexive one by removing
+the diagonal:
+
+=SML
+val €independence_lemma2› = (
+set_goal ([], ¨
+µm∑ m ç {1; 2; 3; 4} ¥
+let	props m =
+	if	m = 1
+	then	Antisym
+	else if	m = 2
+	then	Trans
+	else if	m = 3
+	then	Trich
+	else	WeakMinCond
+in	(∂X : Ó SET; $<< ∑  Refl (X, $<<) ± ≥props m (X, $<<))
+¥	(∂X : Ó SET; $<< ∑ Irrefl (X, $<<) ± ≥props m (X, $<<))
+Æ);
+a(rewrite_tac[let_def]);
+a(PC_T "sets_ext1"  (µ_tac THEN ¥_tac) THEN_TRY all_var_elim_asm_tac
+	THEN conv_tac (MAP_C Ó_eq_conv) THEN rewrite_tac[]
+	THEN DROP_ASMS_T discard_tac
+	THEN rewrite_tac def_thms THEN REPEAT strip_tac
+	THEN ∂_tac¨XÆ THEN ∂_tac¨Ãi j:Ó∑≥i = j ± i << jÆ
+	THEN rewrite_tac[] THEN contr_tac 
+	THEN_TRY SOLVED_T
+		(rename_tac[] THEN all_asm_ufc_tac[] THEN_TRY all_var_elim_asm_tac));
+(* *** Goal "1" *** *) (* Trans *)
+a(cases_tac¨x = yÆ THEN1 all_var_elim_asm_tac);
+a(cases_tac¨y = zÆ THEN1 all_var_elim_asm_tac);
+a(rename_tac[] THEN all_asm_ufc_tac[] THEN_TRY all_var_elim_asm_tac);
+(* *** Goal "2" *** *) (* WeakMinCond *)
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+a(spec_nth_asm_tac 4 ¨xÆ THEN all_asm_ufc_tac[]);
+save_pop_thm"independence_lemma2"
+);
+=TEX
+
+And in the proof of the next lemma, we make a non-irreflexive relation by adding
+in the diagonal (a.k.a., forming the reflexive closure). The hypothesis of non-reflexivity
+is not necessary, but makes the result easier to user later on.
+
+=SML
+val €independence_lemma3› = (
+set_goal ([], ¨
+µm∑ m ç {1; 2; 3; 4} ¥
+let	props m =
+	if	m = 1
+	then	Antisym
+	else if	m = 2
+	then	Trans
+	else if	m = 3
+	then	Trich
+	else	WeakMinCond
+in	(∂X : Ó SET; $<< ∑  props m (X, $<<) ± ≥Refl(X, $<<))
+¥	(∂X : Ó SET; $<< ∑ props m (X, $<<) ± ≥Irrefl(X, $<<))
+Æ);
+a(rewrite_tac[let_def]);
+a(PC_T "sets_ext1"  (µ_tac THEN ¥_tac) THEN_TRY all_var_elim_asm_tac
+	THEN conv_tac (MAP_C Ó_eq_conv) THEN rewrite_tac[]
+	THEN DROP_ASMS_T discard_tac
+	THEN rewrite_tac def_thms THEN REPEAT strip_tac
+	THEN ∂_tac¨XÆ THEN ∂_tac¨Ãi j∑i = j ≤ i << jÆ
+	THEN rewrite_tac[] THEN contr_tac
+	THEN_TRY SOLVED_T
+		(rename_tac[] THEN TRY (all_asm_ufc_tac[]) THEN_TRY all_var_elim_asm_tac));
+(* *** Goal "" *** *) (* WeakMinCond *)
+a(rename_tac[] THEN all_asm_ufc_tac[]);
+a(spec_nth_asm_tac 3 ¨x'Æ THEN  all_asm_ufc_tac[]);
+save_pop_thm"independence_lemma3"
+);
+=TEX
+
+We now do some {\it ad hoc} forward proof that sucks the various cases out of the lemmas.
+Step through this interactively to see what is going on here (roughly, specialise the
+$m$ and $n$ in the lemmas to each numeric value for which the lemma says something
+useful and then simplify the results to give the existential assertion saying that
+an ordered set  of a particular kind exists).
+
+=SML
+val l1 = pc_rule1  "sets_ext1" rewrite_rule[let_def] independence_lemma1;
+val l2 = pc_rule1  "sets_ext1" rewrite_rule[let_def] independence_lemma2;
+val l3 = pc_rule1  "sets_ext1" rewrite_rule[let_def] independence_lemma3;
+
+fun spec_lit th = rewrite_rule[] o conv_rule (MAP_C Ó_eq_conv) o switch µ_elim  th;
+
+val ns0_4 = dest_enum_set ¨{0; 1; 2; 3; 4}Æ;
+val ns1_4 = dest_enum_set ¨{1; 2; 3; 4}Æ;
+
+val ths1 = flat (map (fn t => map (spec_lit t) ns0_4) (map (spec_lit  l1) ns0_4));
+val ths2 = map (spec_lit l2) ns1_4;
+val ths3 = map (spec_lit l3) ns1_4;
+=TEX
+
+Now the independence theorem can be stated and proved.
+The above lemmas give 44 of the 45 cases.
+The only case we have not dealt with is the compatibility of reflexivity and
+irreflexivity (for which the witness is the empty ordered set).
+=SML
+val €independence_thm› = (
+set_goal ([], ¨
+µm n∑ m ç {0; 1; 2; 3; 4; 5} ± n ç {0; 1; 2; 3; 4; 5} ¥
+let	props m =
+	if	m = 0
+	then	Refl
+	else if	m = 1
+	then	Antisym
+	else if	m = 2
+	then	Trans
+	else if	m = 3
+	then	Trich
+	else if	m = 4
+	then	WeakMinCond
+	else	Irrefl
+in	(≥m = n  ¥ ∂X : Ó SET; $<<∑ props m (X, $<<) ± ≥props n (X, $<<))
+±	(m < n ¥ ∂X : Ó SET; $<< ∑ props m (X, $<<) ± props n (X, $<<))
+Æ);
+a(rewrite_tac[let_def]);
+a(PC_T1 "sets_ext1" REPEAT strip_tac THEN_TRY all_var_elim_asm_tac
+	THEN conv_tac (MAP_C Ó_eq_conv) THEN rewrite_tac[]
+	THEN bc_tac (ths2 @ ths3)
+	THEN_TRY MAP_EVERY (TRY o accept_tac) ths1
+	THEN_TRY (
+	SOLVED_T (∂_tac¨UniverseÆ THEN
+		∂_tac¨$º:(Ó≠(Ó≠BOOL))Æ THEN rewrite_tac[º_less_lemma])
+ORELSE
+	SOLVED_T (∂_tac¨UniverseÆ THEN
+		∂_tac¨$<:(Ó≠(Ó≠BOOL))Æ THEN rewrite_tac[º_less_lemma]))
+	THEN ∂_tac¨{}Æ THEN rewrite_tac def_thms);
+save_pop_thm"independence_thm"
+);
+=TEX
+
+Finally, we do some forward proof to suck out a theorem that explicitly states
+the 45 cases --- consult the theory listing or run through this interactively to
+see the result. 
+
+=SML
+val i_th = pc_rule1  "sets_ext1" rewrite_rule[let_def] independence_thm;
+
+val ns0_5 = dest_enum_set ¨{0; 1; 2; 3; 4; 5}Æ;
+
+val i_ths = flat (map (fn t => map (spec_lit t) ns0_5) (map (spec_lit  i_th) ns0_5));
+
+val i_clauses = (pc_rule1"lin_arith" rewrite_rule[]) (list_±_intro ( i_ths));
+
+val €independence_clauses› = save_thm
+	("independence_clauses",  conv_rule cnf_conv i_clauses);
+=TEX
+}%ignore
+
+\newpage
+\appendix
+{%\HOLindexOff
+\small
+\include{ordered_sets.th}
+}
+
+\newpage
+{%\HOLindexOff
+\small
+\include{U_orders.th}
+}
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+=TEX
+
+\end{document}
+=SML
+val use_alias_flag_value = set_flag ("pp_use_alias", true);
+val was_line_len = set_int_control("thl_line_width", 14);
+output_theory{out_file="ordered_sets.th.doc", theory="ordered_sets"};
+output_theory{out_file="U_orders.th.doc", theory="U_orders"};
+val _ = set_int_control("thl_line_width", was_line_len);
+val _ = set_flag ("pp_use_alias", use_alias_flag_value);
+=TEX
+
+

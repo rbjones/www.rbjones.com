@@ -1,6 +1,7 @@
 =IGN
+$Id: t003.doc,v 1.2 2004/10/03 19:42:39 rbj Exp $
 open_theory "diffgeom";
-set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "xl_cs_∂_conv"];
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_conv"];
 set_flag ("pp_use_alias", false);
 =TEX
 \documentclass[11pt,a4paper]{article}
@@ -43,15 +44,16 @@ The theory of real vector spaces, norms and derivatives of functions between nor
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{rbj}
+\bibliography{rbj,fmu}
 } %\raggedright
 
 \section{INTRODUCTION}
 Create new theory ``diffgeom'', parents being ``group\_egs'' from \cite{LEMMA1/HOL/WRK068} and ``analysis'' from \cite{LEMMA1/HOL/WRK066}.
 =SML
 open_theory "rbjmisc";
+open PreConsisProof; open UnifyForwardChain; open Trawling;
 force_new_theory "diffgeom";
-set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "xl_cs_∂_conv"];
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 set_flag ("pp_use_alias", false);
 =TEX
 
@@ -148,15 +150,15 @@ set_goal([], ¨
 	in let n (v: Ø ∏ Ø) = Sqrt(v .âi v)
 	in µu v: Ø ∏ Ø∑ Abs(u .âi v) º (n u) *âR (n v)Æ);
 a (rewrite_tac[let_def] THEN REPEAT strip_tac);
-a (rewrite_tac [top_eq_sym_rule Ø_sqrt_prod_thm]);
+a (rewrite_tac [map_eq_sym_rule Ø_sqrt_prod_thm]);
 a (bc_tac [Ø_square_º_º_thm]
 	THEN TRY (rewrite_tac [
 		Ø_Abs_Norm_clauses,
 		Ø_prod_sign_iff_clauses,
 		get_spec ¨SqrtÆ]));
-a (rewrite_tac [	top_eq_sym_rule Ø_abs_prod_thm,
+a (rewrite_tac [	map_eq_sym_rule Ø_abs_prod_thm,
 		rewrite_rule [Ø_Ó_exp_square_thm]Ø_abs_square_thm2,
-		top_eq_sym_rule Ø_sqrt_prod_thm,
+		map_eq_sym_rule Ø_sqrt_prod_thm,
 		Ø_sqrt_square_thm1]);
 a (LEMMA_T ¨AbsâR
                ((Fst u *âR Fst u +âR Snd u *âR Snd u)
@@ -236,7 +238,7 @@ a (bc_tac [Ø_square_eq_thm2]
 (* *** Goal "1.1" *** *)
 a (bc_tac [Ø_sum_pos_thm] THEN rewrite_tac [get_spec ¨SqrtÆ]);
 (* *** Goal "1.2" *** *)
-a (rewrite_tac [top_eq_sym_rule Ø_sqrt_prod_thm, Ø_sqrt_square_thm1]);
+a (rewrite_tac [map_eq_sym_rule Ø_sqrt_prod_thm, Ø_sqrt_square_thm1]);
 a (rewrite_tac [Ø_sqrt_prod_thm, Ø_times_plus_distrib_thm]);
 a (lemma_tac ¨ÓØ 0 ºâR u .âi u ± ÓØ 0 ºâR v .âi v
 	± ÓØ 0 ºâR Sqrt (u .âi u) ± ÓØ 0 ºâR Sqrt (v .âi v)Æ
@@ -366,14 +368,12 @@ set_goal([], ¨µ R: 'a RVS
      ∑ (µ v w:'a∑ (v + w) R = (v . w) (Grp R))
          ± (µ v∑ ~ v R:'a = ($õ~: 'a ≠ 'a GROUP ≠ 'a) v (Grp R))
          ± (µ v:'a; w:'a∑ (v - w) R:'a =
-		($.:'a≠('a≠((('a)SET∏(('a≠('a≠'a))∏('a∏('a≠'a))))≠'a)))
+		($.:'a≠ 'a ≠ 'a GROUP ≠ 'a)
 		v
 		(($õ~: 'a ≠ 'a GROUP ≠ 'a) w (Grp R)) (Grp R))
          ± 0âV R = Unit (Grp R)
          ± (µ x v∑ (x *âs v) R = (Scale R) x v)Æ);
-a (pure_once_rewrite_tac [
-	prove_rule [] ¨µ p∑ p = (Fst p, Snd p)Æ]
-	THEN (rewrite_tac [vs_ops_def]));
+a(rewrite_tac [vs_ops_def]);
 val vs_ops_def1 = save_pop_thm "vs_ops_def1";
 =TEX
 }\ignore
@@ -516,7 +516,7 @@ val Ø_Lin_thm2 = save_pop_thm "Ø_Lin_thm2";
 πHOLCONST
 ‹ €FunâG› : ('a ≠ Ø) GROUP
 ˜¸¸¸¸¸¸
-‹ FunâG = (Universe, (Ãf g a∑f a + g a), (Ãa∑ÓØ 0), (Ãf a∑~(f a))) 
+‹ FunâG = MkGROUP Universe (Ãf g a∑f a + g a) (Ãa∑ÓØ 0) (Ãf a∑~(f a))
 ∞
 
 \ignore{
@@ -972,7 +972,7 @@ a (≈_tac ¨≈ b∑ (Ã r'∑ ScaleâN r' b N) ç FrechetDeriv (ØâNVS, N) f rÆ);
 a (∂_tac ¨x (ÓØ 1)Æ);
 a (POP_ASM_T (asm_tac o eq_sym_rule));
 a (asm_rewrite_tac[]);
-xl_set_cs_∂_thm (pop_thm());
+save_cs_∂_thm (pop_thm());
 =TEX
 }%\ignore
 

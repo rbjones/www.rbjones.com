@@ -1,0 +1,1964 @@
+=IGN
+$Id: t010.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Miscellaneous Tactics}
+\author{Roger Bishop Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+Several structures providing tactics, tacticals, etc. for theories, forward chaining, backward chaining, theory trawling et.al.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\section{Introduction}
+
+For context and motivation see \cite{rbjt000}.
+
+Several structures are provided, each section below provides a signature and a structure matching the signature (though the code is not listed).
+
+=SML
+infix 4 AND_OR_T;
+infix 4 AND_OR;
+open_theory "basic_hol";
+set_pc "basic_hol";
+=TEX
+
+\section{Sundry Tacticals etc.}
+
+=DOC
+signature ÛRbjTactics1Ý = sig
+=DESCRIBE
+A canon is provided for use with backchaining, and an elaboration of the backchaining facilities which is intended to solve certain kinds of goal by repeated backchaining.
+=ENDDOC
+
+=DOC
+val Ûrule_canonÝ: (THM -> THM) -> CANON;
+=DESCRIBE
+Converts a rule into a CANON which yeilds a singleton list containing the result of applying the rule to the argument of the CANON.
+=ENDDOC
+
+=DOC
+val Û´_T_canonÝ: CANON;
+=DESCRIBE
+If in $asms ô conc$, $conc$ is a universally quantified implication, then $´\_T\_canon (asms ô conc)$ is $[asms ô conc]$, otherwise it is $[asms ô conc ´ T]$.
+=ENDDOC
+
+=DOC
+val Ûall_´_intro_canonÝ: CANON;
+=DESCRIBE
+This is $rule\_canon all\_´\_intro$.
+=SEEALSO
+$rule\_canon$, $all\_´\_intro$
+=ENDDOC
+
+=DOC
+val Ûabc_canonÝ: CANON;
+=DESCRIBE
+A CANON for stripping theorems for backward chaining (used by $abc\_tac$ q.v.).
+It removes universal quantifiers, splits conjunctions into two, undisharges implications repeatedly until these can no longer be done, then it discarges all the assumptions and closes the result.
+=ENDDOC
+
+=DOC
+val Ûabc_tacÝ: THM list -> TACTIC;
+val Ûasm_abc_tacÝ: THM list -> TACTIC;
+=DESCRIBE
+A backchaining tactic which preprocesses theorems using $abc\_canon$ and then repeatedly backchains, terminating only if the conclusion can be reduced to $T$ and discharged.
+The $asm\_$ version uses the assumptions as rules or for reducing the conclusion to $T$.
+=ENDDOC
+
+=DOC
+val Ûmap_eq_sym_ruleÝ : THM -> THM;
+val Ûlist_map_eq_sym_ruleÝ : THM list -> THM list;
+val ÛSYM_ASMS_TÝ : (THM list -> TACTIC) -> TACTIC;
+=DESCRIBE
+These are for turning round equations in order to use them for rewriting, when the equation is not at the top level.
+
+$map\_eq\_sym\_rule$ turns round the equations in the conclusion of the theorem, wherever they occur.
+
+$list\_map\_eq\_sym\_rule$ does the same thing to every one of a list of theorems.
+
+$SYM\_ASMS\_T$ $thmltac$ applies $list\_map\_eq\_sym\_rule$ to the list of assumptions and then passes the result to $thmltac$.
+
+=SEEALSO
+$eq\_sym\_conv$, $eq\_sym\_rule$
+=ENDDOC
+
+=DOC
+val Ûsplit_pair_convÝ : TERM -> THM;
+val Ûsplit_pair_rewrite_tacÝ : TERM list -> THM list -> TACTIC;
+val Ûmap_uncurry_convÝ : CONV;
+val Ûmap_uncurry_ruleÝ : THM -> THM;
+=DESCRIBE
+These facilities are to permit rewriting with the definition of or theorems about functions which take pairs as arguments, and are defined using paired abstraction or pattern matching on pairs.
+
+$split\_pair\_conv$ $¬tm®$ yields the theorem $ô tm = (Fst tm, Snd tm)$.
+
+$split\_pair\_rewrite\_tac$, when supplied with a list of terms which have the type of ordered pairs, will expand each occurence of a term in the list to an explicit ordered pair using  $split\_pair\_conv$,
+and will then apply $pure\_rewrite\_tac$ to the theorems.
+
+$map\_uncurry\_conv$ takes a term and eliminates all occurences of $Uncurry$ in it by rewriting with the definition and beta reducing the result, and then eliminates all resulting terms of the form $(Fst tm, Snd tm)$ in favour of $tm$.
+
+$map\_uncurry\_rule$ applies $map\_uncurry\_conv$ to the conclusion of a theorem.
+The effect is to make a definition or theorem using pair patterns work for rewriting in cases where the argument is not supplied as an explicit pair, {\it provided that a paired abstraction was used in a universal quantification enclosing the equation}.
+So if you want to formulate definitions and generalise them with this rule, use paired abstractions in the quantifiers.
+
+=GFT Example
+(concl o map_uncurry_rule) (asm_rule ¬µx y (v, w)· A (x,y) (v,w) = x=v ± y=w®);
+val it = ¬µ x y p· A (x, y) p = x = Fst p ± y = Snd p® : TERM
+=TEX
+=ENDDOC
+
+=DOC
+val ÛtryÝ : ('a -> 'a) -> ('a -> 'a);
+=DESCRIBE
+Intended for application to rules, but more generally applicable, $try f a$ is $f a$ unless an exception is raised during its evaluation, in which case it is $a$.
+=GFT Definition
+fun ÛtryÝ f a = f a handle _ => a;
+=TEX
+=ENDDOC
+
+=DOC
+val Û¯_top_anf_tacÝ : TACTIC;
+=DESCRIBE
+Convert real arithmetic subexpressions of the conclusion of the current goal to normal form.
+=GFT Example
+set_goal([], ¬µx y z:¯· z = if x = y then (z +‰R y) *‰R x else x *‰R (z -‰R y)®);
+a ¯_top_anf_tac;
+(* *** Goal "" *** *)
+
+(* ?ô *)  ¬µ x y z· z = (if x = y then x *‰R y +‰R x *‰R z else ~‰R x *‰R y +‰R x *‰R z)®
+=TEX
+=GFT Definition
+val Û¯_top_anf_tacÝ = conv_tac (TOP_MAP_C ¯_anf_conv);
+=TEX
+=ENDDOC
+
+=SML
+end; (* of signature RbjTactics1 *)
+=TEX
+
+=SML
+structure ÛRbjTactics1Ý : RbjTactics1 = struct
+=TEX
+
+\ignore{
+=SML
+fun (Ûrule_canonÝ: (THM -> THM) -> CANON) rule thm = [rule thm];
+
+fun (Û´_T_canonÝ:CANON) thm =
+	if is_´ ((snd o strip_µ) (concl thm))
+	then [thm]
+	else [´_intro ¬T® thm];
+
+val Ûall_´_intro_canonÝ: CANON = rule_canon all_´_intro;
+
+val Ûabc_canonÝ =
+	REPEAT_CAN (
+		simple_µ_rewrite_canon
+		ORELSE_CAN (rule_canon undisch_rule)
+		ORELSE_CAN ±_rewrite_canon)
+	THEN_CAN all_´_intro_canon
+	THEN_CAN ´_T_canon;
+
+fun Ûabc_tacÝ thml =
+	let val thms = flat (map abc_canon thml)
+	in REPEAT (accept_tac t_thm ORELSE (bc_tac thms))
+	end;
+
+fun Ûasm_abc_tacÝ thml (asms, conc) =
+	abc_tac (thml @ (map asm_rule asms)) (asms, conc);
+=TEX
+Some functions which turn round equations before using them.
+=SML
+fun Ûmap_eq_sym_ruleÝ thm = conv_rule (ONCE_MAP_C eq_sym_conv) thm;
+fun Ûlist_map_eq_sym_ruleÝ thms = map (fn th => map_eq_sym_rule th handle _=> th) thms;
+fun ÛSYM_ASMS_TÝ tltt = GET_ASMS_T (tltt o list_map_eq_sym_rule);
+=TEX
+For rewriting with definitions which abstract over pairs:
+
+=SML
+fun Ûsplit_pair_convÝ t = prove_rule [] ¬‘t® = (Fst ‘t®, Snd ‘t®)®;
+fun Ûsplit_pair_rewrite_tacÝ tl thms =
+	pure_once_rewrite_tac (map split_pair_conv tl)
+	THEN TRY (pure_rewrite_tac thms);
+
+local	val uncurry_thm = tac_proof (
+		([], ¬µf· Uncurry f = Ìp· f (Fst p) (Snd p)®),
+		rewrite_tac [ext_thm, uncurry_def]);
+	val pair_lemma = nth 2 (strip_±_rule pair_ops_def);
+	val uc_conv = (simple_eq_match_conv1 uncurry_thm)
+		THEN_C (Ì_C ((RATOR_C Â_conv) THEN_C Â_conv));
+in
+	val Ûmap_uncurry_convÝ = MAP_C uc_conv THEN_C pure_rewrite_conv [pair_lemma]
+end;
+
+val Ûmap_uncurry_ruleÝ = conv_rule map_uncurry_conv;
+
+fun ÛtryÝ f a = f a handle _ => a;
+=TEX
+A tactic for normal form conversion of real expressions.
+=SML
+val Û¯_top_anf_tacÝ = conv_tac (TOP_MAP_C ¯_anf_conv);
+=TEX
+}%ignore
+
+=SML
+end; (* of structure RbjTactics1 *)
+=TEX
+
+\section{Stripping With Failure}
+
+=DOC
+signature ÛStripFailÝ = sig
+=DESCRIBE
+This signature provides facilities for stripping assumptions which fail if the current goal remains unchanged.
+This is so that tactics which generate new assumptions, e.g. $fc\_tac$ can be repeated until no new assumptions are generated.
+=ENDDOC
+
+=DOC
+val Ûcheck_asm_tac1Ý : THM -> TACTIC;
+=DESCRIBE
+$check\_asm\_tac1$ is a similar to $check\_asm\_tac$ but will fail rather than leave the goal unchanged.
+
+$check\_asm\_tac1\,thm$ checks the form of the theorem, $thm$,
+and then takes the first applicable action from the following table:
+
+{\centering
+\begin{tabular}{|l|p{4in}|}\hline
+$thm$ & action \\ \hline
+$‡ ô t$ & proves goal if its conclusion is $t$ \\ \hline
+$‡ ô T$ & as $fail\_tac$ \\ \hline
+$‡ ô F$ & proves goal\\ \hline
+$‡ ô ³t$ & proves goal if $t$ in assumptions, fails if $³t$ is in assumptions, else as $asm\_tac$\\ \hline
+$‡ ô t$ & proves goal if $³t$ in assumptions, fails if $t$ is in assumptions, else as $asm\_tac$\\ \hline
+\end{tabular}}
+
+During the search through the assumptions in the last two cases,
+$check\_asm\_tac1$ also checks to see whether any of the assumptions is
+equal to the conclusion of the goal, and if so proves the goal.
+It also checks to see if the conclusion of the theorem
+is already an assumption, in which case the tactic fails.
+When all the assumptions have been examined, if none of the
+above actions is applicable, the conclusion of the theorem is
+added to the assumption list.
+
+=USES
+Tactic programming.
+=SEEALSO
+$check\_asm\_tac$, $strip\_asm\_tac1$.
+=ENDDOC
+
+=DOC
+val Ûstrip_asm_tac1Ý : THM -> TACTIC;
+=DESCRIBE
+$strip\_asm\_tac1$ is a tactic for stripping down or otherwise transforming a theorem before adding it into the assumptions.
+
+The transformations it undertakes are determined primarily by the current proof context which contains a conversion for stripping assumptions, but there are in addition a small number of effects which cannot be achieved by a conversion and are built into this tactic.
+
+First the current stripping conversion will be applied repeatedly until it no longer applies.
+
+Then the following simplification techniques will be tried.
+Using $sat$ as an abbreviation for $strip\_asm\_tac$:
+=GFT
+sat (ô a ± b) 			­	sat (ô a) THEN sat (ô b)
+sat (¶x·a)			­	sat (a[x'/x] ô a[x'/x])
+sat (ô a ² b)({‡} t)		­	sat (a ô a) ({‡} t) ; sat (b ô b) ({‡} t)
+=TEX
+
+The effect is to break conjunctions into two separate theorems, to do a case split on disjunctions and to skolemise existentials.
+
+After all of the available transformation techniques have been exhausted $strip\_asm\_tac$ then passes the theorems to $check\_asm\_tac1$ (q.v.) to discharge the goal or to generate additional assumptions.
+=SEEALSO
+$STRIP\_THM\_THEN$, used to implement this function.
+$check\_asm\_tac1$, $strip\_tac$, $strip\-\_asm\-\_conv$.
+=ENDDOC
+
+=DOC
+val Ûstrip_asms_tac1Ý : THM list -> TACTIC;
+=DESCRIBE
+$strip\_asms\_tac1$ is a tactic for stripping down or otherwise transforming a list of theorems before adding them into the assumptions.
+
+The effect is similar to applying $strip\_asm\_tac1$ to each of the theorems, except that it will fail only if every application of $strip\_asm\_tac1$ fails, i.e. if the total effect is null.
+
+=SEEALSO
+$STRIP\_THM\_THEN1$, used to implement this function.
+$check\_asm\_tac1$, $strip\_tac$, $strip\-\_asm\-\_conv$.
+=ENDDOC
+
+=DOC
+val ÛAND_OR_TÝ : TACTIC * TACTIC -> TACTIC;
+val ÛAND_ORÝ : TACTIC * TACTIC -> TACTIC;
+=DESCRIBE
+$t1 THEN\_ORELSE\_T t2$ has the same effect as $((TRY t1) THEN t2) ORELSE t1$ but is faster.
+$THEN\_ORELSE$ is an alias for $THEN\_ORELSE\_T$.
+=SEEALSO
+$THEN$, $ORELSE$, $TRY$
+=ENDDOC
+
+=DOC
+val Û±_THEN_T1Ý : (THM -> TACTIC) -> (THM -> TACTIC);
+val Û±_THEN1Ý : (THM -> TACTIC) -> (THM -> TACTIC);
+=DESCRIBE
+Similar in effect to $±\_THEN$ but will fail only if both the conjuncts fail.
+
+A theorem tactical to apply a given theorem tactic to both conjuncts of 
+a theorem of the form $‡ ô t1 ± t2$.
+=GFT
+±_THEN1 thmtac (‡ ô t1 ± t2) = thmtac (‡ ô t1) AND_OR thmtac (‡ ô t2)
+=TEX
+=SEEALSO
+$±\_THEN$
+=ENDDOC
+
+=DOC
+val ÛSTRIP_THM_THEN1Ý : THM_TACTICAL;
+=DESCRIBE
+$STRIP\_THM\_THEN1$ provides a general purpose way of
+stripping or transforming theorems before
+using them in a tactic proof.
+$STRIP\_THM\_THEN1$ attempts to apply
+the conversion held for the function in the current proof context, which is
+extracted by $current\_ad\_st\_conv$.
+to rewrite the theorem.
+If that fails it attempts to apply a theorem tactical from the following list (in order):
+=GFT
+±_THEN1,			²_THEN,		SIMPLE_¶_THEN
+=TEX
+The conversion in the current proof context
+got by $current\_ad\_st\_conv$ (q.v.)
+is derived by applying $eqn\_cxt\_conv$ to an equational context in the proof context extracted by $get\_st\_eqn\_cxt$.
+
+The function is partially evaluated with only the
+theorem tactic and theorem arguments.
+=SEEALSO
+$STRIP\_THM\_THEN$
+=ENDDOC
+
+=DOC
+val ÛSOME_TÝ : TACTIC list -> TACTIC;
+=DESCRIBE
+$SOME\_T$ is similar to $EVERY\_T$ except that it fails only if all the tactics fail.
+
+$SOME\_T$ $tlist$ is a tactic that applies the head of $tlist$ to its subgoal, and
+recursively applies the tail of $tlist$ to each resulting subgoal.
+If any application of a tactic fails then the failure is ignored, but if no applications succeed then $SOME\_T$ will fail.
+
+$SOME$ is NOT an alias for $SOME\_T$ (its a already a constructor).
+$SOME$ $[]$ is equal to $fail\_tac$.
+=EXAMPLE
+=GFT
+SOME [µ_tac, ±_tac, µ_tac] 
+	is equivalent to
+µ_tac AND_OR ±_tac AND_OR µ_tac
+=TEX
+=SEEALSO
+$EVERY\_T$
+=ENDDOC
+
+=DOC
+val ÛMAP_SOME_TÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
+val ÛMAP_SOMEÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
+=DESCRIBE
+$MAP\_SOME\_T$ is the same as $MAP\_EVERY\_T$ except that it will fail only if no resulting application of a tactic succeeds.
+
+$MAP\_SOME\_T$ $mapf$ $alist$ maps $mapf$ over $alist$,
+and then applies the resulting list of tactics to the goal
+in sequence (in the same manner as $SOME$, q.v.).
+$MAP\_SOME$ is an alias for $MAP\_SOME\_T$.
+=SEEALSO
+$MAP\_EVERY$
+=ENDDOC
+
+=SML
+end; (* of signature StripFail *)
+=TEX
+
+=SML
+structure StripFail : StripFail = struct
+=TEX
+
+\ignore{
+=SML
+fun Ûcheck_asm_tac1Ý (thm : THM) : TACTIC = (fn gl as (seqasms, conc) =>
+	let	val t = concl thm;
+	in	if t ~=$ conc
+		then accept_tac thm
+		else if is_t t
+		then fail_tac
+		else if is_f t
+		then f_thm_tac thm
+		else if is_³ t
+		then	let	val t' = dest_³ t;
+				fun aux (asm :: more) = (
+					if t ~=$ asm
+					then fail_tac
+					else if asm ~=$ t'
+					then accept_tac (³_elim conc (asm_rule asm) thm)
+					else if asm ~=$ conc
+					then accept_tac (asm_rule asm)
+					else aux more
+				) | aux [] = asm_tac thm;
+			in	aux seqasms
+			end
+		else	let	fun aux (asm :: more) = (
+					if t ~=$ asm
+					then fail_tac
+					else if is_³ asm andalso (dest_³ asm) ~=$ t
+					then accept_tac (³_elim conc thm (asm_rule asm))
+					else if asm ~=$ conc
+					then accept_tac (asm_rule asm)
+					else aux more
+					) | aux [] = asm_tac thm;
+			in	aux seqasms
+			end
+	end	gl
+);
+=TEX
+
+=SML
+fun ((tac1 : TACTIC) ÛAND_OR_TÝ (tac2 : TACTIC)) : TACTIC = (fn gl =>
+	let	val (fok, (sgs1, pf)) = (true, tac1 gl) handle (Fail _) => (false, id_tac gl)
+	in	let val (sgs2pfs2) = (map tac2 sgs1);
+		in	(flat (map fst sgs2pfs2),
+			pf o map_shape (map (fn (sgs, pf) => (pf, length sgs))sgs2pfs2))
+		end handle (Fail _) =>
+			if fok then (sgs1, pf) else fail_tac gl
+	end
+);
+val op ÛAND_ORÝ = op AND_OR_T;
+=TEX
+=SML
+fun Û±_THEN_T1Ý (ttac : THM -> TACTIC) : THM -> TACTIC = (fn thm => 
+	let	val thm1 = ±_left_elim thm;
+		val thm2 = ±_right_elim thm;
+	in	ttac thm1 AND_OR ttac thm2
+	end
+	handle ex => divert ex "±_left_elim" "±_THEN1" 28032 
+		[fn () => string_of_thm thm]
+);
+val Û±_THEN1Ý = ±_THEN_T1;
+=TEX
+
+=SML
+val ÛSTRIP_THM_THEN1Ý : THM_TACTICAL = (fn ttac:THM_TACTIC => 
+	fn thm :THM =>
+	(FIRST_TTCL[CONV_THEN (current_ad_st_conv()),
+		±_THEN1, 
+		²_THEN, 
+		SIMPLE_¶_THEN]
+	ORELSE_TTCL
+		FAIL_WITH_THEN "STRIP_THM_THEN1" 28003 
+			[fn () => string_of_thm thm])
+	ttac
+	thm
+);
+=TEX
+=SML
+fun ÛSOME_TÝ (tacs : TACTIC list) :  TACTIC = (fn gl =>
+	(fold (op AND_OR) tacs fail_tac) gl
+);
+=TEX
+=SML
+fun ÛMAP_SOME_TÝ (tacf : 'a -> TACTIC) (things : 'a list) : TACTIC = (
+	SOME_T (map tacf things)
+);
+=TEX
+=SML
+val ÛMAP_SOMEÝ : ('a -> TACTIC) -> 'a list -> TACTIC = MAP_SOME_T;
+=TEX
+
+=SML
+val Ûstrip_asm_tac1Ý = REPEAT_TTCL STRIP_THM_THEN1 check_asm_tac1;
+val Ûstrip_asms_tac1Ý = MAP_SOME strip_asm_tac1;
+=TEX
+
+
+}%ignore
+
+=SML
+end; (* of structure StripFail *)
+=TEX
+
+\section{Theories and Consistency}
+
+=DOC
+signature ÛPreConsisProofÝ = sig
+=DESCRIBE
+This signature provide the wherewithal to conduct a consistency proof for a HOL constant specification before introducing the specification, so that the specification can be seen to be consistent and will appear in the theory listing as if no consistency proof had been necessary.
+
+The signature also provides some procedures to incorporate exception handling require when a document is required to create or to recreate a theory, and must therefore first delete things which are not necessarily present.
+=ENDDOC
+
+\subsection{Doing Consistency Proofs before Axiomatic Descriptions}
+
+=DOC
+val Ûsave_cs_¶_thmÝ : THM -> unit;
+=DESCRIBE
+This function may be used to provide to the system a theorem which establishes the consistency of a HOL constant specification about to be introduced.
+
+To avoid getting theory listings in which the definitions of some constants are given using $ConstSpec$ I like to do any necessary consistency proofs before introducing the constant specification which needs them.
+For this to do any good, the automatic consistency prover has to know that I done it.
+
+If used in conjunction with the partial proof context $'savedthm_cs_¶_conv$ the theorem will be used to establish the consistency of the specification avoid the need to place a consistency caveat on the stored form of the specification in the theory.
+=SEEALSO
+=ENDDOC
+
+=DOC
+(* Proof Context: Û'savedthm_cs_¶_proofÝ *)
+=DESCRIBE
+This partial proof context contains only the existence prover $savedthm\_cs\_¶\_conv$ which attempts to ``prove'' the consistency of a specification by referring to a standard location in which the consistency theorem may have previously been saved.
+=SEEALSO
+$savedthm\_cs\_¶\_conv$, $save\_cs\_¶\_thm$
+=ENDDOC
+
+\subsection{Force New Theory}
+
+=DOC
+val Ûforce_new_theoryÝ : string -> unit;
+=DESCRIBE
+This is just to save the exception handling which otherwise has to appear at the top of every document which creates a \Product theory.
+
+It deletes the old theory (if present, from your previous build, by using $force\_delete\_theory$) and all its children and starts the theory afresh.
+=SEEALSO
+$force\_delete\_theory$, $force\_new\_pc$
+=ENDDOC
+
+=DOC
+val Ûforce_new_pcÝ : string -> unit;
+=DESCRIBE
+This is just to save the exception handling which otherwise has to appear at the top of every document which creates a \Product proof context.
+
+It deletes the old proof context (if present, from your previous build, using $delete\_pc$) and starts the proof context afresh.
+=SEEALSO
+$force\_new\_theory$, $delete\_pc$
+=ENDDOC
+
+=SML
+end; (* of signature PreConsisProof *)
+=TEX
+
+=SML
+structure ÛPreConsisProofÝ : PreConsisProof = struct
+=TEX
+
+\ignore{
+=SML
+fun Ûforce_new_theoryÝ name =
+  let val _ = force_delete_theory name handle _ => ();
+  in new_theory name
+end;
+=TEX
+
+=SML
+fun Ûforce_new_pcÝ name =
+  let val _ = delete_pc name handle _ => ();
+  in new_pc name
+end;
+=TEX
+
+=IGN
+fun add_pc_thms pc thms =
+		(add_rw_thms thms pc;
+		add_sc_thms thms pc;
+ 		add_st_thms thms pc);
+=TEX
+}
+
+A new value of type $ref THM$ called $saved\_cs\_¶\_thm$ is used to store consistency results.
+
+\ignore{
+=SML
+val saved_cs_¶_thm = ref t_thm;
+=TEX
+
+=SML
+fun save_cs_¶_thm thm = (saved_cs_¶_thm := thm);
+=TEX
+
+I also have a special partial proof context with a consistency prover which knows to look for the consistency proof in this special place.
+This is the consistency prover:
+
+=SML
+fun savedthm_cs_¶_conv x =
+	if x =$ (concl(!saved_cs_¶_thm))
+	then (¤_t_intro (!saved_cs_¶_thm)) handle _ => (* eq_ *) refl_conv x
+	else (* eq_ *) refl_conv x;
+=TEX
+
+and here's the proof context containing it:
+
+=SML
+val _ = force_new_pc "'savedthm_cs_¶_proof";
+val _ = set_cs_¶_convs [savedthm_cs_¶_conv] "'savedthm_cs_¶_proof";
+val _ = set_pr_conv basic_prove_conv "'savedthm_cs_¶_proof";
+val _ = set_pr_tac basic_prove_tac "'savedthm_cs_¶_proof";
+val _ = commit_pc "'savedthm_cs_¶_proof";
+=TEX
+
+=SML
+end; (* of structure PreConsisProof *)
+=TEX
+}%ignore
+
+
+\section{Unifying Forward Chaining}
+
+\subsection{Specifications}
+
+=DOC
+signature ÛUnifyForwardChainÝ = sig
+=DESCRIBE
+This is the signature of facilities for forward chaining based on unification rather than matching.
+=ENDDOC
+
+=DOC
+val Ûsimple_´_unify_mp_rule1Ý : THM -> THM -> THM ;
+=DESCRIBE
+A unifying Modus Ponens rule for an implicative theorem.
+=FRULE 1 Rule
+´_unify_mp_rule1
+÷
+‡1 ô µ x1 ...· t1 ´ t2;
+‡2 ô µ y1 ...· t1'
+÷
+‡1 À ‡2 ô µ z1 ...· t2'
+=TEX
+where $t1'$ is unifiable with $t1$.
+Type instantiation and substitution is permitted for the $x‰i$ in $t1$, the and $y‰i$ in $t1'$ and instantiation of the type variables in $t1$ which do not occur in ‡1 and those in $t1'$ which do not occur in ‡2.
+$t2'$ is obtained from $t2$ by applying to it the substitution to $t1$ required for its unification.
+The $z‰i$ will be the variables free in t2' which were not previously free either in $t2$ or $t1'$.
+No type instantiation or substitution will occur in the assumptions of either theorem.
+
+Pairs are not supported in the bindings.
+=FAILURE
+7044	Cannot match ?0 and ?1
+7045	?0 is not of the form `‡ ô µ x1 ... xn · u ´ v`
+=ENDDOC
+
+=DOC
+val Û´_unify_mp_rule1Ý : THM -> THM -> THM ;
+=DESCRIBE
+A matching Modus Ponens rule for an implicative theorem, supporting paired abstraction.
+=FRULE 1 Rule
+´_unify_mp_rule1
+÷
+‡1 ô µ x1 ...· t1 ´ t2;
+‡2 ô µ y1 ...· t1'
+÷
+‡1 À ‡2 ô µ z1 ...· t2'
+=TEX
+where $t1'$ is unifiable with $t1$.
+Type instantiation and substitution is permitted for the $x‰i$ in $t1$, the and $y‰i$ in $t1'$ and instantiation of the type variables in $t1$ which do not occur in ‡1 and those in $t1'$ which do not occur in ‡2.
+$t2'$ is obtained from $t2$ by applying to it the substitution to $t1$ required for its unification.
+The $z‰i$ will be the variables free in t2' which were not previously free either in $t2$ or $t1'$.
+No type instantiation or substitution will occur in the assumptions of either theorem.
+
+Pairs are supported in the bindings.
+=FAILURE
+7044	Cannot match ?0 and ?1
+7045	?0 is not of the form `‡ ô µ x1 ... xn · u ´ v`
+=ENDDOC
+
+=DOC
+val Ûunify_forward_chain_ruleÝ : THM list -> THM list -> THM list;
+val Ûufc_ruleÝ : THM list -> THM list -> THM list;
+=DESCRIBE
+This is a rule which uses a list of possibly universally
+quantified implications and a list of
+other theorems to infer new theorems, using
+=INLINEFT
+´_unify_mp_rule1
+. (
+=INLINEFT
+ufc_rule
+=TEX
+\ is an alias for
+=INLINEFT
+unify_forward_chain_rule
+=TEX
+.)
+=INLINEFT
+ufc_rule imps ants
+=TEX
+\ returns the list of all theorems which may be derived by
+applying
+=INLINEFT
+´_unify_mp_rule1
+=TEX
+\ to a theorem from $imps$ and one from $ants$.
+As a special case, if any theorem to be returned is determined
+to have $¬F®$ as its conclusion, the first such found wil be returned as a singleton list.
+In order to work well in conjunction with
+=INLINEFT
+fc_canon
+=TEX
+\ and
+=INLINEFT
+ufc_tac
+=TEX
+\ the theorems returned by
+=INLINEFT
+´_unify_mp_rule1
+=TEX
+\ are transformed as follows:
+
+\begin{enumerate}
+\item
+Theorems of the form:
+=INLINEFT
+ô µ x‰1 ...· t‰1 ´ t‰2 ´ ... ´ ³t‰k ´ F
+=TEX
+\ have their final implication changed to
+=INLINEFT
+t‰k
+=TEX
+.
+\item
+Theorems of the form:
+=INLINEFT
+ô µ x‰1 ...· t‰1 ´ t‰2 ´ ... ´ t‰k ´ F
+=TEX
+\ have their final implication changed to
+=INLINEFT
+´\³t‰k
+=TEX
+.
+\item
+All theorems are universally quantified over all the variables which
+appear free in their conclusions but not in their assumptions
+(using
+=INLINEFT
+all_µ_intro
+=TEX
+).
+\end{enumerate}
+Note that the use of
+=INLINEFT
+´_unify_mp_rule1
+=TEX
+\ gives some control over the number of results generated, since
+variables which appear free in $imps$ are not considered as candidates
+for instantiation.
+
+The rule does not check that the theorems in its first argument
+are (possible universally) quantified implications.
+Theorems which are not of this form will be ignored.
+=SEEALSO
+$unify\_forward\_chain\_tac$, $forward\_chain\_canon$.
+=ENDDOC
+
+=DOC
+val ÛUFC_T1Ý :
+	(THM -> THM list) -> (THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_UFC_T1Ý :
+	(THM -> THM list) -> (THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛASM_UFC_T1Ý : 
+	(THM -> THM list) -> (THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_ASM_UFC_T1Ý : 
+	(THM -> THM list) -> (THM list -> TACTIC) -> THM list -> TACTIC;
+=DESCRIBE
+These are tacticals which use theorems whose conclusions are
+implications, or from which implications can be derived,
+to reason forwards from the assumptions of a goal.
+
+The description of 
+=INLINEFT
+ufc_tac
+=TEX
+\ should be consulted for the basic forward chaining algorithms used.
+The significance of the final argument and of the presence or absence of
+=INLINEFT
+ASM
+=TEX
+\ and
+=INLINEFT
+ALL
+=TEX
+\ in the name is exactly as for
+=INLINEFT
+fc_tac
+=TEX
+\ and its relatives.
+
+The tacticals allow variation of the canonicalisation function
+used to obtain implications from the argument theorems and of
+the tactic generating function used to process the theorems derived
+by the forward inference.
+The canonicalisation function to use is the first argument
+and the tactic generating function is the second.
+(Related tacticals with names ending in
+=INLINEFT
+T
+=TEX
+\ rather than
+=INLINEFT
+T1
+=TEX
+\ are also available for the simpler case when
+wants to use the same canonicalisation function as
+=INLINEFT
+fc_tac
+=TEX
+\ and just to vary the tactic generating function.)
+
+\paragraph{Examples}
+
+If the theorem argument comprises only implications
+which are to be used without canonicalisation, one might use:
+=INLINEFT
+UFC_T1 id_canon (MAP_SOME strip_asm_tac)
+=TEX
+.
+
+If one has an instance of $t1$ as an assumption and one wishes to
+use the bi-implication in a theorem of the form
+=INLINEFT
+ô t1 ´ (t2 ¤ t3)
+=TEX
+\ for rewriting, one might use
+=INLINEFT
+UFC_T1 id_canon rewrite_tac
+=TEX
+.
+
+=SEEALSO
+$ufc\_tac$, $asm\_ufc\_tac$, $bc\_tac$, $UFC\_T$.
+=ENDDOC
+
+=DOC
+val ÛUFC_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_UFC_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛASM_UFC_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_ASM_UFC_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_UFC_¤_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+val ÛALL_ASM_UFC_¤_TÝ :
+	(THM list -> TACTIC) -> THM list -> TACTIC;
+=DESCRIBE
+These are tacticals which use theorems whose conclusions are
+implications, or from which implications can be derived,
+to reason forwards from the assumptions of a goal.
+(The tacticals with
+=INLINEFT
+UFC
+=TEX
+\ are aliases for the corresponding ones with
+=INLINEFT
+UNIFY_FORWARD_CHAIN
+=TEX
+.)
+
+The description of 
+=INLINEFT
+ufc_tac
+=TEX
+\ should be consulted for the basic forward chaining algorithms used.
+The significance of the final argument and of the presence or absence of
+=INLINEFT
+ASM
+=TEX
+\ and
+=INLINEFT
+ALL
+=TEX
+\ in the name is exactly as for
+=INLINEFT
+ufc_tac
+=TEX
+\ and its relatives.
+
+The tacticals allow variation of
+the tactic generating function used to process the theorems derived
+by the forward inference.
+The tactic generating function to be used is given as the first
+argument.
+
+\paragraph{Examples}
+=INLINEFT
+ufc_tac
+=TEX
+\ is the same as:
+=INLINEFT
+UFC_T strip_asm_tac1
+=TEX
+.
+
+To rewrite the goal with the results of the forward inference one
+could use
+=INLINEFT
+UFC_T rewrite_tac
+=TEX
+.
+=SEEALSO
+$ufc\_tac$, $asm\_ufc\_tac$, $UFC\_T1$.
+=ENDDOC
+
+=DOC
+val Ûufc_tacÝ : THM list -> TACTIC;
+val Ûall_ufc_tacÝ : THM list -> TACTIC;
+val Ûasm_ufc_tacÝ : THM list -> TACTIC;
+val Ûall_asm_ufc_tacÝ : THM list -> TACTIC;
+val Ûall_ufc_¤_tacÝ : THM list -> TACTIC;
+val Ûall_asm_ufc_¤_tacÝ : THM list -> TACTIC;
+val Ûall_ufc_¤_rewrite_tacÝ : THM list -> TACTIC;
+val Ûall_asm_ufc_¤_rewrite_tacÝ : THM list -> TACTIC;
+=DESCRIBE
+These are tactics which use theorems whose conclusions are
+implications, or from which implications can be derived using
+the canonicalisation function
+=INLINEFT
+fc_canon
+=TEX
+, q.v., to reason forwards from the assumptions of a goal.
+
+The basic step is to take a theorem of the form
+=INLINEFT
+‡ ô t1 ´ t2
+=TEX
+\ and an assumption of the form
+=INLINEFT
+t1'
+=TEX
+\ where $t1'$ is unifiable with $t1$ and to deduce the
+corresponding instance of $t2'$. The new theorem,
+=INLINEFT
+„ ô t2'
+=TEX
+\ say, may then be stripped into the assumptions.
+
+In the case of
+=INLINEFT
+ufc_tac
+=TEX
+\ the implicative theorem is always derived from the list
+of theorems given as an argument.
+In the case of
+=INLINEFT
+asm_ufc_tac
+=TEX
+\ the assumptions are also used.
+In all of the tactics the rule 
+=INLINEFT
+fc_canon
+=TEX
+\ is used to derive an implicative canonical form from the
+candidate implicative theorems.
+Normally combination of an implicative theorem and an assumption
+is then tried in turn and all resulting theorems are stripped into
+the assumptions of the goal.
+However, if the chaining results contain a theorem whose conclusion is ¬F® then the first such found will be stripped
+into the assumptions, and all other theorems discarded.
+
+If one of the implications has the form
+=INLINEFT
+t1 ´ t2 ´ t3
+=TEX
+\ or
+=INLINEFT
+t1 ± t2 ´ t3
+=TEX
+\ and if assumptions matching $t1$ and $t2$ are available,
+=INLINEFT
+ufc_tac
+=TEX
+\ or
+=INLINEFT
+asm_ufc_tac
+=TEX
+\ will derive an intermediate implication
+=INLINEFT
+t2 ´ t3
+=TEX
+\ and
+=INLINEFT
+asm_ufc_tac
+=TEX
+\ could then be used to derive $t3$.
+The variants with $all\_$ may be used to derive $t3$ directly without
+generating any intermediate implications in the assumptions.
+They work like the corresponding tactic without $all\_$ but any theorems
+which are derived which are themselves implications are not stripped into
+the assumptions but instead are used recursively to derive further theorems.
+When no new implications are derivable all of the non-implicative theorems
+derived during the process are stripped into the assumptions.
+
+Note that the use of
+=INLINEFT
+fc_canon
+=TEX
+\ implies that conversions from the
+proof context are applied to generate implications.
+E.g., in an appropriate proof-context covering set theory,
+=INLINEFT
+a € b
+=TEX
+\ might be treated as the implication
+=INLINEFT
+µx·x  a ´ x  b
+=TEX
+.
+Also variables which appear free in a theorem are not considered as candidates
+for instantiation
+(in order to give some control over the number of results generated).
+The tacticals,
+=INLINEFT
+UFC_T1
+=TEX
+\ and 
+=INLINEFT
+ASM_UFC_T1
+=TEX
+\ may be used to avoid the use of
+=INLINEFT
+fc_canon
+=TEX
+.
+
+For example, the tactic:
+=GFT
+asm_ufc_tac[] THEN asm_ufc_tac[]
+=TEX
+will prove the goal:
+=GFT
+{p x, µx·p x ´ q x, µx·q x ´ r x} r x.
+=TEX
+
+The variants with $¤$ in the name use $fc_¤_canon$ instead of $fc_canon$ for processing the rules so that a concluding equivalence is not broken into implications and the results of forward chaining can be used for rewriting (however, this still won't work unless there are outer quantifiers to prevent the equivalence from being broken up when stripped into the assumptions).
+
+All of these tactics add the results into the assumptions using $strip_asms_tac1$ and therefore fail if no new assumptions are added (unless the goal is discharged), except the ones whose name includes $rewrite$ which attempt the rewrite the conclusion of the goal with the results instead of stripping them into the assumptions.
+
+=SEEALSO
+$bc\_tac$,
+$UFC\_T$,
+$ASM\_UFC\_T$,
+$UFC\_T1$,
+$ASM\_UFC\_T1$.
+=ENDDOC
+
+=SML
+end; (* of signature UnifyForwardChain *)
+=TEX
+
+\subsection{Implementation}
+
+=SML
+structure ÛUnifyForwardChainÝ : UnifyForwardChain = struct
+=TEX
+
+\ignore{
+=SML
+val Ûwas_theoryÝ = get_current_theory_name ();
+val _ = open_theory "basic_hol";
+val _ = set_merge_pcs ["'propositions", "'simple_abstractions"];
+=TEX
+}%ignore
+
+In $unify\_´\_mp_rule$ the two theorems will be unified as necessary to permit inference by modus ponens.
+Only variables universally quantified at the outer level will be candidates for instantiation, and in each of the premises only type variables which do not appear in the assumptions will be elegible for instantiation.
+The two theorems are stripped of their outer universal quantifiers and the antecedent of the first (which must be an implication) will also be stripped of universal quantifiers and will then be unified with the second (without permitting substitution for the quanitifiers on the antecedent).
+If this suceeds the consequent is inferred (after adding quantifiers as necessary to the second theorem and instantiating the quantifiers as necessary in the first theorem).
+Then any variables which are free in the result but were previously bound are rebound.
+
+\ignore{
+
+=SML
+open Resolution; open Unification; open StripFail;
+
+fun Ûsimple_´_unify_mp_rule1Ý ith ath =
+ let	val s1 = ´_elim ith ath;
+ in
+	s1
+ end handle (Fail _) =>
+	let
+	val (iasms, iconc) = dest_thm ith;
+	val (aasms, aconc) = dest_thm ath;
+	fun ttys t =  map mk_vartype (term_tyvars t);
+	fun ittys (asms, conc) =  (ttys conc) drop
+		(fn x => present (op =:) x (list_union (op =:) (map ttys asms)));
+	val iityvs = ittys (iasms, iconc);
+	val aityvs = ittys (aasms, aconc);
+	val (ivars, barei) = strip_µ iconc;
+	val (avars, barea) = strip_µ aconc;
+	val (ai, c) = dest_´ barei;
+	val (aivars, bareai) = strip_µ ai;
+	val subs = new_subs 40;
+	val ((ityi, ites) , (atyi, ates)) =
+		term_unify subs [] [] (
+			(bareai, ivars, iityvs),
+			(barea, avars, aityvs));
+	val _ = init_subs subs;
+	fun laux [] t = t
+	|   laux ((nt1, t1)::tl) t = if t1 =$ t then nt1 else laux tl t;
+	val ites2 = map (laux ites) ivars;
+	val ates2 = map (laux ates) avars;
+	val ni = list_µ_elim ites2 (inst_type_rule ityi ith);
+	val na = list_µ_elim ates2 (inst_type_rule atyi ath);
+	val naithm = list_µ_intro aivars na;
+	val othm = ´_elim ni naithm;
+	val ccfrees = frees (concl othm);
+	val cafrees = list_union (op =$) (map frees (asms othm));
+	val bindvars = ccfrees drop (fn x => (present (op =$) x cafrees))
+	in (list_µ_intro bindvars othm)
+end;
+=IGN
+simple_´_unify_mp_rule1 (asm_rule ¬a ´ b®) (asm_rule ¬a:BOOL®);
+simple_´_unify_mp_rule1 (asm_rule ¬µx v· ((Ìz·z)x, v) = y ´ x®) (asm_rule ¬µa b· ((Ìq·q)a:BOOL, b)=y®);
+simple_´_unify_mp_rule1 (asm_rule ¬µ (y:'a) (x:'a) ($<<:'a­'a­BOOL) (X:'a SET)·
+				Snd (TranClsr (X, $<<)) x y ´ ³ x  X ´ F®)
+		 (asm_rule ¬Snd (TranClsr (X:'a SET, $<<:'a­'a­BOOL)) (x'':'a) (x':'a):BOOL®);
+simple_´_unify_mp_rule1 (asm_rule ¬µx y (X:'a SET)· x  X ´ y  X ´ {x; y}  ð X®)
+	(asm_rule ¬(y:'a)  X®);
+simple_´_unify_mp_rule1 (hd(fc_canon (asm_rule ¬µ A:'a SET
+           · (µ x:'a· x  A ´ x  X) ± ³ (µ x:'a· ³ x  A)
+               ´ (¶ x:'a· x  A ± (µ y:'a· y  A ± ³ y = x ´ ³ y << x))®)))
+	(asm_rule ¬µ x:'a· x  A ´ x  X®);
+simple_´_unify_mp_rule1 (hd(fc_canon (asm_rule ¬µ (G: ('a­'b)­('a­'b)) (X:'a SET) ($<<: 'a­'a­BOOL)
+     · FunctRespects G (X, $<<)
+         = (µ g h x
+         · x  X ´ (µ y· y  X ± y << x ´ g y = h y) ´ G g x = G h x)®)))
+	(asm_rule ¬µ (G: ('a­'b)­('a­'b)) (X:'a SET) ($<<: 'a­'a­BOOL)·
+		FunctRespects G (X, $<<):BOOL®);
+=SML
+val Ûall_µ_uncurry_ruleÝ = conv_rule(TRY_C all_µ_uncurry_conv);
+
+fun Û´_unify_mp_rule1Ý (thm1 : THM) : THM -> THM = (
+let	val thm1' = all_µ_uncurry_rule thm1;
+	val r' = simple_´_unify_mp_rule1 thm1'
+		handle complaint =>
+		pass_on complaint "simple_´_unify_mp_rule1"
+			"´_unify_mp_rule1";
+in
+	(fn (thm2 : THM) =>
+	r' thm2
+	handle complaint => reraise complaint "´_unify_mp_rule1")
+end);
+=IGN
+´_unify_mp_rule1 (asm_rule ¬µ(x, y):î ¸ î· y = x * x ´ y ¾ 0 ± q®) (asm_rule ¬µv w q:î· v = w * w®);
+´_unify_mp_rule1 (asm_rule ¬µ(x, y):î ¸ î· y = x * x ´ y ¾ 0 ± q®) (asm_rule ¬µv w q:î· v = w * w®);
+´_unify_mp_rule1 (asm_rule ¬µ y x $<< X· Snd (TranClsr (X, $<<)) x y ´ ³ x  X ´ F®)
+		 (asm_rule ¬Snd (TranClsr (X, $<<)) x'' x'®);
+´_unify_mp_rule1 ((hd o fc_canon o asm_rule) ¬µ X $<< G (x:'a)
+           · x  X ± UniquePartFixp (TcUpTo (X, $<<) x) G
+               ´ (µ f· PartFunEquiv (TcUpTo (X, $<<) x) (G f) f ´ UniqueVal (X, $<<) G x = f x)®)
+	(asm_rule ¬x''  (X:'a SET)®);
+´_unify_mp_rule1 (asm_rule ¬µ(x, y) (X:'a SET)· x  X ´ y  X ´ {x; y}  ð X®)
+	(asm_rule ¬(y:'a)  X®);
+´_unify_mp_rule1 (hd(fc_canon (asm_rule ¬µ A
+           · (µ x· x  A ´ x  X) ± ³ (µ x· ³ x  A)
+               ´ (¶ x· x  A ± (µ y· y  A ± ³ y = x ´ ³ y << x))®)))
+	(asm_rule ¬µ x· x  A ´ x  X®);
+=SML
+local
+val Û³_convsÝ = map
+	(fn t => simple_eq_match_conv1
+		(all_µ_intro (tac_proof(([], t), simple_taut_tac))))
+	[¬³t ´ F ¤ t®, ¬t ´ F ¤ ³t®];
+in
+fun Ûunify_forward_chain_ruleÝ (imps : THM list) (ants : THM list) : THM list = (
+let	val imp_rules = mapfilter ´_unify_mp_rule1 imps;
+	fun aux1 acc _ [] = (acc
+	) | aux1 acc (i :: il) (al as (a :: _)) = (
+		(let val res = i a
+		in
+		if concl res =$ mk_f
+		then [res]
+		else
+		(aux1 (res::acc) il al)
+		end)
+		handle Fail _ => aux1 acc il al
+	) | aux1 acc [] (_ :: al) = (aux1 acc imp_rules al
+	);
+	fun aux2 thm = (
+		case dest_term (concl thm) of
+			Dµ (x, b) => (
+				let val th = aux2 (asm_rule b);
+				in µ_intro x (prove_asm_rule (µ_elim x thm) th)
+				end
+		) |	D´ (a, b) => (
+				(conv_rule(FIRST_C ³_convs) thm)
+				handle Fail _ =>
+				let val th = aux2 (asm_rule b);
+				in ´_intro a (prove_asm_rule(undisch_rule thm) th)
+				end
+		) |	_ => fail "" 99999 []
+	);
+	fun aux3 th = aux2 th handle Fail _ => th;
+in	map aux3 (aux1 [] imp_rules ants)
+end);
+end;
+
+val Ûufc_ruleÝ : THM list -> THM list -> THM list = unify_forward_chain_rule;
+
+=IGN
+ufc_rule [(asm_rule ¬µ(x, y):î ¸ î· y = x * x ´ y ¾ 0 ± q®)] [(asm_rule ¬µv w q:î· v = w * w®)];
+ufc_rule [(asm_rule ¬µ y x $<< X· Snd (TranClsr (X, $<<)) x y ´ x  X®)]
+		 [(asm_rule ¬Snd (TranClsr (X, $<<)) x'' x'®)];
+ufc_rule [asm_rule¬µ X $<< G x
+           · x  X ± UniquePartFixp (TcUpTo (X, $<<) x) G
+               ´ (µ f· PartFunEquiv (TcUpTo (X, $<<) x) (G f) f ´ UniqueVal (X, $<<) G x = f x)®]
+	[asm_rule ¬x''  X®,
+	asm_rule ¬UniquePartFixp (TcUpTo (X, $<<) x'') G®];
+ufc_rule [(asm_rule ¬µ(x, y) (X:'a SET)· x  X ´ y  X ´ {x; y}  ð X®)]
+	[asm_rule ¬(y:'a)  X®];
+ufc_rule [(asm_rule ¬µ(x:'a, y:'b) (X:'a SET) (Y:'b SET)· x  X ´ y  Y ´ {x, y}  ð (X ¸ Y)®)]
+	[asm_rule ¬(y:'b)  X®];
+ufc_rule [tac_proof (([], ¬µ(x:'a, y:'b) (X:'a SET) (Y:'b SET)· x  X ´ y  Y ´ {x, y}  ð (X ¸ Y)®),
+	(REPEAT strip_tac
+	THEN asm_rewrite_tac[sets_ext_clauses, get_spec ¬$¸®]
+	THEN REPEAT strip_tac THEN asm_rewrite_tac[]))]
+	[asm_rule ¬(y:'b)  X®];
+ufc_rule [(asm_rule ¬µ(X:'a SET) (x:'a)· x  X ´ ¶y· y  X ´ {x, y}  ð (X ¸ X)®)]
+	[asm_rule ¬(y:'a)  X®];
+ufc_rule [(asm_rule ¬µ(X:'a SET) (x:'a)· ¶y· x  X ´ y  X ´ {x, y}  ð (X ¸ X)®)]
+	[asm_rule ¬(y:'a)  X®];
+ufc_rule (fc_canon (asm_rule ¬µ A
+           · (µ x· x  A ´ x  X) ± ³ (µ x· ³ x  A)
+               ´ (¶ x· x  A ± (µ y· y  A ± ³ y = x ´ ³ y << x))®))
+	[asm_rule ¬µ x· x  A ´ x  X®];
+ufc_rule (fc_canon (asm_rule ¬µ G (X, $<<)
+     · FunctRespects G (X, $<<)
+         = (µ g h x
+         · x  X ´ (µ y· y  X ± y << x ´ g y = h y) ´ G g x = G h x)®))
+	[asm_rule ¬FunctRespects G (X, $<<):BOOL®];
+fc_rule (fc_canon (asm_rule ¬µ G (X, $<<)
+     · FunctRespects G (X, $<<)
+         = (µ g h x
+         · x  X ´ (µ y· y  X ± y << x ´ g y = h y) ´ G g x = G h x)®))
+	[asm_rule ¬FunctRespects G (X, $<<):BOOL®];
+ufc_rule (fc_canon (asm_rule ¬µ (G: ('a­'b)­('a­'b)) (X:'a SET, $<<: 'a­'a­BOOL)
+     · FunctRespects G (X, $<<)
+         = (µ g h x
+         · x  X ´ (µ y· y  X ± y << x ´ g y = h y) ´ G g x = G h x)®))
+	[asm_rule ¬µ (G: ('a­'b)­('a­'b)) (X:'a SET, $<<: 'a­'a­BOOL)·
+		FunctRespects G (X, $<<):BOOL®];
+=TEX
+
+=SML
+fun ÛUFC_T1Ý
+	(can : THM -> THM list)
+	(ttac : THM list -> TACTIC)
+	(thms : THM list)
+	: TACTIC = (fn gl as (asms, _) =>
+	let	val asmthms = map asm_rule asms;
+	in	ttac(ufc_rule(flat(map can thms)) asmthms) gl
+	end
+);
+=TEX
+=SML
+fun ÛASM_UFC_T1Ý
+	(can : THM -> THM list)
+	(ttac : THM list -> TACTIC)
+	(thms : THM list)
+	: TACTIC = (fn gl as (asms, _) =>
+	let	val asmthms = map asm_rule asms;
+	in	ttac(ufc_rule(flat(map can (thms@asmthms))) asmthms) gl
+	end
+);
+
+val ÛUFC_TÝ = UFC_T1 fc_canon;
+val ÛASM_UFC_TÝ = ASM_UFC_T1 fc_canon;
+
+val Ûufc_tacÝ : THM list -> TACTIC = UFC_T strip_asms_tac1;
+val Ûasm_ufc_tacÝ : THM list -> TACTIC = ASM_UFC_T strip_asms_tac1;
+
+fun ÛALL_UFC_T1Ý (can : CANON) (ttac : THM list -> TACTIC) (ths : THM list) : TACTIC = (
+	let	fun aux1 acc [] = acc
+		|   aux1 (imps, others) (th :: more) = (
+			if is_´ (snd(strip_µ(concl th)))
+			then aux1 (th :: imps, others) more
+			else aux1 (imps, th :: others) more
+		);
+		fun aux2 acc imps = (
+			UFC_T1 id_canon (fn thl =>
+				let	val (imps, others) = aux1 ([], acc) thl;
+				in	if	is_nil imps
+					then	ttac others
+					else	aux2 others imps
+				end
+			) imps
+		);
+		val ths' = flat (map can ths);
+	in	aux2 [] (ths' drop (not o is_´ o snd o strip_µ o concl))
+	end
+);
+val ÛALL_UFC_TÝ : (THM list -> TACTIC) -> THM list -> TACTIC = ALL_UFC_T1 fc_canon;
+
+fun ÛALL_ASM_UFC_T1Ý (can : CANON) (ttac : THM list -> TACTIC) (thms : THM list) : TACTIC = (
+	GET_ASMS_T (fn asm_thms => ALL_UFC_T1 can ttac (thms @ asm_thms)));
+fun ÛALL_ASM_UFC_TÝ (ttac : THM list -> TACTIC) (ths : THM list) : TACTIC = (
+	GET_ASMS_T (fn thl => ALL_UFC_T ttac (thl @ ths)));
+
+val Ûall_ufc_tacÝ : THM list -> TACTIC = ALL_UFC_T strip_asms_tac1;
+val Ûall_asm_ufc_tacÝ : THM list -> TACTIC = ALL_ASM_UFC_T strip_asms_tac1;
+
+val ÛALL_UFC_¤_TÝ = ALL_UFC_T1 fc_¤_canon;
+val ÛALL_ASM_UFC_¤_TÝ = ALL_ASM_UFC_T1 fc_¤_canon;
+
+val Ûall_ufc_¤_tacÝ = ALL_UFC_¤_T strip_asms_tac1;
+val Ûall_asm_ufc_¤_tacÝ = ALL_ASM_UFC_¤_T strip_asms_tac1;
+
+val Ûall_ufc_¤_rewrite_tacÝ = ALL_UFC_¤_T rewrite_tac;
+val Ûall_asm_ufc_¤_rewrite_tacÝ = ALL_ASM_UFC_¤_T rewrite_tac;
+=TEX
+} %ignore
+
+=SML
+end; (* of structure UnifyForwardChain *)
+=TEX
+
+\ignore{
+=IGN
+(** 
+  * the Nominal Unification algorithm by Urban, Pitts & Gabbay 
+  * August, 2003
+*)
+
+exception Fail;                               (* exception for unification failure *) 
+
+(* terms *)
+datatype term = 
+    Unit                                       (* units *)
+  | Atm   of string                            (* atoms *)
+  | Susp  of (string * string) list * string   (* suspensions *)          
+  | Fun   of string * term                     (* function symbols *)
+  | Abst  of string * term                     (* abstracted terms *)
+  | Pair  of term * term;                      (* pairs *)  
+
+(* swapping operation on atoms *)
+fun swap (a,b) c =                             
+  if a=c then b else if b=c then a else c;
+fun swaps pi c = foldr (uncurry swap) c pi;
+
+(* permutation (lists of swappings) acting on terms *)
+fun perm pi t =       
+  case t of	
+      Unit              => Unit
+    | Atm(a)            => Atm(swaps pi a)
+    | Susp(pi',x)       => Susp(pi@pi',x)
+    | Fun(name,t')      => Fun(name, perm pi t') 
+    | Abst(a,t')        => Abst(swaps pi a,perm pi t')
+    | Pair(t1,t2)       => Pair(perm pi t1,perm pi t2);	
+
+(* possibly-capturing substitution operation *)
+fun subst t (v,t') =     
+  case t of 
+      Unit           => Unit
+    | Atm(a)         => Atm(a)
+    | Susp(pi,y)     => if y=v then (perm pi t') else Susp(pi,y)
+    | Fun(name,t1)   => Fun(name,subst t1 (v,t'))
+    | Abst(a,t1)     => Abst(a,subst t1 (v,t'))
+    | Pair(t1,t2)    => Pair(subst t1 (v,t'),subst t2 (v,t'));
+	
+(* substitution composition *)
+fun subst_compose sigma = 
+  case sigma of
+      [] => []
+    | (v,t)::tail => (v,t)::(map (fn (v',t') => (v',subst t' (v,t))) (subst_compose tail));
+
+(* occurs check *)
+fun occurs x t =
+  case t of 
+      Unit                   => false
+    | Atm(a)                 => false
+    | Susp(pi,y)             => if x=y then true else false
+    | Fun(_,t')		  => occurs x t'
+    | Abst(_,t')		  => occurs x t' 
+    | Pair(t1,t2)            => (occurs x t1) orelse (occurs x t2);
+
+(* deletes duplicates from a list 
+ * needed for the calculation of disagreement sets
+ *)
+fun delete_dups l =             
+  case l of                               
+      []   => []
+    | h::t =>
+	let val t' = delete_dups t
+	in if h mem t' then t' else (h::t')
+	end;
+
+(* disagreement set - takes two permutation as arguments *) 
+fun ds pi pi' =    
+  let val (l1,l2) = split (pi@pi') 
+  in filter (fn a => not (swaps pi a) = (swaps pi' a)) (delete_dups (l1@l2))
+  end;
+
+(* propagates a substitution over equational problems and freshness problems 
+ * needed in the elimination step of the unification transformations
+ *)
+fun eliminate (v,t) eprobs nabla =  
+  if occurs v t
+  then raise Fail
+  else (map (fn (t1,t2) => (subst t1 (v,t),subst t2 (v,t))) eprobs,
+        map (fn (a,x)   => (a,subst (Susp([],x)) (v,t))) nabla);
+
+(***************)
+(* unification *)
+(***************)
+
+(* gives preference to freshness problems *)
+fun solve eprobs fprobs = 
+  if fprobs=[]                         (* no freshness problems *)     
+  then solve_e eprobs [] [] 
+  else solve_f eprobs fprobs [] []
+ 
+(* solves equational problems producing a substitution sigma and
+ * and freshness constraints nabla (if freshness problems arise,
+ * then they are solved first) 
+ *)
+and solve_e eprobs sigma nabla =
+  case eprobs of 
+      [] => (subst_compose sigma, delete_dups nabla)            (* all problems solved *)
+    | (Unit,Unit)::tail => solve_e tail sigma nabla             (* unit-unit step *)
+    | (Atm(a),Atm(b))::tail =>                                  (* atom-atom step *)
+        if a=b then solve_e tail sigma nabla else raise Fail
+    | (Susp(pi,x),Susp(pi',x'))::tail when x=x' =>              (* susp-susp step with same variables*)
+        let val new_nabla = map (fn a => (a,x)) (ds pi pi')     (* calculates a new nabla from a ds *)
+	in solve_e tail sigma (new_nabla @ nabla) end
+    | (Susp(pi,x),t)::tail =>
+    | (t,Susp(pi,x))::tail =>                                   (* elimination step *)
+	let val new_sigma = (x,perm (rev pi) t) in             (* sigma to be eliminated *)
+	    val (new_eprobs,new_fprobs) = eliminate new_sigma tail nabla (* sigma is propagated *)
+	in  solve_f new_eprobs new_fprobs (new_sigma::sigma) [] (* solve possible freshness probs*)
+	end
+    | (Fun(n1,t1),Fun(n2,t2))::tail =>                          (* fun-fun step *) 
+	if n1=n2  
+	then solve_e ((t1,t2)::tail) sigma nabla
+	else raise Fail
+    | (Abst(a1,t1),Abst(a2,t2))::tail =>                        (* abst-abst step *)
+	if a1=a2   
+	then solve_e ((t1,t2)::tail) sigma nabla                           (* equal binders *)
+	else solve_f ((t1,perm [(a1,a2)] t2)::tail) [(a1,t2)] sigma nabla  (* different binders *)
+    | (Pair(t1,t2),Pair(s1,s2))::tail =>                        (* pair-pair step *)
+	solve_e ((t1,s1)::(t2,s2)::tail) sigma nabla 
+    | _ => raise Fail
+
+(* solves all freshness problems *)
+and solve_f eprobs fprobs sigma nabla =
+  case fprobs of
+      [] => solve_e eprobs sigma nabla
+    | (a,Unit)::tail        => solve_f eprobs tail sigma nabla          
+    | (a,Atm(b))::tail      => 
+	if a=b then raise Fail else solve_f eprobs tail sigma nabla
+    | (a,Susp(pi,x))::tail  => solve_f eprobs tail sigma ((swaps (rev pi) a,x)::nabla)
+    | (a,Fun(_,t))::tail    => solve_f eprobs ((a,t)::tail) sigma nabla
+    | (a,Abst(b,t))::tail when a=b => solve_f eprobs tail sigma nabla      (* equal-with-binder case *)
+    | (a,Abst(b,t))::tail   => solve_f eprobs ((a,t)::tail) sigma nabla   
+    | (a,Pair(t1,t2))::tail => solve_f eprobs ((a,t1)::(a,t2)::tail) sigma nabla;
+  
+   
+(************)
+(* Examples *)
+(************)
+
+(* a few variables*)
+let x = Susp([],"X")
+and y = Susp([],"Y")
+and z = Susp([],"Z");;
+
+(* lam a.(X a) =? lam b.(c b)     --> [X:=c] *)
+let t1 = Abst("a",Pair(x,Atm("a")));;
+let t2 = Abst("b",Pair(Atm("c"),Atm("b")));;
+solve [(t1,t2)] [];; 
+
+(* lam a.(X a) =? lam b.(a b)     --> fails      *)
+let t1 = Abst("a",Pair(x,Atm("a")));;
+let t2 = Abst("b",Pair(Atm("a"),Atm("b")));;
+solve [(t1,t2)] [];;    
+
+(* lam a.(X a) =? lam b.(X b)     --> a#X, b#X   *)
+let t1 = Abst("a",Pair(x,Atm("a")));;
+let t2 = Abst("b",Pair(x,Atm("b")));;
+solve [(t1,t2)] [];;    
+
+(* lam a.(X a) =? lam b.(Y b)     --> [X:=(a b)oY]  a#Y *)
+(*                                --> [Y:=(b a)oX]  b#X *)
+let t1 = Abst("a",Pair(x,Atm("a")));;
+let t2 = Abst("b",Pair(y,Atm("b")));;
+solve [(t1,t2)] [];;   
+solve [(t2,t1)] [];;
+
+(* quiz-questions from the paper *)
+let m1 = Susp([],"M1")
+and m2 = Susp([],"M2")
+and m3 = Susp([],"M3")
+and m4 = Susp([],"M4")
+and m5 = Susp([],"M5")
+and m6 = Susp([],"M6")
+and m7 = Susp([],"M7");;
+
+(* 1 --> fail *)
+let t1 = Abst("a",Abst("b",Pair(m1,Atm("b"))));;
+let t2 = Abst("b",Abst("a",Pair(Atm("a"),m1)));;
+solve [(t1,t2)] [];;
+
+(* 2 --> [M2:=b ,M3:=a] *)
+let t1 = Abst("a",Abst("b",Pair(m2,Atm("b"))));;
+let t2 = Abst("b",Abst("a",Pair(Atm("a"),m3)));;
+solve [(t1,t2)] [];;
+
+(* 3 --> [M4:=(a b)o M5] *)
+let t1 = Abst("a",Abst("b",Pair(Atm("b"),m4)));;
+let t2 = Abst("b",Abst("a",Pair(Atm("a"),m5)));;
+solve [(t1,t2)] [];;
+
+(* 4 --> [M6:=(b a)oM7] b#M7 *)
+let t1 = Abst("a",Abst("b",Pair(Atm("b"),m6)));;
+let t2 = Abst("a",Abst("a",Pair(Atm("a"),m7)));;
+solve [(t1,t2)] [];;
+=TEX
+
+}%ignore
+
+\section{Unifying Backchaining}
+
+=IGN
+open_theory "cache'rbj";
+=TEX
+
+The idea here is to get an improvement in proof development productivity by getting a more of the necessary instantiation of intermediate results done automatically.
+
+This is approached as a ``backchaining'' problem for two reasons:
+\begin{enumerate}
+\item the conclusion of the goal provides valuable information for constraining the search space
+\item the assumption that a theorems will be used from left to right also helps avoid explosion of the  search space
+\end{enumerate}
+
+In fact, the approach we adopt here makes the search into the transformation of a single conjecture which initially grows in size as the problem is picked apart, but eventually collapses if a proof is successful.
+
+\subsubsection{Rule Management}
+
+The methods used for storing an retrieving rules have some significance for performance and effectiveness, though these are less important than the search strategy.
+For example, to maximise performance in rule matching a unifying rule database would be possible, which efficiently retrieves all the rules which match a target term.
+
+
+
+The purpose of this signature is to make a clean interface to the rule end of the backchaining so that an implementation of backchaining can start out rather crudely in this area and perhaps be improved later.
+
+=DOC
+signature ÛRuleManagerÝ = sig
+=DESCRIBE
+This is the signature of types and functions for managing and using a collection of rules for chaining.
+At present oriented to back-chaining.
+=ENDDOC
+
+=DOC
+type RULEDB
+=DESCRIBE
+
+=ENDDOC
+
+=SML
+end; (* of signature RuleManager *)
+=TEX
+
+\subsubsection{Search Management}
+
+
+=DOC
+signature ÛUnifyingBackchainingÝ = sig
+=DESCRIBE
+
+=ENDDOC
+
+=DOC
+val Ûunify_backchain_ruleÝ : (TYPE list) -> (TERM list)
+	->	(THM * TERM list * TYPE list)
+	->	(TERM * TERM list * TYPE list)
+	-> 	THM * ((TYPE * TYPE) list * (TERM * TERM) list) *
+   		((TYPE * TYPE) list * (TERM * TERM) list);
+=DESCRIBE
+This function is a variant on $term\_unify$ q.v. in which the first term to be unified is suppled as the right hand side of an implication which is the conclusion of some theorem.
+In addition to the substitutions necessary to unify the two terms, the function returns the left had side of the implication after performing on it the unifying substitution for the right hand side, and a function which will infer the instantiated right hand side as a theorem from a theorem whose conclusion is the instantiated left hand side.
+
+Thus from a theorem:
+=GFT
+thm =	asms ô lhs ´ rhs
+=TEX
+and a term $tm$:
+
+=GFT
+	unify_backchain_rule avtyl avtml (thm, tml1, tyl1) (tm, tml2, tyl2)
+=TEX
+
+yields $(thm2, (thmtytyl, thmtmtml), (tmtytyl, tmtmtml))$, where:
+
+\begin{description}
+\item[avtyl] is a list of type variables to be avoided
+\item[avtml] is a list of term variables to be avoided
+\item[thm] is a theorem whose conclusion is an implication the right hand side of which is to be unified with $tm$
+\item[tml1] is the list of term variables which may be instantiated in $thm$
+\item[tyl1] is the list of type variables which may be instantiated in $thm$
+\item[tm] is a term to be unified with the right hand side of the implication in the conclusion of $thm$
+\item[tml2] is the list of term variables which may be instantiated in $tm$
+\item[tyl2] is the list of type variables which may be instantiated in $tm$
+\item[thm2] is the instance of $tm$ resulting from application of the unifying substitution
+\item[thmtytyl] is the list of pairs of types to be substituted in $thm$
+\item[thmtmtml] is the list of pairs of term to be substituted in $thm$
+\item[tmtytyl] is the list of pairs of types to be substituted in $tm$
+\item[tmtmtml] is the list of pairs of term to be substituted in $tm$
+\end{description}
+=ENDDOC
+
+=SML
+end; (* signature UnifyingBackchaining *)
+=TEX
+
+=SML
+structure UnifyingBackchaining: UnifyingBackchaining = struct
+=TEX
+...
+\ignore{
+=SML
+local open Resolution; open Unification
+in
+fun unify_backchain_rule avtyl avtml (thm, tml1, tyl1) (tm, tml2, tyl2) =
+	let
+	val subs = new_subs 40;
+	val (_, rhs) = (dest_´ o concl) thm;
+	val ((thmtytyl, thmtmtml) , (tmtytyl, tmtmtml)) = term_unify subs avtyl avtml (
+			(rhs, tml1, tyl1),
+			(tm, tml2, tyl2)
+		);
+	val _ = init_subs subs;
+	val thm2 = inst_term_rule thmtmtml (inst_type_rule thmtytyl thm);
+	in (thm2, (thmtytyl, thmtmtml), (tmtytyl, tmtmtml))
+	end
+end;
+=TEX
+}%ignore
+=SML
+end;
+open UnifyingBackchaining;
+=TEX
+=IGN
+unify_backchain_rule [] []
+	(all_µ_elim ¯_¼_antisym_thm, [¬x:¯®, ¬y:¯®], [])
+	(¬v *‰R w = z®, [¬v:¯®, ¬w:¯®], []);
+=TEX
+=SML
+datatype BCP = 
+	BcDone
+|	BcFailed
+|	BcIncomplete;
+
+datatype BCS =
+	BcLeft
+|	BcRight;
+
+(* In a Back Chain Tree, think of 'a as a goal and 'b as a proof *)
+
+datatype ('a, 'b) BCT =
+	Bc± of BCP * ('a * ('a, 'b) BCT * ('a, 'b) BCT)
+|	Bc² of BCP * ('a * BCS * ('a, 'b) BCT * ('a, 'b) BCT)
+| 	BcRules of BCP * ('a * ('b * ('a, 'b) BCT) list)
+| 	BcLeaf of BCP * 'a;
+
+(* UARDB stands for Unifying & Anti-unifying Rule Data Base
+It is a function which takes some target term and returns all the
+rules which can be used to infer a term unifiable with the target,
+together with the antiunifier of all the results, i.e. as much as
+can be inferred about the result from the knowledge that it must
+be proved by one of the selected rules.
+*)
+
+type ('a, 'b) UARDB = 'a -> ('b * ('a, 'b) BCT) list;
+
+fun	bct2bcp (Bc± (x,y)) = x
+|	bct2bcp (Bc² (x,y)) = x
+|	bct2bcp (BcRules (x,y)) = x
+|	bct2bcp (BcLeaf (x,y)) = x;
+
+fun bcp_and (BcDone, BcDone)	= BcDone
+|   bcp_and (BcFailed, _)		= BcFailed	
+|   bcp_and (_, BcFailed)		= BcFailed	
+|   bcp_and (_, _)		= BcIncomplete;	
+
+fun bcp_or (BcDone, _)		= (BcDone, BcLeft)
+|   bcp_or (_, BcDone)		= (BcDone, BcRight)
+|   bcp_or (BcFailed, BcFailed)	= (BcFailed, BcLeft)	
+|   bcp_or (_, _)			= (BcIncomplete, BcLeft);	
+
+val bcp_or2 = fst o bcp_or;
+
+=IGN
+
+fun
+  bct_map f (Bc± (bcp, (a, bct1, bct2))) =
+	let	val bct1' = bct_map f bct1;
+		val bct2' = bct_map f bct2;
+	in (Bc± (bcp_and (bct2bcp bct1', bct2bcp bct2'), (a, bct1', bct2')))
+	end
+| bct_map f (Bc² (bcp, (a, bcs, bct1, bct2))) =
+	let	val bct1' = bct_map f bct1;
+		val bct2' = bct_map f bct2;
+		val (bcp', bcs') = bcp_or (bct2bcp bct1', bct2bcp bct2');
+	in (Bc² (bcp', (a, bcs', bct1', bct2')))
+	end
+| bct_map f (BcRules (bcp, (a, []))) = BcRules (bcp, (a, []))
+| bct_map f (BcRules (bcp, (a, hr::trl))) =
+	let	val (hprf, bcth) = hr;
+		val bcth' = bct_map f bcth;
+		val hr' = (hprf, bcth');
+		val (BcRules (tbcp', (a', trl'))) = bct_map f (BcRules (bcp, (a, trl)));
+	in (BcRules (bcp_or2 (bct2bcp bcth', tbcp'), (a, hr'::trl')))
+	end
+| bct_map f (BcLeaf (bcp, a)) = f a;
+
+
+=TEX
+
+\section{Trawling for Useful Theorems}
+
+=DOC
+signature ÛTrawlingÝ = sig
+=DESCRIBE
+The functions in this signature search the ancestors of the current theory for theorems which do something with the current goal, i.e. which rewrite the conclusion, backward chain from it, or forward chain from the assumptions.
+=ENDDOC
+
+=DOC
+datatype ÛTHMDETÝ = Spec of TERM | Thm of (string * string);
+val Ûon_concÝ : (TERM -> 'a) -> 'a;
+val Ûon_asmsÝ : (TERM list -> 'a) -> 'a;
+val Ûrew_thmsÝ : TERM -> ((int * THMDET) * THM) list;
+val Ûrew_specsÝ : TERM -> ((int * THMDET) * THM) list;
+val Ûbc_thmsÝ : TERM -> ((int * THMDET) * THM) list;
+val Ûfc_thmsÝ : TERM list -> ((int * THMDET) * THM) list;
+val Ûall_fc_thmsÝ : TERM list -> ((int * THMDET) * THM) list;
+val ÛtodoÝ : unit -> {bc: int, fc: int, rw: int};
+val Ûtd_thmlÝ : THMDET list -> THM list;
+=DESCRIBE
+$on\_conc$ and $on\_asms$ apply their arguments respectively to the conclusion or the list of assmuptions of the current goal.
+
+$rew\_thms$, $rew\_specs$, $bc\_thms$ retrieve respectively theorems ($thms$) or specifications ($specs$) which can be used to sucessfully rewrite ($rew$) or backchain from ($bc$) the term supplied as an argument.
+
+$fc\_thms$ and $all\_fc\_thms$, when supplied with a list of assumptions, retrieve theorems which will yield results using $fc\_tac$ and $all\_fc\_tac$.
+
+$todo()$ returns a count of how many theorems or specifications are applicable to the current goal, classified according to the method of application.
+$bc$ = back chaining, $fc$ = forward chaining, $rw$ = rewriting.
+=ENDDOC
+
+=SML
+end; (* of signature Trawling *)
+=TEX
+
+=SML
+structure ÛTrawlingÝ : Trawling = struct
+=TEX
+
+\ignore{
+=SML
+
+val avoid_theories = ref ["min", "log", "misc", "sets", "combin", "pair", "list"];
+val avoid_constants = ref [""];
+val avoid_specs: string list ref = ref [""];
+
+datatype THMDET =
+		Spec of TERM
+	|	Thm of (string * string);
+
+fun is_defined_constant s =
+	let val theoryname = get_const_theory s;
+	    val defn = get_defn theoryname s
+	in true
+	end
+	handle _ => false;
+
+fun defined_consts t =
+	let val consts = term_consts t
+	in filter
+		(fn x => not ((fst x) mem !avoid_constants)
+		andalso is_defined_constant (fst x))
+	   consts
+	end;
+
+fun defined_const_names t = map fst (defined_consts t);
+
+fun on_conc f = f (snd (top_goal()));
+
+fun on_asms f =
+	let val (asms, concl) = top_goal()
+	in f asms
+	end;
+
+fun on_goal f =
+	let val (asms, concl) = top_goal()
+	in  flat(map f (concl :: asms))
+	end;
+
+fun term_const_specs t =
+	let fun gs (s,t) =
+		let val c = mk_const (s,t)
+		in (if	s mem !avoid_specs orelse
+			(get_const_theory s) mem !avoid_theories
+		   then []
+		   else [(Spec c, get_spec c)]) handle _ => []
+		end
+	in flat (map gs (term_consts t))
+	end;
+
+fun const_theories t = list_cup (map (fn x => [get_const_theory x]) (defined_const_names t));
+
+fun ancestor_theories t = filter (fn x => not (x mem !avoid_theories)) (get_ancestors t);
+
+fun thy_thms t = map (fn (s,thm) => (Thm(t, hd s), thm)) (get_thms t);
+
+fun const_thms t = flat(map thy_thms (const_theories t));
+
+fun ancestor_thms t = flat(map thy_thms (ancestor_theories t));
+
+fun rewriting_thm t thm =
+	let val t' = pure_once_rewrite_conv [thm] t
+	in true
+	end handle _ => false;
+
+local open RbjTactics1 in
+fun srewriting_thm t thm = rewriting_thm t (map_eq_sym_rule thm) handle _ => false;
+end;
+
+fun fc_thm ts thm =
+	let val thms = fc_rule (fc_canon thm) (map asm_rule ts)
+	in (fn [] => false | _ => true) thms
+	end handle _ => false;
+
+fun all_fc_thm ts thm =
+	let val (gl, pr) = all_fc_tac [thm] (ts, ¬F®)
+	in if length gl = 1 andalso length (fst (hd gl)) = length ts
+		then false else true
+	end handle _ => false;
+
+fun bc_thm c thm =
+	let val (gl, pr) = bc_tac [thm] ([], c)
+	in if length gl = 1 andalso (snd (hd gl)) =$ c
+		then false else true
+	end handle _ => false;
+
+fun numthms n [] = []
+|   numthms n ((thmdets, thm)::t) = ((n, thmdets), thm):: (numthms (n+1) t);
+
+fun rew_specs t =
+	let val thms = term_const_specs t
+	in numthms 1 (filter ((rewriting_thm t) o snd) thms)
+	end;
+
+fun terml_const_specs tl = flat (map term_const_specs tl);
+
+fun fc_specs ts =
+	let val thms = terml_const_specs ts
+	in numthms 1 (filter ((fc_thm ts) o snd) thms)
+	end;
+
+fun bc_specs t =
+	let val thms = term_const_specs t
+	in numthms 1 (filter ((bc_thm t) o snd) thms)
+	end;
+
+fun rew_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((rewriting_thm t) o snd) thms)
+	end;
+
+fun srew_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((srewriting_thm t) o snd) thms)
+	end;
+
+fun fc_thms tl =
+	let val thms = (ancestor_thms "-") @ (terml_const_specs tl)
+	in numthms 1 (filter ((fc_thm tl) o snd) thms)
+	end;
+
+fun all_fc_thms tl =
+	let val thms = (ancestor_thms "-") @ (terml_const_specs tl)
+	in numthms 1 (filter ((all_fc_thm tl) o snd) thms)
+	end;
+
+fun bc_thms t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (filter ((bc_thm t) o snd) thms)
+	end;
+
+fun rew_thms2 t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (flat (map (fn (sl, th) =>
+		[(sl, (th, (snd o dest_eq)(concl (pure_once_rewrite_conv [th] t))))]
+		handle _ => []) thms))
+	end;
+
+fun rew_thms3 t =
+	let val thms = (ancestor_thms "-") @ (term_const_specs t)
+	in numthms 1 (flat (map (fn (sl, th) =>
+		[(sl, (snd o dest_eq)(concl (pure_once_rewrite_conv [th] t)))]
+		handle _ => []) thms))
+	end;
+
+fun const_rewrite_conv t =
+	let val thms = map snd (rew_thms t)
+	in rewrite_conv thms t
+	end;
+
+fun with_conc_thms f =
+	let fun ff t = f (map snd (rew_thms t))
+	in on_conc ff
+	end;
+
+fun with_conc_specs f =
+	let fun ff t = f (map snd (rew_specs t))
+	in on_conc ff
+	end;
+
+fun td_thm (Thm (thyn, thmn)) = get_thm thyn thmn
+|   td_thm (Spec s) = get_spec s;
+
+fun td_thml tdl = map td_thm tdl;
+
+fun numl2tdl tdsl nl =
+ map (fn chose => (snd o fst o chose) tdsl) (map (fn n=> nth (n-1)) nl);
+
+fun todo () =
+	let val rw = length (on_conc rew_thms)
+	    val bc = length (on_conc bc_thms)
+	    val fc = length (on_asms fc_thms)
+	in {rw = rw, bc = bc, fc = fc}
+	end;
+=TEX
+}%ignore
+
+=SML
+end; (* of structure Trawling *)
+=TEX
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}

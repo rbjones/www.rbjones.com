@@ -1,0 +1,267 @@
+=IGN
+$Id: t008.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+open_theory "fixp_egs";
+set_merge_pcs["hol", "'savedthm_cs_∂_proof"];
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Illustrations of (Co-)Inductive Definitions}
+\author{Roger Bishop Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+This document provides examples of the use of the facilities provided in t007.doc.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\section{INTRODUCTION}
+
+The document follows, as far as is reasonable, the structure of \cite{rbjt007} in providing material illustrating (and testing) the facilities for (co-)inductive definition of sets and types provided in that document.
+
+\subsection{Formalities}
+
+Create new theory ``fixp\_egs''.
+
+=SML
+open_theory "fixp";
+force_new_theory "fixp_egs";
+set_merge_pcs["hol", "'savedthm_cs_∂_proof"];
+=IGN
+set_flag ("pp_use_alias", false);
+set_flag ("pp_show_HOL_types", true);
+=TEX
+
+\section{FIXED POINTS}
+
+I probably won't supply any direct examples of this material.
+It is used indirectly in all that follows.
+
+\section{INDUCTIVE DEFINITIONS OF SETS}
+
+\subsection{Hereditarily Over a Function}
+
+The example I had in mind which made me think this kind of definition useful is the inductive definition of the theorems of some deductive system.
+This belongs here because taking the rules of a deductive system as constructors gives an inductive definition in which the constructor is not one-one.
+It also raises a question about inductive definition of functions over the type, since a naive interpretation of the `content' relation would not be well-founded.
+
+Another example would be the definition of recursive function.
+
+These things are easy to do without any special machinery so it might be interesting to try one which has already been done that way, for example my definition of a first order property in \cite{rbjt004}.
+
+=SML
+new_parent "membership";
+=TEX
+
+The inductive definition is that of {\it fof}.
+How would that look if formulated as the fixed point of a function?
+
+πHOLCONST
+‹ FofCSet: ('a PPMS SET ∏ 'a PPMS) SET
+˜¸¸¸¸¸¸
+‹ FofCSet = {(ppmss, ppms) |
+‹	ppmss = {} ± (∂s1 s2∑ ppms = s1 =âp s2 ≤ ppms = s1 çâp s2)
+‹	≤ (∂p s∑ ppmss = {p} ± ppms = (∂âp s p) ≤ ppms = ≥âp p)
+‹	≤ (∂p1 p2∑ ppmss = {p1; p2} ± ppms = p1 ±âp p2)
+‹	}
+∞
+
+\subsection{Hereditarily Over a Relation}
+
+\subsection{Hereditarily Over a Property}
+
+\section{INDUCTIVE DEFINITIONS OF SETS}
+
+The examples here are examples which do not use the machinery for generating constructor functions.
+
+\subsection{Sets Defined Using CCP's}
+
+\subsubsection{Hereditarily Pure Functions}
+
+\subsubsection{Hereditarily Pure Functors and Categories}
+
+\section{CODING CONSTRUCTIONS}
+
+\subsection{HOL Types and Terms}
+
+Here is a simple type description to work from, the types and terms of HOL:
+Note that for each constructor is supplied the type of the constructor and a predicate over the domain of the constructor.
+In this example the predicates enforce constraints on the names of constants and variables requiring that names beginning with ' are variable names.
+
+The type variables $'TYPE$ and $'TERM$ give the names of the sets or types which are being defined.
+
+=SML
+val constructor_types = [
+	(¨MkVarType: STRING ≠ 'TYPEÆ,
+				¨Ãx:STRING∑ Hd x = '''Æ),
+	(¨MkCType: STRING ≠ 'TYPE LIST ≠'TYPEÆ,
+				¨Ã(x:STRING, y:'TYPE LIST)∑ ≥ Hd x = '''Æ),
+	(¨MkVarTerm: STRING ≠ 'TYPE ≠'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE)∑ Hd x = '''Æ),
+	(¨MkCTerm: STRING ≠ 'TYPE ≠'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE)∑ ≥ Hd x = '''Æ),
+	(¨MkLamTerm: STRING ≠ 'TYPE ≠ 'TERM ≠ 'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE, z:'TERM)∑ Hd x = '''Æ),
+	(¨MkAppTerm: 'TERM ≠ 'TERM ≠ 'TERMÆ,
+				¨Ã(x:'TERM, y:'TERM)∑ TÆ)
+];
+=TEX
+
+This system of type specifications can be translated into an expression for a fixedpoint as follows:
+=SML
+set_flag ("pp_use_alias", true);
+declare_ctk_aliases ntree_ctk ctk_aliases;
+val fixp_expression = translate_sig ntree_ctk constructor_types;
+undeclare_ctk_aliases ntree_ctk ctk_aliases;
+fixp_expression;
+=TEX
+
+Which yields:
+=GFT
+val fixp_expression =
+   ¨ä
+     [[ò (∆ «) (∆ “) (Ã x∑ Head x = ''');
+           ò (∆ « ∏ ∆ I) (∆ “ ∏ ∆ (◊ 1)) (Ã (x, y)∑ ≥ Head x = ''')];
+         [ò (∆ « ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ Head x = ''');
+             ò (∆ « ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ ≥ Head x = ''');
+             ò (∆ « ∏ I ∏ I) (∆ “ ∏ ◊ 1 ∏ ◊ 2) (Ã (x, y, z)∑ Head x = ''');
+             ò (I ∏ I) (◊ 2 ∏ ◊ 2) (Ã (x, y)∑ T)]]Æ : TERM
+
+=TEX
+Without the aliases that is:
+=GFT
+val fixp_expression =
+   ¨FR
+     [[CR (NTreeMkList MkLeafTree) (NTrListC NTrLeafC) (Ã x∑ Head x = ''');
+           CR
+               (NTreeMkProd (NTreeMkList MkLeafTree) (NTreeMkList I))
+               (NTrProdC (NTrListC NTrLeafC) (NTrListC (NTreeTagC 1)))
+               (Ã (x, y)∑ ≥ Head x = ''')];
+         [CR
+               (NTreeMkProd (NTreeMkList MkLeafTree) I)
+               (NTrProdC (NTrListC NTrLeafC) (NTreeTagC 1))
+               (Ã (x, y)∑ Head x = ''');
+             CR
+                 (NTreeMkProd (NTreeMkList MkLeafTree) I)
+                 (NTrProdC (NTrListC NTrLeafC) (NTreeTagC 1))
+                 (Ã (x, y)∑ ≥ Head x = ''');
+             CR
+                 (NTreeMkProd (NTreeMkList MkLeafTree) (NTreeMkProd I I))
+                 (NTrProdC
+                     (NTrListC NTrLeafC)
+                     (NTrProdC (NTreeTagC 1) (NTreeTagC 2)))
+                 (Ã (x, y, z)∑ Head x = ''');
+             CR
+                 (NTreeMkProd I I)
+                 (NTrProdC (NTreeTagC 2) (NTreeTagC 2))
+                 (Ã (x, y)∑ T)]]Æ
+: TERM
+=TEX
+which has type:
+
+=SML
+type_of fixp_expression;
+=GFT
+val it = î(Ó, CHAR) TREE SETÆ : TYPE
+=TEX
+
+This set contains the representatives of each type discriminated by tags, so to recover the two sets we need to filter the one as follows:
+
+=SML
+declare_ctk_aliases ntree_ctk ctk_aliases;
+val type_rep = ¨{x | ∂y∑ y ç ëfixp_expressionÆ ± IsTag 1 y ± x = UnTag y}Æ;
+=GFT
+val term_rep =
+   ¨{x
+   |∂ y
+     ∑ y
+           ç ä
+             [[ò (∆ “) (∆ “) (Ã x∑ Head x = ''');
+                   ò (∆ “ ∏ ∆ I) (∆ “ ∏ ∆ (◊ 1)) (Ã (x, y)∑ ≥ Head x = ''')];
+                 [ò (∆ “ ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ Head x = ''');
+                     ò (∆ “ ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ ≥ Head x = ''');
+                     ò
+                         (∆ “ ∏ I ∏ I)
+                         (∆ “ ∏ ◊ 1 ∏ ◊ 2)
+                         (Ã (x, y, z)∑ Head x = ''');
+                     ò (I ∏ I) (◊ 2 ∏ ◊ 2) (Ã (x, y)∑ T)]]
+         ± IsTag 2 y
+         ± x = UnTag y}Æ : TERM
+=SML
+val term_rep = ¨{x | ∂y∑ y ç ëfixp_expressionÆ ± IsTag 2 y ± x = UnTag y}Æ;
+=GFT
+val term_rep =
+   ¨{x
+   |∂ y
+     ∑ y
+           ç ä
+             [[ò (∆ “) (∆ “) (Ã x∑ Head x = ''');
+                   ò (∆ “ ∏ ∆ I) (∆ “ ∏ ∆ (◊ 1)) (Ã (x, y)∑ ≥ Head x = ''')];
+                 [ò (∆ “ ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ Head x = ''');
+                     ò (∆ “ ∏ I) (∆ “ ∏ ◊ 1) (Ã (x, y)∑ ≥ Head x = ''');
+                     ò
+                         (∆ “ ∏ I ∏ I)
+                         (∆ “ ∏ ◊ 1 ∏ ◊ 2)
+                         (Ã (x, y, z)∑ Head x = ''');
+                     ò (I ∏ I) (◊ 2 ∏ ◊ 2) (Ã (x, y)∑ T)]]
+         ± IsTag 2 y
+         ± x = UnTag y}Æ : TERM
+=TEX
+
+Let's check this out by trying a proof that the set of types is non-empty.
+
+=SML
+set_goal ([], ¨∂t∑ t ç ëtype_repÆÆ);
+a (rewrite_tac (map get_spec [¨äÆ, ¨òÆ, ¨NTrProdCÆ, ¨NTreeMkProdÆ]));
+=TEX
+
+\section{MAKING NEW TYPES}
+
+Here are some examples I would like to be able to handle.
+
+\begin{description}
+\item[algebras] e.g. a type of groups, these are essentially subtypes of labelled product types in which the projections yield objects conforming to the signature of the relevant algebra.  This is therefore a special case of the general inductive datatypes problem (if an implementation of that allowed predicates).
+\item[types from algebras] e.g. given a type of groups, make a type out of a presentation of a particular group.
+\item[from hereditatily sets]
+e.g. a type of hereditarily pure functions, or a pair of types for the pure concrete categories and functors.
+\end{description}
+
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{fixp_egs.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+set_flag ("pp_use_alias", true);
+output_theory{out_file="fixp_egs.th.doc", theory="fixp_egs"};
+set_flag ("pp_use_alias", false);
+=TEX

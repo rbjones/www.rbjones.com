@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.2 2004/09/08 05:15:37 rbj Exp $
+$Id: t005.doc,v 1.3 2004/10/03 19:42:39 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -36,10 +36,12 @@ Fixed Points and Well Founded Relations
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{rbj}
+\bibliography{rbj,fmu}
 } %\raggedright
 
 \section{Introduction}
+
+For context and motivation see \cite{rbjt000}.
 
 \subsection{The Theory wfrel}
 
@@ -48,7 +50,7 @@ The new theory is first created, together with a proof context which we will bui
 open_theory "hol";
 force_new_theory "wfrel";
 force_new_pc "wfrel";
-merge_pcs ["xl_cs_¶_conv"] "wfrel";
+merge_pcs ["'savedthm_cs_¶_proof"] "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
 
@@ -302,17 +304,16 @@ val tc_wf_twf_thm = save_pop_thm "tc_wf_twf_thm";
 We here define a general tactic for performing induction using some well-founded relation.
 The following function (I think these things are called "THM-TACTICAL"s) must be given a theorem which asserts that some relation is well-founded, and then a THM-TACTIC (which determines what is done with the induction assumption), and then a term which is the variable to induct over, and will then facilitate an inductive proof of the current goal using that theorem.
 =SML
-fun WF_INDUCTION_T (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC = (
-	let	fun bad_thm thm = thm_fail "WF_INDUCTION_T" 29021 [thm];
-		val (wf, r) = (dest_app (concl thm))
-			handle Fail _ => bad_thm thm;
-		val sthm = µ_elim r tcwf_lemma2
-			handle Fail _ => bad_thm thm;
-		val ithm = ´_elim sthm thm
-			handle Fail _ => bad_thm thm;
-	in GEN_INDUCTION_T ithm ttac
-	end
-);
+fun WF_INDUCTION_T (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
+ let	fun bad_thm thm = thm_fail "WF_INDUCTION_T" 29021 [thm];
+	val (wf, r) = (dest_app (concl thm))
+		handle Fail _ => bad_thm thm;
+	val sthm = µ_elim r tcwf_lemma2
+		handle Fail _ => bad_thm thm;
+	val ithm = ´_elim sthm thm
+		handle Fail _ => bad_thm thm;
+ in GEN_INDUCTION_T ithm ttac
+ end;
 =TEX
 
 And now we make a tactic out of that (basically by saying "strip the induction hypothesis into the assumptions").
@@ -905,7 +906,7 @@ a (REPEAT strip_tac THEN rewrite_tac[]);
 a (all_Å_tac);
 a (all_fc_tac [fixp_thm1]);
 a (¶_tac ¬g® THEN strip_tac);
-val _ = xl_set_cs_¶_thm (pop_thm ());
+val _ = save_cs_¶_thm (pop_thm ());
 =TEX
 } %\ignore
 
@@ -986,8 +987,7 @@ a (rewrite_tac [ResRelOfFunctor_def, WfDomOf_def, WfPartOf_def, get_spec ¬well_f
 a (spec_nth_asm_tac 1 ¬x®);
 a (SPEC_NTH_ASM_T 2 ¬Ìz· ³ r y z® ante_tac);
 a (rewrite_tac[] THEN REPEAT strip_tac);
-=GFT
-
+=TEX
 
 \section{Respect Theorems}
 
