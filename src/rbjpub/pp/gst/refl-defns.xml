@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: refl-defns.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="refl-defns"
+       title="Definitions of Reflexive Structures."
+       description="The definition of non well-founded classes and functions in well-founded set theory."
+       keywords="x-logic xml logic proofpower gst hol set theory well-founded reflxive"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="../index.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document defines encodings of functions into well-founded sets.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="PolyMorphic Functions"/>
+</sbcol>
+<secref title="Definable Functions"/>
+<sbcol>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody title="Goals">
+<sbcol>
+<subsec title="1. Goals">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="3. ">
+<p>
+</p>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="The Theory refl-defs">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+First we introduce for these definitions the new theory "refl-defs", a child of gst.
+<ft lang="xl-sml" rest="">
+open_theory "gst";
+force_new_theory "refl-defs";
+force_new_pc "refl-defs";
+set_merge_pcs ["gst","refl-defs"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="PolyMorphic Functions" tag="PolyFunc">
+<abstract>
+Polymorphic function are defined using ``patterns''.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Instantiate">
+The following defines how a pattern is instantiated.
+A pattern is instantiated using a function which assigns a value to all possible ``wildcards''.
+A wildcard is any set which more or less than one member.
+<holconst><holsig>
+instantiate : (GS &rarr; GS) &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f s&bull;
+	instantiate f (Unit s) = Imagep (instantiate f) s
+&and;
+	((&not;&exist;t&bull; s = Unit t) &rArr; instantiate f s = f s)
+</holpred>
+</holconst>
+A unit set is a set of patterns, each of which is to be instantiated.
+Any other set is a wildcard which must be replaced by the value assigned to it.
+</subsec>
+<subsec title="Membership">
+Using pattern instantiation we define a new membership relation, &isin;<sub>g</sub><sub>p</sub>, which may be thought of as ``polymorphic'' membership.
+<ft lang="xl-sml" rest="">
+declare_infix (230,"&isin;<sub>g</sub><sub>p</sub>");
+</ft>
+<holconst><holsig>
+$&isin;<sub>g</sub><sub>p</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s t&bull; s &isin;<sub>g</sub><sub>p</sub> t &equiv; &exist;f&bull; s = instantiate f t
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Function Application">
+Function application is by juxtaposition (i.e. nothing), which however we have to subscript.
+So its an infix subscript p.
+<ft lang="xl-sml" rest="">
+declare_infix (240,"<sub>p</sub>");
+</ft>
+<holconst><holsig>
+$<sub>p</sub> : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f x&bull; f <sub>p</sub> x = &epsilon;y&bull; (x &mapsto;<sub>g</sub> y &isin;<sub>g</sub><sub>p</sub> f)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Definable Functions" tag="DefFunc">
+<abstract>
+Definable functions are are those definable in set theory from the ``PolyMorphic'' functions.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Elaborate">
+<p>
+This is the analogue for definable functions of the function ``instantiate''.
+The idea is to encode as sets the definable functions roughly as described in Chapter V of Kunen's <i>Set Theory</i>, except that you get to use any set as a starting point
+(so instead of a countable number of functions you get a collection the same size as WF).
+</p>
+<p>
+To understand ``elaborate'' you must think of a set as an encoding of a formula in a set theory with a very large term language (every set in GS is a term).
+The formula has free variables, and elaborate, given an assignment of values to free variables will give a truth value for the encoded formula.
+</p>
+<holconst><holsig>
+elaborate : (GS &rarr; GS) &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f s t v&bull;
+	elaborate f (&empty;<sub>g</sub> &mapsto;<sub>g</sub> (s &mapsto;<sub>g</sub> t)) &equiv; instantiate f s = instantiate f t
+&and;
+	elaborate f ((Unit &empty;<sub>g</sub>) &mapsto;<sub>g</sub> (s &mapsto;<sub>g</sub> t)) &equiv; instantiate f s &isin;<sub>g</sub> instantiate f t
+&and;
+	elaborate f (Pair (Unit &empty;<sub>g</sub>) &empty;<sub>g</sub> &mapsto;<sub>g</sub> (v &mapsto;<sub>g</sub> (s &mapsto;<sub>g</sub> t)))
+	&equiv; &not; &forall;x&bull;
+		let f' y = if y = v then x else f y
+		in (elaborate f' s &and; elaborate f' t)
+</holpred>
+</holconst>
+The first two clauses in the above definition concern atomic formulae (membership and equality), the terms of which are evaluated using "instantiate".
+The final clause addresses non-atomic formulae via a generalised scheffer stroke.
+</subsec>
+<subsec title="Membership">
+Using elaborate we define another new membership relation, &isin;<sub>g</sub><sub>p</sub>, which may be thought of as ``polymorphic'' membership.
+<ft lang="xl-sml" rest="">
+declare_infix (230,"&isin;<sub>g</sub><sub>d</sub>");
+</ft>
+<holconst><holsig>
+$&isin;<sub>g</sub><sub>d</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s t&bull; s &isin;<sub>g</sub><sub>d</sub> t &equiv; elaborate (&lambda;v&bull; s) t
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

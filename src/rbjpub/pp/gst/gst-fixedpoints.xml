@@ -1,0 +1,614 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: gst-fixedpoints.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="gst-fixedpoints"
+       title="The theory of fixed points in GST"
+       description="A proof of the Knaster-Tarski fixed point theorem."
+       keywords="x-logic xml logic proofpower gst hol set theory fixedpoint knaster tarski"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="index.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+In this document I am investigating how hard it is to prove the Knaster-Tarski fixedpoint theorem in GST.
+I am following Larry Paulson's paper, to whatever extent that is possible with ProofPower.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Monotonicity and Closure Definitions"/>
+<secref title="Least Closure and Fixed Point Definitions"/>
+<secref title="Monotonicity and Closure Lemmas"/>
+</sbcol>
+<sbcol>
+<secref title="Least Fixed Point Lemmas"/>
+<secref title="Least Fixed Point Theorem and Definition"/>
+<secref title="Induction"/>
+<subsec title="Listing of Theory gst-fixp" href="gst-fixp.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "gst-fixp" theory is created as a child of "gst-fun".
+Probably 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory gst-fixp">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "gst-fun";
+force_new_theory "gst-fixp";
+force_new_pc "gst-fixp";
+merge_pcs ["xl_cs_&exist;_conv"] "gst-fixp";
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun", "gst-fixp"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Monotonicity and Closure Definitions">
+<abstract>
+Definitions of the notion of a bounded monotonic function, and of the closure of a set under such a function.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+Larry Paulson does his fixed-point theory in Isabelle using "meta-level functions" rather than functional sets.
+I am guessing that in GST the closest analogy is a HOL function over sets.
+Certainly the transcription is entirely mechanical.
+I am also following Paulson in proving the theorem relative to the lattice of subsets of some set, rather than an arbitrary complete lattice.
+It would also be possible to do this relative to a HOL property and its subproperties and this might be thought more general, since it would then be applicable to arbitrary HOL types.
+I think the pseudo-urelements in GST will mean that the results proven in set theory are easy to apply to other types, and this avoids having to do the set theory used in the proofs for properties as well as for sets.
+</p>
+</subsec>
+<subsec title="bnd_mono">
+The property of being a bounded monotonic function.
+The first argument is the set whose powerset is the relevant lattice.
+<holconst><holsig>
+bnd_mono : GS &rarr; (GS &rarr; GS) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;D h&bull; bnd_mono D h &equiv;
+	h(D) &sube;<sub>g</sub> D &and;
+	&forall;x y&bull; x &sube;<sub>g</sub> y &and; y &sube;<sub>g</sub> D
+		&rArr; h(x) &sube;<sub>g</sub> h(y)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Closures">
+<p>
+I have some reservations about the terminology used in Paulson's paper (though this may well be standard), so I am making some adjustments which have very little impact on the proofs.
+There are two problems.
+</p><p>
+The first is that he defines "lfp" to mean something which he later proves is the least fixed point.
+I would prefer the definition of "lfp" to more directly state that the thing yielded us the least fixed point.
+</p><p>
+The second is that while he talks about fixed points, some of his formal material is really about closures.
+</p><p>
+So I'm going to talk about closures until I have proven the "fixed point" theorem, and then define "lfp" (actually as yielding a fixed point which is the least closure, since this is slightly "stronger" than least fixed point).
+</p><p>
+Here you should first think of forming closures under certain operations.
+This is hard to formalise in a general way because the signatures of the operations may vary.
+So we suppose that we are doing an iterative process (like the iterative construction of the heirarchy of sets except that that particular one never yields a closed).
+At each step in this process new objects are formed from an existing set using the operations under which we are aiming for closure, and these are added to the old objects to form a new set.
+For the function doing this we usually use the name "h".
+If we ever find a set closed under the operations then we find that the result of applying "h" to it is contained in the original (no new objects result), and that is what the following definition of closed states:
+</p>
+<holconst><holsig>
+ closed : GS &rarr; (GS &rarr; GS) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;A h&bull; closed A h &equiv; h(A) &sube;<sub>g</sub> A
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Least Closure and Fixed Point Definitions">
+<abstract>
+The concepts fixed point, least closed, and a function yielding an intersection of closures are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Fixed Point">
+A fixed point of "h" is a set which h maps onto itself.
+This is also a closed.
+<holconst><holsig>
+ fixed_point : GS &rarr; (GS &rarr; GS) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;A h&bull; fixed_point A h &equiv; A = h(A)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Least closed">
+We define here the property of being a least closed set under some function.
+<holconst><holsig>
+ least_closed : GS &rarr; GS &rarr; (GS &rarr; GS) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;D A h&bull; least_closed D A h &equiv;
+	A &sube;<sub>g</sub> D
+	&and; closed A h
+	&and; &forall; B&bull;
+		B &sube;<sub>g</sub> D
+		&and; closed B h
+		&rArr; A &sube;<sub>g</sub> B
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Intersection of closures">
+This is what Paulson defines as the least fixed point.
+I'm going to call it "iclosed" for "intersection of closed sets", and then the proof shows that it is also the least fixed point and justifies the subsequent definition of least fixed point.
+<holconst><holsig>
+ iclosed : GS &rarr; (GS &rarr; GS) &rarr; GS
+</holsig>
+<holpred>
+&forall;D h&bull; iclosed D h = &lcap;<sub>g</sub> (Sep (&weierp;<sub>g</sub> D) &lambda;X&bull; h(X) &sube;<sub>g</sub> X)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Monotonicity and Closure Lemmas">
+<abstract>
+In this section lemmas are proven following Paulson's proof as closely as possible.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Motivation">
+<p>
+I'm following Paulson's proof to get a feel for how much harder it is with ProofPower's less powerful proof automation (and my limited competence driving it).
+Also, I have no reason to be original, so far as I know.
+</p>
+</subsec>
+<subsec title="bnd_monoI">
+This is an introduction rule for bnd_mono.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull;
+h D &sube;<sub>g</sub> D &and;
+(&forall;W X&bull; W &sube;<sub>g</sub> D &and; X &sube;<sub>g</sub> D &and; W &sube;<sub>g</sub> X &rArr; (h W) &sube;<sub>g</sub> (h X))
+&rArr; bnd_mono D h&qqter;);
+a (rewrite_tac[get_spec &qqtel;bnd_mono&qqter;]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;x &sube;<sub>g</sub> D&qqter;
+	THEN1 (
+	fc_tac [&sube;<sub>g</sub>_trans_thm]
+	THEN (asm_fc_tac[])));
+a (REPEAT (asm_fc_tac[]));
+val bnd_monoI = save_pop_thm "bnd_monoI";
+</ft>
+</subsec>
+<subsec title="bnd_monoD1">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull;
+bnd_mono D h &rArr; (h D) &sube;<sub>g</sub> D&qqter;);
+a (rewrite_tac[get_spec &qqtel;bnd_mono&qqter;]
+	THEN REPEAT strip_tac);
+val bnd_monoD1 = save_pop_thm "bnd_monoD1";
+</ft>
+</subsec>
+<subsec title="bnd_monoD2">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull;
+bnd_mono D h &and; W &sube;<sub>g</sub> X &and; X &sube;<sub>g</sub> D &rArr; (h W) &sube;<sub>g</sub> (h X)&qqter;);
+a (rewrite_tac[get_spec &qqtel;bnd_mono&qqter;]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val bnd_monoD2 = save_pop_thm "bnd_monoD2";
+</ft>
+</subsec>
+<subsec title="bnd_mono_subset">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull;
+bnd_mono D h &and; X &sube;<sub>g</sub> D &rArr; (h X) &sube;<sub>g</sub> D&qqter;);
+a (rewrite_tac[get_spec &qqtel;bnd_mono&qqter;]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;h X &sube;<sub>g</sub> h D&qqter;
+	THEN1 ASM_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [&sube;<sub>g</sub>_refl_thm]))) []);
+a (fc_tac[&sube;<sub>g</sub>_trans_thm]
+	THEN asm_fc_tac[]);
+val bnd_mono_subset = save_pop_thm "bnd_mono_subset";
+</ft>
+</subsec>
+<subsec title="bnd_mono_&cup;">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D A B h &bull;
+bnd_mono D h &and; A &sube;<sub>g</sub> D &and; B &sube;<sub>g</sub> D &rArr; (h A) &cup;<sub>g</sub> (h B) &sube;<sub>g</sub> h (A &cup;<sub>g</sub> B)&qqter;);
+a (rewrite_tac[get_spec &qqtel;bnd_mono&qqter;]
+	THEN REPEAT strip_tac);
+a (bc_thm_tac &cup;<sub>g</sub>&sube;<sub>g</sub>_thm1
+	THEN strip_tac
+	THEN (GET_NTH_ASM_T 3 bc_thm_tac)
+	THEN (rewrite_tac [&sube;<sub>g</sub>&cup;<sub>g</sub>_thm])
+	THEN (bc_thm_tac &cup;<sub>g</sub>&sube;<sub>g</sub>_thm1)
+	THEN contr_tac);
+val bnd_mono_&cup;<sub>g</sub> = save_pop_thm "bnd_mono_&cup;<sub>g</sub>";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Least Fixed Point Lemmas">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="lfp_lowerbound">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h A&bull;
+h A &sube;<sub>g</sub> A &and; A &sube;<sub>g</sub> D &rArr; iclosed D h &sube;<sub>g</sub> A&qqter;);
+a (rewrite_tac[get_spec &qqtel;iclosed&qqter;]
+	THEN REPEAT strip_tac);
+a (once_rewrite_tac[gst_relext_clauses]);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&lcap;<sub>g</sub> (Sep (&weierp;<sub>g</sub> D) (&lambda; X&bull; h X &sube;<sub>g</sub> X)) &sube;<sub>g</sub> A&qqter;);
+(* *** Goal "1" *** *)
+a (LEMMA_T &qqtel;A &isin;<sub>g</sub> Sep (&weierp;<sub>g</sub> D) (&lambda; X&bull; h X &sube;<sub>g</sub> X)&qqter;
+	(fn x=&gt; accept_tac (&rArr;_match_mp_rule &lcap;<sub>g</sub>&sube;<sub>g</sub>_thm x))
+	THEN1 asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [&isin;<sub>g</sub>&sube;<sub>g</sub>_thm]);
+a (asm_fc_tac[]);
+val lfp_lowerbound = pop_thm ();
+</ft>
+</subsec>
+<subsec title="lfp_subset">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h&bull; iclosed D h &sube;<sub>g</sub> D&qqter;);
+a (once_rewrite_tac[gst_relext_clauses]);
+a (rewrite_tac[get_spec &qqtel;iclosed&qqter;,
+	get_spec &qqtel;&lcap;<sub>g</sub>&qqter;]);
+a (REPEAT strip_tac);
+a (fc_tac [&isin;<sub>g</sub>&sube;<sub>g</sub>_thm]);
+a (asm_fc_tac[]);
+val lfp_subset = pop_thm ();
+</ft>
+</subsec>
+<subsec title="def_lfp_subset">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; A = iclosed D h &rArr; A &sube;<sub>g</sub> D&qqter;);
+a (REPEAT strip_tac
+	THEN asm_rewrite_tac[lfp_subset]);
+val def_lfp_subset = save_pop_thm "def_lfp_subset";
+</ft>
+</subsec>
+<subsec title="lfp_greatest">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; h D &sube;<sub>g</sub> D
+	&and; (&forall;X&bull; h X &sube;<sub>g</sub> X &and; X &sube;<sub>g</sub> D &rArr; A &sube;<sub>g</sub> X)
+	&rArr; A &sube;<sub>g</sub> iclosed D h&qqter;);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec&qqtel;iclosed&qqter;]);
+a (LEMMA_T &qqtel;D &isin;<sub>g</sub> Sep (&weierp;<sub>g</sub> D) (&lambda; X&bull; h X &sube;<sub>g</sub> X)&qqter;
+	(fn x=&gt; asm_tac(&rArr;_match_mp_rule &sube;<sub>g</sub>&lcap;<sub>g</sub>_thm x))
+	THEN1 (asm_rewrite_tac[&sube;<sub>g</sub>_refl_thm]));
+a (lemma_tac &qqtel;&forall; D'&bull; D' &isin;<sub>g</sub> Sep (&weierp;<sub>g</sub> D) (&lambda; X&bull; h X &sube;<sub>g</sub> X) &rArr; A &sube;<sub>g</sub> D'&qqter;);
+(* *** Goal "1" *** *)
+a (rewrite_tac[]);
+a (asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT (asm_fc_tac[]));
+val lfp_greatest = save_pop_thm "lfp_greatest";
+</ft>
+ </subsec>
+<subsec title="lfp_lemma1">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; bnd_mono D h &and; h A &sube;<sub>g</sub> A &and; A &sube;<sub>g</sub> D
+	&rArr; h(iclosed D h) &sube;<sub>g</sub> A&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;h(iclosed D h) &sube;<sub>g</sub> h A&qqter;);
+a (bc_thm_tac bnd_monoD2
+	THEN &exist;_tac &qqtel;D&qqter;
+	THEN asm_rewrite_tac[]);
+a (fc_tac[lfp_lowerbound]
+	THEN REPEAT (asm_fc_tac[]));
+a (fc_tac[&sube;<sub>g</sub>_trans_thm]
+	THEN REPEAT (asm_fc_tac[]));
+val lfp_lemma1 = save_pop_thm "lfp_lemma1";
+</ft>
+</subsec>
+<subsec title="lfp_lemma2">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; bnd_mono D h
+	&rArr; h(iclosed D h) &sube;<sub>g</sub> iclosed D h&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&forall; X&bull; h X &sube;<sub>g</sub> X &and; X &sube;<sub>g</sub> D &rArr; h (iclosed D h) &sube;<sub>g</sub> X&qqter;);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac);
+a (fc_tac [lfp_lemma1]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;h D &sube;<sub>g</sub> D&qqter;
+	THEN1 (fc_tac[bnd_monoD1]));
+a (fc_tac[lfp_greatest]);
+a (asm_fc_tac[]);
+val lfp_lemma2 = save_pop_thm "lfp_lemma2";
+</ft>
+</subsec>
+<subsec title="lfp_lemma3">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; bnd_mono D h
+	&rArr; iclosed D h &sube;<sub>g</sub> h(iclosed D h)&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;h (h (iclosed D h)) &sube;<sub>g</sub> h (iclosed D h)
+	&and; h (iclosed D h) &sube;<sub>g</sub> D&qqter;);
+(* *** Goal "1" *** *)
+a strip_tac;
+(* *** Goal "1.1" *** *)
+a (lemma_tac &qqtel;h (iclosed D h) &sube;<sub>g</sub> iclosed D h
+	&and; iclosed D h &sube;<sub>g</sub> D&qqter;);
+(* *** Goal "1.1.1" *** *)
+a strip_tac;
+(* *** Goal "1.1.1.1" *** *)
+a (fc_tac [lfp_lemma2]);
+(* *** Goal "1.1.1.2" *** *)
+a (lemma_tac &qqtel;D &sube;<sub>g</sub> D&qqter;
+	THEN1 (rewrite_tac [&sube;<sub>g</sub>_refl_thm]));
+a (lemma_tac &qqtel;h D &sube;<sub>g</sub> D&qqter;);
+(* *** Goal "1.1.1.2.1" *** *)
+a (fc_tac [bnd_mono_subset]);
+a (spec_asm_tac &qqtel;&forall; X&bull; X &sube;<sub>g</sub> D &rArr; h X &sube;<sub>g</sub> D&qqter; &qqtel;D&qqter; );
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
+(* *** Goal "1.1.1.2.2" *** *)
+a (rewrite_tac [lfp_subset]);
+(* *** Goal "1.1.2" *** *)
+a (fc_tac [bnd_monoD2]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "1.2" *** *)
+a (lemma_tac &qqtel;iclosed D h &sube;<sub>g</sub> D&qqter;
+	THEN1 (rewrite_tac [lfp_subset]));
+a (fc_tac[bnd_mono_subset]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (fc_tac [lfp_lowerbound]);
+val lfp_lemma3 = save_pop_thm "lfp_lemma3";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Least Fixed Point Theorem and Definition">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="lfp_Tarski">
+This is Paulson's version of Tarski's theorem, apart from my using the name "iclosed" instead of "lfp".
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; A D h&bull; bnd_mono D h
+	&rArr; iclosed D h = h(iclosed D h)&qqter;);
+a (REPEAT strip_tac
+	THEN (rewrite_tac[&sube;<sub>g</sub>_eq_thm]));
+a (fc_tac[lfp_lemma2, lfp_lemma3]
+	THEN REPEAT strip_tac);
+val lfp_Tarski = save_pop_thm "lfp_Tarski";
+</ft>
+</subsec>
+<subsec title="least_closed iclosed">
+Now we take a brief excursion from Paulson's path resulting from my eccentricities on the specificaton.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull; bnd_mono D h &rArr; 
+least_closed D (iclosed D h) h&qqter;);
+a (REPEAT strip_tac);
+a (rewrite_tac[
+	get_spec &qqtel;closed&qqter;,
+	get_spec &qqtel;least_closed&qqter;]);
+a (rewrite_tac[lfp_subset]);
+a (fc_tac[lfp_Tarski, lfp_lemma2]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;h (iclosed D h) &sube;<sub>g</sub> B&qqter;);
+(* *** Goal "1" *** *)
+a (fc_tac[lfp_lemma1]);
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (asm_ante_tac &qqtel;h (iclosed D h) &sube;<sub>g</sub> B&qqter;
+	THEN GET_NTH_ASM_T 3
+	(fn x=&gt; once_rewrite_tac[eq_sym_rule x])
+	THEN REPEAT strip_tac);
+val lemp_lemma = save_pop_thm "lemp_lemma";
+</ft>
+</subsec>
+<subsec title="Fixed Point Theorem">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h &bull;
+bnd_mono D h &rArr; &exist;A&bull; A &sube;<sub>g</sub> D 
+	&and; fixed_point A h
+	&and; least_closed D A h&qqter;);
+a (REPEAT strip_tac);
+a (&exist;_tac &qqtel;iclosed D h&qqter; THEN rewrite_tac[
+	get_spec &qqtel;fixed_point&qqter;,
+	get_spec &qqtel;closed&qqter;]);
+a (rewrite_tac[lfp_subset]);
+a (fc_tac[lfp_Tarski, lfp_lemma2, lemp_lemma]
+	THEN REPEAT strip_tac);
+val Tarski_thm = save_pop_thm "Tarski_thm";
+</ft>
+</subsec>
+<subsec title="Least Fixed Point Function">
+This asserts the existence of a function delivering least fixed points.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;lfp&bull; &forall; D h &bull;
+bnd_mono D h &rArr; (lfp D h) &sube;<sub>g</sub> D 
+	&and; fixed_point (lfp D h) h
+	&and; least_closed D (lfp D h) h&qqter;);
+a (&exist;_tac &qqtel;iclosed&qqter; THEN rewrite_tac[
+	get_spec &qqtel;fixed_point&qqter;,
+	get_spec &qqtel;closed&qqter;]);
+a (rewrite_tac[lfp_subset]);
+a (REPEAT strip_tac
+	THEN fc_tac[lfp_Tarski, lfp_lemma2, lemp_lemma]
+	THEN REPEAT strip_tac);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+lfp: GS &rarr; (GS &rarr; GS) &rarr; GS
+</holsig>
+<holpred>
+&forall; D h &bull; bnd_mono D h &rArr;
+	(lfp D h) &sube;<sub>g</sub> D
+	&and; fixed_point (lfp D h) h
+	&and; least_closed D (lfp D h) h
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Least Fixed Point Clauses">
+We now need to carry forward some of the useful results about "iclosed" to "lfp".
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; D h&bull; bnd_mono D h &rArr; 	lfp D h &sube;<sub>g</sub> D&qqter;);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec &qqtel;lfp&qqter;]);
+val lfp_subset = save_pop_thm "lfp_subset";
+
+set_goal([],&qqtel;&forall; D h&bull; bnd_mono D h &rArr; h(lfp D h) = lfp D h&qqter;);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec &qqtel;lfp&qqter;]);
+a (GET_NTH_ASM_T 2
+	(fn x=&gt; rewrite_tac[eq_sym_rule(rewrite_rule[get_spec &qqtel;fixed_point&qqter;] x)])
+	THEN rewrite_tac[&sube;<sub>g</sub>_refl_thm]);
+val lfp_fixp = save_pop_thm "lfp_fixp";
+
+set_goal([],&qqtel;&forall; D h&bull; bnd_mono D h &rArr; 
+	&forall;A X&bull; h A &sube;<sub>g</sub> A
+	&and; A &sube;<sub>g</sub> D
+	&rArr; lfp D h &sube;<sub>g</sub> A
+&qqter;);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec &qqtel;lfp&qqter;]);
+a (asm_ante_tac &qqtel;least_closed D (lfp D h) h&qqter;
+	THEN (rewrite_tac [
+		get_spec &qqtel;least_closed&qqter;,
+		get_spec &qqtel;closed&qqter;])
+	THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[]));
+val lfp_lowerbound = save_pop_thm "lfp_lowerbound";
+
+(*
+set_goal([],&qqtel;&forall; D h&bull; bnd_mono D h &rArr; 
+	&forall;A X&bull; h D &sube;<sub>g</sub> D
+	&and; (&forall;X&bull; h X &sube;<sub>g</sub> X &and; X &sube;<sub>g</sub> D &rArr; A &sube;<sub>g</sub> X)
+	&rArr; A &sube;<sub>g</sub> lfp D h
+&qqter;);
+*)
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Induction">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Set is Closed">
+This lemma states that the induction hypothesis (couched in terms of h) imply that the set of elements having the property is closed under h.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;D h p&bull;
+	bnd_mono D h &and; (&forall;x&bull; x &isin;<sub>g</sub> h(Sep (lfp D h) p) &rArr; p x)
+	&rArr; closed (Sep (lfp D h) p) h&qqter;);
+a (prove_tac [get_spec &qqtel;closed&qqter;]);
+a (once_rewrite_tac [gst_relext_clauses]);
+a (asm_prove_tac[]);
+a (lemma_tac &qqtel;h (Sep (lfp D h) p) &sube;<sub>g</sub> h (lfp D h)&qqter;);
+a (lemma_tac &qqtel;Sep (lfp D h) p &sube;<sub>g</sub> lfp D h&qqter;);
+a (prove_tac [gst_relext_clauses]);
+a (lemma_tac &qqtel;lfp D h &sube;<sub>g</sub> D&qqter;
+	THEN1 (fc_tac[get_spec &qqtel;lfp&qqter;]));
+a (fc_tac [bnd_monoD2]);
+a (REPEAT (asm_fc_tac[]));
+a (lemma_tac &qqtel;h (lfp D h) &sube;<sub>g</sub> lfp D h&qqter;);
+a (fc_tac [
+	rewrite_rule [
+		get_spec &qqtel;least_closed&qqter;,
+		get_spec &qqtel;closed&qqter;]
+	(get_spec &qqtel;lfp&qqter;)]);
+a (lemma_tac &qqtel;h (Sep (lfp D h) p) &sube;<sub>g</sub> lfp D h&qqter;
+	THEN1 (fc_tac[&sube;<sub>g</sub>_trans_thm] THEN REPEAT (asm_fc_tac[])));
+a (asm_ante_tac &qqtel;h (Sep (lfp D h) p) &sube;<sub>g</sub> lfp D h&qqter;
+	THEN asm_prove_tac [gst_relext_clauses]);
+val Collect_is_pre_fixedpt = save_pop_thm "Collect_is_pre_fixedpt";
+</ft>
+</subsec>
+<subsec title="Induction">
+
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;D h p a&bull;
+	bnd_mono D h &and; (&forall;x&bull; x &isin;<sub>g</sub> h(Sep (lfp D h) p) &rArr; p x) &and; a &isin;<sub>g</sub> lfp D h
+	&rArr; p a&qqter;);
+a (REPEAT strip_tac);
+a (fc_tac [Collect_is_pre_fixedpt]);
+a (asm_fc_tac[]);
+a (asm_ante_tac &qqtel;closed (Sep (lfp D h) p) h&qqter;
+	THEN (rewrite_tac [get_spec &qqtel;closed&qqter;])
+	THEN strip_tac);
+a (lemma_tac &qqtel;Sep (lfp D h) p &sube;<sub>g</sub> D&qqter;
+	THEN1 (fc_tac[lfp_subset] THEN
+		asm_prove_tac[gst_relext_clauses]));
+a (fc_tac [lfp_lowerbound]);
+a (LEMMA_T &qqtel;lfp D h &sube;<sub>g</sub> Sep (lfp D h) p&qqter; ante_tac
+	THEN1 (REPEAT (asm_fc_tac[])));
+a (rewrite_tac[gst_relext_clauses]
+	THEN (REPEAT strip_tac));
+a (REPEAT (asm_fc_tac[]));
+val induct = save_pop_thm "induct";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+In this section I will create a decent proof context for fixedpoints, eventually.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+commit_pc "gst-fixp";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

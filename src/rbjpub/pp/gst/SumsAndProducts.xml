@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: SumsAndProducts.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="SumsAndProducts"
+       title="Indexed Sums and Products in GST"
+       description="Definitions and elementary results concerning dependent sum and product spaces."
+       keywords="x-logic xml logic proofpower gst hol set theory sum product dependent"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="index.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Sums"/>
+</sbcol>
+<sbcol>
+<secref title="Products"/>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory gst-sumprod" href="gst-sumprod.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "gst-rec" theory is created as a child of "gst-fun".
+Probably 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory gst-sumprod">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "gst-fun";
+force_new_theory "gst-sumprod";
+force_new_pc "gst-sumprod";
+merge_pcs ["xl_cs_&exist;_conv"] "gst-sumprod";
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun", "gst-sumprod"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Sums">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Defining Dependent Sums">
+The symbol &qqtel;&Sigma;&qqter; is used for the dependent product or existential type constructor, which is a generalisation of a labelled disjoint union.
+It takes a set which must be a function and which is interpreted as an indexed collection of sets.
+It returns a set of ordered pairs the first of which is some value (the index) in the domain of the function, and the second is a value in the set which the function maps that index.
+The function is interpreted as assigning to each element in the index set a "type", and the result is the labelled disjoint union of all these types, the labels being the indexes.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist; &Sigma;&bull;
+&forall;f&bull; fun f &rArr;
+	(&forall;e&bull; e &isin;<sub>g</sub> (&Sigma; f) &equiv;
+		&exist;i v&bull; e = i &mapsto;<sub>g</sub> v
+		&and; i &isin;<sub>g</sub> dom f
+		&and; v &isin;<sub>g</sub> f <sub>g</sub> i)
+&qqter;);
+a (&exist;_tac &qqtel;&lambda;f&bull; &lcup;<sub>g</sub> (
+	Imagep
+	(&lambda;i&bull; Imagep (&lambda;v&bull; i &mapsto;<sub>g</sub> v) (f <sub>g</sub> i))
+	(dom f))&qqter;
+	THEN rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_ante_tac &qqtel;e &isin;<sub>g</sub> e'&qqter;
+	THEN asm_rewrite_tac[]
+	THEN (REPEAT strip_tac));
+a (&exist;_tac &qqtel;e''&qqter; THEN &exist;_tac &qqtel;e'''&qqter;
+	THEN asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;Imagep (&lambda; v&bull; i &mapsto;<sub>g</sub> v) (f <sub>g</sub> i)&qqter;
+	THEN asm_prove_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+&Sigma; : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; fun f &rArr;
+	(&forall;e&bull; e &isin;<sub>g</sub> (&Sigma; f) &equiv;
+		&exist;i v&bull; e = i &mapsto;<sub>g</sub> v
+		&and; i &isin;<sub>g</sub> dom f
+		&and; v &isin;<sub>g</sub> f <sub>g</sub> i)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Products">
+<abstract>
+
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Defining Dependent Function Spaces">
+The symbol &qqtel;&Pi;&qqter; is used for the dependent function space constructor, which is a generalisation of a labelled product or record type constructor.
+It takes a set which must be a function and which is interpreted as an indexed collection of sets.
+It returns a set of functions.
+The domain of each function is the set of indexes, i.e. the domain of the indexed set.
+Each of the functions maps each of the indexes into a member of the set with that index in the indexed set.
+Each function is therefore a subset of the dependent produce space (or existential type), and this is used in the definition.
+The function is interpreted as assigning to each element in the index set a "type", and the result is the dependent function space.
+<ft lang="xl-sml" rest="">
+(*
+set_goal([],&qqtel;&exist; &Pi;&bull;
+&forall;f&bull; fun f &rArr;
+	(&forall;e&bull; e &isin;<sub>g</sub> (&Pi; f) &equiv;
+		dom e = dom f
+		&and; e &sube;<sub>g</sub> &Sigma; f)
+&qqter;);
+a (&exist;_tac &qqtel;&lambda;f&bull;
+		Sep
+		(&weierp; (&Sigma; f))
+		(&lambda;s&bull; fun s &and; dom s = dom f)&qqter;
+	THEN rewrite_tac[]);
+
+type_of &qqtel;Imagep&qqter;;
+delete_const &qqtel;&Sigma;&qqter;;
+y
+*)
+</ft>
+<holconst><holsig>
+&Pi; : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; fun f &rArr;
+	(&forall;e&bull; e &isin;<sub>g</sub> (&Pi; f) &equiv;
+		dom e = dom f
+		&and; e &sube;<sub>g</sub> &Sigma; f)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+commit_pc "gst-sumprod";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

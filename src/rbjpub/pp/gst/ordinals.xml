@@ -1,0 +1,377 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: ordinals.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="ordinals"
+       title="The theory of ordinals in GST"
+       description="Definition of ordinals and the development of the theory of ordinals in Galactic Set Theory."
+       keywords="logic proofpower gst hol set theory ordinals"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="gst-final.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document introduces definitions and derives results relating to ordinal numbers in galactic set theory.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Ordinals"/>
+</sbcol>
+<sbcol>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory ord" href="ord.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "ord" theory is created as a child of "gst-ax".
+The theory will contain the definitions of ordinals and related material for general use, roughly following "Set Theory" by Frank Drake, chapter 2 section 2.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Motivation">
+This is really motivated purely by interest and self-education.
+Since its so fundamental I think it likely to turn out handy.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Theory ord">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "gst-ax";
+force_new_theory "ord";
+new_parent "wf_relp";
+force_new_pc "ord";
+merge_pcs ["xl_cs_&exist;_conv"] "ord";
+set_merge_pcs ["basic_hol", "gst-ax", "ord"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Ordinals">
+<abstract>
+Ordinal is defined, Drake ch. 2 sec. 2.1
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Definition">
+The concept of transitive set has already been defined in theory <i>gst-ax</i>.
+The concepts <i>connected</i> and <i>ordinal</i> are now defined.
+<holconst><holsig>
+ connected : GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;s :GS&bull; connected s &equiv;
+	&forall;t u :GS&bull; t &isin;<sub>g</sub> s &and; u &isin;<sub>g</sub> s &rArr; t &isin;<sub>g</sub> u &or; t = u &or; u &isin;<sub>g</sub> t
+</holpred>
+</holconst>
+<holconst><holsig>
+ ordinal : GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;s :GS&bull; ordinal s &equiv; transitive s &and; connected s
+</holpred>
+</holconst>
+We now introduce infix ordering relations over ordinals.
+<ft lang="xl-sml" rest="">
+declare_infix(240,"&lt;<sub>o</sub>");
+declare_infix(240,"&le;<sub>o</sub>");
+</ft>
+<holconst><holsig>
+ $&lt;<sub>o</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;x y:GS&bull; x &lt;<sub>o</sub> y &equiv; ordinal x &and; ordinal y &and; x &isin;<sub>g</sub> y
+</holpred>
+</holconst>
+<holconst><holsig>
+ $&le;<sub>o</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;x y:GS&bull; x &le;<sub>o</sub> y &equiv; ordinal x &and; ordinal y &and; x &isin;<sub>g</sub> y &or; x = y
+</holpred>
+</holconst>
+The following definition gives the successor function over the ordinals.
+<holconst><holsig>
+ suc<sub>o</sub> : GS &rarr; GS
+</holsig>
+<holpred>
+  &forall;x:GS&bull; suc<sub>o</sub> x = x &cup;<sub>g</sub> (Unit x)
+</holpred>
+</holconst>
+<hide>
+add_pc_thms "ord" [get_spec &qqtel;connected&qqter;, get_spec &qqtel;ordinal&qqter;];
+set_merge_pcs ["basic_hol", "gst-ax", "ord"];
+</hide>
+</subsec>
+<subsec title="Elementary Theorems">
+First we prove that the empty set is an ordinal.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull; ordinal &empty;<sub>g</sub>
+&qqter;);
+a (rewrite_tac[get_spec &qqtel;ordinal&qqter;, get_spec &qqtel;transitive&qqter;, get_spec &qqtel;connected&qqter;]);
+val ordinal_&empty;<sub>g</sub> = save_pop_thm "ordinal_&empty;<sub>g</sub>";
+</ft>
+Next we prove that the successor of an ordinal is an ordinal.
+This is done in two parts as follows:
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull; transitive x &rArr; transitive (suc<sub>o</sub> x)
+&qqter;);
+</ft>
+(proof omitted)
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;transitive&qqter;, get_spec &qqtel;suc<sub>o</sub>&qqter;]
+	THEN REPEAT strip_tac
+	THEN once_rewrite_tac [gst_relext_clauses]
+	THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 4 &qqtel;e&qqter;);
+a (POP_ASM_T ante_tac);
+a (once_rewrite_tac [get_spec&qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN strip_tac);
+a (all_asm_fc_tac[]);
+val trans_suc_trans = save_pop_thm "trans_suc_trans";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull;
+	connected x &rArr; connected (suc<sub>o</sub> x)
+&qqter;);
+</ft>
+(proof omitted)
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;connected&qqter;, get_spec &qqtel;suc<sub>o</sub>&qqter;]);
+a (REPEAT strip_tac
+	THEN all_asm_fc_tac[]
+	THEN all_var_elim_asm_tac);
+val conn_suc_conn = save_pop_thm "conn_suc_conn";
+</ft>
+</hide><br />
+These together give:
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull; ordinal x &rArr; ordinal (suc<sub>o</sub> x)
+&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;ordinal&qqter;]
+	THEN REPEAT strip_tac
+	THEN fc_tac [trans_suc_trans, conn_suc_conn]);
+val ord_suc_ord = save_pop_thm "ord_suc_ord";
+</ft>
+</hide>
+We now aim to prove that the members of an ordinal are ordinals.
+We do this by proving first that they are connected and then that they are transitive.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull; connected x &rArr; &forall; y:GS&bull; y &sube;<sub>g</sub> x &rArr; connected y&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac (map get_spec [&qqtel;connected&qqter;, &qqtel;$&sube;<sub>g</sub>&qqter;])
+	THEN REPEAT_N 7 strip_tac);
+a (all_asm_fc_tac[]);
+a (REPEAT_N 2 (asm_fc_tac[]) THEN REPEAT strip_tac);
+val conn_sub_conn = save_pop_thm "conn_sub_conn";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall; x:GS&bull; ordinal x &rArr; &forall; y:GS&bull; y &isin;<sub>g</sub> x &rArr; connected y&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac (map get_spec [&qqtel;ordinal&qqter;, &qqtel;transitive&qqter;])
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac []);
+a (all_asm_fc_tac [conn_sub_conn]);
+val conn_mem_ord = save_pop_thm "conn_mem_ord";
+</ft>
+</hide>
+To prove that the members of an ordinal are transitive, well-foundedness is needed.
+First we prove the particular consequences of well-foundedness which are required.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x:GS&bull; &not; x &isin;<sub>g</sub> x&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (asm_tac (gs_wf_ind_thm));
+a (spec_nth_asm_tac 1 &qqtel;&lambda;x&bull; &not; x &isin;<sub>g</sub> x&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac[]
+	THEN swap_nth_asm_concl_tac 1
+	THEN ALL_ASM_FC_T (MAP_EVERY ante_tac) []
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac
+	THEN swap_nth_asm_concl_tac 1
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN &exist;_tac &qqtel;x&qqter;
+	THEN asm_rewrite_tac[]);
+val wf_l1 = save_pop_thm "wf_l1";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; &not; (x &isin;<sub>g</sub> y &and; y &isin;<sub>g</sub> x)&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (asm_tac gs_wf_ind_thm);
+a (spec_nth_asm_tac 1 &qqtel;&lambda;z&bull; &forall;x&bull; &not;(x &isin;<sub>g</sub> z &and; z &isin;<sub>g</sub> x)&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac[]
+	THEN swap_nth_asm_concl_tac 1
+	THEN ALL_ASM_FC_T (MAP_EVERY ante_tac) []
+	THEN asm_rewrite_tac[]);
+a (strip_tac
+	THEN spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "2" *** *)
+a (strip_tac
+	THEN swap_nth_asm_concl_tac 1
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN &exist;_tac &qqtel;y&qqter;
+	THEN REPEAT strip_tac
+	THEN &exist;_tac &qqtel;x&qqter;
+	THEN REPEAT strip_tac);
+val wf_l2 = save_pop_thm "wf_l2";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y z:GS&bull; &not; (x &isin;<sub>g</sub> y &and; y &isin;<sub>g</sub> z &and; z &isin;<sub>g</sub> x)&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (asm_tac gs_wf_ind_thm);
+a (spec_nth_asm_tac 1 &qqtel;&lambda;z&bull; &forall;x y&bull; &not;(x &isin;<sub>g</sub> y &and; y &isin;<sub>g</sub> z &and; z &isin;<sub>g</sub> x)&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac[]
+	THEN swap_nth_asm_concl_tac 1
+	THEN ALL_ASM_FC_T (MAP_EVERY ante_tac) []
+	THEN asm_rewrite_tac[]);
+a (strip_tac
+	THEN list_spec_nth_asm_tac 1 [&qqtel;x&qqter;, &qqtel;x''&qqter;]);
+(* *** Goal "2" *** *)
+a (REPEAT &forall;_tac);
+a (SPEC_NTH_ASM_T 1 &qqtel;z:GS&qqter; ante_tac);
+a (rewrite_tac[]);
+a (strip_tac THEN asm_rewrite_tac[]);
+val wf_l3 = save_pop_thm "wf_l3";
+</ft>
+</hide>
+Now we are ready to prove that the members of an ordinal are transitive.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x:GS&bull; ordinal x &rArr; &forall; y:GS&bull; y &isin;<sub>g</sub> x &rArr; transitive y&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac (map get_spec [&qqtel;ordinal&qqter;, &qqtel;transitive&qqter;]));
+a (REPEAT strip_tac);
+a (rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN REPEAT strip_tac);
+a (REPEAT_N 4 (all_asm_fc_tac[&isin;<sub>g</sub>&sube;<sub>g</sub>_thm]));
+a (fc_tac[get_spec&qqtel;connected&qqter;]);
+a (lemma_tac &qqtel;y &isin;<sub>g</sub> e' &or; y = e' &or; e' &isin;<sub>g</sub> y&qqter;);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 1 [&qqtel;e'&qqter;, &qqtel;y&qqter;]
+	THEN REPEAT strip_tac);
+a( POP_ASM_T ante_tac THEN once_asm_rewrite_tac[]);
+a (rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (asm_tac wf_l3);
+a (list_spec_nth_asm_tac 1 [&qqtel;e&qqter;, &qqtel;y&qqter;, &qqtel;e'&qqter;]);
+(* *** Goal "3" *** *)
+a (all_var_elim_asm_tac);
+a (asm_tac wf_l2);
+a (list_spec_nth_asm_tac 1 [&qqtel;e&qqter;, &qqtel;e'&qqter;]);
+val tran_mem_ord = save_pop_thm "tran_mem_ord";
+</ft>
+</hide>
+Finally we prove that all members of an ordinal are ordinals.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x:GS&bull; ordinal x &rArr; &forall; y:GS&bull; y &isin;<sub>g</sub> x &rArr; ordinal y&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec &qqtel;ordinal&qqter;]);
+a (all_fc_tac [tran_mem_ord, conn_mem_ord]);
+a contr_tac;
+val ord_mem_ord = save_pop_thm "ord_mem_ord";
+</ft>
+</hide>
+
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x:GS&bull; &exist; y:GS&bull; y &isin;<sub>g</sub> x &and; x &cap;<sub>g</sub> y = &empty;<sub>g</sub>&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (asm_tac gs_wf_ind_thm);
+a (spec_nth_asm_tac 1 &qqtel;&lambda; s:GS&bull; &exist; t:GS&bull; s &isin;<sub>g</sub> t &and; s &cap;<sub>g</sub> t = &empty;<sub>g</sub>&qqter;);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[]);
+a (swap_nth_asm_concl_tac 2);
+a (rewrite_tac[]);
+a (strip_tac);
+</ft>
+<ft lang="xl-ign" rest="">
+a (rewrite_tac[]);
+
+val wf2 = save_pop_thm "wf2";
+</ft>
+</hide>
+
+<ft lang="xl-ign" rest="">
+
+undo 1;
+&lt;/subsec&gt;
+&lt;/sbcol&gt;
+&lt;/secbody&gt;
+&lt;/section&gt;
+
+&lt;section title="Proof Context"&gt;
+&lt;abstract&gt;
+In this section we define a proof context for ordinals.
+&lt;/abstract&gt;
+&lt;secbody&gt;
+&lt;sbcol&gt;
+&lt;/sbcol&gt;
+&lt;sbcol&gt;
+&lt;subsec title="Proof Context"&gt;
+</ft>
+<ft lang="xl-sml" rest="">
+add_pc_thms "ord" ([]);
+set_merge_pcs ["basic_hol", "gst-ax", "ord"];
+commit_pc "ord";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

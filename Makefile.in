@@ -1,0 +1,99 @@
+# $Id: Makefile.in,v 1.1 2002/12/24 16:02:49 rbj Exp $
+# @configure_input@
+
+.PHONY: dobuild
+
+default: dobuild
+
+Makefile: Makefile.in configure
+	./configure --prefix=$(prefix)
+#	./config.status
+
+TOPSRCDIR=.
+
+include build/common/vars.mk
+
+# files created by the build process in the top directory (rest are in build dir)
+# "configure" is not deleted by make clean
+CLEANFILES=Makefile config.status config.cache config.log top_srcdir.mk
+
+SITE=rbjones
+prefix=@prefix@
+SITEDATADIR=@datadir@/$(SITE)
+SITEWEBDIR=$(SITEDATADIR)/$(SITE)
+
+TARDEST=/dosb/xfer
+
+help:
+	@echo "A full build-and-install sequence runs like this:"
+	@echo ""
+	@echo "./configure"
+	@echo "make"
+	@echo "make install"
+	@echo ""
+	@echo "The default installation directories are chosen by configure,"
+	@echo "(current web destination is $(SITEWEBDIR)),"
+	@echo "but there are various ways you can impose your own choices"
+	@echo "using parameters to configure."
+	@echo "The easiest is to say: ./configure --prefix=dir"
+	@echo "then everything is installed somewhere below \"dir\"."
+	@echo "This is also one way to check what gets installed and where"
+	@echo "before doing it for real (but you may end up doing the build twice)."
+	@echo ""
+	@echo "Other targets:"
+	@echo "help         - output this text"
+	@echo "clean		- tidy up (deletes configure and Makefile as well!)"
+	@echo "openbrand.tar.gz (in directory $(TARDEST))"
+	@echo "configure		-	build a configure script from configure.in using autoconf"
+	@echo "Makefile		-	make Makefile using config.status"
+	@echo "config.status	-	update config.status to reflect any changes in configure"
+	@echo "uninst	- clear out the OpenBrand data directory (rm -rf $(SITEDATADIR)/*)"
+	@echo "every invocation of make will update Makefile (if out of date)"
+
+configure: configure.in
+	autoconf
+
+clean:
+	-rm -rf build
+	-rm $(CLEANFILES)
+
+config.status: configure
+	./configure
+#	./config.status --recheck
+
+dobuild: top_srcdir.mk
+	cd build && $(MAKE) build
+
+iinstall:
+	@if ! test -d $(PIMAGEDIR); then $(INSTALL) -d -m 755 $(PIMAGEDIR); fi
+	@if ! test -d $(PSGDIR); then $(INSTALL) -d -m 755 $(PSGDIR); fi
+	$(INSTALL) $(XLSGDIR)/*.* $(PSGDIR)
+	$(INSTALL) $(XLIMDIR)/*.* $(PIMAGEDIR)
+	$(INSTALL) src/images/*.* $(PIMAGEDIR)
+
+install: dobuild iinstall
+	cd build && $(MAKE) install
+
+tarfile: install
+	cd $(SITEWEBDIR)/..; tar cvfz $(TARDEST)/rbjones.tar.gz rbjones
+
+uninst:
+	rm -rf $(SITEDATADIR)/*
+
+top_srcdir.mk:
+	@echo "TOPSRCDIR=`pwd`" >> top_srcdir.mk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

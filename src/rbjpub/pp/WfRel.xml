@@ -1,0 +1,450 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: WfRel.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="WfRel"
+       title="Transitive and Well-Founded Relations"
+       description="A theory of transitive and well-founded relations in ProofPower HOL"
+       keywords="x-logic xml logic proofpower hol relations transitive well-founded"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Transitive Relations"/>
+<secref title="Well-Founded Relations"/>
+</sbcol>
+<sbcol>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory wf_rel" href="wf_rel.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "wf_rel" theory is created as a child of "bin_rel".
+Probably 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory wf_rel">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "bin_rel";
+force_new_theory "wf_rel";
+force_new_pc "wf_rel";
+merge_pcs ["xl_cs_&exist;_conv"] "wf_rel";
+set_merge_pcs ["hol", "'bin_rel", "wf_rel"];
+</ft>
+</subsec>
+<subsec title="Auxiliary Results">
+We here demonstrate certain results which properly belong to theories higher up the tree.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;f s&bull; Dom (s &dr; f) = s &cap; (Dom f)&qqter;
+);
+a (prove_tac [sets_ext_clauses, &isin;_in_clauses]);
+val Dom_rest_thm = save_pop_thm "Dom_rest_thm";
+</ft>
+And a result about equality of binary relations:
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;r s&bull; r = s &equiv; Dom r = Dom s &and;
+	&forall;x&bull; x&isin; Dom r &cap; Dom s &rArr; &forall;y&bull; (x,y)&isin;r &equiv; (x,y)&isin;s&qqter;);
+a (REPEAT_N 4 strip_tac
+	THEN1 (strip_tac THEN asm_rewrite_tac[]));
+a (rewrite_tac[sets_ext_clauses, &isin;_in_clauses]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 &qqtel;Fst x&qqter;
+	THEN spec_nth_asm_tac 4 &qqtel;Fst x&qqter;
+	THEN_TRY (SOLVED_T (asm_fc_tac[])));
+a (SPEC_NTH_ASM_T 2 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 3 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 1 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 &qqtel;Fst x&qqter;
+	THEN spec_nth_asm_tac 4 &qqtel;Fst x&qqter;
+	THEN_TRY (SOLVED_T (asm_fc_tac[])));
+a (SPEC_NTH_ASM_T 1 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 2 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 1 &qqtel;Snd x&qqter; (strip_asm_tac o (rewrite_rule[])));
+val rel_ext_Dom_thm = save_pop_thm "rel_ext_Dom_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Transitive Relations">
+<abstract>
+Elementary results about transitive relations and transitive closure.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Theorems">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;r&bull; r<sup class="l">+</sup> &isin; Transitive&qqter;);
+a (rewrite_tac(map get_spec [&qqtel;$<sup class="l">+</sup>&qqter;,&qqtel;Transitive&qqter;]));
+a (REPEAT strip_tac THEN REPEAT (all_asm_fc_tac[]));
+val tran_tc_thm = save_pop_thm("tran_tc_thm");
+
+set_goal([],&qqtel;&forall; r x y z&bull; (x,y) &isin; r<sup class="l">+</sup> &and; (y,z) &isin; r<sup class="l">+</sup> &rArr; (x,z) &isin; r<sup class="l">+</sup>&qqter;);
+a (prove_tac [rewrite_rule [get_spec &qqtel;Transitive&qqter;] tran_tc_thm]);
+val tran_tc_thm2 = save_pop_thm("tran_tc_thm2");
+
+set_goal([],&qqtel;&forall;r &bull; r &sube; r<sup class="l">+</sup>&qqter;);
+a (prove_tac [get_spec &qqtel;$<sup class="l">+</sup>&qqter;, sets_ext_clauses]);
+val &sube;_tc_thm = save_pop_thm("&sube;_tc_thm");
+
+set_goal([],&qqtel;&forall;r x y &bull; (x,y) &isin; r &rArr; (x,y) &isin; r<sup class="l">+</sup>&qqter;);
+a (prove_tac [get_spec &qqtel;$<sup class="l">+</sup>&qqter;, sets_ext_clauses]);
+val &isin;_tc_thm = save_pop_thm("&isin;_tc_thm");
+
+set_goal([],&qqtel;&forall; r x y&bull; (x,y) &isin; r<sup class="l">+</sup> &and; &not; (x,y) &isin; r &rArr; &exist;z&bull; (x,z) &isin; r<sup class="l">+</sup> &and; (z,y) &isin; r&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&forall;q&bull; q &isin; Transitive &and; r &sube; q &rArr; (x,y) &isin; q&qqter;);
+a (asm_ante_tac &qqtel;(x, y) &isin; r <sup class="l">+</sup>&qqter;);
+a (prove_tac [get_spec &qqtel;$<sup class="l">+</sup>&qqter;, &isin;_in_clauses]);
+a (spec_nth_asm_tac 1 &qqtel;{(v, w) | (v,w) &isin; r &or; &exist;u&bull; (v,u) &isin; r<sup class="l">+</sup> &and; (u,w) &isin; r}&qqter;);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x2&qqter;);
+a (all_asm_fc_tac [&isin;_tc_thm]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;u&qqter;);
+a (REPEAT (all_fc_tac [tran_tc_thm2,&isin;_tc_thm]));
+(* *** Goal "2.3" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x2&qqter;);
+a (REPEAT (all_fc_tac [tran_tc_thm2,&isin;_tc_thm]));
+(* *** Goal "2.4" *** *)
+a (spec_nth_asm_tac 1 &qqtel;u'&qqter;);
+a (REPEAT (all_fc_tac [tran_tc_thm2,&isin;_tc_thm]));
+(* *** Goal "2.5" *** *)
+a (DROP_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule[sets_ext_clauses])));
+(* *** Goal "2.6" *** *)
+a (&exist;_tac &qqtel;u&qqter; THEN asm_rewrite_tac[]);
+val tc_decomp_thm = save_pop_thm "tc_decomp_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Well-Founded Relations">
+<abstract>
+Definition of well-founded and transitive-well-founded and proof that the transitive closure of a well-founded relation is transitive-well-founded.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Definitions">
+<holconst><holsig>
+wf: (('a &cross; 'a)SET)SET
+</holsig>
+<holpred>
+&forall; r &bull;
+ r &isin; wf &equiv; &forall; s &bull;
+          (&forall; x &bull; (&forall; y &bull; (y,x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s)
+          &rArr; &forall; x &bull; x &isin; s
+</holpred>
+</holconst>
+<holconst><holsig>
+twf: (('a &cross; 'a)SET)SET
+</holsig>
+<holpred>
+&forall; r &bull;
+ r &isin; twf &equiv; r &isin; wf &and; r &isin; Transitive
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Theorems">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s r&bull; r &isin; wf &rArr; &forall;x&bull; (&forall;y&bull; (y,x) &isin; r<sup class="l">+</sup> &rArr; (&forall;z&bull; (z,y) &isin; r<sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+	&rArr; (&forall;y&bull; (y,x) &isin; r<sup class="l">+</sup> &rArr; y &isin; s)&qqter;);
+a (pure_rewrite_tac [get_spec &qqtel;wf&qqter;, &isin;_in_clauses]);
+a (REPEAT_N 3 strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;{x | (&forall;y&bull; (y,x) &isin; r<sup class="l">+</sup> &rArr; (&forall;z&bull; (z,y) &isin; r<sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+	&rArr; (&forall;y&bull; (y,x) &isin; r<sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  7 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  6 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  5 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  4 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  3 *)  &qqtel;&not; y &isin; s&qqter;
+(*  2 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  1 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (fc_tac [list_&forall;_elim [&qqtel;r&qqter;,&qqtel;y&qqter;,&qqtel;x&qqter;] tc_decomp_thm]);
+(* *** Goal "1.1" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  8 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  7 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  6 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  5 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  4 *)  &qqtel;&not; y &isin; s&qqter;
+(*  3 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  2 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  1 *)  &qqtel;(y, x) &isin; r&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (spec_nth_asm_tac 7 &qqtel;y&qqter;);
+(* *** Goal "1.1.1" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(* 11 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(* 10 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  9 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  8 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  7 *)  &qqtel;&not; y &isin; s&qqter;
+(*  6 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  5 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  4 *)  &qqtel;(y, x) &isin; r&qqter;
+(*  3 *)  &qqtel;(y'', y) &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;&forall; z&bull; (z, y'') &isin; r <sup class="l">+</sup> &rArr; z &isin; s&qqter;
+(*  1 *)  &qqtel;&not; y'' &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (all_fc_tac [tran_tc_thm2]);
+a (spec_nth_asm_tac 10 &qqtel;y''&qqter;);
+a (asm_fc_tac[]);
+(* *** Goal "1.1.2" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  9 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  8 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  7 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  6 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  5 *)  &qqtel;&not; y &isin; s&qqter;
+(*  4 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  3 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;(y, x) &isin; r&qqter;
+(*  1 *)  &qqtel;&forall; y'&bull; (y', y) &isin; r <sup class="l">+</sup> &rArr; y' &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (spec_nth_asm_tac 7 &qqtel;y&qqter;);
+a (spec_nth_asm_tac 3 &qqtel;z&qqter;);
+(* *** Goal "1.2" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  9 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  8 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  7 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  6 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  5 *)  &qqtel;&not; y &isin; s&qqter;
+(*  4 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  3 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;(y, z) &isin; r <sup class="l">+</sup>&qqter;
+(*  1 *)  &qqtel;(z, x) &isin; r&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (spec_nth_asm_tac 8 &qqtel;z&qqter;);
+(* *** Goal "1.2.1" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(* 12 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(* 11 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(* 10 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  9 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  8 *)  &qqtel;&not; y &isin; s&qqter;
+(*  7 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  6 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  5 *)  &qqtel;(y, z) &isin; r <sup class="l">+</sup>&qqter;
+(*  4 *)  &qqtel;(z, x) &isin; r&qqter;
+(*  3 *)  &qqtel;(y'', z) &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;&forall; z&bull; (z, y'') &isin; r <sup class="l">+</sup> &rArr; z &isin; s&qqter;
+(*  1 *)  &qqtel;&not; y'' &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (lemma_tac &qqtel;(z, x) &isin; r <sup class="l">+</sup>&qqter;
+	THEN1 fc_tac [&isin;_tc_thm]);
+a (lemma_tac &qqtel;(y'', x) &isin; r <sup class="l">+</sup>&qqter;
+	THEN1 strip_asm_tac (list_&forall;_elim [&qqtel;r&qqter;,&qqtel;y''&qqter;,&qqtel;z&qqter;,&qqtel;x&qqter;] tran_tc_thm2));
+a (spec_nth_asm_tac 12 &qqtel;y''&qqter;);
+a (spec_nth_asm_tac 6 &qqtel;z'&qqter;);
+(* *** Goal "1.2.2" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(* 10 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  9 *)  &qqtel;&forall; y
+           &bull; (y, x) &isin; r
+               &rArr; y
+                 &isin; {x
+                 |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                     &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  8 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  7 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  6 *)  &qqtel;&not; y &isin; s&qqter;
+(*  5 *)  &qqtel;&forall; y&bull; (y, x') &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  4 *)  &qqtel;(y', x') &isin; r <sup class="l">+</sup>&qqter;
+(*  3 *)  &qqtel;(y, z) &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;(z, x) &isin; r&qqter;
+(*  1 *)  &qqtel;&forall; y&bull; (y, z) &isin; r <sup class="l">+</sup> &rArr; y &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y' &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  4 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  3 *)  &qqtel;&forall; x
+           &bull; x
+               &isin; {x
+               |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                   &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  2 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  1 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+
+(* ?&turnstil; *)  &qqtel;y &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (spec_nth_asm_tac 3 &qqtel;x&qqter;);
+(* *** Goal "2.1" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  7 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  6 *)  &qqtel;&forall; x
+           &bull; x
+               &isin; {x
+               |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                   &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  5 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  4 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  3 *)  &qqtel;(y', x) &isin; r <sup class="l">+</sup>&qqter;
+(*  2 *)  &qqtel;&forall; z&bull; (z, y') &isin; r <sup class="l">+</sup> &rArr; z &isin; s&qqter;
+(*  1 *)  &qqtel;&not; y' &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (spec_nth_asm_tac 5 &qqtel;y'&qqter;);
+a (asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+</ft>
+<ft lang="xl-gft" rest="">
+(*  5 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; (y, x) &isin; r &rArr; y &isin; s) &rArr; x &isin; s) &rArr; (&forall; x&bull; x &isin; s)&qqter;
+(*  4 *)  &qqtel;&forall; x
+           &bull; x
+               &isin; {x
+               |(&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s)
+                   &rArr; (&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s)}&qqter;
+(*  3 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; (&forall; z&bull; (z, y) &isin; r <sup class="l">+</sup> &rArr; z &isin; s) &rArr; y &isin; s&qqter;
+(*  2 *)  &qqtel;(y, x) &isin; r <sup class="l">+</sup>&qqter;
+(*  1 *)  &qqtel;&forall; y&bull; (y, x) &isin; r <sup class="l">+</sup> &rArr; y &isin; s&qqter;
+
+(* ?&turnstil; *)  &qqtel;y &isin; s&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (asm_fc_tac[]);
+val tcwf_lemma1 = save_pop_thm "tcwf_lemma1";
+
+set_goal([],&qqtel;&forall;r&bull; r &isin; wf &rArr; &forall;s&bull; (&forall;t&bull; (&forall;u&bull; (u,t) &isin; r<sup class="l">+</sup> &rArr; u &isin; s) &rArr; t &isin; s) &rArr; (&forall;e&bull; e &isin; s)&qqter;);
+a (REPEAT strip_tac THEN fc_tac [tcwf_lemma1]);
+a (spec_nth_asm_tac 2 &qqtel;e&qqter;);
+a (list_spec_nth_asm_tac 3 [&qqtel;e&qqter;,&qqtel;s&qqter;,&qqtel;u&qqter;]);
+a (spec_nth_asm_tac 7 &qqtel;y&qqter;);
+a (spec_nth_asm_tac 4 &qqtel;u'&qqter;);
+val tcwf_lemma2 = save_pop_thm "tcwf_lemma2";
+
+set_goal([],&qqtel;&forall;r&bull; r &isin; wf &rArr; r<sup class="l">+</sup> &isin; twf&qqter;);
+a (REPEAT strip_tac);
+a (fc_tac [tcwf_lemma2]);
+a (pure_rewrite_tac [get_spec &qqtel;twf&qqter;,get_spec &qqtel;wf&qqter;, tran_tc_thm]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [&qqtel;s&qqter;,&qqtel;x&qqter;]);
+a (spec_nth_asm_tac 3 &qqtel;t&qqter;);
+a (spec_nth_asm_tac 4 &qqtel;y&qqter;);
+val tc_wf_twf_thm = save_pop_thm "tc_wf_twf_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+In this section I will create a decent proof context for recursive definitions, eventually.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+(* commit_pc "wf_rel"; *)
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

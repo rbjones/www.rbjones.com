@@ -1,0 +1,1183 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: gst-axioms.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="gst-axioms"
+       title="Axioms for galactic set theory."
+       description="The axiomatisation of galactic set theory."
+       keywords="logic proofpower gst hol set theory axiom"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="index.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt"
+       indexwidth="220">
+
+<section title="Overview">
+<abstract>
+An axiomatisation in Higher Order Logic of a well-founded set theory with galaxies.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Membership"/>
+<secref title="Extensionality and Well-Foundedness"/>
+<secref title="The Ontology Axiom"/>
+<secref title="PowerSets and Union"/>
+<secref title="Replacement"/>
+</sbcol>
+<sbcol>
+<secref title="Pair and Unit sets"/>
+<secref title="Separation"/>
+<secref title="Union and Intersection"/>
+<secref title="Galaxies"/>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory gst-ax" href="gst-ax.html" />
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+Galactic set theory is a set theory with "galaxies" (previously known as "universes") axiomatised in Higher Order Logic.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Scope">
+This document is mainly concerned with the axioms of galactic set theory, but includes in addition some definitions and theorems which might easily have been part of the axiomatisation.
+In the usual first order axiomatisations of set theory, for example, the <i>pair</i> constructor is introduced axiomatically.
+In this axiomatisation neither the empty set nor <i>pair</i> are primitive, they are introduced by definition once the axioms have been presented.
+Same goes for separation and intersection.
+The theory "gst-ax" created by this document, consists of an axiomatic development of a well-founded set theory in ProofPower HOL, and is created as a child of "basic-hol".
+This version of the theory is derived from a previous version in which "pseudo-urelements" were available, and in which the standard set theoretic vocabulary was used (which rendered the theory unusable in combination with the usual ProofPower HOL theory of sets).
+Pseudo-urelements were dropped because I don't need them, and, however slight the complication they introduce, its not necessary.
+To enable this theory to be used with the standard set theory (properties in set theoretic clothing) the volcabulary has been systematically subscripted with "g" (for galactic).
+</subsec>
+<subsec title="Why Galactic?">
+This document introduces Galactic Set Theory, which is similar to what has elsewhere been called Universal Set Theory (e.g. by Paul M. Cohn in his "Universal Algebra", but I dare say it came from somewhere else).
+The "universes" in Cohn, and the galaxies here are mostly models of ZFC, except the smallest in which there is no infinite set.
+The other main difference is that galactic set theory is formulated in higher order logic.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Membership" tag="MemPue">
+<abstract>
+The first thing we do is to introduce a new ProofPower theory and, in that theory, the new TYPE SET together with the membership relation and a psuedo-urelement injection.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Type GS">
+The sets under consideration will be the elements of a new type "GS" so the first thing we do is to introduce that new type.
+GST is a <i>pure</i> <i>well-founded</i> set theory.
+Since the theory will not be conservative, we make no attempt to relate the membership of "GS" to any of the types already available.
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+<ft lang="xl-sml" rest="">
+open_theory "basic_hol";
+force_new_theory "gst-ax";
+new_parent "wf_relp";
+force_new_pc "gst-ax";
+merge_pcs ["xl_cs_&exist;_conv"] "gst-ax";
+set_merge_pcs ["basic_hol", "gst-ax"];
+new_type ("GS", 0);
+</ft>
+</subsec>
+<subsec title="Membership">
+The most important constant is membership, which is a relation over the sets.
+We can't define this constant (in this context) so it is introduced as a new constant (about which nothing is asserted except its name and type) and its properties are introduced axiomatically. 
+<ft lang="xl-sml" rest="">
+new_const ("&isin;<sub>g</sub>", &qqco;GS&rarr;GS&rarr;BOOL&qqter;);
+declare_infix (230,"&isin;<sub>g</sub>");
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Extensionality and Well-Foundedness" tag="ExtWF">
+<abstract>
+The axioms of extensionality and well-foundedness may be thought of as telling us what kind of thing a set is (later axioms tell us how many of these sets are to be found in our domain of discourse).
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Extensionality">
+The most fundamental property of membership (or is it of sets?) is <i>extensionality</i>, which tells us what kind of thing a set is.
+The axiom tells us that if two sets have the same elements then they are in fact the same set.
+<ft lang="xl-sml" rest="">
+val gs_ext_axiom = new_axiom (["gs_ext_axiom"],
+&qqtel; &forall;s t:GS&bull;
+  s = t &equiv; &forall;e&bull; e &isin;<sub>g</sub> s &equiv; e &isin;<sub>g</sub> t&qqter;);
+</ft>
+It follows from the definitions of IsPue and IsSet and ue_inj_axiom that nothing is both a set and a urelement, and that urelements are equal iff the values from which they were obtained under Pue are equal.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Well-Foundedness">
+The axiom of well-foundedness asserts the requirement that the elements of ('a)GS are a subset of the cumulative heirarchy of sets formed by iteration of set formation beginning with the empty set.
+<ft lang="xl-sml" rest="">
+val gs_wf_axiom =
+	new_axiom (["gs_wf_axiom"],
+&qqtel;well_founded $&isin;<sub>g</sub>
+&qqter;);
+</ft>
+The form in which we have stated the axiom is not very informative and so the more usual formulation is immediately derived as a theorem.
+<ft lang="xl-sml" rest="">
+val gs_wf_min_thm = save_thm ("gs_wf_min_thm",
+	(&rArr;_elim (&forall;_elim &qqtel;$&isin;<sub>g</sub>&qqter; wf_min_thm) gs_wf_axiom));
+</ft>
+We also save the axiom expanded out as an explicit induction theorem.
+<ft lang="xl-sml" rest="">
+val gs_wf_ind_thm = save_thm ("gs_wf_ind_thm",
+	(rewrite_rule [get_spec &qqtel;well_founded&qqter;, get_spec &qqtel;$hereditary&qqter;, get_spec &qqtel;$hered_at&qqter;] gs_wf_axiom));
+</ft>
+
+The remaining axioms are intended to ensure that the subset is a large and well-rounded subset of the cumulative heirarchy.
+This is to be accomplished by defining a Galaxy as a set satisfying certain closure properties and then asserting that every set is a member of some Galaxy.
+It is convenient to introduce new constants and axioms for each of the Galactic closure properties before asserting the existence of the Galaxies.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The Ontology Axiom" tag="Ont">
+<abstract>
+Here we define the subset relation and assert the existence of powersets and unions.
+</abstract>
+<secbody>
+<subsec title="Subsets">
+A subset s of t is a set all of whose members are also members of t.
+<ft lang="xl-sml" rest="">
+declare_infix (230,"&sube;<sub>g</sub>");
+</ft>
+<holconst><holsig>
+$&sube;<sub>g</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s t&bull; s &sube;<sub>g</sub> t &equiv;
+	&forall;e&bull; e &isin;<sub>g</sub> s &rArr; e &isin;<sub>g</sub> t
+</holpred>
+</holconst>
+<subsec>
+<ft lang="xl-sml" rest="">
+val &sube;<sub>g</sub>_thm = get_spec &qqtel;$&sube;<sub>g</sub>&qqter;;
+val &sube;<sub>g</sub>_eq_thm = save_thm ("&sube;<sub>g</sub>_eq_thm", 
+	prove_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;, gs_ext_axiom]
+	&qqtel;&forall;A B&bull; A = B &equiv; A &sube;<sub>g</sub> B &and; B &sube;<sub>g</sub> A&qqter;);
+val &sube;<sub>g</sub>_refl_thm = save_thm ("&sube;<sub>g</sub>_refl_thm", 
+	prove_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	&qqtel;&forall;A&bull; A &sube;<sub>g</sub> A&qqter;);
+val &isin;<sub>g</sub>&sube;<sub>g</sub>_thm = save_thm ("&isin;<sub>g</sub>&sube;<sub>g</sub>_thm",
+	prove_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	&qqtel;&forall;e A B&bull; e &isin;<sub>g</sub> A &and; A &sube;<sub>g</sub> B &rArr; e &isin;<sub>g</sub> B&qqter;);
+val &sube;<sub>g</sub>_trans_thm = save_thm ("&sube;<sub>g</sub>_trans_thm",
+	prove_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	&qqtel;&forall;A B C&bull; A &sube;<sub>g</sub> B &and; B &sube;<sub>g</sub> C &rArr; A &sube;<sub>g</sub> C&qqter;);
+</ft>
+</subsec>
+</subsec>
+<subsec title="ManyOne">
+The relations used in replacement must be "ManyOne" relations, otherwise the image may be larger than the domain, and Russell's paradox would reappear.
+This definition doesn't really belong here, it doesn't belong anywhere else either.
+<holconst><holsig>
+ManyOne : ('a &rarr; 'b &rarr; BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;r&bull; ManyOne r &equiv; &forall;x y z&bull; r x y &and; r x z &rArr; y = z
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Galactic Ontology">
+We now specify with a single axiom the closure requirements which ensure that our universe is adequately populated.
+The ontology axiom states that every set is a member of some galaxy which is transitive and closed under formation of powersets and unions and under replacement.
+<ft lang="xl-sml" rest="">
+val Ontology_axiom =
+	new_axiom (["Ontology_axiom"],
+&qqtel; &forall;s&bull;
+	&exist;g&bull; s &isin;<sub>g</sub> g
+&and;
+	&forall;t&bull; t &isin;<sub>g</sub> g &rArr; t &sube;<sub>g</sub> g
+	&and; (&exist;p&bull; (&forall;v&bull; v &isin;<sub>g</sub> p &equiv; v &sube;<sub>g</sub> t) &and; p &isin;<sub>g</sub> g)
+	&and; (&exist;u&bull; (&forall;v&bull; v &isin;<sub>g</sub> u &equiv; &exist;w&bull; v &isin;<sub>g</sub> w &and; w &isin;<sub>g</sub> t) &and; u &isin;<sub>g</sub> g)
+	&and; (&forall;rel&bull; ManyOne rel &rArr;
+		(&exist;r&bull; (&forall;v&bull; v &isin;<sub>g</sub> r &equiv; &exist;w &bull; w &isin;<sub>g</sub> t &and; rel w v) &and;
+			(r &sube;<sub>g</sub> g &rArr; r &isin;<sub>g</sub> g)))&qqter;
+);
+</ft>
+</subsec>
+</secbody>
+</section>
+
+<section title="PowerSets and Union" tag="Pow">
+<abstract>
+Here we define the powerset and union operators.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="PowerSets">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist; &weierp;<sub>g</sub>&bull; &forall;s t:GS&bull; t &isin;<sub>g</sub> &weierp;<sub>g</sub> s &equiv; t &sube;<sub>g</sub> s&qqter;);
+a (prove_&exist;_tac THEN strip_tac);
+a (strip_asm_tac (&forall;_elim &qqtel;s'&qqter; (Ontology_axiom)));
+a (spec_nth_asm_tac 1 &qqtel;s'&qqter;);
+a (&exist;_tac &qqtel;p&qqter; THEN asm_rewrite_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+&tvb; &weierp;<sub>g</sub>: GS &rarr; GS
+</holsig>
+<holpred>
+&tvb; &forall;s t:GS&bull; t &isin;<sub>g</sub> &weierp;<sub>g</sub> s &equiv; t &sube;<sub>g</sub> s
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Union">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;&lcup;<sub>g</sub>&bull; &forall;s t&bull; t &isin;<sub>g</sub> &lcup;<sub>g</sub> s &equiv; &exist;e&bull; t &isin;<sub>g</sub> e &and; e &isin;<sub>g</sub> s&qqter;);
+a (prove_&exist;_tac THEN strip_tac);
+a (strip_asm_tac (&forall;_elim &qqtel;s'&qqter; Ontology_axiom));
+a (spec_nth_asm_tac 1 &qqtel;s'&qqter;);
+a (&exist;_tac &qqtel;u&qqter; THEN asm_rewrite_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+&tvb; &lcup;<sub>g</sub>: GS &rarr; GS
+</holsig>
+<holpred>
+&tvb; &forall;s t&bull; t &isin;<sub>g</sub> &lcup;<sub>g</sub> s &equiv; &exist;e&bull; t &isin;<sub>g</sub> e &and; e &isin;<sub>g</sub> s
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+val &isin;<sub>g</sub>&lcup;<sub>g</sub>_thm = save_thm ("&isin;<sub>g</sub>&lcup;<sub>g</sub>_thm",
+	prove_rule [get_spec &qqtel;&lcup;<sub>g</sub>&qqter;, &sube;<sub>g</sub>_thm]
+	&qqtel;&forall;s t:GS&bull; t &isin;<sub>g</sub> s &rArr; t &sube;<sub>g</sub> &lcup;<sub>g</sub> s&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Relational Replacement">
+<abstract>
+The constant RelIm is defined for relational replacement.
+</abstract>
+<secbody>
+<subsec title="RelIm">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;RelIm&bull; &forall;rel s t&bull; ManyOne rel &rArr; (t &isin;<sub>g</sub> RelIm rel s &equiv; &exist;e&bull; e &isin;<sub>g</sub> s &and; rel e t)&qqter;);
+a (prove_&exist;_tac THEN REPEAT strip_tac);
+a (strip_asm_tac (&forall;_elim &qqtel;s'&qqter; Ontology_axiom));
+a (spec_nth_asm_tac 1 &qqtel;s'&qqter;);
+a (spec_nth_asm_tac 1 &qqtel;rel'&qqter;);
+a (asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;r&qqter; THEN strip_tac THEN strip_tac THEN asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;r&qqter; THEN strip_tac THEN strip_tac THEN asm_rewrite_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+<holconst><holsig>
+&tvb; RelIm: (GS &rarr; GS &rarr; BOOL) &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&tvb; &forall;rel s t&bull; ManyOne rel &rArr; (t &isin;<sub>g</sub> RelIm rel s &equiv; &exist;e&bull; e &isin;<sub>g</sub> s &and; rel e t)
+</holpred>
+</holconst>
+</subsec>
+</secbody>
+</section>
+
+<section title="Separation">
+<abstract>
+Separation is introduced by conservative extension.
+</abstract>
+<secbody>
+<subsec title="Consistency Proof">
+<p>
+The specification which follows is introduced after proving that it is satisfied by a term involving the use of the Image function and the empty set.
+(This is no longer ideal, a "nicer" proof that separation is conservative is now obtainable from the primitive replacement axiom.)
+The basic idea is that a non-empty subset of any set, consisting of just those elements which satisfy a give property, can be shown to exist using <i>Imagep</i>.
+The required subset is obtained using a function which is the identity function on elements of the original which satisfy the property, and which maps the rest to an element selected from those that do by the choice function.
+A special case is made of the empty subset, which cannot be constructed from a non-empty set using "Imagep".
+Thus, separation is definable in terms of Imagep but the definition depends on the existence of the empty set and the axiom of choice.
+Using the more primitive replacement axiom the existence of the empty set 
+The proof script is omitted (but is available in the source code to this page and is invoked as the theory is loaded).
+</p>
+<p>
+If I had formulated replacement in the more traditional manner, using a many-one relation rather than a (HOL) function, neither the axiom of choice not the empty set axiom would not have been necessary.
+It didn't occur to me at the time that there was a material difference!
+One day I will rework this with the relational replacement axiom, since the functional one would be definable.
+</p>
+<p>
+The consistency claim and the first step in the proof script showing the witness used to prove the claim are:
+</p>
+<ft lang="xl-sml" rest="">
+fun &equiv;_FC_T tac thm = GET_ASMS_T
+	(tac o (fc_rule (fc_&equiv;_canon thm)));
+set_goal([],&qqtel;&exist;Sep&bull; &forall;s p e&bull;
+e &isin;<sub>g</sub> (Sep s p) &equiv; e &isin;<sub>g</sub> s &and; p e
+&qqter;);
+a (prove_&exist;_tac THEN REPEAT strip_tac);
+a (strip_asm_tac (list_&forall;_elim [&qqtel;s'&qqter;] (Ontology_axiom)));
+a (lemma_tac &qqtel;&exist;rel&bull; rel = &lambda;x y&bull; p' x &and; y = x&qqter;
+	THEN1 prove_&exist;_tac);
+a (lemma_tac &qqtel;ManyOne rel&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;ManyOne rel&qqter;]);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;RelIm rel s'&qqter;);
+a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+a (prove_tac[]);
+xl_set_cs_&exist;_thm (pop_thm());
+</ft>
+</subsec>
+<subsec title="Definition">
+This higher order formulation of separation is accomplished by defining a new constant which takes a property of sets <i>p</i> and a set <i>s</i> and returns the subset of <i>s</i> consisting of those elements which satisfy <i>p</i>.
+The definition uses the replacement principle, but since the image of a non-empty set cannot be empty a special case must be made where the result is the empty set.
+The HOL choice function is also used, making this defined version of separation dependent on the axiom of choice as well as replacement.
+<holconst><holsig>
+Sep : GS &rarr; (GS &rarr; BOOL) &rarr; GS
+</holsig>
+<holpred>
+&forall;s p e&bull; e &isin;<sub>g</sub> (Sep s p) &equiv; e &isin;<sub>g</sub> s &and; p e
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+val Sep_thm = get_spec &qqtel;Sep&qqter;;
+add_pc_thms "gst-ax" [Sep_thm, &sube;<sub>g</sub>_refl_thm];
+set_merge_pcs ["basic_hol", "gst-ax"];
+</ft>
+</subsec>
+</secbody>
+</section>
+
+<section title="Galaxies">
+<abstract>
+A Galaxy is a transitive set closed under powerset formation, union and replacement.
+The Ontology axioms ensures that every set is a member of some galaxy.
+Here we define a galaxy constructor and establish some of its properties.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Definition of Galaxy">
+First we define the property of being a galaxy.
+<holconst><holsig>
+&tvb; galaxy: GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s&bull;
+	galaxy s &equiv; (&exist;x&bull; x &isin;<sub>g</sub> s)
+	&and; &forall;t&bull; t &isin;<sub>g</sub> s
+		&rArr; t &sube;<sub>g</sub> s
+		&and; &weierp;<sub>g</sub> t &isin;<sub>g</sub> s
+		&and; &lcup;<sub>g</sub> t &isin;<sub>g</sub> s
+		&and; (&forall;rel&bull; ManyOne rel
+			&rArr; RelIm rel t &sube;<sub>g</sub> s
+			&rArr; RelIm rel t &isin;<sub>g</sub> s)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Existence of Galaxies">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s&bull; &exist;g&bull; s &isin;<sub>g</sub> g &and; galaxy g&qqter;);
+a (strip_tac THEN rewrite_tac [get_spec &qqtel;galaxy&qqter;]);
+a (strip_asm_tac (&forall;_elim &qqtel;s&qqter; Ontology_axiom));
+a (&exist;_tac &qqtel;g&qqter; THEN asm_rewrite_tac []);
+a (strip_tac
+	THEN1 (&exist;_tac &qqtel;s&qqter; THEN strip_tac)
+	THEN strip_tac THEN strip_tac);
+a (spec_nth_asm_tac 2 &qqtel;t&qqter;);
+a (asm_rewrite_tac[] THEN strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac &qqtel;&weierp;<sub>g</sub> t = p&qqter;
+	THEN1 (rewrite_tac [get_spec &qqtel;&weierp;<sub>g</sub>&qqter;, gs_ext_axiom]
+		THEN strip_tac
+		THEN asm_rewrite_tac[])
+	);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac);
+(* *** Goal "2.1" *** *)
+a (lemma_tac &qqtel;&lcup;<sub>g</sub> t = u&qqter;
+	THEN1 (rewrite_tac [get_spec &qqtel;&lcup;<sub>g</sub>&qqter;, gs_ext_axiom]
+		THEN strip_tac
+		THEN asm_rewrite_tac[])
+	);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (strip_tac THEN strip_tac);
+a (spec_nth_asm_tac 2 &qqtel;rel&qqter;);
+(* *** Goal "2.2.1" *** *)
+a (lemma_tac &qqtel;RelIm rel t = r&qqter;);
+(* *** Goal "2.2.1.1" *** *)
+a (rewrite_tac [gs_ext_axiom]);
+a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+(* *** Goal "2.2.1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (lemma_tac &qqtel;RelIm rel t = r&qqter;);
+(* *** Goal "2.2.2.1" *** *)
+a (rewrite_tac [gs_ext_axiom]);
+a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+(* *** Goal "2.2.2.2" *** *)
+a (asm_rewrite_tac[]);
+val galaxies_&exist;_thm = save_pop_thm "galaxies_&exist;_thm";
+</ft>
+Then we define a function which maps each set onto its smallest enclosing galaxy.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist; Gx&bull; &forall;s t&bull; t &isin;<sub>g</sub> Gx s &equiv; &forall;g&bull; galaxy g &and; s &isin;<sub>g</sub> g &rArr; t &isin;<sub>g</sub> g&qqter;);
+a (prove_&exist;_tac THEN strip_tac);
+a (strip_asm_tac (&forall;_elim &qqtel;s'&qqter; galaxies_&exist;_thm));
+a (&exist;_tac &qqtel;Sep g (&lambda;h&bull; &forall; i&bull; galaxy i &and; s' &isin;<sub>g</sub> i &rArr; h &isin;<sub>g</sub> i)&qqter;);
+a (rewrite_tac [get_spec &qqtel;Sep&qqter;]);
+a (REPEAT strip_tac THEN_TRY all_asm_fc_tac[]);
+xl_set_cs_&exist;_thm (pop_thm());
+</ft>
+<holconst><holsig>
+&tvb; Gx: GS &rarr; GS
+</holsig>
+<holpred>
+ &forall;s t&bull; t &isin;<sub>g</sub> Gx s &equiv; &forall;g&bull; galaxy g &and; s &isin;<sub>g</sub> g &rArr; t &isin;<sub>g</sub> g
+</holpred>
+</holconst>
+Now we prove that Gx s is a subset of any galaxies containing s.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s g&bull; galaxy g &and; s &isin;<sub>g</sub> g  &rArr; (Gx s) &sube;<sub>g</sub> g&qqter;);
+a (rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;, get_spec &qqtel;Gx&qqter;]);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+val Gx_&sube;<sub>g</sub>_galaxy = save_pop_thm "Gx_&sube;<sub>g</sub>_galaxy";
+</ft>
+Now we prove that Gx always yeilds a galaxy.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s&bull; galaxy (Gx s)&qqter;);
+a (rewrite_tac (map get_spec [&qqtel;galaxy&qqter;]));
+a (REPEAT_N 2 strip_tac
+	THEN1 (&exist;_tac &qqtel;s&qqter;
+		THEN rewrite_tac [get_spec &qqtel;Gx&qqter;]
+		THEN REPEAT strip_tac)
+	THEN strip_tac
+	THEN rewrite_tac [get_spec &qqtel;Gx&qqter;]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac (map get_spec [&qqtel;$&sube;<sub>g</sub>&qqter;,&qqtel;Gx&qqter;])
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (asm_ante_tac &qqtel;t &sube;<sub>g</sub> g&qqter;
+	THEN rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+(* *** Goal "3" *** *)
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (all_asm_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+(* *** Goal "4" *** *)
+a (all_asm_fc_tac[]);
+a (asm_fc_tac [list_&forall;_elim [&qqtel;g&qqter;] (get_spec &qqtel;galaxy&qqter;)]);
+a (REPEAT (all_asm_fc_tac [Gx_&sube;<sub>g</sub>_galaxy, &sube;<sub>g</sub>_trans_thm]));
+val galaxy_Gx = save_pop_thm "galaxy_Gx";
+</ft>
+</subsec>
+<subsec title="Galaxy Closure">
+The galaxy axiom asserts that a Galaxy is transitive and closed under construction of powersets, distributed union and replacement.
+Galaxies are also closed under most other ways of constructing sets, and we need to demonstrate these facts systematically as the theory is developed.
+</subsec>
+<subsec title="Definition of Transitive">
+<holconst><holsig>
+transitive : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s&bull; transitive s &equiv; &forall;e&bull; e &isin;<sub>g</sub> s &rArr; e &sube;<sub>g</sub> s
+</holpred>
+</holconst>
+<ft lang="xl-tex" rest="">
+&lt;/subsec&gt;
+&lt;subsec title="Galaxies are Transitive"&gt;
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s&bull; galaxy s &rArr; transitive s&qqter;);
+a (rewrite_tac [get_spec &qqtel;transitive&qqter;]);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec&qqtel;galaxy&qqter;]
+	THEN asm_fc_tac[]);
+val GalaxiesTransitive_thm = save_pop_thm "GalaxiesTransitive_thm";
+</ft>
+</subsec>
+<subsec title="Galaxies are Closed under Separation">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s&bull; s &isin;<sub>g</sub> g &rArr; &forall;p&bull; Sep s p &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (lemma_tac &qqtel;&exist;rel&bull; rel = &lambda;x y&bull; p x &and; y = x&qqter;
+	THEN1 prove_&exist;_tac);
+a (lemma_tac &qqtel;ManyOne rel&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;ManyOne rel&qqter;]);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;Sep s p = RelIm rel s &and; RelIm rel s &isin;<sub>g</sub> g&qqter;);
+(* *** Goal "2.1" *** *)
+a (list_spec_nth_asm_tac 7 [&qqtel;s&qqter;,&qqtel;rel&qqter;]);
+(* *** Goal "2.1.1" *** *)
+a (SWAP_NTH_ASM_CONCL_T 1 discard_tac);
+a (rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+a (&equiv;_FC_T rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+a (asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (SPEC_NTH_ASM_T 7 &qqtel;s&qqter; ante_tac);
+a (rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (REPEAT strip_tac THEN rewrite_tac[gs_ext_axiom]);
+a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;e&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (once_asm_rewrite_tac[] THEN strip_tac);
+val GCloseSep = save_pop_thm "GCloseSep";
+</ft>
+</subsec>
+<subsec title="The Empty Set">
+We can now prove that there is an empty set as follows:
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&exist; &empty;<sub>g</sub>&bull; &forall;s&bull; &not; s &isin;<sub>g</sub> &empty;<sub>g</sub>&qqter;);
+a (&exist;_tac &qqtel;Sep (&epsilon;s:GS&bull; T) (&lambda;x:GS&bull; F)&qqter;
+	THEN rewrite_tac [get_spec&qqtel;Sep&qqter;]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+So we define &qqtel;&empty;<sub>g</sub>&qqter; as the empty set:
+<holconst><holsig>
+&empty;<sub>g</sub> : GS
+</holsig>
+<holpred>
+&forall;s&bull; &not; s &isin;<sub>g</sub> &empty;<sub>g</sub>
+</holpred>
+</holconst>
+and the empty set is a member of every galaxy:
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &empty;<sub>g</sub> &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac);
+a (fc_tac [GCloseSep, get_spec &qqtel;galaxy&qqter;]);
+a (list_spec_nth_asm_tac 1 [&qqtel;x&qqter;,&qqtel;&lambda;x:GS&bull; F&qqter;]);
+a (lemma_tac &qqtel;&empty;<sub>g</sub> = Sep x (&lambda; x&bull; F)&qqter;
+	THEN1 (rewrite_tac [gs_ext_axiom, get_spec &qqtel;&empty;<sub>g</sub>&qqter;, get_spec &qqtel;Sep&qqter;]));
+a (asm_rewrite_tac[]);
+val G&empty;<sub>g</sub>C = save_pop_thm "G&empty;<sub>g</sub>C";
+</ft>
+<ft lang="xl-sml" rest="">
+val &empty;<sub>g</sub>&sube;<sub>g</sub>_thm = save_thm ("&empty;<sub>g</sub>&sube;<sub>g</sub>_thm",
+	prove_rule [get_spec &qqtel;&empty;<sub>g</sub>&qqter;, &sube;<sub>g</sub>_thm]
+	&qqtel;&forall;s:GS&bull; &empty;<sub>g</sub> &sube;<sub>g</sub> t&qqter;);
+val &lcup;<sub>g</sub>&empty;<sub>g</sub>_thm = save_thm ("&lcup;<sub>g</sub>&empty;<sub>g</sub>_thm",
+	prove_rule [get_spec &qqtel;&empty;<sub>g</sub>&qqter;, get_spec &qqtel;&lcup;<sub>g</sub>&qqter;, gs_ext_axiom]
+	&qqtel;&lcup;<sub>g</sub> &empty;<sub>g</sub> = &empty;<sub>g</sub>&qqter;);
+val &empty;<sub>g</sub>_spec = get_spec &qqtel;&empty;<sub>g</sub>&qqter;;
+add_pc_thms "gst-ax" (map get_spec [&qqtel;&weierp;<sub>g</sub>&qqter;, &qqtel;&lcup;<sub>g</sub>&qqter;] @ [&empty;<sub>g</sub>_spec, &empty;<sub>g</sub>&sube;<sub>g</sub>_thm, &lcup;<sub>g</sub>&empty;<sub>g</sub>_thm]);
+set_merge_pcs ["basic_hol", "gst-ax"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functional Replacement">
+<abstract>
+The more convenient form of replacement which takes a function rather than a relation (and hence needs no "ManyOne" caveat) is introduced here.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+Though a functional formulation of replacement is most convenient for most applications, it has a number of small disadvantages which have persuaded me to stay closer to the traditional formulation of replacement in terms of relations.
+The more convenient functional version will then be introduced by definition (so if you don't know what I'm talking about, look forward to compare the two versions).
+</p>
+For the record the disadvantages of the functional one (if used as an axiom) are:
+<ol>
+<li>It can't be used to prove the existence of the empty set.</li>
+<li>When used to define separation it requires the axiom of choice.</li>
+</ol>
+</subsec>
+<subsec title="Imagep">
+Now we prove a more convenient version of replacement which takes a HOL function rather than a relation as its argument.
+It states that the image of any set under a function is also a set.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;Imagep&bull; &forall;f:GS &rarr; GS&bull; &forall;s: GS&bull; 
+	(&forall;x&bull; x &isin;<sub>g</sub> Imagep f s &equiv; &exist;e&bull; e &isin;<sub>g</sub> s &and; x = f e)&qqter;);
+a (prove_&exist;_tac THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;&exist;fr&bull; fr = &lambda;x y&bull; y = f' x&qqter; THEN1 prove_&exist;_tac);
+a (lemma_tac &qqtel;ManyOne fr&qqter;
+	THEN1 (asm_rewrite_tac [get_spec &qqtel;ManyOne&qqter;]
+		THEN REPEAT strip_tac
+		THEN asm_rewrite_tac[]));
+a (&exist;_tac &qqtel;RelIm fr s'&qqter;);
+a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+"Imagep f s" is the image of s through f.
+<holconst><holsig>
+Imagep : (GS &rarr; GS) &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f s&bull; 
+	&forall;x&bull; x &isin;<sub>g</sub> Imagep f s
+	&equiv; &exist;e&bull; e &isin;<sub>g</sub> s &and; x = f e
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+val Imagep_spec = get_spec &qqtel;Imagep&qqter;;
+add_pc_thms "gst-ax" (map get_spec [&qqtel;Imagep&qqter;]);
+set_merge_pcs ["basic_hol", "gst-ax"];
+</ft>
+We now show that galaxies are closed under Image.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g
+	&rArr; &forall;s&bull; s &isin;<sub>g</sub> g
+	&rArr; &forall;f&bull; Imagep f s &sube;<sub>g</sub> g
+	&rArr; Imagep f s &isin;<sub>g</sub> g&qqter;);
+a (REPEAT_N 5 strip_tac);
+a (lemma_tac &qqtel;&exist;fr&bull; fr = &lambda;x y&bull; y = f x&qqter; THEN1 prove_&exist;_tac);
+a (lemma_tac &qqtel;ManyOne fr&qqter;
+	THEN1 (asm_rewrite_tac [get_spec &qqtel;ManyOne&qqter;]
+		THEN REPEAT strip_tac
+		THEN asm_rewrite_tac[]));
+a (lemma_tac &qqtel;Imagep f s = RelIm fr s&qqter;);
+(* *** Goal "1" *** *)
+a (pure_rewrite_tac [gs_ext_axiom]);
+a (&equiv;_FC_T pure_once_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
+a (asm_rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (once_asm_rewrite_tac[]);
+a (fc_tac[get_spec &qqtel;galaxy&qqter;]);
+a (list_spec_nth_asm_tac 5 [&qqtel;s&qqter;,&qqtel;fr&qqter;]
+	THEN asm_rewrite_tac[]);
+val GImagepC = save_pop_thm "GImagepC";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Pair and Unit sets" tag="PairUnit">
+<abstract>
+Pair is defined using replacement, and Unit using Pair.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Pair">
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;Pair&bull; &forall;s t e:GS&bull;
+	e &isin;<sub>g</sub> Pair s t
+	&equiv; e = s &or; e = t&qqter;);
+a (&exist;_tac &qqtel;&lambda;s t&bull;Imagep (&lambda;x&bull; if x = &empty;<sub>g</sub> then s else t) (&weierp;<sub>g</sub> (&weierp;<sub>g</sub> &empty;<sub>g</sub>))&qqter;
+	THEN rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_ante_tac &qqtel;&not; e = s&qqter;);
+a (asm_rewrite_tac[]);
+a (cases_tac &qqtel;e'=&empty;<sub>g</sub>&qqter;
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;&empty;<sub>g</sub>&qqter;
+	THEN prove_tac
+	[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+(* *** Goal "3" *** *)
+a (lemma_tac &qqtel;&not; &weierp;<sub>g</sub> &empty;<sub>g</sub> = &empty;<sub>g</sub>&qqter;);
+a (prove_tac[
+	get_spec &qqtel;$&sube;<sub>g</sub>&qqter;,
+	gs_ext_axiom]);
+a (&exist;_tac &qqtel;&empty;<sub>g</sub>&qqter;
+	THEN prove_tac[]);
+a (&exist;_tac &qqtel;&weierp;<sub>g</sub> &empty;<sub>g</sub>&qqter; THEN asm_rewrite_tac[]);
+a (strip_tac THEN rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+Pairs can be defined as the image of some two element set under a function defined by a conditional.
+A suitable two element set can be constructed from the empty set using the powerset construction a couple of times.
+However, having proven that this can be done (details omitted), we can introduce the pair constructor by conservative extension as follows.
+(the ProofPower tool shows that it has accepted my proof by putting this extension into the "definitions" section of the theory listing).
+<holconst><holsig>
+Pair : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;s t e:GS&bull;
+	e &isin;<sub>g</sub> Pair s t
+	&equiv; e = s &or; e = t	
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Pair equality theorem">
+Extensional proofs about equality of pairs are simplified by the following principle.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t u v&bull;
+	Pair s t = Pair u v
+	&equiv; s = u &and; t = v
+	&or; s = v &and; t = u&qqter;);
+a (rewrite_tac[
+	&forall;_elim &qqtel;Pair s t&qqter; gs_ext_axiom,	
+	get_spec &qqtel;Pair&qqter;]
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 2 &qqtel;s&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 &qqtel;u&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (spec_nth_asm_tac 2 &qqtel;v&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (spec_nth_asm_tac 2 &qqtel;t&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+val Pair_eq_thm =
+	save_pop_thm "Pair_eq_thm";
+</ft>
+</subsec>
+<subsec title="Galaxy Closure">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s t&bull; s &isin;<sub>g</sub> g &and; t &isin;<sub>g</sub> g &rArr; Pair s t &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;Pair s t = Imagep (&lambda;x&bull; if x = &empty;<sub>g</sub> then s else t) (&weierp;<sub>g</sub> (&weierp;<sub>g</sub> &empty;<sub>g</sub>))&qqter;);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac [gs_ext_axiom]);
+a (rewrite_tac (map get_spec [&qqtel;Pair&qqter;,&qqtel;Imagep&qqter;]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+a (&exist;_tac &qqtel;&empty;<sub>g</sub>&qqter; THEN rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+(* *** Goal "1.2" *** *)
+a (&exist;_tac &qqtel;&weierp;<sub>g</sub> &empty;<sub>g</sub>&qqter; THEN rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+a (lemma_tac &qqtel;&not; &weierp;<sub>g</sub> &empty;<sub>g</sub> = &empty;<sub>g</sub>&qqter;);
+(* *** Goal "1.2.1" *** *)
+a (rewrite_tac [gs_ext_axiom]
+	THEN strip_tac
+	THEN &exist;_tac &qqtel;&empty;<sub>g</sub>&qqter;
+	THEN rewrite_tac[]);
+(* *** Goal "1.2.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (cases_tac &qqtel;e' = &empty;<sub>g</sub>&qqter;
+	THEN asm_rewrite_tac[]);
+a (asm_ante_tac &qqtel;e = (if e' = &empty;<sub>g</sub> then s else t)&qqter;
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+a (fc_tac [GImagepC]);
+a (list_spec_nth_asm_tac 1 [&qqtel;&weierp;<sub>g</sub> (&weierp;<sub>g</sub> &empty;<sub>g</sub>)&qqter;,&qqtel;&lambda; x&bull; if x = &empty;<sub>g</sub> then s else t&qqter;]);
+a (fc_tac [G&empty;<sub>g</sub>C]);
+a (lemma_tac &qqtel;&forall;s&bull; s &isin;<sub>g</sub> g &rArr; &weierp;<sub>g</sub> s &isin;<sub>g</sub> g&qqter;
+	THEN1 (REPEAT (fc_tac [get_spec &qqtel;galaxy&qqter;])));
+a (REPEAT (asm_fc_tac []));
+(* *** Goal "2.2" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]);
+a (REPEAT strip_tac);
+a (POP_ASM_T ante_tac
+	THEN cases_tac &qqtel;e' = &empty;<sub>g</sub>&qqter;
+	THEN asm_rewrite_tac[]
+	THEN strip_tac
+	THEN asm_rewrite_tac[]);
+val GClosePair = save_pop_thm "GClosePair";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Unit definition">
+<holconst><holsig>
+Unit : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;s&bull; Unit s = Pair s s
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Unit extension theorem">
+The following theorem tells you what the members of a unit sets are.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s e&bull;
+	e &isin;<sub>g</sub> Unit s &equiv; e = s&qqter;);
+a (rewrite_tac [
+	get_spec&qqtel;Unit&qqter;,
+	get_spec&qqtel;Pair&qqter;]
+	THEN REPEAT strip_tac);
+val Unit_thm = pop_thm ();
+add_pc_thms "gst-ax" [get_spec &qqtel;Pair&qqter;, Unit_thm];
+set_merge_pcs ["basic_hol", "gst-ax"];
+</ft>
+</subsec>
+<subsec title="Unit equality theorem">
+The following theorem tells you when two unit sets are equal.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t&bull;
+	Unit s = Unit t
+	&equiv; s = t&qqter;);
+a (prove_tac [
+	&forall;_elim &qqtel;Unit s&qqter; gs_ext_axiom]);
+val Unit_eq_thm = pop_thm ();
+add_pc_thms "gst-ax" [Unit_eq_thm];
+set_merge_pcs ["basic_hol", "gst-ax"];
+</ft>
+</subsec>
+<subsec title="Galaxy Closure">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s t&bull; s &isin;<sub>g</sub> g &rArr; Unit s &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec &qqtel;Unit&qqter;]);
+a (REPEAT (asm_fc_tac[GClosePair]));
+val GCloseUnit = save_pop_thm "GCloseUnit";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Unit-Pair equations">
+The following theorems tell you when Pairs are really Units.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t u&bull;
+	Unit s = Pair t u
+	&equiv; s = t &and; s = u&qqter;);
+a (prove_tac [
+	&forall;_elim &qqtel;Unit s&qqter; gs_ext_axiom]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;s&qqter;
+	THEN spec_nth_asm_tac 2 &qqtel;t&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;u&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY rewrite_tac[]);
+val Unit_Pair_eq_thm = pop_thm ();
+</ft>
+</subsec>
+<subsec>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t u&bull;
+	Pair s t = Unit u
+	&equiv; s = u &and; t = u&qqter;);
+a (prove_tac [
+	&forall;_elim &qqtel;Pair s t&qqter; gs_ext_axiom]);
+val Pair_Unit_eq_thm = pop_thm ();
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Union and Intersection">
+<abstract>
+Binary union and distributed and binary intersection are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Binary Union">
+<hide>
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&cup;<sub>g</sub>");
+set_goal ([],&qqtel;&exist;($&cup;<sub>g</sub>)&bull; &forall;s t e&bull;
+e &isin;<sub>g</sub> (s &cup;<sub>g</sub> t) &equiv; e &isin;<sub>g</sub> s &or; e &isin;<sub>g</sub> t
+&qqter;);
+a (&exist;_tac &qqtel;&lambda;s t&bull; &lcup;<sub>g</sub> (Pair s t)&qqter;);
+a (prove_tac [get_spec &qqtel;&lcup;<sub>g</sub>&qqter;]);
+xl_set_cs_&exist;_thm(pop_thm());
+</ft>
+</hide>
+<holconst><holsig>
+$&cup;<sub>g</sub> : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;s t e&bull; e &isin;<sub>g</sub> (s &cup;<sub>g</sub> t) &equiv; e &isin;<sub>g</sub> s &or; e &isin;<sub>g</sub> t
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+val &cup;<sub>g</sub>_thm = get_spec &qqtel;$&cup;<sub>g</sub>&qqter;;
+val &sube;<sub>g</sub>&cup;<sub>g</sub>_thm = save_thm ("&sube;<sub>g</sub>&cup;<sub>g</sub>_thm", prove_rule
+	[&sube;<sub>g</sub>_thm, &cup;<sub>g</sub>_thm]
+	&qqtel;&forall;A B&bull; A &sube;<sub>g</sub> A &cup;<sub>g</sub> B &and; B &sube;<sub>g</sub> A &cup;<sub>g</sub> B&qqter;);
+val &cup;<sub>g</sub>&sube;<sub>g</sub>_thm1 = save_thm ("&cup;<sub>g</sub>&sube;<sub>g</sub>_thm1", prove_rule
+	[&sube;<sub>g</sub>_thm, &cup;<sub>g</sub>_thm]
+	&qqtel;&forall;A B C&bull; A &sube;<sub>g</sub> C &and; B &sube;<sub>g</sub> C &rArr; A &cup;<sub>g</sub> B &sube;<sub>g</sub> C&qqter;);
+val &cup;<sub>g</sub>&sube;<sub>g</sub>_thm2 = save_thm ("&cup;<sub>g</sub>&sube;<sub>g</sub>_thm2", prove_rule
+	[&sube;<sub>g</sub>_thm, &cup;<sub>g</sub>_thm]
+	&qqtel;&forall;A B C D&bull; A &sube;<sub>g</sub> C &and; B &sube;<sub>g</sub> D &rArr; (A &cup;<sub>g</sub> B) &sube;<sub>g</sub> (C &cup;<sub>g</sub> D)&qqter;);
+val &cup;<sub>g</sub>&empty;<sub>g</sub>_clauses = save_thm ("&cup;<sub>g</sub>&empty;<sub>g</sub>_clauses", prove_rule
+	[gs_ext_axiom, &cup;<sub>g</sub>_thm]
+	&qqtel;&forall;A&bull; (A &cup;<sub>g</sub> &empty;<sub>g</sub>) = A
+	&and; (&empty;<sub>g</sub> &cup;<sub>g</sub> A) = A&qqter;);
+</ft>
+</subsec>
+<subsec title="Galaxy Closure">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s t&bull; s &isin;<sub>g</sub> g &and; t &isin;<sub>g</sub> g &rArr; s &cup;<sub>g</sub> t &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac THEN fc_tac [get_spec &qqtel;galaxy&qqter;]);
+a (lemma_tac &qqtel;s &cup;<sub>g</sub> t = &lcup;<sub>g</sub> (Pair s t)&qqter;
+	THEN1 (once_rewrite_tac [gs_ext_axiom]
+		THEN rewrite_tac [get_spec &qqtel;&lcup;<sub>g</sub>&qqter;, get_spec &qqtel;$&cup;<sub>g</sub>&qqter;]
+		THEN prove_tac[]));
+a (asm_rewrite_tac []);
+a (lemma_tac &qqtel;Pair s t &isin;<sub>g</sub> g&qqter;
+	THEN1 (REPEAT (asm_fc_tac [GClosePair])));
+a (REPEAT (asm_fc_tac[]));
+val GClose&cup;<sub>g</sub> = save_pop_thm "GClose&cup;<sub>g</sub>";
+</ft>
+</subsec>
+<subsec title="Distributed Intersection">
+Distributed intersection doesn't really make sense for the empty set, but under this definition it maps the empty set onto itself.
+<holconst><holsig>
+&lcap;<sub>g</sub> : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;s&bull; &lcap;<sub>g</sub> s = Sep (&lcup;<sub>g</sub> s) (&lambda;x&bull; &forall;t&bull; t &isin;<sub>g</sub> s &rArr; x &isin;<sub>g</sub> t)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Extensional Intersection Theorem">
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;x s e&bull; x &isin;<sub>g</sub> s &rArr;
+	(e &isin;<sub>g</sub> &lcap;<sub>g</sub> s &equiv; &forall;y&bull; y &isin;<sub>g</sub> s &rArr; e &isin;<sub>g</sub> y)&qqter;);
+a (prove_tac [
+	get_spec &qqtel;&lcap;<sub>g</sub>&qqter;]);
+val &lcap;<sub>g</sub>_thm = save_pop_thm "&lcap;<sub>g</sub>_thm";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t&bull; s &isin;<sub>g</sub> t &rArr; &lcap;<sub>g</sub> t &sube;<sub>g</sub> s&qqter;);
+a (rewrite_tac [&lcap;<sub>g</sub>_thm, &sube;<sub>g</sub>_thm]);
+a (REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[&lcap;<sub>g</sub>_thm]));
+val &lcap;<sub>g</sub>&sube;<sub>g</sub>_thm = save_pop_thm "&lcap;<sub>g</sub>&sube;<sub>g</sub>_thm";
+
+val &sube;<sub>g</sub>&lcap;<sub>g</sub>_thm = save_thm ("&sube;<sub>g</sub>&lcap;<sub>g</sub>_thm", 
+	(prove_rule [&sube;<sub>g</sub>_thm, gs_ext_axiom,
+	get_spec &qqtel;$&lcap;<sub>g</sub>&qqter;]
+	&qqtel;&forall;A B&bull; A &isin;<sub>g</sub> B &rArr; &forall;C&bull;	
+	(&forall;D&bull; D &isin;<sub>g</sub> B &rArr; C &sube;<sub>g</sub> D)
+	&rArr; C &sube;<sub>g</sub> &lcap;<sub>g</sub> B&qqter;));
+
+val &lcap;<sub>g</sub>&empty;<sub>g</sub>_thm = save_thm ("&lcap;<sub>g</sub>&empty;<sub>g</sub>_thm", 
+	(prove_rule [gs_ext_axiom,	get_spec &qqtel;$&lcap;<sub>g</sub>&qqter;]
+	&qqtel;&lcap;<sub>g</sub> &empty;<sub>g</sub> = &empty;<sub>g</sub>&qqter;));
+</ft>
+</subsec>
+<subsec title="Binary Intersection">
+Binary intersection could be defined in terms of distributed intersection, but its easier not to.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&cap;<sub>g</sub>");
+</ft>
+<holconst><holsig>
+$&cap;<sub>g</sub> : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;s t&bull; s &cap;<sub>g</sub> t = Sep s (&lambda;x&bull; x &isin;<sub>g</sub> t)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Galaxy Closure">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s&bull; s &isin;<sub>g</sub> g &rArr; &lcap;<sub>g</sub> s &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac
+	THEN rewrite_tac[get_spec &qqtel;&lcap;<sub>g</sub>&qqter;]);
+a (fc_tac [GCloseSep, get_spec &qqtel;galaxy&qqter;]);
+a (list_spec_nth_asm_tac 1 [&qqtel;&lcup;<sub>g</sub> s&qqter;, &qqtel;&lambda; x&bull; &forall; t&bull; t &isin;<sub>g</sub> s &rArr; x &isin;<sub>g</sub> t&qqter;]);
+a (asm_fc_tac[]);
+val GClose&lcap;<sub>g</sub> = save_pop_thm "GClose&lcap;<sub>g</sub>";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s t&bull; s &isin;<sub>g</sub> g &and; t &isin;<sub>g</sub> g &rArr; s &cap;<sub>g</sub> t &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac
+	THEN rewrite_tac[get_spec &qqtel;$&cap;<sub>g</sub>&qqter;]);
+a (fc_tac [GCloseSep]);
+a (list_spec_nth_asm_tac 1 [&qqtel;s&qqter;, &qqtel;&lambda; x&bull; x &isin;<sub>g</sub> t&qqter;]);
+val GClose&cap;<sub>g</sub> = save_pop_thm "GClose&cap;<sub>g</sub>";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Extensional Binary Intersection Theorem">
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;s t e&bull;
+	e &isin;<sub>g</sub> s &cap;<sub>g</sub> t &equiv; e &isin;<sub>g</sub> s &and; e &isin;<sub>g</sub> t&qqter;);
+a (prove_tac [
+	get_spec &qqtel;$&cap;<sub>g</sub>&qqter;]);
+val &cap;<sub>g</sub>_thm = save_thm ("&cap;<sub>g</sub>_thm",
+	prove_rule [get_spec &qqtel;$&cap;<sub>g</sub>&qqter;]
+	&qqtel;&forall;s t e&bull;	e &isin;<sub>g</sub> s &cap;<sub>g</sub> t &equiv; e &isin;<sub>g</sub> s &and; e &isin;<sub>g</sub> t&qqter;);
+val &sube;<sub>g</sub>&cap;<sub>g</sub>_thm = save_thm ("&sube;<sub>g</sub>&cap;<sub>g</sub>_thm",
+	prove_rule [&sube;<sub>g</sub>_thm, &cap;<sub>g</sub>_thm]
+	&qqtel;&forall;A B&bull; A &cap;<sub>g</sub> B &sube;<sub>g</sub> A &and; A &cap;<sub>g</sub> B &sube;<sub>g</sub> B&qqter;);
+val &cap;<sub>g</sub>&sube;<sub>g</sub>_thm1 = save_thm ("&cap;<sub>g</sub>&sube;<sub>g</sub>_thm1",
+	prove_rule [&sube;<sub>g</sub>_thm, &cap;<sub>g</sub>_thm]
+	&qqtel;&forall;A B C&bull; A &sube;<sub>g</sub> C &and; B &sube;<sub>g</sub> C &rArr; A &cap;<sub>g</sub> B &sube;<sub>g</sub> C&qqter;);
+val &cap;<sub>g</sub>&sube;<sub>g</sub>_thm2 = save_thm ("&cap;<sub>g</sub>&sube;<sub>g</sub>_thm2",
+	prove_rule [&sube;<sub>g</sub>_thm, &cap;<sub>g</sub>_thm]
+	&qqtel;&forall;A B C D&bull; A &sube;<sub>g</sub> C &and; B &sube;<sub>g</sub> D &rArr; (A &cap;<sub>g</sub> B) &sube;<sub>g</sub> (C &cap;<sub>g</sub> D)&qqter;);
+val &cap;<sub>g</sub>&sube;<sub>g</sub>_thm3 = save_thm ("&cap;<sub>g</sub>&sube;<sub>g</sub>_thm3",
+	prove_rule [&sube;<sub>g</sub>_thm, &cap;<sub>g</sub>_thm]
+	&qqtel;&forall;A B C&bull; C &sube;<sub>g</sub> A &and; C &sube;<sub>g</sub> B &rArr; C &sube;<sub>g</sub> A &cap;<sub>g</sub> B&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Proof Context">
+<abstract>
+To simplify subsequent proofs a new "proof context" is created enabling automatic use of the results now available.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Principles">
+<p>
+The only principle I know of which assists with elementary proofs in set theory is the principle that set theoretic conjectures can be reduced to the predicate calculus by using extensional rules for relations and for operators.
+</p>
+<p>
+Too hasty a reduction can be overkill and may convert a simple conjecture into an unintelligible morass.
+We have sometimes in the past used made available two proof contexts, an aggressive extensional one, and a milder non-extensional one.
+However, the extensional rules for the operators are fairly harmless, expansion is triggered by the extensional rules for the relations (equality and subset), so a proof context containing the former together with a suitable theorem for the latter gives good control.
+</p>
+</subsec>
+
+<subsec title="Theorems Used Recklessly">
+This is pretty much guesswork, only time will tell whether this is the best collection.
+<ft lang="xl-sml" rest="">
+val gst_ax_thms = [
+	&empty;<sub>g</sub>_spec,
+	get_spec &qqtel;&weierp;<sub>g</sub>&qqter;,
+	get_spec &qqtel;&lcup;<sub>g</sub>&qqter;,
+	Imagep_spec,
+	Pair_eq_thm,
+	get_spec &qqtel;Pair&qqter;,
+	Unit_eq_thm,
+	Unit_thm,
+	Pair_Unit_eq_thm,
+	Unit_Pair_eq_thm,
+	Sep_thm,
+	&cup;<sub>g</sub>_thm,
+	&cap;<sub>g</sub>_thm
+];
+val gst_opext_clauses =
+	(all_&forall;_intro
+	o list_&and;_intro
+	o (map all_&forall;_elim))
+	gst_ax_thms;
+save_thm ("gst_opext_clauses", gst_opext_clauses);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Theorems Used Cautiously">
+The following theorems are too aggressive for general use in the proof context but are needed when attempting automatic proof.
+When an extensional proof is appropriate it can be initiated by a cautious (i.e. a "once") rewrite using the following clauses, after which the extensional rules in the proof context will be triggered.
+<ft lang="xl-sml" rest="">
+val gst_relext_clauses =
+	(all_&forall;_intro
+	o list_&and;_intro
+	o (map all_&forall;_elim))
+	[gs_ext_axiom,
+	get_spec&qqtel;$&sube;<sub>g</sub>&qqter;];
+save_thm ("gst_relext_clauses", gst_relext_clauses);
+</ft>
+There are a number of important theorems, such as well-foundedness and galaxy closure which have not been mentioned in this context.
+The character of these theorems makes them unsuitable for the proof context, their application requires thought.
+</subsec>
+<subsec title="Automatic Proof">
+The basic proof automation is augmented by adding a preliminary rewrite with the relational extensionality clauses.
+<ft lang="xl-sml" rest="">
+fun gst_ax_prove_conv thl =
+	TRY_C (pure_rewrite_conv [gst_relext_clauses])
+	THEN_C (basic_prove_conv thl);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Proof Context gst-ax">
+<ft lang="xl-sml" rest="">
+add_rw_thms gst_ax_thms "gst-ax";
+add_sc_thms gst_ax_thms "gst-ax";
+add_st_thms gst_ax_thms "gst-ax";
+set_pr_conv gst_ax_prove_conv "gst-ax";
+set_pr_tac
+	(conv_tac o gst_ax_prove_conv)
+	"gst-ax";
+commit_pc "gst-ax";
+</ft>
+Using the proof context "gst-ax" elementary results in gst are now provable automatically on demand.
+For this reason it is not necessary to prove in advance of needing them results such as the associativity of intersection, since they can be proven when required by an expression of the form "prove rule[] term" which proves <i>term</i> and returns it as a theorem.
+If the required proof context for doing this is not in place the form "merge_pcs_rule ["basic_hol", gst-ax"] (prove_rule []) term" may be used.
+Since this is a little cumbersome we define the function "gst_ax_rule" and illustrate its use as follows:
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+val gst_ax_rule =
+	(merge_pcs_rule1
+	["basic_hol", "gst-ax"]
+	prove_rule) [];
+val gst_ax_conv = 
+	MERGE_PCS_C1
+	["basic_hol", "gst-ax"]
+	prove_conv;
+val gst_ax_tac =
+	conv_tac o gst_ax_conv;
+</ft>
+</subsec>
+<subsec title="Examples">
+The following are examples of the elementary results which are now proven automatically:
+<ft lang="xl-sml" rest="">
+gst_ax_rule &qqtel;
+	a &cap;<sub>g</sub> (b &cap;<sub>g</sub> c)
+	= (a &cap;<sub>g</sub> b) &cap;<sub>g</sub> c&qqter;;
+gst_ax_rule &qqtel;a &cap;<sub>g</sub> b &sube;<sub>g</sub> b&qqter;;
+gst_ax_rule &qqtel;&empty;<sub>g</sub> &cup;<sub>g</sub> b = b&qqter;;
+gst_ax_rule &qqtel;
+	a &sube;<sub>g</sub> b &and; c &sube;<sub>g</sub> d
+	&rArr; a &cap;<sub>g</sub> c &sube;<sub>g</sub> b &cap;<sub>g</sub> d&qqter;;
+gst_ax_rule &qqtel;Sep b p &sube;<sub>g</sub> b&qqter;;
+gst_ax_rule &qqtel;a &sube;<sub>g</sub> b &rArr;
+	Imagep f a &sube;<sub>g</sub> Imagep f b&qqter;;
+</ft>
+<ft lang="xl-ign" rest="">
+Imagep_axiom;
+set_goal([],&qqtel;a &sube;<sub>g</sub> b &and; c &sube;<sub>g</sub> d
+	&rArr; Imagep f (a &cap;<sub>g</sub> c)
+	&sube;<sub>g</sub> Imagep f (b &cap;<sub>g</sub> d)&qqter;);
+a (once_rewrite_tac
+	[gst_relext_clauses]);
+a (gst_ax_tac[]);
+a (rewrite_tac[]);
+a (prove_tac[]);
+a contr_tac;
+Sep_thm;
+</ft>
+
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: x001.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       name="x001"
+       title="A theory of fixed points"
+       description="A proof of the Knaster-Tarski fixed point theorem."
+       keywords="logic proofpower hol fixedpoint knaster tarski"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+In this document I prove the Knaster-Tarski fixedpoint theorem in a general formulation for HOL.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Monotonicity and Closure Definitions"/>
+<secref title="Least Closure and Fixed Point Definitions"/>
+<secref title="Monotonicity and Closure Lemmas"/>
+</sbcol>
+<sbcol>
+<secref title="Least Fixed Point Lemmas"/>
+<secref title="Least Fixed Point Theorem and Definition"/>
+<secref title="Induction"/>
+<subsec title="Listing of Theory gst-fixp" href="gst-fixp.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "fixp" theory is created as a child of "basic-hol".
+Probably 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory fixp">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+force_new_theory "fixp";
+force_new_pc "fixp";
+merge_pcs ["xl_cs_&exist;_conv"] "fixp";
+set_merge_pcs ["hol", "fixp"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Monotonicity and Closure Definitions">
+<abstract>
+Definitions of the notion of a bounded monotonic function, and of the closure of a set under such a function.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+<p>
+</p>
+</subsec>
+<subsec title="monotonic">
+The property of being a monotonic function.
+
+<holconst><holsig>
+monotonic : ('a SET &rarr; 'a SET) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f&bull; monotonic f &equiv; &forall;x y&bull; x &sube; y &rArr; f(x) &sube; f(y)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Fixpoint Conjecture">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;h&bull; monotonic h &rArr; &exist; s&bull; h s = s&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&exist;T<sub>0</sub>&bull; T<sub>0</sub>={X | X &sube; h X}&qqter;
+	THEN1 prove_&exist;_tac);
+a (lemma_tac &qqtel;&exist;S&bull; S=&lcup;T<sub>0</sub>&qqter;
+	THEN1 prove_&exist;_tac);
+a (&exist;_tac &qqtel;S&qqter;);
+a (lemma_tac &qqtel;S &sube; h(S)&qqter;);
+(* *** Goal "1" *** *)
+a (rewrite_tac[sets_ext_clauses]);
+a (asm_rewrite_tac []
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;x &isin; h s&qqter;
+	THEN1 all_fc_tac[&sube;_def]);
+a (lemma_tac &qqtel;h s &sube; h (&lcup; {X|X &sube; h X})&qqter;);
+(* *** Goal "1.1" *** *)
+a (lemma_tac &qqtel;s &sube; &lcup; {X|X &sube; h X}&qqter;);
+(* *** Goal "1.1.1" *** *)
+a (lemma_tac &qqtel;s &sube; &lcup; {X|X &sube; h X}&qqter;);
+a (once_rewrite_tac[sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (&exist;_tac &qqtel;s&qqter;
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2" *** *)
+a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac [&sube;_def]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;h S &isin; T<sub>0</sub>&qqter;);
+(* *** Goal "2.1" *** *)
+a (GET_ASM_T &qqtel;T<sub>0</sub> = {X|X &sube; h X}&qqter; rewrite_thm_tac);
+a (all_asm_fc_tac [get_spec &qqtel;monotonic&qqter;]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;h S &sube; S&qqter;);
+(* *** Goal "2.2.1" *** *)
+a (rewrite_tac [sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (once_asm_rewrite_tac[]);
+a strip_tac;
+a (&exist;_tac &qqtel;h S&qqter;
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (GET_NTH_ASM_T 1 ante_tac);
+a (GET_NTH_ASM_T 3 ante_tac);
+a (rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val fixpoint_thm = save_pop_thm "fixpoint_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+In this section I will create a decent proof context for fixedpoints, eventually.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+commit_pc "fixp";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+
