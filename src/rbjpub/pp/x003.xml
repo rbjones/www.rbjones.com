@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: x003.xml,v 1.1 2004/04/26 15:38:04 rbj Exp $"
+       name="x003"
+       title="Analyticity and Deduction"
+       description="A proof of an elementary connection between alalyticity and deduction"
+       keywords="logic proofpower analyticity deduction"
+       class="con"
+       root="../../"
+       path="rbjpub/pp/"
+       up="index.html"
+       rbjhome="../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+Formal definitions are give of the concepts analytic and demonstrative and it is proven that under these defintions the two concepts are coextensive.
+The concept "demonstrative" as here formulated is engineered to capture the necessary conditions for proof in a formal system whose theorems are guaranteed to be analytic.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Definitions"/>
+</sbcol>
+<sbcol>
+<subsec title="Listing of Theory x003t" href="x003t.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Definitions">
+<abstract>
+A new "x003" theory is created as a child of "hol" and the definitions of <i>analytic</i> and <i>demonstrative</i> are supplied.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory x003t">
+The new theory is first created.
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+force_new_theory "x003t";
+set_pc "hol";
+</ft>
+</subsec>
+<subsec title="Language and Semantics">
+<p>
+A language is a set of sentences with a given semantics.
+For present purpose a truth conditional semantics is sufficient.
+In fact all we need to know is what sentences in the language are analytic.
+A language is therefore modelled as two properties of sentences, the property of being well formed and the property of being analytic.
+One would expect that the first of these would include the second, I don't think this condition is strictly necessary for present purposes but well have it anyway.
+</p>
+<holconst><holsig>
+&tvb;	language : ('s &rarr;  BOOL) &cross; ('s &rarr;  BOOL)  &rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;wf an&bull; language (wf, an) &equiv; &forall;x &bull; an x &rArr; wf x
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Analytic">
+<p>
+</p>
+<holconst><holsig>
+&tvb;	analytic : 's &cross; ('s &rarr;  BOOL)  &rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;sen sem&bull; analytic (sen, sem) &equiv; sem sen
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Sound Deductive System">
+<p>
+A deductive system is a relation between sets of sentences and sentences, that of derivability.
+Soundness is a relation between deductive systems and semantics, that of preserving analticity.
+</p>
+<holconst><holsig>
+&tvb;	sound : (('s &rarr;  BOOL) &cross; 's &rarr;  BOOL) &cross; ('s &rarr;  BOOL)  &rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;ds sem&bull; sound (ds, sem)
+&tvb;	&equiv; &forall;prem conc&bull; ds (prem, conc)
+&tvb;	  &rArr; ((&forall;s&bull; prem s &rArr; sem s) &rArr; sem conc)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Demonstrative">
+<p>
+A demonstrative is a relation between sentences and semantics (that a sentence when interpreted under that semantics is demonstative).
+</p>
+<holconst><holsig>
+&tvb;	demonstrative : 's &cross; ('s &rarr;  BOOL)  &rarr;  BOOL
+</holsig>
+<holpred>
+&tvb;	&forall;sen sem&bull; demonstrative (sen, sem)
+&tvb;	&equiv; &exist; ds&bull; sound (ds, sem) &and; ds ((&lambda;s&bull;F), sen)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Analytic and Demonstrative are Coextensive">
+<abstract>
+A short proof.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Proof">
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;sen sem&bull; analytic (sen, sem) &equiv; demonstrative (sen, sem)&qqter;);
+a (rewrite_tac(map get_spec [
+		&qqtel;analytic&qqter;,
+		&qqtel;demonstrative&qqter;,
+		&qqtel;sound&qqter;]));
+</ft>
+<ft lang="xl-gft" rest="">
+(* ?&turnstil; *)  &qqtel;&forall; sen sem
+           &bull; sem sen
+               &equiv; (&exist; ds
+               &bull; (&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc)
+                   &and; ds ((&lambda; s&bull; F), sen))&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (REPEAT strip_tac);
+</ft>
+<ft lang="xl-gft" rest="">
+(* *** Goal "2" *** *)
+
+(*  2 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc&qqter;
+(*  1 *)  &qqtel;ds ((&lambda; s&bull; F), sen)&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen&qqter;
+
+
+(* *** Goal "1" *** *)
+
+(*  1 *)  &qqtel;sem sen&qqter;
+
+(* ?&turnstil; *)  &qqtel;&exist; ds
+           &bull; (&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc)
+               &and; ds ((&lambda; s&bull; F), sen)&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;&lambda;(ss,s)&bull; s = sen&qqter;
+	THEN rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+(*  1 *)  &qqtel;sem sen&qqter;
+
+(* ?&turnstil; *)  &qqtel;&forall; prem conc&bull; conc = sen &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+Current goal achieved, next goal is:
+
+(* *** Goal "2" *** *)
+
+(*  2 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc&qqter;
+(*  1 *)  &qqtel;ds ((&lambda; s&bull; F), sen)&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [&qqtel;(&lambda; s&bull; F)&qqter;, &qqtel;sen&qqter;]);
+</ft>
+<ft lang="xl-gft" rest="">
+(*  4 *)  &qqtel;&forall; prem conc&bull; ds (prem, conc) &rArr; (&forall; s&bull; prem s &rArr; sem s) &rArr; sem conc&qqter;
+(*  3 *)  &qqtel;ds ((&lambda; s&bull; F), sen)&qqter;
+(*  2 *)  &qqtel;(&lambda; s&bull; F) s&qqter;
+(*  1 *)  &qqtel;&not; sem s&qqter;
+
+(* ?&turnstil; *)  &qqtel;sem sen&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
+a (swap_nth_asm_concl_tac 2
+	THEN rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
+Current and main goal achieved
+</ft>
+<ft lang="xl-sml" rest="">
+save_pop_thm "analdemon";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+
