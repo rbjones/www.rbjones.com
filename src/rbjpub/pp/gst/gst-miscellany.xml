@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: gst-miscellany.xml,v 1.1 2003/02/01 14:30:08 rbj Exp $"
+       name="gst-miscellany"
+       title="Miscellaneous work using gst."
+       description="Miscellaneous work using gst."
+       keywords="logic proofpower gst hol set theory"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="index.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+Miscellaneous proof work using the gst axioms.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Strong Infinity in HOL"/>
+</sbcol>
+<sbcol>
+<subsec title="Listing of Theory gst-misc" href="gst-misc.html" />
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+So far only one thing here, proof of a putative strong infinity axiom for HOL.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Motivation">
+The idea here is that instead of axiomatising set theory in Higher Order Logic you chose a strong axiom of infinity and then develop one or more set theories by conservative extension.
+</subsec>
+<subsec title="The Theory gst-misc">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+<ft lang="xl-sml" rest="">
+open_theory "gst-ax";
+force_new_theory "gst-misc";
+force_new_pc "gst-misc";
+merge_pcs ["xl_cs_&exist;_conv"] "gst-misc";
+set_merge_pcs ["basic_hol", "gst-ax", "gst-misc"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Strong Infinity in HOL" tag="SI">
+<abstract>
+This section demonstrates the truth of a proposed strong infinity principle.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Strong Infinity using Sets">
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&exist;e: GS &rarr; GS &rarr; BOOL&bull; &forall;p&bull; &exist;q&bull; (e p q &and; (&forall;x&bull; e x q &rArr; (
+        (&exist;y&bull; e y q &and; &forall;Z&bull; &exist;z&bull; e z y &and; &forall;v&bull; e v z &equiv; e v x &and; (Z v))
+        &and; (&forall;f&bull;(&forall;u&bull; e u x &rArr; e (f u) q) &rArr; &exist;y&bull; e y q &and; &forall;u&bull; e u x &rArr; e (f u) y))))
+&qqter;);
+a (&exist;_tac &qqtel;$&isin;<sub>g</sub>&qqter; THEN strip_tac);
+a (strip_asm_tac (&forall;_elim &qqtel;p&qqter; galaxies_&exist;_thm));
+a (&exist;_tac &qqtel;g&qqter; THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;&weierp;<sub>g</sub> x&qqter; THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (all_fc_tac [get_spec &qqtel;galaxy&qqter;]);
+(* *** Goal "1.2" *** *)
+a (&exist;_tac &qqtel;Sep x Z&qqter;
+	THEN rewrite_tac[gst_relext_clauses]
+	THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;Imagep f x&qqter;
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (lemma_tac &qqtel;Imagep f x &sube;<sub>g</sub> g&qqter;
+	THEN1 (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;, get_spec &qqtel;Imagep&qqter;]
+		THEN REPEAT strip_tac
+		THEN asm_rewrite_tac[]
+		THEN REPEAT (asm_fc_tac[])));
+a (fc_tac[GImagepC]);
+a (list_spec_nth_asm_tac 1 [&qqtel;x&qqter;, &qqtel;f&qqter;]);
+(* *** Goal "2.2" *** *)
+a (&exist;_tac &qqtel;u&qqter; THEN asm_rewrite_tac[]);
+val strong_infinity_thm = save_pop_thm "strong_infinity_thm";
+</ft>
+</subsec>
+<subsec title="Strong Infinity using Ordinals">
+This is here for the record, I have no plans at present to do the proof.
+<ft lang="xl-gft" rest="">
+set_goal([], &qqtel;&exist;&lt;&bull;&forall;p&bull;&exist;q&bull; (p&lt;q /\ (&forall;x&lt;q&bull; (
+      (&exist;y&lt;q, e&bull; (&forall;Z&bull; &exist;u&lt;y&bull; (&forall;v&lt;x&bull;(v e u &lt;=&gt; Z v))))
+      /\ (&forall;F&bull;(&forall;u&lt;x&bull;(F u)&lt;q) =&gt; &exist;y&lt;q&bull; &forall;u&lt;x&bull;(F u)&lt;y))))
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

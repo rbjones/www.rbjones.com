@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: ordinals.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       id="$Id: ordinals.xml,v 1.2 2003/02/01 14:30:08 rbj Exp $"
        name="ordinals"
        title="The theory of ordinals in GST"
        description="Definition of ordinals and the development of the theory of ordinals in Galactic Set Theory."
@@ -21,9 +21,14 @@ This document introduces definitions and derives results relating to ordinal num
 <secbody>
 <sbcol>
 <secref title="Introduction"/>
-<secref title="Ordinals"/>
+<secref title="Definitions 2.1 and 2.3"/>
+<secref title="Theorem 2.2"/>
+<secref title="Theorem 2.4"/>
 </sbcol>
 <sbcol>
+<secref title="Definition 2.6"/>
+<secref title="Theorem 2.7"/>
+<secref title="Theorem 2.8"/>
 <secref title="Proof Context"/>
 <subsec title="Listing of Theory ord" href="ord.html" />
 </sbcol>
@@ -39,15 +44,35 @@ set_flag("pp_show_HOL_types", false);
 <abstract>
 A new "ord" theory is created as a child of "gst-ax".
 The theory will contain the definitions of ordinals and related material for general use, roughly following "Set Theory" by Frank Drake, chapter 2 section 2.
+The subsections in this document correspondend to the subsections in the book.
 </abstract>
 <secbody>
 <sbcol>
 <subsec title="Motivation">
 This is really motivated purely by interest and self-education.
 Since its so fundamental I think it likely to turn out handy.
+Some of the material required is not specific to set theory and is quite widely applicable (in which case I actually develop it elsewhere and then just use it here.
+Well-foundedness and induction over well-founded relations is the obvious case relevant to this part of Drake.
+The recursion theorem is the important more general result which appears in the next section in Drake.
+"more general" means "can be developed as a polymorphic theory in HOL and applied outside the context of set theory".
+In fact these things have to be developed in the more general context to be used in the ways they are required in the development of set theory, since, for example, one wants to do definitions by recursion over the set membership relation where neither the function defined nor the relevant well-founded relation are actually sets.
 </subsec>
 </sbcol>
 <sbcol>
+<subsec title="Divergence">
+<p>
+I have not followed Drake slavishly.
+More or less, I follow him where it works out OK and looks reasonable and doesn't trigger any of my prejudices.
+</p><p>
+Sometimes the context in which I am doing the work makes some divergence desirable or necessary.
+For example, I am doing the work in the context of a slightly eccentric set theory ("Galactic Set Theory") which mainly makes no difference, but has a non-standard formulation of the axiom of foundation.
+Mainly this is covered by deriving the standard formulation and its consequences and using them where this is used by Drake (in proving the trichotomy theorem).
+However, the machinery for dealing with well-foundedness makes a difference to how induction principles are best formulated and derived.
+</p><p>
+Sometimes I look at what he has done and I think, "no way am I going to do that".
+Not necessarily big things, for example, I couldn't use his definition of successor ordinal which he pretty much admits himself is what we nerds call a kludge.
+</p>
+</subsec>
 <subsec title="The Theory ord">
 The new theory is first created, together with a proof context which we will build up as we develop the theory.
 <ft lang="xl-sml" rest="">
@@ -63,9 +88,10 @@ set_merge_pcs ["basic_hol", "gst-ax", "ord"];
 </secbody>
 </section>
 
-<section title="Ordinals">
+<section title="Definitions 2.1 and 2.3">
 <abstract>
-Ordinal is defined, Drake ch. 2 sec. 2.1
+An ordinal is defined as a transitive and connected set.
+The usual ordering over the ordinals is defined and also the successor function.
 </abstract>
 <secbody>
 <sbcol>
@@ -106,7 +132,7 @@ declare_infix(240,"&le;<sub>o</sub>");
   &forall;x y:GS&bull; x &le;<sub>o</sub> y &equiv; ordinal x &and; ordinal y &and; x &isin;<sub>g</sub> y &or; x = y
 </holpred>
 </holconst>
-The following definition gives the successor function over the ordinals.
+The following definition gives the successor function over the ordinals (this appears later in Drake).
 <holconst><holsig>
  suc<sub>o</sub> : GS &rarr; GS
 </holsig>
@@ -119,19 +145,29 @@ add_pc_thms "ord" [get_spec &qqtel;connected&qqter;, get_spec &qqtel;ordinal&qqt
 set_merge_pcs ["basic_hol", "gst-ax", "ord"];
 </hide>
 </subsec>
-<subsec title="Elementary Theorems">
-First we prove that the empty set is an ordinal.
+</sbcol>
+</secbody>
+</section>
+
+<section title="Theorem 2.2">
+<abstract>
+We prove that the empty set is an ordinal, and that the members of an ordinal and the successor of an ordinal are ordinals.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Empty Set is an Ordinal">
+First we prove that the empty set is an ordinal, which requires only rewriting with the relevant definitions.
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall; x:GS&bull; ordinal &empty;<sub>g</sub>
-&qqter;);
+set_goal([],&qqtel;	ordinal &empty;<sub>g</sub>	&qqter;);
 a (rewrite_tac[get_spec &qqtel;ordinal&qqter;, get_spec &qqtel;transitive&qqter;, get_spec &qqtel;connected&qqter;]);
 val ordinal_&empty;<sub>g</sub> = save_pop_thm "ordinal_&empty;<sub>g</sub>";
 </ft>
+</subsec>
+<subsec title="The Successor of an Ordinal is an Ordinal">
 Next we prove that the successor of an ordinal is an ordinal.
-This is done in two parts as follows:
+This is done in two parts, transitivity and connectedness.
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall; x:GS&bull; transitive x &rArr; transitive (suc<sub>o</sub> x)
-&qqter;);
+set_goal([], &qqtel;	&forall; x:GS&bull; transitive x &rArr; transitive (suc<sub>o</sub> x)	&qqter;);
 </ft>
 (proof omitted)
 <hide>
@@ -164,37 +200,54 @@ a (REPEAT strip_tac
 val conn_suc_conn = save_pop_thm "conn_suc_conn";
 </ft>
 </hide><br />
-These together give:
+These together enable us to prove:
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall; x:GS&bull; ordinal x &rArr; ordinal (suc<sub>o</sub> x)
-&qqter;);
+set_goal([],&qqtel;	&forall; x:GS&bull; ordinal x &rArr; ordinal (suc<sub>o</sub> x)	&qqter;);
 </ft>
-<hide>
+The proof expands using the definition of ordinal, strips the goal and reasons forward from the resulting assumptions using the two lemmas proved above.
 <ft lang="xl-sml" rest="">
 a (rewrite_tac[get_spec &qqtel;ordinal&qqter;]
 	THEN REPEAT strip_tac
 	THEN fc_tac [trans_suc_trans, conn_suc_conn]);
-val ord_suc_ord = save_pop_thm "ord_suc_ord";
+val ord_suc_ord_thm = save_pop_thm "ord_suc_ord_thm";
 </ft>
-</hide>
+</subsec>
+<subsec title="The members of an Ordinal are Ordinals">
 We now aim to prove that the members of an ordinal are ordinals.
 We do this by proving first that they are connected and then that they are transitive.
+First however, we show that any subset of a connected set is connected.
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall; x:GS&bull; connected x &rArr; &forall; y:GS&bull; y &sube;<sub>g</sub> x &rArr; connected y&qqter;);
+set_goal([],&qqtel;
+	&forall; x:GS&bull; connected x &rArr; &forall; y:GS&bull; y &sube;<sub>g</sub> x &rArr; connected y
+&qqter;);
 </ft>
-<hide>
+The proof consists of expanding appropriate definitions, stripping the goal and then reasoning forward from the assumptions.
 <ft lang="xl-sml" rest="">
 a (rewrite_tac (map get_spec [&qqtel;connected&qqter;, &qqtel;$&sube;<sub>g</sub>&qqter;])
 	THEN REPEAT_N 7 strip_tac);
+</ft>
+<ft lang="xl-gft" rest="">
+(* *** Goal "" *** *)
+
+(*  4 *)  &qqtel;&forall; t u&bull; t &isin;<sub>g</sub> x &and; u &isin;<sub>g</sub> x &rArr; t &isin;<sub>g</sub> u &or; t = u &or; u &isin;<sub>g</sub> t&qqter;
+(*  3 *)  &qqtel;&forall; e&bull; e &isin;<sub>g</sub> y &rArr; e &isin;<sub>g</sub> x&qqter;
+(*  2 *)  &qqtel;t &isin;<sub>g</sub> y&qqter;
+(*  1 *)  &qqtel;u &isin;<sub>g</sub> y&qqter;
+
+(* ?&turnstil; *)  &qqtel;t &isin;<sub>g</sub> u &or; t = u &or; u &isin;<sub>g</sub> t&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
 a (all_asm_fc_tac[]);
 a (REPEAT_N 2 (asm_fc_tac[]) THEN REPEAT strip_tac);
 val conn_sub_conn = save_pop_thm "conn_sub_conn";
 </ft>
-</hide>
+Now we show that any member of an ordinal is an ordinal.
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall; x:GS&bull; ordinal x &rArr; &forall; y:GS&bull; y &isin;<sub>g</sub> x &rArr; connected y&qqter;);
+set_goal([],&qqtel;
+	&forall; x:GS&bull; ordinal x &rArr; &forall; y:GS&bull; y &isin;<sub>g</sub> x &rArr; connected y
+&qqter;);
 </ft>
-<hide>
+Expanding the definition of ordinal and making use of transitivity enables us to infer that members of an ordinals are subsets and permits application of the previous result to obtain connectedness.
 <ft lang="xl-sml" rest="">
 a (rewrite_tac (map get_spec [&qqtel;ordinal&qqter;, &qqtel;transitive&qqter;])
 	THEN REPEAT strip_tac);
@@ -202,23 +255,43 @@ a (all_asm_fc_tac []);
 a (all_asm_fc_tac [conn_sub_conn]);
 val conn_mem_ord = save_pop_thm "conn_mem_ord";
 </ft>
-</hide>
 To prove that the members of an ordinal are transitive, well-foundedness is needed.
-First we prove the particular consequences of well-foundedness which are required.
+First we prove the particular consequences of well-foundedness which are required (these results really belong somewhere else).
 <ft lang="xl-sml" rest="">
-set_goal([], &qqtel;&forall; x:GS&bull; &not; x &isin;<sub>g</sub> x&qqter;);
+set_goal([], &qqtel;
+	&forall; x:GS&bull; &not; x &isin;<sub>g</sub> x
+&qqter;);
 </ft>
-<hide>
+The proof uses well-founded transfinite induction over the membership relation.
 <ft lang="xl-sml" rest="">
 a (asm_tac (gs_wf_ind_thm));
 a (spec_nth_asm_tac 1 &qqtel;&lambda;x&bull; &not; x &isin;<sub>g</sub> x&qqter;);
+</ft>
+<ft lang="xl-gft" rest="">
 (* *** Goal "1" *** *)
+
+(*  3 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; y &isin;<sub>g</sub> x &rArr; s y) &rArr; s x) &rArr; (&forall; x&bull; s x)&qqter;
+(*  2 *)  &qqtel;&forall; y&bull; y &isin;<sub>g</sub> x &rArr; (&lambda; x&bull; &not; x &isin;<sub>g</sub> x) y&qqter;
+(*  1 *)  &qqtel;&not; (&lambda; x&bull; &not; x &isin;<sub>g</sub> x) x&qqter;
+
+(* ?&turnstil; *)  &qqtel;&forall; x&bull; &not; x &isin;<sub>g</sub> x&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
 a (swap_nth_asm_concl_tac 1
 	THEN rewrite_tac[]
 	THEN swap_nth_asm_concl_tac 1
 	THEN ALL_ASM_FC_T (MAP_EVERY ante_tac) []
 	THEN asm_rewrite_tac[]);
+</ft>
+<ft lang="xl-gft" rest="">
 (* *** Goal "2" *** *)
+
+(*  2 *)  &qqtel;&forall; s&bull; (&forall; x&bull; (&forall; y&bull; y &isin;<sub>g</sub> x &rArr; s y) &rArr; s x) &rArr; (&forall; x&bull; s x)&qqter;
+(*  1 *)  &qqtel;&forall; x&bull; (&lambda; x&bull; &not; x &isin;<sub>g</sub> x) x&qqter;
+
+(* ?&turnstil; *)  &qqtel;&forall; x&bull; &not; x &isin;<sub>g</sub> x&qqter;
+</ft>
+<ft lang="xl-sml" rest="">
 a (strip_tac
 	THEN swap_nth_asm_concl_tac 1
 	THEN rewrite_tac[]
@@ -227,7 +300,6 @@ a (strip_tac
 	THEN asm_rewrite_tac[]);
 val wf_l1 = save_pop_thm "wf_l1";
 </ft>
-</hide>
 <ft lang="xl-sml" rest="">
 set_goal([], &qqtel;&forall; x y:GS&bull; &not; (x &isin;<sub>g</sub> y &and; y &isin;<sub>g</sub> x)&qqter;);
 </ft>
@@ -319,45 +391,489 @@ a contr_tac;
 val ord_mem_ord = save_pop_thm "ord_mem_ord";
 </ft>
 </hide>
-
+</subsec>
+<subsec title="Galaxies are Closed under the Successor Relationship">
+We need this result later to show that the natural numbers are a set.
 <ft lang="xl-sml" rest="">
-set_goal([], &qqtel;&forall; x:GS&bull; &exist; y:GS&bull; y &isin;<sub>g</sub> x &and; x &cap;<sub>g</sub> y = &empty;<sub>g</sub>&qqter;);
+set_goal([], &qqtel;&forall;g x&bull; galaxy g &and; x &isin;<sub>g</sub> g &rArr; suc<sub>o</sub> x &isin;<sub>g</sub> g&qqter;);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec &qqtel;suc<sub>o</sub>&qqter;]);
+a (REPEAT (all_asm_fc_tac [GCloseUnit, GClose&cup;<sub>g</sub>]));
+val GCloseSuc<sub>o</sub> = save_pop_thm "GCloseSuc<sub>o</sub>";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Theorem 2.4">
+<abstract>
+We prove that the ordinals are linearly ordered by $&lt;<sub>o</sub>.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+First we prove some lemmas:
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; transitive x &and; transitive y &rArr; transitive (x &cap;<sub>g</sub> y)&qqter;);
 </ft>
 <hide>
 <ft lang="xl-sml" rest="">
-a (asm_tac gs_wf_ind_thm);
-a (spec_nth_asm_tac 1 &qqtel;&lambda; s:GS&bull; &exist; t:GS&bull; s &isin;<sub>g</sub> t &and; s &cap;<sub>g</sub> t = &empty;<sub>g</sub>&qqter;);
-a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac[]);
-a (swap_nth_asm_concl_tac 2);
-a (rewrite_tac[]);
-a (strip_tac);
-</ft>
-<ft lang="xl-ign" rest="">
-a (rewrite_tac[]);
-
-val wf2 = save_pop_thm "wf2";
+a (rewrite_tac[get_spec &qqtel;transitive&qqter;]);
+a (REPEAT strip_tac);
+a (ALL_ASM_FC_T (MAP_EVERY ante_tac) []);
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN prove_tac[]);
+val tran_&cap;_thm = save_pop_thm "tran_&cap;_thm";
 </ft>
 </hide>
-
-<ft lang="xl-ign" rest="">
-
-undo 1;
-&lt;/subsec&gt;
-&lt;/sbcol&gt;
-&lt;/secbody&gt;
-&lt;/section&gt;
-
-&lt;section title="Proof Context"&gt;
-&lt;abstract&gt;
-In this section we define a proof context for ordinals.
-&lt;/abstract&gt;
-&lt;secbody&gt;
-&lt;sbcol&gt;
-&lt;/sbcol&gt;
-&lt;sbcol&gt;
-&lt;subsec title="Proof Context"&gt;
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; transitive x &and; transitive y &rArr; transitive (x &cup;<sub>g</sub> y)&qqter;);
 </ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;transitive&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (ALL_ASM_FC_T (MAP_EVERY ante_tac) []);
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN prove_tac[]);
+(* *** Goal "2" *** *)
+a (ALL_ASM_FC_T (MAP_EVERY ante_tac) []);
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN prove_tac[]);
+val tran_&cup;_thm = save_pop_thm "tran_&cup;_thm";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; connected x &and; connected y &rArr; connected (x &cap;<sub>g</sub> y)&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;connected&qqter;]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 8 [&qqtel;t&qqter;, &qqtel;u&qqter;]);
+val conn_&cap;_thm = save_pop_thm "conn_&cap;_thm";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; ordinal x &and; ordinal y &rArr; ordinal (x &cap;<sub>g</sub> y)&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;ordinal&qqter;]);
+a (REPEAT_N 3 strip_tac);
+a (all_asm_fc_tac [tran_&cap;_thm, conn_&cap;_thm]
+	THEN contr_tac);
+val ord_&cap;_thm = save_pop_thm "ord_&cap;_thm";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; ordinal x &and; ordinal y &and; x &sube;<sub>g</sub> y &and; &not; x = y &rArr; x &isin;<sub>g</sub> y&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;&exist;z&bull; z = Sep y (&lambda;v&bull; &not; v &isin;<sub>g</sub> x)&qqter;
+	THEN1 prove_&exist;_tac);
+a (DROP_NTH_ASM_T 2 (fn x=&gt; strip_asm_tac (rewrite_rule [gs_ext_axiom] x)));
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 4 (fn x=&gt; all_asm_fc_tac [rewrite_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;] x]));
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;e &isin;<sub>g</sub> z&qqter; THEN1 asm_rewrite_tac[]);
+a (strip_asm_tac gs_wf_min_thm);
+a (spec_nth_asm_tac 1 &qqtel;z&qqter;);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;e&qqter;);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;z' &isin;<sub>g</sub> y &and; &not; z' &isin;<sub>g</sub> x&qqter;
+	THEN1 (DROP_NTH_ASM_T 2 ante_tac
+		THEN asm_rewrite_tac[]));
+a (lemma_tac &qqtel;z' = x&qqter;
+	THEN (DROP_NTH_ASM_T 3 ante_tac
+		THEN asm_rewrite_tac[gs_ext_axiom]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.2.1" *** *)
+a (lemma_tac &qqtel;e' &isin;<sub>g</sub>  y&qqter;);
+(* *** Goal "2.2.1.1" *** *)
+a (lemma_tac &qqtel;transitive y&qqter;
+	THEN1 (all_asm_fc_tac [get_spec &qqtel;ordinal&qqter;]));
+a (LEMMA_T &qqtel;z' &sube;<sub>g</sub> y&qqter; ante_tac THEN1 (all_asm_fc_tac [get_spec &qqtel;transitive&qqter;]));
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+(* *** Goal "2.2.1.2" *** *)
+a (spec_nth_asm_tac 3 &qqtel;e'&qqter;);
+(* *** Goal "2.2.2" *** *)
+a (lemma_tac &qqtel;e' &isin;<sub>g</sub> y&qqter;
+	THEN1 (GET_NTH_ASM_T 11 ante_tac
+		THEN rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+		THEN asm_prove_tac[]));
+a (LEMMA_T &qqtel;connected y&qqter; (fn x=&gt; asm_tac(rewrite_rule [get_spec &qqtel;connected&qqter;] x)) 
+	THEN1 (all_asm_fc_tac [get_spec &qqtel;ordinal&qqter;]));
+a (list_spec_nth_asm_tac 1 [&qqtel;e'&qqter;, &qqtel;z'&qqter;]);
+(* *** Goal "2.2.2.1" *** *)
+a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2" *** *)
+a (lemma_tac &qqtel;transitive x&qqter;
+	THEN1 (all_asm_fc_tac [get_spec &qqtel;ordinal&qqter;]));
+a (LEMMA_T &qqtel;e' &sube;<sub>g</sub> x&qqter; ante_tac THEN1 (all_asm_fc_tac [get_spec &qqtel;transitive&qqter;]));
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val trichot_lemma = pop_thm();
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; ordinal x &and; ordinal y &rArr; ordinal (x &cup;<sub>g</sub> y)&qqter;);
+</ft>
+<hide>
+<ft lang="xl-ign" rest="">
+a (rewrite_tac[get_spec &qqtel;ordinal&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [tran_&cup;_thm]);
+(* *** Goal "2" *** *)
+a (all_asm_ante_tac);
+a (rewrite_tac[get_spec &qqtel;connected&qqter;, get_spec &qqtel;transitive&qqter;]);
+a (REPEAT_N 6 strip_tac);
+
+val ord_&cup;_thm = save_pop_thm "ord_&cup;_thm";
+</ft>
+</hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; x y:GS&bull; ordinal x &and; ordinal y &rArr; x &lt;<sub>o</sub> y &or; x = y &or; y &lt;<sub>o</sub> x&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (rewrite_tac[get_spec &qqtel;$&lt;<sub>o</sub>&qqter;]);
+a (REPEAT_N 3 strip_tac THEN asm_rewrite_tac[]);
+a (lemma_tac &qqtel;ordinal (x &cap;<sub>g</sub> y)&qqter;
+	THEN1 (all_fc_tac [ord_&cap;_thm]));
+a (lemma_tac &qqtel;x &cap;<sub>g</sub> y &sube;<sub>g</sub> x &and; x &cap;<sub>g</sub> y &sube;<sub>g</sub> y&qqter;
+	THEN1 (prove_tac[gst_relext_clauses, gst_opext_clauses]));
+a (lemma_tac &qqtel;x &cap;<sub>g</sub> y = x &or; x &cap;<sub>g</sub> y = y&qqter;
+	THEN1 contr_tac);
+(* *** Goal "1" *** *)
+a (strip_asm_tac trichot_lemma);
+a (all_asm_fc_tac []);
+a (list_spec_nth_asm_tac 2 [&qqtel;x &cap;<sub>g</sub> y&qqter;, &qqtel;x&qqter;]);
+a (strip_asm_tac wf_l1);
+a (spec_nth_asm_tac 1 &qqtel;x &cap;<sub>g</sub> y&qqter;);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac [gst_relext_clauses, gst_opext_clauses]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;x &sube;<sub>g</sub> y&qqter;
+	THEN1 (POP_ASM_T ante_tac
+		THEN prove_tac [gst_relext_clauses, gst_opext_clauses]));
+a (strip_asm_tac (list_&forall;_elim [&qqtel;x&qqter;, &qqtel;y&qqter;] trichot_lemma)
+	THEN contr_tac);
+a (asm_fc_tac []);
+(* *** Goal "3" *** *)
+a (lemma_tac &qqtel;y &sube;<sub>g</sub> x&qqter;
+	THEN1 (POP_ASM_T ante_tac
+		THEN prove_tac [gst_relext_clauses, gst_opext_clauses]));
+a (strip_asm_tac (list_&forall;_elim [&qqtel;y&qqter;, &qqtel;x&qqter;] trichot_lemma)
+	THEN asm_rewrite_tac[]);
+val trich_for_ords_thm = save_pop_thm "trich_for_ords_thm";
+</ft>
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Definition 2.6">
+<abstract>
+Successor and limit ordinals are defined.
+Natural numbers are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+These definitions are not the ones used by Drake, and not only the names but the concepts differ.
+My successor predicate does not hold of the empty set.
+I use the name "natural number" where he talks of integers, and generally I'm chosing longer names.
+<holconst><holsig>
+ successor : GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;s :GS&bull; successor s &equiv; &exist;t&bull; ordinal t &and; s = suc<sub>o</sub> t
+</holpred>
+</holconst>
+<holconst><holsig>
+ limit_ordinal : GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;s :GS&bull; limit_ordinal s &equiv; ordinal s &and; &not; successor s &and; &not; s = &empty;<sub>g</sub>
+</holpred>
+</holconst>
+<holconst><holsig>
+ natural_number : GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;s :GS&bull; natural_number s &equiv; s = &empty;<sub>g</sub> &or; (successor s &and; &forall;t&bull; t&isin;<sub>g</sub> s &rArr; t = &empty;<sub>g</sub> &or; successor t)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Theorem 2.7">
+<abstract>
+Induction theorems over ordinals and natural numbers.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Successors are Ordinals">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;	&forall; x:GS&bull; successor x &rArr; ordinal x	&qqter;);
+a (rewrite_tac[get_spec &qqtel;successor&qqter;]
+	THEN REPEAT strip_tac
+	THEN fc_tac [ord_suc_ord_thm]
+	THEN asm_rewrite_tac[]);
+val successor_ord_thm = save_pop_thm "successor_ord_thm";
+</ft>
+</subsec>
+<subsec title="Well-foundedness of the ordinals">
+First we prove that &lt;<sub>o</sub> is well-founded.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;well_founded $&lt;<sub>o</sub>&qqter;);
+a (asm_tac gs_wf_axiom);
+a (fc_tac [wf_restrict_wf_thm]);
+a (SPEC_NTH_ASM_T 1 &qqtel;&lambda;x y&bull; ordinal x &and; ordinal y&qqter; ante_tac
+	THEN rewrite_tac[]);
+a (lemma_tac &qqtel;$&lt;<sub>o</sub> = (&lambda; x y&bull; (ordinal x &and; ordinal y) &and; x &isin;<sub>g</sub> y)&qqter;);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac [ext_thm]);
+a (once_rewrite_tac [ext_thm]);
+a (prove_tac[get_spec &qqtel;$&lt;<sub>o</sub>&qqter;]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+val wf_ordinals_thm = save_pop_thm "wf_ordinals_thm";
+</ft>
+</subsec>
+<subsec title="Ordering the Natural Numbers">
+To get an induction principle for the natural numbers we first define a well-founded ordering over them.
+Since I don't plan to use this a lot I use the name &lt;<sub>g</sub><sub>n</sub> (less than over the natural numbers defined in galactic set theory).
+<ft lang="xl-sml" rest="">
+declare_infix(240,"&lt;<sub>g</sub><sub>n</sub>");
+</ft>
+<holconst><holsig>
+ $&lt;<sub>g</sub><sub>n</sub> : GS &rarr; GS &rarr; BOOL
+</holsig>
+<holpred>
+  &forall;x y:GS&bull; x &lt;<sub>g</sub><sub>n</sub> y &equiv; natural_number x &and; natural_number y &and; x &isin;<sub>g</sub> y
+</holpred>
+</holconst>
+Now we try to find a better proof that the one above that this is well-founded.
+And fail, this is just a more compact rendition of the same proof.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;well_founded $&lt;<sub>g</sub><sub>n</sub>&qqter;);
+a (asm_tac gs_wf_axiom);
+a (fc_tac [wf_restrict_wf_thm]);
+a (SPEC_NTH_ASM_T 1 &qqtel;&lambda;x y&bull; natural_number x &and; natural_number y&qqter; ante_tac
+	THEN rewrite_tac[]);
+a (lemma_tac &qqtel;$&lt;<sub>g</sub><sub>n</sub> = (&lambda; x y&bull; (natural_number x &and; natural_number y) &and; x &isin;<sub>g</sub> y)&qqter;
+	THEN1 (REPEAT_N 2 (once_rewrite_tac [ext_thm])
+		THEN prove_tac[get_spec &qqtel;$&lt;<sub>g</sub><sub>n</sub>&qqter;]));
+a (asm_rewrite_tac[]);
+val wf_nat_thm = save_pop_thm "wf_nat_thm";
+</ft>
+This allows us to do well-founded induction over the natural number which the way I have implemented it is "course-of-values" induction.
+However, for the sake of form I will prove that induction principle as an explicit theorem.
+This is just what you get by expanding the definition of well-foundedness in the above theorem.
+<ft lang="xl-sml" rest="">
+val nat_induct_thm = save_thm ("nat_induct_thm",
+	(rewrite_rule [get_spec &qqtel;well_founded&qqter;] wf_nat_thm));
+</ft>
+Note that this theorem can only be used to prove properties which are true of all sets, so you have to make it conditional (natural_number n &rArr; whatever).
+I suppose I'd better do another one.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; p&bull; (&forall; x&bull; natural_number x &and; (&forall; y&bull; y &lt;<sub>g</sub><sub>n</sub> x &rArr; p y) &rArr; p x)
+	&rArr; (&forall; x&bull; natural_number x &rArr; p x)&qqter;);
+a (asm_tac (rewrite_rule []
+	(all_&forall;_intro (&forall;_elim &qqtel;&lambda;x&bull; natural_number x &rArr; p x&qqter; nat_induct_thm))));
+a (rewrite_tac [all_&forall;_intro (taut_rule &qqtel;a &and; b &rArr; c &equiv; b &rArr; a &rArr; c&qqter;)]);
+a (lemma_tac &qqtel;&forall; p x&bull; (&forall; y&bull; y &lt;<sub>g</sub><sub>n</sub> x &rArr; p y) &equiv; (&forall; y&bull; y &lt;<sub>g</sub><sub>n</sub> x &rArr; natural_number y &rArr; p y)&qqter;);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;$&lt;<sub>g</sub><sub>n</sub>&qqter;]);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+val nat_induct_thm2 = save_pop_thm "nat_induct_thm2";
+</ft>
+I've tried using that principle and it too has disadvantages.
+Because &lt;<sub>g</sub><sub>n</sub> is used the induction hypothesis is more awkward to use (weaker) than it would have been if 
+&isin;<sub>g</sub> had been used.
+Unfortunately the proof of an induction theorem using plain set membership is not entirely trivial, so its proof has to be left til later.
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall; p&bull; (&forall; x&bull; natural_number x &and; (&forall; y&bull; y &isin;<sub>g</sub> x &rArr; p y) &rArr; p x)
+	&rArr; (&forall; x&bull; natural_number x &rArr; p x)&qqter;);
+</ft>
+<ft lang="xl-ign" rest="">
+a (asm_tac (rewrite_rule []
+	(all_&forall;_intro (&forall;_elim &qqtel;&lambda;x&bull; natural_number x &rArr; p x&qqter; nat_induct_thm))));
+a (rewrite_tac [all_&forall;_intro (taut_rule &qqtel;a &and; b &rArr; c &equiv; b &rArr; a &rArr; c&qqter;)]);
+a (lemma_tac &qqtel;&forall; p x&bull; ((&forall; y&bull; y &isin;<sub>g</sub> x &rArr; p y) &rArr; natural_number x &rArr; p x)
+	&equiv; (&forall; y&bull; y &lt;<sub>g</sub><sub>n</sub> x &rArr; natural_number y &rArr; p y) &rArr; natural_number x &rArr; p x&qqter;);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;$&lt;<sub>g</sub><sub>n</sub>&qqter;]);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+val nat_induct_thm2 = save_pop_thm "nat_induct_thm2";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Theorem 2.8">
+<abstract>
+The set of natural numbers.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Natural Numbers are Ordinals">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; ordinal n&qqter;);
+a (rewrite_tac [get_spec &qqtel;natural_number&qqter;, get_spec &qqtel;successor&qqter;]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[ordinal_&empty;<sub>g</sub>]);
+a (all_fc_tac [ord_suc_ord_thm]);
+val ord_nat_thm = save_pop_thm "ord_nat_thm";
+</ft>
+</subsec>
+<subsec title="Members of Natural Numbers are Ordinals">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; &forall;m&bull; m &isin;<sub>g</sub> n &rArr; ordinal m&qqter;);
+a (REPEAT strip_tac);
+a (REPEAT (all_fc_tac[ord_nat_thm, ord_mem_ord]));
+val mem_nat_ord_thm = save_pop_thm "mem_nat_ord_thm";
+</ft>
+</subsec>
+<subsec title="An Ordinal is Zero, a successor or a limit">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; ordinal n &rArr; n = &empty;<sub>g</sub> &or; successor n  &or; limit_ordinal n&qqter;);
+a (rewrite_tac [get_spec &qqtel;limit_ordinal&qqter;, get_spec &qqtel;successor&qqter;]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 2 &qqtel;t&qqter;);
+val ordinal_kind_thm = save_pop_thm "ordinal_kind_thm";
+</ft>
+</subsec>
+<subsec title="A Natural Number is not a Limit Ordinal">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; &not; limit_ordinal n&qqter;);
+a (rewrite_tac [get_spec &qqtel;limit_ordinal&qqter;, get_spec &qqtel;natural_number&qqter;]);
+a (REPEAT strip_tac);
+val nat_not_lim_thm = save_pop_thm "nat_not_lim_thm";
+</ft>
+</subsec>
+<subsec title="A Natural Number is zero or a successor">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; successor n &or; n = &empty;<sub>g</sub>&qqter;);
+a (rewrite_tac [get_spec &qqtel;natural_number&qqter;]);
+a (REPEAT strip_tac);
+val nat_zero_or_suc_thm = save_pop_thm "nat_zero_or_suc_thm";
+</ft>
+</subsec>
+<subsec title="A Non-empty set is not the Empty Set">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;m n&bull; m &isin;<sub>g</sub> n &rArr; &not; n = &empty;<sub>g</sub>&qqter;);
+a (prove_tac [gst_opext_clauses, gst_relext_clauses]);
+val mem_not_empty_thm = save_pop_thm "mem_not_empty_thm";
+</ft>
+</subsec>
+<subsec title="A Natural Number does not contain a Limit Ordinal">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;m n&bull; natural_number n &and; m &isin;<sub>g</sub> n &rArr; &not; limit_ordinal m&qqter;);
+a (rewrite_tac [get_spec &qqtel;limit_ordinal&qqter;, get_spec &qqtel;natural_number&qqter;]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [mem_not_empty_thm]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+val mem_nat_not_lim_thm = save_pop_thm "mem_nat_not_lim_thm";
+</ft>
+</subsec>
+<subsec title="All Members of Natural Numbers are Natural Numbers">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; &forall;m&bull; m &isin;<sub>g</sub> n &rArr; natural_number m&qqter;);
+a (rewrite_tac [get_spec &qqtel;natural_number&qqter;]);
+a (REPEAT strip_tac THEN_TRY all_asm_fc_tac [mem_not_empty_thm]);
+a (lemma_tac &qqtel;transitive n&qqter; THEN1
+	 (REPEAT (all_fc_tac [get_spec &qqtel;ordinal&qqter;, successor_ord_thm])));
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> n&qqter; THEN1 (EVERY [all_fc_tac [get_spec &qqtel;transitive&qqter;],
+	POP_ASM_T ante_tac, rewrite_tac [gst_relext_clauses], asm_prove_tac[]]));
+a (all_asm_fc_tac[]);
+val mem_nat_nat_thm = save_pop_thm "mem_nat_nat_thm";
+</ft>
+</subsec>
+<subsec title="Galaxies are Closed under suc">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;g&bull; galaxy g &rArr; &forall;x&bull; x &isin;<sub>g</sub> g &rArr; suc<sub>o</sub> x &isin;<sub>g</sub> g&qqter;);
+a (rewrite_tac [get_spec &qqtel;suc<sub>o</sub>&qqter;]);
+a (REPEAT strip_tac);
+a (REPEAT (all_fc_tac [GClose&cup;<sub>g</sub>, GCloseUnit]));
+val GCloseSuc = save_pop_thm "GCloseSuc";
+</ft>
+</subsec>
+<subsec title="Natural Numbers are in the Smallest Galaxy">
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;n&bull; natural_number n &rArr; n &isin;<sub>g</sub> Gx &empty;<sub>g</sub>&qqter;);
+a (strip_tac THEN gen_induction_tac1 nat_induct_thm2);
+a (fc_tac [nat_zero_or_suc_thm]);
+(* *** Goal "1" *** *)
+a (fc_tac [get_spec &qqtel;successor&qqter;]);
+a (lemma_tac &qqtel;t &lt;<sub>g</sub><sub>n</sub> n&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;$&lt;<sub>g</sub><sub>n</sub>&qqter;, get_spec &qqtel;suc<sub>o</sub>&qqter;]);
+(* *** Goal "1.1" *** *)
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> n&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;suc<sub>o</sub>&qqter;]);
+a (all_fc_tac [mem_nat_nat_thm]);
+(* *** Goal "1.2" *** *)
+a (asm_tac (&forall;_elim &qqtel;&empty;<sub>g</sub>&qqter; galaxy_Gx));
+a (asm_rewrite_tac[]);
+a (REPEAT (all_asm_fc_tac[GCloseSuc]));
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+a (asm_tac (&forall;_elim &qqtel;&empty;<sub>g</sub>&qqter; galaxy_Gx));
+a (all_asm_fc_tac[G&empty;<sub>g</sub>C]);
+val nat_in_G&empty;<sub>g</sub>_thm = save_pop_thm "nat_in_G&empty;<sub>g</sub>_thm";
+</ft>
+</subsec>
+<subsec title="The Existence of w">
+This comes from the axiom of infinity, however, in galactic set theory we get that from the existence of galaxies, so the following proof is a little unusual.
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&exist;w&bull; &forall;z&bull; z &isin;<sub>g</sub> w &equiv; natural_number z&qqter;);
+a (&exist;_tac &qqtel;Sep (Gx &empty;<sub>g</sub>) natural_number&qqter;
+	THEN rewrite_tac [gst_opext_clauses]);
+a (rewrite_tac [all_&forall;_intro (taut_rule &qqtel;(a &and; b &equiv; b) &equiv; b &rArr; a&qqter;)]);
+a strip_tac;
+a (gen_induction_tac1 nat_induct_thm2);
+a (fc_tac [nat_zero_or_suc_thm]);
+(* *** Goal "1" *** *)
+a (fc_tac [get_spec &qqtel;successor&qqter;, nat_in_G&empty;<sub>g</sub>_thm]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac []);
+a (asm_tac (&forall;_elim &qqtel;&empty;<sub>g</sub>&qqter; galaxy_Gx));
+a (all_asm_fc_tac[G&empty;<sub>g</sub>C]);
+val w_exists_thm = save_pop_thm "w_exists_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Context">
+<abstract>
+In this section we define a proof context for ordinals.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
 <ft lang="xl-sml" rest="">
 add_pc_thms "ord" ([]);
 set_merge_pcs ["basic_hol", "gst-ax", "ord"];
