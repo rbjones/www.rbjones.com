@@ -1,5 +1,7 @@
 =IGN
-$Id: t005.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+$Id: t005.doc,v 1.2 2004/09/08 05:15:37 rbj Exp $
+open_theory "wfrel";
+set_merge_pcs ["hol", "wfrel"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -195,15 +197,17 @@ twfp: ('a ­ 'a ­ BOOL) ­ BOOL
 =TEX
 
 \subsection{Theorems}
+
 The first thing I need to prove here is that the transitive closure of a well-founded relation is also well-founded.
 This provides a form of induction with a stronger induction hypothesis.
+
 Naturally we would expect this to be proven inductively and the question is therefore what property to use in the inductive proof, the observation that the transitive closure of a relation is well-founded is not explicitly the ascription of a property to the field of the relation.
 The obvious method is to relativise the required result to the transitive closure of a set, giving a property of sets, and then to prove that this property is hereditary if the relation is well-founded.
 
 \ignore{
 =SML
-
-set_goal([],¬µs r· well_founded r ´ µx· (µy· tc r y x ´ (µz· tc r z y ´ s z) ´ s y)
+set_goal([],¬µs r· well_founded r
+	´ µx· (µy· tc r y x ´ (µz· tc r z y ´ s z) ´ s y)
 	´ (µy· tc r y x ´ s y)®);
 a (rewrite_tac [get_spec ¬well_founded®]);
 a (REPEAT_N 3 strip_tac);
@@ -600,8 +604,6 @@ val wf_restrict_wf_thm = save_pop_thm "wf_restrict_wf_thm";
 =TEX
 }%\ignore
 
-
-
 \section{Well Founded Recursion}
 
 \subsection{Introduction}
@@ -618,6 +620,11 @@ The relation with respect to which the recursion is well-founded need only be me
 
 Another minor improvement is that I do not require the relation to be transitive.
 
+This is the end result:
+=GFT
+fixp_thm1 = ô µf r· well_founded r ± f respects r ´ ¶g· f g = g
+=TEX
+
 The proof is shorter than (my version of) the original, but by less than 20 percent.
 I'm sure there's lots of scope for improvement.
 (The isabelle version is much shorter than either.)
@@ -625,7 +632,7 @@ I'm sure there's lots of scope for improvement.
 \section{Defining the Fixed Point Operator}
 
 The main part of this is the proof that functionals which are well-founded with respect to some well-founded relation have fixed points.
-This done, the operator "fix" is defined, which yields such a fixed point.
+This done, the operator ``fix'' is defined, which yields such a fixed point.
 \subsection{Definitions}
 =SML
 declare_infix (240, "respects");
@@ -888,6 +895,7 @@ val fixp_thm1 = save_pop_thm "fixp_thm1";
 =TEX
 } %\ignore
 
+
 \ignore{
 =SML
 set_goal ([],¬¶fix· µf r·	well_founded r ± f respects r
@@ -907,6 +915,79 @@ fix: (('a ­ 'b) ­ ('a ­ 'b)) ­ 'a ­ 'b
 µf r· well_founded r ± f respects r ´ f (fix f) = fix f
 °
 =TEX
+
+\subsection{Partial Functions}
+
+Having reformulated the recursion theorem to work with total functions in HOL rather than relations, I later decided that I needed a version which supported the definition of functions over a subset of a type.
+
+The application I am thinking of here is as follows.
+
+A new type is to be defined.
+The carrier is defined using induction.
+One of the primitive operators over the new type must be defined inductively.
+If it weren't primitive it could be defined by well founded induction over the new type, but given that it is primitive it has to be defined over the representation {\it set}.
+I'm guessing a function is still required rather than a relation (it probably doesn't make much difference) but either way it will only be nicely behaved over the representation set.
+
+I'm not sure that I have an example of that kind, but here is a better example.
+If you want to code something into some membership structure, e.g. ``godelising'' the syntax of a language to prove a Tarski-like definability result, you don't want to make a new type of this inductively defined set, but you will need to define functions by recursion over the set.
+
+There are some other things I want to try out at the same time.
+
+They are:
+\begin{itemize}
+\item recovering the ``well-founded'' relation from the functor which is required to respect it, i.e. recovering the relation which it respects.
+\item taking a fixed point which is a function not defined over the whole type, not even defined over some specified subset, but which is defined over the well-founded part of the dependency relation of the defining functor.
+\end{itemize}
+
+The possibility has arisen to take a fixpoint of this kind without consideration of well-foundedness, but taking a closure of the empty set under some functor derived from the defining functor.
+I haven't yet got a very clear idea on this one, and don't know how closely this material comes to it.
+
+Anyway, for starters I will try to formulate the revised fixedpoint conjecture.
+
+\subsubsection{Extracting a Minimal Respected Relation}
+
+¹HOLCONST
+Ü ResRelOfFunctor: (('a ­ 'a) ­ ('a ­ 'a)) ­ ('a ­ 'a ­ BOOL)
+÷üüüüüü
+Ü µf x y· ResRelOfFunctor f x y ¤
+Ü	¶g v· ³ f g y = f (Ìz· if z = x then v else g z) y
+°
+
+\subsubsection{The Well-founded Part of a Relation}
+
+¹HOLCONST
+Ü WfDomOf: ('a ­ 'a ­ BOOL) ­ ('a ­ BOOL)
+÷üüüüüü
+Ü µr· WfDomOf r =
+Ü	(Ì x· µp· (µv· (µw· r w v ´ p w) ´ p v) ´ p x)
+°
+
+¹HOLCONST
+Ü WfPartOf: ('a ­ 'a ­ BOOL) ­ ('a ­ 'a ­ BOOL)
+÷üüüüüü
+Ü µr· WfPartOf r = (Ìx y· r x y ± WfDomOf r y)
+°
+
+Now we want a conjecture to the effect that any functor has a partial fixed point, i.e. a function whose behaviour over the well-founded part of its respected relation is fixed under the functor.
+
+However, there is no point in doing that without checking that these definitions work.
+
+=SML
+val ResRelOfFunctor_def = get_spec ¬ResRelOfFunctor®;
+val WfPartOf_def = get_spec ¬WfPartOf®;
+val WfDomOf_def = get_spec ¬WfDomOf®;
+=IGN
+set_goal([], ¬µr x y· WfDomOf r y ± r x y ´ WfDomOf r x®);
+a (rewrite_tac [WfDomOf_def] THEN REPEAT strip_tac);
+
+set_goal([], ¬µr· well_founded (WfPartOf r)®);
+a (rewrite_tac [ResRelOfFunctor_def, WfDomOf_def, WfPartOf_def, get_spec ¬well_founded®]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (SPEC_NTH_ASM_T 2 ¬Ìz· ³ r y z® ante_tac);
+a (rewrite_tac[] THEN REPEAT strip_tac);
+=GFT
+
 
 \section{Respect Theorems}
 
@@ -949,6 +1030,24 @@ a (asm_rewrite_tac []);
 val relmap_respect_thm = save_pop_thm "relmap_respect_thm";
 =TEX
 }%\ignore
+
+\ignore{
+=SML
+set_goal([], ¬µf r1 r2· f respects r1 ± (µx y· r1 x y ´ r2 x y) ´ f respects r2®);
+a (rewrite_tac [get_spec ¬$respects®] THEN REPEAT strip_tac);
+a (fc_tac [tc_mono_thm]);
+a (lemma_tac ¬µ y· tc r1 y x ´ g y = h y®
+	THEN1 REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac []));
+val mono_respects_thm = save_pop_thm "mono_respects_thm";
+=IGN
+set_goal([], ¬µf s· (µr· s r ´ f respects r) ´ f respects (Ìx y· µr· s r ´ r x y)®);
+a (rewrite_tac [get_spec ¬$respects®] THEN REPEAT strip_tac);
+a (
+
+
+=TEX
+}%ignore
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}

@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
+$Id: t007.doc,v 1.2 2004/09/08 05:15:37 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -17,78 +17,257 @@ $Id: t007.doc,v 1.1 2004/07/15 14:40:31 rbj Exp $
 \def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
 
-\title{Fixed Points, Closure, Induction}
+\title{Inductive and Coinductive Definitions in ProofPower}
 \author{Roger Bishop Jones}
 \makeindex
 \begin{document}
 \vfill
 \maketitle
 \begin{abstract}
-Some fixed point results, and some closure principles.
+Systematic facilities for a range of different kinds of inductive and co-inductive definitions of sets and types in ProofPower HOL.
 \end{abstract}
 \vfill
 \newpage
 \tableofcontents
-\newpage
+
 %%%%
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{fmu}
+\bibliography{fmu,rbj}
 } %\raggedright
 
-\section{Introduction}
+\newpage
+\section{INTRODUCTION}
+
+Inductive definitions are so pervasive and diverse in logic, mathematics and computer science that it is doubtful that a comprehensive account could be given.
+In this document I attempt to provide support for some kinds of inductive type definition commonly used in computing at the same time as facilitating various other kinds of inductive definition of sets which are relevant to my interests in set theory and foundational studies.
+Some interest for me and perhaps some novelty for the reader may arise from the ecclectic mix of applications through which I have attempted to find common threads.
+
+I began with a proof of the ``Knaster-Tarski'' theorem asserting that monotone functions over some power set have greatest and least fixed points, and this does provide at least one point common to all the material.
+
+\subsection{Pre-Topologies, Closures and Interiors}
+
+It is natural to consider inductive definitions as arising from closures, and closure as a topological concept, though in fact the notion of closure is strictly broader than its use in topology.
+I have adopted apparently topological terminology where that seems appropriate, primarily by taking ``open'' as a dual for ``closed'' even in our present non-topological context.
+The kind of closure of interest here is strictly pre-topological, in the sense that these structures belong to a kind which is broader than the notion of topology (let's for the while call this a ``pre-topology''), and all the interesting cases from our present perspective are pre-topologies which are not actually topologies.
+
+To make this explanation more informative let us chose a definition of pre-topology.
+It won't do to generalise the idea of a topology as a set of open sets, because a pre-topology is not determined by its set of open sets.
+What we do instead is generalise the notion of a limit to that of an operator, or the notion of a limit point to that of a point of closure.
+
+Think of a topology as being determined by a (monotonic) function which maps each subset of some universe into the set of limit points of that subset.
+Such a map tells you what the open sets are (they are the fixed points of the function), but not every such map determines a topology.
+It will fail to do so if, as in all the cases of present interest, the empty set is not one of its fixed points.
+
+This gives a generalised notion of open and closed, which is perhaps best spoken of by using ``closure point'' as a generalisation of ``limit point''.
+A set is open if all its members are a among its closure points, and closed if it contains all its closure points.
+
+In the pre-topologies of interest to us the empty set is never closed nor the universal set open.
+There are really only two sets in a pre-topology which are of interest from our present point of view, the closure of the empty set, which is the set defined inductively by the pre-topology, and the interior of the universal set, which is the set defined co-inductively by the pre-topology.
+
+Having thus explained our talk of closures and interiors, we will have no further use for the notion of a pre-topology, and will work only with sets of operators, which may be thought of as defining pre-topologies in relation to which talk of closures and interiors may be understood.
+
+\subsection{Related Work}
+
+For a general introduction to inductive definitions see Aczel \cite{aczel77}.
+
+This work is conducted in a proof tool for higher order logic after the manner of LCF, and the literature concerning inductive definitions in similar contexts is therefore relevant.
+Several papers by Larry Paulson fall into this category, for example \cite{paulson00}, in which may be found a more comprehensive guide to related work.
+I am aware of having taken from Paulson the idea of using the Knaster-Tarski fixedpoint theorem, but it is probable that his contribution, direct or indirect, is pervasive.
+
+The particular system I have used is {\Product}, in relation to which the problem of ``Free Types'' in the Z specification language is relevant, and is discussed by Rob Arthan in \cite{Arthan91c}.
+So far however, the present work does not support any facilities specific to Z.
+
+\subsection{Intended Applications}
+
+Three kinds of application are approached:
+
+\begin{enumerate}
+\item support for defining (mutual) recursive datatypes where the character of the constructors is known but no particular types are known over which the constructions operate.
+\item similar features for use in a context like set theory (in higher order logic) where it is essential to code up the constructors in that context (for example as required to prove Tarski's result about the definability of arithmetic or set theoretic truth in the languages of arithmetic or set theory).
+\item support for a generalisation of what set theorists call ``Hereditarily P'' sets, i.e. sets which have property P all of whose members have property ``Hereditarily P''.
+The generalisation is to allow the constituents which must have the property to be defined other than by plain membership, as for example, in the ``hereditarily pure functions'', even though the members of such a function are not themselves functions (because of the way functions are usually coded up in set theory).
+In this case the relevant constutuents are the members of the domain and range of the function.
+\end{enumerate}
+
+\subsection{Formalities}
 
 Create new theory ``fixp''.
 
 =SML
 open_theory "rbjmisc";
 force_new_theory "fixp";
-set_pc "hol";
+set_merge_pcs["hol", "xl_cs_∂_conv"];
 =IGN
+set_pc "hol";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "xl_cs_∂_conv"];
 set_flag ("pp_use_alias", false);
 =TEX
 
-\section{Definitions}
+\subsection{Some Useful Constant Specifications}
 
-Definition of the notion of a bounded monotonic function and of least and greatest fixed points.
+which probably don't belong here and will in due course be moved elsewhere.
+
+The identity function.
 
 πHOLCONST
-monotonic : ('a SET ≠ 'b SET) ≠ BOOL
-˜
-µf∑ monotonic f § µx y∑ x Ä y ¥ f(x) Ä f(y)
+‹ €I›: 'a ≠ 'a
+˜¸¸¸¸¸¸
+‹ I = Ãx∑x
+∞
+
+Two ways of constructing functions over disjoint unions.
+
+πHOLCONST
+‹ €Funâ+›: ('a ≠ 't) ≠ ('b≠ 'u) ≠ ('a + 'b ≠ 't + 'u)
+˜¸¸¸¸¸¸
+‹ µf:'a ≠ 't; g:'b ≠ 'u; ab:'a + 'b∑
+‹	Funâ+ f g ab = if IsL ab then InL (f (OutL ab)) else InR (g (OutR ab))
 ∞
 
 πHOLCONST
-lfp : ('a SET ≠ 'a SET) ≠ 'a SET
+‹ €FunSum›: ('a ≠ 't) ≠ ('b≠ 't) ≠ ('a + 'b ≠ 't)
+˜¸¸¸¸¸¸
+‹ µf:'a ≠ 't; g:'b ≠ 't; ab:'a + 'b∑
+‹	FunSum f g ab = if IsL ab then f (OutL ab) else g (OutR ab)
+∞
+
+A function for making a list of ascending integers.
+
+=SML
+declare_infix (300, "..âL");
+=TEX
+πHOLCONST
+‹ $€..âL›: Ó ≠ Ó ≠ Ó LIST
+˜¸¸¸¸¸¸
+‹ µ x y∑ x ..âL 0 = []
+‹ ± x ..âL (y + 1) = if x º y then (x ..âL y) @ [y+1] else []
+∞
+
+\subsection{Some Handy SML functions}
+
+Likewise likely to be removed.
+
+=SML
+fun lfoldl f a [] = a
+|  lfoldl f a (h::t) = lfoldl f (f (a, h)) t;
+
+fun lfoldr f a [] = a
+|  lfoldr f a (h::t) = f (a, (lfoldr f h t));
+
+fun €list_s_enter› [] d = d
+|   list_s_enter ((s,v)::t) d = list_s_enter t (s_enter s v d); 
+
+fun €list_to_sdict› l = list_s_enter l initial_s_dict;
+
+fun €list_pos› e [] = 0
+|   list_pos e (h::t) =
+	if h = e
+	then 1
+	else	let val p = list_pos e t 
+		in if p = 0 then 0 else p+1
+		end;
+
+val €strip_≠_type› = strip_spine_right dest_≠_type;
+
+fun €list_mk_∏_type› (h::t) = lfoldr mk_∏_type h t;
+
+fun match_mk_app (f, a) = mk_app(f,a) handle _ => ¨ëfÆ ëaÆÆ;
+
+fun list_match_mk_app (f, al) = lfoldl match_mk_app f al;
+=TEX
+
+=SML
+fun gen_type_map cf vf ty =
+	let fun aux (Vartype v) = vf v
+	|       aux (Ctype (s, tl)) = cf s ((map (aux o dest_simple_type)) tl)
+	in aux (dest_simple_type ty)
+	end;
+
+local fun front_last [e] = ([], e)
+      |   front_last (f::t) = 
+	   let val (f2, l) = front_last t
+	   in (f::f2, l)
+	   end
+in fun €front› x = let val (f,l) = front_last x in f end
+   fun €last› x = let val (f,l) = front_last x in l end
+   fun €right_rotate_list› [] = []
+   |   right_rotate_list [e] = [e]
+   |   right_rotate_list x = let val (f,l) = front_last x in l :: f end
+   fun €left_rotate_list› [] = []
+   |   left_rotate_list [e] = [e]
+   |   left_rotate_list (h::t) = t @ [h]
+end;
+=TEX
+
+\section{FIXED POINTS}
+
+The general scheme involves finding closures of sets under varieties of operators.
+The operators take members or sets of members of elements of the set in question, and construct new values from them.
+Taking the closure of such a set under certain operations involves adding the things which can be constructed from elements in the set to the set untill there are no longer any new values which can be constructed.
+
+In seeking to provide general support for such closure operations in a typed framework the diversity of the possible operations is an issue.
+For this reason, in addressing the fundamental problem for finding the required closure it is supposed that the operations over elements in the sets which are of interest have been compounded into a monotonic operator operating on a set and yeilding that same set augmented by the elements which can be constructed from them.
+
+In the present type-theoretic context such an operator is always monotonic and unbounded, and therefore by the Knaster-Tarski fixedpoint theorem will have at least one fixed point.
+
+In this section we prove the fixedpoint theorem and spin out some elementary consequences.
+
+For reasons connected with the motivation of this work, the emphasis is on taking closures, and the concept of closure is made prominent.
+There is a dual system of terminology, at least insofar the dual of induction is called ``co-induction'' and though I am not strongly motivated by the aplications of the dual system, there is so little extra work in providing both that I have systematically done so, in the hope that applications may become apparent.
+In doing so I have used a "co" prefix whenever I know of no other terminology for the dual of a concept.
+
+\subsection{Monotonicity, Closure and Interior}
+
+Definition of the notion of a function over a powerset monotonic with respect to set inclusion.
+The Knaster-Tarski fixed point theorem applies to bounded monotonic functions, when considering only HOL ``SET''s, as we do here, the boundedness condition is automatically satisfied.
+
+πHOLCONST
+‹ €Monotonic› : ('a SET ≠ 'b SET) ≠ BOOL
 ˜
-µf∑ lfp f = •{X | f X Ä X}
+‹ µf∑ Monotonic f § µx y∑ x Ä y ¥ f(x) Ä f(y)
+∞
+
+=SML
+declare_infix (300, "ClosedUnder");
+declare_infix (300, "OpenUnder");
+=TEX
+
+πHOLCONST
+‹ $€ClosedUnder› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
+˜
+‹ µf X∑ X ClosedUnder f § f(X) Ä X
 ∞
 
 πHOLCONST
-gfp : ('a SET ≠ 'a SET) ≠ 'a SET
+‹ $€OpenUnder› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
 ˜
-µf∑ gfp f = ﬁ{X | X Ä f X}
+‹ µf X∑ X OpenUnder f § X Ä f(X)
 ∞
 
-\section{Least Fixed Points}
+\subsection{Least and Greatest Fixed Points}
 
-Proofs that "lfp" gives a fixed point and that it is the least fixed point.
+πHOLCONST
+‹ €Lfp› : ('a SET ≠ 'a SET) ≠ 'a SET
+˜
+‹ µf∑ Lfp f = •{X | X ClosedUnder f}
+∞
+
+{\it Lfp} gives a fixed point:
+=GFT
+‹ Lfp_fixedpoint_thm: Ù µh∑ Monotonic h ¥ h (Lfp h) = Lfp h
+=TEX
 
 \ignore{
-=IGN
-set_goal([],¨µh∑ monotonic h ¥ ∂ s∑ h s = sÆ);
-a (REPEAT strip_tac);
-a (∂_tac ¨gfp hÆ);
-a (all_fc_tac [least_fixpoint_thm1]);
-val fixpoint_thm2 = save_pop_thm "fixpoint_thm2";
 =SML
+val Monotonic_def = get_spec ¨MonotonicÆ;
+val ClosedUnder_def = get_spec ¨$ClosedUnderÆ;
+val OpenUnder_def = get_spec ¨$OpenUnderÆ;
+val Lfp_def = get_spec ¨LfpÆ;
 
-undeclare_alias ("ç", ¨$çâLÆ);
-
-set_goal([],¨µh∑ monotonic h ¥ h (lfp h) = lfp hÆ);
-a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
+set_goal([],¨µh∑ Monotonic h ¥ h (Lfp h) = Lfp hÆ);
+a (rewrite_tac [ClosedUnder_def, Lfp_def] THEN REPEAT strip_tac);
 a (lemma_tac ¨h(•{X|h X Ä X}) Ä •{X|h X Ä X}Æ);
 (* *** Goal "1" *** *)
 a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
@@ -97,7 +276,7 @@ a (lemma_tac ¨(•{X|h X Ä X}) Ä sÆ);
 a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
 a (spec_nth_asm_tac 1 ¨sÆ);
 (* *** Goal "1.2" *** *)
-a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (all_asm_fc_tac [Monotonic_def]);
 a (all_fc_tac[get_spec ¨$ÄÆ]);
 a (all_fc_tac[get_spec ¨$ÄÆ]);
 (* *** Goal "2" *** *)
@@ -106,53 +285,47 @@ a (lemma_tac ¨•{X|h X Ä X} Ä h(•{X|h X Ä X})Æ);
 a (once_rewrite_tac[sets_ext_clauses]);
 a (REPEAT strip_tac);
 a (spec_asm_tac ¨µ s∑ s ç {X|h X Ä X} ¥ x ç sÆ ¨h (• {X|h X Ä X})Æ);
-a (fc_tac [get_spec ¨monotonicÆ]);
+a (fc_tac [Monotonic_def]);
 a (list_spec_asm_tac ¨µ x y∑ x Ä y ¥ h x Ä h yÆ [¨h(• {X|h X Ä X})Æ, ¨• {X|h X Ä X}Æ]);
 (* *** Goal "2.2" *** *)
 a (all_asm_fc_tac [pc_rule "sets_ext" (prove_rule []) ¨µA B∑ A Ä B ± B Ä A ¥ A = BÆ]);
-val least_fixpoint_thm = save_pop_thm "least_fixpoint_thm";
+val Lfp_fixedpoint_thm = save_pop_thm "Lfp_fixedpoint_thm";
 =TEX
 }%ignore
 
-\subsection{lfp Gives the Least Fixed Point}
+{\it Lfp} gives the least fixed point:
+=GFT
+‹ Lfp_lfp_thm: Ù µh∑ Monotonic h ¥ µg∑ h g = g ¥ (Lfp h) Ä g
+=TEX
 
 \ignore{
 =SML
-set_goal([],¨µh∑ monotonic h ¥ µg∑ h g = g ¥ (lfp h) Ä gÆ);
-a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
+set_goal([],¨µh∑ Monotonic h ¥ µg∑ h g = g ¥ (Lfp h) Ä gÆ);
+a (rewrite_tac [Lfp_def, ClosedUnder_def] THEN REPEAT strip_tac);
 a (once_rewrite_tac [sets_ext_clauses]
 	THEN REPEAT strip_tac);
 a (spec_asm_tac ¨µ s∑ s ç {X|h X Ä X} ¥ x ç sÆ ¨gÆ);
 a (DROP_ASM_T ¨≥ h g Ä gÆ ante_tac THEN asm_rewrite_tac []);
-val lfp_min_thm = save_pop_thm "lfp_min_thm";
+val Lfp_lfp_thm = save_pop_thm "Lfp_lfp_thm";
 =TEX
 }%ignore
 
-\subsection{Induction}
+πHOLCONST
+‹ €Gfp› : ('a SET ≠ 'a SET) ≠ 'a SET
+˜
+‹ µf∑ Gfp f = ﬁ{X | X OpenUnder f}
+∞
 
-I'm not whether the following really counts as an induction principle, but I expect it will help in deriving induction principles.
-It may be read as saying that if the functional preserves some property then that property holds everywhere in the least fixed point.
-
-\ignore{
-=SML
-set_goal([],¨µh∑ monotonic h ¥ µs∑ h s Ä s ¥ (lfp h) Ä sÆ);
-a (rewrite_tac [get_spec ¨lfpÆ] THEN REPEAT strip_tac);
-a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-val lfp_induction_thm = save_pop_thm "lfp_induction_thm";
+{\it Gfp} gives a fixed point:
+=GFT
+Gfp_fixedpoint_thm: Ù µh∑ Monotonic h ¥ h (Gfp h) = Gfp h
 =TEX
-}%ignore
-
-\section{Greatest Fixed Points}
-
-Proofs that "gfp" gives a fixed point and that it is the greatest fixed point.
-
-\subsection{gfp Gives Fixed Points}
 
 \ignore{
 =SML
-set_goal([],¨µh∑ monotonic h ¥ h (gfp h) = gfp hÆ);
-a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
+val Gfp_def = get_spec ¨GfpÆ;
+set_goal([],¨µh∑ Monotonic h ¥ h (Gfp h) = Gfp hÆ);
+a (rewrite_tac [Gfp_def, OpenUnder_def] THEN REPEAT strip_tac);
 a (lemma_tac ¨ﬁ {X|X Ä h X} Ä h (ﬁ {X|X Ä h X})Æ);
 (* *** Goal "1" *** *)
 a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
@@ -164,13 +337,13 @@ a (∂_tac ¨sÆ THEN REPEAT strip_tac);
 a (lemma_tac ¨s ç {X|X Ä h X}Æ);
 (* *** Goal "1.1" *** *)
 a (once_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (all_asm_fc_tac [Monotonic_def]);
 a (all_asm_fc_tac [get_spec ¨$ÄÆ]);
 a (all_asm_fc_tac [get_spec ¨$ÄÆ]);
 (* *** Goal "2" *** *)
 a (lemma_tac ¨h (ﬁ {X|X Ä h X}) ç {X|X Ä h X}Æ);
 (* *** Goal "2.1" *** *)
-a (all_asm_fc_tac [get_spec ¨monotonicÆ]);
+a (all_asm_fc_tac [Monotonic_def]);
 a (asm_rewrite_tac [ç_in_clauses]);
 (* *** Goal "2.2" *** *)
 a (lemma_tac ¨h (ﬁ {X|X Ä h X}) Ä ﬁ {X|X Ä h X}Æ);
@@ -182,41 +355,128 @@ a (REPEAT strip_tac);
 (* *** Goal "2.2.2" *** *)
 a (rewrite_tac [pc_rule "sets_ext" (prove_rule []) ¨µA B∑ A = B § B Ä A ± A Ä BÆ]
 	THEN asm_rewrite_tac[]);
-val greatest_fixpoint_thm = save_pop_thm "greatest_fixpoint_thm";
+val Gfp_fixedpoint_thm = save_pop_thm "Gfp_fixedpoint_thm";
 =TEX
 }%ignore
 
-\subsection{gfp Gives the Greatest Fixed Point}
+Gfp gives the greatest fixed point:
+
+=GFT
+Gfp_gfp_thm: Ù µh∑ Monotonic h ¥ µg∑ h g = g ¥ g Ä (Gfp h)
+=TEX
 
 \ignore{
 =SML
-set_goal([],¨µh∑ monotonic h ¥ µg∑ h g = g ¥ g Ä (gfp h)Æ);
-a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
+set_goal([],¨µh∑ Monotonic h ¥ µg∑ h g = g ¥ g Ä (Gfp h)Æ);
+a (rewrite_tac [Gfp_def, OpenUnder_def] THEN REPEAT strip_tac);
 a (once_rewrite_tac [sets_ext_clauses]
 	THEN REPEAT strip_tac);
 a (∂_tac ¨gÆ THEN asm_rewrite_tac[]);
-val gfp_max_thm = save_pop_thm "gfp_max_thm";
+val Gfp_gfp_thm = save_pop_thm "Gfp_gfp_thm";
 =TEX
 }%ignore
 
-\subsection{C0-Induction}
+\subsection{Closure and Interior}
 
-This is the corresponding theorem for greatest fixed point to the "induction" principle for least fixed points.
-I don't know whether its any use and am including it for the sake of symmetry!
+=GFT
+Lfp_Closed_thm = Ù µh∑ Monotonic h ¥ (Lfp h) ClosedUnder h
+Lfp_Closed_thm1 = Ù µ h∑ Monotonic h ¥ (µ x∑ x ç h (Lfp h) ¥ x ç Lfp h)
+Lfp_Open_thm = Ù µh∑ Monotonic h ¥ (Lfp h) OpenUnder h
+Lfp_Open_thm1 = Ù µ h∑ Monotonic h ¥ (µ x∑ x ç Lfp h ¥ x ç h (Lfp h))
+=TEX
 
 \ignore{
 =SML
-set_goal([],¨µh∑ monotonic h ¥ µs∑ s Ä h s ¥ s Ä (gfp h)Æ);
-a (rewrite_tac [get_spec ¨gfpÆ] THEN REPEAT strip_tac);
-a (once_rewrite_tac [sets_ext_clauses] THEN contr_tac);
-a (asm_fc_tac[]);
-val gfp_coinduction_thm = save_pop_thm "gfp_coinduction_thm";
+set_goal([],¨µh∑ Monotonic h ¥ (Lfp h) ClosedUnder hÆ);
+a (rewrite_tac [ClosedUnder_def] THEN REPEAT strip_tac);
+a (fc_tac [Lfp_fixedpoint_thm]
+	THEN asm_rewrite_tac[]);
+val Lfp_Closed_thm = save_pop_thm "Lfp_Closed_thm";
+val Lfp_Closed_thm1 = save_thm ("Lfp_Closed_thm1",
+	rewrite_rule [ClosedUnder_def, sets_ext_clauses] Lfp_Closed_thm);
+=TEX
+=SML
+set_goal([],¨µh∑ Monotonic h ¥ (Lfp h) OpenUnder hÆ);
+a (rewrite_tac [OpenUnder_def] THEN REPEAT strip_tac);
+a (fc_tac [Lfp_fixedpoint_thm]
+	THEN asm_rewrite_tac[]);
+val Lfp_Open_thm = save_pop_thm "Lfp_Open_thm";
+val Lfp_Open_thm1 = save_thm ("Lfp_Open_thm1",
+	rewrite_rule [OpenUnder_def, sets_ext_clauses] Lfp_Open_thm);
 =TEX
 }%ignore
 
-\section{Inductive Definitions}
+=GFT
+Gfp_Closed_thm = Ù µh∑ Monotonic h ¥ (Gfp h) ClosedUnder h
+Gfp_Closed_thm1 = Ù µ h∑ Monotonic h ¥ (µ x∑ x ç h (Gfp h) ¥ x ç Gfp h)
+Gfp_Open_thm = Ù µh∑ Monotonic h ¥ (Gfp h) OpenUnder h
+Gfp_Open_thm1 = Ù µ h∑ Monotonic h ¥ (µ x∑ x ç Gfp h ¥ x ç h (Gfp h))
+=TEX
 
-Taking a closure of constructors for an inductive datatype definition.
+\ignore{
+=SML
+set_goal([],¨µh∑ Monotonic h ¥ (Gfp h) ClosedUnder hÆ);
+a (rewrite_tac [ClosedUnder_def] THEN REPEAT strip_tac);
+a (fc_tac [Gfp_fixedpoint_thm]
+	THEN asm_rewrite_tac[]);
+val Gfp_Closed_thm = save_pop_thm "Gfp_Closed_thm";
+val Gfp_Closed_thm1 = save_thm ("Gfp_Closed_thm1",
+	rewrite_rule [ClosedUnder_def, sets_ext_clauses] Gfp_Closed_thm);
+=TEX
+=SML
+set_goal([],¨µh∑ Monotonic h ¥ (Gfp h) OpenUnder hÆ);
+a (rewrite_tac [OpenUnder_def] THEN REPEAT strip_tac);
+a (fc_tac [Gfp_fixedpoint_thm]
+	THEN asm_rewrite_tac[]);
+val Gfp_Open_thm = save_pop_thm "Gfp_Open_thm";
+val Gfp_Open_thm1 = save_thm ("Gfp_Open_thm1",
+	rewrite_rule [OpenUnder_def, sets_ext_clauses] Gfp_Open_thm);
+=TEX
+}%ignore
+
+\subsection{Induction and Co-induction}
+
+To prove something about an inductively defined set you prove that all the operations which were used to define the set preserve the required property.
+In our case, where the operator is defined over sets of elements and we think of ourselves as starting out with the empty set, there is no ``base case'' for the induction
+(alternatively think of the base case as the application of the operator to the empty set).
+
+For some property represented as a set {\it s} and a set of constructors represented as a function {\it h} the induction principle states that if the property is closed under the function then all the elements of the set inductively defined by the function (e.g. its least fixed point) have the property.
+
+The least fixed point induction principle may therefore be expressed:
+
+=GFT
+Lfp_induction_thm: Ù µh∑ Monotonic h ¥ µs∑ s ClosedUnder h ¥ (Lfp h) Ä s
+=TEX
+
+\ignore{
+=SML
+set_goal([],¨µh∑ Monotonic h ¥ µs∑ s ClosedUnder h ¥ (Lfp h) Ä sÆ);
+a (rewrite_tac [Lfp_def, ClosedUnder_def] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val Lfp_induction_thm = save_pop_thm "Lfp_induction_thm";
+=TEX
+}%ignore
+
+This is the corresponding theorem for greatest fixed point to the ``induction'' principle for least fixed points.
+
+=GFT
+Gfp_coinduction_thm: Ù µh∑ Monotonic h ¥ µs∑ s OpenUnder h ¥ s Ä (Gfp h)
+=TEX
+
+\ignore{
+=SML
+set_goal([],¨µh∑ Monotonic h ¥ µs∑ s OpenUnder h ¥ s Ä (Gfp h)Æ);
+a (rewrite_tac [Gfp_def, OpenUnder_def] THEN REPEAT strip_tac);
+a (once_rewrite_tac [sets_ext_clauses] THEN contr_tac);
+a (asm_fc_tac[]);
+val Gfp_coinduction_thm = save_pop_thm "Gfp_coinduction_thm";
+=TEX
+}%ignore
+
+\section{INDUCTIVE DEFINITIONS OF SETS}
+
+We begin with inductive definitions of sets, later addressing the conversion of these sets into types.
 
 The simplest example of interest here is the natural numbers, which can be defined (in HOL) as the smallest set of individuals which includes zero (the individual which is not in the range of the one-one function whose existence is asserted by the usual axiom of infinity) and is closed under the successor function (which is that same one-one function).
 
@@ -233,113 +493,695 @@ In addition to the constructor function and the content information we want to a
 In fact this can be coded into the content function by making it reflexive for values which we wish to exclude from the domain.
 Actually its type doesn't allow reflexive, but mapping these to the universe of the representation type will do the trick.
 
-\subsection{Monotonicity}
+\subsection{Generalised Hereditarily-P Sets}
 
-The following function converts such a relationship into a monotonic function.
-The initial "cc" in the name stands for "constructor and content (functions)".
+The notion of a set being ``hereditarily P'' for some property of sets P is to be generalised in the following two ways:
+
+\begin{enumerate}
+\item Rather than taking any fixed notion of set, the machinery is to work in as broad a range of ``membership structures'' as possible, the minimal conditions on membership structures for this to work will be worked out as we go.
+\item To allow more complex constructions, the generalised ``hereditarily'' will be parameterised by something more complex than a simple property, in particular it is not to be required that all the members of a ``hereditarily X'' set will be ``hereditarily X'', but only the bona-fide ``constituents''.
+For example, in the notion of a hereditarily pure function, it is not the members of a hereditarily pure function which must be hereditarily pure functions, rather, the elements of its domain and range.
+\end{enumerate}
+
+\subsection{Hereditarily Over a Function}
+
+Parameterising the notion of heriditarily by a relation allows the notion to be relativised to an arbitrary set theory or pseudo-set-theory.
+As well as permitting the notion to be used within exotic set theories such as NF, the generalised notion can be applied to domains like the natural numbers, which given a suitable relation will masquerade as hereditarily finite sets, and can be further refined by hereditarily-p notions.
+
+However, the presumption still present is that, albeit with a generalised notion of membership, the kinds construction involved are simply set formation.
+
+It is easy to find natural examples which do not fit into this scheme.
+For example the hereditarily pure functions.
+If one simply takes the property P of being a pure function, then Hereditarily-P does not give what is desired, because the formation of a pure function over pure functions involves a construction more complex than set formation (or at least, requires multiple set formations, firstly the formation of ordered pairs and then the collection of the ordered pairs into a set).
+
+To allow for this kind of generalisation we must leave behind the idea that the construction is taking place in the domain of a set theory.
+This is arguably a generalisation and a simplification and will be used to define the less general notion involving properties.
 
 πHOLCONST
-‹	cc2monof: ('a ≠ 'b) ∏ ('a ≠ 'b SET) ≠ ('b SET ≠ 'b SET)
-˜
-‹	µtor tent∑ cc2monof (tor, tent) = Ãs∑ s ¿ {t | ∂u v∑ u = tent v ± u Ä s ± t = tor v}
+‹ €Fun2MonoFun›: ('a SET ≠ 'a SET) ≠ ('a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µ f s∑ Fun2MonoFun f s = {x | x ç s ≤ ∂t∑ t Ä s ± x ç f t}
 ∞
 
-We prove that this is the case:
-=SML
-set_goal([], ¨µtor tent∑ monotonic (cc2monof (tor, tent))Æ);
+This function does always deliver a monotonic result:
+
+=GFT
+F2MF_Monotonic_thm = Ù µ r∑ Monotonic (Fun2MonoFun f)
 =TEX
+
+This is the last monotonicity proof that I expect to find necessary.
+
 \ignore{
 =SML
-a (rewrite_tac [get_spec ¨cc2monofÆ] THEN REPEAT strip_tac);
-a (rewrite_tac [get_spec ¨monotonicÆ]);
-a (once_rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
+val Fun2MonoFun_def = get_spec ¨Fun2MonoFunÆ;
+set_goal([],¨µf∑ Monotonic (Fun2MonoFun f)Æ);
+a (rewrite_tac [Monotonic_def, Fun2MonoFun_def, sets_ext_clauses]
+	THEN contr_tac
+	THEN REPEAT (asm_fc_tac[]));
+val F2MF_Monotonic_thm = save_pop_thm "F2MF_Monotonic_thm";
+=TEX
+}%ignore
+
+We now define the function which maps a content relation to the least fixed point of the monotonic function obtained from it.
+
+πHOLCONST
+‹ €HeredFun›: ('a SET ≠ 'a SET) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ f∑ HeredFun f = Lfp (Fun2MonoFun f)
+∞
+
+And its dual:
+
+πHOLCONST
+‹ €CoHeredFun›: ('a SET ≠ 'a SET) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ f∑ CoHeredFun f = Gfp (Fun2MonoFun f)
+∞
+
+We define appropriate notions of closure and co-closure for expressing the key properties of these sets.
+
+=SML
+declare_infix (300, "ClosedUnderFun");
+declare_infix (300, "OpenUnderFun");
+=TEX 
+
+πHOLCONST
+‹ $€ClosedUnderFun› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
+˜
+‹ µs f∑ s ClosedUnderFun f § s ClosedUnder (Fun2MonoFun f)  
+∞
+
+πHOLCONST
+‹ $€OpenUnderFun› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
+˜
+‹ µs f∑ s OpenUnderFun f § s OpenUnder (Fun2MonoFun f)
+∞
+
+=GFT
+HeredFun_Closed_thm = Ù µf∑ (HeredFun f) ClosedUnderFun f
+HeredFun_Open_thm = Ù µf∑ (HeredFun f) OpenUnderFun f
+HeredFun_induction_thm = Ù µs f∑ s ClosedUnderFun f ¥ HeredFun f Ä s
+=TEX
+
+\ignore{
+=SML
+val Fun2MonoFun_def = get_spec ¨Fun2MonoFunÆ;
+val HeredFun_def = get_spec ¨HeredFunÆ;
+val CoHeredFun_def = get_spec ¨CoHeredFunÆ;
+val ClosedUnderFun_def = get_spec ¨$ClosedUnderFunÆ;
+val OpenUnderFun_def = get_spec ¨$OpenUnderFunÆ;
+=TEX
+=SML
+set_goal([], ¨µf∑ (HeredFun f) ClosedUnderFun fÆ);
+a (rewrite_tac [HeredFun_def, ClosedUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (FC_T rewrite_tac [Lfp_Closed_thm]);
+val HeredFun_Closed_thm = save_pop_thm "HeredFun_Closed_thm";
+
+set_goal([], ¨µ f x∑ (∂ t∑ (µ x∑ x ç t ¥ x ç HeredFun f) ± x ç f t)
+         ¥ x ç HeredFun fÆ);
+a (REPEAT strip_tac
+	THEN strip_asm_tac (rewrite_rule
+		[ClosedUnderFun_def, ClosedUnder_def, Fun2MonoFun_def, sets_ext_clauses]
+		HeredFun_Closed_thm));
+a (list_spec_nth_asm_tac 1 [¨fÆ, ¨xÆ]);
+a (spec_nth_asm_tac 1 ¨tÆ);
 a (asm_fc_tac[]);
-(* *** Goal "2" *** *)
-a (∂_tac ¨uÆ);
-a (∂_tac ¨vÆ THEN REPEAT strip_tac);
-a (DROP_ASM_T ¨u Ä xÆ ante_tac
-	THEN DROP_ASM_T ¨µ x'∑ x' ç x ¥ x' ç yÆ ante_tac
-	THEN PC_T1 "sets_ext" prove_tac []);
-val mono_cc2monof_thm = save_pop_thm "mono_cc2monof_thm";
+val HeredFun_Closed_thm1 = save_pop_thm "HeredFun_Closed_thm1";
+=TEX
+=SML
+set_goal([], ¨µf∑ (HeredFun f) OpenUnderFun fÆ);
+a (rewrite_tac [HeredFun_def, OpenUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (FC_T rewrite_tac [Lfp_Open_thm]);
+val HeredFun_Open_thm = save_pop_thm "HeredFun_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µs f∑ s ClosedUnderFun f ¥ HeredFun f Ä sÆ);
+a (rewrite_tac [HeredFun_def, ClosedUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (ALL_FC_T rewrite_tac [Lfp_induction_thm]);
+val HeredFun_induction_thm = save_pop_thm "HeredFun_induction_thm";
+=TEX
+
+=IGN
+set_goal([], ¨x ç HeredFun fÆ);
+a (rewrite_tac [HeredFun_def]);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 rewrite_tac [F2MF_Monotonic_thm]);
+a (all_asm_fc_tac [Lfp_fixedpoint_thm]);
+a (SYM_ASMS_T once_rewrite_tac);
+a (once_rewrite_tac [Fun2MonoFun_def]);
+
+set_goal([], ¨µ f x∑ x ç HeredFun f ¥ (∂ t∑ (µ x∑ x ç t ¥ x ç HeredFun f) ± x ç f t)Æ);
+a (REPEAT strip_tac);
+a (Ä_induction_tac HeredFun_induction_thm ¨xÆ);
+
+val Ä_induction_canon = 
+	REPEAT_CAN (
+		simple_µ_rewrite_canon
+		ORELSE_CAN (rule_canon undisch_rule)
+		ORELSE_CAN ±_rewrite_canon)
+	THEN_CAN Ä_ext_canon
+	THEN_CAN all_¥_intro_canon;
+
+fun Ä_induction_tac thm term:TACTIC = fn (asms, concl) =>
+	let val thm1 = rewrite_rule [] (µ_elim (mk_set_comp (term, concl)) thm)
+	in (bc_tac (Ä_induction_canon thm1)) (asms, concl)
+	end;
+
+fun Ä_induction_rule thm term = fn (asms, concl) =>
+	let val thm1 = µ_elim (mk_set_comp (term, concl)) thm
+	in Ä_induction_canon thm1
+	end;
+
+Ä_induction_rule HeredFun_induction_thm ¨xÆ (top_goal());
+Ä_induction_canon HeredFun_induction_thm;
+map (rewrite_rule []) it;
+dest_simple_term ¨{x | x=x}Æ;
+a (bc_tac (map all_µ_intro it));
+set_flag( "pp_show_HOL_types", true);
+rewrite_rule [sets_ext_clauses] (undisch_rule (all_µ_elim HeredFun_induction_thm));
+a (REPEAT µ_tac THEN rewrite_tac [HeredFun_def] THEN strip_tac);
+a (asm_tac (µ_elim ¨fÆ F2MF_Monotonic_thm));
+a (ALL_FC_T (MAP_EVERY ante_tac)
+	[rewrite_rule [OpenUnder_def, sets_ext_clauses] Lfp_Open_thm]);
+a (rewrite_tac [Fun2MonoFun_def]);
+
+a (list_spec_nth_asm_tac 1 [¨fÆ, ¨xÆ]);
+a (spec_nth_asm_tac 1 ¨tÆ);
+a (asm_fc_tac[]);
+val HeredFun_Closed_thm1 = save_pop_thm "HeredFun_Closed_thm1";
+
+=IGN	
+val HeredFun_Open_thm1 = save_thm ("HeredFun_Open_thm1",
+	rewrite_rule [OpenUnderFun_def, OpenUnder_def, Fun2MonoFun_def, sets_ext_clauses]
+	HeredFun_Open_thm);
+OpenUnder_def;
 =TEX
 }%ignore
 
-\subsection{Closure}
+=GFT
+CoHeredFun_Closed_thm = Ù µf∑ (CoHeredFun f) ClosedUnderFun f
+CoHeredFun_Open_thm = Ù µf∑ (CoHeredFun f) OpenUnderFun f
+CoHeredFun_coinduction_thm = Ù µs f∑ s OpenUnderFun f ¥ s Ä CoHeredFun f
+=TEX
 
-The following function defines the least fixed point of such an operator:
+\ignore{
+=SML
+set_goal([], ¨µf∑ (CoHeredFun f) ClosedUnderFun fÆ);
+a (rewrite_tac [CoHeredFun_def, ClosedUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (FC_T rewrite_tac [Gfp_Closed_thm]);
+val CoHeredFun_Closed_thm = save_pop_thm "CoHeredFun_Closed_thm";
+=TEX
+=SML
+set_goal([], ¨µf∑ (CoHeredFun f) OpenUnderFun fÆ);
+a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (FC_T rewrite_tac [Gfp_Open_thm]);
+val CoHeredFun_Open_thm = save_pop_thm "CoHeredFun_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µs f∑ s OpenUnderFun f ¥ s Ä CoHeredFun fÆ);
+a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (ALL_FC_T rewrite_tac [Gfp_coinduction_thm]);
+val CoHeredFun_coinduction_thm = save_pop_thm "CoHeredFun_coinduction_thm";
+=TEX
+=IGN
+set_goal([], ¨µx f∑ x ç HeredFun f ¥ ∂s∑ x ç f s ± µy∑ y ç s ¥ y ç HeredFun fÆ);
+a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
+rewrite_rule [ClosedUnderFun_def] HeredFun_Closed_thm;
+rewrite_rule [OpenUnderFun_def] HeredFun_Closed_thm;
+rewrite_rule [ClosedUnder_def, sets_ext_clauses] Lfp_Closed_thm;
+rewrite_rule [OpenUnder_def, sets_ext_clauses] Lfp_Open_thm;
+
+a (REPEAT strip_tac);
+a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
+	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
+a (ALL_FC_T rewrite_tac [Gfp_coinduction_thm]);
+val CoHeredFun_coinduction_thm = save_pop_thm "CoHeredFun_coinduction_thm";
+=TEX
+}%ignore
+
+\subsection{Hereditarily Over a Relation}
+
+An alternative, but less general approach is to define the constructor from a `content' relation which indicates when a value is an immediate constituent of another value.
+This approach is less general because for some inductive definitions of sets, e.g. for the set of theorems of a formal system, there are several ways of constructing the same object and so no obvious content relation which can be used to define the set.
 
 πHOLCONST
-‹	closure: ('a ≠ 'b) ∏ ('a ≠ 'b SET) ≠ 'b SET
-˜
-‹	µtor tent∑ closure (tor, tent) = lfp (cc2monof (tor, tent))
+‹ €Rel2Fun›: ('a ≠ 'a ≠ BOOL) ≠ ('a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µ r∑ Rel2Fun r = Ãs∑ {x | {y | r y x} = s}
 ∞
 
-We now prove that the result is indeed closed under the operations.
+We now define the function which maps a content relation to the least fixed point of the monotonic function obtained from it.
+
+πHOLCONST
+‹ €HeredRel›: ('a ≠ 'a ≠ BOOL) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ r∑ HeredRel r = HeredFun (Rel2Fun r)
+∞
+
+And its dual:
+
+πHOLCONST
+‹ €CoHeredRel›: ('a ≠ 'a ≠ BOOL) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ r∑ CoHeredRel r = CoHeredFun (Rel2Fun r)
+∞
+
+To accomplist this we need the concepts of closure and co-closure for sets relative to one of our `content relations'
+
+=SML
+declare_infix (300, "ClosedUnderRel");
+declare_infix (300, "OpenUnderRel");
+=TEX 
+
+πHOLCONST
+‹ $€ClosedUnderRel› : 'a SET ≠ ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜
+‹ µs r∑ s ClosedUnderRel r § s ClosedUnderFun (Rel2Fun r)
+∞
+
+πHOLCONST
+$€OpenUnderRel› : 'a SET ≠ ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜
+µs r∑ s OpenUnderRel r § s OpenUnderFun (Rel2Fun r)
+∞
+
+=GFT
+HeredRel_Closed_thm = Ù µf∑ (HeredRel f) ClosedUnderRel f
+HeredRel_Open_thm = Ù µf∑ (HeredRel f) OpenUnderRel f
+HeredRel_induction_thm = Ù µs f∑ s ClosedUnderRel f ¥ HeredRel f Ä s
+=TEX
 
 \ignore{
 =SML
-set_goal([], ¨µtor tent s x y∑
-	  tent x = s
-	± s Ä (closure (tor, tent))
-	± y = tor x
-	¥ y ç (closure (tor, tent))Æ);
-a (rewrite_tac [get_spec ¨closureÆ] THEN REPEAT strip_tac);
-a (asm_tac (list_µ_elim [¨torÆ, ¨tentÆ] mono_cc2monof_thm));
-a (ALL_FC_T (once_rewrite_tac o (map eq_sym_rule)) [least_fixpoint_thm]);
-a (rewrite_tac[get_spec ¨cc2monofÆ]
+val Rel2Fun_def = get_spec ¨Rel2FunÆ;
+val HeredRel_def = get_spec ¨HeredRelÆ;
+val CoHeredRel_def = get_spec ¨CoHeredRelÆ;
+val ClosedUnderRel_def = get_spec ¨$ClosedUnderRelÆ;
+val OpenUnderRel_def = get_spec ¨$OpenUnderRelÆ;
+=TEX
+=SML
+set_goal([], ¨µf∑ (HeredRel f) ClosedUnderRel fÆ);
+a (rewrite_tac [HeredRel_def, ClosedUnderRel_def, HeredFun_Closed_thm]);
+val HeredRel_Closed_thm = save_pop_thm "HeredRel_Closed_thm";
+=TEX
+=SML
+set_goal([], ¨µf∑ (HeredRel f) OpenUnderRel fÆ);
+a (rewrite_tac [HeredRel_def, OpenUnderRel_def, HeredFun_Open_thm]);
+val HeredRel_Open_thm = save_pop_thm "HeredRel_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µs f∑ s ClosedUnderRel f ¥ HeredRel f Ä sÆ);
+a (rewrite_tac [HeredRel_def, ClosedUnderRel_def, HeredFun_induction_thm]);
+val HeredRel_induction_thm = save_pop_thm "HeredRel_induction_thm";
+=TEX
+}%ignore
+
+=GFT
+CoHeredRel_Closed_thm = Ù µf∑ (CoHeredRel f) ClosedUnderRel f
+CoHeredRel_Open_thm = Ù µf∑ (CoHeredRel f) OpenUnderRel f
+CoHeredRel_coinduction_thm = Ù µs f∑ s OpenUnderRel f ¥ s Ä CoHeredRel f
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µf∑ (CoHeredRel f) ClosedUnderRel fÆ);
+a (rewrite_tac [CoHeredRel_def, ClosedUnderRel_def, CoHeredFun_Closed_thm]);
+val CoHeredRel_Closed_thm = save_pop_thm "CoHeredRel_Closed_thm";
+=TEX
+=SML
+set_goal([], ¨µf∑ (CoHeredRel f) OpenUnderRel fÆ);
+a (rewrite_tac [CoHeredRel_def, OpenUnderRel_def, CoHeredFun_Open_thm]);
+val CoHeredRel_Open_thm = save_pop_thm "CoHeredRel_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µs f∑ s OpenUnderRel f ¥ s Ä CoHeredRel fÆ);
+a (rewrite_tac [CoHeredRel_def, OpenUnderRel_def, CoHeredFun_coinduction_thm]);
+val CoHeredRel_coinduction_thm = save_pop_thm "CoHeredRel_coinduction_thm";
+=TEX
+}%ignore
+
+\subsection{Hereditarily Over a Property}
+
+We now presume that the construction is always set formation and that the sets which are formed are those satisfying the given property.
+However, everything is relativised to an arbitrary membership structure.
+
+This is really (only a small generalisation of) what mathematicians call ``Hereditarily-P'' sets, so I shall give it its proper name.
+
+A content relation is obtained from a property over a membership structure as follows:
+
+πHOLCONST
+‹ €Prop2Rel›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a ≠ BOOL) ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µ (X, $<<) p∑ Prop2Rel (X, $<<) p = Ãx y∑ x << y ± p y
+∞
+
+πHOLCONST
+‹ €Hereditary›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a ≠ BOOL) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ (X, $<<) p∑ Hereditary (X, $<<) p = HeredRel (Prop2Rel (X, $<<) p)
+∞
+
+And its dual:
+
+πHOLCONST
+‹ €CoHereditary›: ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ ('a ≠ BOOL) ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ (X, $<<) p∑ CoHereditary (X, $<<) p = CoHeredRel (Prop2Rel (X, $<<) p)
+∞
+
+To accomplish this we need the concepts of closure and co-closure for sets relative to one of our `content relations'
+
+πHOLCONST
+‹ $€ClosedUnderProp› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a SET
+‹ 			≠ ('a ≠ BOOL) ≠ BOOL
+˜
+‹ µ(X, $<<) s p∑ ClosedUnderProp (X, $<<) s p
+‹ 	§ s ClosedUnderRel (Prop2Rel (X, $<<) p)
+∞
+
+πHOLCONST
+‹ $€OpenUnderProp› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a SET
+‹ 			≠ ('a ≠ BOOL) ≠ BOOL
+˜
+‹ µ(X, $<<) s p∑ OpenUnderProp (X, $<<) s p
+‹ 	§ s OpenUnderRel (Prop2Rel (X, $<<) p)
+∞
+
+=GFT
+Hereditary_Closed_thm = Ù µ(X, $<<) p∑
+	ClosedUnderProp (X, $<<) (Hereditary (X, $<<) p) p
+Hereditary_Open_thm = Ù µ(X, $<<) p∑
+	OpenUnderProp (X, $<<) (Hereditary (X, $<<) p) p
+Hereditary_induction_thm = Ù µ(X, $<<) s p∑
+	ClosedUnderProp (X, $<<) s p ¥ Hereditary (X, $<<) p Ä s
+=TEX
+
+\ignore{
+=SML
+val Prop2Rel_def = get_spec ¨Prop2RelÆ;
+val Hereditary_def = get_spec ¨HereditaryÆ;
+val CoHereditary_def = get_spec ¨CoHereditaryÆ;
+val ClosedUnderProp_def = get_spec ¨$ClosedUnderPropÆ;
+val OpenUnderProp_def = get_spec ¨$OpenUnderPropÆ;
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) p∑ ClosedUnderProp (X, $<<) (Hereditary (X, $<<) p) pÆ);
+a (rewrite_tac [Hereditary_def, ClosedUnderProp_def, HeredRel_Closed_thm]);
+a (REPEAT strip_tac);
+val Hereditary_Closed_thm = save_pop_thm "Hereditary_Closed_thm";
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) p∑ OpenUnderProp (X, $<<) (Hereditary (X, $<<) p) pÆ);
+a (rewrite_tac [Hereditary_def, OpenUnderProp_def, HeredRel_Open_thm]
 	THEN REPEAT strip_tac);
-a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
-a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
-a (DROP_ASM_T ¨s Ä lfp (cc2monof (tor, tent))Æ ante_tac
-	THEN rewrite_tac[get_spec ¨cc2monofÆ]);
-val closure_thm1 = save_pop_thm "closure_thm1";
+val Hereditary_Open_thm = save_pop_thm "Hereditary_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) s p∑ ClosedUnderProp (X, $<<) s p ¥ Hereditary (X, $<<) p Ä sÆ);
+a (rewrite_tac [Hereditary_def, ClosedUnderProp_def, HeredRel_induction_thm]
+	THEN REPEAT strip_tac);
+val Hereditary_induction_thm = save_pop_thm "Hereditary_induction_thm";
 =TEX
 }%ignore
 
-\subsection{Induction}
-
-We prove an induction theorem for sets defined as closures.
+=GFT
+CoHereditary_Closed_thm = Ù µ(X, $<<) p∑
+	ClosedUnderProp (X, $<<) (CoHereditary (X, $<<) p) p
+CoHereditary_Open_thm = Ù µ(X, $<<) p∑
+	OpenUnderProp (X, $<<) (CoHereditary (X, $<<) p) p
+CoHereditary_coinduction_thm = Ù µ(X, $<<) s p∑
+	OpenUnderProp (X, $<<) s p ¥ s Ä CoHereditary (X, $<<) p
+=TEX
 
 \ignore{
 =SML
-set_goal([], ¨µtor tent p∑
-	(µx∑ (∂y∑ tor y = x ± tent y Ä p) ¥ x ç p)
-	¥ closure (tor, tent) Ä pÆ);
-a (rewrite_tac [get_spec ¨closureÆ]);
-a (REPEAT strip_tac);
-a (asm_tac (list_µ_elim [¨torÆ, ¨tentÆ] mono_cc2monof_thm));
-a (fc_tac [lfp_induction_thm]);
-a (spec_asm_tac ¨µ s∑ cc2monof (tor, tent) s Ä s ¥ lfp (cc2monof (tor, tent)) Ä sÆ ¨pÆ);
-a (swap_asm_concl_tac ¨≥ cc2monof (tor, tent) p Ä pÆ);
-a (rewrite_tac [get_spec ¨cc2monofÆ]);
-a (once_rewrite_tac [sets_ext_clauses]);
-a (REPEAT strip_tac);
-a (spec_asm_tac ¨µ x∑ (∂ y∑ tor y = x ± tent y Ä p) ¥ x ç pÆ ¨xÆ);
-a (spec_asm_tac ¨µ y∑ ≥ (tor y = x ± tent y Ä p)Æ ¨vÆ);
-(* *** Goal "1" *** *)
-a (DROP_ASM_T ¨≥ tor v = xÆ ante_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (DROP_ASM_T ¨u Ä pÆ ante_tac
-	THEN once_asm_rewrite_tac[]
-	THEN strip_tac);
-val closure_induction_thm = save_pop_thm "closure_induction_thm";
+set_goal([], ¨µ(X, $<<) p∑ ClosedUnderProp (X, $<<) (CoHereditary (X, $<<) p) pÆ);
+a (rewrite_tac [CoHereditary_def, ClosedUnderProp_def, CoHeredRel_Closed_thm]
+	THEN REPEAT strip_tac);
+val CoHereditary_Closed_thm = save_pop_thm "CoHereditary_Closed_thm";
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) p∑ OpenUnderProp (X, $<<) (CoHereditary (X, $<<) p) pÆ);
+a (rewrite_tac [CoHereditary_def, OpenUnderProp_def, CoHeredRel_Open_thm]
+	THEN REPEAT strip_tac);
+val CoHereditary_Open_thm = save_pop_thm "CoHereditary_Open_thm";
+=TEX
+=SML
+set_goal([], ¨µ(X, $<<) s p∑ OpenUnderProp (X, $<<) s p ¥ s Ä CoHereditary (X, $<<) pÆ);
+a (rewrite_tac [CoHereditary_def, OpenUnderProp_def]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac [CoHeredRel_coinduction_thm]);
+val CoHereditary_coinduction_thm = save_pop_thm "CoHereditary_coinduction_thm";
 =TEX
 }%ignore
 
-\section{Coding Constructors}
+\subsection{Sets Defined Using CCPs}
+
+The next two variations on the theme move us closer to the form in which the constructors for an inductively defined set are likely to be presented, and in particular to the kinds of constructors whose definitions can be derived from a {\it signature} for the desired inductive type.
+It is particularly relevant to inductive definitions in a type theory rather than a set theory, where the constructors may have diverse types and some work is involved in obtaining a monotonic function whose fixed point can be taken.
+
+There are two cases we consider.
+
+In the most common case the compounded constructor (operating over the disjoint union of mutually defined sets) is an injection, and the content relation is probably the best way to define the type, which turns out to be the field of the well-founded part of the content relation, so that a well-founded relation for inductive proofs comes easily.
+
+In the less common case the compounded constructor is not injective, and cannot therefore be adequately represented by a content relation, so we use a function from content sets to the set of objects with that content (allowing that the same object may appear in more than one of these sets as a result of being constructible by more than one constructor).
+
+A CCP (constructor, content, predicate triple) consisting of:
+\begin{enumerate}
+\item a compounded constructor function
+\item a content function
+\item a compounded predicate
+\end{enumerate}
+
+play an important role here and in the sequel and is therefore defined as a HOL labelled product as follows:
+
+πHOLLABPROD €CCP›¸¸¸¸¸
+‹ €Constructor›: 'b ≠ 'a;
+‹ €Content›: 'b ≠ 'a SET;
+‹ €Predicate›: 'b ≠ BOOL
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+In this the type variable $'b$ is used for the type of the compounded constructor function which is derived from the type of the desired constructors as follows.
+
+\begin{enumerate}
+\item the type is the disjoint union of the domain types for each individual constructor
+\item for each constructor the domain type is the product of the types of the domains if it is a curried constructor, e.g. for a constructor of type $X ≠ Y ≠ Z$ the domain type is $X ∏ Y$.
+types to be introduced.
+\end{enumerate}
+
+The second type parameter is the representation type over which the constructors are defined, and which will be used to introduce the new types (if required).
+
+A CCP can be converted into either a relation or a function as required for $HeredFun$ or $HeredRel$ using the following functions.
+
+πHOLCONST
+‹ €CCP2Fun›: ('a,'b)CCP ≠ ('a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µ ccp x∑ CCP2Fun ccp x =
+‹	{y | ∂b∑ y = Constructor ccp b ± x = Content ccp b ± Predicate ccp b}
+∞
+
+πHOLCONST
+‹ €CCP2Rel›: ('a,'b)CCP ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µ ccp x y∑ CCP2Rel ccp x y §
+‹	∂b∑ y = Constructor ccp b ± x ç Content ccp b ± Predicate ccp b
+∞
+
+In cases such as that of the ``hereditarily pure functions'' which fall outside the scope of definition using $Hereditarily$ but are similar in spirit the desired effect can be obtained using a $CCP2$ in which the constructor is the identity function.
+The predicate in this particular case would be the property of being a many one relation, and the content function would yield the field of the relation.
+The $CCP2Rel$ conversion and $HeredRel$ would then yield the desired set and an induction principle.
+
+\subsection{Using Multiple CCP's}
+
+In principle it is possible to obtain a fixed point from a system of constructors via a single CCP in which the type variable $'b$ is instantiated to the disjoint union of the domains of the (uncurried) constructors.
+This however leads, to unnecessarily large types, and to complications in the constructor function which arise from manipulating disjoint unions with many components.
+
+The domain types of the constructors have only a transitory appearance in the process of obtaining a fixed point, as can be seen from the type of the functions $CCP2Fun$ and $CCP2Rel$ which convert a structure in which the type variable $'b$ occurs into one in which it does not occur.
+This suggests that it may be best to convert each constructor individually into a content relation before attempting to compound the constructors and obtain a fixed point.
+
+The details of how this can be done are sensitive to issues which have not yet been considered, relating to the manner in which constructors are compounded.
+In the most common kind of inductive definition used in computer science it is expected that the constructors will be injective and will have disjoint ranges, resulting in an inductive type which is analogous to an initial or free algebra.
+In other cases this may not be required.
+
+The following definitions are intended only to address the former case.
+
+In compounding the constructors it is necessary to ensure that the ranges of the constructors are disjoint in the compounded constructor, and also to ensure where there is more than one type that the types are disjoint, and that only objects of the appropriate `type' are supplied to the individual constructors in the compounded constructor.
+The disjointness of the constructors is to be achieved by some kind of tagging operation in which the value yielded by a constructor is tagged with a value unique to that constructor.
+This would also suffice to make the types disjoint, but it seems more convenient to use a double tagging to achieve the desired effect.
+First the value is tagged by a number which discriminates between the constructors yielding values of a type, and then it is tagged again with the type.
+
+This whole process can be accomplished by a single function application to a list of lists of constructor functions or relations, parameterised by an application specific tagging operation.
+
+πHOLCONST
+‹ €MapNFun›: (Ó ≠ 'a ≠ 'a) ≠ 'a LIST ≠ 'a LIST
+˜¸¸¸¸¸¸
+‹ µ tf al∑ MapNFun tf al = Map (Uncurry tf) (Combine (1 ..âL (Length al)) al)
+∞
+πHOLCONST
+‹ €MapTag›: (Ó ≠ 'a ≠ 'a) ≠ ('a ≠ 'a) LIST ≠ ('a ≠ 'a) LIST
+˜¸¸¸¸¸¸
+‹ µ tf al∑ MapTag tf al = MapNFun (Ãn f a∑ tf n (f a)) al
+∞
+πHOLCONST
+‹ €LiftTag›: (Ó ≠ 'a ≠ 'a) ≠ (Ó ≠ 'a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µ tf n s∑ LiftTag tf n s = {x | ∂y∑ y ç s ± x = tf n y}
+∞
+πHOLCONST
+‹ €List2Set›: 'a LIST ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µl∑ List2Set l = {e | e çâL l}
+∞
+πHOLCONST
+‹ €ListUnion›: 'a SET LIST ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µl∑ ListUnion l = ﬁ (List2Set l)
+∞
+πHOLCONST
+‹ €ListFunUnion›: ('a SET ≠ 'a SET) LIST ≠ ('a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µl as∑ ListFunUnion l as = ListUnion (Map (Ãf∑ f as) l)
+∞
+πHOLCONST
+‹ €CompoundFuns›: (Ó ≠ 'a ≠ 'a) ≠ ('a SET ≠ 'a SET) LIST LIST ≠ ('a SET ≠ 'a SET)
+˜¸¸¸¸¸¸
+‹ µ tf asfll ∑ CompoundFuns tf asfll =
+‹	ListFunUnion (Map	ListFunUnion (Map (MapTag (LiftTag tf)) asfll))
+∞
+πHOLCONST
+‹ €HCF›: (Ó ≠ 'a ≠ 'a) ≠ ('a SET ≠ 'a SET) LIST LIST ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ tf asfll ∑ HCF tf asfll = HeredFun (CompoundFuns tf asfll)
+∞
+πHOLCONST
+‹ €LiftTag2›: (Ó ≠ 'a ≠ 'a) ≠ (Ó ≠ ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a ≠ BOOL))
+˜¸¸¸¸¸¸
+‹ µ tf n r∑ LiftTag2 tf n r = Ãx y∑ ∂z∑ r x z ± y = tf n z
+∞
+πHOLCONST
+‹ €MapTag2›: (Ó ≠ 'a ≠ 'a) ≠ ('a ≠ 'a ≠ BOOL) LIST ≠ ('a ≠ 'a ≠ BOOL) LIST
+˜¸¸¸¸¸¸
+‹ µ tf rl∑ MapTag2 tf rl = MapNFun (Ãn r x y∑ ∂z∑ y = tf n z ± r x z) rl
+∞
+πHOLCONST
+‹ €ListRelUnion›: ('a ≠ 'a ≠ BOOL) LIST ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µl x y∑ ListRelUnion l x y § ∂r∑ r çâL l ±  r x y
+∞
+πHOLCONST
+‹ €CompoundRels›: (Ó ≠ 'a ≠ 'a) ≠ ('a ≠ 'a ≠ BOOL) LIST LIST ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µ tf arll ∑ CompoundRels tf arll =
+‹	ListRelUnion (Map	ListRelUnion (Map (MapTag2 tf) arll))
+∞
+πHOLCONST
+‹ €HCR›: (Ó ≠ 'a ≠ 'a) ≠ ('a ≠ 'a ≠ BOOL) LIST LIST ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ tf asrll ∑ HCR tf asrll = HeredRel (CompoundRels tf asrll)
+∞
+
+\section{CODING CONSTRUCTIONS}
+
+It is proposed in the first instance to use HOL types as ways of describing constructions.
+
+It is also desirable to allow the domains of the constructors to be specified by predicates, especially since some type constructors like the power set will not be implementable without some constraint on the subsets.
+
+\subsection{Constructor Translation Kits}
+
+In order to make the translation of such a description of a system of constructors into a function whose fixedpoint can be taken to yield an implementation, the code will be parameterised by the necessary things to build the function.
+For example, for type constructor allowed in the description a function is required to perform the construction of elements of that type over the chosen representation type.
+So we need a map (in SML) from HOL type constructors to hol functions containing this information.
+
+The type $CTK$ is defined as a 1-ary type constructor which in its in its primary role instantiated to type $TERM$.
+When instantiated to $string$ the type can be used to package a set of aliases for these terms enabling the complex terms constructed for fixed points to be presented concisely in theory listings.
+The aliases may be used temporarily just for the theory listing and then easily undeclared so that they do not interfere with parsing.
+
+=SML
+type 'a €CTK› = {
+	tag : 'a,
+	tagc : 'a,
+	mk_leaf: 'a,
+	node_constructors: 'a list,
+	content_extractors: 'a list,
+	leaf_injections: 'a list,
+	leaf_content: 'a,
+	ccp_converter: 'a,
+	compound_fixp: 'a};
+=TEX
+
+\ignore{
+=SML
+
+=IGN
+=TEX
+}%ignore
+
+\subsection{Lifting Over HOL Type Constructors}
+
+The following functions allow the coding of constructors over a representation type to be written without concern for how the functions will be compounded.
+They lift an operator over a representation type to be lifted to a functor which transforms constructors for the operand types into a constructor for the result type.
+
+These lifting functions are specific to the HOL type constructors but independent of the representation type.
+
+πHOLCONST
+‹ €LiftProduct›: ('t ∏ 't ≠ 't) ≠ ('a ≠ 't) ≠ ('b≠ 't) ≠ ('a ∏ 'b ≠ 't)
+˜¸¸¸¸¸¸
+‹ µprod f g a b∑ LiftProduct prod f g (a, b) = prod (f a, g b)
+∞
+
+πHOLCONST
+‹ €LiftSum›: ('t + 't ≠ 't) ≠ ('a ≠ 't) ≠ ('b≠ 't) ≠ ('a + 'b ≠ 't)
+˜¸¸¸¸¸¸
+‹ µsum f g ab∑ LiftSum sum f g ab = sum ((Funâ+ f g) ab)
+∞
+
+πHOLCONST
+‹ €LiftList›: ('t LIST ≠ 't) ≠ ('a ≠ 't) ≠ ('a LIST ≠ 't)
+˜¸¸¸¸¸¸
+‹ µlist f al∑ LiftList list f al = list (Map f al)
+∞
+
+πHOLCONST
+‹ €LiftSumUnion›: ('a ≠ 'u SET) ≠ ('b ≠ 'u SET) ≠ ('a + 'b ≠ 'u SET)
+˜¸¸¸¸¸¸
+‹ µcfl cfr ab∑ LiftSumUnion cfl cfr ab = if IsL ab then cfl (OutL ab) else cfr (OutR ab)
+∞
+
+πHOLCONST
+‹ €LiftSumPred›: ('a ≠ BOOL) ≠ ('b ≠ BOOL) ≠ ('a + 'b ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µpl pr ab∑ LiftSumPred pl pr ab = if IsL ab then pl (OutL ab) else pr (OutR ab)
+∞
+
+\subsection{Constructors Over Trees}
 
 Definitions of constructors for products and lists, and injections for disjoint unions.
 
-I'm triying to make this a general as possible, the idea is to allow for the construction of inductive datatypes based on arbitrary trees.
+I'm trying to make this a general as possible, the idea is to allow for the construction of inductive datatypes based on arbitrary trees.
 
 Then constructions may are therefore be thought of as parameterised by:
 
 \begin{enumerate}
-\item a well-ordering
-\item a set of node tags
-\item a set of arc tags
+\item a type of leaf values
+\item a type of arc tags
 \end{enumerate}
 
 And the tree we construct is a tree whose paths may be as long as the well-ordering and whose nodes and arcs have the appropriate kinds of tags.
@@ -351,12 +1193,12 @@ The fact that we are dealing with sets and partial function is here immaterial t
 
 I can't see how to make use of a well-ordering larger than the natural numbers so that's fixed, and that makes a path into a list of arcs.
 
-\subsection{Some Types, Some Properties}
+\subsubsection{Some Types, Some Properties}
 
 To make the type information in the theory listing less cluttered I will use some labelled product definitions to introduce types.
 
-πHOLLABPROD TREE¸¸¸¸¸
-‹ tree: 'arc LIST ≠ 'node ≠ BOOL
+πHOLLABPROD €TREE›¸¸¸¸¸
+‹ €Tree›: 'arc LIST ≠ 'leaf ≠ BOOL
 ∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸
 
 One could make a proper subtype here by incorporating the necessary conditions on the relations involved, but in the construction of an inductive datatype there will almost invariably be another subtyping involved and one will probably suffice.
@@ -365,126 +1207,524 @@ The conditions depend upon chosing a well-ordering of the index types, and are t
 There may not be to allow for this to be a well-ordering of a subset of the type, but since the definition of well-ordering we have is defined in such terms (i.e. as a property of set/relation pairs) we will define the well-formedness condition as accepting such a well-ordering.
 
 πHOLCONST
-‹ many_one : ('a ≠ 'b ≠ BOOL) ≠ BOOL
+‹ €ManyOne› : ('a ≠ 'b ≠ BOOL) ≠ BOOL
 ˜
-‹ µr∑ many_one r § µx y z∑ r x y ± r x z ¥ y = z
+‹ µr∑ ManyOne r § µx y z∑ r x y ± r x z ¥ y = z
 ∞
 
 πHOLCONST
-‹ domain : ('a ≠ 'b ≠ BOOL) ≠ 'a SET
+‹ €Domain› : ('a ≠ 'b ≠ BOOL) ≠ 'a SET
 ˜
-‹ µr∑ domain r = {x | ∂y∑ r x y}
+‹ µr∑ Domain r = {x | ∂y∑ r x y}
 ∞
 
 πHOLCONST
-‹ is_tree : ('arc, 'node)TREE ≠ BOOL
+‹ €NullTree› : ('arc, 'leaf)TREE
 ˜
-‹ µ t:('arc, 'node)TREE∑
-‹	is_tree t §
-‹	many_one (tree t)
-‹	± (µp∑ p ç domain (tree t) ¥
-‹		(µq r∑ p = Append q r ¥ q ç domain (tree t)))
+‹ NullTree = MkTREE(Ãal n∑ F)
 ∞
 
-\subsection{The Constructor}
+πHOLCONST
+‹ €IsTree› : ('arc, 'leaf)TREE ≠ BOOL
+˜
+‹ µ t:('arc, 'leaf)TREE∑
+‹	IsTree t §
+‹	≥ t = NullTree
+‹	± ManyOne (Tree t)
+‹	± (µp q∑ p ç Domain (Tree t) ¥ ≥ Append p q ç Domain (Tree t))
+∞
 
-We have a single constructor function which takes a 'arc indexed set of trees and a 'node value.
+\subsubsection{A Generic Constructor}
+
+We have a single constructor function which takes a 'arc indexed set of trees and a 'leaf value.
 This constructs a new tree from whose root node has the supplied value and whose children are the supplied trees, placed on the arc names used to index them.
 
-The paths through the tree are therefore the paths of the original trees with a new element slotted in at the beginning.
+The paths through the tree are therefore the paths of the original trees with a new arc slotted in at the head of each path.
 
 πHOLCONST
-‹ MkTree : 'node ≠ ('arc ≠ ('arc, 'node)TREE ≠ BOOL) ≠ ('arc, 'node)TREE
+‹ €MkTree› : ('arc ≠ ('arc, 'leaf)TREE ≠ BOOL) ≠ ('arc, 'leaf)TREE
 ˜
-‹ µn c∑ MkTree n c = MkTREE (Ã path node∑
-‹	path = [] ± node = n
-‹	≤ ∂ hd tl tr∑ path = (Cons hd tl) ± c hd tr ± tree tr tl node)
+‹ µc∑ MkTree c = MkTREE (Ã path leaf∑
+‹	∂ tr∑ c (Hd path) tr ± Tree tr (Tail path) leaf)
 ∞
 
-\subsection{Definitions}
+Though this was written for use in inductive datatypes, I don't know a reason why it could not be used for co-inductive datatypes.
+Presumably you have the same kind of definition but take the maximal rather than the minimal fixed point.
 
-In the following constructor definitions the first argument is expected to be an injection from a preferred indexing type for this constructor to some actual indexing type.
-
-πHOLCONST
-IndPair : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) ∏ ('a LIST ≠ (ONE + 'b))
-	≠ ('a LIST ≠ (ONE + 'b))
-˜
-µi l r h t∑
-	IndPair i (l, r) Nil = InL One
-±	IndPair i (l, r) (Cons h t) =
-		if h = i F then l t
-		else if h = i T then r t
-		else InL One
-∞
+This construction is only one-one subject to some constraints on the supplied map, as follows:
 
 πHOLCONST
-IndInL : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b))
-	≠ ('a LIST ≠ (ONE + 'b))
+‹ €NiceChildren› : ('arc ≠ ('arc, 'leaf)TREE ≠ BOOL) ≠ BOOL
 ˜
-µi j h t∑
-	IndInL i j Nil = InL One
-±	IndInL i j (Cons h t) =
-		if h = i F then j t
-		else InL One
-∞
-
-πHOLCONST
-IndInR : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b))
-	≠ ('a LIST ≠ (ONE + 'b))
-˜
-µi j h t∑
-	IndInR i j Nil = InL One
-±	IndInR i j (Cons h t) =
-		if h = i T then j t
-		else InL One
-∞
-
-πHOLCONST
-IndSum : (BOOL ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) + ('a LIST ≠ (ONE + 'b))
-	≠ ('a LIST ≠ (ONE + 'b))
-˜
-µi j h t∑
-	(IndSum i j Nil = InL One)
-±	(IndSum i j (Cons h t) =
-		if IsL j
-		then	if h = i F
-			then OutL j t
-			else InL One
-		else	if h = i T
-			then OutR j t
-			else InL One)
-∞
-
-πHOLCONST
-IndList : (Ó ≠ 'a) ≠ ('a LIST ≠ (ONE + 'b)) LIST
-	≠ ('a LIST ≠ (ONE + 'b))
-˜
-µi ha ta hb tb∑
-	IndList i Nil tb = InL One
-±	IndList i (Cons ha ta) Nil = InL One
-±	IndList i (Cons ha ta) (Cons hb tb) = 
-		if (∂j∑ hb = i j ± j < Length ta) then IndList i ta (Cons hb tb)
-		else if hb = i (Length ta) then (ha tb)
-		else InL One
+‹ µc∑ NiceChildren c § ManyOne c ± ≥ ∂a∑ c a NullTree
 ∞
 
 \ignore{
-<subsec title="Computing a Constructor">
+=SML
+val Tree_def = get_spec ¨TreeÆ;
+val MkTree_def = get_spec ¨MkTreeÆ;
+val NullTree_def = get_spec ¨NullTreeÆ;
+val ManyOne_def = get_spec ¨ManyOneÆ;
+val NiceChildren_def = get_spec ¨NiceChildrenÆ;
+
+set_goal([], ¨∂DestTree : ('arc, 'leaf)TREE ≠ ('arc ≠ ('arc, 'leaf)TREE ≠ BOOL) ∑
+	µc∑ NiceChildren c ¥ DestTree (MkTree c) = cÆ);
+a (∂_tac ¨Ãt:('arc, 'leaf)TREE∑
+		let tr = Tree t
+		in  (Ãa:'arc; tr2∑ Tree tr2 = (Ãal:'arc LIST; n:'leaf∑ tr (Cons a al) n)
+			± ≥ tr2 = NullTree)
+		   Æ THEN rewrite_tac [let_def, Tree_def, MkTree_def]
+	THEN REPEAT strip_tac);
+a (rewrite_tac [ext_thm] THEN REPEAT µ_tac);	
+a (cases_tac ¨c x x'Æ
+	THEN TRY (asm_rewrite_tac[])
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [NiceChildren_def]);
+a (all_fc_tac [ManyOne_def]);
+a (POP_ASM_T discard_tac THEN asm_rewrite_tac []);
+(* *** Goal "3" *** *)
+a (all_fc_tac [NiceChildren_def]);
+a (swap_nth_asm_concl_tac 1 THEN strip_tac);
+a (∂_tac ¨xÆ
+	THEN POP_ASM_T (rewrite_thm_tac o eq_sym_rule)
+	THEN strip_tac);
+(* *** Goal "4" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [NullTree_def]);
+a (LEMMA_T ¨x' = MkTREE (Ã al n∑ F) § Tree x' = (Ã al n∑ F)Æ
+	rewrite_thm_tac);
+(* *** Goal "4.1" *** *)
+a (REPEAT strip_tac THEN TRY (asm_rewrite_tac [Tree_def]));
+a (SYM_ASMS_T rewrite_tac);
+a (rewrite_tac[Tree_def]);
+(* *** Goal "4.2" *** *)
+a (rewrite_tac [ext_thm] THEN REPEAT strip_tac);	
+a (swap_nth_asm_concl_tac 2);
+a (spec_nth_asm_tac 1 ¨x''Æ);
+a (spec_nth_asm_tac 1 ¨x'''Æ);
+(* *** Goal "4.2.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "4.2.2" *** *)
+a (lemma_tac ¨µ x'' x'''∑ (∂ tr∑ c x tr ± Tree tr x'' x''') § Tree tr x'' x'''Æ
+	THEN REPEAT strip_tac THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "4.2.2.1" *** *)
+a (all_fc_tac [NiceChildren_def]);
+a (all_fc_tac [ManyOne_def]);
+a (all_var_elim_asm_tac);
+(* *** Goal "4.2.2.2" *** *)
+a (∂_tac ¨trÆ THEN asm_rewrite_tac[]);
+(* *** Goal "4.2.2.3" *** *)
+a (rename_tac []);
+a (DROP_NTH_ASM_T 5 ante_tac);
+a (DROP_NTH_ASM_T 1 rewrite_thm_tac
+	THEN strip_tac);
+a (lemma_tac ¨Tree x' = Tree trÆ
+	THEN1 (rewrite_tac [ext_thm]
+		THEN REPEAT µ_tac
+		THEN (POP_ASM_T rewrite_thm_tac)));
+a (LEMMA_T ¨MkTREE (Tree x') = MkTREE (Tree tr)Æ ante_tac
+	THEN1 (asm_rewrite_tac []));
+a (rewrite_tac [Tree_def] THEN strip_tac THEN asm_rewrite_tac[]);
+val _ = xl_set_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €DestTree› : ('arc, 'leaf)TREE ≠ ('arc ≠ ('arc, 'leaf)TREE ≠ BOOL) 
+˜
+‹ µc∑ NiceChildren c ¥ DestTree (MkTree c) = c
+∞
+
+\subsubsection{Specific Constructors}
+
+The idea here is to code up the details of how to construct appropriate data for MkTree for the commonly expected type constructors in an inductive datatype definition.
+
+πHOLCONST
+‹ €MkLeafTree› : 'leaf ≠ ('arc, 'leaf)TREE
+˜
+‹ µl∑ MkLeafTree l = MkTREE (Ãarc leaf∑ arc = [] ± leaf = l)
+∞
+
+πHOLCONST
+€MkProdTree› : (BOOL ≠ 'arc) ≠ (('arc, 'leaf)TREE) ∏ (('arc, 'leaf)TREE)
+‹ 		≠ ('arc, 'leaf)TREE
+˜
+‹ µai l r∑
+‹ 	MkProdTree ai (l, r) = MkTree 
+‹ 	(Ãarc tree∑ arc = (ai T) ± tree = l
+‹ 		≤ arc = (ai F) ± tree = r)
+∞
+
+πHOLCONST
+‹ €MkSumTree› : (BOOL ≠ 'arc)
+‹ 		≠ (('arc, 'leaf)TREE) + (('arc, 'leaf)TREE)
+‹ 		≠ ('arc, 'leaf)TREE
+˜
+‹ µai t∑
+‹ 	MkSumTree ai t = MkTree 
+‹ 	(Ãarc tree∑ if IsL t then arc = (ai T) ± tree = OutL t
+‹ 		else arc = (ai F) ± tree = OutR t)
+∞
+
+πHOLCONST
+‹ €MkArcTree› : 'arc ≠ ('arc, 'leaf)TREE ≠ ('arc, 'leaf)TREE
+˜
+‹ µa t∑
+‹ 	MkArcTree a t = MkTree (Ãarc tree∑ arc = a ± tree = t)
+∞
+
+πHOLCONST
+‹ €MkTagTree› : (Ó ≠ 'arc) ≠ Ó ≠ ('arc, 'leaf)TREE ≠ ('arc, 'leaf)TREE
+˜
+‹ µai n t∑
+‹ 	MkTagTree ai n t = MkArcTree (ai n) t
+∞
+
+πHOLCONST
+‹ €IsTagTree› : (Ó ≠ 'arc) ≠ Ó ≠ ('arc, 'leaf)TREE ≠ BOOL
+˜
+‹ 	µai n t∑ IsTagTree ai n t § ∂t2∑ t = MkTagTree ai n t2 
+∞
+
+πHOLCONST
+‹ €UnTagTree› : ('arc, 'leaf)TREE ≠ ('arc, 'leaf)TREE
+˜
+‹ 	µt∑ ∂ t2 a∑ t = MkArcTree a t2 ¥ UnTagTree t = t2
+∞
+
+πHOLCONST
+‹ €MkListTree› : (Ó ≠ 'arc) ≠ ('arc, 'leaf)TREE LIST ≠ ('arc, 'leaf)TREE
+˜
+‹ µai trl∑
+‹ 	MkListTree ai trl = MkTree
+‹ 	(Ãarc tree∑ ∂n∑ arc = (ai n) ± (n, tree) ç ListRel trl)
+∞
+
+Node injections will be dynamically constructed.
+
+Arc injections are fixed in any particular implementation of these inductive datatypes, determined by the range of type constructors to be supported.
+The arc type has to have a cardinality which is an upper bound of the cardinalities of those required by the type constructors.
+So, for the above set of constructors $Ó$ suffices and the arc injectors are therefore defined as follows:
+
+πHOLCONST
+‹ €AiOneToN› : ONE ≠ Ó;  AiBoolToN : BOOL ≠ Ó; AiNToN : Ó ≠ Ó
+˜
+‹ 	(µone∑ AiOneToN one = 0)
+‹ ±	(µb∑ AiBoolToN b = if b then 1 else 0)
+‹ ±	(µn∑ AiNToN n = n)
+∞
+
+\subsection{An Ó Tree Constructor Translator Kit}
+
+In order to make the definitions of types no more prolix than need be it is desirable not to use expressions in making up constructor toolkits.
+So we here define constants for making a default toolkit based on trees with natural number arcs.
+
+\subsubsection{Special Constructors}
+
+The following definition instantiates the tree constructors to the injections into $Ó$ and lifts them to give the functions required for a $CTK$.
+
+πHOLCONST
+‹ €NTreeTag›: Ó ≠ ('a  ≠ (Ó, 'leaf)TREE) ≠ ('a  ≠ (Ó, 'leaf)TREE)
+˜¸¸¸¸¸¸
+‹ 	µn f∑ NTreeTag n f = (MkTagTree AiNToN n) o f
+∞
+
+πHOLCONST
+‹ €NTreeIsTag›: Ó ≠ (Ó, 'leaf)TREE ≠ BOOL
+˜¸¸¸¸¸¸
+‹ 	NTreeIsTag = IsTagTree AiNToN
+∞
+
+\subsubsection{Node Constructors}
+
+πHOLCONST
+‹ €NTreeMkList›: ('a ≠ (Ó, 'leaf)TREE) ≠ ('a LIST ≠ (Ó, 'leaf)TREE)
+˜¸¸¸¸¸¸
+‹ 	 NTreeMkList = LiftList (MkListTree AiNToN)
+∞
+
+πHOLCONST
+‹ €NTreeMkProd›: ('a ≠ (Ó, 'leaf)TREE) ≠ ('b ≠ (Ó, 'leaf)TREE)
+‹	 ≠ ('a ∏ 'b ≠ (Ó, 'leaf)TREE);
+‹ €NTreeMkSum›: ('a ≠ (Ó, 'leaf)TREE) ≠ ('b ≠ (Ó, 'leaf)TREE)
+‹	 ≠ ('a + 'b ≠ (Ó, 'leaf)TREE)
+˜¸¸¸¸¸¸
+‹ 	NTreeMkProd = LiftProduct (MkProdTree AiBoolToN)
+‹ ±	NTreeMkSum = LiftSum (MkSumTree AiBoolToN)
+∞
+
+\subsubsection{Content Extractors}
+
+πHOLCONST
+‹ €NTrListC›: ('a ≠ (Ó, 'leaf)TREE SET) ≠ ('a LIST ≠ (Ó, 'leaf)TREE SET)
+˜¸¸¸¸¸¸
+‹ 	 NTrListC = LiftList (Ãsl∑ ﬁ {x | x çâL sl})
+∞
+
+πHOLCONST
+‹ €NTrProdC›: ('a ≠ (Ó, 'leaf)TREE SET) ≠ ('b ≠ (Ó, 'leaf)TREE SET)
+‹	 ≠ ('a ∏ 'b ≠ (Ó, 'leaf)TREE SET);
+‹ €NTrSumC›: ('a ≠ (Ó, 'leaf)TREE SET) ≠ ('b ≠ (Ó, 'leaf)TREE SET)
+‹	 ≠ ('a + 'b ≠ (Ó, 'leaf)TREE SET)
+˜¸¸¸¸¸¸
+‹ 	NTrProdC = LiftProduct (Uncurry $¿)
+‹ ±	NTrSumC = LiftSum (Ãx∑ if IsL x then OutL x else OutR x)
+∞
+
+πHOLCONST
+‹ €NTrLeafC›: ('a ≠ (Ó, 'leaf)TREE SET)
+˜¸¸¸¸¸¸
+‹ 	 µl∑ NTrLeafC l = {}
+∞
+
+This function tags content as required by content extractors on type variables for the new types.
+It also makes a unit set of the result.
+
+πHOLCONST
+‹ €NTreeTagC›: Ó ≠ (Ó, 'leaf)TREE ≠ (Ó, 'leaf)TREE SET
+˜¸¸¸¸¸¸
+‹ 	µn t∑ NTreeTagC n t = {MkTagTree AiNToN n t}
+∞
+
+\subsubsection{Ntree Ctk}
+
+The following definition gives the required ccp to relation conversion:
+
+πHOLCONST
+‹ €CR›: ('b ≠ 'a) ≠ ('b ≠ 'a SET) ≠ ('b ≠ BOOL) ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ 	µtor tent pred∑ CR tor tent pred = CCP2Rel (MkCCP tor tent pred)
+∞
+
+This definition provides the compounder which combines the relations for all the constructors and takes the fixed point.
+
+πHOLCONST
+‹ €FR›: ((Ó, 'a) TREE ≠ (Ó, 'a) TREE ≠ BOOL) LIST LIST ≠ (Ó, 'a) TREE SET
+˜¸¸¸¸¸¸
+‹ 	µrll∑ FR rll = HeredRel (CompoundRels (MkTagTree AiNToN) rll)
+∞
+
+=SML
+val €ntree_ctk›:TERM CTK = {
+	tag = ¨NTreeTagÆ,
+	tagc = ¨NTreeTagCÆ,
+	mk_leaf = ¨MkLeafTreeÆ,
+	node_constructors = [¨NTreeMkProdÆ, ¨NTreeMkSumÆ, ¨NTreeMkListÆ],
+	leaf_injections = [¨MkLeafTree:CHAR≠(Ó, CHAR)TREEÆ],
+	content_extractors = [¨NTrProdCÆ, ¨NTrSumCÆ, ¨NTrListCÆ],
+	leaf_content = ¨NTrLeafCÆ,
+	ccp_converter = ¨CRÆ,
+	compound_fixp = ¨FRÆ
+};
+val ctk_aliases:string CTK ={
+	tag = "’",
+	tagc = "◊",
+	mk_leaf = "«",
+	node_constructors = ["∏", "+", "∆"],
+	leaf_injections = ["“"],
+	content_extractors = ["∏", "+", "∆"],
+	leaf_content = "“",
+	ccp_converter = "ò",
+	compound_fixp = "ä"
+};
+
+fun declare_ctk_aliases (ctk: TERM CTK) (sctk:string CTK) =
+ let
+	fun map_declare_alias (sl, tl) = map declare_alias (combine sl tl);
+	val _ = declare_alias (#tag sctk, #tag ctk);
+	val _ = declare_alias (#tagc sctk, #tagc ctk);
+	val _ = declare_alias (#mk_leaf sctk, #mk_leaf ctk);
+	val _ = map_declare_alias (#node_constructors sctk, #node_constructors ctk);
+	val _ = map_declare_alias (#leaf_injections sctk, #leaf_injections ctk);
+	val _ = map_declare_alias (#content_extractors sctk, #content_extractors ctk);
+	val _ = declare_alias (#leaf_content sctk, #leaf_content ctk);
+	val _ = declare_alias (#ccp_converter sctk, #ccp_converter ctk);
+	val _ = declare_alias (#compound_fixp sctk, #compound_fixp ctk)
+	in ()
+	end;
+
+fun undeclare_ctk_aliases (ctk: TERM CTK) (sctk:string CTK) =
+ let
+	fun map_undeclare_alias (sl, tl) = map undeclare_alias (combine sl tl);
+	val _ = undeclare_alias (#tag sctk, #tag ctk);
+	val _ = undeclare_alias (#tagc sctk, #tagc ctk);
+	val _ = undeclare_alias (#mk_leaf sctk, #mk_leaf ctk);
+	val _ = map_undeclare_alias (#node_constructors sctk, #node_constructors ctk);
+	val _ = map_undeclare_alias (#leaf_injections sctk, #leaf_injections ctk);
+	val _ = map_undeclare_alias (#content_extractors sctk, #content_extractors ctk);
+	val _ = undeclare_alias (#leaf_content sctk, #leaf_content ctk);
+	val _ = undeclare_alias (#ccp_converter sctk, #ccp_converter ctk);
+	val _ = undeclare_alias (#compound_fixp sctk, #compound_fixp ctk)
+	in ()
+	end;
+
+=TEX
+
+\ignore{
+
+\subsection{Coding into Membership Structures}
+
+We provide here a method of coding inductely defined sets into membership structures.
+This supports coding in the following three ways:
+
+\begin{enumerate}
+\item into a membership structure of choice and a ordered pair construction over that structure
+\item into the natural numbers, given a suitable relation over the natural numbers
+\item into the finite Von Neuman ordinals in a membership structure
+\end{enumerate}
+
+In relation to the first method, the Sierpinski and Quine ordered pair construction are provided.
+In relation to the second, a method of encoding the hereditarily finite sets into natural numbers is provided.
+
+One way to approach this would be to provide metalanguage facilities parameterized by membership structures with ordered pair constructors for preparing contructor translation kits giving fixed points which are in the membership structure.
+
+There are two disadvantages to this.
+
+The first small disadvantage is that either the facility would have to perform definitions for the constants in each CTK it produces, causing a proliferation of new constant definitions, or else expressions would have to be used, which would exacerbate the complexity of the terms involved.
+
+The second disdvantage is that such a facility would not permit reasoning in general about what can be coded in membership structures.
+
+To permit proof (for example) of a generalised negative definability result obtained via construction of a liar sentence, it is desirable that the parameterisation by membership structure should take place in the object rather than the metalangage.
+
+We will therefore be defining a CTK in which the representation type is the domain of a membership structure which is expected (together with an ordered pair constructor) as an argument by the constructors in the CTK, which delivers not simply a fixed point, but a function from such a structure to a fixed point.
+
+We might as well treat the necessary injection from the natural numbers into the membership structure in the same way as the pairing constructor.
+
+
+ πHOLCONST
+‹ SierpinskiPair ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
+ ˜¸¸¸¸¸¸
+‹ µ (S, $çâm) (x,y) = 
+ ∞
+
+
+ πHOLCONST
+‹ MSUPair ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
+ ˜¸¸¸¸¸¸
+‹ µ (S, $çâm) (x,y)∑ MSUPair (S, $çâm) (x,y) = 
+ ∞
+
+
+
+\subsection{Constructing a Fixed Point}
+
 The following function takes a HOL type and a list of constructors and computes a compound constructor.
 The HOL type should have a sum of any finite number of distinct type variables as its codomain
 The constructors should include one for each type constructor which is involved in the recursion.
 
+=SML
+fun match_mk_cons (t, u) = list_match_mk_app (¨ConsÆ, (t::u::[]));
+fun list_match_mk_cons l = foldr match_mk_cons ¨NilÆ l;
 =IGN
-dest_simple_type î'a + 'b + 'cÆ;
-fun ind_constructor scs cc =
- let 
+fun match_mk_sum (t, u) = list_match_mk_app (¨FunSumÆ, (t::u::[]));
+fun list_match_mk_sum (h::tl) = lfoldr match_mk_sum h tl;
 
- in
+fun match_mk_sum_union (t, u) = list_match_mk_app (¨LiftSumUnionÆ, (t::u::[]));
+fun list_match_mk_sum_union (h::tl) = lfoldr match_mk_sum_union h tl;
 
+fun match_mk_sum_pred (t, u) = list_match_mk_app (¨LiftSumPredÆ, (t::u::[]));
+fun list_match_mk_sum_pred (h::tl) = lfoldr match_mk_sum_pred h tl;
+
+fun tc_of_constructor c = (fst o dest_ctype o last o front) ((strip_≠_type o type_of) c);
+=SML
+fun node_constructor_pair c = ((fst o dest_ctype o last o front) ((strip_≠_type o type_of) c), c);
+
+fun leaf_injection_pair li = ((fst o dest_ctype o fst o dest_≠_type o type_of) li, li);
+
+val node_extractor_pair = node_constructor_pair;
+
+fun leaf_extractor_pair t li = ((fst o dest_ctype o fst o dest_≠_type o type_of) li, t);
+
+local
+ fun aux1 (a,b) =
+	let val (n,t) = dest_var a
+	    val (tt::tl) = right_rotate_list (strip_≠_type t)
+	in (n, length tl, list_mk_∏_type tl, tt, b) end;
+ fun aux2 (_,_,_,d,_) = [dest_vartype d]
+in
+ fun sigproc sig1 =
+  let    val sig2 = map aux1 sig1;
+	val new_types = list_cup (map aux2 sig2)
+	val sig3 = map (fn x => filter (fn (_,_,_,y,_) => x = dest_vartype y) sig2) new_types;
+  in (new_types, sig3)
+  end
+end;
+
+fun translate_mapper (ctk:TERM CTK) =
+ let val cd = list_to_sdict (
+		  (map node_constructor_pair (#node_constructors ctk))
+		@ (map leaf_injection_pair (#leaf_injections ctk)))
+ in (fn tcn =>
+	let val Value x = s_lookup tcn cd
+	in fn tl => list_match_mk_app (x, tl)
+	end)
  end;
+
+fun extract_mapper (ctk:TERM CTK) =
+ let val cd = list_to_sdict (
+		  (map node_extractor_pair (#content_extractors ctk))
+		@ (map (leaf_extractor_pair (#leaf_content ctk)) (#leaf_injections ctk)))
+ in (fn tcn =>
+	let val Value x = s_lookup tcn cd
+	in fn tl => list_match_mk_app (x, tl)
+	end)
+ end;
+
+val constructor_types = [
+	(¨MkVarType: STRING ≠ 'TYPEÆ,
+				¨Ãx:STRING∑ Hd x = '''Æ),
+	(¨MkCType: STRING ≠ 'TYPE LIST ≠'TYPEÆ,
+				¨Ã(x:STRING, y:'TYPE LIST)∑ ≥ Hd x = '''Æ),
+	(¨MkVarTerm: STRING ≠ 'TYPE ≠'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE)∑ Hd x = '''Æ),
+	(¨MkCTerm: STRING ≠ 'TYPE ≠'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE)∑ ≥ Hd x = '''Æ),
+	(¨MkLamTerm: STRING ≠ 'TYPE ≠ 'TERM ≠ 'TERMÆ,
+				¨Ã(x:STRING, y:'TYPE, z:'TERM)∑ Hd x = '''Æ),
+	(¨MkAppTerm: 'TERM ≠ 'TERM ≠ 'TERMÆ,
+				¨Ã(x:'TERM, y:'TERM)∑ TÆ)
+];
+
+fun translate_sig ctk sign =
+ let
+	val psig = sigproc sign;
+	val newtyvars = fst psig;
+	fun tagnum tv = mk_Ó (list_pos tv newtyvars);
+	val cf = translate_mapper ctk;
+	val tag = #tag  ctk;
+	val tagc = #tagc ctk;
+	fun id_vf x = ¨IÆ;
+     	fun aux (_,_,ty1,_,_) = gen_type_map cf id_vf ty1;
+	fun tvcon_vf tv = match_mk_app (tagc, tagnum tv);
+	val xf = extract_mapper ctk;
+     	fun aux2 (_,_,ty1,_,_) = gen_type_map xf tvcon_vf ty1;
+	val dtll = map (map (fn x as (a,b,c,d,e) =>
+		list_match_mk_app (#ccp_converter ctk, [aux x, aux2 x, e]))) (snd psig)
+	val tll = list_match_mk_cons (map list_match_mk_cons dtll)
+ in      match_mk_app (#compound_fixp ctk, tll)
+ end;
+
+=IGN
+set_flag ("pp_use_alias", true);
+declare_ctk_aliases ntree_ctk ctk_aliases;
+translate_sig ntree_ctk constructor_types;
 =TEX
 
 }%ignore
+
+\section{MAKING NEW TYPES}
+
+The last stage in this process takes place where the objective is to introduce new types and constructors over the new types.
+The preceding material enables the description of a system of constructors to be translated into a realisation of that system over various sets.
+
+This final stage involves the creation of a new type (possibly a type constructor) for each of the distinct sets which are the co-domains of the constructors, the definition of operators over these types corresponding to the constructors, and the transfer of the properties of the sets to theorems over the types.
+
+These facilities will I hope be orthogonal to most aspects of variation in the definition of the underlying sets.
+It is most strongly motivated by the recursive datatypes of computer science, where there is a desire to abstract away from the details of how the constructions are coded, and may not be required in metatheoretic applications.
+An example of the latter applications is where the system of constructors is providing a coding of syntax into some domain of interest (as in Goedel numbering).
+However, in other metatheoretic studies, where the details of the construction are important and specific to the application, e.g. in the definition of mutually dependent hereditarily pure concrete functors and  categories, it may be desired at the end to abstract away from the constructions and have separate new types for functors and categories.
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}
@@ -496,7 +1736,9 @@ fun ind_constructor scs cc =
 
 \end{document}
 =SML
-set_flag ("pp_use_alias", true);
+val aliasflag = set_flag ("pp_use_alias", true);
+declare_ctk_aliases ntree_ctk ctk_aliases;
 output_theory{out_file="fixp.th.doc", theory="fixp"};
-set_flag ("pp_use_alias", false);
+undeclare_ctk_aliases ntree_ctk ctk_aliases;
+set_flag ("pp_use_alias", aliasflag);
 =TEX
