@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.7 2005/01/26 20:53:38 rbj Exp $
+# $Id: Makefile.in,v 1.8 2005/04/09 14:00:53 rbj Exp $
 
 BUILDFIRST=pp-smlxtras.lds strong_infinity.lds WfRecp.lds x002.lds
 TOPSRCDIR=@top_srcdir@
@@ -18,10 +18,12 @@ PPTEXDOC=pp_theories.doc $(PPDOCDOC)
 PPTEXSML=$(PPTEXDOC:.doc=.sml)
 PPLDS=$(PPXML:.xml=.lds) $(PPDOCDOC:.doc=.lds)
 PPPPTH= basic_hol.th char.th hol.th init.th list.th log.th min.th misc.th pair.th
-PPTH=$(PPPPTH) fixp.th wf_rel.th wf_relp.th wf_rec.th wf_recp.th si.th pc.th \
+OPPTH= fixp.th wf_rel.th wf_relp.th wf_rec.th wf_recp.th si.th pc.th \
 	x003t.th x003u.th x003v.th
+PPTH=$(PPPPTH) $(OPPTH)
 PPTHTO= diffgeom.th membership.th wfrel.th t001a.th t002a.th
 #PPTHD=$(PPTH:.th=.thd) t001a.thd t002a.thd analysis.thd diffgeom.thd membership.thd
+OPPTHTEX=$(OPPTH:.th=.th.tex)
 
 XML005=$(PPXML) index.xml pptheories.xml
 #HTML004=$(XML004:.xml=.html)
@@ -29,8 +31,6 @@ XML005=$(PPXML) index.xml pptheories.xml
 #HTML004m=$(XML004:.xml=-m.html)
 
 XMLFILES=$(XML005)
-HTMLTHLSi=$(HTMLTHLS:.html=-i.html)
-HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
 
 ENTFILES=pp-symbol.ent
 
@@ -62,9 +62,10 @@ vpath %.xsl $(XLCOMDIR)
 
 # Rules
 
-pp-smlxtras.lds: pp-smlxtras.sml $(PPDB).dbts
+$(PPPPTH): $(PPDB).dbts
+	touch $@
 
-$(PPPPTH): pp-smlxtras.lds
+pp-smlxtras.lds: pp-smlxtras.sml $(PPDB).dbts
 
 index.html: pp-smlxtras.xmlt pptheories.xmlt strong_infinity.xmlt x002.xmlt \
 	x003.xmlt WfRec.xmlt WfRecp.xmlt WfRel.xmlt pure_categories.xmlt gst/index.xmlt
@@ -102,16 +103,14 @@ analysis.th: $(PPDB).dbts
 x003t.th x003u.th x003v.th: x003.lds
 	touch x003t.th x003u.th x003v.th
 
-pp_theories.th.tex: $(PPTHTEX)
-	cat $(PPTHTEX) > pp_theories.th.tex
+pp_theories.th.tex: $(OPPTHTEX)
+	cat $(OPPTHTEX) > pp_theories.th.tex
 
-pp_theories.tex: pp_theories.doc $(PPTHTEX) gst/gst_theories.th.tex
+pp_theories.tex: pp_theories.doc pp_theories.th.tex gst/gst_theories.th.tex
 	doctex pp_theories
 
-pp_theories.dvi: pp_theories.tex $(PPTHTEX)
+pp_theories.dvi: pp_theories.tex
 	texdvi pp_theories
 
 pp_theories.ps: pp_theories.dvi
 	dvips $< -o pp_theories.ps
-
-

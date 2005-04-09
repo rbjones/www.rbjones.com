@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: pcf-axioms.xml,v 1.1 2005/04/09 14:00:53 rbj Exp $"
+       name="pcf-axioms"
+       title="Axioms for Pure Categories and Functors."
+       description="The axioms pure concrete functors and categories and of various operations over them."
+       keywords="x-logic xml logic proofpower gst hol set theory functor category pure"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="pcf-defns.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document creates a theory of pure concrete categories and functors.
+The theory contains a set of theorems which might serve as an independent axiomatisation of the theory.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+</sbcol>
+<sbcol>
+<subsec title="Listing of Theory pcf-axs" href="pcf-axs.html" />
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+Pure functors and categories are the concrete functors and categories which can be constructed by an iterative process starting from the empty category.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory pcf-axs">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+First we introduce for these definitions the new theory "pcf-axs", a child of "pcf-defs".
+<ft lang="xl-sml" rest="">
+open_theory "pcf-defs";
+force_new_theory "pcf-axs";
+force_new_pc "pcf-axs";
+set_merge_pcs ["gst","pcf-defs","pcf-axs"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Elementary Axioms" tag="EA">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Provisional Axiomatisation">
+This is my guess at a set of "axioms", entered as axioms.
+They should all be provable, and as they are proved the axioms will be removed.
+I could have used conjectures instead of axioms, but then I would not have been able to reason from them.
+There is a sense in which the nature of sets is fully captured by the axiom of extensionality, the remaining axioms of set theory telling us not what a set is, but what sets there are.
+In the axiomatisation I moot here for my categorical foundation system, the pattern of saying what kinds of thing exist and then saying which of these kinds of entity are found in the domain of discourse is retained.
+The things which exist are (pure, concrete) categories and functors rather than sets.
+Our categories and functors are extensional, but they are more complex than sets, and so saying that these functors and categories are extensional still leaves more to be said about what categories and functors <i>are</i> before we pass to saying which of these kinds of entity are in our domain of discourse.
+
+Extensionality comes in two flavours of course, though they may not be independent.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+new_axiom (["pc_ext"], &qqtel;&forall;c1 c2&bull; c1 = c2 &equiv; (&forall;f&bull; f &isin;<sub>f</sub> c1 &equiv; f &isin;<sub>f</sub> c2)&qqter;);
+new_axiom (["pf_ext"], &qqtel;
+	&forall;f1 f2&bull; f1 = f2
+	&equiv; (dom<sub>c</sub> f1 = dom<sub>c</sub> f2)
+	&and; (cod<sub>c</sub> f1 = cod<sub>c</sub> f2)
+	&and; (&forall;f&bull; f &isin;<sub>f</sub> dom<sub>c</sub> f1 &rArr; f1 <sub>f</sub> f = f2 <sub>f</sub> f)
+&qqter;);
+</ft>
+The other things to be said, before we pass to purely ontological principles are (roughly) as follows:
+
+<ol>
+<li>that <i>id</i> yields an identity functor</li>
+<li>that well-typed composition is associative</li>
+<li>that categories have identity functors and are closed under well-typed composition</li>
+</ol>
+
+<ft lang="xl-sml" rest="">
+new_axiom (["associative_axiom"], &qqtel;
+	&forall;f g h:PF&bull; cod<sub>c</sub> h = dom<sub>c</sub> g &and; cod<sub>c</sub> g = dom<sub>c</sub> f
+		&rArr; f o<sub>f</sub> (g o<sub>f</sub> h) = (f o<sub>f</sub> g) o<sub>f</sub> h
+&qqter;);
+new_axiom (["identity_axiom"], &qqtel;
+	&forall;c:PC; f:PF&bull; (dom<sub>c</sub> f = c &rArr; (id<sub>f</sub> c) o<sub>f</sub> f = f)
+		&and; (cod<sub>c</sub> f = c &rArr; f o<sub>f</sub> (id<sub>f</sub> c) = f)
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec>
+Before giving the category closure axiom it is convenient to define a membership relation between categories.
+<ft lang="xl-sml" rest="">
+declare_infix (300, "&isin;<sub>c</sub>");
+</ft>
+<holconst><holsig>
+&tvb; $&isin;<sub>c</sub> : PC &rarr; PC &rarr; BOOL
+</holsig>
+<holpred>
+&tvb; &forall;c d&bull; c &isin;<sub>c</sub> d &equiv; id<sub>f</sub> c &isin;<sub>f</sub> d
+</holpred>
+</holconst>
+The closure axioms can then be stated:
+<ft lang="xl-sml" rest="">
+new_axiom (["pc_closure_axiom"], &qqtel;
+	&forall;c:PC; f g:PF&bull; (f &isin;<sub>f</sub> c &rArr; dom<sub>c</sub> f &isin;<sub>c</sub> c &and; cod<sub>c</sub> f &isin;<sub>c</sub> c
+	 	&and; (g &isin;<sub>f</sub> c &and; dom<sub>c</sub> f = cod<sub>c</sub> g &rArr; (f o<sub>f</sub> g) &isin;<sub>f</sub> c))
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+In saying which of these things appears in our domain of discourse we begin with a negative principle, the principle of well-foundedness.
+This tells us that anything which is ill-founded doesn't exist, even if it satisfies all the other principles.
+<p />
+Well-foundedness is I think nicer given as an induction principle, at least it is so long as we are working in a higher order logic.
+One principle suffices and the one for pure functors seems neater.
+<ft lang="xl-sml" rest="">
+new_axiom (["pf_induction"], &qqtel;
+	&forall;p&bull; (&forall;f&bull; (&forall;g&bull;
+		(g &isin;<sub>f</sub> dom<sub>c</sub> f &or; g &isin;<sub>f</sub> cod<sub>c</sub> f) &rArr; p g)
+		&rArr; p f)
+	&rArr; &forall;f&bull; p f&qqter;);
+</ft>
+From this an induction principle for pure categories should be derivable.
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec>
+Now the difficult one, the ontology axiom, which serves to place lower bounds on what exists.
+Its useful to define galactic categories and then write the axiom in terms of that definition.
+<p />
+This is rather more difficult to state for category theoretic foundations than for set theoretic so its best to make some definitions first.
+The things we to defined are:
+<ol>
+<li>transitive categories</li>
+<li>functorial abstraction</li>
+<li>limits and co-limits of functors</li>
+<li>functor space categories</li>
+</ol>
+The ontology axiom asserts that every functor belongs to some category which is transitive and which is closed under limits and co-limits, functorial abstraction and construction of functor space categories.
+Functorial abstraction plays a role similar to the replacement axiom in ZFC (which subsumes separation when suitably stated), closure under limits and co-limits that if the closure under unions and intersections, closure under functor space categories plays the role of closure under formation of powersets.
+<p />
+It seems better here to use a function rather than a relation for functorial abstraction, but this prevents the empty category from being defined this way and we might need to assert the existence of the empty category.
+However, asserting the existence of limits and co-limits is stronger than closure under unions and ought to give us the empty category.
+Its not so specific as the set theoretic union axiom, and therefore may not be sufficient for present purposes.
+<p />
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+The following is the gst ontology axiom in the process of being massaged into a pcf ontology axiom.
+<ft lang="xl-gft" rest="">
+new_axiom (["pcf_ontology_axiom"], &qqtel; &forall;c&bull;
+	&exist;g&bull; c &isin;<sub>g</sub> g
+&and;
+	&forall;d&bull; d &isin;<sub>g</sub> g &rArr; d &sube;<sub>c</sub> g
+	&and; (&exist;p&bull; (&forall;v&bull; v &isin;<sub>g</sub> p &equiv; v &sube;<sub>g</sub> d) &and; p &isin;<sub>g</sub> g)
+	&and; (&exist;u&bull; (&forall;v&bull; v &isin;<sub>g</sub> u &equiv; &exist;w&bull; v &isin;<sub>g</sub> w &and; w &isin;<sub>g</sub> d) &and; u &isin;<sub>g</sub> g)
+	&and; (&forall;rel&bull; ManyOne rel &rArr;
+		(&exist;r&bull; (&forall;v&bull; v &isin;<sub>g</sub> r &equiv; &exist;w &bull; w &isin;<sub>g</sub> d &and; rel w v) &and;
+			(r &sube;<sub>g</sub> g &rArr; r &isin;<sub>g</sub> g)))&qqter;
+);
+</ft>
+
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

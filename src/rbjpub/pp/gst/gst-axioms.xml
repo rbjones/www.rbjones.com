@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: gst-axioms.xml,v 1.2 2003/01/02 13:41:45 rbj Exp $"
+       id="$Id: gst-axioms.xml,v 1.3 2005/04/09 14:00:53 rbj Exp $"
        name="gst-axioms"
        title="Axioms for galactic set theory."
        description="The axiomatisation of galactic set theory."
@@ -380,8 +380,11 @@ First we define the property of being a galaxy.
 			&rArr; RelIm rel t &isin;<sub>g</sub> s)
 </holpred>
 </holconst>
-</subsec>
-<subsec title="Existence of Galaxies">
+<ft lang="xl-gft" rest="">
+galaxies_&exist;_thm =
+	&turnstil; &forall;s&bull; &exist;g&bull; s &isin;<sub>g</sub> g &and; galaxy g
+</ft>
+<hide>
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;s&bull; &exist;g&bull; s &isin;<sub>g</sub> g &and; galaxy g&qqter;);
 a (strip_tac THEN rewrite_tac [get_spec &qqtel;galaxy&qqter;]);
@@ -427,7 +430,11 @@ a (&equiv;_FC_T asm_rewrite_tac (get_spec &qqtel;RelIm&qqter;));
 a (asm_rewrite_tac[]);
 val galaxies_&exist;_thm = save_pop_thm "galaxies_&exist;_thm";
 </ft>
-Then we define a function which maps each set onto its smallest enclosing galaxy.
+</hide>
+</subsec>
+<subsec title="Definition of Gx">
+<i>Gx</i> is a function which maps each set onto its smallest enclosing galaxy.
+<hide>
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&exist; Gx&bull; &forall;s t&bull; t &isin;<sub>g</sub> Gx s &equiv; &forall;g&bull; galaxy g &and; s &isin;<sub>g</sub> g &rArr; t &isin;<sub>g</sub> g&qqter;);
 a (prove_&exist;_tac THEN strip_tac);
@@ -437,14 +444,32 @@ a (rewrite_tac [get_spec &qqtel;Sep&qqter;]);
 a (REPEAT strip_tac THEN_TRY all_asm_fc_tac[]);
 xl_set_cs_&exist;_thm (pop_thm());
 </ft>
+</hide>
 <holconst><holsig>
 &tvb; Gx: GS &rarr; GS
 </holsig>
 <holpred>
- &forall;s t&bull; t &isin;<sub>g</sub> Gx s &equiv; &forall;g&bull; galaxy g &and; s &isin;<sub>g</sub> g &rArr; t &isin;<sub>g</sub> g
+&tvb; &forall;s t&bull; t &isin;<sub>g</sub> Gx s &equiv; &forall;g&bull; galaxy g &and; s &isin;<sub>g</sub> g &rArr; t &isin;<sub>g</sub> g
 </holpred>
 </holconst>
-Now we prove that Gx s is a subset of any galaxies containing s.
+<ft lang="xl-tex" rest="">
+Each set is in its smallest enclosing galaxy, which is of course a galaxy and is contained in any other galaxy of which that set is a member:
+</ft>
+<ft lang="xl-gft" rest="">
+t_in_Gx_t_thm =
+	&turnstil; &forall; t&bull; t &isin;<sub>g</sub> Gx t
+galaxy_Gx =
+	&turnstil; &forall;s&bull; galaxy (Gx s)
+Gx_&sube;<sub>g</sub>_galaxy =	
+	&turnstil; &forall;s g&bull; galaxy g &and; s &isin;<sub>g</sub> g  &rArr; (Gx s) &sube;<sub>g</sub> g
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;t&bull; t &isin;<sub>g</sub> Gx t&qqter;);
+a (prove_tac [get_spec &qqtel;Gx&qqter;]);
+val t_in_Gx_t_thm = save_pop_thm "t_in_Gx_t_thm";
+</ft>
+Now we prove that Gx s is a subset of any galaxy containing s.
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;s g&bull; galaxy g &and; s &isin;<sub>g</sub> g  &rArr; (Gx s) &sube;<sub>g</sub> g&qqter;);
 a (rewrite_tac[get_spec &qqtel;$&sube;<sub>g</sub>&qqter;, get_spec &qqtel;Gx&qqter;]);
@@ -483,12 +508,14 @@ a (asm_fc_tac [list_&forall;_elim [&qqtel;g&qqter;] (get_spec &qqtel;galaxy&qqte
 a (REPEAT (all_asm_fc_tac [Gx_&sube;<sub>g</sub>_galaxy, &sube;<sub>g</sub>_trans_thm]));
 val galaxy_Gx = save_pop_thm "galaxy_Gx";
 </ft>
+</hide>
 </subsec>
+</sbcol>
+<sbcol>
 <subsec title="Galaxy Closure">
 The galaxy axiom asserts that a Galaxy is transitive and closed under construction of powersets, distributed union and replacement.
 Galaxies are also closed under most other ways of constructing sets, and we need to demonstrate these facts systematically as the theory is developed.
-</subsec>
-<subsec title="Definition of Transitive">
+
 <holconst><holsig>
 transitive : GS &rarr; BOOL
 </holsig>
@@ -496,10 +523,27 @@ transitive : GS &rarr; BOOL
 &forall;s&bull; transitive s &equiv; &forall;e&bull; e &isin;<sub>g</sub> s &rArr; e &sube;<sub>g</sub> s
 </holpred>
 </holconst>
-<ft lang="xl-tex" rest="">
-&lt;/subsec&gt;
-&lt;subsec title="Galaxies are Transitive"&gt;
+<ft lang="xl-gft" rest="">
+GalaxiesTransitive_thm =
+	&turnstil; &forall;s&bull; galaxy s &rArr; transitive s
+GCloseSep =
+	&turnstil; &forall;g&bull; galaxy g &rArr; &forall;s&bull; s &isin;<sub>g</sub> g &rArr; &forall;p&bull; Sep s p &isin;<sub>g</sub> g
+Gx_transitive_thm =
+	&turnstil; &forall; s&bull; transitive (Gx s)
+Gx_mono_thm =
+	&turnstil; &forall;s t&bull; s &sube;<sub>g</sub> t &rArr; Gx s &sube;<sub>g</sub> Gx t
+Gx_mono_thm2 =
+	&turnstil; &forall;s t&bull; s &isin;<sub>g</sub> t &rArr; Gx s &sube;<sub>g</sub> Gx t
+t_sub_Gx_t_thm =
+	&turnstil; &forall; t&bull; t &sube;<sub>g</sub> Gx t
+Gx_mono_thm3 =
+	&turnstil; &forall; s t&bull; s &sube;<sub>g</sub> t &rArr; s &sube;<sub>g</sub> Gx t
+Gx_trans_thm2 =
+	&turnstil; &forall; s t&bull; s &isin;<sub>g</sub> t &rArr; s &isin;<sub>g</sub> Gx t
+Gx_trans_thm3 =
+	&turnstil; &forall; s t u&bull; s &isin;<sub>g</sub> t &and; t &isin;<sub>g</sub> Gx u &rArr; s &isin;<sub>g</sub> Gx u
 </ft>
+<hide>
 <ft lang="xl-sml" rest="">
 set_goal([],&qqtel;&forall;s&bull; galaxy s &rArr; transitive s&qqter;);
 a (rewrite_tac [get_spec &qqtel;transitive&qqter;]);
@@ -507,10 +551,7 @@ a (REPEAT strip_tac
 	THEN fc_tac [get_spec&qqtel;galaxy&qqter;]
 	THEN asm_fc_tac[]);
 val GalaxiesTransitive_thm = save_pop_thm "GalaxiesTransitive_thm";
-</ft>
-</subsec>
-<subsec title="Galaxies are Closed under Separation">
-<ft lang="xl-sml" rest="">
+
 set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s&bull; s &isin;<sub>g</sub> g &rArr; &forall;p&bull; Sep s p &isin;<sub>g</sub> g&qqter;);
 a (REPEAT strip_tac);
 a (fc_tac [get_spec &qqtel;galaxy&qqter;]);
@@ -541,8 +582,85 @@ a (&exist;_tac &qqtel;e&qqter; THEN asm_rewrite_tac[]);
 (* *** Goal "2.2" *** *)
 a (once_asm_rewrite_tac[] THEN strip_tac);
 val GCloseSep = save_pop_thm "GCloseSep";
+
+set_goal([], &qqtel;&forall;s&bull; transitive (Gx s)&qqter;);
+a (strip_tac);
+a (lemma_tac &qqtel;galaxy (Gx s)&qqter; THEN1 rewrite_tac [galaxy_Gx]);
+a (fc_tac [GalaxiesTransitive_thm]);
+val Gx_transitive_thm = save_pop_thm "Gx_transitive_thm";
+
+set_goal([], &qqtel;&forall;s t&bull; s &sube;<sub>g</sub> t &rArr; Gx s &sube;<sub>g</sub> Gx t&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;galaxy (Gx t)&qqter; THEN1 rewrite_tac [galaxy_Gx]);
+a (lemma_tac &qqtel;s &isin;<sub>g</sub> (Gx t)&qqter;);
+(* *** Goal "1" *** *)
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> Gx t&qqter;
+	THEN1 rewrite_tac [t_in_Gx_t_thm]);
+a (fc_tac [GCloseSep]);
+a (LIST_SPEC_NTH_ASM_T 1 [&qqtel;t&qqter;, &qqtel;&lambda;x&bull; x &isin;<sub>g</sub> s&qqter;] ante_tac);
+a (lemma_tac &qqtel;Sep t (&lambda; x&bull; x &isin;<sub>g</sub> s) = s&qqter;
+	THEN1 (once_rewrite_tac[gs_ext_axiom]
+		THEN rewrite_tac[get_spec &qqtel;Sep&qqter;]
+		THEN REPEAT strip_tac));
+(* *** Goal "1.1" *** *)
+a (GET_NTH_ASM_T 5 ante_tac
+	THEN once_rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]
+	THEN strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (once_rewrite_tac[asm_rule &qqtel;Sep t (&lambda; x&bull; x &isin;<sub>g</sub> s) = s&qqter;]);
+a (strip_tac);
+(* *** Goal "2" *** *)
+a (fc_tac [Gx_&sube;<sub>g</sub>_galaxy]);
+a (asm_fc_tac[]);
+val Gx_mono_thm = save_pop_thm "Gx_mono_thm";
+
+set_goal([], &qqtel;&forall;s t&bull; s &isin;<sub>g</sub> t &rArr; Gx s &sube;<sub>g</sub> Gx t&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;galaxy (Gx t)&qqter; THEN1 rewrite_tac [galaxy_Gx]);
+a (fc_tac [GalaxiesTransitive_thm]);
+a (fc_tac [get_spec &qqtel;transitive&qqter;]);
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> Gx t&qqter; THEN1 rewrite_tac[t_in_Gx_t_thm]);
+a (ASM_FC_T (MAP_EVERY(strip_asm_tac o (once_rewrite_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;]))) [] 
+	THEN asm_fc_tac[]);
+a (all_fc_tac [Gx_&sube;<sub>g</sub>_galaxy]);
+val Gx_mono_thm2 = save_pop_thm "Gx_mono_thm2";
+
+set_goal([], &qqtel;&forall;t&bull; t &sube;<sub>g</sub> Gx t&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> Gx t&qqter; THEN1 rewrite_tac [t_in_Gx_t_thm]);
+a (fc_tac [rewrite_rule [get_spec &qqtel;transitive&qqter;]Gx_transitive_thm]);
+val t_sub_Gx_t_thm = save_pop_thm "t_sub_Gx_t_thm";
+
+set_goal([], &qqtel;&forall;s t&bull; s &sube;<sub>g</sub> t &rArr; s &sube;<sub>g</sub> Gx t&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;t &sube;<sub>g</sub> Gx t&qqter; THEN1 rewrite_tac [t_sub_Gx_t_thm]);
+a (all_fc_tac [&sube;<sub>g</sub>_trans_thm]);
+val Gx_mono_thm3 = save_pop_thm "Gx_mono_thm3";
+
+set_goal([], &qqtel;&forall;s t&bull; s &isin;<sub>g</sub> t &rArr; s &isin;<sub>g</sub> Gx t&qqter;);
+a (REPEAT strip_tac);
+a (lemma_tac &qqtel;t &isin;<sub>g</sub> Gx t&qqter; THEN1 rewrite_tac [t_in_Gx_t_thm]);
+a (lemma_tac &qqtel;transitive (Gx t)&qqter; THEN1 rewrite_tac [Gx_transitive_thm]);
+a (ALL_FC_T (MAP_EVERY (fn x =&gt; fc_tac [rewrite_rule [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;] x]))
+	[get_spec &qqtel;transitive&qqter;]);
+val Gx_trans_thm2 = save_pop_thm "Gx_trans_thm2";
+
+set_goal([], &qqtel;&forall;s t u&bull; s &isin;<sub>g</sub> t &and; t &isin;<sub>g</sub> Gx u &rArr; s &isin;<sub>g</sub> Gx u&qqter;);
+a (REPEAT strip_tac);
+a (LEMMA_T &qqtel;transitive (Gx u)&qqter; ante_tac THEN1 rewrite_tac [Gx_transitive_thm]);
+a (rewrite_tac [get_spec &qqtel;transitive&qqter;]
+	THEN STRIP_T (fn x =&gt; FC_T (MAP_EVERY ante_tac) [x]));
+a (rewrite_tac [get_spec &qqtel;$&sube;<sub>g</sub>&qqter;] THEN STRIP_T (fn x =&gt; fc_tac [x]));
+val Gx_trans_thm3 = save_pop_thm "Gx_trans_thm3";
 </ft>
+</hide>
 </subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
 <subsec title="The Empty Set">
 We can now prove that there is an empty set as follows:
 <ft lang="xl-sml" rest="">
@@ -835,7 +953,7 @@ set_merge_pcs ["basic_hol", "gst-ax"];
 </subsec>
 <subsec title="Galaxy Closure">
 <ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s t&bull; s &isin;<sub>g</sub> g &rArr; Unit s &isin;<sub>g</sub> g&qqter;);
+set_goal([],&qqtel;&forall;g&bull; galaxy g &rArr; &forall;s&bull; s &isin;<sub>g</sub> g &rArr; Unit s &isin;<sub>g</sub> g&qqter;);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec &qqtel;Unit&qqter;]);
 a (REPEAT (asm_fc_tac[GClosePair]));

@@ -1,0 +1,441 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: pcf2-defns.xml,v 1.1 2005/04/09 14:00:53 rbj Exp $"
+       name="pcf2-defns"
+       title="Definitions of Pure Abstract Categories and Functors."
+       description="The definition of pure abstract functors and categories and of various operations over them."
+       keywords="logic proofpower gst hol set theory functor category pure abstract"
+       class="con"
+       root="../../../"
+       path="rbjpub/pp/gst/"
+       up="../ctf.html"
+       rbjhome="../../rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document defines the concepts "pure category" and "pure functor" as a preliminary to developing a foundation system whose domains of discourse are the pure categories and functors.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Functor Functions"/>
+<secref title="Application and Composition"/>
+<secref title="Concrete Categories"/>
+<secref title="Concrete Functors"/>
+</sbcol>
+<sbcol>
+<secref title="Category-Functors and Functor-Categories"/>
+<secref title="Hereditary Properties"/>
+<secref title="Pure Functors"/>
+<secref title="Pure Categories"/>
+<subsec title="Listing of Theory pcf-defs" href="pcf-defs.html" />
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+Pure functors and categories are the abstract functors and categories which can be constructed by an iterative process starting from the empty category.
+</abstract>
+<secbody title="Goals">
+<sbcol>
+<subsec title="1. Goals">
+This is a variant of <a href="pcf-defns.html">pure categories and functors</a> in which the categories and functors are not concrete.
+I don't actually remember why I made them concrete in the first version.
+I guess that seemed natural and simple.
+We shall see whether it really is more complicated to have abstract categories.
+<p>
+One benefit of the abstract approach is that it will allow ill-founded categories.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="The Theory pcf2-defs">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+First we introduce for these definitions the new theory "pcf2-defs", a child of gst.
+<ft lang="xl-sml" rest="">
+open_theory "gst";
+force_new_theory "pcf2-defs";
+force_new_pc "pcf2-defs";
+set_merge_pcs ["gst","pcf2-defs"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functor Functions" tag="FuncFunc">
+<abstract>
+A functor function is a graph together with its domain and codomain.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Functor Functions">
+A functor is a function which may have a codomain which is larger than its range, and which cannot therefore be represented just by its graph.
+We therefore define first a special kind of function, which we call a "func" (think of the "c" as hinting the connection with categories), and which consists of an graph together with its domain and codomain.
+<holconst><holsig>
+func : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s&bull; func s &equiv; &exist;d c g&bull;
+	s = (d&mapsto;<sub>g</sub> c)&mapsto;<sub>g</sub> g
+	&and; fun g
+	&and; dom g = d
+	&and; ran g &sube;<sub>g</sub>  c
+</holpred>
+</holconst>
+Of course, the "d" component here is redundant since it can be recovered from the graph, so maybe it should omitted.
+I'm going to wait and see whether it gets in the way in the proofs.
+</subsec>
+<subsec title="Constructor">
+A constructor function is defined as follows:
+<holconst><holsig>
+mk_func : GS &rarr; GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;l g r&bull; mk_func l g r = (l &mapsto;<sub>g</sub>  r) &mapsto;<sub>g</sub>  g
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Projections">
+The projection functions are defined as follows:
+<holconst><holsig>
+lefts rights graph : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; lefts f = fst (fst f)
+	&and; rights f = snd (fst f)
+	&and; graph f = snd f
+</holpred>
+</holconst>
+The final "s" should warn you that the result is a set.
+Next we define analogues which return functor (still as sets however).
+</subsec>
+<subsec title="Identity Functor Functions">
+First we define a function which converts an arbitrary set into an identity functor function over that set.
+<holconst><holsig>
+idff : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; idff f = mk_func f (id f) f
+</holpred>
+</holconst>
+Then we use it to define the left and right identity functors.
+<holconst><holsig>
+idleft idright : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; idleft f = idff (lefts f)
+	&and; idright f = idff (rights f)
+</holpred>
+</holconst>
+Later <i>left</i> and <i>right</i> will be defined as functions over a new type "PFc" of pure functors.
+</subsec>
+<subsec title="Field">
+Its handy to have this definition of the union of the domain and codomain:
+<holconst><holsig>
+fields : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; fields f = lefts f &cup;<sub>g</sub>  rights f
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Application and Composition" tag="AppComp">
+<abstract>
+Application and composition of functor functions is very similar to ordinary function application and composition.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Application of Functors">
+Application of a functors is application of its graph.
+<holconst><holsig>
+appg : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f g&bull; appg f g =
+	(graph f) <sub>g</sub> g
+</holpred>
+</holconst>
+We introduce here the use of suffix f for something which operates on functors or the sets which represent them.
+In the latter case a "g" is appended to the name to distinguish it from the corresponding operation which will later be defined over the type of functors.
+Composition of functors is associative, and in our concrete categories composition is always this operation.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Composition of Functors">
+Composition of functors is essentially composition of their graphs.
+<ft lang="xl-sml" rest="">
+declare_infix(240,"og<sub>f</sub>");
+</ft>
+<holconst><holsig>
+$og<sub>f</sub> : GS &rarr; GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f g&bull; f og<sub>f</sub> g =
+	mk_func
+	(lefts f)
+	((graph f) o<sub>g</sub> (graph g))
+	(rights g)
+</holpred>
+</holconst>
+We introduce here the use of suffix f for something which operates on functors or the sets which represent them.
+In the latter case a "g" is appended to the name to distinguish it from the corresponding operation which will later be defined over the type of functors.
+Composition of functors is associative, and in our concrete categories composition is always this operation.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Concrete Categories" tag="CC">
+<abstract>
+A concrete category is (in our special world) just a set of functor functions which is closed under composition and has left and right identities.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Categories">
+A category is a collection of "func"s which is closed under composition and has left and right identities.
+<holconst><holsig>
+ccat : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s&bull; ccat s &equiv;
+	&forall;t&bull; t &isin;<sub>g</sub>  s &rArr; func t
+	&and; idleft t &isin;<sub>g</sub>  s
+	&and; idright t &isin;<sub>g</sub>  s
+	&and; &forall;u&bull; u &isin;<sub>g</sub>  s
+		&and; rights t = lefts u
+		&rArr; (t og<sub>f</sub> u) &isin;<sub>g</sub>  s
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Category Constituents">
+Categories are built out of categories.
+In order to express the purity requirement which is characteristic of the categories in our chosen domain of discourse ("pure" as in "pure set", suitably modified for categories), we need to be able to talk about the categories which are immediate constituents of some category (analogously to the members of a set).
+<holconst><holsig>
+ccat_const : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;c&bull; ccat_const c = &lcup;<sub>g</sub>  (Imagep lefts c)
+</holpred>
+</holconst>
+This is the union of the set which is the image of the category under left projection, i.e. the union of the domains of all the functors in the category.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Concrete Functors" tag="CF">
+<abstract>
+A concrete functor is a functor function whose domain and codomains are sets of functor functions and which respects composition.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Definition">
+A concrete functor is a func which respects composition.
+<holconst><holsig>
+cfunc : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f&bull; cfunc f &equiv; func f
+	&and; (&forall;g&bull; g &isin;<sub>g</sub>  fields f &rArr; func g)
+	&and; &forall;g h&bull; g &isin;<sub>g</sub>  (lefts f)
+		&and; h &isin;<sub>g</sub>  (lefts f)
+		&and; rights g = lefts h
+		&rArr; appg f (g og<sub>f</sub> h)
+		= (appg f g) og<sub>f</sub> (appg f h)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Functor Constituents">
+Functors are built out of functors.
+In order to express the purity requirement which is characteristic of the functors in our chosen domain of discourse ("pure" as in "pure set", suitably modified for functors), we need to be able to talk about the functors which are immediate constituents of some functor (analogously to the members of a set).
+<holconst><holsig>
+cfunc_const : GS &rarr; GS
+</holsig>
+<holpred>
+&forall;f&bull; cfunc_const f = (lefts f) &cup;<sub>g</sub>  (rights f)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Category-Functors and Functor-Categories" tag="CFFC">
+<abstract>
+A category-functor (ccat_cfunc) is a concrete functor whose domain and codomain are concrete categories (not just sets) while a functor-category (cfunc_ccat) is a concrete category whose elements are concrete functors (not just functor functions). 
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Category-Functors">
+<holconst><holsig>
+ccat_cfunc : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f&bull; ccat_cfunc f &equiv; cfunc f
+	&and; &forall;c&bull; c &isin;<sub>g</sub>  (fields f)
+		&rArr; ccat c
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Functor-Categories">
+<holconst><holsig>
+cfunc_ccat : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;c&bull; cfunc_ccat c &equiv; ccat c
+	&and; &forall;f&bull; f &isin;<sub>g</sub>  c
+		&rArr; cfunc f
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Hereditary Properties" tag="HP">
+<abstract>
+Hereditary properties are those which are inherited as new (concrete) functors and categories are constructed from old.
+</abstract>
+
+<secbody>
+<sbcol>
+<subsec>
+<p>
+Ideally, so far as clarity is concerned, we would here define two mutually recursive properties of properties, one for functors and the other for categories.
+However, in practice there would be difficulties in demonstrating the consistency of such a definition which would make necessary one of two other approaches to establishing the existence of the desired properties.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<p>
+One approach would be to take one of the properties as primary, define it first and then define the other in terms of it.
+</p>
+<p>
+Its not immediately obvious which one to start with.
+So I've done them both.
+Naturally, having defined each independently I don't need to define either in terms of the other.
+However, the theorems which show how they interlink may prove useful, we probably want to end up as if we had defined them mutually.
+</p>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="functor hereditary properties">
+A property of an ordered pair of sets is "pf_hered" if a functor inherits this property from its constituent functors.
+i.e. if all functors whose constituents are pf_hered functors are themselves pf_hered.
+
+<holconst><holsig>
+pf_hered : (GS &rarr; BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;p&bull; pf_hered p &equiv; &forall;f&bull;
+	ccat_cfunc f
+	&and; (&forall;g&bull; g &isin;<sub>g</sub>  cfunc_const f &rArr; p g)
+	&rArr; p f
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+
+<sbcol>
+<subsec title="category hereditary properties">
+(probably to be scrapped)
+A property of a category is "pc_hered" if a category inherits this property from its constituent categories.
+i.e. if all categories whose constituents are pc_hered categories are themselves pc_hered.
+<holconst><holsig>
+pc_hered : (GS &rarr; BOOL) &rarr; BOOL
+</holsig>
+<holpred>
+&forall;p&bull; pc_hered p &equiv; &forall;c&bull;
+	cfunc_ccat c
+	&and; (&forall;d&bull; d &isin;<sub>g</sub>  ccat_const c &rArr; p d)
+	&rArr; p c
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Pure Functors" tag="PF">
+<abstract>
+Pure functors are the concrete functors which can be built starting from the empty category using a sequence of alternating constructions of categories and functors from functors and categories (resp.) already constructed.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Pure Functors">
+A pure functor is a functor which has all the pcf_hereditary properties.
+This is an oblique way of saying that the functor can be constructed from the trivial endo-functor over the empty category by a process which involves only the formation of functors from functors already constructed.
+
+<holconst><holsig>
+pure_functor : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;s&bull; pure_functor s &equiv;
+	&forall;p&bull; pf_hered p &rArr; p s
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Pure Categories" tag="PC">
+<abstract>
+Pure categories are the concrete categories which can be built starting from the empty category using a sequence of alternating constructions of categories and functors from functors and categories (resp.) already constructed.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Pure Categories">
+A pure category is a category all of whose members (the arrows) are pure functors.
+
+<holconst><holsig>
+pure_category : GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;c&bull; pure_category c &equiv; &forall;p&bull; pc_hered p &rArr; p c
+</holpred>
+</holconst>
+</subsec>
+<subsec title="consistency proof">
+We now prove that there exists a pure function.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;x&bull; pure_functor x&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+</xldoc>

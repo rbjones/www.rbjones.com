@@ -2,7 +2,7 @@
 <!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: pcf-defns.xml,v 1.1 2002/12/24 16:02:49 rbj Exp $"
+       id="$Id: pcf-defns.xml,v 1.2 2005/04/09 14:00:53 rbj Exp $"
        name="pcf-defns"
        title="Definitions of pure categories and functors."
        description="The definition of pure functors and categories in Galactic set theory and of various operations over them."
@@ -23,14 +23,14 @@ This document defines the concepts "pure category" and "pure functor" as a preli
 <secref title="Introduction"/>
 <secref title="Functor Functions"/>
 <secref title="Application and Composition"/>
-<secref title="Concrete Categories"/>
-<secref title="Concrete Functors"/>
+<secref title="Concrete Categories and Functors"/>
+<secref title="Category-Functors and Functor-Categories"/>
 </sbcol>
 <sbcol>
-<secref title="Category-Functors and Functor-Categories"/>
 <secref title="Hereditary Properties"/>
-<secref title="Pure Functors"/>
-<secref title="Pure Categories"/>
+<secref title="Pure Functors and Categories"/>
+<secref title="Composition, Identity, Membership, Application"/>
+<secref title="Abstraction and Galaxies"/>
 <subsec title="Listing of Theory pcf-defs" href="pcf-defs.html" />
 </sbcol>
 </secbody>
@@ -112,10 +112,10 @@ Though this approach would probably not yield a practically useful foundation, i
 <sbcol>
 <subsec title="5. Another Kind of Alternative">
 <p>
-Don't just chose a different language, chose a different ontology.
+Don't just choose a different language, choose a different ontology.
 </p>
 <p>
-If you chose a non-well-founded ontology you can solve some of the problems of categories that don't exist in classical set theory (e.g. the category of categories), but you tend to find that other things happen which you might not like (e.g. the category of categories might not be cartesian closed).
+If you choose a non-well-founded ontology you can solve some of the problems of categories that don't exist in classical set theory (e.g. the category of categories), but you tend to find that other things happen which you might not like (e.g. the category of categories might not be cartesian closed).
 You are also likely to find it difficult to get strength in a nice usable way, and you may find that people complain about the lack of intuition about your ontology.
 </p>
 <p>
@@ -165,28 +165,27 @@ A functor function is a graph together with its domain and codomain.
 <sbcol>
 <subsec title="Functor Functions">
 A functor is a function which may have a codomain which is larger than its range, and which cannot therefore be represented just by its graph.
-We therefore define first a special kind of function, which we call a "func" (think of the "c" as hinting the connection with categories), and which consists of an graph together with its domain and codomain.
+We therefore define first a special kind of function, which we call a "func" (think of the "c" as hinting the connection with categories), and which consists of an graph together with its codomain.
 <holconst><holsig>
 func : GS &rarr; BOOL
 </holsig>
 <holpred>
-&forall;s&bull; func s &equiv; &exist;d c g&bull;
-	s = (d&mapsto;<sub>g</sub> c)&mapsto;<sub>g</sub> g
+&forall;s&bull; func s &equiv; &exist;c g&bull;
+	s = c &mapsto;<sub>g</sub> g
 	&and; fun g
-	&and; dom g = d
 	&and; ran g &sube;<sub>g</sub>  c
 </holpred>
 </holconst>
-Of course, the "d" component here is redundant since it can be recovered from the graph, so maybe it should omitted.
-I'm going to wait and see whether it gets in the way in the proofs.
+Of course, a functor is thought of as having a specific domain as well, but since we are thinking of conrete functors we expect the graph to be a total function, and its better to omit the domain than to include the domain redundantly are require the graph to be total over that domain
+(from the point view of simplicity of the underlying theory, the resulting theories are identical)
 </subsec>
 <subsec title="Constructor">
 A constructor function is defined as follows:
 <holconst><holsig>
-mk_func : GS &rarr; GS &rarr; GS &rarr; GS
+mk_func : GS &rarr; GS &rarr; GS
 </holsig>
 <holpred>
-&forall;l g r&bull; mk_func l g r = (l &mapsto;<sub>g</sub>  r) &mapsto;<sub>g</sub>  g
+&forall;c g&bull; mk_func c g = c &mapsto;<sub>g</sub>  g
 </holpred>
 </holconst>
 </subsec>
@@ -195,15 +194,28 @@ mk_func : GS &rarr; GS &rarr; GS &rarr; GS
 <subsec title="Projections">
 The projection functions are defined as follows:
 <holconst><holsig>
-lefts rights graph : GS &rarr; GS
+doms cods graph : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;f&bull; lefts f = fst (fst f)
-	&and; rights f = snd (fst f)
+&forall;f&bull; doms f = dom (snd f)
+	&and; cods f = fst f
 	&and; graph f = snd f
 </holpred>
 </holconst>
 The final "s" should warn you that the result is a set.
+<ft lang="xl-gft" rest="">
+func_thm =
+	&turnstil; &forall; f&bull; func f &rArr; fun (graph f)
+		&and; ran (graph f) &sube;<sub>g</sub> cods f
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;f&bull; func f &rArr; fun (graph f) &and; ran (graph f) &sube;<sub>g</sub> cods f&qqter;);
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, get_spec &qqtel;func&qqter;] THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val func_thm = save_pop_thm "func_thm";
+</ft>
+</hide>
 Next we define analogues which return functor (still as sets however).
 </subsec>
 <subsec title="Identity Functor Functions">
@@ -212,19 +224,19 @@ First we define a function which converts an arbitrary set into an identity func
 idff : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;f&bull; idff f = mk_func f (id f) f
+&forall;f&bull; idff f = mk_func f (id f)
 </holpred>
 </holconst>
-Then we use it to define the left and right identity functors.
+Then we use it to define the dom and cod identity functors.
 <holconst><holsig>
-idleft idright : GS &rarr; GS
+iddom idcod : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;f&bull; idleft f = idff (lefts f)
-	&and; idright f = idff (rights f)
+&forall;f&bull; iddom f = idff (doms f)
+	&and; idcod f = idff (cods f)
 </holpred>
 </holconst>
-Later <i>left</i> and <i>right</i> will be defined as functions over a new type "PFc" of pure functors.
+Later <i>dom</i> and <i>cod</i> will be defined as functions over a new type "PFc" of pure functors.
 </subsec>
 <subsec title="Field">
 Its handy to have this definition of the union of the domain and codomain:
@@ -232,7 +244,7 @@ Its handy to have this definition of the union of the domain and codomain:
 fields : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;f&bull; fields f = lefts f &cup;<sub>g</sub>  rights f
+&forall;f&bull; fields f = doms f &cup;<sub>g</sub>  cods f
 </holpred>
 </holconst>
 </subsec>
@@ -247,7 +259,7 @@ Application and composition of functor functions is very similar to ordinary fun
 <secbody>
 <sbcol>
 <subsec title="Application of Functors">
-Application of a functors is application of its graph.
+Application of a functor is application of its graph.
 <holconst><holsig>
 appg : GS &rarr; GS &rarr; GS
 </holsig>
@@ -258,6 +270,65 @@ appg : GS &rarr; GS &rarr; GS
 </holconst>
 We introduce here the use of suffix f for something which operates on functors or the sets which represent them.
 In the latter case a "g" is appended to the name to distinguish it from the corresponding operation which will later be defined over the type of functors.
+<ft lang="xl-gft" rest="">
+appg_thm1 =
+	&turnstil; &forall; f x&bull; func f &rArr; (&exist;<sub>1</sub> y&bull; x &mapsto;<sub>g</sub> y &isin;<sub>g</sub> graph f)
+		&rArr; x &mapsto;<sub>g</sub> appg f x &isin;<sub>g</sub> graph f
+appg_thm2 =
+	&turnstil; &forall; f x&bull; func f &and; x &isin;<sub>g</sub> doms f
+		&rArr; x &mapsto;<sub>g</sub> appg f x &isin;<sub>g</sub> graph f
+appg_thm3 =
+	&turnstil; &forall; f x y&bull; func f &and; x &mapsto;<sub>g</sub> y &isin;<sub>g</sub> graph f
+		&rArr; appg f x = y
+appg_thm4 =
+	&turnstil; &forall; f x&bull; func f &and; x &isin;<sub>g</sub> doms f
+		&rArr; appg f x &isin;<sub>g</sub> cods f
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;f x&bull; func f &rArr; (&exist; y&bull; x &mapsto;<sub>g</sub> y &isin;<sub>g</sub> graph f) &rArr; x &mapsto;<sub>g</sub> appg f x &isin;<sub>g</sub> graph f&qqter;);
+a (rewrite_tac [get_spec &qqtel;func&qqter;, get_spec &qqtel;appg&qqter;, get_spec &qqtel;graph&qqter;]
+ THEN REPEAT_N 3 strip_tac	THEN asm_rewrite_tac[] THEN strip_tac);
+a (fc_tac [app_thm1, app_thm2]);
+a (fc_tac [app_thm2]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+val appg_thm1 = save_pop_thm "appg_thm1";
+
+set_goal([], &qqtel;&forall;f x&bull; func f &and; x &isin;<sub>g</sub> doms f &rArr; x &mapsto;<sub>g</sub> appg f x &isin;<sub>g</sub> graph f&qqter;);
+a (REPEAT strip_tac THEN bc_tac [appg_thm1]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm, get_spec &qqtel;appg&qqter;]
+	THEN REPEAT strip_tac
+	THEN fc_tac [appg_thm1]
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec &qqtel;graph&qqter;, get_spec &qqtel;appg&qqter;]
+	THEN REPEAT strip_tac THEN all_asm_fc_tac[]);
+val appg_thm2 = save_pop_thm "appg_thm2";
+
+set_goal([], &qqtel;&forall;f x y&bull; func f &and; x &mapsto;<sub>g</sub> y &isin;<sub>g</sub> graph f &rArr; appg f x = y&qqter;);
+a (rewrite_tac [get_spec &qqtel;appg&qqter;, get_spec &qqtel;graph&qqter;, get_spec &qqtel;func&qqter;]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_&forall;_elim [&qqtel;snd f&qqter;, &qqtel;x&qqter;, &qqtel;y&qqter;] app_thm2));
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+val appg_thm3 = save_pop_thm "appg_thm3";
+
+set_goal([], &qqtel;&forall;f x&bull; func f &and; x &isin;<sub>g</sub> doms f &rArr; appg f x &isin;<sub>g</sub> cods f&qqter;);
+a (REPEAT strip_tac
+	THEN all_fc_tac [appg_thm2, get_spec &qqtel;func&qqter;]
+	THEN asm_rewrite_tac [get_spec &qqtel;cods&qqter;, get_spec &qqtel;appg&qqter;]);
+a (DROP_NTH_ASM_T 4 ante_tac
+	THEN asm_rewrite_tac[get_spec &qqtel;graph&qqter;, get_spec &qqtel;appg&qqter;]
+	THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN once_rewrite_tac [gst_relext_clauses]
+	THEN rewrite_tac [ran_thm]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;g <sub>g</sub> x&qqter;);
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+val appg_thm4 = save_pop_thm "appg_thm4";
+
+</ft>
+</hide>
 Composition of functors is associative, and in our concrete categories composition is always this operation.
 </subsec>
 </sbcol>
@@ -273,43 +344,51 @@ $og<sub>f</sub> : GS &rarr; GS &rarr; GS
 <holpred>
 &forall;f g&bull; f og<sub>f</sub> g =
 	mk_func
-	(lefts f)
+	(cods f)
 	((graph f) o<sub>g</sub> (graph g))
-	(rights g)
 </holpred>
 </holconst>
 We introduce here the use of suffix f for something which operates on functors or the sets which represent them.
 In the latter case a "g" is appended to the name to distinguish it from the corresponding operation which will later be defined over the type of functors.
 Composition of functors is associative, and in our concrete categories composition is always this operation.
+
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;f g h&bull; (f og<sub>f</sub> g) og<sub>f</sub> h = f og<sub>f</sub> (g og<sub>f</sub> h)&qqter;);
+a (rewrite_tac (map get_spec [&qqtel;$og<sub>f</sub>&qqter;, &qqtel;cods&qqter;, &qqtel;mk_func&qqter;]));
+a (rewrite_tac [o<sub>g</sub>_associative_thm]);
+val og<sub>f</sub>_associative_thm = save_pop_thm "og<sub>f</sub>_associative_thm";
+</ft>
+</hide>
+
 </subsec>
 </sbcol>
 </secbody>
 </section>
 
-<section title="Concrete Categories" tag="CC">
+<section title="Concrete Categories and Functors" tag="CCF">
 <abstract>
-A concrete category is (in our special world) just a set of functor functions which is closed under composition and has left and right identities.
+A concrete category is (in our special world) just a set of functor functions which is closed under composition and has dom and cod identity functors (the objects are recoverable from the identities).
+A concrete functor is a functor function whose domain and codomain are sets of functor functions and which respects composition.
 </abstract>
 <secbody>
 <sbcol>
-<subsec title="Categories">
-A category is a collection of "func"s which is closed under composition and has left and right identities.
+<subsec title="Concrete Categories">
+A category is a collection of "func"s which is closed under composition and has dom and cod identities.
 <holconst><holsig>
 ccat : GS &rarr; BOOL
 </holsig>
 <holpred>
 &forall;s&bull; ccat s &equiv;
-	&forall;t&bull; t &isin;<sub>g</sub>  s &rArr; func t
-	&and; idleft t &isin;<sub>g</sub>  s
-	&and; idright t &isin;<sub>g</sub>  s
+	&forall;t&bull; t &isin;<sub>g</sub> s &rArr; func t
+	&and; iddom t &isin;<sub>g</sub>  s
+	&and; idcod t &isin;<sub>g</sub>  s
 	&and; &forall;u&bull; u &isin;<sub>g</sub>  s
-		&and; rights t = lefts u
+		&and; doms t = cods u
 		&rArr; (t og<sub>f</sub> u) &isin;<sub>g</sub>  s
 </holpred>
 </holconst>
 </subsec>
-</sbcol>
-<sbcol>
 <subsec title="Category Constituents">
 Categories are built out of categories.
 In order to express the purity requirement which is characteristic of the categories in our chosen domain of discourse ("pure" as in "pure set", suitably modified for categories), we need to be able to talk about the categories which are immediate constituents of some category (analogously to the members of a set).
@@ -317,22 +396,15 @@ In order to express the purity requirement which is characteristic of the catego
 ccat_const : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;c&bull; ccat_const c = &lcup;<sub>g</sub>  (Imagep lefts c)
+&forall;c&bull; ccat_const c = (Imagep doms c)
+	&cup;<sub>g</sub> (Imagep cods c)
 </holpred>
 </holconst>
-This is the union of the set which is the image of the category under left projection, i.e. the union of the domains of all the functors in the category.
+This is the set which is the image of the category under left projection, i.e. the union of the domains of all the functors in the category.
 </subsec>
 </sbcol>
-</secbody>
-</section>
-
-<section title="Concrete Functors" tag="CF">
-<abstract>
-A concrete functor is a functor function whose domain and codomains are sets of functor functions and which respects composition.
-</abstract>
-<secbody>
 <sbcol>
-<subsec title="Definition">
+<subsec title="Concrete Functors">
 A concrete functor is a func which respects composition.
 <holconst><holsig>
 cfunc : GS &rarr; BOOL
@@ -340,16 +412,16 @@ cfunc : GS &rarr; BOOL
 <holpred>
 &forall;f&bull; cfunc f &equiv; func f
 	&and; (&forall;g&bull; g &isin;<sub>g</sub>  fields f &rArr; func g)
-	&and; &forall;g h&bull; g &isin;<sub>g</sub>  (lefts f)
-		&and; h &isin;<sub>g</sub>  (lefts f)
-		&and; rights g = lefts h
-		&rArr; appg f (g og<sub>f</sub> h)
-		= (appg f g) og<sub>f</sub> (appg f h)
+	&and; &forall;g h&bull; g &isin;<sub>g</sub>  (doms f)
+		&and; h &isin;<sub>g</sub> (doms f)
+		&and; doms g = cods h
+		&and; (g og<sub>f</sub> h) &isin;<sub>g</sub> (doms f)
+		&rArr; doms (appg f g) = cods (appg f h)
+		  &and; appg f (g og<sub>f</sub> h)
+		    = (appg f g) og<sub>f</sub> (appg f h)
 </holpred>
 </holconst>
 </subsec>
-</sbcol>
-<sbcol>
 <subsec title="Functor Constituents">
 Functors are built out of functors.
 In order to express the purity requirement which is characteristic of the functors in our chosen domain of discourse ("pure" as in "pure set", suitably modified for functors), we need to be able to talk about the functors which are immediate constituents of some functor (analogously to the members of a set).
@@ -357,7 +429,7 @@ In order to express the purity requirement which is characteristic of the functo
 cfunc_const : GS &rarr; GS
 </holsig>
 <holpred>
-&forall;f&bull; cfunc_const f = (lefts f) &cup;<sub>g</sub>  (rights f)
+&forall;f&bull; cfunc_const f = (doms f) &cup;<sub>g</sub>  (cods f)
 </holpred>
 </holconst>
 </subsec>
@@ -368,7 +440,7 @@ cfunc_const : GS &rarr; GS
 
 <section title="Category-Functors and Functor-Categories" tag="CFFC">
 <abstract>
-A category-functor (ccat_cfunc) is a concrete functor whose domain and codomain are concrete categories (not just sets) while a functor-category (cfunc_ccat) is a concrete category whose elements are concrete functors (not just functor functions). 
+A category-functor (_cfunc) is a concrete functor whose domain and codomain are concrete categories (not just sets) while a functor-category (cfunc_) is a concrete category whose elements are concrete functors (not just functor functions). 
 </abstract>
 <secbody>
 <sbcol>
@@ -377,9 +449,7 @@ A category-functor (ccat_cfunc) is a concrete functor whose domain and codomain 
 ccat_cfunc : GS &rarr; BOOL
 </holsig>
 <holpred>
-&forall;f&bull; ccat_cfunc f &equiv; cfunc f
-	&and; &forall;c&bull; c &isin;<sub>g</sub>  (fields f)
-		&rArr; ccat c
+&forall;f&bull; ccat_cfunc f &equiv; cfunc f &and; ccat (doms f) &and; ccat (cods f)
 </holpred>
 </holconst>
 </subsec>
@@ -391,7 +461,7 @@ cfunc_ccat : GS &rarr; BOOL
 </holsig>
 <holpred>
 &forall;c&bull; cfunc_ccat c &equiv; ccat c
-	&and; &forall;f&bull; f &isin;<sub>g</sub>  c
+	&and; &forall;f&bull; f &isin;<sub>g</sub> c
 		&rArr; cfunc f
 </holpred>
 </holconst>
@@ -447,6 +517,10 @@ pf_hered : (GS &rarr; BOOL) &rarr; BOOL
 </holpred>
 </holconst>
 </subsec>
+<subsec title="Lemmas">
+<hide>
+</hide>
+</subsec>
 </sbcol>
 
 <sbcol>
@@ -454,6 +528,7 @@ pf_hered : (GS &rarr; BOOL) &rarr; BOOL
 (probably to be scrapped)
 A property of a category is "pc_hered" if a category inherits this property from its constituent categories.
 i.e. if all categories whose constituents are pc_hered categories are themselves pc_hered.
+
 <holconst><holsig>
 pc_hered : (GS &rarr; BOOL) &rarr; BOOL
 </holsig>
@@ -464,14 +539,34 @@ pc_hered : (GS &rarr; BOOL) &rarr; BOOL
 	&rArr; p c
 </holpred>
 </holconst>
+
+</subsec>
+<subsec title="Lemmas">
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody title="Lemmas Connecting these Concepts">
+<sbcol>
+<subsec title="">
+<hide>
+</hide>
+</subsec>
+</sbcol>
+
+<sbcol>
+<subsec title="Lemmas">
+<hide>
+</hide>
+
 </subsec>
 </sbcol>
 </secbody>
 </section>
 
-<section title="Pure Functors" tag="PF">
+<section title="Pure Functors and Categories" tag="PFC">
 <abstract>
-Pure functors are the concrete functors which can be built starting from the empty category using a sequence of alternating constructions of categories and functors from functors and categories (resp.) already constructed.
+Pure functors and categories are the concrete functors and categories which can be built starting from the empty category using a sequence of alternating constructions of categories and functors from functors and categories (resp.) already constructed.
 </abstract>
 <secbody>
 <sbcol>
@@ -488,15 +583,88 @@ pure_functor : GS &rarr; BOOL
 </holpred>
 </holconst>
 </subsec>
-</sbcol>
-</secbody>
-</section>
+<subsec title="consistency proof and type definition">
+We now prove that there exists a pure function, and introduce the type <i>PF</i> of pure functors.
+<ft lang="xl-gft" rest="">
+pure_functor_exists &turnstil; &exist;x&bull; pure_functor x
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;x&bull; pure_functor x&qqter;);
+a (&exist;_tac &qqtel;mk_func &empty;<sub>g</sub> &empty;<sub>g</sub>&qqter;
+	THEN rewrite_tac (map get_spec [
+		&qqtel;pure_functor&qqter;,
+		&qqtel;pf_hered&qqter;])
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;mk_func &empty;<sub>g</sub> &empty;<sub>g</sub>&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac (map get_spec [
+		&qqtel;ccat_cfunc&qqter;,
+		&qqtel;ccat&qqter;,
+		&qqtel;fields&qqter;,
+		&qqtel;cfunc&qqter;,
+		&qqtel;doms&qqter;, &qqtel;cods&qqter;, &qqtel;mk_func&qqter;, &qqtel;func&qqter;]));
+a (&exist;_tac &qqtel;&empty;<sub>g</sub>&qqter; THEN &exist;_tac &qqtel;&empty;<sub>g</sub>&qqter;
+	THEN rewrite_tac (map get_spec [
+		&qqtel;fun&qqter;, &qqtel;dom&qqter;, &qqtel;ran&qqter;]));
+(* *** Goal "2" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN rewrite_tac (map get_spec [
+		&qqtel;cfunc_const&qqter;, &qqtel;mk_func&qqter;, &qqtel;doms&qqter;, &qqtel;cods&qqter;]));
+val pure_functor_exists = pop_thm (); 
 
-<section title="Pure Categories" tag="PC">
-<abstract>
-Pure categories are the concrete categories which can be built starting from the empty category using a sequence of alternating constructions of categories and functors from functors and categories (resp.) already constructed.
-</abstract>
-<secbody>
+new_type_defn(["PF"], "PF", [], pure_functor_exists);
+</ft>
+</hide>
+</subsec>
+<subsec title="Lemmas">
+<ft lang="xl-gft" rest="">
+pf_&equiv;_lem1 = &turnstil; &forall; f&bull; pure_functor f
+	&equiv; ccat_cfunc f
+	&and; (&forall; g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g)
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;pf_hered pure_functor&qqter;);
+a (rewrite_tac [get_spec &qqtel;pf_hered&qqter;, get_spec &qqtel;pure_functor&qqter;]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+val pf_hered_pf_lemma = pop_thm ();
+
+set_goal([], &qqtel;pf_hered (&lambda;f&bull; ccat_cfunc f &and; &forall;g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pf_hered&qqter;, get_spec &qqtel;pure_functor&qqter;, get_spec &qqtel;ccat_cfunc&qqter;]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+val pf_hered_pf2_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;f&bull; pure_functor f &rArr; ccat_cfunc f &and; &forall;g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g&qqter;);
+a (strip_tac THEN STRIP_T (strip_asm_tac o (rewrite_rule [get_spec &qqtel;pure_functor&qqter;])));
+a (strip_asm_tac pf_hered_pf2_lemma);
+a (ASM_FC_T (MAP_EVERY (strip_asm_tac o rewrite_rule[])) []);
+a (asm_rewrite_tac []);
+val pf_hered_pf3_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;f&bull; ccat_cfunc f &and; (&forall;g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g) &rArr; pure_functor f&qqter;);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec &qqtel;pure_functor&qqter;, get_spec &qqtel;pf_hered&qqter;]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (LEMMA_T &qqtel;pure_functor g&qqter; ante_tac THEN1 asm_fc_tac[]);
+a (rewrite_tac [get_spec &qqtel;pure_functor&qqter;, get_spec &qqtel;pf_hered&qqter;]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;p&qqter;);
+a (asm_fc_tac[]);
+val pf_hered_pf4_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;f&bull; pure_functor f
+	&equiv; ccat_cfunc f &and; (&forall; g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g)&qqter;);
+a (strip_tac THEN strip_tac
+	THEN rewrite_tac [pf_hered_pf3_lemma, pf_hered_pf4_lemma]);
+val pf_&equiv;_lem1 = save_pop_thm "pf_&equiv;_lem1";
+</ft>
+</hide>
+</subsec>
+</sbcol>
 <sbcol>
 <subsec title="Pure Categories">
 A pure category is a category all of whose members (the arrows) are pure functors.
@@ -509,13 +677,751 @@ pure_category : GS &rarr; BOOL
 </holpred>
 </holconst>
 </subsec>
-<subsec title="consistency proof">
-We now prove that there exists a pure function.
-<ft lang="xl-sml" rest="">
-set_goal([],&qqtel;&exist;x&bull; pure_functor x&qqter;);
+<subsec title="consistency proof and type definition">
+It is proved that there exists a pure category and the type <i>PC</i> of pure categories is introduced:
+<ft lang="xl-gft" rest="">
+pure_category_exists &turnstil; &exist;x&bull; pure_category x
 </ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;x&bull; pure_category x&qqter;);
+a (&exist;_tac &qqtel;&empty;<sub>g</sub>&qqter;
+	THEN rewrite_tac (map get_spec [
+		&qqtel;pure_category&qqter;,
+		&qqtel;pc_hered&qqter;])
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 &qqtel;&empty;<sub>g</sub>&qqter;);
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac (map get_spec [
+		&qqtel;cfunc_ccat&qqter;,
+		&qqtel;ccat&qqter;,
+		&qqtel;fields&qqter;,
+		&qqtel;cfunc&qqter;,
+		&qqtel;doms&qqter;, &qqtel;cods&qqter;, &qqtel;mk_func&qqter;, &qqtel;func&qqter;]));
+(* *** Goal "2" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN rewrite_tac (map get_spec [
+		&qqtel;ccat_const&qqter;, &qqtel;mk_func&qqter;, &qqtel;doms&qqter;, &qqtel;cods&qqter;]));
+val pure_category_exists = pop_thm (); 
+
+new_type_defn(["PC"], "PC", [], pure_category_exists);
+</ft>
+</hide>
+</subsec>
+<subsec title="Lemmas">
+<ft lang="xl-gft" rest="">
+pc_&equiv;_lem1 = &turnstil; &forall; c&bull; pure_category c
+         &equiv; cfunc_ccat c
+	&and; (&forall; d&bull; d &isin;<sub>g</sub> ccat_const c &rArr; pure_category d)
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;pc_hered pure_category&qqter;);
+a (rewrite_tac [get_spec &qqtel;pc_hered&qqter;, get_spec &qqtel;pure_category&qqter;]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+val pc_hered_pc_lemma = pop_thm ();
+
+set_goal([], &qqtel;pc_hered (&lambda;c&bull; cfunc_ccat c &and; &forall;d&bull; d &isin;<sub>g</sub> ccat_const c &rArr; pure_category d)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pc_hered&qqter;, get_spec &qqtel;pure_category&qqter;, get_spec &qqtel;cfunc_ccat&qqter;]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+val pc_hered_pc2_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;c&bull; pure_category c &rArr; cfunc_ccat c &and; &forall;d&bull; d &isin;<sub>g</sub> ccat_const c &rArr; pure_category d&qqter;);
+a (strip_tac THEN STRIP_T (strip_asm_tac o (rewrite_rule [get_spec &qqtel;pure_category&qqter;])));
+a (strip_asm_tac pc_hered_pc2_lemma);
+a (ASM_FC_T (MAP_EVERY (strip_asm_tac o rewrite_rule[])) []);
+a (asm_rewrite_tac []);
+val pc_hered_pc3_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;c&bull; cfunc_ccat c &and; (&forall;d&bull; d &isin;<sub>g</sub> ccat_const c &rArr; pure_category d) &rArr; pure_category c&qqter;);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec &qqtel;pure_category&qqter;, get_spec &qqtel;pc_hered&qqter;]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (LEMMA_T &qqtel;pure_category d&qqter; ante_tac THEN1 (asm_fc_tac[]));
+a (rewrite_tac [get_spec &qqtel;pure_category&qqter;, get_spec &qqtel;pc_hered&qqter;]
+	THEN REPEAT strip_tac
+	THEN spec_nth_asm_tac 1 &qqtel;p&qqter;);
+a (all_asm_fc_tac[]);
+val pc_hered_pc4_lemma = pop_thm ();
+
+set_goal([], &qqtel;&forall;c&bull; pure_category c &equiv; cfunc_ccat c &and; (&forall;d&bull; d &isin;<sub>g</sub> ccat_const c &rArr; pure_category d)&qqter;);
+a (strip_tac THEN strip_tac
+	THEN rewrite_tac [pc_hered_pc3_lemma, pc_hered_pc4_lemma]);
+val pc_&equiv;_lem1 = save_pop_thm "pc_&equiv;_lem1";
+</ft>
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec>
+<ft lang="xl-gft" rest="">
+pf_&equiv;_lem2 = &turnstil; &forall; f&bull; pure_functor f
+         &equiv; cfunc f
+	&and; pure_category (doms f)
+	&and; pure_category (cods f)
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;pf_hered &lambda;f&bull; cfunc f &and; pure_category (doms f) &and; pure_category (cods f)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pf_hered&qqter;, get_spec &qqtel;ccat_cfunc&qqter;] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac &qqtel;cfunc_ccat (doms f) &and; (&forall; d&bull; d &isin;<sub>g</sub> ccat_const (doms f) &rArr; pure_category d)&qqter;
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (rewrite_tac [get_spec &qqtel;cfunc_ccat&qqter;]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;f' &isin;<sub>g</sub> cfunc_const f&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;cfunc_const&qqter;]);
+a (asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (lemma_tac &qqtel;&exist;g&bull; (d = doms g &or; d = cods g) &and; g &isin;<sub>g</sub> cfunc_const f&qqter;
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac [get_spec &qqtel;ccat_const&qqter;, get_spec &qqtel;cfunc_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN &exist;_tac &qqtel;e&qqter; THEN asm_rewrite_tac[])
+	THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (all_fc_tac [rewrite_rule [get_spec &qqtel;pc_hered&qqter;] pc_hered_pc_lemma]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;cfunc_ccat (cods f) &and; (&forall; d&bull; d &isin;<sub>g</sub> ccat_const (cods f) &rArr; pure_category d)&qqter;
+	THEN1 REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;cfunc_ccat&qqter;]
+	THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;f' &isin;<sub>g</sub> cfunc_const f&qqter;
+	THEN1 asm_rewrite_tac [get_spec &qqtel;cfunc_const&qqter;]);
+a (asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;&exist;g&bull; (d = doms g &or; d = cods g) &and; g &isin;<sub>g</sub> cfunc_const f&qqter;
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac [get_spec &qqtel;ccat_const&qqter;, get_spec &qqtel;cfunc_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN &exist;_tac &qqtel;e&qqter; THEN asm_rewrite_tac[])
+	THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "2.3" *** *)
+a (all_fc_tac [rewrite_rule [get_spec &qqtel;pc_hered&qqter;] pc_hered_pc_lemma]);
+val pfh_pcdc_lemma = pop_thm ();
+
+set_goal ([], &qqtel;&forall;f&bull; pure_functor f &rArr; cfunc f &and; pure_category (doms f) &and; pure_category (cods f)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pure_functor&qqter;] THEN REPEAT_N 2 strip_tac);
+a (asm_tac pfh_pcdc_lemma THEN ASM_FC_T (MAP_EVERY ante_tac) []
+	THEN rewrite_tac[]);
+val pf_has_pcs_lemma = pop_thm ();
+</ft>
+</hide>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-gft" rest="">
+pc_&equiv;_lem2 = &turnstil; &forall; c&bull; pure_category c
+	&equiv;  c &and; (&forall; g&bull; g &isin;<sub>g</sub> c &rArr; pure_functor g)
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;pc_hered &lambda;c&bull; ccat c &and; &forall;f&bull; f &isin;<sub>g</sub> c &rArr; pure_functor f&qqter;);
+a (rewrite_tac [get_spec &qqtel;pc_hered&qqter;, get_spec &qqtel;cfunc_ccat&qqter;] THEN REPEAT strip_tac);
+a (lemma_tac &qqtel;ccat_cfunc f &and; (&forall;g&bull; g &isin;<sub>g</sub> cfunc_const f &rArr; pure_functor g)&qqter;
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;ccat_cfunc&qqter;] THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (lemma_tac &qqtel;doms f &isin;<sub>g</sub> ccat_const c&qqter;
+	THEN1 (rewrite_tac [get_spec &qqtel;ccat_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN spec_nth_asm_tac 1 &qqtel;f&qqter;));
+a (asm_fc_tac[]);
+(* *** Goal "1.3" *** *)
+a (lemma_tac &qqtel;cods f &isin;<sub>g</sub> ccat_const c&qqter;
+	THEN1 (rewrite_tac [get_spec &qqtel;ccat_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN &exist;_tac &qqtel;f&qqter; THEN asm_rewrite_tac[]));
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec &qqtel;cfunc_const&qqter;]
+	THEN strip_tac);
+(* *** Goal "2.1" *** *)
+a (lemma_tac &qqtel;doms f &isin;<sub>g</sub> ccat_const c&qqter;
+	THEN1 (rewrite_tac [get_spec&qqtel;ccat_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN spec_nth_asm_tac 1 &qqtel;f&qqter;));
+a (spec_nth_asm_tac 4 &qqtel;doms f&qqter;);
+a (spec_nth_asm_tac 1 &qqtel;g&qqter;);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;cods f &isin;<sub>g</sub> ccat_const c&qqter;
+	THEN1 (rewrite_tac [get_spec&qqtel;ccat_const&qqter;]
+		THEN REPEAT strip_tac
+		THEN &exist;_tac &qqtel;f&qqter; THEN asm_rewrite_tac[]));
+a (spec_nth_asm_tac 4 &qqtel;cods f&qqter;);
+a (spec_nth_asm_tac 1 &qqtel;g&qqter;);
+(* *** Goal "3" *** *)
+a (all_fc_tac [rewrite_rule [get_spec &qqtel;pf_hered&qqter;] pf_hered_pf_lemma]);
+val pch_pfdf_lemma = pop_thm ();
+
+set_goal ([], &qqtel;&forall;c&bull; pure_category c &rArr; ccat c &and; &forall;g&bull; g &isin;<sub>g</sub> c &rArr; pure_functor g&qqter;);
+a (rewrite_tac [get_spec &qqtel;pure_category&qqter;] THEN REPEAT_N 2 strip_tac);
+a (asm_tac pch_pfdf_lemma THEN ASM_FC_T (MAP_EVERY ante_tac) []
+	THEN rewrite_tac[get_spec &qqtel;pure_functor&qqter;]
+	THEN REPEAT strip_tac);
+val pc_has_pfs_lemma = pop_thm ();
+set_goal ([], &qqtel;&forall;f&bull; cfunc f &and; pure_category (doms f) &and; pure_category (cods f) &rArr; pure_functor f&qqter;);
+a (REPEAT strip_tac THEN once_rewrite_tac [pf_&equiv;_lem1] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;ccat_cfunc&qqter;]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac [pc_has_pfs_lemma]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec &qqtel;cfunc_const&qqter;]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac [pc_has_pfs_lemma]));
+val pf_has_pcs_lemma2 = pop_thm ();
+
+set_goal ([], &qqtel;&forall;f&bull; pure_functor f &equiv; cfunc f &and; pure_category (doms f) &and; pure_category (cods f)&qqter;);
+a (strip_tac THEN strip_tac THEN rewrite_tac [pf_has_pcs_lemma, pf_has_pcs_lemma2]);
+val pf_&equiv;_lem2 = save_pop_thm "pf_&equiv;_lem2";
+
+set_goal ([], &qqtel;&forall;c&bull; ccat c &and; (&forall;g&bull; g &isin;<sub>g</sub> c &rArr; pure_functor g) &rArr; pure_category c&qqter;);
+a (REPEAT strip_tac
+	THEN once_rewrite_tac [pc_&equiv;_lem1]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;cfunc_ccat&qqter;]
+	THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[pf_&equiv;_lem1, get_spec &qqtel;ccat_cfunc&qqter;]));
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec &qqtel;ccat_const&qqter;]
+	THEN strip_tac THEN asm_rewrite_tac[]
+	THEN asm_fc_tac[]
+	THEN asm_fc_tac[pf_has_pcs_lemma]);
+val pf2pc_lem1 = pop_thm ();
+
+set_goal ([], &qqtel;&forall;c&bull; pure_category c &equiv; ccat c &and; (&forall;g&bull; g &isin;<sub>g</sub> c &rArr; pure_functor g)&qqter;);
+a (strip_tac THEN strip_tac
+	THEN rewrite_tac [pf2pc_lem1, pc_has_pfs_lemma]);
+val pc_&equiv;_lem2 = save_pop_thm "pc_&equiv;_lem2";
+</ft>
+</hide>
 </subsec>
 </sbcol>
 </secbody>
 </section>
+
+<section title="Composition, Identity, Membership, Application" tag="CIMA">
+<abstract>
+It is now necessary to define the usual category theoretic operators over the new types.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Representation and Abstraction Functions">
+ProofPower doesn't give you these for free, only the existence of the bijection.
+In principle you can manage without defining these functions, but its easier to define them and then use them to define the required operations over the new types.
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&exist;pf_rep: PF &rarr; GS; mk_pf : GS &rarr; PF &bull;
+	OneOne pf_rep &and; (&forall;x&bull; mk_pf (pf_rep x) = x)
+	&and; (&forall; x&bull; pure_functor x &equiv; (&exist; y&bull; x = pf_rep y))&qqter;);
+a (strip_asm_tac (rewrite_rule [get_spec &qqtel;TypeDefn&qqter;]
+	(get_defn "pcf-defs" "PF")));
+a (&exist;_tac &qqtel;f&qqter; THEN asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;&lambda;y&bull; &epsilon;z&bull; pure_functor y &rArr; f z = y&qqter;
+	THEN rewrite_tac[get_spec &qqtel;$o&qqter;, ext_thm, get_spec &qqtel;CombI&qqter;]);
+a (strip_tac);
+a (&epsilon;_tac &qqtel;&epsilon; z&bull; pure_functor (f x) &rArr; f z = f x&qqter;);
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;x&qqter; THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 &qqtel;f x&qqter;);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "3" *** *)
+a (cases_tac &qqtel;pure_functor (f x)&qqter; THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule[get_spec &qqtel;OneOne&qqter;])));
+a (&epsilon;_tac &qqtel;&epsilon; z&bull; f z = f x&qqter;);
+(* *** Goal "3.1.1" *** *)
+a (&exist;_tac &qqtel;x&qqter; THEN rewrite_tac[]);
+(* *** Goal "3.1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "3.2" *** *)
+a (spec_nth_asm_tac 3 &qqtel;f x&qqter;);
+(* *** Goal "3.2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "3.2.2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+xl_set_cs_&exist;_thm(pop_thm());
+</ft>
+</hide>
+
+<holconst><holsig>
+pf_rep : PF &rarr; GS; mk_pf : GS &rarr; PF
+</holsig>
+<holpred>
+	OneOne pf_rep
+	&and; (&forall;x&bull; mk_pf (pf_rep x) = x)
+	&and; (&forall;x&bull; pure_functor x &equiv; (&exist; y&bull; x = pf_rep y))
+</holpred>
+</holconst>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&exist;pc_rep: PC &rarr; GS; mk_pc : GS &rarr; PC&bull;
+	OneOne pc_rep
+	&and; (&forall;x&bull; mk_pc (pc_rep x) = x)
+	&and; (&forall;x&bull; pure_category x &equiv; (&exist; y&bull; x = pc_rep y))&qqter;);
+a (strip_asm_tac (rewrite_rule [get_spec &qqtel;TypeDefn&qqter;]
+	(get_defn "pcf-defs" "PC")));
+a (&exist;_tac &qqtel;f&qqter; THEN asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;&lambda;y&bull; &epsilon;z&bull; pure_category y &rArr; f z = y&qqter;
+	THEN rewrite_tac[get_spec &qqtel;$o&qqter;, ext_thm, get_spec &qqtel;CombI&qqter;]);
+a (strip_tac);
+a (&epsilon;_tac &qqtel;&epsilon; z&bull; pure_category (f x) &rArr; f z = f x&qqter;);
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;x&qqter; THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 &qqtel;f x&qqter;);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "3" *** *)
+a (cases_tac &qqtel;pure_category (f x)&qqter; THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule[get_spec &qqtel;OneOne&qqter;])));
+a (&epsilon;_tac &qqtel;&epsilon; z&bull; f z = f x&qqter;);
+(* *** Goal "3.1.1" *** *)
+a (&exist;_tac &qqtel;x&qqter; THEN rewrite_tac[]);
+(* *** Goal "3.1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "3.2" *** *)
+a (spec_nth_asm_tac 3 &qqtel;f x&qqter;);
+(* *** Goal "3.2.1" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+(* *** Goal "3.2.2" *** *)
+a (spec_nth_asm_tac 1 &qqtel;x&qqter;);
+xl_set_cs_&exist;_thm(pop_thm());
+</ft>
+</hide>
+<holconst><holsig>
+pc_rep : PC &rarr; GS; mk_pc : GS &rarr; PC
+</holsig>
+<holpred>
+   OneOne pc_rep
+   &and; (&forall;x&bull; mk_pc (pc_rep x) = x)
+   &and; (&forall;x&bull; pure_category x &equiv; (&exist; y&bull; x = pc_rep y))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+
+<subsec title="Definitions">
+<ft lang="xl-sml" rest="">
+declare_infix (310, "o<sub>f</sub>");
+</ft>
+
+<holconst><holsig>
+$o<sub>f</sub> : PF &rarr; PF &rarr; PF
+</holsig>
+<holpred>
+&forall;f g&bull; f o<sub>f</sub> g = mk_pf ((pf_rep f) og<sub>f</sub> (pf_rep g))
+</holpred>
+</holconst>
+<holconst><holsig>
+$id<sub>f</sub> : PC &rarr; PF
+</holsig>
+<holpred>
+&forall;c&bull; id<sub>f</sub> c = mk_pf (idff(pc_rep c))
+</holpred>
+</holconst>
+<holconst><holsig>
+$dom<sub>c</sub> : PF &rarr; PC
+</holsig>
+<holpred>
+&forall;f&bull; dom<sub>c</sub> f = mk_pc (doms(pf_rep f))
+</holpred>
+</holconst>
+<holconst><holsig>
+$cod<sub>c</sub> : PF &rarr; PC
+</holsig>
+<holpred>
+&forall;f&bull; cod<sub>c</sub> f = mk_pc (cods(pf_rep f))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec title="Elementary Theorems">
+<ft lang="xl-gft" rest="">
+pf_pf_rep_thm =
+	&turnstil; &forall;f&bull; pure_functor (pf_rep f)
+cf_cf_rep_thm =
+	&turnstil; &forall;c&bull; pure_category (pc_rep c)
+pf_inv_thm =
+	&turnstil; &forall; x&bull; pure_functor x &rArr; pf_rep (mk_pf x) = x
+pc_inv_thm =
+	&turnstil; &forall; x&bull; pure_category x &rArr; pc_rep (mk_pc x) = x
+idff_closure_lem =
+	&turnstil; &forall; c&bull; pure_category c &rArr; pure_functor (idff c)
+func_comp_thm =
+  	&turnstil; &forall; x y&bull; func x &and; func y &rArr; func (mk_func (cods x) (graph x o<sub>g</sub> graph y))=XML
+fields_&sube;<sub>g</sub>_thm =
+   &turnstil; &forall; f g&bull; fields (f og<sub>f</sub> g) &sube;<sub>g</sub> fields f &cup;<sub>g</sub> fields g
+appg_og<sub>f</sub>_thm =
+   &turnstil;  &forall;x y g&bull; func x &and; func y &and; doms x = cods y &and; g &isin;<sub>g</sub> doms y
+	&rArr; appg (x og<sub>f</sub> y) g = appg x (appg y g)
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&forall;f&bull; pure_functor (pf_rep f)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pf_rep&qqter;] THEN strip_tac);
+a (&exist;_tac &qqtel;f&qqter; THEN rewrite_tac[]);
+val pf_pf_rep_thm = save_pop_thm "pf_pf_rep_thm";
+
+set_goal([], &qqtel;&forall;c&bull; pure_category (pc_rep c)&qqter;);
+a (rewrite_tac [get_spec &qqtel;pc_rep&qqter;] THEN strip_tac);
+a (&exist;_tac &qqtel;c&qqter; THEN rewrite_tac[]);
+val pc_pc_rep_thm = save_pop_thm "pc_pc_rep_thm";
+
+set_goal([], &qqtel;&forall;x&bull; pure_functor x &rArr; pf_rep (mk_pf x) = x&qqter;);
+a (REPEAT strip_tac THEN fc_tac [get_spec &qqtel;pf_rep&qqter;]
+	THEN asm_rewrite_tac [get_spec &qqtel;pf_rep&qqter;]);
+val pf_inv_thm = save_pop_thm "pf_inv_thm";
+
+set_goal([], &qqtel;&forall;x&bull; pure_category x &rArr; pc_rep (mk_pc x) = x&qqter;);
+a (REPEAT strip_tac THEN fc_tac [get_spec &qqtel;pc_rep&qqter;]
+	THEN asm_rewrite_tac [get_spec &qqtel;pc_rep&qqter;]);
+val pc_inv_thm = save_pop_thm "pc_inv_thm";
+
+set_goal([], &qqtel;&forall;c&bull; pure_category c &rArr; pure_functor (idff c)&qqter;);
+a (REPEAT strip_tac THEN rewrite_tac [
+	get_spec &qqtel;idff&qqter;, pf_&equiv;_lem2, get_spec &qqtel;doms&qqter;, get_spec &qqtel;mk_func&qqter;]
+	THEN REPEAT strip_tac);
+a (rewrite_tac [get_spec &qqtel;cfunc&qqter;] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac
+	[get_spec &qqtel;fields&qqter;, get_spec &qqtel;doms&qqter;]
+	THEN strip_tac);
+a (all_fc_tac [pc_&equiv;_lem2]);
+a (fc_tac [pf_&equiv;_lem2]);
+a (fc_tac [get_spec &qqtel;cfunc&qqter;]);
+(* *** Goal "3" *** *)
+a (lemma_tac &qqtel;appg (c &mapsto;<sub>g</sub> id c) g = g&qqter;);
+(* *** Goal "3.1" *** *)
+a (lemma_tac &qqtel;func (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "3.1.1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "3.1.2" *** *)
+a (lemma_tac &qqtel;g &mapsto;<sub>g</sub> g &isin;<sub>g</sub> graph (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "3.1.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, id_thm1]);
+a (&exist;_tac &qqtel;g&qqter; THEN rewrite_tac[]);
+a (GET_NTH_ASM_T 5 ante_tac THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]);
+(* *** Goal "3.1.2.2" *** *)
+a (all_fc_tac [appg_thm3]);
+(* *** Goal "3.2" *** *)
+a (asm_rewrite_tac []);
+a (lemma_tac &qqtel;appg (c &mapsto;<sub>g</sub> id c) h = h&qqter;);
+(* *** Goal "3.2.1" *** *)
+a (lemma_tac &qqtel;func (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "3.2.1.1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "3.2.1.2" *** *)
+a (lemma_tac &qqtel;h &mapsto;<sub>g</sub> h &isin;<sub>g</sub> graph (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "3.2.1.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, id_thm1]);
+a (&exist;_tac &qqtel;h&qqter; THEN rewrite_tac[]);
+a (GET_NTH_ASM_T 5 ante_tac THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]);
+(* *** Goal "3.2.1.2.2" *** *)
+a (all_fc_tac [appg_thm3]);
+(* *** Goal "3.2.2" *** *)
+a (asm_rewrite_tac []);
+(* *** Goal "4" *** *)
+a (lemma_tac &qqtel;appg (c &mapsto;<sub>g</sub> id c) g = g&qqter;);
+(* *** Goal "4.1" *** *)
+a (lemma_tac &qqtel;func (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.1.1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "4.1.2" *** *)
+a (lemma_tac &qqtel;g &mapsto;<sub>g</sub> g &isin;<sub>g</sub> graph (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.1.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, id_thm1]);
+a (&exist;_tac &qqtel;g&qqter; THEN rewrite_tac[]);
+a (GET_NTH_ASM_T 5 ante_tac THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]);
+(* *** Goal "4.1.2.2" *** *)
+a (all_fc_tac [appg_thm3]);
+(* *** Goal "4.2" *** *)
+a (asm_rewrite_tac[]);
+a (lemma_tac &qqtel;appg (c &mapsto;<sub>g</sub> id c) h = h&qqter;);
+(* *** Goal "4.2.1" *** *)
+a (lemma_tac &qqtel;func (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.2.1.1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "4.2.1.2" *** *)
+a (lemma_tac &qqtel;h &mapsto;<sub>g</sub> h &isin;<sub>g</sub> graph (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.2.1.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, id_thm1]);
+a (&exist;_tac &qqtel;h&qqter; THEN rewrite_tac[]);
+a (GET_NTH_ASM_T 5 ante_tac THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]);
+(* *** Goal "4.2.1.2.2" *** *)
+a (all_fc_tac [appg_thm3]);
+(* *** Goal "4.2.2" *** *)
+a (asm_rewrite_tac []);
+a (lemma_tac &qqtel;func (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.2.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;func&qqter;]);
+a (&exist;_tac &qqtel;c&qqter; THEN &exist;_tac &qqtel;id c&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "4.2.2.2" *** *)
+a (lemma_tac &qqtel;(g og<sub>f</sub> h) &mapsto;<sub>g</sub> (g og<sub>f</sub> h) &isin;<sub>g</sub> graph (c &mapsto;<sub>g</sub> id c)&qqter;);
+(* *** Goal "4.2.2.2.1" *** *)
+a (rewrite_tac [get_spec &qqtel;graph&qqter;, id_thm1]);
+a (&exist;_tac &qqtel;(g og<sub>f</sub> h)&qqter; THEN rewrite_tac[]);
+a (fc_tac [pc_&equiv;_lem2]);
+a (fc_tac [get_spec &qqtel;ccat&qqter;]);
+a (lemma_tac &qqtel;h &isin;<sub>g</sub> c&qqter;);
+(* *** Goal "4.2.2.2.1.1" *** *)
+a (GET_NTH_ASM_T 12 ante_tac
+	THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]);
+(* *** Goal "4.2.2.2.1.2" *** *)
+a (lemma_tac &qqtel;g &isin;<sub>g</sub> c&qqter; THEN1
+	(GET_NTH_ASM_T 14 ante_tac
+	THEN rewrite_tac [get_spec &qqtel;doms&qqter;, dom_thm]));
+a (all_asm_fc_tac[]);
+(* *** Goal "4.2.2.2.2" *** *)
+a (all_fc_tac [appg_thm3]);
+val idff_closure_lem = save_pop_thm "idff_closure_lem";
+
+set_goal([], &qqtel;&forall;x y&bull; func x &and; func y &rArr; func (x og<sub>f</sub> y)&qqter;);
+a (rewrite_tac [get_spec &qqtel;func&qqter;, get_spec &qqtel;$og<sub>f</sub>&qqter;] THEN REPEAT strip_tac);
+a (&exist;_tac &qqtel;cods x&qqter; THEN &exist;_tac &qqtel;graph x o<sub>g</sub> graph y&qqter;
+	THEN asm_rewrite_tac[get_spec &qqtel;mk_func&qqter;, get_spec &qqtel;graph&qqter;]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [list_&forall;_elim [&qqtel;g&qqter;, &qqtel;g'&qqter;] o<sub>g</sub>_fun_thm]);
+(* *** Goal "2" *** *)
+a (asm_tac (list_&forall;_elim [&qqtel;g&qqter;, &qqtel;g'&qqter;] ran_o<sub>g</sub>_thm));
+a (all_fc_tac [&sube;<sub>g</sub>_trans_thm]);
+val func_comp_thm = save_pop_thm "func_comp_thm";
+
+set_goal([], &qqtel;&forall;f g&bull; doms (f og<sub>f</sub> g) &sube;<sub>g</sub> doms g &and; cods (f og<sub>f</sub> g) &sube;<sub>g</sub> cods f&qqter;);
+a (rewrite_tac [get_spec &qqtel;doms&qqter;, get_spec &qqtel;cods&qqter;, get_spec &qqtel;$og<sub>f</sub>&qqter;, get_spec &qqtel;mk_func&qqter;,
+	dom_o<sub>g</sub>_thm]);
+val doms_cods_og<sub>f</sub>_thm = save_pop_thm "doms_cods_og<sub>f</sub>_thm";
+
+set_goal([], &qqtel;&forall; f g&bull; fields (f og<sub>f</sub> g) &sube;<sub>g</sub> fields f &cup;<sub>g</sub> fields g&qqter;);
+a (rewrite_tac [get_spec &qqtel;fields&qqter;]);
+a (REPEAT strip_tac THEN ante_tac (all_&forall;_elim doms_cods_og<sub>f</sub>_thm));
+a (once_rewrite_tac [gst_relext_clauses]
+	THEN rewrite_tac [gst_opext_clauses]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val fields_&sube;<sub>g</sub>_thm = save_pop_thm "fields_&sube;<sub>g</sub>_thm";
+
+set_goal([], &qqtel;&forall;x y g&bull; func x &and; func y &and; doms x = cods y &and; g &isin;<sub>g</sub> doms y
+	&rArr; appg (x og<sub>f</sub> y) g = appg x (appg y g)&qqter;);
+a (rewrite_tac [get_spec &qqtel;appg&qqter;, get_spec &qqtel;graph&qqter;, get_spec &qqtel;func&qqter;, get_spec &qqtel;$og<sub>f</sub>&qqter;,
+	get_spec &qqtel;mk_func&qqter;]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (all_var_elim_asm_tac1);
+a (REPEAT_N 2 (POP_ASM_T ante_tac) THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (all_var_elim_asm_tac1);
+a (all_fc_tac [o<sub>g</sub>_<sub>g</sub>_thm]);
+val appg_og<sub>f</sub>_thm = save_pop_thm "appg_og<sub>f</sub>_thm";
+
+</ft>
+<ft lang="xl-ign" rest="">
+set_goal ([], &qqtel;&forall;x y&bull; cfunc x &and; cfunc y &and; doms x = cods y &rArr; cfunc (x og<sub>f</sub> y)&qqter;);
+a (rewrite_tac [get_spec &qqtel;cfunc&qqter;] THEN REPEAT_N 3 strip_tac);
+a (ALL_FC_T asm_rewrite_tac [func_comp_thm]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [once_rewrite_rule [gst_relext_clauses] fields_&sube;<sub>g</sub>_thm]
+	THEN asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac &qqtel;g &isin;<sub>g</sub> doms y &and; h &isin;<sub>g</sub> doms y&qqter;
+	THEN1 (fc_tac [once_rewrite_rule [gst_relext_clauses] doms_cods_og<sub>f</sub>_thm]
+		THEN contr_tac));
+a (all_asm_fc_tac[]);
+a (lemma_tac &qqtel;(appg y g) &isin;<sub>g</sub> doms x &and; (appg y h) &isin;<sub>g</sub> doms x&qqter;
+	THEN1 asm_rewrite_tac[get_spec &qqtel;cods&qqter;]);
+(* *** Goal "2.1" *** *)
+a (lemma_tac &qqtel;ran (graph y) &sube;<sub>g</sub> cods y&qqter;
+	THEN1 fc_tac [func_thm]);
+a (all_fc_tac [appg_thm4]);
+a (lemma_tac &qqtel;fst y = cods y&qqter; THEN1 rewrite_tac [get_spec &qqtel;cods&qqter;]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac &qqtel;appg (x og<sub>f</sub> y) g = appg x (appg y g)&qqter;
+	THEN1 (all_fc_tac [appg_og<sub>f</sub>_thm]));
+a (lemma_tac &qqtel;appg (x og<sub>f</sub> y) h = appg x (appg y h)&qqter;
+	THEN1 (all_fc_tac [appg_og<sub>f</sub>_thm]));
+a (asm_rewrite_tac[]);
+a (lemma_tac &qqtel;appg y g og<sub>f</sub> appg y h &isin;<sub>g</sub> doms x&qqter;);
+ 
+a (list_spec_nth_asm_tac 15 [&qqtel;appg y g&qqter;, &qqtel;appg y h&qqter;]);
+(* *** Goal "3" *** *)
+
+a (strip_asm_tac (list_&forall;_elim [&qqtel;x&qqter;, &qqtel;y&qqter;, &qqtel;g og<sub>f</sub> h&qqter;] appg_og<sub>f</sub>_thm));
+
+appg_thm1;appg_thm2;appg_thm4;
+
+a (fc_tac[]);
+
+a (lemma_tac &qqtel;(appg y g) &isin;<sub>g</sub> doms x &and; (appg y h) &isin;<sub>g</sub> doms x&qqter;
+	THEN1 (fc_tac [once_rewrite_rule [gst_relext_clauses] doms_cods_og<sub>f</sub>_thm]
+		THEN contr_tac));
+get_spec &qqtel;func&qqter;;
+a (rewrite_tac[get_spec &qqtel;appg&qqter;]);
+
+a (&exist;_tac &qqtel;cods y&qqter; THEN &exist;_tac &qqtel;graph x o<sub>g</sub> graph y&qqter;
+	THEN asm_rewrite_tac [get_spec &qqtel;mk_func&qqter;, get_spec &qqtel;graph&qqter;]);
+a (strip_tac THEN1 (all_fc_tac [list_&forall;_elim [&qqtel;g&qqter;, &qqtel;g'&qqter;] o<sub>g</sub>_fun_thm]));
+
+set_goal([], &qqtel;&forall;x y&bull; pure_functor x &and; pure_functor y &rArr; pure_functor (x og<sub>f</sub> y)&qqter;);
+a (rewrite_tac [pf_&equiv;_lem2, get_spec &qqtel;mk_func&qqter;, get_spec&qqtel;doms&qqter;]
+	THEN REPEAT strip_tac);
+a (rewrite_tac [get_spec &qqtel;$og<sub>f</sub>&qqter;, pf_&equiv;_lem2, get_spec &qqtel;mk_func&qqter;, get_spec&qqtel;doms&qqter;]
+	THEN REPEAT strip_tac);
+a (rewrite_tac [get_spec&qqtel;cfunc&qqter;, get_spec &qqtel;fields&qqter;, get_spec &qqtel;func&qqter;]
+	THEN REPEAT strip_tac);
+
+</ft>
+<ft lang="xl-ign" rest="">
+set_goal([], &qqtel;(&forall;f&bull; (id<sub>f</sub> (dom<sub>c</sub> f)) o<sub>f</sub> f = f
+	&and; f o<sub>f</sub> (id<sub>f</sub> (cod<sub>c</sub> f)) = f)&qqter;);
+a (rewrite_tac (map get_spec [&qqtel;id<sub>f</sub>&qqter;, &qqtel;dom<sub>c</sub>&qqter;, &qqtel;cod<sub>c</sub>&qqter;, &qqtel;$o<sub>f</sub>&qqter;]));
+a (lemma_tac &qqtel;pf_hered (&lambda;rf
+           &bull; mk_pf (pf_rep (mk_pf (idff (pc_rep (mk_pc (doms rf))))) og<sub>f</sub> rf) = mk_pf rf
+               &and; mk_pf
+                   (rf og<sub>f</sub> pf_rep (mk_pf (idff (pc_rep (mk_pc (cods rf))))))
+                 = mk_pf rf)&qqter;);
+a (rewrite_tac (map get_spec [&qqtel;pf_hered&qqter;])
+	THEN REPEAT strip_tac);
+
+a (strip_asm_tac (rewrite_rule [get_spec &qqtel;TypeDefn&qqter;]
+	(get_defn "pcf-defs" "PF")));
+a (strip_asm_tac (rewrite_rule [get_spec &qqtel;TypeDefn&qqter;]
+	(get_defn "pcf-defs" "PC")));
+
+a (&exist;_tac &qqtel;f' o doms o f&qqter;);
+type_of it;
+rewrite_rule [get_spec &qqtel;TypeDefn&qqter;] (get_defn "pcf-defs" "PF");
+</ft>
+</hide>
+
+<ft lang="xl-ign" rest="">
+ &circS;HOLCONST
+L<sub>c</sub> R<sub>c</sub> : PF &rarr; PC;
+$o<sub>f</sub> : PF &rarr; PF &rarr; PF;
+Id<sub>f</sub> : PC &rarr; PF
+ &turnstil;
+(&forall;f&bull; (Id<sub>f</sub> (L<sub>c</sub> f)) o<sub>f</sub> f = f &and; f o<sub>f</sub> (Id<sub>f</sub> (R<sub>c</sub> f)) = f)
+&and; (&forall;f g&bull; R<sub>c</sub> f = L<sub>c</sub> g &rArr; L<sub>c</sub> (f o<sub>f</sub> g) = L<sub>c</sub> f &and; R<sub>c</sub> (f o<sub>f</sub> g) = R<sub>c</sub> g)
+&and; (&forall;f g h&bull; R<sub>c</sub> f = L<sub>c</sub> g &and; R<sub>c</sub> g = L<sub>c</sub> h &rArr; (f o<sub>f</sub> g) o<sub>f</sub> h = f o<sub>f</sub> (g o<sub>f</sub> h))
+ &bbox;
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Membership">
+Membership is a relation between functors and categories.
+A relationship between categories and categories will be defined from it,
+<ft lang="xl-sml" rest="">
+declare_infix(310, "&isin;<sub>f</sub>");
+
+</ft>
+<holconst><holsig>
+$&isin;<sub>f</sub> : PF &rarr; PC &rarr; BOOL
+</holsig>
+<holpred>
+&forall;f c&bull; f &isin;<sub>f</sub> c &equiv; (pf_rep f) &isin;<sub>g</sub> (pc_rep c)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Functor Application">
+<ft lang="xl-sml" rest="">
+declare_infix(310, "<sub>f</sub>");
+
+</ft>
+<holconst><holsig>
+$<sub>f</sub> : PF &rarr; PF &rarr; PF
+</holsig>
+<holpred>
+&forall;f g&bull; f <sub>f</sub> g = mk_pf(appg (pf_rep f) (pf_rep g))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Abstraction and Galaxies" tag="AG">
+<abstract>
+Category and functor abstraction, and the Galaxy (or "Grothendieck Universe") contructor.
+</abstract>
+
+<secbody>
+<sbcol>
+<subsec title="Category Abstraction">
+This is analogous to separation in set theory.
+Possibly this could have been defined in terms of functorial abstraction.
+<holconst><holsig>
+Sep<sub>c</sub> : PC &rarr; (PF &rarr; BOOL) &rarr; PF
+</holsig>
+<holpred>
+&forall;c p&bull; Sep<sub>c</sub> c p = mk_pf (Sep (pc_rep c) (&lambda;s&bull; &exist;f&bull; s = pf_rep f &and; p f))
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Functorial Abstraction">
+<holconst><holsig>
+&Lambda;<sub>f</sub> : PC &rarr; (PF &rarr; PF) &rarr; PF
+</holsig>
+<holpred>
+&forall;pc pfpf&bull; &Lambda;<sub>f</sub> pc pfpf = mk_pf (mk_func
+	(Imagep (pf_rep o pfpf o mk_pf) (pc_rep pc))
+	(Imagep (&lambda;f&bull; (f &mapsto;<sub>g</sub> pf_rep (pfpf (mk_pf f)))) (pc_rep pc)))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Galactic Categories">
+The following defines a function which takes a pure category and returns the smallest galactic category which contains it.
+A function taking a functor and returning the smallest containing galactic category is easy to define from it.
+<holconst><holsig>
+G<sub>c</sub> : PC &rarr; PC
+</holsig>
+<holpred>
+&forall;pc&bull; G<sub>c</sub> pc = mk_pc (Sep (Gx (pc_rep pc)) pure_functor)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+
+</section>
+
 </xldoc>

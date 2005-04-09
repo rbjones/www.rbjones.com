@@ -1,0 +1,424 @@
+=IGN
+$Id: t017.doc,v 1.1 2005/04/09 14:00:53 rbj Exp $
+open_theory "cat";
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_conv"];
+set_flag ("pp_use_alias", false);
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\tabstop=0.25in
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\Hide#1{\relax}
+\newcommand{\ignore}[1]{}
+
+\title{Category Theory}
+\author{Roger Jones}
+\makeindex
+\begin{document}
+\vfill
+\maketitle
+\begin{abstract}
+Formalisation of some of the concepts of category theory in {\ProductHOL}.
+\end{abstract}
+\vfill
+\newpage
+\tableofcontents
+\newpage
+%%%%
+%%%%
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\section{INTRODUCTION}
+
+This is minor exercise to help some of the elementary concepts of category theory into my brain, and is not intended to show offer any enlightenment which cannot be found in any elementary text on category theory.
+In fact I am following Saunders Mac Lane (roughly).
+
+Create new theory ``cat'', parent ``rbjmisc''.
+=SML
+open_theory "rbjmisc";
+open PreConsisProof; open UnifyForwardChain; open Trawling;
+force_new_theory "cat";
+new_parent "sum";
+new_parent "one";
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+set_flag ("pp_use_alias", false);
+=TEX
+
+\ignore{
+=SML
+=TEX
+}%ignore
+
+\section{Categories Functors and Natural Transformations}
+
+\subsection{Definition of Category}
+
+We model a category by its set of arrows.
+It is therefore a set, together with:
+
+\begin{itemize}
+\item[] a partial associative operation over the arrows
+\item left and right operators which return the domain and codomain of each arrow
+\end{itemize}
+
+πHOLLABPROD €CAT›¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+‹	Arrows	:'a SET;
+‹	Compose	:'a ≠ 'a ≠ 'a;
+‹	Left Right: 'a ≠ 'a
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+
+πHOLCONST
+‹ €Cat› :  'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ C∑ Cat C §
+‹   (µ x∑ x ç Arrows C
+‹	¥ Left C x ç Arrows C ± Right C x ç Arrows C
+‹	± Compose C (Left C x) x = x ± Compose C x (Right C x) = x)
+‹ ± (µ x y∑ x ç Arrows C ± y ç Arrows C ± Right C x = Left C y
+‹	¥ Compose C x y ç Arrows C)
+‹ ± (µ x y z∑ x ç Arrows C ± y ç Arrows C ± z ç Arrows C 
+‹	± Right C x = Left C y ± Right C y = Left C z
+‹	¥ Compose C x (Compose C y z) = Compose C (Compose C x y) z)
+∞
+
+Some derived operations over categories:
+
+πHOLCONST
+‹ €Obj› :  'a CAT ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ C a∑ a ç Obj C § a ç Arrows C ± a = Left C a
+∞
+
+\subsubsection{Notation for Commutative Diagrams}
+
+=SML
+declare_infix (310, "ò");
+declare_infix (310, "å");
+=TEX
+\ignore{
+=SML
+set_goal ([], ¨∂$å:'a CAT ≠ 'a LIST ≠ 'a∑
+ µ C la a∑ C å [a] = a
+	± (la = [] ≤ C å (Cons a la) = Compose C a (C å la))Æ);
+a (prove_∂_tac THEN  strip_tac);
+a (lemma_tac ¨∂f:'a LIST ≠ 'a∑ µx y z∑
+	f [] = (≈v:'a∑T) ± f (Cons y z) = if z = [] then y else (Compose C' y (f z))Æ);
+a (prove_∂_tac);
+a (∂_tac ¨fÆ THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €$å› :  'a CAT ≠ 'a LIST ≠ 'a
+˜¸¸¸¸¸¸
+‹ µ C la a∑ C å [a] = a
+‹	± (la = [] ≤ C å (Cons a la) = Compose C a (C å la))
+∞
+
+πHOLCONST
+‹ €$ò› :  'a CAT ≠ 'a LIST LIST ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ C lla∑ Cò lla §
+‹    ∂x∑ Fold Insert (Map ($å C) lla) {} = {x}
+∞
+
+\subsection{Categories}
+
+\ignore{
+=SML
+set_goal([], ¨∂öâc:'a CAT∑ Arrows öâc = {}Æ);
+a (∂_tac ¨MkCAT ({}:'a SET) (Ãx y∑x) (Ãx∑x) (Ãx∑x)Æ);
+a (rewrite_tac [get_spec ¨ArrowsÆ]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €öâc› :  'a CAT 
+˜¸¸¸¸¸¸
+‹ Arrows öâc = {} 
+∞
+
+\ignore{
+=SML
+push_pc "hol1";
+set_goal([], ¨∂1âc:'a ≠ 'a CAT∑ µx:'a∑ Cat (1âc x) ± Arrows (1âc x) = {x}Æ);
+a (∂_tac ¨Ãx:'a∑ MkCAT ({x}:'a SET) (Ãy z∑x) (Ãy∑x) (Ãy∑x)Æ);
+a (rewrite_tac [get_spec ¨ArrowsÆ, get_spec ¨CatÆ]
+	THEN REPEAT strip_tac THEN asm_rewrite_tac[]); 
+pop_pc();
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €1âc› :  'a ≠ 'a CAT 
+˜¸¸¸¸¸¸
+‹ µx:'a∑ Cat (1âc x) ± Arrows (1âc x) = {x} 
+∞
+
+Of course, we have:
+
+=GFT
+Cat_öâc_thm Ù Cat öâc
+=TEX
+
+\ignore{
+=SML
+set_pc "hol1";
+set_goal ([], ¨Cat öâcÆ);
+a (prove_tac [get_spec ¨CatÆ, get_spec ¨öâcÆ]
+	THEN REPEAT strip_tac);
+val Cat_öâc_thm = save_pop_thm "Cat_öâc_thm";
+=TEX
+=SML
+set_goal ([], ¨µx∑ Cat (1âc x)Æ);
+a (prove_tac [get_spec ¨CatÆ, get_spec ¨1âcÆ]
+	THEN REPEAT strip_tac);
+val Cat_1âc_thm = save_pop_thm "Cat_1âc_thm";
+=TEX
+}
+
+Both of the above are special cases of {\it discrete} categories.
+In a discrete category all arrows are identity arrows.
+The following function allows the construction of arbitrary discrete categories.
+
+πHOLCONST
+‹ €Discreteâc› :  'a SET ≠ 'a CAT 
+˜¸¸¸¸¸¸
+‹ µs:'a SET∑ Discreteâc s = MkCAT s (Ãx y∑ x) (Ãx∑x) (Ãx∑x) 
+∞
+
+Any set can be made into a discrete category in this way:
+
+=GFT
+discrete_cat_thm Ù µs∑ Cat (Discreteâc s)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µs∑ Cat (Discreteâc s)Æ);
+a (prove_tac [get_spec ¨CatÆ, get_spec ¨MkCATÆ, get_spec ¨DiscreteâcÆ]);
+val discrete_cat_thm = save_pop_thm "discrete_cat_thm";
+=TEX
+}%ignore
+
+\subsection{Functors}
+
+πHOLCONST
+‹ €Functor› :  'a CAT ∏ 'b CAT ≠ ('a ≠ 'b) SET
+˜¸¸¸¸¸¸
+‹ µ A B f∑ f ç Functor (A,B) §
+‹    (µa∑ a ç Arrows A ¥ f a ç Arrows B)
+‹ ±   µa b∑ a ç Arrows A ± b ç Arrows A ± Right A a = Left A b
+‹	¥ Right B (f a) = f (Right A a)
+‹	± Left B (f b) = f (Left A b)
+‹	± Compose B (f a) (f b) = f (Compose A a b)
+∞
+
+πHOLCONST
+‹ €Full› :  'a CAT ∏ 'b CAT ≠ ('a ≠ 'b) SET
+˜¸¸¸¸¸¸
+‹ µ A B f∑ f ç Full (A,B) §
+‹    µb∑ b ç Arrows B ¥ ∂a∑ a ç Arrows A ± b = f a
+∞
+
+πHOLCONST
+‹ €Faithful› :  'a CAT ∏ 'b CAT ≠ ('a ≠ 'b) SET
+˜¸¸¸¸¸¸
+‹ µ A B f∑ f ç Faithful (A,B) §
+‹    µa b∑ a ç Arrows A ± b ç Arrows A ± f a = f b ¥ a = b
+∞
+
+Since functors are functions, they compose, and the composition is also a functor.
+Composition also preserves fullness and faithfulness.
+
+=GFT
+functor_composition_thm Ù
+	µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Functor (A,B) ± bc ç Functor (B,C) ¥ (bc o ab) ç Functor (A,C)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs["hol", "'savedthm_cs_∂_proof"];
+set_goal([], ¨µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Functor (A,B) ± bc ç Functor (B,C) ¥ (bc o ab) ç Functor (A,C)Æ);
+a (rewrite_tac (map get_spec [¨FunctorÆ])
+	THEN REPEAT_N 6 strip_tac);
+a (lemma_tac ¨µ a∑ a ç Arrows A ¥ bc (ab a) ç Arrows CÆ THEN1 asm_prove_tac[]);
+a (asm_rewrite_tac[] THEN REPEAT_N 3 strip_tac);
+a (lemma_tac ¨Right B (ab a) = Left B (ab b)Æ THEN1 (
+	all_asm_ufc_tac[] THEN asm_rewrite_tac[]));
+a (all_asm_ufc_tac[]);
+a (all_asm_ufc_tac[]);
+a (asm_rewrite_tac[]);
+val functor_composition_thm = save_pop_thm "functor_composition_thm ";
+pop_pc();
+=TEX
+}%ignore
+
+=GFT
+full_compose_thm Ù
+	µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Full (A,B) ± bc ç Full (B,C) ¥ (bc o ab) ç Full (A,C)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs["hol", "'savedthm_cs_∂_proof"];
+set_goal([], ¨µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Full (A,B) ± bc ç Full (B,C) ¥ (bc o ab) ç Full (A,C)Æ);
+a (rewrite_tac (map get_spec [¨FullÆ])
+	THEN REPEAT strip_tac);
+a (REPEAT_N 2 (all_asm_ufc_tac[]));
+a (∂_tac ¨a'Æ THEN rewrite_tac [asm_rule ¨b = bc aÆ]
+	THEN asm_rewrite_tac[]);
+val full_compose_thm = save_pop_thm "full_compose_thm ";
+pop_pc();
+=TEX
+}%ignore
+
+=GFT
+faithful_compose_thm Ù
+	µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Functor (A,B) ± ab ç Faithful (A,B) ± bc ç Faithful (B,C)
+	¥ (bc o ab) ç Faithful (A,C)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs["hol", "'savedthm_cs_∂_proof"];
+set_goal([], ¨µA:'a CAT; B:'b CAT; a:'a; ab:'a ≠ 'b∑
+	a ç Arrows A ± ab ç Functor (A,B) ¥ ab a ç Arrows BÆ);
+a (prove_tac (map get_spec [¨FunctorÆ, ¨ArrowsÆ]));
+val functor_arrow_thm = save_pop_thm "functor_arrow_thm";
+
+set_goal([], ¨µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
+	ab ç Functor (A,B) ± ab ç Faithful (A,B) ± bc ç Faithful (B,C)
+	¥ (bc o ab) ç Faithful (A,C)Æ);
+a (rewrite_tac (map get_spec [¨FunctorÆ, ¨FaithfulÆ])
+	THEN REPEAT strip_tac);
+a (REPEAT (all_asm_ufc_tac[]));
+val faithful_thm = save_pop_thm "faithful_thm ";
+pop_pc();
+=TEX
+}%ignore
+
+\subsubsection{Subcategories}
+
+=SML
+declare_infix (310, "Äâc");
+=TEX
+
+πHOLCONST
+‹ $€Äâc› : 'a CAT ≠ 'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ A1 A2∑ A1 Äâc A2 §
+‹    Arrows A1 Ä Arrows A2
+‹ ± (µa∑ a ç Arrows A1 ¥ Left A1 a ç Arrows A1 ± Right A1 a ç Arrows A1
+‹	± Left A1 a = Left A2 a ± Right A1 a = Right A2 a)
+‹ ± (µa b∑ a ç Arrows A1 ± b ç Arrows A1 ¥ Compose A1 a b ç Arrows A1
+‹	± Compose A1 a b = Compose A2 a b)
+∞
+
+A subcategory of a category is of course a category.
+
+=GFT
+subcat_cat_thm Ù µa b:'a CAT∑ Cat a ± b Äâc a ¥ Cat b
+=TEX
+
+=IGN
+set_goal ([], ¨µa b:'a CAT∑ Cat a ± b Äâc a ¥ Cat bÆ);
+a (rewrite_tac (map get_spec [¨CatÆ, ¨$ÄâcÆ])
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (REPEAT (all_asm_ufc_tac[]) THEN REPEAT strip_tac);
+a (REPEAT (all_asm_ufc_tac[]));
+val subcat_cat_thm = save_pop_thm "subcat_cat_thm ";
+=TEX
+
+
+\ignore{
+=SML
+val €cat_def› = get_spec¨CatÆ;
+=TEX
+}%ignore
+
+\subsection{Natural Transformations}
+
+πHOLCONST
+‹ $€NatTran› :  ('a CAT ∏ 'b CAT) ≠ (('a ≠ 'b) ∏ ('a ≠ 'b)) ≠ ('a ≠ 'b) SET
+˜¸¸¸¸¸¸
+‹ µ A B R S ‘∑ ‘ ç NatTran (A,B) (R,S) §
+‹    µf∑ f ç Obj A
+‹	¥ ‘ f ç Arrows B
+‹	± Compose B (‘ (Left A f)) (S f) = Compose B (R f) (‘ (Right A f))
+∞
+
+
+\section{CATEGORIAL STRUCTURES}
+
+This doesn't belong here, and if it gets anywhere it will be moved elsewhere.
+Its an experiment in doing a kind of categorical foundation system by methods analogous to the study of foundations via the study of membership structures.
+
+In the domain of discourse there exist only arrows.
+Some of these are identity arrows and such arrows are themselves categories.
+
+The structure which constitutes a category is taken as defined in {\it Category Theory} \cite{rbjt017}.
+The categorial structure is given by a type of arrows one element of which is distinguished as the universal category together with a function which assignes to each identity arrow in that category some other category.
+
+=SML
+open_theory "cat";
+force_new_theory "fcat";
+new_parent "membership";
+=TEX
+
+πHOLLABPROD FCAT¸¸¸¸¸
+‹ Ucat : 'a CAT;
+‹ Catmap: 'a ≠ 'a CAT
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+The idea is then to define the properties of FCAT which are desirable for if they are to serve as the model of a foundation system, as an ontology for mathematics.
+
+As in set theory we have some axioms which tell us what kind of things sets are, and then axioms which tell us which objects of that kind actually exist.
+
+πHOLCONST
+‹ €Fcat› :  'a FCAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µfc: 'a FCAT∑ Cat (Ucat fc)
+‹       ± µobj:'a∑ obj ç Obj (Ucat fc) ¥ Cat (Catmap fc obj)
+∞
+
+{\let\Section\section
+\def\section#1{\Section{#1}\label{TheoryListing}}
+\include{cat.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{INDEX}]
+{\small\printindex}
+
+\end{document}
+=SML
+set_flag ("pp_use_alias", true);
+output_theory{out_file="cat.th.doc", theory="cat"};
+set_flag ("pp_use_alias", false);
+=TEX

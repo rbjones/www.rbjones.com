@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.5 2005/01/26 20:53:23 rbj Exp $
+# $Id: rules.mk,v 1.6 2005/04/09 14:00:53 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -50,7 +50,7 @@ PDF=$(PS:.ps=.pdf)
 
 # Qualified dependencies
 
-$(KLUDVI): rbj.bib
+$(KLUDVI): rbjk.bib
 
 # Qualified rules
 

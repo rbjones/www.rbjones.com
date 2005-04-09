@@ -23,6 +23,7 @@ ENTRY
     series
     title
     type
+    url
     volume
     year
   }
@@ -852,6 +853,16 @@ FUNCTION {unpublished}
   format.title "title" output.check
   new.block
   note "note" output.check
+  fin.entry
+}
+ 
+FUNCTION {webpublished}
+{ output.bibitem
+  format.authors "author" output.check
+  author format.key output
+  format.title "title" output.check
+  new.block
+  url "URL" output.check
   fin.entry
 }
  

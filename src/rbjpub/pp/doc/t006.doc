@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.3 2004/10/03 19:42:39 rbj Exp $
+$Id: t006.doc,v 1.4 2005/04/09 14:00:53 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -29,8 +29,10 @@ Definitions or theorems which arguably belong in a theory already produced by so
 \end{abstract}
 \vfill
 \newpage
-\tableofcontents
-\newpage
+
+{\setcounter{tocdepth}{4}
+\parskip=0pt\tableofcontents}
+
 %%%%
 
 {\raggedright
@@ -50,21 +52,66 @@ There is one section in this document, following this one, for each theory to wh
 open PreConsisProof;
 =TEX
 
-\section{Real numbers and Analysis}
-
 =SML
-open_theory "cache'rbj";
+open_theory "cache'rbjhol";
 force_new_theory "rbjmisc";
 new_parent "analysis";
 set_merge_pcs["basic_hol1", "'sets_alg", "'¯", "'savedthm_cs_¶_proof"];
 open UnifyForwardChain; open RbjTactics1;
 =TEX
 
-\subsection{Products}
+\section{Lists}
 
+\subsection{List Membership}
+
+=SML
+declare_infix(300, "‰L");
+=TEX
+
+¹HOLCONST
+Ü $Û‰Lİ: 'a ­ 'a  LIST ­ BOOL
+÷üüüüüü
+Ü µ a b al· (a ‰L [] ¤ F)
+Ü	± (a ‰L (Cons b al) ¤ a = b ² a ‰L al)
+°
+
+\subsection{Quantification}
+
+¹HOLCONST
+Ü Ûµ‰Lİ: BOOL LIST ­ BOOL
+÷üüüüüü
+Ü µ bl· µ‰L bl = Fold $± bl T
+°
+
+¹HOLCONST
+Ü Û¶‰Lİ: BOOL LIST ­ BOOL
+÷üüüüüü
+Ü µ bl· ¶‰L bl = Fold $² bl F
+°
+
+\subsection{Mapping Constructors}
+
+The idea here is to facilitate the construction of a list of objects of some kind (typically a HOL labelled product), given a curried constructor and lists of the operands.
+We will need a different one for each arity of constructor, so I will use a numeric suffix.
+
+¹HOLCONST
+Ü ÛMapCf‰2İ: ('a ­ 'b ­ 'c) ­ 'a LIST ­ 'b LIST ­ 'c LIST
+÷üüüüüü
+Ü µ cf al bl·  MapCf‰2 cf al bl = Map (Uncurry cf) (Combine al bl)
+°
+
+¹HOLCONST
+Ü ÛMapCf‰3İ: ('a ­ 'b ­ 'c ­ 'd) ­ 'a LIST ­ 'b LIST ­ 'c LIST ­ 'd LIST
+÷üüüüüü
+Ü µ cf al bl cl·  MapCf‰3 cf al bl cl = Map (Uncurry (Uncurry cf)) (Combine (Combine al bl) cl)
+°
+
+\section{Real Numbers and Analysis}
+
+\subsection{Products}
 =GFT
 ¯_prod_sign_iff_clauses 
-ô (µ x y· î¯ 0 <‰R x *‰R y		¤ î¯ 0 <‰R x ± î¯ 0 <‰R y ² x <‰R î¯ 0 ± y <‰R î¯ 0)
+ô (µ x y· î¯ 0 <R x *‰R y		¤ î¯ 0 <‰R x ± î¯ 0 <‰R y ² x <‰R î¯ 0 ± y <‰R î¯ 0)
 ± (µ x y· x *‰R y <‰R î¯ 0		¤ î¯ 0 <‰R x ± y <‰R î¯ 0 ² x <‰R î¯ 0 ± î¯ 0 <‰R y)
 ± (µ x y· î¯ 0 ¼‰R x *‰R y		¤ î¯ 0 ¼‰R x ± î¯ 0 ¼‰R y ² x ¼‰R î¯ 0 ± y ¼‰R î¯ 0)
 ± (µ x y· x *‰R y ¼‰R î¯ 0		¤ î¯ 0 ¼‰R x ± y ¼‰R î¯ 0 ² x ¼‰R î¯ 0 ± î¯ 0 ¼‰R y)
@@ -1105,18 +1152,6 @@ val sqrt_plus_thm = save_pop_thm "sqrt_plus_thm";
 
 }%ignore
 
-\subsection{List Membership}
-
-=SML
-declare_infix(300, "‰L");
-=TEX
-¹HOLCONST
-Ü $Û‰Lİ: 'a ­ 'a  LIST ­ BOOL
-÷üüüüüü
-Ü µ a b al· (a ‰L [] ¤ F)
-Ü	± (a ‰L (Cons b al) ¤ a = b ² a ‰L al)
-°
-
 \subsection{Sums of Countable Collections of Reals}
 
 In evaluating the cosmological consequences of Newton's Laws it is desirable to formulate them as cosmological theories in ways which do not prejudge such questions as whether the cardinality of the universe is finite.
@@ -1309,6 +1344,50 @@ However, what we really need here is the construction of a topology from an arbi
 Prove that $TopologyFrom$ yields a topology.
 
 }%ignore
+
+\section{For Inductive and Coinductive Definitions}
+
+These have been moved from \cite{rbjt007}, pro-tem into this new section, to be merged in later.
+
+\subsection{Some Useful Constant Specifications}
+
+which probably don't belong here and will in due course be moved elsewhere.
+
+The identity function.
+
+¹HOLCONST
+Ü ÛIİ: 'a ­ 'a
+÷üüüüüü
+Ü I = Ìx·x
+°
+
+Two ways of constructing functions over disjoint unions.
+
+¹HOLCONST
+Ü ÛFun‰+İ: ('a ­ 't) ­ ('b­ 'u) ­ ('a + 'b ­ 't + 'u)
+÷üüüüüü
+Ü µf:'a ­ 't; g:'b ­ 'u; ab:'a + 'b·
+Ü	Fun‰+ f g ab = if IsL ab then InL (f (OutL ab)) else InR (g (OutR ab))
+°
+
+¹HOLCONST
+Ü ÛFunSumİ: ('a ­ 't) ­ ('b­ 't) ­ ('a + 'b ­ 't)
+÷üüüüüü
+Ü µf:'a ­ 't; g:'b ­ 't; ab:'a + 'b·
+Ü	FunSum f g ab = if IsL ab then f (OutL ab) else g (OutR ab)
+°
+
+A function for making a list of ascending integers.
+
+=SML
+declare_infix (300, "..‰L");
+=TEX
+¹HOLCONST
+Ü $Û..‰Lİ: î ­ î ­ î LIST
+÷üüüüüü
+Ü µ x y· x ..‰L 0 = []
+Ü ± x ..‰L (y + 1) = if x ¼ y then (x ..‰L y) @ [y+1] else []
+°
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}

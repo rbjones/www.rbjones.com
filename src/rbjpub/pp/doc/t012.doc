@@ -1,5 +1,5 @@
 =IGN
-$Id: t012.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+$Id: t012.doc,v 1.2 2005/04/09 14:00:53 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -17,7 +17,7 @@ $Id: t012.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
 \def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
 
-\title{Chaining}
+\title{Backward Chaining}
 \author{Roger Bishop Jones}
 \makeindex
 \begin{document}
@@ -52,6 +52,201 @@ The interface is intended to be consistent with matching the premises of a rule 
 
 The design of the data structures involved is therefore required to permit the rule base software to anticipate what unifications will be required with minimal prejudice to the search strategy or other aspects of the implementation of the chaining inference facility.
 
+\section{Unifying Backchaining}
+
+=IGN
+open_theory "cache'rbj";
+=TEX
+
+The idea here is to get an improvement in proof development productivity by getting a more of the necessary instantiation of intermediate results done automatically.
+
+This is approached as a ``backchaining'' problem for two reasons:
+\begin{enumerate}
+\item the conclusion of the goal provides valuable information for constraining the search space
+\item the assumption that a theorems will be used from left to right also helps avoid explosion of the  search space
+\end{enumerate}
+
+In fact, the approach we adopt here makes the search into the transformation of a single conjecture which initially grows in size as the problem is picked apart, but eventually collapses if a proof is successful.
+
+\subsubsection{Rule Management}
+
+The methods used for storing an retrieving rules have some significance for performance and effectiveness, though these are less important than the search strategy.
+For example, to maximise performance in rule matching a unifying rule database would be possible, which efficiently retrieves all the rules which match a target term.
+
+
+
+The purpose of this signature is to make a clean interface to the rule end of the backchaining so that an implementation of backchaining can start out rather crudely in this area and perhaps be improved later.
+
+=DOC
+signature €RuleManager› = sig
+=DESCRIBE
+This is the signature of types and functions for managing and using a collection of rules for chaining.
+At present oriented to back-chaining.
+=ENDDOC
+
+=DOC
+type RULEDB
+=DESCRIBE
+
+=ENDDOC
+
+=SML
+end; (* of signature RuleManager *)
+=TEX
+
+\subsection{The Unifying Backchain Rule}
+
+=DOC
+signature €UnifyingBackchaining› = sig
+=DESCRIBE
+
+=ENDDOC
+
+=DOC
+val €unify_backchain_rule› : (TYPE list) -> (TERM list)
+	->	(THM * TERM list * TYPE list)
+	->	(TERM * TERM list * TYPE list)
+	-> 	THM * ((TYPE * TYPE) list * (TERM * TERM) list) *
+   		((TYPE * TYPE) list * (TERM * TERM) list);
+=DESCRIBE
+This function is a variant on $term\_unify$ q.v. in which the first term to be unified is suppled as the right hand side of an implication which is the conclusion of some theorem.
+In addition to the substitutions necessary to unify the two terms, the function returns the left had side of the implication after performing on it the unifying substitution for the right hand side, and a function which will infer the instantiated right hand side as a theorem from a theorem whose conclusion is the instantiated left hand side.
+
+Thus from a theorem:
+=GFT
+thm =	asms Ù lhs ¥ rhs
+=TEX
+and a term $tm$:
+
+=GFT
+	unify_backchain_rule avtyl avtml (thm, tml1, tyl1) (tm, tml2, tyl2)
+=TEX
+
+yields $(thm2, (thmtytyl, thmtmtml), (tmtytyl, tmtmtml))$, where:
+
+\begin{description}
+\item[avtyl] is a list of type variables to be avoided
+\item[avtml] is a list of term variables to be avoided
+\item[thm] is a theorem whose conclusion is an implication the right hand side of which is to be unified with $tm$
+\item[tml1] is the list of term variables which may be instantiated in $thm$
+\item[tyl1] is the list of type variables which may be instantiated in $thm$
+\item[tm] is a term to be unified with the right hand side of the implication in the conclusion of $thm$
+\item[tml2] is the list of term variables which may be instantiated in $tm$
+\item[tyl2] is the list of type variables which may be instantiated in $tm$
+\item[thm2] is the instance of $tm$ resulting from application of the unifying substitution
+\item[thmtytyl] is the list of pairs of types to be substituted in $thm$
+\item[thmtmtml] is the list of pairs of term to be substituted in $thm$
+\item[tmtytyl] is the list of pairs of types to be substituted in $tm$
+\item[tmtmtml] is the list of pairs of term to be substituted in $tm$
+\end{description}
+=ENDDOC
+
+=SML
+end; (* signature UnifyingBackchaining *)
+=TEX
+
+=SML
+structure UnifyingBackchaining: UnifyingBackchaining = struct
+=TEX
+...
+\ignore{
+=SML
+local open Resolution; open Unification
+in
+fun unify_backchain_rule avtyl avtml (thm, tml1, tyl1) (tm, tml2, tyl2) =
+	let
+	val subs = new_subs 40;
+	val (_, rhs) = (dest_¥ o concl) thm;
+	val ((thmtytyl, thmtmtml) , (tmtytyl, tmtmtml)) = term_unify subs avtyl avtml (
+			(rhs, tml1, tyl1),
+			(tm, tml2, tyl2)
+		);
+	val _ = init_subs subs;
+	val thm2 = inst_term_rule thmtmtml (inst_type_rule thmtytyl thm);
+	in (thm2, (thmtytyl, thmtmtml), (tmtytyl, tmtmtml))
+	end
+end;
+=TEX
+}%ignore
+=SML
+end;
+open UnifyingBackchaining;
+=TEX
+=IGN
+unify_backchain_rule [] []
+	(all_µ_elim Ø_º_antisym_thm, [¨x:ØÆ, ¨y:ØÆ], [])
+	(¨v *âR w = zÆ, [¨v:ØÆ, ¨w:ØÆ], []);
+=TEX
+=SML
+datatype BCP = 
+	BcDone
+|	BcFailed
+|	BcIncomplete;
+
+datatype BCS =
+	BcLeft
+|	BcRight;
+
+(* In a Back Chain Tree, think of 'a as a goal and 'b as a proof *)
+
+datatype ('a, 'b) BCT =
+	Bc± of BCP * ('a * ('a, 'b) BCT * ('a, 'b) BCT)
+|	Bc≤ of BCP * ('a * BCS * ('a, 'b) BCT * ('a, 'b) BCT)
+| 	BcRules of BCP * ('a * ('b * ('a, 'b) BCT) list)
+| 	BcLeaf of BCP * 'a;
+
+(* UARDB stands for Unifying & Anti-unifying Rule Data Base
+It is a function which takes some target term and returns all the
+rules which can be used to infer a term unifiable with the target,
+together with the antiunifier of all the results, i.e. as much as
+can be inferred about the result from the knowledge that it must
+be proved by one of the selected rules.
+*)
+
+type ('a, 'b) UARDB = 'a -> ('b * ('a, 'b) BCT) list;
+
+fun	bct2bcp (Bc± (x,y)) = x
+|	bct2bcp (Bc≤ (x,y)) = x
+|	bct2bcp (BcRules (x,y)) = x
+|	bct2bcp (BcLeaf (x,y)) = x;
+
+fun bcp_and (BcDone, BcDone)	= BcDone
+|   bcp_and (BcFailed, _)		= BcFailed	
+|   bcp_and (_, BcFailed)		= BcFailed	
+|   bcp_and (_, _)		= BcIncomplete;	
+
+fun bcp_or (BcDone, _)		= (BcDone, BcLeft)
+|   bcp_or (_, BcDone)		= (BcDone, BcRight)
+|   bcp_or (BcFailed, BcFailed)	= (BcFailed, BcLeft)	
+|   bcp_or (_, _)			= (BcIncomplete, BcLeft);	
+
+val bcp_or2 = fst o bcp_or;
+=IGN
+
+fun
+  bct_map f (Bc± (bcp, (a, bct1, bct2))) =
+	let	val bct1' = bct_map f bct1;
+		val bct2' = bct_map f bct2;
+	in (Bc± (bcp_and (bct2bcp bct1', bct2bcp bct2'), (a, bct1', bct2')))
+	end
+| bct_map f (Bc≤ (bcp, (a, bcs, bct1, bct2))) =
+	let	val bct1' = bct_map f bct1;
+		val bct2' = bct_map f bct2;
+		val (bcp', bcs') = bcp_or (bct2bcp bct1', bct2bcp bct2');
+	in (Bc≤ (bcp', (a, bcs', bct1', bct2')))
+	end
+| bct_map f (BcRules (bcp, (a, []))) = BcRules (bcp, (a, []))
+| bct_map f (BcRules (bcp, (a, hr::trl))) =
+	let	val (hprf, bcth) = hr;
+		val bcth' = bct_map f bcth;
+		val hr' = (hprf, bcth');
+		val (BcRules (tbcp', (a', trl'))) = bct_map f (BcRules (bcp, (a, trl)));
+	in (BcRules (bcp_or2 (bct2bcp bcth', tbcp'), (a, hr'::trl')))
+	end
+| bct_map f (BcLeaf (bcp, a)) = f a;
+=TEX
+
+\section{Rule Manager}
 
 =DOC
 signature €BcRuleManager› = sig

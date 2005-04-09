@@ -1,6 +1,6 @@
 ######################################################################
 #
-#	$Id: rbj.mkf,v 1.5 2005/01/26 20:53:38 rbj Exp $
+#	$Id: rbj.mkf,v 1.6 2005/04/09 14:00:53 rbj Exp $
 #
 #	makefile for Roger's things
 #
@@ -15,8 +15,7 @@
 # default make target.  displays a list of more useful targets
 
 default:
-	@echo "This is the make file for an assortment of experiments"
-	@echo "with ProofPower, mostly philosophically motivated."
+	@echo "This is the make file for an assortment of experiments"	@echo "with ProofPower, mostly philosophically motivated."
 	@echo " "
 	@echo "ProofPower version 2.7.3 or later is required."
 	@echo "In addition we assume the existence of the database"
@@ -55,17 +54,26 @@ PRODUCT=$(PRODNAME)
 CWD=$(shell pwd)
 HAVERCS=$(shell (test -d RCS && echo y ) || echo n)
 
-DBNAME=rbj
-STARTDBNAME=maths_egs
+HOLDBNAME=rbjhol
+ZEDDBNAME=rbjzed
+STARTHOLDBNAME=maths_egs
+STARTZEDDBNAME=zed
 
 RELDIR=release
 
 # The documents
-SMLDOCS= t000.doc t001.doc t002.doc t003.doc t004.doc t006.doc t007.doc \
-	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc
+HOLDOCS= t001.doc t002.doc t003.doc t004.doc t006.doc t007.doc \
+	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc \
+	t015.doc t016.doc t017.doc
+
+ZEDDOCS=
+
+SMLDOCS=$(HOLDOCS) $(ZEDDOCS)
+
 OTHERDOCS= t000.doc
 
-LDD=$(SMLDOCS:.doc=.ldd)
+HOLLDD=$(HOLDOCS:.doc=.ldd)
+ZEDLDD=$(ZEDDOCS:.doc=.ldd)
 
 # Variations on the documents
 SMLFILES= $(SMLDOCS:.doc=.sml)
@@ -92,9 +100,11 @@ t006.ldd: t010.ldd
 t007.ldd: t006.ldd
 t008.ldd: t007.ldd
 t009.ldd: t006.ldd
-t010.ldd: rbjdb.ldd
-t011.ldd: rbjdb.ldd
-t012.ldd: rbjdb.ldd
+t010.ldd: rbjholdb.ldd
+t011.ldd: rbjholdb.ldd
+t012.ldd: rbjholdb.ldd
+t016.ldd: t006.ldd
+t017.ldd: t006.ldd t004.ldd
 $(DVIFILES): rbj.bib
 README.txt:
 
@@ -105,7 +115,7 @@ README.txt:
 ######################################################################
 
 THEORIES= t001a.th t002a.th rbjmisc.th diffgeom.th membership.th fixp.th \
-	fixp_egs.th ordered_sets.th U_orders.th
+	fixp_egs.th ordered_sets.th U_orders.th X-Logic-1.th
 THDOCS=$(THEORIES:.th=.th.doc)
 THTEXS=$(THEORIES:.th=.th.tex)
 
@@ -135,6 +145,16 @@ ordered_sets.th.tex: ordered_sets.th.doc
 
 U_orders.th.tex: U_orders.th.doc
 
+X-Logic-1.th.doc X-Logic-2.th.doc: t016.ldd 
+
+cat.th.doc: t017.ldd
+
+X-Logic-1.th.tex: X-Logic-1.th.doc
+
+X-Logic-2.th.tex: X-Logic-2.th.doc
+
+cat.th.tex: cat.th.doc
+
 t001.dvi: t001a.th.tex
 
 t002.dvi: t002a.th.tex
@@ -153,6 +173,10 @@ t008.dvi: fixp_egs.th.tex
 
 t009.dvi: ordered_sets.th.tex U_orders.th.tex
 
+t016.dvi: X-Logic-1.th.tex X-Logic-2.th.tex
+
+t017.dvi: cat.th.tex
+
 ######################################################################
 #
 #	Building the database
@@ -160,11 +184,15 @@ t009.dvi: ordered_sets.th.tex U_orders.th.tex
 ######################################################################
 
 bld: t002.ldd t003.ldd t004.ldd t006.ldd t007.ldd t008.ldd t009.ldd \
-	t010.ldd t012.ldd
+	t010.ldd t012.ldd t016.ldd
 
-rbjdb.ldd:
-	pp_make_database -f -p $(STARTDBNAME) $(DBNAME)
-	touch rbjdb.ldd
+rbjholdb.ldd:
+	pp_make_database -f -p $(STARTHOLDBNAME) $(HOLDBNAME)
+	touch rbjholdb.ldd
+
+rbjzeddb.ldd:
+	pp_make_database -f -p $(STARTZEDDBNAME) $(ZEDDBNAME)
+	touch rbjzeddb.ldd
 
 # useful target to print out the names of all the files in the source $(RELDIR)
 
@@ -254,7 +282,7 @@ doc:	docrel
 clean:
 	rcsclean
 	rm -f $(SMLFILES) $(LDDFILES)
-	rm -f *.aux *.bbl *.blg *.idx *.log *.lot *.sid *.sml *.tex *.toc rbjdb.ldd *.th.doc
+	rm -f *.aux *.bbl *.blg *.idx *.log *.lot *.sid *.sml *.tex *.toc rbjholdb.ldd *.th.doc
 
 ######################################################################
 #
@@ -262,10 +290,16 @@ clean:
 #
 ######################################################################
 
-$(LDD): %.ldd: %.sml
+$(HOLLDD): %.ldd: %.sml
 	@rm -f $@ $*.err 2>/dev/null
 	@echo "Compiling (code)" $<
-	@pp -d $(DBNAME) -f $< >$*.err
+	@pp -d $(HOLDBNAME) -f $< >$*.err
+	@mv $*.err $@
+
+$(ZEDLDD): %.ldd: %.sml
+	@rm -f $@ $*.err 2>/dev/null
+	@echo "Compiling (code)" $<
+	@pp -d $(ZEDDBNAME) -f $< >$*.err
 	@mv $*.err $@
 
 %.sml: %.doc

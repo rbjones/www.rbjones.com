@@ -1,5 +1,5 @@
 =IGN
-$Id: t008.doc,v 1.1 2004/10/03 19:42:39 rbj Exp $
+$Id: t008.doc,v 1.2 2005/04/09 14:00:53 rbj Exp $
 open_theory "fixp_egs";
 set_merge_pcs["hol", "'savedthm_cs_∂_proof"];
 =TEX
@@ -89,6 +89,79 @@ How would that look if formulated as the fixed point of a function?
 ‹	≤ (∂p1 p2∑ ppmss = {p1; p2} ± ppms = p1 ±âp p2)
 ‹	}
 ∞
+This is turned into a set of formulae thus:
+
+πHOLCONST
+‹ Fof: 'a PPMS SET
+˜¸¸¸¸¸¸
+‹ Fof = HeredFun (Rules2Fun FofCSet)
+∞
+
+From this we should be able to get an induction principle by instantiating and expanding {\it HeredFun\_induction\_thm2}.
+
+However, this looks quite hard to massage into a nicely formulated induction property.
+
+By comparison coding up the required closure property directly gives:
+
+πHOLCONST
+‹ FofCProp: 'a PPMS SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ ppmss∑ FofCProp ppmss §
+‹	(µs1 s2∑ s1 =âp s2 ç ppmss ± s1 çâp s2 ç ppmss)
+‹	± (µp∑ p ç ppmss ¥ ≥âp p ç ppmss ± µs∑ (∂âp s p) ç ppmss)
+‹	± (µp1 p2∑ p1 ç ppmss ± p2 ç ppmss ¥ p1 ±âp p2 ç ppmss)
+∞
+
+
+πHOLCONST
+‹ Fofâ2: 'a PPMS SET
+˜¸¸¸¸¸¸
+‹ Fofâ2 = • {s | FofCProp s}
+∞
+
+=GFT
+fof_induction_thm Ù µs∑ FofCProp s ¥ Fofâ2 Ä s
+
+fof_induction_thm2 Ù µ s
+     ∑ (µ s1 s2∑ s1 =âp s2 ç s ± s1 çâp s2 ç s)
+           ± (µ p∑ p ç s ¥ ≥âp p ç s ± (µ s'∑ ∂âp s' p ç s))
+           ± (µ p1 p2∑ p1 ç s ± p2 ç s ¥ p1 ±âp p2 ç s)
+         ¥ Fofâ2 Ä s
+=TEX
+
+\ignore{
+=SML
+push_pc "hol1";
+set_goal([], ¨µs∑ FofCProp s ¥ Fofâ2 Ä sÆ);
+a (rewrite_tac [get_spec ¨FofCPropÆ, get_spec ¨Fofâ2Æ]
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac[]);
+val fof_induction_thm = save_pop_thm "fof_induction_thm";
+pop_pc();
+val fof_induction_thm2 = save_thm ("fof_induction_thm2",
+	rewrite_rule [get_spec ¨FofCPropÆ] fof_induction_thm);
+=TEX
+}%ignore
+
+=IGN
+rewrite_rule [get_spec ¨Rules2FunÆ, get_spec ¨FofCSetÆ, sets_ext_clauses]
+(rewrite_rule [eq_sym_rule (get_spec ¨FofÆ)]
+	(µ_elim ¨Rules2Fun FofCSetÆ HeredFun_induction_thm2));
+,
+	rewrite_conv [get_spec ¨Rules2FunÆ, get_spec ¨FofCSetÆ]
+	]
+
+eq_sym_rule (get_spec ¨FofÆ);
+
+set_goal([], ¨µs∑ s ClosedUnderFun (Rules2Fun FofCSet) ¥ Fof Ä sÆ);
+a (rewrite_tac [get_spec ¨FofÆ, HeredFun_induction_thm2]);
+val lemma1= top_thm();
+
+rewrite_rule ((map get_spec [¨FofCSetÆ, ¨Rules2FunÆ, ¨$ClosedUnderFunÆ,
+	¨$ClosedUnderÆ, ¨Fun2MonoFunÆ])@[sets_ext_clauses]) lemma1; 
+µ_elime sets_ext_clauses;
+list_µ_elim ¨Rules2Fun FofCSetÆ HeredFun_induction_thm;
+=TEX
 
 \subsection{Hereditarily Over a Relation}
 
