@@ -1,5 +1,5 @@
 =IGN
-$Id: t011.doc,v 1.3 2005/04/09 14:00:53 rbj Exp $
+$Id: t011.doc,v 1.4 2006/03/25 22:50:36 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -118,14 +118,14 @@ $Simple_Dictionary$, $EfficientDictionary$.
 =ENDDOC
 
 =DOC
-type 'a €M_DICT›;
-val €initial_m_dict› : 'a M_DICT;
-val €m_lookup› : string -> 'a M_DICT -> 'a OPT;
-val €m_enter› : string -> 'a -> 'a M_DICT -> 'a M_DICT;
-val €m_list_enter› : (string * 'a) list -> 'a M_DICT -> 'a M_DICT;
-val €m_extend› : string -> 'a -> 'a M_DICT -> 'a M_DICT;
-val €m_list_extend› : (string * 'a) list -> 'a M_DICT -> 'a M_DICT;
-val €m_delete› : string -> 'a M_DICT -> 'a M_DICT;
+type (''k,'a) €M_DICT›;
+val €initial_m_dict› : (''k,'a) M_DICT;
+val €m_lookup› : ''k ->(''k,'a) M_DICT -> 'a OPT;
+val €m_enter› : ''k -> 'a -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_list_enter› : (''k * 'a) list -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_extend› : ''k -> 'a -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_list_extend› : (''k * 'a) list -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_delete› : ''k -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
 =DESCRIBE
 \begin{description}
 \item $initial\_m\_dict$ is the empty dictionary which associates nothing with any key value.
@@ -138,16 +138,14 @@ val €m_delete› : string -> 'a M_DICT -> 'a M_DICT;
 =ENDDOC
 
 =DOC
-val €m_app› : string -> ('a -> 'a) -> 'a M_DICT -> 'a M_DICT;
-val €m_mapfilter› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b M_DICT;
-val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b list;
-val €m_list› : 'a M_DICT -> (string * 'a) list;
-=GFT
+val €m_app› : ''k -> ('a -> 'a) -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_mapfilter› : ((''k * 'a) -> 'b) -> (''k,'a) M_DICT -> (''k,'b) M_DICT;
+val €m_mapfilter_list› : ((''k * 'a) -> 'b) -> (''k,'a) M_DICT -> 'b list;
+val €m_list› : (''k,'a) M_DICT -> (''k * 'a) list;
 val €m_combine› : ('a OPT * 'b OPT -> 'c OPT)
-		-> 'a M_DICT -> 'b M_DICT -> 'c M_DICT;
-=SML
-val €m_override› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
-val €m_merge› : 'a M_DICT -> 'a M_DICT -> 'a M_DICT;
+		-> (''k,'a) M_DICT -> (''k,'b) M_DICT -> (''k,'c) M_DICT;
+val €m_override› : (''k,'a) M_DICT -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
+val €m_merge› : (''k,'a) M_DICT -> (''k,'a) M_DICT -> (''k,'a) M_DICT;
 =DESCRIBE
 \begin{description}
 \item $m\_app$ $key$ $f$ gives a dictionary which associates with the key $key$ the result of applying the function $f$ to the value associated with key $key$ in dictionary $dict$, and is otherwise the same as $dict$.
@@ -176,7 +174,7 @@ structure €SimpleMDictionary› : MappingDictionary = struct
 =TEX
 
 =SML
-type 'a M_DICT = (string * 'a) list;
+type (''k,'a) M_DICT = (''k * 'a) list;
 =TEX
 
 The implementation of the functions corresponding to those of $SimpleDictionary$ is copied from imp001 \cite{ds/fmu/ied/imp001}, the only changes being to the names of the functions.
@@ -192,14 +190,14 @@ previous sections:
 $m\_lookup$ implements application (of the dictionary
 viewed as a partial function):
 =SML
-fun €m_lookup› (s : string) (dict : 'a M_DICT) : 'a OPT = (
-	lassoc5 dict s
+fun €m_lookup› (k : ''k) (dict : (''k,'a) M_DICT) : 'a OPT = (
+	lassoc5 dict k
 );
 =TEX
 $m\_enter$ implements overwriting by a singleton function:
 =SML
-fun €m_enter› (s : string) (a : 'a) (dict : 'a M_DICT) : 'a M_DICT = (
-	dict overwrite (s, a)
+fun €m_enter› (k : ''k) (a : 'a) (dict : (''k,'a) M_DICT) : (''k,'a) M_DICT = (
+	dict overwrite (k, a)
 );
 =TEX
 $m\_extend$ implements extension by a singleton function,
@@ -207,31 +205,32 @@ that is to say it is like $m\_enter$  but raises an
 exception if the new argument is already
 in the domain of the dictionary:
 =SML
-fun €m_extend› (s : string) (a : 'a) (dict : 'a M_DICT) : 'a M_DICT = (
-	case lassoc5 dict s of
-	Value _ => fail "m_extend" 1014 [fn (():unit) => s]
-	| Nil => (s,a) :: dict
+fun €m_extend› (k : ''k) (a : 'a) (dict : (''k,'a) M_DICT) : (''k,'a) M_DICT = (
+	case lassoc5 dict k of
+	Value _ => fail "m_extend" 1014 []
+	| Nil => (k,a) :: dict
 );
 =TEX
 $m\_delete$ deletes an element of the domain of a dictionary.
 If the element is not in the domain it returns the
 dictionary unchanged.
 =SML
-fun €m_delete› (s : string) (dict : 'a M_DICT) : 'a M_DICT = (
-	dict drop (fn (s', _) => s' = s)
+fun €m_delete› (k : ''k) (dict : (''k,'a) M_DICT) : (''k,'a) M_DICT = (
+	dict drop (fn (k', _) => k' = k)
 );
 =TEX
 $m\_merge$ extends one dictionary by another.
 An exception will be raised if the domains of the
 two dictionaries have elements in common.
 =SML
-fun €m_merge› (dict1 : 'a M_DICT) (dict2 : 'a M_DICT) : 'a M_DICT = (
+fun €m_merge› (dict1: (''k,'a) M_DICT)
+	(dict2 : (''k,'a) M_DICT) : (''k,'a) M_DICT = (
 	fold (uncurry(uncurry m_extend)) dict1 dict2
 );
 =TEX
 The initial value of the dictionary is just the empty list.
 =SML
-val €initial_m_dict› : 'a M_DICT = [];
+val €initial_m_dict› : (''k,'a) M_DICT = [];
 =TEX
 }%ignore
 
@@ -243,18 +242,18 @@ fun €m_list_extend› l = fold (fn ((s, v), d) => m_extend s v d) l;
 =TEX
 
 =SML
-fun €m_app› tag f ([]: 'a M_DICT) : 'a M_DICT
-	= fail "MappingDictionary" 100111 [fn _ => tag]
+fun €m_app› tag f ([]: (''k,'a) M_DICT) : (''k,'a) M_DICT
+	= fail "MappingDictionary" 100111 []
 |   m_app tag f ((he as (ht,hv))::t)
 	=	if ht = tag
 		then (ht, f hv)::t
 		else (he :: m_app tag f t);
 fun mfa f (k,v) = (k, f(k,v));
-fun €m_mapfilter› f (d: 'a M_DICT) : 'b M_DICT = mapfilter (mfa f) d;
-val €m_mapfilter_list› : ((string * 'a) -> 'b) -> 'a M_DICT -> 'b list
+fun €m_mapfilter› f (d: (''k,'a) M_DICT) : (''k,'b) M_DICT = mapfilter (mfa f) d;
+val €m_mapfilter_list› : ((''k * 'a) -> 'b) -> (''k,'a) M_DICT -> 'b list
 	= mapfilter;
-fun €m_list› (dict: 'a M_DICT) : (string * 'a) list = dict;
-=IGN
+fun €m_list› (dict: (''k,'a) M_DICT) : (''k * 'a) list = dict;
+
 fun €m_combine› f d1 d2 =
  let fun	aux acc ((s,v)::t) [] =
 		let val acc' = case f (Value v, Nil) of
@@ -266,7 +265,7 @@ fun €m_combine› f d1 d2 =
  		let val acc' = case f (Nil, Value v) of
 				  Value v' => ((s, v')::acc)
 				| Nil => acc
-		in aux acc' t []
+		in aux acc' [] t
 		end
      |	 aux acc ((s1,v1)::t1) ((s2,v2)::t2) =
 		if s1 = s2
@@ -279,8 +278,8 @@ fun €m_combine› f d1 d2 =
      |	aux acc [] [] = acc
  in aux [] d1 d2
  end;
-=SML
-fun €m_override› (dict1 : 'a M_DICT) (dict2 : 'a M_DICT) : 'a M_DICT = (
+
+fun €m_override› (dict1 : (''k,'a) M_DICT) (dict2 : (''k,'a) M_DICT) : (''k,'a) M_DICT = (
 	fold (uncurry(uncurry m_enter)) dict1 dict2);
 =TEX
 
@@ -315,16 +314,16 @@ $MappingDictionary$.
 =ENDDOC
 
 =DOC
-type €'a LI_DICT›;
-val €initial_li_dict› : 'a LI_DICT;
-val €li_lookup› : string list -> 'a LI_DICT -> 'a list;
-val €li_enter› : string list -> 'a -> 'a LI_DICT -> 'a LI_DICT;
-val €li_enter_list› : string list -> 'a list -> 'a LI_DICT -> 'a LI_DICT;
-val €li_delete› : string list -> 'a LI_DICT -> 'a LI_DICT;
-val €li_replace› : string list -> 'a list -> 'a LI_DICT -> 'a LI_DICT;
-val €li_list› : 'a LI_DICT -> (string list * 'a list) list;
+type €(''k,'a) LI_DICT›;
+val €initial_li_dict› : (''k,'a) LI_DICT;
+val €li_lookup› : ''k list -> (''k,'a) LI_DICT -> 'a list;
+val €li_enter› : ''k list -> 'a -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
+val €li_enter_list› : ''k list -> 'a list -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
+val €li_delete› : ''k list -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
+val €li_replace› : ''k list -> 'a list -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
+val €li_list› : (''k,'a) LI_DICT -> (''k list * 'a list) list;
 =GFT
-val €li_merge› : 'a LI_DICT -> 'a LI_DICT -> 'a LI_DICT;
+val €li_merge› : (''k,'a) LI_DICT -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
 =DESCRIBE
 \begin{description}
 \item [$initial\_li\_dict$] is the empty list indexed dictionary.
@@ -339,13 +338,13 @@ val €li_merge› : 'a LI_DICT -> 'a LI_DICT -> 'a LI_DICT;
 =ENDDOC
 
 =DOC
-datatype ('a, 'b) LIDFUN =	LidRetain
+datatype (''k, 'a, 'b) LIDFUN =	LidRetain
 		|	LidDiscard
-		|	LidFun of {linode	: string -> ('a, 'b) LIDFUN,
+		|	LidFun of {linode	: ''k -> (''k, 'a, 'b) LIDFUN,
 				lileaf	: ('a list) -> 'b};
-val €li_mapfilter› : ('a,'b list) LIDFUN -> 'a LI_DICT -> 'b LI_DICT;
-val €li_mapfilter2› : ('a,'a list) LIDFUN -> 'a LI_DICT -> 'a LI_DICT;
-val €li_mapfilter_list› : ('a,'b) LIDFUN -> 'a LI_DICT -> 'b list;
+val €li_mapfilter› : (''k,'a,'b list) LIDFUN -> (''k,'a) LI_DICT -> (''k,'b) LI_DICT;
+val €li_mapfilter2› : (''k,'a,'a list) LIDFUN -> (''k,'a) LI_DICT -> (''k,'a) LI_DICT;
+val €li_mapfilter_list› : (''k,'a,'b) LIDFUN -> (''k,'a) LI_DICT -> 'b list;
 =DESCRIBE
 These functions are designed to support efficient processing of the entire dictionary using functions which process a stream of tag values.
 The datatype {\it LIDFUN} is concocted to support such applications, and the generic trawling/mapping/filtering operations expect a {\it LIDFUN} as a parameter.
@@ -353,7 +352,7 @@ To have a non-trivial effect a {\it LidFun} would be supplied and the tags would
 This process is effectively repeated for each path in the dictionary, except that paths sharing an initial segment will also share the computation associated with that initial segment (side effects are not intended).
 The two other kinds of {\it LIDFUN} allow this process to be curtailed.
 When a {\it LidFun} {\it linode} returns a {\it LidDiscard} then the result is as if there were no paths in the original dictionary with that initial path segment.
-When a {\it LidFun} {\it linode} is given a tag and returns a {\it LidRetain} then the entire subtree with that initial path segment is to be retained unchanged (the only operator whose type is compatible with the use of {\it LidRetain} is {\it li\_mapfilter2}, others will raise an exception it is arises).
+When a {\it LidFun} {\it linode} is given a tag and returns a {\it LidRetain} then the entire subtree with that initial path segment is to be retained unchanged (the only operator whose type is compatible with the use of {\it LidRetain} is {\it li\_mapfilter2}, others will raise an exception if it arises).
 
 \begin{description}
 \item [$li\_mapfilter$ $lidfun$ $dict$] yields a new dictionary in which, against any taglist is held the value obtained by submitting the first value in each taglist to the $linode$ component of the $lidfun$ argument yeilding a new {\it LIDFUN}, submitting the next string to the $linode$ component of that $LIDFUN$ and so on until reaching a leaf, at which point the $'a list$ stored under that taglist is supplied to the $lileaf$ component of the current $LIDFUN$.
@@ -378,11 +377,11 @@ open SimpleMDictionary;
 \ignore{
 
 =SML
-datatype 'a €LI_DICT› = LiDict of {leaf: 'a list, mdict: ('a LI_DICT) M_DICT};
+datatype (''k,'a) €LI_DICT› = LiDict of {leaf: 'a list, mdict: (''k,(''k,'a) LI_DICT) M_DICT};
 val €initial_li_dict› = LiDict {leaf = [], mdict = initial_m_dict};
-datatype ('a, 'b) LIDFUN =	LidRetain
+datatype (''k, 'a, 'b) LIDFUN =	LidRetain
 		|	LidDiscard
-		|	LidFun of {linode	: string -> ('a, 'b) LIDFUN,
+		|	LidFun of {linode	: ''k -> (''k, 'a, 'b) LIDFUN,
 				lileaf	: ('a list) -> 'b};
 =TEX
 
@@ -393,23 +392,23 @@ fun €li_lookup› [] (LiDict x) = #leaf x
 			Nil => []
 		| 	Value lidict => li_lookup t lidict);
 
-fun €li_enter_list› ([]:string list) (vl:'a list) (LiDict {leaf, mdict}) =
+fun €li_enter_list› ([]:''k list) (vl:'a list) (LiDict {leaf, mdict}) =
 		LiDict {leaf = vl @ leaf, mdict = mdict}
  |  li_enter_list (tagl as (tagh::tagt)) vl (LiDict {leaf, mdict}) =
 		LiDict {leaf = leaf, mdict = m_app tagh (li_enter_list tagt vl) mdict};
  
-fun €li_enter› (sl:string list) (v:'a) = li_enter_list sl [v];
+fun €li_enter› (sl:''k list) (v:'a) = li_enter_list sl [v];
 =TEX
 
 =SML
-fun €li_delete› ([]:string list) (LiDict {leaf, mdict}) =
+fun €li_delete› ([]:''k list) (LiDict {leaf, mdict}) =
 		LiDict {leaf = [], mdict = mdict}
  |  li_delete (tagl as (tagh::tagt)) (dict as LiDict {leaf, mdict}) =
 		LiDict {leaf = leaf, mdict = m_app tagh (li_delete tagt) mdict}
 	handle ex => if area_of ex = "MappingDictionary" then dict
 		else pass_on ex "" "";
 
-fun €li_replace› ([]:string list) (vl:'a list) (LiDict {leaf, mdict}) =
+fun €li_replace› ([]:''k list) (vl:'a list) (LiDict {leaf, mdict}) =
 		LiDict {leaf = vl, mdict = mdict}
  |  li_replace (tagl as (tagh::tagt)) vl (LiDict {leaf, mdict}) =
 		LiDict {leaf = leaf, mdict = m_app tagh (li_replace tagt vl) mdict};
@@ -424,9 +423,7 @@ fun €li_mapfilter› LidRetain lid = fail "SimpleLIDictionary" 100112 []
 		val mdict' = m_mapfilter aux mdict
 	in LiDict {leaf = leaf', mdict = mdict'}
 	end;
-=TEX
 
-=SML
 fun €li_mapfilter2› LidRetain lid = lid
 | li_mapfilter2 LidDiscard lid = initial_li_dict
 | li_mapfilter2 (lidf as LidFun {linode, lileaf}) (lid as LiDict {leaf, mdict}) =
@@ -450,8 +447,8 @@ fun €li_mapfilter_list› LidRetain lid = fail "SimpleLIDictionary" 100112 []
 fun €list_lidfun› path =
 	LidFun {	linode = fn tag => list_lidfun (tag::path),
 		lileaf = fn leaf => (rev path, leaf)};
-fun €li_list› lid = li_mapfilter_list (list_lidfun []) lid;
 
+fun €li_list› lid = li_mapfilter_list (list_lidfun []) lid;
 =IGN
 fun €li_merge› (lid1 as LiDict {leaf, mdict}) (lid2 as LiDict {leaf, mdict}) =
 	let val leaf' = leaf1 @ leaf2
@@ -464,6 +461,146 @@ fun €li_merge› (lid1 as LiDict {leaf, mdict}) (lid2 as LiDict {leaf, mdict}) =
 =SML
 end (* of SimpleLIDictionary *);
 open SimpleLIDictionary;
+=TEX
+
+\section{UNIFYING STORES}
+
+=DOC
+signature €UNet› = sig
+=DESCRIBE
+This is the signature of a structure providing facilities similar to those provided by NetTools except that lookup involves unification and returns all items indexed by styructures which are unifiable with the lookup structure.
+The results include the unifying substitutions and an anti-unifier of the matching values.
+
+Though in the target applications the indexes are HOL terms this interface is less specific.
+It is expected that the structure involved is coded as a list of tag values, the type of which is only partly specified here.
+Sufficient tag structure is specified to pernit unification, with polymorphic slots for application specific structure the details of which do not affect the unification algorithm.
+=ENDDOC
+
+=DOC
+type ('a, 'b)€UTAG›
+type ('a, 'b, 'c)€UNET›;
+type ('a, 'b)€USUBS›;
+=DESCRIBE
+Type $('a, 'b)UTAG$ is a type of tags, lists of which may be used to represent various kinds of structures when the type parameters are suitably instantiated.
+
+$('a, 'b, 'c)UNET$ is the type of a unifying net storing values of type $'c$ indexed by lists of tags of type $('a, 'b)UTAG$.
+
+$('a, 'b)USUBS$ is a value which represents unifying substitutions.
+=ENDDOC
+
+=DOC
+val €mk_uterm› : (TERM * TYPE list * TERM list * TYPE list * TERM list)
+	-> UTERM;
+val €dest_uterm› : UTERM
+	-> (TERM * TYPE list * TERM list * TYPE list * TERM list);
+=DESCRIBE
+The interfaces to unifying term net facilities make use of the type $UTERM$, which stands for $Unifiable Term$, and left undetermined by the signature to allow optimisation of this type.
+
+The functions $mk\_uterm$ and $dest\_uterm$ provide the external methods for assembling and disassembling $UTERM$s.
+The components are:
+\begin{enumerate}
+\item a term for unification
+\item a list of type variables which are to be avoided when creating new type variables
+\item a list of term variables which are to be avoided when creating new term variables
+\item a list of type variables which can be instantiated during unification
+\item a list of term variables which can be instantiated during unification
+\end{enumerate}
+
+=ENDDOC
+
+=DOC
+val €empty_unet› : ('a, 'b, 'c) UNET;
+val €make_utmnet› : (('a,'b)UTAG * 'c) list -> ('a,'b,'c) UNET;
+val €unet_enter› : ('a,'b,'c) UNET -> (('a,'b)UTAG * 'c) -> ('a,'b,'c)UNET;
+val €list_utmnet_enter› : ('a,'b,'c) UNET -> (('a,'b)UTAG * 'c) list -> ('a,'b,'c)UNET;
+=DESCRIBE
+$empty\_unet$ gives an empty unet, the type parameters are the type of the nodes and leaves of the tag types and the type of the values to be stored in the unet.
+$make\_unet$ takes a list of index/value pairs and inserts them into an empty utmnet.
+$unet\_enter$ enters a single new value into a utmnet, $list\_unet\_enter$ adds a list of new entries.
+
+The indexing term must be supplied together with information controlling unification which consists of:
+\begin{enumerate}
+\item a list of type variables which should be avoided
+\item a list of term variables which should be avoided
+\item the list of type variables which may be instantiated
+\item the list of term variables which may be instantiated
+\end{enumerate}
+=ENDDOC
+=DOC
+val €utmnet_content› : ('a UTMNET) -> (UTERM * 'a)list;
+val €utmnet_lookup› : ('a UTMNET) -> UTERM
+		-> ((UTMSUBST * UTERM * UTMSUBST * 'a)list * UTMSUBST);
+val €utmnet_map_filter› : ('a UTMNET) -> ((UTERM * 'a) -> 'b)
+		-> UTERM -> ('b UTMNET);
+val €utmnet_map› : ('a UTMNET) -> ((UTERM * 'a) -> 'b) -> ('b UTMNET);
+val €utmnet_filter› : ('a UTMNET) -> UTERM -> ('a UTMNET);
+val €utmnet_fold› : (((UTERM * 'a) * 'b) -> 'b) -> ('a UTMNET) -> 'b -> 'b;
+=DESCRIBE
+$utmnet\_content$ is the inverse of $make\_utmnet$.
+
+$utmnet\_lookup$ $net$ $uterm$ will return a list of the values entered into $net$
+that were indexed by $uterm$s which can be unified with $uterm$.
+
+Each value is returned with the following information:
+\begin{enumerate}
+\item a substitution which may be applied to the search uterm to unify it with the relevant index uterm
+\item an index uterm found to be unifiable with the search uterm
+\item a substitution which may be applied to the index uterm to unify it with the search uterm
+\item the value associated with the index entry
+\end{enumerate}
+One further substitution is returned, which instantiates the search uterm to the anti-unifier of the returned terms.
+This is not guaranteed to be the most specific antiunifier, some implementations may decline to antiunify and should then return the null substitution.
+
+If $utmnet\_lookup$ returns more than one value, then the only
+ordering on the resulting values specified is that if two entries are made into the net with the same index term, then if the $net\_lookup$ term matches the index term then the second entered value will be returned before the first in the list of matches.
+
+$utmnet\_map\_filter$ filters a $UNET$ retaining only items indexed by terms which are unifiable with its argument, and applies the supplied function to the index/value pair replacing the value with the result.
+If the function fails then the index/value pair is discarded.
+
+$utmnet\_filter$ is the special cases of $utmnet\_map\_filter$ in which the map is the right projection function.
+
+$utmnet\_map$ is the special cases of $utmnet\_map\_filter$ in which the function is applied to the entire net, the only items dropped being those on which the function fails.
+
+$utmnet\_fold f utmn c$ folds the function over the values in the termnet with initial value c.
+=ENDDOC
+
+
+=SML
+end; (* of signature UNet *)
+=TEX
+
+
+=SML
+structure SimpleUNet : UNet = struct
+
+open SimpleLIDictionary;
+=TEX
+
+=SML
+datatype ('a,'b)UTAG =
+		UtNode of 'a
+	|	UtLeaf of 'b
+	|	UtVb of string
+	|	UtBv of string
+	|	UtIv of string
+	|	UtEnd;
+
+type ('a,'b,'c)UNET = (('a,'b)UTAG, 'c) LI_DICT;
+
+type ('a,'b)USUBST = (string * ('a,'b)UTAG list) list;
+=TEX
+
+=IGN
+val €empty_unet› : (''a, ''b, 'c) UNET
+	= initial_li_dict: ((''a,''b)UTAG,'c)LI_DICT;
+val €make_unet› : (('a,'b)UTAG * 'c) list -> ('a,'b,'c) UNET
+	=;
+val €unet_enter› : ('a,'b,'c) UNET -> (('a,'b)UTAG * 'c) -> ('a,'b,'c)UNET;
+val €list_utmnet_enter› : ('a,'b,'c) UNET -> (('a,'b)UTAG * 'c) list -> ('a,'b,'c)UNET;
+=TEX
+
+=SML
+end (* of structure SimpleNet *)
 =TEX
 
 \section{UNIFYING TERM NETS}
@@ -532,6 +669,7 @@ val €utmnet_map_filter› : ('a UTMNET) -> ((UTERM * 'a) -> 'b)
 		-> UTERM -> ('b UTMNET);
 val €utmnet_map› : ('a UTMNET) -> ((UTERM * 'a) -> 'b) -> ('b UTMNET);
 val €utmnet_filter› : ('a UTMNET) -> UTERM -> ('a UTMNET);
+val €utmnet_fold› : (((UTERM * 'a) * 'b) -> 'b) -> ('a UTMNET) -> 'b -> 'b;
 =DESCRIBE
 $utmnet\_content$ is the inverse of $make\_utmnet$.
 
@@ -557,6 +695,8 @@ If the function fails then the index/value pair is discarded.
 $utmnet\_filter$ is the special cases of $utmnet\_map\_filter$ in which the map is the right projection function.
 
 $utmnet\_map$ is the special cases of $utmnet\_map\_filter$ in which the function is applied to the entire net, the only items dropped being those on which the function fails.
+
+$utmnet\_fold f utmn c$ folds the function over the values in the termnet with initial value c.
 =ENDDOC
 
 
@@ -634,6 +774,8 @@ fun utmnet_filter utmn sutm =
 	fun aux (_, utm, _, res) = (utm, res)
  in mapfilter aux utm'
  end;
+
+fun utmnet_fold f u = fold f (utmnet_content u);
 =TEX
 
 }%ignore
@@ -642,6 +784,15 @@ fun utmnet_filter utmn sutm =
 end; (* of structure CrudeTermNet *)
 =TEX
 
+
+
+=SML
+structure €UNet› : UNet
+=TEX
+
+=SML
+end; (* structure UNet *)
+=TEX
 
 \twocolumn[\section{INDEX}\label{INDEX}]
 {\small\printindex}

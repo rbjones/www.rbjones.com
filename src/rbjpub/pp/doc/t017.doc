@@ -1,5 +1,5 @@
 =IGN
-$Id: t017.doc,v 1.1 2005/04/09 14:00:53 rbj Exp $
+$Id: t017.doc,v 1.2 2006/03/25 22:50:36 rbj01 Exp $
 open_theory "cat";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_conv"];
 set_flag ("pp_use_alias", false);
@@ -68,10 +68,10 @@ set_flag ("pp_use_alias", false);
 \subsection{Definition of Category}
 
 We model a category by its set of arrows.
-It is therefore a set, together with:
+It is therefore a set (of arrows), together with:
 
 \begin{itemize}
-\item[] a partial associative operation over the arrows
+\item a partial associative operation over the arrows
 \item left and right operators which return the domain and codomain of each arrow
 \end{itemize}
 
@@ -81,28 +81,106 @@ It is therefore a set, together with:
 ‹	Left Right: 'a ≠ 'a
 ∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
 
-
-πHOLCONST
-‹ €Cat› :  'a CAT ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ C∑ Cat C §
-‹   (µ x∑ x ç Arrows C
-‹	¥ Left C x ç Arrows C ± Right C x ç Arrows C
-‹	± Compose C (Left C x) x = x ± Compose C x (Right C x) = x)
-‹ ± (µ x y∑ x ç Arrows C ± y ç Arrows C ± Right C x = Left C y
-‹	¥ Compose C x y ç Arrows C)
-‹ ± (µ x y z∑ x ç Arrows C ± y ç Arrows C ± z ç Arrows C 
-‹	± Right C x = Left C y ± Right C y = Left C z
-‹	¥ Compose C x (Compose C y z) = Compose C (Compose C x y) z)
-∞
-
-Some derived operations over categories:
+Before giving the definition of a category it will be convenient to define some auxiliary concepts.
 
 πHOLCONST
 ‹ €Obj› :  'a CAT ≠ 'a SET
 ˜¸¸¸¸¸¸
 ‹ µ C a∑ a ç Obj C § a ç Arrows C ± a = Left C a
 ∞
+
+We need often to state explicitly that two arrows are composable and therefore introduce a notation for this.
+We use an infix operator which yields a property of categories.
+
+=SML
+declare_infix(400, "ï");
+=TEX
+
+πHOLCONST
+‹ €$ï› :  'a ≠ 'a ≠ 'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ f g C∑ (f ï g) C §
+‹	f ç Arrows C ± g ç Arrows C
+‹	± Right C f = Left C g
+∞
+
+πHOLCONST
+‹ €Identity› :  'a CAT ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ C a∑ a ç Identity C § a ç Arrows C
+‹	± Left C a = a ± Right  C a = a
+‹	± µb ∑ (a ï b) C ¥ Compose C a b = b
+‹	     ± (b ï a) C ¥ Compose C b a = b
+∞
+
+It will also be convenient to cite concisely the domain and codomain of an arrow.
+
+=SML
+declare_infix(400, ">->");
+=TEX
+
+πHOLCONST
+‹ €$>->› :  'a ≠ 'a ≠ 'a CAT ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ f a b C∑ f ç (a >-> b) C §
+‹	f ç Arrows C ± a ç Arrows C ± b ç Arrows C
+‹	± Left C f = a ± Right C f = b
+∞
+
+A notation for stating the value of a composition.
+
+=SML
+declare_infix(400, ">ò>");
+=TEX
+
+πHOLCONST
+‹ €$>ò>› :  'a ∏ 'a ≠ 'a ≠ 'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ f g h C∑ ((f, g) >ò> h) C § 
+‹	(f ï g) C ± Compose C f g = h
+∞
+
+A notation for stating the equality of two compositions, a simple example of a commutative diagram.
+
+=SML
+declare_infix(400, "<ò>");
+=TEX
+
+πHOLCONST
+‹ €$<ò>› :  'a ∏ 'a ≠ 'a ∏ 'a ≠ 'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ f g h i C∑ ((f, g) <ò> (h, i)) C § 
+‹	(f ï g) C ± (h ï i) C ± Compose C f g = Compose C h i
+∞
+
+πHOLCONST
+‹ €Cat› :  'a CAT ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ C∑ Cat C §
+‹   (µ x∑ x ç Arrows C
+‹	¥ Left C x ç Identity C ± Right C x ç Identity C)
+‹ ± (µ x y∑ (x ï y) C ¥ Compose C x y ç Arrows C
+‹	± (Compose C x y) ç ((Left C x) >-> (Right C y)) C)
+‹ ± (µ x y z∑ (x ï y) C ± (y ï z) C 
+‹	¥ Compose C x (Compose C y z) = Compose C (Compose C x y) z)
+∞
+
+=GFT
+
+=TEX
+\ignore{
+=SML
+val €obj_def› = get_spec ¨ObjÆ;
+val €ï_def› = get_spec ¨$ïÆ;
+val €identity_def› = get_spec ¨IdentityÆ;
+val €gt_gt_def› = get_spec ¨$>->Æ;
+val €gtògt_def› = get_spec ¨$>ò>Æ;
+val €ltògt_def› = get_spec ¨$<ò>Æ;
+val €cat_def› = get_spec ¨CatÆ;
+=TEX
+=SML
+=TEX
+}%ignore
 
 \subsubsection{Notation for Commutative Diagrams}
 
@@ -159,12 +237,10 @@ save_cs_∂_thm (pop_thm());
 
 \ignore{
 =SML
-push_pc "hol1";
 set_goal([], ¨∂1âc:'a ≠ 'a CAT∑ µx:'a∑ Cat (1âc x) ± Arrows (1âc x) = {x}Æ);
 a (∂_tac ¨Ãx:'a∑ MkCAT ({x}:'a SET) (Ãy z∑x) (Ãy∑x) (Ãy∑x)Æ);
-a (rewrite_tac [get_spec ¨ArrowsÆ, get_spec ¨CatÆ]
-	THEN REPEAT strip_tac THEN asm_rewrite_tac[]); 
-pop_pc();
+a (rewrite_tac [cat_def, get_spec ¨ArrowsÆ, gt_gt_def, identity_def]
+	THEN REPEAT strip_tac);
 save_cs_∂_thm (pop_thm());
 =TEX
 }%ignore
@@ -183,15 +259,17 @@ Cat_öâc_thm Ù Cat öâc
 
 \ignore{
 =SML
+val öâc_def = get_spec ¨öâcÆ;
 set_pc "hol1";
 set_goal ([], ¨Cat öâcÆ);
-a (prove_tac [get_spec ¨CatÆ, get_spec ¨öâcÆ]
+a (prove_tac [cat_def, öâc_def, ï_def]
 	THEN REPEAT strip_tac);
 val Cat_öâc_thm = save_pop_thm "Cat_öâc_thm";
 =TEX
 =SML
+val oneâc_def = get_spec ¨1âcÆ;
 set_goal ([], ¨µx∑ Cat (1âc x)Æ);
-a (prove_tac [get_spec ¨CatÆ, get_spec ¨1âcÆ]
+a (prove_tac [cat_def, oneâc_def]
 	THEN REPEAT strip_tac);
 val Cat_1âc_thm = save_pop_thm "Cat_1âc_thm";
 =TEX
@@ -216,7 +294,8 @@ discrete_cat_thm Ù µs∑ Cat (Discreteâc s)
 \ignore{
 =SML
 set_goal([], ¨µs∑ Cat (Discreteâc s)Æ);
-a (prove_tac [get_spec ¨CatÆ, get_spec ¨MkCATÆ, get_spec ¨DiscreteâcÆ]);
+a (prove_tac [cat_def, get_spec ¨MkCATÆ, get_spec ¨DiscreteâcÆ,
+	identity_def, ï_def, gt_gt_def]);
 val discrete_cat_thm = save_pop_thm "discrete_cat_thm";
 =TEX
 }%ignore
@@ -228,7 +307,7 @@ val discrete_cat_thm = save_pop_thm "discrete_cat_thm";
 ˜¸¸¸¸¸¸
 ‹ µ A B f∑ f ç Functor (A,B) §
 ‹    (µa∑ a ç Arrows A ¥ f a ç Arrows B)
-‹ ±   µa b∑ a ç Arrows A ± b ç Arrows A ± Right A a = Left A b
+‹ ±   µa b∑ (a ï b) A
 ‹	¥ Right B (f a) = f (Right A a)
 ‹	± Left B (f b) = f (Left A b)
 ‹	± Compose B (f a) (f b) = f (Compose A a b)
@@ -262,7 +341,7 @@ functor_composition_thm Ù
 push_merge_pcs["hol", "'savedthm_cs_∂_proof"];
 set_goal([], ¨µA:'a CAT; B:'b CAT; C:'c CAT; ab: 'a ≠ 'b; bc: 'b ≠ 'c∑
 	ab ç Functor (A,B) ± bc ç Functor (B,C) ¥ (bc o ab) ç Functor (A,C)Æ);
-a (rewrite_tac (map get_spec [¨FunctorÆ])
+a (rewrite_tac [get_spec ¨FunctorÆ, ï_def]
 	THEN REPEAT_N 6 strip_tac);
 a (lemma_tac ¨µ a∑ a ç Arrows A ¥ bc (ab a) ç Arrows CÆ THEN1 asm_prove_tac[]);
 a (asm_rewrite_tac[] THEN REPEAT_N 3 strip_tac);
@@ -332,8 +411,7 @@ declare_infix (310, "Äâc");
 πHOLCONST
 ‹ $€Äâc› : 'a CAT ≠ 'a CAT ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µ A1 A2∑ A1 Äâc A2 §
-‹    Arrows A1 Ä Arrows A2
+‹ µ A1 A2∑ A1 Äâc A2 § Arrows A1 Ä Arrows A2
 ‹ ± (µa∑ a ç Arrows A1 ¥ Left A1 a ç Arrows A1 ± Right A1 a ç Arrows A1
 ‹	± Left A1 a = Left A2 a ± Right A1 a = Right A2 a)
 ‹ ± (µa b∑ a ç Arrows A1 ± b ç Arrows A1 ¥ Compose A1 a b ç Arrows A1
@@ -346,20 +424,82 @@ A subcategory of a category is of course a category.
 subcat_cat_thm Ù µa b:'a CAT∑ Cat a ± b Äâc a ¥ Cat b
 =TEX
 
+\ignore{
 =IGN
 set_goal ([], ¨µa b:'a CAT∑ Cat a ± b Äâc a ¥ Cat bÆ);
 a (rewrite_tac (map get_spec [¨CatÆ, ¨$ÄâcÆ])
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (REPEAT (all_asm_ufc_tac[]) THEN REPEAT strip_tac);
-a (REPEAT (all_asm_ufc_tac[]));
+a (lemma_tac ¨Left b x ç Arrows b ± Right b x ç Arrows bÆ
+	THEN1 (asm_fc_tac[] THEN REPEAT strip_tac)
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨Compose b (Left b x) x = Compose a (Left b x) xÆ
+	THEN1 all_asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨Compose b x (Right b x) = Compose a x (Right b x)Æ
+	THEN1 all_asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨Left b x = Left a x ± Right b x = Right a xÆ
+	THEN1 (asm_fc_tac[] THEN REPEAT strip_tac)
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨x ç Arrows aÆ THEN1 all_asm_fc_tac[]);
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+a (asm_tac (rewrite_rule [asm_rule ¨Left b x = Left a xÆ]
+	(asm_rule ¨Left b x ç Arrows bÆ)));
+a (spec_nth_asm_tac 43 ¨Left a xÆ);
+a (asm_rewrite_tac[]);
+a (asm_tac (rewrite_rule [asm_rule ¨Right b x = Right a xÆ]
+	(asm_rule ¨Right b x ç Arrows bÆ)));
+a (spec_nth_asm_tac 48 ¨Right a xÆ);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨(Compose b x y) ç Arrows bÆ
+	THEN1 all_asm_ufc_tac[]);
+a (lemma_tac ¨Left b (Compose b x y) = Left a (Compose b x y)
+	± Compose b x y = Compose a x y ± Left b x = Left a x
+	± Right b x = Right a x ± Left b y = Left a y
+	± x ç Arrows a ± y ç Arrows aÆ
+	THEN1 (all_asm_ufc_tac[] THEN REPEAT strip_tac));
+a (asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 9 (asm_tac o (rewrite_rule [
+	asm_rule ¨Right b x = Right a xÆ,
+	asm_rule ¨Left b y = Left a yÆ])));
+a (all_asm_ufc_tac []);
+(* *** Goal "2.3" *** *)
+a (lemma_tac ¨(Compose b x y) ç Arrows bÆ
+	THEN1 all_asm_ufc_tac[]);
+a (lemma_tac ¨Right b (Compose b x y) = Right a (Compose b x y)
+	± Compose b x y = Compose a x y ± Right b y = Right a y
+	± Right b x = Right a x ± Left b y = Left a y
+	± x ç Arrows a ± y ç Arrows aÆ
+	THEN1 (all_asm_ufc_tac[] THEN REPEAT strip_tac));
+a (asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 9 (asm_tac o (rewrite_rule [
+	asm_rule ¨Right b x = Right a xÆ,
+	asm_rule ¨Left b y = Left a yÆ])));
+a (all_asm_ufc_tac []);
+(* *** Goal "3" *** *)
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 6 [¨yÆ, ¨zÆ]);
+a (list_spec_nth_asm_tac 8 [¨xÆ, ¨yÆ]);
+a (list_spec_nth_asm_tac 10 [¨xÆ, ¨Compose b y zÆ]);
+a (list_spec_nth_asm_tac 12 [¨Compose b x yÆ, ¨zÆ]);
+a (asm_rewrite_tac[]);
+a (fc_tac [asm_rule ¨µ x∑ x ç Arrows b ¥ x ç Arrows aÆ]);
+a (list_spec_nth_asm_tac 24 [¨xÆ, ¨yÆ, ¨zÆ]);
+(* *** Goal "3.1" *** *)
+a (spec_nth_asm_tac 23 ¨xÆ);
+a (spec_nth_asm_tac 27 ¨yÆ);
+a (GET_NTH_ASM_T 26 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3.2" *** *)
+a (spec_nth_asm_tac 23 ¨yÆ);
+a (spec_nth_asm_tac 27 ¨zÆ);
+a (GET_NTH_ASM_T 25 ante_tac THEN asm_rewrite_tac[]);
 val subcat_cat_thm = save_pop_thm "subcat_cat_thm ";
-=TEX
-
-
-\ignore{
-=SML
-val €cat_def› = get_spec¨CatÆ;
 =TEX
 }%ignore
 
@@ -369,12 +509,36 @@ val €cat_def› = get_spec¨CatÆ;
 ‹ $€NatTran› :  ('a CAT ∏ 'b CAT) ≠ (('a ≠ 'b) ∏ ('a ≠ 'b)) ≠ ('a ≠ 'b) SET
 ˜¸¸¸¸¸¸
 ‹ µ A B R S ‘∑ ‘ ç NatTran (A,B) (R,S) §
-‹    µf∑ f ç Obj A
-‹	¥ ‘ f ç Arrows B
-‹	± Compose B (‘ (Left A f)) (S f) = Compose B (R f) (‘ (Right A f))
+‹    (µa∑ a ç Obj A
+‹	¥ ‘ a ç Arrows B ± Left B(‘ a) = R a ± Right B(‘ a) = S a)
+‹ ± (µf∑ f ç Arrows A
+‹	¥ Left B(‘ (Right A f)) = R f ± Right B(‘ (Right A f)) = S f
+‹	± Compose B (‘ (Left A f)) (S f) = Compose B (R f) (‘ (Right A f)))
 ∞
 
+πHOLCONST
+‹ $€IdâNâT› :  ('a CAT ∏ 'b CAT) ≠ ('a ≠ 'b) ≠ ('a ≠ 'b)
+˜¸¸¸¸¸¸
+‹ µ A B R f∑ IdâNâT (A,B) R f = Left B (R f)
+∞
 
+\ignore{
+=IGN
+val nat_tran_def = get_spec ¨NatTranÆ;
+val idnt_def = get_spec ¨IdâNâTÆ;
+set_goal([], ¨µA B R∑ Cat A ± Cat B ± R ç Functor (A,B)
+	¥ IdâNâT (A,B) R ç NatTran (A,B) (R,R)Æ);
+a (rewrite_tac [nat_tran_def, idnt_def, get_spec ¨FunctorÆ, get_spec ¨ObjÆ, cat_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+(* *** Goal "3" *** *)
+a (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+
+=TEX
+}%ignore
 \section{CATEGORIAL STRUCTURES}
 
 This doesn't belong here, and if it gets anywhere it will be moved elsewhere.
