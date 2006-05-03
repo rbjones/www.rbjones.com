@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.7 2006/03/25 22:50:36 rbj01 Exp $
+# $Id: rules.mk,v 1.8 2006/05/03 14:08:49 rbj01 Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -90,7 +90,8 @@ $(HTML004m) $(HTML001m): %-m.html : %.html
 
 $(HTMLTHLS): %.html: %.xml $(XLDPDIR)/xslt001s8.sxx xslt002.xsl frame01.xsl pp-symbol.ent ppft.xsl X-Logic.xsl
 	xxml2xml <$*.xml >$*.xmlt
-	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt001s8.sxx root=$(BLDROOT) dir=$(RELWEBDIR)/ name=$*
+	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt001s8.sxx root=$(BLDROOT) \
+	dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs
 
 $(COMDIRCPY): %: $(COMDIR)/%
 	cp $(COMDIR)/$@ .
@@ -130,7 +131,7 @@ $(PPTHDXLD) $(PPPPTHDXLD): %.xml: %.thd
 
 $(PPDB).dbts:
 	if test "$(PPDBDIR)" != ""; then ln -s $(PPDBDIR)$(PPDB).$(PPDBARCH); fi
-	cd ./$(PPDBDIR); if test ! -f $(PPDB).$(PPDBARCH); then pp_make_database -p $(PPBASEDB) $(PPDB); fi
+	cd ./$(PPDBDIR); pp_make_database -f -p $(PPBASEDB) $(PPDB)
 	touch $(PPDB).dbts
 
 $(PPLDS): %.lds: %.sml $(PPDB).dbts
