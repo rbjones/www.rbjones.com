@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.8 2006/05/03 14:08:49 rbj01 Exp $
+# $Id: rules.mk,v 1.9 2006/05/12 16:30:34 rbj01 Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -245,7 +245,7 @@ $(HTM005i) $(HTMTHLSi): %-i.htm : %.htm
 
 $(HTM005m) $(HTMTHLSm): %-m.htm : %.htm
 
-$(XMLT006) $(XMLT007): %.xmlt: %.xml
+$(XMLT006) $(XMLT007) $(XMLT008): %.xmlt: %.xml
 	addftl <$<  | xxml2xml >$*.xmlt
 
 $(HTML006): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl IndexFrame.xsl MainFrame.xsl pp-symbol.ent ppft.xsl X-Logic.xsl sitespecific.xsl
@@ -256,3 +256,7 @@ $(HTML007f): %.html: %.xmlt $(XLDPDIR)/xslt001s8.sxx pp-symbol.ent
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
 
 $(HTML007i) $(HTML007m): $(HTML007f)
+
+$(HTML008): %.html: %.xmlt $(XLDPDIR)/xslt004s8.sxx pp-symbol.ent
+	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt004s8.sxx root=$(BLDROOT) \
+		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
