@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: xreal01.xml,v 1.1 2006/05/27 19:22:20 rbj01 Exp $"
+       title="Exact Real Computation in ProofPower"
+       created="2006-05-26"
+       description="A non-theoretical but a priori discussion of how to implement exact real computation into the proof tool ProofPower"
+       keywords="rbjones logic exact real computation proofpower"
+       class="con"
+       root="../../"
+       up="index.htm"
+       rbjhome="rbj.htm"
+       site="rbjones">
+
+<section title="Overview">
+<abstract>
+I describe some ideas about the implementation of exact real arithmetic in the theorem prover ProofPower.
+The rationale is carefully exposed.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Background"/>
+<secref title="The Representation of Real Numbers"/>
+</sbcol>
+<sbcol>
+<secref title="Considerations Specific to LCF Provers"/>
+<secref title="Beyond the LCF Paradigm"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Background">
+<abstract>
+What is "exact real arithmetic"?
+Why does it matter?
+What does it have to do with theorem provers?
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="What is Exact Real Arithmetic">
+<p>
+"Real numbers" may be thought of informally as numers with infinite precision, i.e. as numbers which, if we could write them down as a decimal might have an infinite decimal expansion. 
+These are needed to get the mathematics to work out nicely.
+The mathematics in question includes the theory of analysis which in turn includes the differential and integral calculus and more, and is widely applied in engineering and science.
+When it comes to using computers to do calculations, real numbers pose serious provlems, because of the fact that they involve infinite amounts of information.
+Digital computers can store and compute with only finite amounts of information.
+</p>
+<p>
+Consequently, real number computation normally uses finite precision representations, most often "floating point" representations of various precisions.
+The results of each step in the computation are obtained as an approximation within the relevant limits of precision.
+The results of computations involving many steps then suffer from the cumulative effects of many such approximations, and there is no limit to how widely they may diverge from the correct value.
+Though techniques are available for estimating the accuracy of such floating point computations, these do not usually yield definite upper bounds on the error.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+</sbcol>
+</secbody>
+
+</section>
+
+<section title="The Representation of Real Numbers" tag="RR">
+<abstract>
+A key choice is how real numbers should be represented during the computations.
+</abstract>
+
+<secbody title="Processing Infinite Structures">
+<sbcol>
+<subsec>
+<p>
+A real number is represented by some infinite data structure.
+Its a low cardinality infinite, an infinite list of elements chosen from some finite set would do.
+Since you can't hold arbitrary completed objects of this kind in the computer the term "exact real computation" is really a bit misleading.
+What you really get is computation to arbitrary and known precision in the end result, provided that all the inputs are known exactly or are obtainable to arbitrary and known precision (on demand during computation).You could consider the computable reals as finite algorithms which compute infinite expansions, and the operations applied to such computable reals yeild new algorithms which compute the infinite expansion of the result (but never get completely execute, because they don't terminate).
+If you think of these algorithms as reals, then the operators do yield exact results.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<p>
+This is good for ordinary computer programs doing real arithmetic, but when you look at doing real computation in a theorem proving context there are advantages in thinking of these operations as operations over arbitrary reals.
+This is because the "classical" theory is done with the full system of real numbers.
+Science and Engineering are based on this kind of "classical" analysis, there is a very large body of applicable mathematics which builds on the real numbers, and it isn't broken so we don't need to re-invent it. 
+</p>
+<p>
+Now so long as these algorithms for doing computations over reals only make use of the values which constituer an expansion of an input rather than the algorithm which computes them (i.e. they treat the algorithm as an oracle) and only demand access to finite segments of the input values in generating any finite segment of the output value, then they will work on arbitrary streams representing arbitrary real numbers, not just computable streams representing computable real numbers and the functions or operations they compute will be functions over the real numbers as a whole.
+</p>
+</subsec>
+</sbcol>
+</secbody>
+<secbody title="Highly Redundant Representations">
+<sbcol>
+<subsec title="Rational Intervals">
+<p>
+A real can be represented by a convergent infinite nested sequence of intervals with rational endpoints.
+This may be a nice representation for theoretical purposes and probably results in simple algorithms.
+I think of this as a redundant representation because each new piece of information effectively includes the important aspects of all that has gone before it.
+The alogorithms can be completely localised in the following sense.
+If you know how to compute an approximation to a real number as an interval with rational endpoints from two approximations in the same form, then this algorithm for computing a single approximation can be lifted automatically to operate over streams of such approximations.
+So with this representation you get simplified programming of algorithms.
+But this is unlikely to yeild efficient algorithms.
+</p>
+<p>
+Here are two considerations which suggest that this method would be inefficient.
+<ul>
+<li>redundancy - at each step in the computation you effectively start again from scratch with new approximations to the inputs, each time there will be more information to process so things will get slow pretty fast</li>
+<li>assymmetries - in some computations the accuracy of the result is more sensitive to one operand than the other and the rate of convergence of the approximations in the different operands may be different, none of this is take into account, so you may end up evaluating one operand to excessive and useless precision while some other operand takes a long time to reach the required accuracy.
+</li>
+</ul>
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Continued Fractions">
+<p>
+Continued fractions have been used by some researchers.
+I have not looked closely enough at what they have done with them to understand how they have used continued fractions for exact real computation, but the characteristics of continued fractions make them unsuitable for a full implementation of computable exact real functions.
+</p>
+<p>
+The salient characteristic which mitigates against their use is that the relation between continued fractions and the real numbers which they represent is a bijection.
+Each real number has exactly one representation as a continued fraction.
+If a single continued fraction is used to represent each real number, then even the simplest operations over reals will not be Turing computable and cannot be implemented on digital computers.
+</p>
+<p>
+I can see two ways in which continued fractions might be used for exact real computation.
+In the first case a single continued fraction is used to represent a real number and this is not a case of highly redundant representation.
+Also, it doesn't work.
+So whatever algorithm you chose for real addition, it will sometimes go into a loop and produce no further output. 
+</p>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Considerations Specific to LCF or HOL Provers" tag="LCF"/>
+
+<section title="Beyond the LCF Paradigm" tag="beyond"/>
+
+</xldoc>
