@@ -2,7 +2,7 @@
 
 <xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
        xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
-       id="$Id: xreal01.xml,v 1.1 2006/05/27 19:22:20 rbj01 Exp $"
+       id="$Id: xreal01.xml,v 1.2 2006/05/29 13:43:36 rbj01 Exp $"
        title="Exact Real Computation in ProofPower"
        created="2006-05-26"
        description="A non-theoretical but a priori discussion of how to implement exact real computation into the proof tool ProofPower"
@@ -133,6 +133,48 @@ So whatever algorithm you chose for real addition, it will sometimes go into a l
 </sbcol>
 </secbody>
 </section>
+
+<section>
+
+<CENTER><H2>Ideas about How To Do It in HOL</H2></CENTER>
+<p/>
+<ol>
+<li>Define a type of <EM>varidigits</EM> (variable base digits) each element of which consists of an integer v and a natural number r such that |v|&lt;2<SUP>(r+1)</SUP>.</li>
+<li>Define a type of finite or infinite lists (if you don't have one to hand), with a neat infix cons operator (lets call these <EM>ilist</EM>s).</li>
+<li>Define a real representative as a <EM>varidigit ilist</EM>.</li>
+<li>Define the function RR, which maps a real representative to the real number which it represents, as the sum of the series:</li>
+<br/>
+v<SUB>1</SUB>+v<SUB>2</SUB>/2<SUP>(r<SUB>2</SUB>+1)</SUP>+v<SUB>3</SUB
+>/2<SUP>(r<SUB>2</SUB>+r<SUB>3</SUB>+2)</SUP>+v<SUB>4</SUB>/2<SUP>(r<SUB>2</SUB>+r<SUB>3</SUB>+r<SUB>4</SUB>+3)</SUP>...<BR/>
+(conjectures:
+<ol><li>under this interpretation lists of varidigits are an admissible representation.</li>
+<li>this map is a surjection.</li>
+</ol>).
+<li>Now you can code up effective operations over these real representatives as conversions.
+You have to tell the conversion how far to go, since the computations are in general non-
+terminating, I guess you need a parameter indicating how many bits to evaluate.</li>
+<li>To get things to go fast, you could code up your conversions using mk_thm.</li>
+<li>Upgrade the pretty printer to display these things nicely.</li>
+</ol>
+I'm not claiming that any of this is easy, or that this is the best approach.
+<p/>
+Note that, this approach is proposed in the context of a classical theory of real numbers, nothing here depends on falling back to constructive analysis.
+Even though not all reals are computable, real addition is computable over all reals!
+<p/>
+There is some more to say about the motivation for this representation:
+<ol>
+<li>This is a stream-like representation in which the elements of the stream are increments.
+Its like a redundant n-ary expansion rather than, say, a Cachy sequence, in which each element in the stream is a complete representation of an approximation to the final result.
+The truth is that I never ever considered anything else, since I was looking for something reasonably efficient and it never occurred to me that anything else would be optimal.</li>
+<li>This a <i>variable arity</i> positional representation.
+If a fixed arity positional stream is used, the precision required in the atoms of a complex expression to yield one digit in the value of the expression gets out of hand.
+If for reasons of efficiency you want to work with 32 or 64 bits at a time, as if with a base of 2^32 or 2^64, then you have to take, say two big digits of precision in the operands to give one in the result, where all you need is one slightly larger digit (a base 2^33 digit rather than two base 2^32 digits).
+The idea is that you say how much precision you want in each stage in the computation.
+This doesn't stop you coming back for more, but it does mean that there is less wasted precision in evaluating arguments and subexpressions.</li>
+</ol>
+Sorry this is a poor explanation, but I thought I'd make a note of the motivation, however crude.
+</section>
+
 
 <section title="Considerations Specific to LCF or HOL Provers" tag="LCF"/>
 
