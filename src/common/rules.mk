@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.9 2006/05/12 16:30:34 rbj01 Exp $
+# $Id: rules.mk,v 1.10 2006/06/16 17:40:38 rbj01 Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -130,8 +130,9 @@ $(PPTHDXLD) $(PPPPTHDXLD): %.xml: %.thd
 	ppthd2xml $* $(WEBROOTDIR)
 
 $(PPDB).dbts:
-	if test "$(PPDBDIR)" != ""; then ln -s $(PPDBDIR)$(PPDB).$(PPDBARCH); fi
-	cd ./$(PPDBDIR); pp_make_database -f -p $(PPBASEDB) $(PPDB)
+	if test "$(PPDBDIR)" != ""; \
+	then ln -s $(PPDBDIR)$(PPDB).$(PPDBARCH); cd ./$(PPDBDIR); $(MAKE) $(PPDB).dbts; \
+	else pp_make_database -f -p $(PPBASEDB) $(PPDB); fi
 	touch $(PPDB).dbts
 
 $(PPLDS): %.lds: %.sml $(PPDB).dbts
