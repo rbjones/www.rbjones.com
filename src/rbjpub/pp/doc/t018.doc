@@ -1,0 +1,335 @@
+=IGN
+$Id: t018.doc,v 1.1 2006/09/11 10:16:45 rbj01 Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\ExpName{\mbox{{\sf exp}}}
+\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\makeindex
+\title{NFU in ProofPower HOL}
+\author{Roger Bishop Jones}
+\makeindex
+\author{R.B.Jones\\ rbj01@rbjones.com}
+\date{\FormatDate{$Date: 2006/09/11 10:16:45 $%
+}}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+This is an axiomatisation of the set theory NFU in ProofPower HOL.
+\end{abstract}
+\vfill
+\begin{centering}
+
+\bf Copyright \copyright\ : Roger Bishop Jones \number\year \\
+Reference: rbjpub/pp/t001; issue $Revision: 1.1 $%
+
+\end{centering}
+\thispagestyle{empty}
+\end{titlepage}
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+\tableofcontents
+%\newpage
+%\subsection{Document cross references}
+
+\subsection*{To Do}
+\begin{itemize}
+
+\item
+Everything.
+
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+This is a training exercise in NFU.
+
+There is a bit of research built into the exercise.
+The "research" objective is to use NFU to construct domains useful for a category theoretic foundation for mathematics in which the ontology consists entirely of objects and arrows and in which the kinds of reflexive categories which are anaologous to the set theoretic universe and hence do not exist in well-founded set theories are available (e.g. the categories of categories, groups, etc.).
+
+The game plan is to begin with a routine transcription into ProofPower HOL of the axioms and definitions for NFU as presented by Randall Holmes in his book (Cahiers du Centre Logique, Volume 10, also available from his web site).
+This will proceed initially no further than is necessary to interpret the stratified lambda calculus, and then attempt a construction of the domain of the stratified lambda calculus (conservatively over NFU).
+If this seems OK then, without developing the stratified lambda calculs further, I will see if I can figure our how to do something category theoretic.
+
+I will not necessarily be single-minded in heading for the category theoretic foundation, there may be aspects of NFU which will seem worth persuing en-route.
+
+\subsection{Technical Prelude}
+
+First of all, we must give the the ML commands to  introduce the new theory ``NFU'' as a child of the theory ``hol''.
+
+=SML
+open_theory "rbjmisc";
+force_new_theory "NFU";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+In the context in which the development is taking place there is already a set theory, and we will make occasional use of it.
+The normal set theoretic symbols are interpreted in this prior set theory, and the new set theory (NFU) which we are introducing will therefore use symbols systematically subscripted with a small roman `n'.
+
+\subsection{The Set Concept}
+
+We introduce a new type which contains the sets of NFU and also some non-sets.
+We have a predicate $¨SetânÆ$ which tells us which are the sets, and a relation $¨çânÆ$ which tells us what the members of a set are.
+Non-sets are called {\it atoms} and have no members.
+
+=SML
+new_type("NF",0);
+new_const("Setân", îNF ≠ BOOLÆ);
+declare_infix(300, "çân");
+new_const("çân", îNF ≠ NF ≠ BOOLÆ);
+=TEX
+
+=SML
+val Ext_ax = new_axiom (["Ext"],
+	¨µa b∑ Setân a ± Setân b ¥ (µx∑ x çân a § x çân b) ¥ a = bÆ);
+val Atom_ax = new_axiom (["Atoms"],
+	¨µx∑ ≥ Setân x ¥ (µy∑ ≥ y çân x)Æ);
+=TEX
+
+\ignore{
+=SML
+push_goal([],¨µa b:NF∑ Setân a ± Setân b ± (µx:NF∑ ≥ x çân a ± ≥ x çân b) ¥ a = bÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨µx:NF∑ x çân a § x çân bÆ THEN1 (strip_tac THEN asm_rewrite_tac[]));
+a (all_fc_tac [Ext_ax]);
+val OneEmpty_thm = save_pop_thm "One_Empty";
+=TEX
+} %ignore
+
+From these axioms we infer that there is only one empty set:
+
+=GFT
+OneEmpty_thm = Ù µ a b∑ Setân a ± Setân b ± (µ x∑ ≥ x çân a ± ≥ x çân b) ¥ a = b
+=TEX
+
+Notation for set comprehension will probably be useful.
+We have syntax for sets, which in this context will yeild values of type
+=INLINEFT
+îNF SETÆ
+=TEX
+, so we define two new constants, one to assert the existence of a set with a particular extension, and the other to convert an object of type 
+=INLINEFT
+î(NF)SETÆ
+=TEX
+ to one of type 
+=INLINEFT
+îNFÆ
+=TEX
+.
+
+The constant
+=INLINEFT
+¨∂ânÆ
+=TEX
+ simply asserts the existence of a set with some particular extension.
+
+πHOLCONST
+‹ €∂ân› : (NF)SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µs∑ ∂ân s § ∂a∑ Setân a ± µx∑ x çân a § x ç s
+∞
+
+\ignore{
+=SML
+val ∂ân_def = get_spec ¨∂ânÆ;
+
+set_goal([], ¨∂ ïân∑ µs∑ ∂ân s ¥ Setân (ïân s) ± µx∑ x çân (ïân s) § x ç sÆ);
+a (∂_tac ¨Ãs∑ ≈n∑ Setân n ± µx∑ x çân n § x ç sÆ THEN rewrite_tac[]
+	THEN strip_tac THEN rewrite_tac [∂ân_def]
+	THEN STRIP_T asm_tac);
+a (≈_tac ¨≈n∑ Setân n ± µx∑ x çân n § x ç sÆ THEN REPEAT_N 2 strip_tac);
+a (asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+} %ignore
+
+The constant 
+=INLINEFT
+¨ïânÆ$
+=TEX
+ simulates set comprehension in NFU.
+If applied to an extension (as an object of type
+=INLINEFT
+î(NF)SETÆ
+=TEX
+) for which a set exists it yields that set.
+
+πHOLCONST
+‹ €ïân› : NF SET ≠ NF
+˜¸¸¸¸¸¸
+‹ µs∑ ∂ân s ¥ Setân (ïân s) ± µx∑ x çân (ïân s) § x ç s
+∞
+
+\subsection{Boolean Operations}
+
+In this area the theory NFU differs from the kind of typed set theory which we do in HOL only because of the complications arising from the possibility that there are atoms in the domain of discourse.
+The effect of this is that the theorems which characterise the operations over sets are all conditional.
+Whereas in HOL it is straightforward to eliminate this kind of set theoretic vocabulary, reducing equalities and inequalities to propositional logic or elementary theorems of quantifier theory, in NFU this is not quite so straightforward and requires a bit more machinary. 
+
+\subsubsection{The Universe}
+
+=SML
+new_const("Vân", îNFÆ);
+val V_ax = new_axiom (["V"],
+	¨Setân Vân ± µa∑ a çân VânÆ);
+=TEX
+
+\subsubsection{Complement}
+
+=SML
+new_const("õc", îNF ≠ NFÆ);
+declare_postfix(310,"õc");
+val õc_ax = new_axiom (["õc"],
+	¨µa∑ Setân a ¥ Setân (a õc) ± µx∑ x çân a õc § ≥ x çân aÆ);
+=TEX
+
+\subsubsection{Union}
+
+=SML
+new_const("¿ân", îNF ≠ NF ≠ NFÆ);
+declare_infix(290, "¿ân");
+val ¿_ax = new_axiom (["¿"],
+	¨µa b∑ Setân a ± Setân b ¥ Setân (a ¿ân b)
+	± µx∑ x çân (a ¿ân b) § x çân a ≤ x çân bÆ);
+=TEX
+
+\subsubsection{Intersection}
+
+We are now able to {\it define} intersection:
+
+=SML
+declare_infix(300, "°ân");
+=TEX
+
+πHOLCONST
+‹ €$°ân› : NF ≠  NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µa b∑ (a °ân b) = (a õc ¿ân b õc)õc
+∞
+
+\ignore{
+=SML
+val °_def = get_spec ¨$°ânÆ;
+
+set_goal ([], ¨µa b∑ Setân a ± Setân b ¥ Setân (a °ân b)Æ);
+a (rewrite_tac [°_def] THEN REPEAT strip_tac);
+a (REPEAT (all_fc_tac [õc_ax, ¿_ax]));
+val °ân_set_thm = save_pop_thm "°ân_set_thm";
+
+set_goal ([], ¨µa b∑ Setân a ± Setân b ¥ µx∑ x çân (a °ân b) § x çân a ± x çân bÆ);
+a (rewrite_tac [°_def] THEN REPEAT_N 4 strip_tac);
+a (lemma_tac ¨Setân (a õc) ± Setân (b õc)Æ
+	THEN1 (all_fc_tac [õc_ax] THEN REPEAT strip_tac));
+a (lemma_tac ¨Setân (a õc ¿ân b õc)Æ
+	THEN1 (all_fc_tac [¿_ax]));
+a (FC_T1 fc_§_canon rewrite_tac [õc_ax]);
+a (ALL_FC_T1 fc_§_canon rewrite_tac [¿_ax]);
+a (ALL_FC_T1 fc_§_canon rewrite_tac [õc_ax]);
+a (REPEAT strip_tac);
+val °ân_thm = save_pop_thm "°ân_thm";
+=TEX
+}%ignore
+
+=GFT
+°ân_set_thm
+	Ù µ a b∑ Setân a ± Setân b ¥ Setân (a °ân b)
+°ân_thm
+	Ù µ a b∑ Setân a ± Setân b ¥ (µ x∑ x çân a °ân b § (x çân a ± x çân b))
+=TEX
+
+\subsubsection{Relative Complement}
+
+=SML
+declare_infix(300, "\\ân");
+=TEX
+
+πHOLCONST
+‹ €$\ân› : NF ≠  NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µa b∑ (a \ân b) = a °ân (b õc)
+∞
+
+\ignore{
+=IGN
+set_goal ([], ¨µa b:NF∑ Setân a ± Setân b ¥ Setân (a \ân b)Æ);
+
+ ± µx∑ x çân (a \ân b) § x çân a ± ≥ x çân bÆ);
+a (∂_tac ¨Ãa b∑ ïân {x | x çân a ± ≥ x çân b}Æ);
+
+
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+\subsubsection{Symmetric Difference}
+
+=SML
+declare_infix(300, "Ñân");
+=TEX
+
+πHOLCONST
+‹ €$Ñân› : NF ≠  NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µa b∑ (a Ñân b) = (b \ân a) ¿ân (a \ân b)
+∞
+
+\subsubsection{Distributed Union}
+
+=SML
+new_const("ﬁân", îNF ≠ NFÆ);
+declare_prefix(310, "ﬁân");
+val ﬁ_ax = new_axiom (["ﬁ"],
+	¨µa∑ Setân a ¥ Setân (ﬁân a) ± µx∑ x çân ﬁân a § ∂y∑ x çân y ± y çân ﬁân aÆ);
+=TEX
+
+\ignore{
+=SML
+=TEX
+} %ignore
+
+\ignore{
+ πHOLCONST
+‹ €› :
+˜¸¸¸¸¸¸
+‹
+ ∞
+}
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{NFU.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}
+=SML
+output_theory{out_file="NFU.th.doc", theory="NFU"};
+=IGN
