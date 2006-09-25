@@ -1,6 +1,6 @@
 ######################################################################
 #
-#	$Id: rbj.mkf,v 1.10 2006/09/19 14:36:22 rbj01 Exp $
+#	$Id: rbj.mkf,v 1.11 2006/09/25 20:00:46 rbj01 Exp $
 #
 #	makefile for Roger's things
 #
@@ -10,7 +10,7 @@
 ######################################################################
 
 # suffixes known
-.SUFFIXES: .db .doc .dvi .ldd .log .lot .sh .doc .tex .tch
+.SUFFIXES: .db .doc .pdf .ldd .log .lot .sh .doc .tex .tch
 
 # default make target.  displays a list of more useful targets
 
@@ -24,7 +24,7 @@ default:
 	@echo " "
 	@echo "The following are useful for developers:"
 	@echo " "
-	@echo "make -f rbj.mkf doc      - makes a .dvi tar file (rbj.doc.tgz)"
+	@echo "make -f rbj.mkf doc      - makes a .pdf tar file (rbj.doc.tgz)"
 	@echo "make -f rbj.mkf dist     - makes a source tar file (rbj.src.tgz)"
 	@echo " "
 	@echo "The following are the three most useful make commands for users:"
@@ -65,7 +65,7 @@ RELDIR=release
 # The documents
 HOLDOCS= t001.doc t002.doc t003.doc t004.doc t006.doc t007.doc \
 	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc \
-	t015.doc t016.doc t017.doc t018.doc
+	t015.doc t016.doc t017.doc t018.doc t019.doc
 
 ZEDDOCS=
 
@@ -107,7 +107,9 @@ t012.ldd: t011.ldd
 t016.ldd: t006.ldd
 t017.ldd: t006.ldd t004.ldd
 t018.ldd: t006.ldd
+t019.ldd: t004.ldd
 $(DVIFILES): rbj.bib
+$(PDFFILES): rbj.bib
 README.txt:
 
 ######################################################################
@@ -117,11 +119,13 @@ README.txt:
 ######################################################################
 
 THEORIES= t001a.th t002a.th rbjmisc.th diffgeom.th membership.th \
-	  fixp.th fixp_egs.th ordered_sets.th U_orders.th X-Logic-1.th \
-	  NF.th NFU.th PI.th meta_cf.th cf.th
+	  fixp.th fixp_egs.th nfus.th ordered_sets.th U_orders.th X-Logic-1.th \
+	  NF.th NFU.th PI.th catfun.th metapi.th cfpi.th metaci.th
 
 THDOCS=$(THEORIES:.th=.th.doc)
 THTEXS=$(THEORIES:.th=.th.tex)
+
+$(THTEX): %.tex: %.doc
 
 t001a.th.doc: t001.ldd
 
@@ -137,71 +141,55 @@ rbjmisc.th.doc: t006.ldd
 
 fixp.th.doc: t007.ldd
 
-fixp.th.tex: fixp.th.doc
-
 fixp_egs.th.doc: t008.ldd
 
-fixp_egs.th.tex: fixp_egs.th.doc
-
 ordered_sets.th.doc U_orders.th.doc: t009.ldd
-
-ordered_sets.th.tex: ordered_sets.th.doc
-
-U_orders.th.tex: U_orders.th.doc
 
 X-Logic-1.th.doc X-Logic-2.th.doc: t016.ldd 
 
 cat.th.doc: t017.ldd
 
-cat.th.tex: cat.th.doc
+t001.pdf: t001a.th.tex
 
-X-Logic-1.th.tex: X-Logic-1.th.doc
+t002.pdf: t002a.th.tex
 
-X-Logic-2.th.tex: X-Logic-2.th.doc
+t003.pdf: diffgeom.th.tex
 
-t001.dvi: t001a.th.tex
+t004.pdf: membership.th.tex
 
-t002.dvi: t002a.th.tex
+#t005.pdf: wfrel.th.tex
 
-t003.dvi: diffgeom.th.tex
+t006.pdf: rbjmisc.th.tex
 
-t004.dvi: membership.th.tex
+t007.pdf: fixp.th.tex
 
-#t005.dvi: wfrel.th.tex
+t008.pdf: fixp_egs.th.tex
 
-t006.dvi: rbjmisc.th.tex
+t009.pdf: ordered_sets.th.tex U_orders.th.tex
 
-t007.dvi: fixp.th.tex
+t016.pdf: X-Logic-1.th.tex X-Logic-2.th.tex
 
-t008.dvi: fixp_egs.th.tex
-
-t009.dvi: ordered_sets.th.tex U_orders.th.tex
-
-t016.dvi: X-Logic-1.th.tex X-Logic-2.th.tex
-
-t017.dvi: cat.th.tex
+t017.pdf: cat.th.tex
 
 NF.th.doc: t018.ldd
 
-NF.th.tex: NF.th.doc
-
 NFU.th.doc: t018.ldd
-
-NFU.th.tex: NFU.th.doc
 
 PI.th.doc: t018.ldd
 
-PI.th.tex: PI.th.doc
+catfun.th.doc: t018.ldd
 
-meta_cf.th.doc: t018.ldd
+metapi.th.doc: t018.ldd
 
-meta_cf.th.tex: PI.th.doc
+cfpi.th.doc: t018.ldd
 
-cf.th.doc: t018.ldd
+metaci.th.doc: t018.ldd
 
-cf.th.tex: PI.th.doc
+t018.pdf: NF.th.tex NFU.th.tex PI.th.tex catfun.th.tex metapi.th.tex cfpi.th.tex metaci.th.tex
 
-t018.dvi: NF.th.tex NFU.th.tex PI.th.tex meta_cf.th.tex cf.th.tex
+nfus.th.doc: t019.ldd
+
+t019.pdf: nfus.th.tex
 
 ######################################################################
 #
@@ -280,8 +268,8 @@ srcrel: srcdir $(DISTPACKINGLIST)
 	chmod -R g-w $(RELDIR)
 	chmod -R u+w $(RELDIR)
 
-docrel: docdir $(DVIFILES)
-	@for f in $(DVIFILES); \
+docrel: docdir $(PDFFILES)
+	@for f in $(PDFFILES); \
 	do \
 		cp $$f $(RELDIR)/doc/$$f; \
 	done
@@ -296,7 +284,7 @@ src:	srcrel
 dist:	src
 
 doc:	docrel
-	cd $(RELDIR) && tar cvfz $(CWD)/$(PRODUCT).dvi.tgz ./*
+	cd $(RELDIR) && tar cvfz $(CWD)/$(PRODUCT).pdf.tgz ./*
 	cd $(CWD)
 
 ######################################################################
@@ -339,5 +327,10 @@ $(ZEDLDD): %.ldd: %.sml
 	BSTINPUTS=.:$(PPHOME)/tex: \
 	BIBINPUTS=.:$(PPHOME)/tex: docdvi $*
 
-%.pdf: %.dvi
-	dvipdf -sPAPERSIZE=a4 $*
+%.pdf: %.tex
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: docpdf $*
+
+#%.pdf: %.dvi
+#	dvipdf -sPAPERSIZE=a4 $*

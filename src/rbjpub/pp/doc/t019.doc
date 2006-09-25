@@ -1,0 +1,287 @@
+=IGN
+$Id: t019.doc,v 1.1 2006/09/25 20:00:47 rbj01 Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\ExpName{\mbox{{\sf exp}}}
+\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\makeindex
+\title{NFU and NF in ProofPower-HOL}
+\makeindex
+\date{$ $Date: 2006/09/25 20:00:47 $ $}
+\author{Roger Bishop Jones\\ rbj01@rbjones.com}
+
+\usepackage[pdftex]{hyperref}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+Two formalisations in {\Product-HOL} are undertaken of both NFU and NF.
+One follows Quine's original formulation by expressing stratified comprehension as a single higher-order axiom.
+The other is a finite axiomatisation.
+\end{abstract}
+\vfill
+\begin{centering}
+Reference: rbjt0019; $ $Revision: 1.1 $ $
+\end{centering}
+\thispagestyle{empty}
+\end{titlepage}
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+\tableofcontents
+%\newpage
+%\subsection{Document cross references}
+
+\subsection*{To Do}
+\begin{itemize}
+
+\item
+Everything.
+
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+The material here concerns non-well-founded formal foundations for mathematics.
+
+Though my primary sources of information about NF and NFU are Forster \cite{forster92} and Holmes \cite{holmes98} the formalisations here follow neither closely.
+In a previous exploration \cite{rbjt018} I transcribed into {\Product-HOL} both a finite axiom system due to Hailperin more or less as presented in Forster \cite{forster92}, and a finite axiomatisation due to Holmes more or less as presented in \cite{holmes98}.
+These first transcriptions are sufficiently unsatisfactory in various ways that I a completely fresh start seems a good idea.
+
+These new approaches have the following aims:
+\begin{itemize}
+
+\item To attempt an axiomatisation closer to Quine's original in having an explicit axiom of stratified comprehension, rendered as a higher order axiom (axiom schemes are not supported by {\Product}).
+
+\item To produce a finite axiomatisation, not involving stratified comprehension, which is more compact and uniform in presentation than my previous rendering of Holmes' system.
+This is to be similar in character to the Hailperin axioms, but substantially based on Holmes and retaining most of the latter's accessibility.
+
+\end{itemize}
+
+In both cases two theories will be presented, the first being NFU and the second NF, defined as a child of NFU by adding a further axiom.
+The names of the four theories will be {\it nfu\_s}, {\it nf\_s}, {\it nfu\_f}, {\it nf\_f}, in which the `s' suggests a schema of comprehension and the `f' that the axiomatisation is finite. 
+
+\section{NFU USING STRATIFIED COMPREHENSION}
+
+\subsection{Introducing the Theory}
+
+The notion of stratified comprehension is defined in a previous document \cite{rbjt004} and applied here in this axiomatisation.
+The theory containing this prior material is called `membership', and `nfu\_s' is therefore introduced as a child of that theory.
+
+=SML
+open_theory "membership";
+force_new_theory "nfus";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+First we introduce a new type for the domain of the set theory.
+The elements of this type are the sets of NF(U).
+
+=SML
+new_type("nfs", 0);
+=TEX
+
+We already have a polymorphic equality which will work over this type, but we will need a constant for the membership relation over this type.
+The usual membership symbol is already in use for the typed membership in {\Product-HOL} so we use that symbol subscripted with ``s'' for membership in NF and introduce an alias to allow the subscript to be omitted where no ambiguity results.
+
+=SML
+declare_infix (310, "eâs");
+new_const("çâs", înfs ≠ nfs ≠ BOOLÆ);
+declare_alias("ç", ¨$çâsÆ);
+=TEX
+
+\subsection{Notation for Existence and Comprehension}
+
+There is special syntactic support for the typed set theory in {\Product-HOL}, notably for the usual way of writing a set comprehension.
+The following two definitions will allow us to make use of this notation.
+
+First a notation for asserting the existence of a set in NF(U).
+
+πHOLCONST
+‹  €∂âs›: nfs SET ≠ BOOL
+˜¸¸¸¸¸¸¸¸
+‹  µs∑ ∂âs s § ∂a:nfs∑ µx:nfs∑ x ç s § x ç a 
+∞
+
+Thus
+=INLINEFT
+¨∂âsÆ
+=TEX
+when applied to a term of type înfs SETÆ asserts the existence of a set in NF(U) (of type înfsÆ) with the same extension. 
+
+The following constant enables us to pull out of the air a set with some specified extension, and therefore is analogous to the usual set abstraction notation.
+
+\ignore{
+=SML
+set_goal([], ¨∂ å: nfs SET ≠ nfs∑ µs: nfs SET∑ ∂âs s ¥ µe:nfs∑ e ç å s § e ç sÆ);
+a (∂_tac ¨Ãs:nfs SET∑ ≈t: nfs∑ ∂âs s ¥ µe:nfs∑ e ç t § e ç sÆ
+	THEN strip_tac THEN rewrite_tac[get_spec ¨$∂âsÆ]
+	THEN REPEAT_N 2 strip_tac);
+a (≈_tac ¨≈ t:nfs∑ (∂ a:nfs∑ µ x∑ x ç s § x ç a) ¥ (µ e∑ e ç t § e ç s)Æ);
+(* *** Goal "1" *** *)
+a (∂_tac ¨aÆ THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 2 discard_tac THEN asm_rewrite_tac[]);
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 1 ¨aÆ ante_tac);
+a (POP_ASM_T discard_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹  €å›: nfs SET ≠ nfs
+˜¸¸¸¸¸¸¸¸
+‹  µs:nfs SET∑ ∂âs s ¥ µe∑ e ç å s § e ç s 
+∞
+
+Thus applying ¨åÆ to an object of type înfs SETÆ will yield a value of type înfsÆ which will have the same extension if such a set exists.
+To make use of this we need to be able to prove that the required set exists.
+
+\subsection{Stratified Comprehension}
+
+Stratified comprehension is an axiom scheme in first order logic.
+We do not have support for axiom schemes, but we do have a higher order logic.
+
+If we were axiomatising separation in ZF, a higher order axiom of separation could be used quantifying over properties of sets.
+This would be slightly stronger than the first order axiom of separation, since not all properties in the range of a higher-order quantifier are expressible as formulae of first order logic.
+If this extra strength had to be avoided, then the property of properties which consists in their being expressible in first order logic can be defined in higher order logic, and the quantification could be restricted to these properties.
+
+A similar technique can be used for stratified comprehension.
+The property of being a property expressible by a stratified first order formula is definable in higher order logic, and an axiom could quantify over these properties.
+This property has been defined in the theory `membership' in \cite{rbjt004}.
+
+There is one further complication.
+The usual schema involves universal quantification over any number of variables which may appear free in the comprehension.
+To express this in a single higher order axiom requires one further subterfuge.
+
+A variable valuation may be represented as a function from variable names to sets.
+We quantify over such valuations.
+
+
+
+
+
+
+
+=SML
+
+
+=TEX
+
+\section{NF USING STRATIFIED COMPREHENSION}
+
+At this point I don't have a clear motivation for full extensionality.
+It would make proof automation more straightforward and effective, but I don't know whether that is enough to persuade me to do much here.
+
+=SML
+open_theory "nfus";
+force_new_theory "nfs";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+We could add something weak to upgrade the qualified extensionality of NFU, but instead plump for a full statement of extensionality.
+We might express this as the implication from equal extensions to equality, but the equivalence with equality on the left is more useful, so we might as well have that. 
+
+=SML
+new_axiom(["Extensionality"], ¨µx y∑ x = y § (µz∑ z çâs x § z çâs y)Æ);
+=TEX
+
+\section{FINITE AXIOMATISATION OF NFU}
+
+This is mainly based on Holmes' axiom system \cite{holmes98}.
+
+The following points give some indication of the motivation and character of the differences between the system present here and that of Holmes.
+
+\begin{itemize}
+
+\item It seems likely that at least the presentation and perhaps also in some degree the substance of Holmes' axioms is pedagogical.
+We have no such purpose in mind here, and are aiming for a system which is practical for formal machine checked reasoning, but still intelligible.
+
+\item As in my previous version, the pragmatics will result in the system being as extensional as possible and not distinguishing between the empty set and the urelements more often than is necessary.
+This is expected to make automation of reasoning more effective.
+
+\item A uniform style of axiomatisation by existential assertion will be adopted.
+This means that the existence of sets is stipulated before the introduction of operations which yield the stipulated sets.
+
+\item The axiom system will be presented, as far as is practical, as a whole prior to the development of the theory, rather than interleaved with the development as it is in \cite{holmes98} and in my previous version.
+
+\item The question will be considered of how stratified comprehension can be automated, and the convenience of the axioms for this purpose will be taking into account.
+
+\end{itemize}
+
+\subsection{Technical Prelude}
+
+First of all, we must give the the ML commands to  introduce the new theory ``nfu\_f'' as a child of the theory ``rbjmisc''.
+
+=SML
+open_theory "membership";
+force_new_theory "nfuf";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+\ignore{
+=SML
+set_flag ("pp_use_alias", true);
+=IGN
+open_theory "nfc";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+}%ignore
+
+\section{FINITE AXIOMATISATION OF NF}
+
+\ignore{
+=SML
+=TEX
+} %ignore
+
+\ignore{
+ πHOLCONST
+‹ €› :
+˜¸¸¸¸¸¸
+‹
+ ∞
+} %ignore
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{nfus.th}
+}  %\let
+
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}
+=SML
+open_theory "nfus";
+output_theory{out_file="nfus.th.doc", theory="nfus"};
+=IGN

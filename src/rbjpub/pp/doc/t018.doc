@@ -1,5 +1,5 @@
 =IGN
-$Id: t018.doc,v 1.3 2006/09/19 14:36:22 rbj01 Exp $
+$Id: t018.doc,v 1.4 2006/09/25 20:00:47 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -20,25 +20,23 @@ $Id: t018.doc,v 1.3 2006/09/19 14:36:22 rbj01 Exp $
 \newcommand{\ignore}[1]{}
 
 \makeindex
-\title{A Pseudo-Well-Founded Category Theoretic Foundation System with a Universal Category}
-\author{Roger Bishop Jones}
+\title{Category Theoretic Foundation Systems with Universal Categories}
 \makeindex
-\author{R.B.Jones\\ rbj01@rbjones.com}
-\date{\FormatDate{$Date: 2006/09/19 14:36:22 $%
-}}
+\date{$ $Date: 2006/09/25 20:00:47 $ $}
+\author{Roger Bishop Jones\\ rbj01@rbjones.com}
+
+\usepackage[pdftex]{hyperref}
 
 \begin{document}
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This document is a formal exporation of the possibility of constructing a category theoretic foundation for mathematics using a pseudo-inductive filtering of the psuedo-well-founded sets in Quine's NF or NFU.
+This document is a formal exporation of the possibility of constructing a category theoretic foundation for mathematics by contructing and axiomatising a model from the sets in Quine's NF or NFU.
+It begins with axiomatisations of NF and NFU in {\Product-HOL} and proceeds from there conservatively, by constructing domains suitable for the proposed concrete reflexive category theory, defining new types based on these domains and deriving as theorems principles suitable for an independent axiomatic theory of this system.
 \end{abstract}
 \vfill
 \begin{centering}
-
-\bf Copyright \copyright\ : Roger Bishop Jones \number\year \\
-Reference: rbjpub/pp/doc/t0018.pdf; issue $Revision: 1.3 $%
-
+Reference: rbjt0018; $ $Revision: 1.4 $ $
 \end{centering}
 \thispagestyle{empty}
 \end{titlepage}
@@ -66,7 +64,33 @@ Everything.
 \newpage
 \section{INTRODUCTION}
 
-My objective is to use a non-well-founded set theory to construct domains useful for a category theoretic foundation for mathematics in which the ontology consists entirely of concrete categories and functors and in which the kinds of non-well-founded categories which are analogous to the set theoretic universe (and hence do not exist in well-founded set theories) are available (e.g. the categories of categories, groups, etc.).
+The material here concerns non-well-founded formal foundations for mathematics.
+
+It begins from material relating to non-well-founded set theories in books by Forster \cite{forster92} and Holmes \cite{holmes98} and engages in a process of ontological transformation, whereby the ontology for an established foundation system is used to construct an alternative ontology, for which a stuiable axiomatisation is formally established.
+
+More specifically we begin with axiomatisations in {\Product-HOL} of the non-well-founded set theories NF and NFU, the first based on an axiomatisation due to Hailperin, substantially (but not entirely) as presented in \cite{forster92} (and not developed futher here), the second based on (but not entirely the same as) the finite axiomatisation by Holmes presented in \cite{holmes98}.
+The formalisation of NFU is then used as a basis for the construction of domains of concrete categories and functors intended as models for a foundational theory of concrete categories and functors.
+
+The rationale here is as follows:
+\begin{itemize}
+
+\item It is natural, even in an untyped universe, to abstract away from the detailed coding of functions as sets by treating both sets and functions as primitive.
+
+\item In set theory we find a foundational ontology which is as simple as can be (i.e. sets are completely unstructured collections, all other ontologies involve working with structures which have more information in them than the collection of things from which they are built.
+This presumably has many advantages in the investigation of foundational problems.
+It may be however, that ontologies of more structured entities are pragmatically superior in applications.
+Sets and functions are special cases of Categories (which are sets with some structure) and functors (more generally arrows) which are functions which preserve some structure.
+This more complex ontology subsumes in a very direct way the more primitive set/function ontology.
+A set is a discrete category, a function is a functor whose domain is discrete.
+
+\item all the above has nothing to do with universal sets or well=foundedness.
+The kind of construction described is easily done in a well-founded set theory, but I have found the prospective advantages in a well-founded context insufficient motivation to carry through from the construction to development of the resulting theory.
+Partly this is because category theory more conspicuously than set theory screams against the constraint of well-foundedness.
+When done in a non=well-founded context, the additional merit of a category theory in which talk about size becomes less pervasive is added to the incentive to see how the theory works out.
+\end{itemize}
+
+Two approaches to this construction are presented, the first based on the notion of pseudo-well-foundedness presented in \cite{forster92} and the second a ``Co-Inductive'' definition using methods from \cite{rbjt007}, one other is defined, {\it en passant} i.e. the well-founded inductive definition (which differs from the co-inductive case only in taking a least instead of a greatest fixed point), but taken not further.
+One more case might merit consideration if we had decided to take pseudo-induction more seriously, and that is pseudo-co-induction (again taking a greatest rather than a least fixed point).
 
 I will spell this out informally a little more fully.
 
@@ -95,11 +119,12 @@ However, its more interesting to go one step further and consider sets and funct
 This I have previously done in the well-founded case (at least, so far as defining the domsins is concerned).
 The objective here is to do something similar, without the constraint to well-foundedness, so that we get a foundation system which is categorical and in which there is a universal category.
 
-The well-founded case is convered only in a web page, at:
+The well-founded case has been addressed in a web page, at:
 
 http://www.rbjones.com/rbjpub/pp/gst/pcf-defns.html
 
 using a pair of rather cumbersome constructions.
+The material here offers an alternative presentation of essentially the same material as well as different constructions not confined to well-founded ontologies.
 
 Here I propose to take from that only the manner of representing categories and functors, and to recode the construction following Forster's definition of pseudo-well-foundedness.
 Thus, a functor will be a triple consisting of a set which is the domain, a set which is the codomain and a function which is a many one relation between the domain and the codomain, total on the domain.
@@ -1075,15 +1100,38 @@ A relation is a set of ordered pairs.
 Ü µr· Rel‰u r ¤ µx· x ‰u r ´ µy z· x = Op‰u(y, z)
 °
 
+\ignore{
+=SML
+val Relèuê_def = get_spec ¬Rel‰u®;
+=IGN
+set_goal([], ¬Rel‰u š‰u®);
+a (rewrite_tac [Relèuê_def, šèuê_ax]);
+val Relèuê_šèuê_thm = save_pop_thm "Relèuê_šèuê_thm";
+=TEX
+}%ignore
+
+
 Every relation has an inverse.
 
 =SML
-val Relèuê_def = get_spec ¬Rel‰u®;
-
 new_const("›-›1‰u", ”NFU ­ NFU®);
 declare_postfix (320, "›-›1‰u");
 val rel_inv_ax = new_axiom (["rel_inv_ax"],
 	¬µr· Set‰u(r ›-›1‰u) ± µx· x ‰u r ›-›1‰u ¤ ¶y z· x = Op‰u(y, z) ± Op‰u(z, y) ‰u r®);
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬š‰u ›-›1‰u = š‰u®);
+a (lemma_tac ¬Set‰u (š‰u ›-›1‰u) ± Set‰u š‰u® THEN1 rewrite_tac [Setèuê_clauses, rel_inv_ax]);
+a (ALL_FC_T1 fc_¤_canon rewrite_tac [Extèuê_set_thm]);
+a (rewrite_tac [rel_inv_ax, šèuê_ax]);
+val rel_inv_šèuê_thm = save_pop_thm "rel_inv_šèuê_thm";
+=TEX
+}%ignore
+
+=GFT
+rel_inv_šèuê_thm = ô š‰u ›-›1‰u = š‰u
 =TEX
 
 Relations can be composed.
@@ -1098,10 +1146,23 @@ val rel_comp_ax = new_axiom (["rel_comp_ax"], ¬µr s· Set‰u(r »‰u s)
 
 The domain of a relation is a set.
 
+\ignore{
 =SML
 new_const("dom‰u", ”NFU ­ NFU®);
 val domèuê_ax = new_axiom (["domèuê_ax"],
 	¬µr· Set‰u(dom‰u r) ± µx· x ‰u dom‰u r ¤ ¶y· Op‰u(x, y) ‰u r®);
+
+set_goal([], ¬dom‰u š‰u = š‰u®);
+a (lemma_tac ¬Set‰u (dom‰u š‰u) ± Set‰u š‰u®
+	THEN1 rewrite_tac [domèuê_ax, Setèuê_clauses]);
+a (ALL_FC_T1 fc_¤_canon rewrite_tac [Extèuê_set_thm]);
+a (rewrite_tac [domèuê_ax, šèuê_ax]);
+val domèuê_šèuê_thm = save_pop_thm "domèuê_šèuê_thm";
+=TEX
+}%ignore
+
+=GFT
+domèuê_šèuê_thm = ô dom‰u š‰u = š‰u
 =TEX
 
 So is the range.
@@ -1118,12 +1179,24 @@ So is the range.
 Ü µr· field‰u r = (dom‰u r) À‰u (rng‰u r)
 °
 
-Singleton images exists as follows:
-
+\ignore{
 =SML
 val rngèuê_def = get_spec ¬rng‰u®;
 val fieldèuê_def = get_spec ¬field‰u®;
 
+set_goal([], ¬rng‰u š‰u = š‰u®);
+a (rewrite_tac[rngèuê_def, rel_inv_šèuê_thm, domèuê_šèuê_thm]);
+val rngèuê_šèuê_thm = save_pop_thm "rngèuê_šèuê_thm";
+=TEX
+}%ignore
+
+=GFT
+rngèuê_šèuê_thm = ô rng‰u š‰u = š‰u
+=TEX
+
+Singleton images exists as follows:
+
+=SML
 new_const("si‰u", ”NFU ­ NFU®);
 val sièuê_ax = new_axiom (["sièuê_ax"],
 	¬µr· si‰u r = •‰u {z | ¶x y· Op‰u(x, y) ‰u r ± z = Op‰u(É‰u x, É‰u y)}®);
@@ -1168,6 +1241,15 @@ declare_infix (320, "‰u");
 Ü µf a v· Op‰u(a, v) ‰u f ´ f ‰u a = v 
 °
 
+\ignore{
+=SML
+val ManyOne_def = get_spec ¬ManyOne‰u®;
+=IGN
+val
+=TEX
+}%ignore
+
+
 \subsection{Pre-Functors}
 
 This section is not from Holmes.
@@ -1182,6 +1264,16 @@ Thus, we may represent a pre-functor as an ordered pair of which the first eleme
 ÷üüüüüü
 Ü µp· PreFunctor‰u p ¤ ¶x y· p = Op‰u(x, y) ± Rel‰u x ± ManyOne‰u x ± rng‰u x €‰u y   
 °
+
+\ignore{
+=SML
+val PreFunctorèuê_def = get_spec ¬PreFunctor‰u®;
+=IGN
+set_goal([], ¬PreFunctor‰u (Op‰u(š‰u, š‰u))®);
+a (rewrite_tac[PreFunctorèuê_def]);
+a (¶_tac ¬š‰u® THEN ¶_tac ¬š‰u® THEN rewrite_tac[Relèuê_šèuê_thm, rngèuê_šèuê_thm]);
+=TEX
+}%ignore
 
 We define functions giving the graph, domain and codomain and field of a pre-functor and for application and composition of prefunctors.
 
@@ -1365,9 +1457,27 @@ nfu_rule ¬®
 =TEX
 }%ignore
 
-\section{PSEUDO-HEREDITARILY COLLECTIONS}
+\section{(CO-)INDUCTIVE AND PSEUDO (CO-)INDUCTIVE DEFINITIONS}
 
-The aspects of this which are independent of a specific set theory are done in the new theory ``PI''.
+Forster \cite{forster92}, introduces pseudo well-foundedness as way of getting a kind of inductive proof principle in NF.
+A pseudo-well-founded universe is partitioned into two clasess, in a way which suggests that the desired split of the universe into categories and functors might be definable by adaptation of this principle.
+To see the connection observe that the `constituents' of categories are functors, and the constuents of functors are categories.
+This means that, in a well-founded universe, a slightly gerrimandered notion of rank (in which rank increases by exactly one as we pass from a functor to a category containing that functor or from a category to a functor over that category) assigns even ranks to categories and odd ranks to functors (we need to enhance the notion of odd and even to cover limit points, which I think need to be even). 
+Not only are categories and functors distinguished by the parity of their rank, there is a difference in parity for every descending path according to whether it begins at a category or a functor.
+This fits in with the game theoretic flavour of pseudo well-foundedness in which a game is just such a descending path, and the winner of the game is determined by the parity of its length.
+
+For these reasons I thought it might be interesting to see how a `pseudo-inductive` definition adapted from Forster's notion of pseudo-well-foundedness worked in this application.
+
+Since embarking on this path a second method occurred to me, which is to use co-induction.
+For the purposes which Forster had in mind (a principle which could be added to the axioms of NF to exclude certain possibly pathological sets (like a set which is its own unit set) while still leaving the important well-founded sets) co-induction would not suffice, since it looks like co-induction for what its worth, comes for free in NF.
+However, in this application, where we are filtering out all but categories and functors, the coinductive defintiion will actually do something, and the fact (if it is a fact) that a principle of co-well-foundedness is derivable in NF would suggest that this form of definitions will give the most liberal ontology of the selected kind.
+
+Once co-induction occurs as an alternative non-well-foundedness preserving definitional method, the question arised whether there is a similar dual to psuedo-well foundedness, and how this `pseudo-co-induction' differs from pseduo- and co-induction, if at all.
+
+Material on inductive and co=inductive definitions in {\Product} is available in \cite{rbjt007} and is therefore used by invoking its theory `fixp'.
+The material in this section may eventually be moved into that document.
+
+For this material (mainly on pseudo-induction) we introduce a new theory `pi'.
 
 =SML
 open_theory "rbjmisc";
@@ -1379,6 +1489,15 @@ set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
 
 It would be a good idea eventually to define these first and check back that they are special cases of the pseudo versions and that the well-founded functor/category collections are contained in the pseudo-well-founded collections.
 
+\subsection{Hereditarily and Co-Hereditarily PQ}
+
+Though \cite{rbjt007} defines methods for inductive and co-inductive definition which generalise the notion of a `hereditarily P' set for arbitrary properties of sets P, it does not explicitly cover the present requirement for mutually dependent inductive definitions.
+However, this can be achieved by two separate inductive definitions.
+
+No additional machinery is required, the application to yield purely inductive and co-inductive conceptions of category and functor are shown in the next section.
+
+\ignore{
+
 Here is a stab at a {\it hereditarily P} construction suitably generalised.
 
 ¹HOLCONST
@@ -1389,6 +1508,8 @@ Here is a stab at a {\it hereditarily P} construction suitably generalised.
 Ü	(¥ {X' | µx· P x ± (µy z· y  (c x) ± z  (d y) ´ Q y ± z  X') ´ x  X'},
 Ü	 ¥ {Y' | µx· Q x ± (µy z· y  (d x) ± z  (c y) ´ P y ± z  Y') ´ x  Y'})
 °
+
+}%ignore
 
 \subsection{Pseudo-Well-Founded Collections}
 
@@ -1485,7 +1606,7 @@ The structure of this definition is now broken down similarly to that of {\it Ps
 
 ¹HOLCONST
 Ü ÛP_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-		­ 'X ğ ­ BOOL
+Ü		­ 'X ğ ­ BOOL
 ÷üüüüüü
 Ü µc d P Q w· P_closed (c, d, P, Q) w
 Ü	¤ µx· P x ± (µy· y  (c x) ´ Q y ± (¶z· z  (d y) ± z  w)) ´ x  w
@@ -1493,20 +1614,20 @@ The structure of this definition is now broken down similarly to that of {\it Ps
 
 ¹HOLCONST
 Ü ÛQ_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-		­ 'X ğ ­ BOOL
+Ü		­ 'X ğ ­ BOOL
 ÷üüüüüü
 Ü µc d P Q w· Q_closed (c, d, P, Q) w
 Ü	¤ µx· Q x ± (¶y· y  (d x) ± P y ± µz· z  (c y) ´ z  w) ´ x  w
 °
 ¹HOLCONST
 Ü ÛP_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-		­ 'X ğ
+Ü		­ 'X ğ
 ÷üüüüüü
 Ü µz· P_closure z = ¥{x | P_closed z x}
 °
 ¹HOLCONST
 Ü ÛQ_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-		­ 'X ğ
+Ü		­ 'X ğ
 ÷üüüüüü
 Ü µz· Q_closure z = ¥{x | Q_closed z x}
 °
@@ -1593,9 +1714,24 @@ Among the important properties which we hope this construction will have are:
 
 I am by no means confident of any of these features at present.
 
-\section{PWF CATEGORIES AND FUNCTORS}
+\ignore{
+=SML
+val P_closed_def = get_spec ¬P_closed®;
+val Q_closed_def = get_spec ¬Q_closed®;
+val P_closure_def = get_spec ¬P_closure®;
+val Q_closure_def = get_spec ¬Q_closure®;
+val PseudoHereditarilyPQ_def = get_spec ¬PseudoHereditarilyPQ®;
+=TEX
+}%ignore
 
-\subsection{Meta-Theory}
+\section{CATEGORIES AND FUNCTORS}
+
+More than one approach is considered for defining collections of categories and functors in terms of the selected axiomatisation of set theory.
+
+The first approach considered was inspired by the notion of pseudo-well-foundedness discussed in \cite{forster92}, the second on co-inductive methods described in \cite{rbjt007}.
+Some initial material describing the categories and functors under discussion is used by both approached and is therefore presented first.
+
+\subsection{Common Material on Categories and Functors}
 
 Now we define the properties and content functions corresponding to concrete categories and functors.
 This could be done by defining a function which takes a membership relation as an argument and returns a full set of four values for use with the function {\it PseudoCDPQHeredirary}.
@@ -1607,16 +1743,9 @@ I will therefore create a theory {\it meta\_cf} which will contain the `metatheo
 I propose to base the construction on NFU.
 
 =SML
-force_new_theory "meta_cf";
+force_new_theory "catfun";
 new_parent "NFU";
-=IGN
-open_theory "NFU";
-set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
 =TEX
-
-Since these sets (the categories and functors) are expected to be disjoint, at most (hopefully exactly) one of them will contain the empty set.
-In our scheme the empty set is a category (but not a functor, functors will all be ordered pairs).
-Looking at our definition of hereditarily above we see that the empty set can only be a member of the left hand collection, and so (c,P) must be the content function and characterising property for the categories and (d,Q) are those for functors.
 
 A concrete category (here) is a set of functors (the arrows) which is closed under composition (where the domain and codomains match) and includes the identity functors on the domain and codomain of each functor.
 Composition is the same operation in all categories, and is associative as here defined.
@@ -1663,6 +1792,78 @@ This function returns the set of categories in the field of a functor.
 Ü µf· FuncCon f = {PFdom‰u f; PFcod‰u f}
 °
 
+\ignore{
+=SML
+val CatProp_def = get_spec ¬CatProp®;
+val CatCon_def = get_spec ¬CatCon®;
+val FuncProp_def = get_spec ¬FuncProp®;
+val FuncCon_def = get_spec ¬FuncCon®;
+=TEX
+}%ignore
+
+The following is a deeper category property, which asserts that the members of the category are all functors.
+
+¹HOLCONST
+Ü ÛCatFuncPropİ : NFU ­ BOOL
+÷üüüüüü
+Ü µa· CatFuncProp a ¤ CatProp a ± µf· f  CatCon a ´ FuncProp f
+°
+
+If the deeper property is in use, a deep content function may also be needed.
+This gives for each category the set of categories which appear as the domain or codomain of one of the functors in the category.
+
+¹HOLCONST
+Ü ÛCatFuncConİ : NFU ­ NFU ğ
+÷üüüüüü
+Ü µc· CatFuncCon c = Ş{fc | ¶f· f  CatCon c ± fc = FuncCon f}
+°
+
+Next we have the corresponding deeper functor property which asserts that the domain and codomain of the functor are categories.
+
+¹HOLCONST
+Ü ÛFuncCatPropİ : NFU ­ BOOL
+÷üüüüüü
+Ü µa· FuncCatProp a ¤ FuncProp a ± µc· c  FuncCon a ´ CatProp c
+°
+
+Similarly the deeper functor content: 
+
+¹HOLCONST
+Ü ÛFuncCatConİ : NFU ­ NFU ğ
+÷üüüüüü
+Ü µf· FuncCatCon f = Ş{cf | ¶c· c  FuncCon f ± cf = CatCon c}
+°
+
+\ignore{
+=SML
+val CatFuncProp_def = get_spec ¬CatFuncProp®;
+val CatFuncCon_def = get_spec ¬CatFuncCon®;
+val FuncCatProp_def = get_spec ¬FuncCatProp®;
+val FuncCatCon_def = get_spec ¬FuncCatCon®;
+=TEX
+}%ignore
+
+For use in co-inductive definitions the property and the content function are combined into a single content function which effectively incorporates the property.
+This function maps sets to sets.
+It maps each set to the set of objects which can be constructed from the members in the argument set.
+
+\subsection{Meta-Theory by Pseudo-Induction}
+
+=SML
+force_new_theory "metapi";
+new_parent "NFU";
+new_parent "PI";
+set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
+=IGN
+open_theory "metapi";
+set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
+=TEX
+
+Since these sets (the categories and functors) are expected to be disjoint, at most (hopefully exactly) one of them will contain the empty set.
+In our scheme the empty set is a category (but not a functor, functors will all be ordered pairs).
+Looking at our definition of hereditarily above we see that the empty set can only be a member of the left hand collection, and so (c,P) must be the content function and characterising property for the categories and (d,Q) are those for functors.
+
+
 We are now in a position to define the sets of pseudo-well-founded categories and functors.
 
 ¹HOLCONST
@@ -1690,15 +1891,6 @@ Its useful to keep the theorems for the specific witnesses, the empty categort a
 
 \ignore{
 =SML
-val CatCon_def = get_spec ¬CatCon®;
-val CatProp_def = get_spec ¬CatProp®;
-val FuncCon_def = get_spec ¬FuncCon®;
-val FuncProp_def = get_spec ¬FuncProp®;
-val P_closed_def = get_spec ¬P_closed®;
-val Q_closed_def = get_spec ¬Q_closed®;
-val P_closure_def = get_spec ¬P_closure®;
-val Q_closure_def = get_spec ¬Q_closure®;
-val PseudoHereditarilyPQ_def = get_spec ¬PseudoHereditarilyPQ®;
 val PWFcf_def = get_spec ¬PWFcf®;
 val PWFcategory_def = get_spec ¬PWFcategory®;
 val PWFfunctor_def = get_spec ¬PWFfunctor®;
@@ -1756,17 +1948,115 @@ pwf_cat_š‰u_thm = 	ô PWFcategory š‰u
 ¶_pwf_func_thm = 	ô ¶ a· PWFfunctor a
 =TEX
 
-\subsection{Object Theory}
+\subsection{Object Theory by Pseudo-Induction}
 
 Now we introduce a new theory in which the types of pseudo-well-founded categories and functors are defined, and whose theories are intended to be a suitable independent axiomatisation for a two-sorted foundation system for which these two types supply a model. 
 
 =SML
-open_theory "meta_cf";
-force_new_theory "cf";
-force_new_pc "cf";
+open_theory "metapi";
+force_new_theory "cfpi";
+force_new_pc "cfpi";
 new_type_defn(["CAT"], "CAT", [], ¶_pwf_cat_thm);
 new_type_defn(["FUNC"], "FUNC", [], ¶_pwf_func_thm);
 =TEX
+
+\subsection{Meta-Theory by (Co-)Induction}
+
+The one we want here is co-induction, but we also show elements of the treatment by induction.
+
+=SML
+open_theory "catfun";
+force_new_theory "metaci";
+new_parent "NFU";
+new_parent "fixp";
+set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
+=IGN
+open_theory "metaci";
+set_merge_pcs["hol1", "nfu", "'savedthm_cs_¶_proof"];
+=TEX
+
+We must first chose one of the kinds of representation which are supported by the theory `fixp' and convert our available functions to the chosen format.
+In this case a `content relation' will suffice.
+This is the relation between an object and those things of which it is an immediate constituent.
+In this case we take two of these, one giving the relation between a category and those categories of which it is the domain or codomain of a functor, the other that between a functor and those functors of whose domain or codomain the functor is a member.
+
+
+¹HOLCONST
+Ü ÛCatRelİ : NFU ­ NFU ­ BOOL
+÷üüüüüü
+Ü µc d· CatRel c d ¤ CatFuncProp d ± c  CatFuncCon d
+°
+
+¹HOLCONST
+Ü ÛFuncRelİ : NFU ­ NFU ­ BOOL
+÷üüüüüü
+Ü µf g· FuncRel f g ¤ FuncCatProp g ± f  FuncCatCon g
+°
+
+We may now use these two functions to obtain the least and greatest fixed points which are the respective inductive and co-inductively defined classes.
+
+First the inductive case:
+
+¹HOLCONST
+Ü ÛWFcfİ : NFU SET ¸ NFU SET
+÷üüüüüü
+Ü WFcf = (HeredRel CatRel, HeredRel FuncRel)
+°
+
+Then the co-inductive case:
+
+¹HOLCONST
+Ü ÛCWFcfİ : NFU SET ¸ NFU SET
+÷üüüüüü
+Ü CWFcf = (CoHeredRel CatRel, CoHeredRel FuncRel)
+°
+
+For the purpose of introducing new types we need this as two properties:
+
+¹HOLCONST
+Ü ÛCWFcategoryİ : NFU ­ BOOL
+÷üüüüüü
+Ü   µc· CWFcategory c = c  Fst CWFcf
+°
+
+¹HOLCONST
+Ü ÛCWFfunctorİ : NFU ­ BOOL
+÷üüüüüü
+Ü   µf· CWFfunctor f = f  Snd CWFcf
+°
+
+\ignore{
+=SML
+val CatRel_def = get_spec ¬CatRel®;
+val FuncRel_def = get_spec ¬FuncRel®;
+val CWFcf_def = get_spec ¬CWFcf®;
+val CWFcategory_def = get_spec ¬CWFcategory®;
+val CWFfunctor_def = get_spec ¬CWFfunctor®;
+
+set_goal([], ¬¶c· CWFcategory c®);
+a (¶_tac ¬š‰u® THEN rewrite_tac ([CWFcf_def, CWFcategory_def] @
+	map get_spec [¬CoHeredRel®, ¬CoHeredFun®, ¬Gfp®, ¬Rel2Fun®, ¬Fun2MonoFun®, ¬$OpenUnder®]));
+a (¶_tac ¬{š‰u}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (¶_tac ¬{}® THEN rewrite_tac [CatRel_def, CatFuncCon_def, CatCon_def, šèuê_ax]);
+val ¶_CWFcategory_thm = save_pop_thm "¶_CWFcategory_thm";
+
+=IGN
+set_goal([], ¬¶f· CWFfunctor f®);
+a (¶_tac ¬Op‰u(š‰u, š‰u)® THEN rewrite_tac ([CWFcf_def, CWFfunctor_def] @
+	map get_spec [¬CoHeredRel®, ¬CoHeredFun®, ¬Gfp®, ¬Rel2Fun®, ¬Fun2MonoFun®, ¬$OpenUnder®]));
+a (¶_tac ¬{š‰u; Op‰u(š‰u, š‰u)}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬{š‰u}® THEN rewrite_tac
+	[FuncRel_def, FuncCatCon_def, FuncCatProp_def, FuncCon_def, FuncProp_def, šèuê_ax]);
+a (strip_tac);
+(* *** Goal "1.1" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+
+val ¶_CWFcategory_thm = save_pop_thm "¶_CWFcategory_thm";
+=TEX
+}%ignore
+
 
 
 \ignore{
@@ -1809,13 +2099,25 @@ new_type_defn(["FUNC"], "FUNC", [], ¶_pwf_func_thm);
 {\let\Section\section
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{meta_cf.th}
+\include{catfun.th}
 }  %\let
 
 {\let\Section\section
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{cf.th}
+\include{metapi.th}
+}  %\let
+
+{\let\Section\section
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{cfpi.th}
+}  %\let
+
+{\let\Section\section
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{metaci.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]
@@ -1829,8 +2131,12 @@ open_theory "NFU";
 output_theory{out_file="NFU.th.doc", theory="NFU"};
 open_theory "PI";
 output_theory{out_file="PI.th.doc", theory="PI"};
-open_theory "meta_cf";
-output_theory{out_file="meta_cf.th.doc", theory="meta_cf"};
-open_theory "cf";
-output_theory{out_file="cf.th.doc", theory="cf"};
+open_theory "catfun";
+output_theory{out_file="catfun.th.doc", theory="catfun"};
+open_theory "metapi";
+output_theory{out_file="metapi.th.doc", theory="metapi"};
+open_theory "cfpi";
+output_theory{out_file="cfpi.th.doc", theory="cfpi"};
+open_theory "metaci";
+output_theory{out_file="metaci.th.doc", theory="metaci"};
 =IGN

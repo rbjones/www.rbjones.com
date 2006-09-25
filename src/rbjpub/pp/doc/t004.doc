@@ -1,5 +1,5 @@
 =IGN
-$Id: t004.doc,v 1.5 2006/09/11 10:11:46 rbj01 Exp $
+$Id: t004.doc,v 1.6 2006/09/25 20:00:47 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -14,12 +14,15 @@ $Id: t004.doc,v 1.5 2006/09/11 10:11:46 rbj01 Exp $
 \def\Z{\mathbb{Z}}
 \def\Q{\mathbb{Q}}
 
-\def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
+\def\Hide#1{\relax}
+\def\pindex#1{#1\index{#1}}
 
 \title{Membership Structures}
-\author{Roger Jones}
+\author{Roger Bishop Jones}
+\date{$ $Date: 2006/09/25 20:00:47 $ $}
 \makeindex
+\usepackage[pdftex]{hyperref}
 \begin{document}
 \vfill
 \maketitle
@@ -27,6 +30,9 @@ $Id: t004.doc,v 1.5 2006/09/11 10:11:46 rbj01 Exp $
 A queer way of doing set theory in HOL (together with some queer reasons for doing it that way).
 \end{abstract}
 \vfill
+\begin{centering}
+http://www.rbjones.com/rbjpub/pp/doc/t004.pdf
+\end{centering}
 \newpage
 \tableofcontents
 \newpage
@@ -48,6 +54,20 @@ A queer way of doing set theory in HOL (together with some queer reasons for doi
 %%%%
 \section{INTRODUCTION}
 
+\subsection{Indexing Tests}
+
+hello \index{hello}
+
+hellol2 \index{hello!level2}
+
+hellol3 \index{hello!level2!level3}
+
+bold \index{bold@\textbf{bold}}
+
+boldpp \index{bold|textbf}
+
+\subsection{Introduction Proper}
+
 This document explores a way of doing set theory in higher order logic.
 
 It is in fact rather more concerned with philosophy than with the brute technical development, and I don't really expect the formal development to get far enough to be valuable in itself.
@@ -56,10 +76,12 @@ The philosophy is concerned with set theory as a foundation for abstract semanti
 
 Create new theory ``membership''.
 =SML
+set_flag("pp_use_alias", true);
 open_theory "Ûrbjmiscİ";
 force_new_theory "Ûmembershipİ";
 new_parent "ordered_sets";
-set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
+new_parent "bin_rel";
+set_merge_pcs["hol1", "'ú", "'savedthm_cs_¶_proof"];
 open RbjTactics1;
 =TEX
 
@@ -79,8 +101,6 @@ To make a judgement about kinds of necessity one must of course judge necessity 
 A necessary proposition must however be true {\it under all conditions}.
 Any complete account of the truth conditions of the relevant language must of course tell us whenever a statement is unconditionally true.
 If any statement is judged necessary {\it de re} it must be that the denial of its being necessary {\it de re} is based upon an incomplete account of the truth conditions of the language.
-
-
 
 \section{BASIC PROPERTIES OF MEMBERSHIP RELATIONS}
 
@@ -231,20 +251,17 @@ declare_infix (310, "ò‰m");
 In order to define the notion of a ``first order property'' we need to mimic the satisfaction relation.
 Sentences define sets of interpretations, but formulae only do so in the context of an assignment to the free variables in the formula.
 The operators we define therefore operate over parameterised properties of interpretations.
-An assignment to free variables is modelled as a function from strings to elements in the domain of the relation.
+
+It proves desirable to make this theory polymorphic not only in the type of the sets involved, but also in the notion of variable (sometimes we may wish to work with assignments to terms).
+An assignment to free variables is modelled as a function from objects of type ”'v® (a type variable) to elements in the domain of the relation (here ”'s®).
 
 =SML
-declare_type_abbrev ("ÛVAİ", ["'a"], ”STRING ­ 'a®);
+declare_type_abbrev ("ÛVAİ", ["'s", "'v"], ”'v ­ 's®);
 =TEX
 
 ¹HOLLABPROD PPMSüüüüü
-Ü pms : 'a VA ­ 'a PMS
+Ü pms : ('s, 'v) VA ­ 's PMS
 °üüüüüüüüüüüüüü
-
-=IGN
-declare_type_abbrev ("ÛVAİ", ["'a"], ”STRING ­ 'a®);
-declare_type_abbrev ("ÛPPMSİ", ["'a"], ”'a VA ­ 'a PMS®);
-=TEX
 
 Various operators over properties of membership relations are now defined.
 
@@ -264,9 +281,9 @@ declare_infix (305, "‰p");
 =TEX
 
 ¹HOLCONST
-Ü $Û‰pİ: STRING ­ STRING ­ 'a PPMS
+Ü $Û‰pİ: 'v ­ 'v ­ ('s, 'v) PPMS
 ÷üüüüüü
-Ü µ s t:STRING· (s ‰p t) = MkPPMS (Ìva: 'a VA; (X, $‰r):'a MS·
+Ü µ s t:'v· (s ‰p t) = MkPPMS (Ìva: ('s, 'v) VA; (X, $‰r):'s MS·
 Ü	(va s) ‰r (va t))
 °
 
@@ -277,9 +294,9 @@ declare_infix (305, "=‰p");
 =TEX
 
 ¹HOLCONST
-Ü $Û=‰pİ: STRING ­ STRING ­ 'a PPMS
+Ü $Û=‰pİ: 'v ­ 'v ­ ('s, 'v) PPMS
 ÷üüüüüü
-Ü µ s t:STRING· s =‰p t = MkPPMS(Ì va:'a VA; (X, $‰r): 'a MS·
+Ü µ s t:'v· s =‰p t = MkPPMS(Ì va:('s, 'v) VA; (X, $‰r): 's MS·
 Ü	(va s) = (va t))
 °
 
@@ -290,7 +307,7 @@ declare_infix (302, "±‰p");
 =TEX
 
 ¹HOLCONST
-Ü $Û±‰pİ: 'a PPMS ­ 'a PPMS ­ 'a PPMS
+Ü $Û±‰pİ: ('s, 'v) PPMS ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü µ l r· l ±‰p r = MkPPMS(Ìva (X, $‰r)· (pms l va (X, $‰r)) ± (pms r va (X, $‰r)))
 °
@@ -298,7 +315,7 @@ declare_infix (302, "±‰p");
 Negation denotes a monadic operator.
 
 ¹HOLCONST
-Ü Û³‰pİ: 'a PPMS ­ 'a PPMS
+Ü Û³‰pİ: ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü µ f· ³‰p f = MkPPMS(Ìva (X, $‰r)· ³ (pms f va (X, $‰r)))
 °
@@ -307,7 +324,7 @@ The existential quantifier binds a variable and its value depends upon assigning
 The following function modifies a variable assignment.
 
 ¹HOLCONST
-Ü Ûassignİ:  'a ­ STRING ­ 'a VA ­ 'a VA
+Ü Ûassignİ:  's ­ 'v ­ ('s, 'v) VA ­ ('s, 'v) VA
 ÷üüüüüü
 Ü µ a s va t · assign a s va t = if t = s then a else va t
 °
@@ -315,7 +332,7 @@ The following function modifies a variable assignment.
 Finally the existential quantifier, which is parameterised by the name of the variable it binds and the value of the formula it quantifies over.
 
 ¹HOLCONST
-Ü Û¶‰pİ: STRING ­ 'a PPMS ­ 'a PPMS
+Ü Û¶‰pİ: 'v ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü µ s f· ¶‰p s f = MkPPMS(Ìva (X, $‰r)· ¶a· a  X ± pms f (assign a s va) (X, $‰r))
 °
@@ -336,7 +353,7 @@ val ¶‰p_def = get_spec ¬¶‰p®;
 Next we define the set of parameterised properties which can be constructed by these operators and then take their closures to eliminate the parameters.
 
 ¹HOLCONST
-Ü Ûfofİ: 'a PPMS ­ BOOL
+Ü Ûfofİ: ('s, 'v) PPMS ­ BOOL
 ÷üüüüüü
 Ü µppms· fof ppms ¤
 Ü	µpppms· (µs1 s2 p1 p2 ·
@@ -360,20 +377,23 @@ An awkwardness arises here in dealing with the possibility of empty structures.
 An interpretation of a first order language must be non-empty, but for present purposes it is convenient for the notion of a first order property of structures to take into account the possibility of empty structures.
 
 ¹HOLCONST
-Ü Ûfocİ: 'a PPMS ­ 'a PMS
+Ü Ûfocİ: ('s, 'v) PPMS ­ 's PMS
 ÷üüüüüü
 Ü µppms (X, $‰m)· foc ppms (X, $‰m) = µva· X = {} ² (µv· va v  X)
 Ü		´ pms ppms va (X, $‰m)
 °
 
-
 The concept of first order sentence, as here presented using semantic rather than syntactic entities, is in fact the property of being a property of membership structures which can be expressed by a sentence in the language of first order set theory.
 The name {\it fop} for {\it first order property} is therefore chosen rather than {\it fos} for {\it first order sentence}.
 
+This property is independent of the type of variables, but is defined in terms of entities which are polymorphic in the type of variables.
+For the definition to be conservative we have to parameterise it with a variable, which is ignored.
+In applications this definition can be instantiated to the application type to yield a property.
+
 ¹HOLCONST
-Ü Ûfopİ: 'a PMS ­ BOOL
+Ü Ûfopİ: 'v ­ 's PMS ­ BOOL
 ÷üüüüüü
-Ü µpmr· fop pmr ¤ ¶f· fof f ± pmr = foc f
+Ü µpmr v· fop v pmr ¤ ¶f: ('s, 'v) PPMS· fof f ± pmr = foc f
 °
 
 For convenience the following derived constructors are defined:
@@ -385,25 +405,25 @@ declare_infix (290, "¤‰p");
 =TEX
 
 ¹HOLCONST
-Ü $Û²‰pİ : 'a PPMS ­ 'a PPMS ­ 'a PPMS
+Ü $Û²‰pİ : ('s, 'v) PPMS ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü  µl r· l ²‰p r = ³‰p (³‰p l ±‰p ³‰p r)
 °
 
 ¹HOLCONST
-Ü $Û´‰pİ : 'a PPMS ­ 'a PPMS ­ 'a PPMS
+Ü $Û´‰pİ : ('s, 'v) PPMS ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü  µl r· l ´‰p r = r ²‰p ³‰p l
 °
 
 ¹HOLCONST
-Ü $Û¤‰pİ : 'a PPMS ­ 'a PPMS ­ 'a PPMS
+Ü $Û¤‰pİ : ('s, 'v) PPMS ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü  µl r· l ¤‰p r = (l ´‰p r) ±‰p (r ´‰p l)
 °
 
 ¹HOLCONST
-Ü Ûµ‰pİ: STRING ­ 'a PPMS ­ 'a PPMS
+Ü Ûµ‰pİ: 'v ­ ('s, 'v) PPMS ­ ('s, 'v) PPMS
 ÷üüüüüü
 Ü µ s p · µ‰p s p = ³‰p (¶‰p s (³‰p p))
 °
@@ -428,7 +448,7 @@ val foc_thm = save_pop_thm "foc_thm";
 =TEX
 
 =SML
-set_goal([], ¬µs1 s2: STRING ·
+set_goal([], ¬µs1 s2: 'v ·
 Ü	  fof (s1 =‰p s2)
 Ü	± fof (s1 ‰p s2)®);
 a (REPEAT strip_tac THEN TRY (rewrite_tac [fof_def]
@@ -438,7 +458,7 @@ a (REPEAT strip_tac THEN TRY (rewrite_tac [fof_def]
 val fof_base_clauses = save_pop_thm "fof_base_clauses";
 =TEX
 =SML
-set_goal([], ¬µs s1; p1 p2: 'a PPMS ·
+set_goal([], ¬µs s1; p1 p2: ('s, 'v) PPMS ·
 Ü	  (fof p1 ´ fof (³‰p p1)
 Ü		± fof (¶‰p s p1)
 Ü		± fof (µ‰p s p1))
@@ -454,12 +474,12 @@ a (REPEAT strip_tac THEN TRY (rewrite_tac
 (* *** Goal "1" *** *)
 a (REPEAT (all_asm_fc_tac[]));
 (* *** Goal "2" *** *)
-a (list_spec_nth_asm_tac 2 [¬s®, ¬""®, ¬p1®, ¬p1®]);
+a (list_spec_nth_asm_tac 2 [¬s®, ¬s®, ¬p1®, ¬p1®]);
 (* *** Goal "3" *** *)
 a (lemma_tac ¬pppms (³‰p p1)® 
-	THEN1 list_spec_nth_asm_tac 2 [¬s®, ¬""®, ¬p1®, ¬p1®]);
+	THEN1 list_spec_nth_asm_tac 2 [¬s®, ¬s®, ¬p1®, ¬p1®]);
 a (lemma_tac ¬pppms (¶‰p s (³‰p p1))® 
-	THEN1 list_spec_nth_asm_tac 3 [¬s®, ¬""®, ¬³‰p p1®, ¬p1®]);
+	THEN1 list_spec_nth_asm_tac 3 [¬s®, ¬s®, ¬³‰p p1®, ¬p1®]);
 a (REPEAT (all_asm_fc_tac[]));
 (* *** Goal "4" *** *)
 a (REPEAT (all_asm_fc_tac[]));
@@ -474,22 +494,22 @@ a (lemma_tac ¬pppms (³‰p p1) ± pppms (³‰p p2)®
 	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
 a (lemma_tac ¬pppms (³‰p (³‰p p1))®
 	THEN1 (REPEAT (all_asm_fc_tac[])));
-a (list_spec_nth_asm_tac 6 [¬""®, ¬""®, ¬³‰p p2®, ¬³‰p (³‰p p1)®]);
-a (list_spec_nth_asm_tac 11 [¬""®, ¬""®, ¬(³‰p p2) ±‰p (³‰p (³‰p p1))®, ¬³‰p p2®]);
+a (list_spec_nth_asm_tac 6 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p p2®, ¬³‰p (³‰p p1)®]);
+a (list_spec_nth_asm_tac 11 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬(³‰p p2) ±‰p (³‰p (³‰p p1))®, ¬³‰p p2®]);
 (* *** Goal "7" *** *)
 a (lemma_tac ¬pppms (³‰p p1) ± pppms (³‰p p2)®
 	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
 a (lemma_tac ¬pppms (³‰p (³‰p p1)) ± pppms (³‰p (³‰p p2))®
 	THEN1 (strip_tac THEN REPEAT (all_asm_fc_tac[])));
 a (lemma_tac ¬pppms (³‰p p2 ±‰p ³‰p (³‰p p1))® 
-	THEN1 list_spec_nth_asm_tac 7 [¬""®, ¬""®, ¬³‰p p2®, ¬³‰p (³‰p p1)®]);
+	THEN1 list_spec_nth_asm_tac 7 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p p2®, ¬³‰p (³‰p p1)®]);
 a (lemma_tac ¬pppms (³‰p p1 ±‰p ³‰p (³‰p p2))® 
-	THEN1 list_spec_nth_asm_tac 8 [¬""®, ¬""®, ¬³‰p p1®, ¬³‰p (³‰p p2)®]);
+	THEN1 list_spec_nth_asm_tac 8 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p p1®, ¬³‰p (³‰p p2)®]);
 a (lemma_tac ¬pppms (³‰p (³‰p p2 ±‰p ³‰p (³‰p p1)))® 
-	THEN1 list_spec_nth_asm_tac 9 [¬""®, ¬""®, ¬³‰p p2 ±‰p ³‰p (³‰p p1)®, ¬³‰p p2®]);
+	THEN1 list_spec_nth_asm_tac 9 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p p2 ±‰p ³‰p (³‰p p1)®, ¬³‰p p2®]);
 a (lemma_tac ¬pppms (³‰p (³‰p p1 ±‰p ³‰p (³‰p p2)))® 
-	THEN1 list_spec_nth_asm_tac 10 [¬""®, ¬""®, ¬³‰p p1 ±‰p ³‰p (³‰p p2)®, ¬³‰p p2®]);
-a (list_spec_nth_asm_tac 11 [¬""®, ¬""®, ¬³‰p (³‰p p2 ±‰p ³‰p (³‰p p1))®,
+	THEN1 list_spec_nth_asm_tac 10 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p p1 ±‰p ³‰p (³‰p p2)®, ¬³‰p p2®]);
+a (list_spec_nth_asm_tac 11 [¬Åx:'v·T®, ¬Åx:'v·T®, ¬³‰p (³‰p p2 ±‰p ³‰p (³‰p p1))®,
 	¬³‰p (³‰p p1 ±‰p ³‰p (³‰p p2))®]);
 val fof_step_clauses = save_pop_thm "fof_step_clauses";
 =TEX
@@ -508,7 +528,7 @@ val fof_extensionality_lemma1b = pop_thm ();
 =TEX
 
 =SML
-set_goal ([], ¬fop (foc(µ‰p "x" (µ‰p "y" ("x" =‰p "y" ¤‰p µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y")))))®);
+set_goal ([], ¬fop "" (foc(µ‰p "x" (µ‰p "y" ("x" =‰p "y" ¤‰p µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y")))))®);
 a (rewrite_tac [fop_def, foc_def]);
 a (¶_tac ¬(µ‰p "x" (µ‰p "y" ("x" =‰p "y" ¤‰p µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y"))))®
 	THEN rewrite_tac [fof_extensionality_lemma1]);
@@ -516,7 +536,7 @@ val fof_extensionality_lemma2 = pop_thm ();
 =TEX
 
 =SML
-set_goal ([], ¬fop (foc(µ‰p "x" (µ‰p "y" (µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y") ´‰p "x" =‰p "y"))))®);
+set_goal ([], ¬fop "" (foc(µ‰p "x" (µ‰p "y" (µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y") ´‰p "x" =‰p "y"))))®);
 a (rewrite_tac [fop_def, foc_def]);
 a (¶_tac ¬µ‰p "x" (µ‰p "y" ( µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y") ´‰p "x" =‰p "y"))®
 	THEN rewrite_tac [fof_extensionality_lemma1b]);
@@ -524,7 +544,7 @@ val fof_extensionality_lemma2b = pop_thm ();
 =TEX
 
 =SML
-set_goal([], ¬fop extensional®);
+set_goal([], ¬fop "" extensional®);
 a (rewrite_tac [fop_def]);
 a (¶_tac ¬µ‰p "x" (µ‰p "y" ( µ‰p "z" ("z" ‰p "x" ¤‰p "z" ‰p "y") ´‰p "x" =‰p "y"))®
 	THEN rewrite_tac [fof_extensionality_lemma1b]);
@@ -552,6 +572,347 @@ val fop_extensional_thm = save_pop_thm "fop_extensional_thm";
 =TEX
 
 }%ignore
+
+\subsection{Stratified Properties}
+
+Some set theories, notably Quine's NF and NFU, are defined using \pindex{stratified\ comprehension} rather than the more usual {\it separation}.
+Stratification is a syntactic constraint on the formulae of set theory which can be used to define a set.
+This limited class of formulae defines a subset of the first order properties of membership structures, which we will call stratified first order properties.
+
+The {\it semantics} of formulae is unaffected by this constraint, so in defining a stratified property exactly the same constuctors can be used as for non-stratified formulae.
+However, when two properties are combined, there must be a check imposed to establish that the combined property is stratified.
+This only happens in conjunction, so only one check need be specified.
+The check is that there is a type assignment to the free variables of the formula, and this is best performed using a type assignment to the formulae to be combined.
+The type assignments are therefore produced intially for the atomic formulae, and then elaborated by each syntactic construction, with a possibility of failure on conjunction.
+
+\subsubsection{Type Assignments v1}
+
+At present we have two different representations of type assignments.
+
+A type assignment is an assignment of natural numbers to the free variables such that the operands of an equation have the same type and the left operand of a membership has a type one less than that on the right.
+Since for any correct type assignment another can be obtained by adding any natural number to all the types, the absolute values have no significance, only the relative values.
+We therefore represent a type assignment by a partial function from ordered pairs of variable names to integers, representing the partial function as a set of ordered pair of which the first is a pair of names and the second an integer.
+
+The well-formedness conditions for a type assignment are as follows:
+
+\begin{itemize}
+\item the relation must be many one
+\item the relation must have a kind of antisymmetry (change of order changes sign)
+\item the relation must have a kind of transitivity (the type differences should add up)
+\end{itemize}
+
+=SML
+new_parent "ú";
+declare_type_abbrev("TA", [], ”(('v ¸ 'v) ¸ ú) ğ®);
+=TEX
+
+¹HOLCONST
+Ü ÛTaManyOneİ: TA ­ BOOL
+÷üüüüüü
+Ü µ ta:TA· TaManyOne ta ¤
+Ü	(µx y:'v; v w:ú· ((x,y), v)  ta ± ((x,y), w)  ta ´ v = w)
+°
+
+¹HOLCONST
+Ü ÛTaAntiSymİ: TA ­ BOOL
+÷üüüüüü
+Ü µ ta:TA· TaAntiSym ta ¤
+Ü	(µx y:'v; z:ú· ((x,y), z)  ta ¤ ((y,x), ~ z)  ta)
+°
+
+¹HOLCONST
+Ü ÛTaTransİ: TA ­ BOOL
+÷üüüüüü
+Ü µ ta:TA· TaTrans ta ¤
+Ü	(µv1 v2 v3:'v; t1 t2:ú·
+Ü		((v1,v2), t1)  ta ± ((v2,v3), t2)  ta
+Ü		´ ((v1,v3), t1 + t2)  ta)
+°
+
+¹HOLCONST
+Ü ÛWfTaİ: TA ­ BOOL
+÷üüüüüü
+Ü µ ta:TA· WfTa ta ¤
+Ü	TaManyOne ta
+Ü  ±	TaAntiSym ta
+Ü  ±	TaTrans ta
+°
+
+This of course, does not state that the type assignment is correct, just that it is a type assignment.
+
+Type assignments may be combined as followe:
+
+=SML
+declare_infix (290, "±‰ta");
+=TEX
+
+¹HOLCONST
+Ü $Û±‰taİ: TA ­ TA ­ TA
+÷üüüüüü
+Ü µ a b· a ±‰ta b = ¥ {ta | WfTa ta ± a € ta ± b € ta}
+°
+
+Though defined as a total function, there may be no well-formed type assignment which combines two well-formed type assignments.
+In that case the result will be the intersection of the empty set of sets, which is the {\it Universe} over the relevant type. and which is not a well formed type assignment.
+
+We would like to demonstrate that the above definition does yield a correct type assignment where one exists (it obviously does give a minimal one in that case), for which purpose some additional definitions will be helpful.
+
+We define the concepts of the domain of a type assignment and of the domain restriction of a type assignment for use in the proof.
+
+¹HOLCONST
+Ü ÛDomTaİ: TA ­ 'v SET
+÷üüüüüü
+Ü µ ta· DomTa ta = {x | ¶y z· ((x,y),z)  ta ² ((y,x),z)  ta}
+°
+
+=SML
+declare_infix (300, "ò‰ta");
+=TEX
+
+¹HOLCONST
+Ü $Ûò‰taİ: 'v SET ­ TA ­ TA
+÷üüüüüü
+Ü µta ss· ss ò‰ta ta = {((x,y),z) | ((x,y),z)  ta ± {x; y} € DomTa ta}
+°
+
+\ignore{
+=SML
+set_goal([], ¬µta ss· WfTa ta ´ WfTa (ss ò‰ta ta)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¬WfTa®, ¬$ò‰ta®, ¬TaManyOne®,
+		¬TaAntiSym®, ¬TaTrans®, ¬DomTa®])
+	THEN (asm_prove_tac[]));
+val WfTa_ò_thm = save_pop_thm "WfTa_ò_thm";
+
+=IGN
+
+set_goal([], ¬µa b· WfTa a ± WfTa b ± (¶ta· WfTa ta ± a À b € ta) ´ WfTa (a ±‰ta b)®);
+a (rewrite_tac [get_spec¬$±‰ta®] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac [get_spec ¬WfTa®]
+	THEN once_rewrite_tac [get_spec ¬TaManyOne®]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¬WfTa (((DomTa a) À (DomTa b)) ò‰ta ta)®
+	THEN1 ALL_FC_T rewrite_tac [WfTa_ò_thm]);
+a (lemma_tac ¬µ ss· WfTa (ss ò‰ta (DomTa a À DomTa b) ò‰ta ta)®
+	THEN1 all_fc_tac [WfTa_ò_thm]);
+a (spec_nth_asm_tac 3 ¬((DomTa a) À (DomTa b)) ò‰ta ta®);
+(* *** Goal "1.1" *** *)
+
+a (REPEAT_N 2 (all_asm_fc_tac[]));
+
+	THEN REPEAT_N 2 (all_asm_fc_tac[]))
+	THEN_TRY asm_prove_tac[]
+);
+
+	THEN PC_T1 "ú_lin_arith" asm_prove_tac[]);
+val WfTa_±_thm = save_pop_thm "WfTa_±_thm";
+=TEX
+}%ignore
+
+=GFT
+
+=TEX
+
+We now define the type assignments for equality and membership assertions and the effect of existential quantification.
+
+=SML
+declare_infix (290, "=‰ta");
+=TEX
+
+¹HOLCONST
+Ü $Û=‰taİ: 'v ­ 'v ­ TA
+÷üüüüüü
+Ü µ a b· a =‰ta b = {((a,a),îú 0); ((b,b),îú 0); ((a,b),îú 0); ((b,a),îú 0)}
+°
+
+\ignore{
+=SML
+set_goal([], ¬µa b· WfTa (a =‰ta b)®);
+a (rewrite_tac (map get_spec [¬WfTa®, ¬$=‰ta®, ¬TaManyOne®, ¬TaAntiSym®, ¬TaTrans®])
+	THEN PC_T1 "ú_lin_arith" asm_prove_tac[]);
+val WfTa_eq_thm = save_pop_thm "WfTa_eq_thm";
+=TEX
+}%ignore
+
+=GFT
+WfTa_eq_thm = ô µ a b· WfTa (a =‰ta b)
+=TEX
+
+=SML
+declare_infix (290, "‰ta");
+=TEX
+
+¹HOLCONST
+Ü $Û‰taİ: 'v ­ 'v ­ TA
+÷üüüüüü
+Ü µ a b· a ‰ta b = {((a,a),îú 0); ((b,b),îú 0); ((a,b),îú 1); ((b,a), ~(îú 1))}
+°
+
+\ignore{
+=SML
+set_goal([], ¬µa b· ³ a = b ´ WfTa (a ‰ta b)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¬WfTa®, ¬$‰ta®, ¬TaManyOne®, ¬TaAntiSym®, ¬TaTrans®])
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]
+	THEN TRY (PC_T1 "ú_lin_arith" asm_prove_tac[]));
+val WfTa__thm = save_pop_thm "WfTa__thm";
+=TEX
+}%ignore
+
+=GFT
+WfTa__thm = ô µ a b· ³ a = b ´ WfTa (a ‰ta b)
+=TEX
+
+¹HOLCONST
+Ü $Û¶‰taİ: 'v ­ TA ­ TA
+÷üüüüüü
+Ü µ a ta· ¶‰ta a ta = {((l,r),t) | ((l,r),t)  ta ± ³ (l = a ² r = a)}
+°
+\ignore{
+=SML
+set_goal([], ¬µa ta· WfTa ta ´ WfTa (¶‰ta a ta)®);
+a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬WfTa®, ¬¶‰ta®, ¬TaManyOne®, ¬TaAntiSym®, ¬TaTrans®])
+	THEN prove_tac[]);
+val WfTa_¶_thm = save_pop_thm "WfTa_¶_thm";
+=TEX
+}%ignore
+
+=GFT
+WfTa_¶_thm = ô µ a ta· WfTa ta ´ WfTa (¶‰ta a ta)
+=TEX
+
+Negation has no effect on type assignments.
+We can now proceed to define the stratified properties.
+
+For this purpose we need to upgrade our property of `parameterised membership systems' to a property of `typed parameterised membership systems'.
+Lets just use an ordered pair for one of these.
+
+=SML
+declare_type_abbrev("TPPMS", ["'s", "'v"], ”('s, 'v) PPMS ¸ TA®);
+=TEX
+
+¹HOLCONST
+Ü Ûsfofİ: ('s, 'v)TPPMS ­ BOOL
+÷üüüüüü
+Ü µtppms· sfof tppms ¤
+Ü	µptppms· (µs1 s2 p1 p2 ta1 ta2 ta3·
+Ü		ptppms (s1 ‰p s2, s1 ‰ta s2)
+Ü		± ptppms (s1 =‰p s2, s1 =‰ta s2)
+Ü		± 
+Ü		(ptppms (p1, ta1) ± ptppms (p2, ta2)
+Ü		´ ptppms (³‰p p1, ta1)
+Ü		± ptppms (¶‰p s1 p1, ¶‰ta s1 ta1)
+Ü		± (ta3 = ta1 ±‰ta ta2 ± WfTa ta3 ´ ptppms (p1 ±‰p p2, ta3))
+Ü		))
+Ü	´ ptppms tppms
+°
+
+\subsubsection{Type Assignment v2}
+
+This version differs from the above in the respects:
+
+\begin{itemize}
+\item A type assignment is represented as a set of lists of sets of variable names
+
+\item The specification for a stratified property uses a single type assignment given ab initio rather than building up a type assignement as the property is built from the primitive relations.
+
+\item The type assignment does not take account of bound variables, and this means that some terms in which the same variable is used more than once in quantifiers there may not be a type assignment adequate for these purpose.
+In these cases it will be necessary to rename some bound variables before a type assignment becomes available.
+Because the type assignment comes top down it must contain information about the types of bound variables, which was not the case in the previous version, and since we have not made provision for scoping such information a proper description of the types may not be possible where the same name is bound more than once.
+
+\end{itemize}
+
+
+=SML
+declare_type_abbrev("TA", ["'v"], ”(('v SET)LIST)SET®);
+=TEX
+
+In the type assignment each list is a list of sets of type-related variable names.
+The members of each set all have the same type, the members of successive sets have successive types.
+Separate lists are each independent of each other.
+For example the formula ¬x  y ± b  y ± v = w ± w  u® would have the type assignment ¬{[{x;b};{y}]; [{v;w};{u}]}®.
+
+The well-formedness conditions are simply that no name occurs more than once, i.e. that the sets in each list are pairwise disjoint and the unions of the sets in each list are pairwise disjoint.
+To test an atomic formula for correctness relative to a type assignment, restrict the assignment to the names in the formula, then you should have, for ¬a  b®, ¬{[{a};{b}]}® and for a = b, ¬{[{a;b}]}® (bearing in mind that order in list displays is signficant but in set displays is not.
+
+To check a formula you need only check each atom sentence which occurs in it.
+
+Now we formalise this.
+
+¹HOLCONST
+Ü ÛListUnionİ: 'a SET LIST ­ 'a SET
+÷üüüüüü
+Ü µ ls· ListUnion ls = Fold $À ls {}
+°
+
+¹HOLCONST
+Ü ÛDisjointİ: 'a SET LIST ­ BOOL
+÷üüüüüü
+Ü (Disjoint [] ¤ T)
+Ü  ± µ h t· Disjoint (Cons h t) ¤ ((h ¡ (ListUnion t) = {}) ± Disjoint t)
+°
+
+¹HOLCONST
+Ü ÛSetMapİ: ('a ­ 'b) ­ 'a SET ­ 'b SET
+÷üüüüüü
+Ü µ f s· SetMap f s = {x | ¶y· y  s ± x = f y}
+°
+
+¹HOLCONST
+Ü ÛTaDomİ: 'v TA ­ 'v SET
+÷üüüüüü
+Ü µ ta· TaDom ta = Ş (SetMap ListUnion ta)
+°
+
+=SML
+declare_infix (310, "ò‰ta");
+=TEX
+
+¹HOLCONST
+Ü $Ûò‰taİ: 'v SET ­ 'v TA ­ 'v TA
+÷üüüüüü
+Ü µ vs ta· vs ò‰ta ta = SetMap (Ìl· Map ($¡ vs) l) ta
+°
+
+We do not need functions to construct these type assignments, we need only to be able to check properties against them.
+In fact we only need to check the atomic propositions.
+
+¹HOLCONST
+Ü ÛCheck_eqİ: 'v TA ­ 'v ­ 'v ­ BOOL
+÷üüüüüü
+Ü µ ta a b· Check_eq ta a b ¤ {a; b} ò‰ta ta = {[{a;b}]}
+°
+
+¹HOLCONST
+Ü ÛCheck_İ: 'v TA ­ 'v ­ 'v ­ BOOL
+÷üüüüüü
+Ü µ ta a b· Check_ ta a b ¤ {a; b} ò‰ta ta = {[{a;b}]}
+°
+
+=SML
+declare_type_abbrev("UPPMS", ["'s", "'v"], ”('s, 'v) PPMS ¸ TA®);
+=TEX
+
+¹HOLCONST
+Ü Ûwtfofİ: ('s, 'v)UPPMS ­ BOOL
+÷üüüüüü
+Ü µtppms· wffof ppms ta ¤
+Ü	µptppms· (µs1 s2 p1 p2 ta1 ta2 ta3·
+Ü		ptppms (s1 ‰p s2, s1 ‰ta s2)
+Ü		± ptppms (s1 =‰p s2, s1 =‰ta s2)
+Ü		± 
+Ü		(ptppms (p1, ta1) ± ptppms (p2, ta2)
+Ü		´ ptppms (³‰p p1, ta1)
+Ü		± ptppms (¶‰p s1 p1, ¶‰ta s1 ta1)
+Ü		± (ta3 = ta1 ±‰ta ta2 ± WfTa ta3 ´ ptppms (p1 ±‰p p2, ta3))
+Ü		))
+Ü	´ ptppms tppms
+°
+
+
 
 %%%%
 %%%%
