@@ -1,5 +1,5 @@
 =IGN
-$Id: t019.doc,v 1.1 2006/09/25 20:00:47 rbj01 Exp $
+$Id: t019.doc,v 1.2 2006/10/02 12:36:31 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -22,7 +22,7 @@ $Id: t019.doc,v 1.1 2006/09/25 20:00:47 rbj01 Exp $
 \makeindex
 \title{NFU and NF in ProofPower-HOL}
 \makeindex
-\date{$ $Date: 2006/09/25 20:00:47 $ $}
+\date{$ $Date: 2006/10/02 12:36:31 $ $}
 \author{Roger Bishop Jones\\ rbj01@rbjones.com}
 
 \usepackage[pdftex]{hyperref}
@@ -31,13 +31,14 @@ $Id: t019.doc,v 1.1 2006/09/25 20:00:47 rbj01 Exp $
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-Two formalisations in {\Product-HOL} are undertaken of both NFU and NF.
-One follows Quine's original formulation by expressing stratified comprehension as a single higher-order axiom.
-The other is a finite axiomatisation.
+Three formalisations in {\Product-HOL} are undertaken of NFU and NF.
+One is based on Hailperin's axioms.
+Another tries to follow Quine's original formulation by expressing stratified comprehension as a single higher-order axiom (axiom schemes are not supported by {\Product}.
+The last is a finite axiomatisation based on one originating with Holmes.
 \end{abstract}
 \vfill
 \begin{centering}
-Reference: rbjt0019; $ $Revision: 1.1 $ $
+Reference: rbjt0019; $ $Revision: 1.2 $ $
 \end{centering}
 \thispagestyle{empty}
 \end{titlepage}
@@ -84,6 +85,206 @@ This is to be similar in character to the Hailperin axioms, but substantially ba
 In both cases two theories will be presented, the first being NFU and the second NF, defined as a child of NFU by adding a further axiom.
 The names of the four theories will be {\it nfu\_s}, {\it nf\_s}, {\it nfu\_f}, {\it nf\_f}, in which the `s' suggests a schema of comprehension and the `f' that the axiomatisation is finite. 
 
+\section{NF FOLLOWING HAILPERIN}
+\subsection{Technical Prelude}
+
+First of all, we must give the the ML commands to  introduce the new theory ``NF'' as a child of the theory ``rbjmisc''.
+
+=SML
+open_theory "rbjmisc";
+force_new_theory "nfh";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+\ignore{
+=SML
+set_flag ("pp_use_alias", true);
+=IGN
+open_theory "nfh";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+}%ignore
+
+In the context in which the development is taking place there is already a set theory, and we will make occasional use of it.
+The normal set theoretic symbols are interpreted in this prior set theory, and the new set theory (NF) which we are introducing will therefore use symbols systematically subscripted with a small roman `n'.
+
+Here is the new type for NF:
+
+=SML
+new_type ("NF", 0);
+=TEX
+
+This axioms use membership, the unit set and ordered pair constructors.
+I will take the ordinary pair constructor as primitive and define unit set and ordered pair in terms of them before introducing the axiom.
+
+=SML
+declare_infix (310, "çân");
+new_const("çân", îNF ≠ NF ≠ BOOLÆ);
+new_const("pairân", îNF ∏ NF ≠ NFÆ);
+declare_prefix (320, "…");
+=TEX
+
+πHOLCONST
+‹ $€…› : NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu∑ … u = pairân (u, u)
+∞
+
+πHOLCONST
+‹ €wkp› : NF ∏ NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu v∑ wkp(u, v) = pairân(… u, pairân(u, v))
+∞
+
+πHOLCONST
+‹ €Kt› : NF ∏ NF ∏ NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu v w∑ Kt(u, v, w) = wkp(… … u, wkp(v, w)) 
+∞
+
+\subsection{The Hailperin Axioms}
+
+=SML
+val Extân = new_axiom(["Extân"],
+
+	¨µu v∑ (µx∑ x çân u § x çân v) ¥ u = vÆ);
+
+val pairËnÍ = new_axiom(["pairân"],	
+
+	¨µu v∑ (µx∑ x çân pairân(u,v) § x = u ≤ x = v)Æ);
+
+val P1 = new_axiom(["P1"],
+
+	¨µu v∑ ∂ y∑ µ x∑ x çân y § ≥ x çân u ≤ ≥ x çân vÆ);
+
+val P2 = new_axiom(["P2"],
+
+	¨µu∑∂v∑µx y∑ wkp(… x, … y) çân v § wkp(x, y) çân uÆ);
+
+val P3 = new_axiom(["P3"],
+
+	¨µu∑∂v∑µx y z∑ Kt(x, y, z) çân v § wkp(x, y) çân uÆ);
+
+val P4 = new_axiom(["P4"],
+
+	¨µu∑∂v∑µx y z∑ Kt(x, z, y) çân v § wkp(x, y) çân uÆ);
+
+val P5 = new_axiom(["P5"],
+
+	¨µu∑∂v∑µx y∑ wkp(x, y) çân v § x çân uÆ);
+
+val P6 = new_axiom(["P6"],
+
+	¨µu∑∂v∑µx∑ x çân v § µz∑ wkp(z, … x) çân uÆ);
+
+val P7 = new_axiom(["P7"],
+
+	¨µu∑∂v∑µx y∑ wkp(y, x) çân u § wkp(x, y) çân vÆ);
+
+val P8 = new_axiom(["P8"],
+
+	¨∂v∑µx∑ x çân v § ∂y∑ x = … yÆ);
+
+val P9 = new_axiom(["P9"],
+
+	¨∂v∑µx y∑ wkp(… x, y) çân v § x çân yÆ);
+=TEX
+
+The following axiom says that for every two sets $u$ and $v$ there exists a set $y$ of those elements $x$ which appear in neither $u$ nor $v$.
+This is of course the complement of the union of the two sets, and the axiom allows us to define complement and union and various other operations over sets.
+
+\subsection{Definitions}
+
+Many of the following definitions depend upon a consistency proof, the details of which are not presented.
+
+Axiom P1 allows the definition of complementation and intersection, these two operators are the set theoretic counterpart to negation and conjunction which provide a universal set of operators for the propositional calculus.
+Axiom P1 therefore leads by itself to the definition of any set operations which correspond to propositional truth functions.
+
+\subsubsection{Complement}
+
+=SML
+declare_postfix (320, "õc");
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨∂ $õc:NF ≠ NF∑ µu x∑ x çân u õc § ≥ x çân uÆ);
+a (∂_tac ¨Ãx∑ ≈y∑ µz∑ z çân y § ≥ z çân xÆ THEN rewrite_tac[]
+	THEN REPEAT_N 2 strip_tac);
+a (≈_tac ¨≈ y∑ µ z∑ z çân y = (≥ z çân u)Æ);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¨uÆ, ¨uÆ] P1));
+a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€õc› : NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu x∑ x çân u õc § ≥ x çân u
+∞
+
+\subsubsection{Intersection}
+
+=SML
+declare_infix(310, "°ân");
+=TEX
+
+\ignore{
+=SML
+val õcân_def = get_spec ¨$õcÆ;
+
+set_goal([], ¨∂$°ân:NF ≠ NF ≠ NF∑ µu v x∑ x çân u °ân v § x çân u ± x çân vÆ);
+a (∂_tac ¨Ãu v∑ ≈w∑ µx∑ x çân w § x çân u ± x çân vÆ
+	THEN rewrite_tac[]
+	THEN REPEAT_N 3 strip_tac);
+a (≈_tac ¨≈w∑ µx∑ x çân w § x çân u ± x çân vÆ);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¨uÆ, ¨vÆ] P1));
+a (∂_tac ¨y õcÆ THEN asm_rewrite_tac[õcân_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€°ân› : NF ≠ NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu v x∑ x çân (u °ân v) § x çân u ± x çân v
+∞
+
+\ignore{
+=SML
+val °ân_def = get_spec ¨$°ânÆ; 
+=TEX
+}%ignore
+
+
+\subsubsection{Union}
+
+=SML
+declare_infix(305, "¿ân");
+=TEX
+
+πHOLCONST
+‹ $€¿ân› : NF ≠ NF ≠ NF
+˜¸¸¸¸¸¸
+‹ µu v∑ u ¿ân v = ((u õc) °ân (v õc)) õc
+∞
+
+\ignore{
+ πHOLCONST
+‹ $€õc› : NF ≠ NF
+˜¸¸¸¸¸¸
+‹ 
+ ∞
+} %ignore
+
 \section{NFU USING STRATIFIED COMPREHENSION}
 
 \subsection{Introducing the Theory}
@@ -94,6 +295,9 @@ The theory containing this prior material is called `membership', and `nfu\_s' i
 =SML
 open_theory "membership";
 force_new_theory "nfus";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=IGN
+open_theory "nfus";
 set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
 =TEX
 
@@ -108,9 +312,16 @@ We already have a polymorphic equality which will work over this type, but we wi
 The usual membership symbol is already in use for the typed membership in {\Product-HOL} so we use that symbol subscripted with ``s'' for membership in NF and introduce an alias to allow the subscript to be omitted where no ambiguity results.
 
 =SML
-declare_infix (310, "eâs");
+declare_infix (310, "çâs");
 new_const("çâs", înfs ≠ nfs ≠ BOOLÆ);
 declare_alias("ç", ¨$çâsÆ);
+=TEX
+
+\subsection{Weak Extensionality}
+
+=SML
+val WkExt_ax = new_axiom (["WkExt"],
+	¨µx y:nfs∑ (∂z∑ z ç x ≤ z ç y) ¥ (x = y § (µz∑ z ç x § z ç y))Æ);
 =TEX
 
 \subsection{Notation for Existence and Comprehension}
@@ -123,7 +334,7 @@ First a notation for asserting the existence of a set in NF(U).
 πHOLCONST
 ‹  €∂âs›: nfs SET ≠ BOOL
 ˜¸¸¸¸¸¸¸¸
-‹  µs∑ ∂âs s § ∂a:nfs∑ µx:nfs∑ x ç s § x ç a 
+‹  µs∑ ∂âs s § ∂a:nfs∑ µx:nfs∑ x ç s § x çâs a 
 ∞
 
 Thus
@@ -157,7 +368,7 @@ save_cs_∂_thm (pop_thm());
 πHOLCONST
 ‹  €å›: nfs SET ≠ nfs
 ˜¸¸¸¸¸¸¸¸
-‹  µs:nfs SET∑ ∂âs s ¥ µe∑ e ç å s § e ç s 
+‹  µs:nfs SET∑ ∂âs s ¥ µe∑ e çâs å s § e ç s 
 ∞
 
 Thus applying ¨åÆ to an object of type înfs SETÆ will yield a value of type înfsÆ which will have the same extension if such a set exists.
@@ -183,21 +394,53 @@ To express this in a single higher order axiom requires one further subterfuge.
 A variable valuation may be represented as a function from variable names to sets.
 We quantify over such valuations.
 
-
-
-
-
-
-
 =SML
-
-
+val StratComp_ax = new_axiom(["StratComp"],
+	¨µva; p:(nfs≠(nfs≠BOOL))≠((CHAR)LIST≠nfs)≠(nfs)SET∑
+	Stratified p ¥ ∂âs (p $çâs va)Æ);
 =TEX
 
-\section{NF USING STRATIFIED COMPREHENSION}
+I need to do some checks on this since the formulation was not straightforward and there is a good chance of errors.
 
-At this point I don't have a clear motivation for full extensionality.
-It would make proof automation more straightforward and effective, but I don't know whether that is enough to persuade me to do much here.
+One way of checking is to see that it gives the results one expects, but that doesn't ensure that it is not too strong.
+
+The following conjecture is worth checking.
+(and so far doesn't look at all plausible!)
+=SML
+new_conjecture(["Strat"], 
+	¨(µva p∑	Stratified p ¥ ∂âs (p $çâs va))
+	§
+	StratCompClosed "" (Universe, $çâs)Æ);
+=TEX
+
+\ignore{
+=IGN
+set_goal([], get_conjecture "-" "Strat");
+a (rewrite_tac (map get_spec [¨StratifiedÆ, ¨StratCompClosedÆ, ¨focÆ, ¨∂âsÆ]));
+=TEX
+}%ignore
+
+\subsection{Deriving the Basic Principles}
+
+We want to be able to prove all the principles in the finite axiomatisation which we use later in the document.
+Since they aren't axioms here I shall call them the {\it Basic Principles}.
+
+They will have the same names here as later, but with the suffix "\_thm" rather than "\_ax".
+Details of the proofs are not shown, here is the list of the principles which have been demonstrated:
+
+
+\ignore{
+=GFT
+set_goal([], ¨∂âs (Ãm va∑ $çâs (Ãx:Ó.≈) µy∑ ≥ y çânf x)Æ);
+
+
+set_goal([], ¨∂x∑ µy∑ ≥ y çânf xÆ);
+=TEX
+}%
+
+\subsection{Strong Extensionality}
+
+We start a new theory for this so that it remains possibly to use nfu. 
 
 =SML
 open_theory "nfus";
@@ -235,31 +478,1314 @@ This means that the existence of sets is stipulated before the introduction of o
 
 \end{itemize}
 
-\subsection{Technical Prelude}
+\subsection{Axioms I}
 
-First of all, we must give the the ML commands to  introduce the new theory ``nfu\_f'' as a child of the theory ``rbjmisc''.
+This finite axiomatisation is evolving.
+Initially I intend to compile it fairly directly from Holmes' finite axiomatisation of NFU \cite{holmes98}.
+Then I may massage it in the light of practical questions, for example that of how automation of stratified comprehension works out.
+
+First some preliminaries, setting up a new theory, a new type for the NF(U) sets and declaring the constant for the membership relation.
 
 =SML
-open_theory "membership";
+open_theory "hol";
 force_new_theory "nfuf";
+force_new_pc "'nfuf";
+declare_infix (290, "çânf");
+new_type ("SETânf", 0);
+new_const ("çânf", îSETânf ≠ SETânf ≠ BOOLÆ);
 set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+=IGN
+open_theory "nfuf";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+
+A principle difference in presentation is that this presentation will be primarily {\it existential}, i.e. consisting of set existence assertions.
+Holmes' more pedagogical presentation takes the more commmon approach of giving axioms for new set constructors in which the existence claim is implicit.
+
+In the case of NFU there are special details which complicate the characterisation but which are properly irrelevant to the axiom system (it is desirable to assert that operations over sets always yield sets, even where the required extension is empty, but the bald existence claim need not do this).
+
+We would begin with a weak axiom of extensionality for NFU to be strengthened later for NF.
+
+=SML
+val weak_ext_ax = new_axiom(["weak_ext"],
+	¨µx y∑ (∂z∑ z çânf x ≤ z çânf y) ¥ (x = y § µz∑ z çânf x § z çânf y)Æ);
+=TEX
+
+Instead of the universe we begin with the empty set:
+
+=SML
+val empty_set_ax = new_axiom(["empty_set"],
+	¨∂x∑ µy∑ ≥ y çânf xÆ);
+=TEX
+
+This nextx axiom is taken from Hailperin and states more concisely than Holmes' the sets form a boolean algebra.
+
+=SML
+val nand_ax = new_axiom(["nand"],
+	¨µv w∑ ∂x∑ µy∑ y çânf x § ≥ y çânf v ≤ ≥ y çânf wÆ);
+
+val union_ax = new_axiom(["union"],
+	¨µv∑ ∂x∑ µy∑ y çânf x § ∂z∑ z çânf v ± y çânf zÆ);
+
+val unit_ax = new_axiom(["unit"],
+	¨µv∑ ∂x∑ µy∑ y çânf x § y = vÆ);
+=TEX
+
+The axioms from here onward depend upon the ordered pair constructor.
+I will therefore break here in statement of the axioms to undertake various definitions and some elementary proofs before completing the axioms.
+
+\subsection{Definitions}
+
+Now we introduce a collection of constants by definition (or at least, by conservative extension).
+The minor complications which arise here from the possibility of urelements will be apparent.
+
+The subsections here follow the early chapter headings in Holmes \cite{holmes98}.
+
+\subsubsection{The Set Concept}
+
+We are free to take any of the objects with no members as the empty set (all the others will then be urelements).
+We do this by introding a constant to designate that object.
+
+\ignore{
+=SML
+set_goal([], ¨∂ö∑ µx∑ ≥ x çânf öÆ);
+a (accept_tac empty_set_ax);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ö› : SETânf
+˜¸¸¸¸¸¸
+‹ µx∑ ≥ x çânf ö
+∞
+
+Once we have "chosen" the empty set we can define a predicate which distinguished the sets from the urelements.
+Alternatively this predicate could have been taken as primitive, instead of our choice of empty set.
+
+πHOLCONST
+‹ €Set› : SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µx∑ Set x § x = ö ≤ ∂y∑ y çânf x
+∞
+
+We might as well have a name for the other things:
+
+πHOLCONST
+‹ €Ur› : SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µx∑ Ur x § ≥ Set x
+∞
+
+=SML
+declare_postfix (320, "õc");
+=TEX
+\ignore{
+=SML
+set_goal([], ¨∂ $õc:SETânf ≠ SETânf∑ µx∑ Set (x õc) ± µy∑ y çânf (x õc) § ≥ y çânf xÆ);
+a (∂_tac ¨Ãx∑ ≈y∑ Set y ± µv∑ v çânf y § ≥ v çânf xÆ THEN strip_tac
+	THEN rewrite_tac[]);
+a (≈_tac ¨≈ y∑ Set y ± µ v∑ v çânf y § ≥ v çânf xÆ);
+(* *** Goal "1" *** *)
+a (asm_tac nand_ax);
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨xÆ]);
+a (∂_tac ¨if (∂y:SETânf∑ y çânf x') then x' else öÆ THEN asm_rewrite_tac[get_spec ¨SetÆ]);
+a (CASES_T ¨∂ y∑ ≥ y çânf xÆ asm_tac THEN asm_rewrite_tac[get_spec ¨öÆ]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[] THEN strip_tac);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€õc› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µx∑ Set (x õc) ± µy∑ y çânf (x õc) § ≥ y çânf x
+∞
+
+\subsubsection{Boolean operations on Sets}
+
+The Universe is the complement of the empty set.
+
+πHOLCONST
+‹ €V› : SETânf
+˜¸¸¸¸¸¸
+‹ V = ö õc
+∞
+
+=SML
+declare_infix(305, "°ânf");
+=TEX
+
+\ignore{
+=SML
+set_goal([],¨∂ $°ânf:SETânf ≠ SETânf ≠ SETânf∑ µa b∑
+	Set (a °ânf b) ± µx∑ x çânf (a °ânf b) § x çânf a ± x çânf bÆ);
+a (∂_tac ¨Ãa b∑ ≈c∑ Set c ± µx∑ x çânf c § x çânf a ± x çânf bÆ
+	THEN rewrite_tac[]
+	THEN REPEAT µ_tac
+	THEN ≈_tac ¨≈c∑ Set c ± µx∑ x çânf c § x çânf a ± x çânf bÆ
+	THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨aÆ, ¨bÆ] nand_ax));
+a (∂_tac ¨x õcÆ THEN rewrite_tac[get_spec¨$õcÆ]);
+a (asm_prove_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€°ânf› : SETânf ≠ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b∑ Set (a °ânf b) ± µx∑ x çânf (a °ânf b) § x çânf a ± x çânf b
+∞
+
+We are now able to defin union:
+
+=SML
+declare_infix(300, "¿ânf");
+=TEX
+
+πHOLCONST
+‹ $€¿ânf› : SETânf ≠  SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b∑ (a ¿ânf b) = (a õc °ânf b õc)õc
+∞
+
+=SML
+declare_infix(300, "\\ânf");
+=TEX
+
+πHOLCONST
+‹ $€\ânf› : SETânf ≠  SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b∑ (a \ânf b) = a °ânf (b õc)
+∞
+
+=SML
+declare_infix(300, "Ñânf");
+=TEX
+
+πHOLCONST
+‹ $€Ñânf› : SETânf ≠  SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b∑ (a Ñânf b) = (b \ânf a) ¿ânf (a \ânf b)
+∞
+
+=SML
+declare_infix(290, "Äânf");
+declare_infix(290, "†ânf");
+=TEX
+
+πHOLCONST
+‹ $€Äânf› : SETânf ≠  SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µa b∑ (a Äânf b) § µx∑ x çânf a ¥ x çânf b
+∞
+
+πHOLCONST
+‹ $€†ânf› : SETânf ≠  SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µa b∑ (a †ânf b) § (a Äânf b) ± ≥ b Äânf a
+∞
+
+Up until now we have used only three axioms ({\it weak\_ext, empty\_set, nand}), now we invoke {\it union} the distributed union axiom.
+
+=SML
+declare_prefix(310, "ﬁânf");
+
+set_goal ([], ¨∂ $ﬁânf:SETânf ≠ SETânf∑
+	µx∑ Set (ﬁânf x) ± (µy∑ y çânf (ﬁânf x) § ∂z∑ z çânf x ± y çânf z)Æ);
+a (prove_∂_tac THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ union_ax));
+a (∂_tac ¨if ∂s t∑ t çânf x' ± s çânf t then x else öÆ
+	THEN CASES_T ¨∂s t∑ t çânf x' ± s çânf tÆ
+	(fn x => rewrite_tac [x] THEN strip_asm_tac x));
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[get_spec ¨SetÆ]
+	THEN REPEAT strip_tac
+	THEN ∂_tac ¨sÆ
+	THEN ∂_tac ¨tÆ
+	THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨SetÆ, get_spec ¨öÆ]);
+save_cs_∂_thm (pop_thm());
+=TEX
+
+πHOLCONST
+‹ $€ﬁânf› : SETânf ≠  SETânf
+˜¸¸¸¸¸¸
+‹ µx∑ Set (ﬁânf x) ± (µy∑ y çânf (ﬁânf x) § ∂z∑ z çânf x ± y çânf z)
+∞
+
+\subsection{Proof Support}
+
+It is now possible to automate elementary proofs, typically of algebraic laws in the theory so far.
+To this end we demonstrate (proofs not presented) various theorems which will be useful and integrate these into a `proof context'.
+
+\ignore{
+=SML
+set_goal([], ¨µx y∑ Set x ± Set y ¥ (x = y § (µz∑ z çânf x § z çânf y))Æ);
+a (prove_tac [get_spec ¨SetÆ]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨y'Æ
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨öÆ]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨y'Æ
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨öÆ]);
+(* *** Goal "3" *** *)
+a (LEMMA_T ¨∂ z∑ z çânf x ≤ z çânf yÆ asm_tac
+	THEN1 (∂_tac ¨y'Æ THEN REPEAT strip_tac));
+a (ALL_FC_T1 fc_§_canon asm_rewrite_tac [weak_ext_ax]);
+val nfuf_set_ext_thm = save_pop_thm "set_ext_thm";
+
+set_goal([], ¨µx y∑ Set ö ± Set V ± Set (x õc) ± Set (x °ânf y)
+	± Set (x ¿ânf y) ± Set (x \ânf y) ± Set (x Ñânf y) ± Set (ﬁânf x)Æ);
+a (rewrite_tac (map get_spec [¨öÆ, ¨$õcÆ, ¨VÆ, ¨$°ânfÆ, ¨$¿ânfÆ,
+	¨$\ânfÆ, ¨$ÑânfÆ, ¨$ﬁânfÆ]));
+a (rewrite_tac [get_spec ¨SetÆ]);
+val nfuf_set_clauses = pop_thm();
+
+set_goal([], ¨µx y z∑
+		≥ z çânf ö
+	±	z çânf V
+	±	(z çânf x õc § ≥ z çânf x)
+	±	(z çânf (x °ânf y) § z çânf x ± z çânf y)
+	±	(z çânf (x ¿ânf y) § z çânf x ≤ z çânf y)
+	±	(z çânf (x \ânf y) § z çânf x ± ≥ z çânf y)
+	±	(z çânf (x Ñânf y) § z çânf x ± ≥ z çânf y ≤ ≥ z çânf x ± z çânf y)
+	±	(z çânf (ﬁânf x) § ∂ y∑ y çânf x ± z çânf y)
+Æ);
+a (REPEAT µ_tac);
+a (rewrite_tac (map get_spec [¨öÆ, ¨VÆ, ¨$õcÆ, ¨$°ânfÆ, ¨$¿ânfÆ, ¨$\ânfÆ, ¨$ÑânfÆ, ¨$ﬁânfÆ]));
+a (prove_tac[]);
+val nfuf_op_ext_clauses = pop_thm ();
+=TEX
+}%ignore
+
+The proof and use of theorems about the algebra of sets in nfu is complicated by the presence of urelements in the domain of discourse.
+This would naturally suggest that this kind of theorem would involve restricted quantification over just the sets.
+This kind of theorem is harder to apply than one involving unrestricted quantification because of the need to prove that the values being manipulated are all sets.
+To limit the inconvenience occasioned by these considerations the definitions of the various operations over sets have been written so that they do not care whether their objects are sets or not, but will always yield sets with an extension determined by the extension of the operands.
+The result of one of these operations will always be a set, even if the operands are not.
+
+The plan is then that the proof of an equation between expressions begins with the demonstration that the operands are sets, which will usually be trivial, and then proceeds by application of a version of extensionality which is good for all sets.
+The subset relations are defined extensionality so they can be expanded without demonstrating that the arguments are sets.
+
+First we prove the version of extensionality which applies to all sets.
+
+=GFT
+nfuf_set_ext_thm =
+   Ù µ x y∑ Set x ± Set y ¥ (x = y § (µ z∑ z çânf x § z çânf y))
+=TEX
+
+Then we provide a theorem to assist in proving that expressions do denote sets.
+
+=GFT
+nfuf_set_clauses =
+   Ù µ x y
+     ∑ Set ö
+         ± Set V
+         ± Set (x õc)
+         ± Set (x °ânf y)
+         ± Set (x ¿ânf y)
+         ± Set (x \ânf y)
+         ± Set (x Ñânf y)
+         ± Set (ﬁânf x)
+=TEX
+
+Now we need extensional characterisations of the set operators:
+
+=GFT
+nfuf_op_ext_clauses =
+   Ù µ x y z
+     ∑ ≥ z çânf ö
+         ± z çânf V
+         ± (z çânf x õc § ≥ z çânf x)
+         ± (z çânf x °ânf y § z çânf x ± z çânf y)
+         ± (z çânf x ¿ânf y § z çânf x ≤ z çânf y)
+         ± (z çânf x \ânf y § z çânf x ± ≥ z çânf y)
+         ± (z çânf x Ñânf y § z çânf x ± ≥ z çânf y ≤ ≥ z çânf x ± z çânf y)
+	± (z çânf (ﬁânf x) § ∂ y∑ y çânf x ± z çânf y)
+=TEX
+
+\ignore{
+We now need a bit of programming to deal with the conditions on extensionality of equations.
+
+=SML
+fun €nfuf_eq_ext_conv› tm =
+ let	val (lhs, rhs) = dest_eq tm;
+	val set_thm = tac_proof(([],¨Set ëlhsÆ ± Set ërhsÆÆ), rewrite_tac[nfuf_set_clauses]);
+	val eq_thm = ¥_elim (list_µ_elim [lhs, rhs] nfuf_set_ext_thm) set_thm;
+ in eq_thm
+end;
+=TEX
+
+=SML
+val nfuf_thms = [nfuf_set_clauses, nfuf_op_ext_clauses];
+
+add_rw_thms nfuf_thms "'nfuf";
+set_sc_eqn_cxt ([(¨x = yÆ, nfuf_eq_ext_conv)]) "'nfuf";
+add_sc_thms nfuf_thms "'nfuf";
+add_st_thms [nfuf_op_ext_clauses] "'nfuf";
+
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+
+fun nfuf_prove_conv thms tm = §_t_intro (tac_proof (([],tm),
+	REPEAT µ_tac
+	THEN_TRY rewrite_tac thms
+	THEN_TRY (conv_tac (ONCE_MAP_C nfuf_eq_ext_conv))
+	THEN_TRY rewrite_tac thms
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]
+));
+
+fun nfuf_prove_tac thms = 
+	REPEAT µ_tac
+	THEN_TRY rewrite_tac thms
+	THEN_TRY (conv_tac (ONCE_MAP_C nfuf_eq_ext_conv))
+	THEN_TRY rewrite_tac thms
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[];
+
+set_pr_conv nfuf_prove_conv "'nfuf";
+set_pr_tac nfuf_prove_tac "'nfuf";
+
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+}%ignore
+
+We are now able to define a `proof context' in which we can prove elementary algebraic equations such as those cited towards the end of Chapter 3 of Holmes \cite{holmes98}.
+
+=IGN
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+
+val terms = [
+¨A °ânf B = B °ânf AÆ,
+¨A ¿ânf B = B ¿ânf AÆ,
+¨(A °ânf B) °ânf C = A °ânf (B °ânf C)Æ,
+¨(A ¿ânf B) ¿ânf C = A ¿ânf (B ¿ânf C)Æ,
+¨A °ânf (B ¿ânf C) = (A °ânf B) ¿ânf (A °ânf C)Æ,
+¨A ¿ânf (B °ânf C) = (A ¿ânf B) °ânf (A ¿ânf C)Æ,
+¨A °ânf ö = öÆ,
+¨A ¿ânf V = VÆ,
+¨(A ¿ânf B) õc = (A õc) °ânf (B õc)Æ,
+¨(A °ânf B) õc = (A õc) ¿ânf (B õc)Æ,
+¨(A õc) °ânf A = öÆ,
+¨(A õc) ¿ânf A = VÆ,
+¨V õc = öÆ,
+¨ö õc = VÆ,
+¨ﬁânf V = VÆ,
+¨ﬁânf ö = öÆ,
+¨ö Äânf AÆ,
+¨A Äânf VÆ
+];
+
+map (fn t => (t, (prove_rule[get_spec ¨$ÄânfÆ] t handle _ => t_thm))) terms;
+
+prove_rule [] ¨ﬁânf V = VÆ;
+
+set_goal([], ¨ﬁânf V = VÆ);
+a (rewrite_tac[]);
+
+=TEX
+
+=GFT
+val it = [
+	Ù A °ânf B = B °ânf A,
+	Ù A ¿ânf B = B ¿ânf A,
+	Ù (A °ânf B) °ânf C = A °ânf B °ânf C,
+	Ù (A ¿ânf B) ¿ânf C = A ¿ânf B ¿ânf C,
+	Ù A °ânf (B ¿ânf C) = A °ânf B ¿ânf A °ânf C,
+	Ù A ¿ânf B °ânf C = (A ¿ânf B) °ânf (A ¿ânf C),
+	Ù A °ânf ö = ö,
+	Ù A ¿ânf V = V,
+	Ù (A ¿ânf B) õc = A õc °ânf B õc,
+	Ù (A °ânf B) õc = A õc ¿ânf B õc,
+	Ù A õc °ânf A = ö,
+	Ù A õc ¿ânf A = V,
+	Ù V õc = ö,
+	Ù ö õc = V,
+	Ù ö Äânf A,
+	Ù A Äânf V
+] : THM list
+=TEX
+
+The rules shown by Holmes with a variable on the right rather than an expression are not provable since the are false if that variable denotes a urelement.
+They are provable only as conditional on the variable denoting a set.
+
+These results are provable on demand as required and are not therefore stored in our theory, however some of them can be useful in automatic proof so we prove and store those separately and add them to our proof context.
+
+\ignore{
+=SML
+set_goal([], ¨
+	µA∑ V õc = ö
+	± ö õc = V
+	± A °ânf ö = ö
+	± ö °ânf A = ö
+	± (A õc) °ânf A = ö
+	± A °ânf (A õc) = ö
+	± A ¿ânf V = V
+	± V ¿ânf A = V
+	± (A õc) ¿ânf A = V
+	± A ¿ânf (A õc) = V
+	± A \ânf A = ö
+	± A Ñânf A = ö
+	± A Ñânf (A õc) = V
+	± (A õc) Ñânf A = V
+	± ﬁânf V = V
+	± ﬁânf ö = ö
+Æ);
+a (prove_tac[]);
+a (∂_tac ¨VÆ THEN rewrite_tac[]);
+val nfuf_öV_clauses = pop_thm();
+
+add_rw_thms [nfuf_öV_clauses] "'nfuf";
+add_sc_thms [nfuf_öV_clauses] "'nfuf";
+add_st_thms [nfuf_öV_clauses] "'nfuf";
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+}%ignore
+
+=GFT
+nfuf_öV_clauses =
+   Ù µA∑ V õc = ö
+	± ö õc = V
+	± A °ânf ö = ö
+	± ö °ânf A = ö
+	± (A õc) °ânf A = ö
+	± A °ânf (A õc) = ö
+	± A ¿ânf V = V
+	± V ¿ânf A = V
+	± (A õc) ¿ânf A = V
+	± A ¿ânf (A õc) = V
+	± A \ânf A = ö
+	± A Ñânf A = ö
+	± A Ñânf (A õc) = V
+	± (A õc) Ñânf A = V
+=TEX
+
+\subsection{Building Finite Structures}
+
+=SML
+declare_prefix (320, "…");
+=TEX
+
+\ignore{
+=SML
+set_goal([],¨∂ $…∑ µx∑ Set (… x) ± µy∑ y çânf (… x) § y = xÆ);
+a (prove_∂_tac THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ unit_ax));
+a (∂_tac ¨xÆ THEN asm_rewrite_tac [get_spec ¨SetÆ]);
+a (REPEAT strip_tac THEN ∂_tac ¨x'Æ THEN strip_tac);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€…› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µx∑ Set (… x) ± µy∑ y çânf (… x) § y = x
+∞
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ Set (… x)Æ);
+a (rewrite_tac[get_spec ¨$…Æ]);
+val Set_…_thm = pop_thm();
+
+set_goal([], ¨µx y∑ x çânf (… y) § x = yÆ);
+a (rewrite_tac[get_spec ¨$…Æ]);
+val ç_…_thm = pop_thm();
+
+set_goal([], ¨µx y∑ … x = … y § x = yÆ);
+a (REPEAT µ_tac);
+a (lemma_tac ¨Set (… x) ± Set (… y)Æ
+	THEN1 rewrite_tac [get_spec ¨$…Æ]
+	THEN ALL_FC_T1 fc_§_canon (rewrite_tac) [nfuf_set_ext_thm]); 
+a (REPEAT_N 3 strip_tac THEN_TRY asm_rewrite_tac[]);
+a (SPEC_NTH_ASM_T 1 ¨xÆ ante_tac);
+a (rewrite_tac [ç_…_thm, get_spec ¨$…Æ]);
+val …_eq_thm = pop_thm ();
+
+add_rw_thms [Set_…_thm, ç_…_thm, …_eq_thm] "'nfuf";
+add_sc_thms [Set_…_thm, ç_…_thm, …_eq_thm] "'nfuf";
+add_st_thms [ç_…_thm, …_eq_thm] "'nfuf";
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+}%ignore
+
+=GFT
+	Ù µ x∑ Set (… x)
+	Ù µ x y∑ x çânf … y § x = y
+	Ù µ x y∑ … x = … y § x = y
+=TEX
+
+
+\subsubsection{pairs}
+
+The ordered pair constructor appears in the statement of several axioms, and unless we bundle them all together we will have to give a name to it.
+
+We are now able to introduce by definition an ordered pair constructor.
+The axioms ultimately will be incompatible with the ordered pairs being those of the Wiener-Kuratowski construction.
+However, this axiomatic constraint which rules them out does not appear until later, and at this point it is possible to introduce ordered pairs using a loose definition which could be interpreted as WK pairs, and hence can be shown consistent using them.
+
+We therefore proceed by first defining unordered and then Wiener-Kuratowski pairs, and then introduce by conservative extension a kind of ordered pair which might be but need not be (and ultimately will be forced not to be) Wiener-Kuratowski.
+
+A pair is the union of two singletons.
+
+πHOLCONST
+‹ €pair› : SETânf ∏ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µx y∑ pair (x, y) = (… x) ¿ânf (… y)
+∞
+
+\ignore{
+=SML
+val pair_def = get_spec ¨pairÆ;
+
+set_goal([],¨µa b∑ Set (pair(a, b)) ± (µx∑ x çânf pair(a, b) § x = a ≤ x = b)Æ);
+a (rewrite_tac [pair_def] THEN REPEAT strip_tac);
+val pair_thm = pop_thm ();
+
+set_goal([], ¨µa b c∑ … a = pair(b, c) § b = a ± c = aÆ);
+a (REPEAT_N 3 strip_tac);
+a (LEMMA_T ¨Set(… a) ± Set(pair(b, c))Æ strip_asm_tac
+	THEN1 rewrite_tac [get_spec ¨pairÆ]);
+a (ALL_FC_T1 fc_§_canon (rewrite_tac)
+	[nfuf_set_ext_thm]);
+a (rewrite_tac [ç_…_thm, pair_thm]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+val …_eq_pair_thm = pop_thm ();
+
+set_goal([], ¨µa b c∑ pair(b, c) = … a § b = a ± c = aÆ);
+a (REPEAT_N 3 strip_tac);
+a (LEMMA_T ¨pair(b, c) = … a § … a = pair(b, c)Æ rewrite_thm_tac
+	THEN1 (REPEAT strip_tac THEN asm_rewrite_tac[]));
+a (rewrite_tac […_eq_pair_thm]);
+val pair_eq_…_thm = pop_thm ();
+
+set_goal([], ¨µa b c d∑ pair(a, b) = pair(c, d) § a = c ± b = d ≤ a = d ± b = cÆ);
+a (REPEAT µ_tac);
+a (lemma_tac ¨Set(pair(a,b)) ± Set(pair(c,d))Æ THEN1 rewrite_tac[pair_thm]);
+a (ALL_FC_T1 fc_§_canon rewrite_tac [list_µ_elim [¨pair(a,b)Æ, ¨pair(c,d)Æ] nfuf_set_ext_thm]);
+a (rewrite_tac [pair_thm] THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 2 ¨aÆ);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨cÆ);
+a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (lemma_tac ¨≥d=bÆ THEN1 (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]));
+a (spec_nth_asm_tac 3 ¨dÆ THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (spec_nth_asm_tac 2 ¨bÆ THEN asm_rewrite_tac[]);
+val pair_eq_pair_thm = pop_thm ();
+=TEX
+}%ignore
+
+=GFT
+pair_thm =
+   Ù µ a b∑ Set (pair (a, b)) ± (µ x∑ x çânf pair (a, b) § x = a ≤ x = b)
+
+…_eq_pair_thm =
+   Ù µ a b c∑ … a = pair (b, c) § b = a ± c = a
+
+pair_eq_…_thm =
+   Ù µ a b c∑ pair (b, c) = … a § b = a ± c = a
+
+pair_eq_pair_thm =
+   Ù µ a b c d∑ pair (a, b) = pair (c, d) § a = c ± b = d ≤ a = d ± b = c
+
+=TEX
+
+
+πHOLCONST
+‹ $€wkp› : SETânf ∏ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µx y∑ wkp (x, y) = pair (… x, pair (x, y))
+∞
+
+\ignore{
+=SML
+val wkp_def = get_spec ¨wkpÆ;
+
+set_goal([],¨µa b∑ Set (wkp(a,b)) ± µx∑ x çânf wkp(a,b) § x=… a ≤ x=pair(a, b)Æ);
+a (rewrite_tac [wkp_def, pair_thm]);
+val wkp_thm = pop_thm ();
+
+set_goal([], ¨µa b c d∑ wkp(a, b) = wkp(c, d) § a = c ± b = dÆ);
+a (REPEAT µ_tac THEN strip_tac THEN strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨Set(wkp(a, b)) ± Set(wkp(c, d))Æ THEN1 rewrite_tac [wkp_thm]);
+a (ALL_FC_T1 fc_§_canon (rewrite_tac)
+	[list_µ_elim [¨wkp(a, b)Æ, ¨wkp(c, d)Æ] nfuf_set_ext_thm]
+	THEN asm_rewrite_tac[wkp_thm] THEN strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨… aÆ (asm_tac o (rewrite_rule[…_eq_thm, …_eq_pair_thm])));
+a (lemma_tac ¨a = cÆ THEN1 (POP_ASM_T strip_asm_tac THEN asm_rewrite_tac[]));
+a (asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 3 ante_tac);
+a (asm_rewrite_tac[] THEN strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨pair (d, b)Æ (ante_tac o (rewrite_rule[…_eq_thm, …_eq_pair_thm,
+		pair_eq_…_thm, pair_eq_pair_thm])));
+a (cases_tac ¨d = cÆ THEN asm_rewrite_tac[]);
+a (cases_tac ¨b = cÆ THEN asm_rewrite_tac[]);
+a (SPEC_NTH_ASM_T 3 ¨pair (c, b)Æ (ante_tac o (rewrite_rule[…_eq_thm, …_eq_pair_thm,
+		pair_eq_…_thm, pair_eq_pair_thm]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+val wkp_eq_wkp_thm = pop_thm ();
+=TEX
+} %ignore
+
+The following theorems are proven and used in the introduction of $op$.
+
+=GFT
+   Ù µ a b∑ Set (wkp (a, b))
+         ± (µ x∑ x çânf wkp (a, b) § x = … a ≤ x = pair (a, b))
+
+   Ù µ a b c d∑ wkp (a, b) = wkp (c, d) § a = c ± b = d
+=TEX
+
+Having established that a pair constructor exists using a specific encoding, we can now introduce a new name for a pair constructor which is not tied to this particular coding.
+The introduction of this constant involves a consistency proof in which the {\it wkp} is used (script not shown).
+
+\ignore{
+=SML
+set_goal([], ¨∂ op: SETânf ∏ SETânf ≠ SETânf∑ µa b c d∑ op (a, b) = op(c, d)
+	§ a = c ± b = dÆ);
+a (∂_tac ¨wkpÆ THEN accept_tac wkp_eq_wkp_thm);
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €op› : SETânf ∏ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b c d∑ op (a, b) = op (c, d)
+‹	§ a = c ± b = d
+∞
+
+\ignore{
+=SML
+val op_def = get_spec ¨opÆ;
+
+set_goal([], ¨∂ fst: SETânf ≠ SETânf∑ µa b∑ fst (op (a, b)) = aÆ);
+a (∂_tac ¨Ãp:SETânf∑ ≈a:SETânf∑ ∂b∑ p = op(a,b)Æ THEN rewrite_tac[]);
+a (≈_tac ¨≈ a'∑ ∂ b'∑ op (a, b) = op (a', b')Æ);
+(* *** Goal "1" *** *)
+a (∂_tac ¨aÆ THEN ∂_tac ¨bÆ THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac THEN rewrite_tac[op_def ]);
+a (≈_tac ¨≈ a''∑ ∂ b'∑ a' = a'' ± b'' = b'Æ);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨a'Æ THEN ∂_tac ¨b''Æ THEN rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (SYM_ASMS_T rewrite_tac);
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €fst› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa b∑ fst (op (a, b)) = a
+∞
+
+\ignore{
+=SML
+set_goal([], ¨∂ snd: SETânf ≠ SETânf∑ µa b∑ snd (op (a, b)) = bÆ);
+a (∂_tac ¨Ãp:SETânf∑ ≈b:SETânf∑ ∂a∑ p = op(a,b)Æ THEN rewrite_tac[]);
+a (≈_tac ¨≈ b'∑ ∂ a'∑ op (a, b) = op (a', b')Æ);
+(* *** Goal "1" *** *)
+a (∂_tac ¨bÆ THEN ∂_tac ¨aÆ THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac THEN rewrite_tac[op_def ]);
+a (≈_tac ¨≈ b''∑ ∂ a'∑ a' = a'' ± b'' = b'Æ);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨b'Æ THEN ∂_tac ¨a''Æ THEN rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (LEMMA_T ¨(Ãb''∑ ∂ a'∑ a'' = a' ± b' = b'') = (Ãb''∑∂ a'∑ a' = a'' ± b'' = b')Æ asm_tac
+	THEN1 (strip_tac THEN strip_tac THEN rewrite_tac[] THEN REPEAT strip_tac));
+(* *** Goal "2.2.1" *** *)
+a (∂_tac ¨a''Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (∂_tac ¨a''Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.3" *** *)
+a (asm_rewrite_tac[]);
+save_cs_∂_thm(pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €snd› : SETânf ≠ SETânf
+˜¸¸¸¸¸
+‹ µa b∑ snd (op (a, b)) = b
+∞
+
+First we assert the existence of cartesian products:
+
+=SML
+val snd_def = get_spec ¨sndÆ;
+=TEX
+\ignore{
+=SML
+set_goal([], ¨µ a b c d∑
+	(… a = pair (b, c) § b = a ± c = a)
+ ±	(pair (b, c) = … a § b = a ± c = a)
+ ±	(pair (a, b) = pair (c, d) § a = c ± b = d ≤ a = d ± b = c)
+ ±	(wkp (a, b) = wkp (c, d) § a = c ± b = d)
+ ±	(op (a, b) = op (c, d) § a = c ± b = d)
+ ±	(fst (op (a, b)) = a)
+ ±	(snd (op (a, b)) = b)
+Æ);
+a (REPEAT µ_tac THEN rewrite_tac[…_eq_pair_thm, pair_eq_…_thm, pair_eq_pair_thm, wkp_eq_wkp_thm,
+	get_spec ¨opÆ, get_spec ¨fstÆ, get_spec ¨sndÆ]);
+val pair_eq_clauses = save_pop_thm "pair_eq_clauses"; 
+=TEX
+}%ignore
+
+\subsection{Axioms II}
+
+Now that we have ordered pairs we can assert the existence of cartesian products.
+
+=SML
+val ∏_ax = new_axiom (["∏"],
+	¨µu v∑ ∂w∑ µx∑ x çânf w § ∂y z∑ y çânf u ± z çânf v ± x = op (y, z)Æ);
+=TEX
+
+The following asserts the existence of the inverse (converse?) of a relation.
+
+=SML
+val rel_inv_ax = new_axiom (["rel_inv"],
+	¨µu∑ ∂v∑ µw∑ w çânf v § ∂x y∑ w = op (x, y) ± op(y, x) çânf uÆ);
+=TEX
+
+Next, the composition of two relations.
+
+=SML
+val rel_comp_ax = new_axiom (["rel_comp"],
+	¨µt u∑ ∂v∑ µw∑ w çânf v §
+	∂x y z∑ w = op (x, z) ± op(x, y) çânf t ± op(y, z) çânf uÆ);
+=TEX
+
+The domain of a relation exists.
+
+=SML
+val dom_ax = new_axiom (["dom"],
+	¨µu∑ ∂v∑ µw∑ w çânf v § ∂x∑ op (w, x) çânf uÆ);
+=TEX
+
+Singleton Images exist.
+
+=SML
+val sing_image_ax = new_axiom (["sing_image"],
+	¨µu∑ ∂v∑ µw∑ w çânf v § ∂x∑ x çânf u ± µy∑ y çânf w § y = xÆ);
+=TEX
+
+The equality relation exists.
+
+=SML
+val eq_ax = new_axiom (["eq"],
+	¨∂v∑ µw∑ w çânf v § ∂x∑ w = op (x, x)Æ);
+=TEX
+
+The projection relations exist.
+
+=SML
+val proj_ax = new_axiom (["proj"],
+	¨∂f s∑ (µw∑ w çânf f § ∂x y∑ w = op (op (x, y), x))
+	± (µw∑ w çânf s § ∂x y∑ w = op (op (x, y), y))Æ);
+=TEX
+
+We now should have enough axioms for stratified comprehension, and therefore as much as we would need for NF apart from the strengthening of extensionality.
+
+
+\subsection{Finite Structures Continued}
+
+We now define the cartesian product constructor.
+
+=SML
+declare_infix (300, "∏");
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨∂ $∏∑ µu v∑ Set (u ∏ v) ± µx∑ x çânf u ∏ v § ∂y z∑ y çânf u ± z çânf v ± x = op (y, z)Æ);
+a (prove_∂_tac THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨u'Æ,¨v'Æ] ∏_ax));
+a (∂_tac ¨if ∂z∑ z çânf w then w else öÆ
+	THEN CASES_T ¨∂z∑ z çânf wÆ
+	(fn q => ((rewrite_tac [q, get_spec¨SetÆ]) THEN strip_asm_tac q)));
+a (REPEAT_N 5 strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[asm_rule¨µ z∑ ≥ z çânf wÆ])));
+a (spec_nth_asm_tac 1 ¨yÆ);
+a (spec_nth_asm_tac 1 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€∏› : SETânf ≠ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µu v∑ Set (u ∏ v)
+‹	±
+‹		µx∑ x çânf u ∏ v
+‹		§
+‹		∂y z∑ y çânf u ± z çânf v ± x = op (y, z)
+∞
+
+\subsection{The Theory of Relations}
+
+A relation is a set of ordered pairs.
+
+πHOLCONST
+‹ €Rel› : SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µr∑ Rel r § µx∑ x çânf r ¥ ∂y z∑ x = op(y, z)
+∞
+
+\ignore{
+=SML
+set_goal([], ¨Rel öÆ);
+a (rewrite_tac [get_spec ¨RelÆ]);
+val Rel_ö_thm = pop_thm ();
+=TEX
+}%ignore
+
+Every relation has an inverse.
+
+=SML
+declare_postfix (320, "õ-õ1ânf");
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨∂ $õ-õ1ânf∑ µr∑ Set(r õ-õ1ânf)
+	± µx∑ x çânf r õ-õ1ânf § ∂y z∑ x = op(y, z) ± op(z, y) çânf rÆ);
+a (prove_∂_tac THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨r'Æ rel_inv_ax));
+a (∂_tac ¨if ∂z∑ z çânf v then v else öÆ
+	THEN CASES_T ¨∂z∑ z çânf vÆ
+	(fn q => ((rewrite_tac [q, get_spec¨SetÆ]) THEN strip_asm_tac q)));
+a (REPEAT_N 6 strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[asm_rule¨µ z∑ ≥ z çânf vÆ])));
+a (spec_nth_asm_tac 1 ¨yÆ);
+a (spec_nth_asm_tac 1 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€õ-õ1ânf› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µr∑ Set(r õ-õ1ânf) ± µx∑ x çânf r õ-õ1ânf § ∂y z∑ x = op(y, z) ± op(z, y) çânf r
+∞
+
+\ignore{
+=SML
+set_goal([], ¨ö õ-õ1ânf = öÆ);
+a (lemma_tac ¨Set (ö õ-õ1ânf) ± Set öÆ THEN1 rewrite_tac [nfuf_set_clauses, get_spec ¨$õ-õ1ânfÆ]);
+a (ALL_FC_T1 fc_§_canon rewrite_tac [nfuf_set_ext_thm]);
+a (rewrite_tac [get_spec ¨$õ-õ1ânfÆ]);
+val rel_inv_ö_thm = pop_thm ();
+=TEX
+}%ignore
+
+=GFT
+rel_inv_ö_thm = Ù ö õ-õ1ânf = ö
+=TEX
+
+Relations can be composed.
+Relational composition is also known as relational product.
+
+\ignore{
+=SML
+declare_infix (300, "ª");
+set_goal([], ¨∂$ª∑ µr s∑ Set(r ª s)
+	± µx∑ x çânf r ª s § ∂u v w∑ x = op(u, w) ± op(u, v) çânf r ± op(v, w) çânf sÆ);
+a (prove_∂_tac THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨r'Æ, ¨s'Æ] rel_comp_ax));
+
+a (∂_tac ¨if ∂z∑ z çânf v then v else öÆ
+	THEN CASES_T ¨∂z∑ z çânf vÆ
+	(fn q => ((rewrite_tac [q, get_spec¨SetÆ]) THEN strip_asm_tac q)));
+a (REPEAT_N 7 strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[asm_rule¨µ z∑ ≥ z çânf vÆ])));
+a (spec_nth_asm_tac 1 ¨uÆ);
+a (spec_nth_asm_tac 1 ¨v'Æ THEN_TRY asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ $€ª› : SETânf ≠ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µr s∑ Set(r ª s)
+‹	± µx∑ x çânf r ª s
+‹	  § ∂u v w∑ x = op(u, w) ± op(u, v) çânf r ± op(v, w) çânf s
+∞
+
+
+The domain of a relation is a set.
+
+\ignore{
+=SML
+set_goal([], ¨∂dom∑ µr∑ Set(dom r) ± µx∑ x çânf dom r § ∂y∑ op(x, y) çânf rÆ);
+a (prove_∂_tac THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨r'Æ] dom_ax));
+a (∂_tac ¨if ∂z∑ z çânf v then v else öÆ
+	THEN CASES_T ¨∂z∑ z çânf vÆ
+	(fn q => ((rewrite_tac [q, get_spec¨SetÆ]) THEN strip_asm_tac q)));
+a (REPEAT strip_tac);
+a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[asm_rule¨µ z∑ ≥ z çânf vÆ])));
+a (spec_nth_asm_tac 1 ¨yÆ);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €dom› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µr∑ Set(dom r)
+‹	± µx∑ x çânf (dom r) § ∂y∑ op(x, y) çânf r
+∞
+
+\ignore{
+=SML
+set_goal([], ¨dom ö = öÆ);
+a (lemma_tac ¨Set (dom ö) ± Set öÆ
+	THEN1 rewrite_tac [get_spec ¨domÆ, nfuf_set_clauses]);
+a (ALL_FC_T1 fc_§_canon rewrite_tac [nfuf_set_ext_thm]);
+a (rewrite_tac [get_spec¨domÆ]);
+val dom_ö_thm = pop_thm ();
+=TEX
+}%ignore
+
+=GFT
+dom_ö_thm = Ù dom ö = ö
+=TEX
+
+So is the range.
+
+πHOLCONST
+‹ €rng› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µr∑ rng r = dom (r õ-õ1ânf)
+∞
+
+πHOLCONST
+‹ €field› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µr∑ field r = (dom r) ¿ânf (rng r)
+∞
+
+\ignore{
+=SML
+val rng_def = get_spec ¨rngÆ;
+val field_def = get_spec ¨fieldÆ;
+
+set_goal([], ¨rng ö = öÆ);
+a (rewrite_tac[rng_def, rel_inv_ö_thm, dom_ö_thm]);
+val rng_ö_thm = pop_thm ();
+=TEX
+}%ignore
+
+=GFT
+rng_ö_thm = Ù rng ö = ö
+=TEX
+
+
+\subsection{Proof Support II}
+
+It is now possible to automate elementary proofs, typically of algebraic laws in the theory so far.
+To this end we demonstrate (proofs not presented) various theorems which will be useful and integrate these into a `proof context'.
+
+\ignore{
+=SML
+set_goal([], ¨µx y∑ Set ö ± Set V ± Set (x õc) ± Set (x °ânf y)
+	± Set (x ¿ânf y) ± Set (x \ânf y) ± Set (x Ñânf y) ± Set (ﬁânf x)
+	± Set (… x) ± Set (pair(x,y)) ± Set (wkp(x,y)) ± Set (x ∏ y) ± Set (x õ-õ1ânf)
+	± Set (x ª y) ± Set (dom x) ± Set (rng x) ± Set (field x)
+Æ);
+a (rewrite_tac (map get_spec [¨$…Æ, ¨pairÆ, ¨wkpÆ, ¨$∏Æ, ¨$õ-õ1ânfÆ, ¨$ªÆ,
+	¨domÆ, ¨rngÆ, ¨fieldÆ]));
+val nfuf_set_clauses = save_pop_thm "set_clauses";
+
+set_goal([], ¨µx y z∑
+		≥ z çânf ö
+	±	z çânf V
+	±	(z çânf x õc § ≥ z çânf x)
+	±	(z çânf (x °ânf y) § z çânf x ± z çânf y)
+	±	(z çânf (x ¿ânf y) § z çânf x ≤ z çânf y)
+	±	(z çânf (x \ânf y) § z çânf x ± ≥ z çânf y)
+	±	(z çânf (x Ñânf y) § z çânf x ± ≥ z çânf y ≤ ≥ z çânf x ± z çânf y)
+	±	(z çânf (… x) § z = x)
+	±	(z çânf pair(x, y) § z = x ≤ z = y) 
+Æ);
+a (prove_tac (map get_spec [¨öÆ, ¨VÆ, ¨$õcÆ, ¨$°ânfÆ, ¨$¿ânfÆ, ¨$\ânfÆ, ¨$ÑânfÆ,
+	¨$…Æ, ¨pairÆ, ¨fstÆ, ¨sndÆ, ¨$∏Æ]));
+val nfuf_op_ext_clauses1 = save_pop_thm "op_ext_clauses1";
+
+set_goal([], ¨µx y z∑
+		(x çânf (ﬁânf y) § ∂ z∑ z çânf y ± x çânf z)
+	±	(x çânf y ∏ z
+		 § ∂v w∑ v çânf y ± w çânf z ± x = op (v, w))
+	±	(x çânf y õ-õ1ânf § ∂v w∑ x = op(v, w) ± op(w, v) çânf y)
+	±	(x çânf y ª z § ∂u v w∑ x = op(u, w) ± op(u, v) çânf y ± op(v, w) çânf z)
+	±	(x çânf (dom y) § ∂u∑ op(x,u) çânf y) 
+	±	(x çânf (rng y) § ∂u∑ op(u,x) çânf y) 
+	±	(x çânf (field y) § ∂u∑ op(x,u) çânf y ≤ op(u,x) çânf y) 
+Æ);
+a (REPEAT µ_tac);
+a (rewrite_tac (map get_spec [¨$ﬁânfÆ, ¨$∏Æ, ¨$õ-õ1ânfÆ, ¨$ªÆ, ¨domÆ, ¨rngÆ, ¨fieldÆ]));
+a (REPEAT strip_tac THEN_TRY all_var_elim_asm_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (all_fc_tac [get_spec ¨opÆ]);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨uÆ THEN ∂_tac ¨xÆ THEN ∂_tac ¨uÆ THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (∂_tac ¨y'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (all_fc_tac [get_spec ¨opÆ] THEN all_var_elim_asm_tac);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (spec_nth_asm_tac 1 ¨uÆ);
+(* *** Goal "6" *** *)
+a (∂_tac ¨uÆ THEN ∂_tac ¨xÆ THEN ∂_tac ¨uÆ THEN asm_rewrite_tac[]);
+val nfuf_op_ext_clauses2 = save_pop_thm "op_ext_clauses2";
+=TEX
+}%ignore
+
+The proof and use of theorems about the algebra of sets in nfu is complicated by the presence of urelements in the domain of discourse.
+This would naturally suggest that this kind of theorem would involve restricted quantification over just the sets.
+This kind of theorem is harder to apply than one involving unrestricted quantification because of the need to prove that the values being manipulated are all sets.
+To limit the inconvenience occasioned by these considerations the definitions of the various operations over sets have been written so that they do not care whether their objects are sets or not, but will always yield sets with an extension determined by the extension of the operands.
+The result of one of these operations will always be a set, even if the operands are not.
+
+The plan is then that the proof of an equation between expressions begins with the demonstration that the operands are sets, which will usually be trivial, and then proceeds by application of a version of extensionality which is good for all sets.
+The subset relations are defined extensionality so they can be expanded without demonstrating that the arguments are sets.
+
+
+Then we provide a theorem to assist in proving that expressions do denote sets.
+
+=GFT
+nfuf_set_clauses =
+   Ù µ x y
+     ∑ Set ö
+         ± Set V
+         ± Set (x õc)
+         ± Set (x °ânf y)
+         ± Set (x ¿ânf y)
+         ± Set (x \ânf y)
+         ± Set (x Ñânf y)
+         ± Set (ﬁânf x)
+=TEX
+
+Now we need extensional characterisations of the set operators:
+
+=GFT
+nfuf_op_ext_clauses =
+   Ù µ x y z
+     ∑ ≥ z çânf ö
+         ± z çânf V
+         ± (z çânf x õc § ≥ z çânf x)
+         ± (z çânf x °ânf y § z çânf x ± z çânf y)
+         ± (z çânf x ¿ânf y § z çânf x ≤ z çânf y)
+         ± (z çânf x \ânf y § z çânf x ± ≥ z çânf y)
+         ± (z çânf x Ñânf y § z çânf x ± ≥ z çânf y ≤ ≥ z çânf x ± z çânf y)
+
+nfuf_op_ext_clauses2 =
+   Ù µ x y z
+     ∑ (x çânf ﬁânf y § (∂ z∑ z çânf y ± x çânf z))
+         ± (x çânf y ∏ z § (∂ v w∑ v çânf y ± w çânf z ± x = op (v, w)))
+         ± (x çânf y õ-õ1ânf § (∂ v w∑ x = op (v, w) ± op (w, v) çânf y))
+         ± (x çânf y ª z
+           § (∂ u v w∑ x = op (u, w) ± op (u, v) çânf y ± op (v, w) çânf z))
+         ± (x çânf dom y § (∂ u∑ op (x, u) çânf y))
+         ± (x çânf rng y § (∂ u∑ op (u, x) çânf y))
+         ± (x çânf field y § (∂ u∑ op (x, u) çânf y ≤ op (u, x) çânf y))
+
+=TEX
+
+\ignore{
+We now need a bit of programming to deal with the conditions on extensionality of equations.
+
+=SML
+val nfuf_thms = [nfuf_set_clauses, nfuf_op_ext_clauses1, nfuf_op_ext_clauses2];
+
+add_rw_thms [nfuf_set_clauses, nfuf_op_ext_clauses1] "'nfuf";
+set_sc_eqn_cxt ([(¨x = yÆ, nfuf_eq_ext_conv)]) "'nfuf";
+add_sc_thms [nfuf_set_clauses, nfuf_op_ext_clauses1] "'nfuf";
+add_st_thms [nfuf_op_ext_clauses1, nfuf_op_ext_clauses2] "'nfuf";
+
+set_pr_conv nfuf_prove_conv "'nfuf";
+set_pr_tac nfuf_prove_tac "'nfuf";
+
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+}%ignore
+
+
+\ignore{
+=SML
+set_goal([], ¨
+	µA∑ V õc = ö
+	± ö õc = V
+	± A °ânf ö = ö
+	± ö °ânf A = ö
+	± (A õc) °ânf A = ö
+	± A °ânf (A õc) = ö
+	± A ¿ânf V = V
+	± V ¿ânf A = V
+	± (A õc) ¿ânf A = V
+	± A ¿ânf (A õc) = V
+	± A \ânf A = ö
+	± A Ñânf A = ö
+	± A Ñânf (A õc) = V
+	± (A õc) Ñânf A = V
+	± ﬁânf V = V
+	± ﬁânf ö = ö
+	± ö õ-õ1ânf = ö
+	± ö ª x = ö
+	± x ª ö = ö
+	± dom ö = ö
+	± rng ö = ö
+	± field ö = ö
+	± Rel ö
+Æ);
+a (prove_tac [nfuf_op_ext_clauses2, get_spec ¨RelÆ]);
+val nfuf_öV_clauses = save_pop_thm "öV_clauses";
+
+add_rw_thms [nfuf_öV_clauses] "'nfuf";
+add_sc_thms [nfuf_öV_clauses] "'nfuf";
+add_st_thms [nfuf_öV_clauses] "'nfuf";
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
+=TEX
+}%ignore
+
+=GFT
+nfuf_öV_clauses =
+   Ù µA∑ V õc = ö
+	± ö õc = V
+	± A °ânf ö = ö
+	± ö °ânf A = ö
+	± (A õc) °ânf A = ö
+	± A °ânf (A õc) = ö
+	± A ¿ânf V = V
+	± V ¿ânf A = V
+	± (A õc) ¿ânf A = V
+	± A ¿ânf (A õc) = V
+	± A \ânf A = ö
+	± A Ñânf A = ö
+	± A Ñânf (A õc) = V
+	± (A õc) Ñânf A = V
+=TEX
+
+
+\subsection{Introducing Functions}
+
+Here I may begin to diverge more from Holmes, since the material on functions does not contribute to the axiom system, and I have in mind the use of functions in the appication of NFU to the construction of category theoretic foundations.
+
+A function is a many-one relation:
+
+πHOLCONST
+‹ €ManyOne› : SETânf ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µr∑ ManyOne r § µx∑ x çânf dom r ¥
+‹	µy z∑ op(x, y) çânf r ± op(x, z) çânf r ¥ y = z   
+∞
+
+Identity functions will prove useful later:
+
+\ignore{
+ πHOLCONST
+‹ €Idânf› : SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µa∑ Idânf a = ïânf {x | ∂y∑ y çânf a ± x = op(y, y)}  
+ ∞
+}%ignore
+
+Function application is an infix suffix {\it u}.
+
+=SML
+declare_infix (320, "ânf");
+=TEX
+
+πHOLCONST
+‹ $€ânf› : SETânf ≠ SETânf ≠ SETânf
+˜¸¸¸¸¸¸
+‹ µf a v∑ op(a, v) çânf f ¥ f ânf a = v 
+∞
+
+\subsection{Strong Extensionality}
+
+Once again, we introduce a new theory for the strongly extensional system,
+First of all, we must give the the ML commands to  introduce the new theory ``nff'' as a child of the theory ``nfuf''.
+
+=SML
+open_theory "nfuf";
+force_new_theory "nff";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
 =TEX
 
 \ignore{
 =SML
 set_flag ("pp_use_alias", true);
 =IGN
-open_theory "nfc";
-set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
+open_theory "nff";
+set_merge_pcs["hol1", "'savedthm_cs_∂_proof", "'nfuf"];
 =TEX
 }%ignore
 
-\section{FINITE AXIOMATISATION OF NF}
+The distinguishing feature of NF is that there are no urelements.
+We might as well make this the new axiom.
+
+=SML
+val N13_ax = new_axiom (["N13"],
+	¨≥ ∂x∑ Ur xÆ);
+=TEX
+
+This of course means that everything is a set...
 
 \ignore{
 =SML
+set_goal([], ¨µx∑ Set xÆ);
+a (strip_asm_tac (rewrite_rule [get_spec ¨UrÆ] N13_ax));
+a (asm_rewrite_tac[]);
+val nff_Set_thm = save_pop_thm "Set_thm";
 =TEX
-} %ignore
+}%ignore
+
+=GFT
+nff_Set_thm =
+	Ù µ x∑ Set x
+=TEX
+
+and hence that extensionality is now unconditional:
+
+\ignore{
+=SML
+val nff_ext_thm = save_thm ("ext_thm", rewrite_rule [nff_Set_thm] nfuf_set_ext_thm);
+=TEX
+}%ignore
+
+=GFT
+nff_ext_thm = 
+	Ù µ x y∑ x = y § (µ z∑ z çânf x § z çânf y)
+=TEX
+
+At the elementary level we have so far reached this doesn't make a big difference so we will say no more {\it pro-tem}.
 
 \ignore{
  πHOLCONST
@@ -273,15 +1799,30 @@ set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{nfh.th}
+}  %\let
+
+{\let\Section\section
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{nfus.th}
 }  %\let
 
+{\let\Section\section
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{nfuf.th}
+}  %\let
 
 \twocolumn[\section{INDEX}\label{index}]
 {\small\printindex}
 
 \end{document}
 =SML
+open_theory "nfh";
+output_theory{out_file="nfh.th.doc", theory="nfh"};
 open_theory "nfus";
 output_theory{out_file="nfus.th.doc", theory="nfus"};
+open_theory "nfuf";
+output_theory{out_file="nfuf.th.doc", theory="nfuf"};
 =IGN

@@ -1,5 +1,5 @@
 =IGN
-$Id: t018.doc,v 1.4 2006/09/25 20:00:47 rbj01 Exp $
+$Id: t018.doc,v 1.5 2006/10/02 12:36:31 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -22,7 +22,7 @@ $Id: t018.doc,v 1.4 2006/09/25 20:00:47 rbj01 Exp $
 \makeindex
 \title{Category Theoretic Foundation Systems with Universal Categories}
 \makeindex
-\date{$ $Date: 2006/09/25 20:00:47 $ $}
+\date{$ $Date: 2006/10/02 12:36:31 $ $}
 \author{Roger Bishop Jones\\ rbj01@rbjones.com}
 
 \usepackage[pdftex]{hyperref}
@@ -36,7 +36,7 @@ It begins with axiomatisations of NF and NFU in {\Product-HOL} and proceeds from
 \end{abstract}
 \vfill
 \begin{centering}
-Reference: rbjt0018; $ $Revision: 1.4 $ $
+Reference: rbjt0018; $ $Revision: 1.5 $ $
 \end{centering}
 \thispagestyle{empty}
 \end{titlepage}
@@ -171,205 +171,6 @@ Typically this is the case in an axiom introducing an operation over sets.
 Such definitions will effectively treat atoms as if they were the empty set if the condition is removed, and I am supposing this is a harmless but convenient idosyncracy on my part.
 \end{itemize}
 
-\section{NF}
-\subsection{Technical Prelude}
-
-First of all, we must give the the ML commands to  introduce the new theory ``NF'' as a child of the theory ``rbjmisc''.
-
-=SML
-open_theory "rbjmisc";
-force_new_theory "NF";
-set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
-=TEX
-
-\ignore{
-=SML
-set_flag ("pp_use_alias", true);
-=IGN
-open_theory "NF";
-set_merge_pcs["hol1", "'savedthm_cs_∂_proof"];
-=TEX
-}%ignore
-
-In the context in which the development is taking place there is already a set theory, and we will make occasional use of it.
-The normal set theoretic symbols are interpreted in this prior set theory, and the new set theory (NF) which we are introducing will therefore use symbols systematically subscripted with a small roman `n'.
-
-Here is the new type for NF:
-
-=SML
-new_type ("NF", 0);
-=TEX
-
-This axioms use membership, the unit set and ordered pair constructors.
-I will take the ordinary pair constructor as primitive and define unit set and ordered pair in terms of them before introducing the axiom.
-
-=SML
-declare_infix (310, "çân");
-new_const("çân", îNF ≠ NF ≠ BOOLÆ);
-new_const("Pairân", îNF ∏ NF ≠ NFÆ);
-declare_prefix (320, "…");
-=TEX
-
-πHOLCONST
-‹ $€…› : NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu∑ … u = Pairân (u, u)
-∞
-
-πHOLCONST
-‹ €Kp› : NF ∏ NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu v∑ Kp(u, v) = Pairân(… u, Pairân(u, v))
-∞
-
-πHOLCONST
-‹ €Kt› : NF ∏ NF ∏ NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu v w∑ Kt(u, v, w) = Kp(… … u, Kp(v, w)) 
-∞
-
-\subsection{The Hailperin Axioms}
-
-=SML
-val Extân = new_axiom(["Extân"],
-
-	¨µu v∑ (µx∑ x çân u § x çân v) ¥ u = vÆ);
-
-val PairËnÍ = new_axiom(["Pairân"],	
-
-	¨µu v∑ (µx∑ x çân Pairân(u,v) § x = u ≤ x = v)Æ);
-
-val P1 = new_axiom(["P1"],
-
-	¨µu v∑ ∂ y∑ µ x∑ x çân y § ≥ x çân u ≤ ≥ x çân vÆ);
-
-val P2 = new_axiom(["P2"],
-
-	¨µu∑∂v∑µx y∑ Kp(… x, … y) çân v § Kp(x, y) çân uÆ);
-
-val P3 = new_axiom(["P3"],
-
-	¨µu∑∂v∑µx y z∑ Kt(x, y, z) çân v § Kp(x, y) çân uÆ);
-
-val P4 = new_axiom(["P4"],
-
-	¨µu∑∂v∑µx y z∑ Kt(x, z, y) çân v § Kp(x, y) çân uÆ);
-
-val P5 = new_axiom(["P5"],
-
-	¨µu∑∂v∑µx y∑ Kp(x, y) çân v § x çân uÆ);
-
-val P6 = new_axiom(["P6"],
-
-	¨µu∑∂v∑µx∑ x çân v § µz∑ Kp(z, … x) çân uÆ);
-
-val P7 = new_axiom(["P7"],
-
-	¨µu∑∂v∑µx y∑ Kp(y, x) çân u § Kp(x, y) çân vÆ);
-
-val P8 = new_axiom(["P8"],
-
-	¨∂v∑µx∑ x çân v § ∂y∑ x = … yÆ);
-
-val P9 = new_axiom(["P9"],
-
-	¨∂v∑µx y∑ Kp(… x, y) çân v § x çân yÆ);
-=TEX
-
-The following axiom says that for every two sets $u$ and $v$ there exists a set $y$ of those elements $x$ which appear in neither $u$ nor $v$.
-This is of course the complement of the union of the two sets, and the axiom allows us to define complement and union and various other operations over sets.
-
-\subsection{Definitions}
-
-Many of the following definitions depend upon a consistency proof, the details of which are not presented.
-
-Axiom P1 allows the definition of complementation and intersection, these two operators are the set theoretic counterpart to negation and conjunction which provide a universal set of operators for the propositional calculus.
-Axiom P1 therefore leads by itself to the definition of any set operations which correspond to propositional truth functions.
-
-\subsubsection{Complement}
-
-=SML
-declare_postfix (320, "õc");
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨∂ $õc:NF ≠ NF∑ µu x∑ x çân u õc § ≥ x çân uÆ);
-a (∂_tac ¨Ãx∑ ≈y∑ µz∑ z çân y § ≥ z çân xÆ THEN rewrite_tac[]
-	THEN REPEAT_N 2 strip_tac);
-a (≈_tac ¨≈ y∑ µ z∑ z çân y = (≥ z çân u)Æ);
-(* *** Goal "1" *** *)
-a (strip_asm_tac (list_µ_elim [¨uÆ, ¨uÆ] P1));
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (asm_rewrite_tac[]);
-save_cs_∂_thm(pop_thm());
-=TEX
-}%ignore
-
-πHOLCONST
-‹ $€õc› : NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu x∑ x çân u õc § ≥ x çân u
-∞
-
-\subsubsection{Intersection}
-
-=SML
-declare_infix(310, "°ân");
-=TEX
-
-\ignore{
-=SML
-val õcân_def = get_spec ¨$õcÆ;
-
-set_goal([], ¨∂$°ân:NF ≠ NF ≠ NF∑ µu v x∑ x çân u °ân v § x çân u ± x çân vÆ);
-a (∂_tac ¨Ãu v∑ ≈w∑ µx∑ x çân w § x çân u ± x çân vÆ
-	THEN rewrite_tac[]
-	THEN REPEAT_N 3 strip_tac);
-a (≈_tac ¨≈w∑ µx∑ x çân w § x çân u ± x çân vÆ);
-(* *** Goal "1" *** *)
-a (strip_asm_tac (list_µ_elim [¨uÆ, ¨vÆ] P1));
-a (∂_tac ¨y õcÆ THEN asm_rewrite_tac[õcân_def]
-	THEN REPEAT strip_tac);
-(* *** Goal "2" *** *)
-a (asm_rewrite_tac[]);
-save_cs_∂_thm(pop_thm());
-=TEX
-}%ignore
-
-πHOLCONST
-‹ $€°ân› : NF ≠ NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu v x∑ x çân (u °ân v) § x çân u ± x çân v
-∞
-
-\ignore{
-=SML
-val °ân_def = get_spec ¨$°ânÆ; 
-=TEX
-}%ignore
-
-
-\subsubsection{Union}
-
-=SML
-declare_infix(305, "¿ân");
-=TEX
-
-πHOLCONST
-‹ $€¿ân› : NF ≠ NF ≠ NF
-˜¸¸¸¸¸¸
-‹ µu v∑ u ¿ân v = ((u õc) °ân (v õc)) õc
-∞
-
-\ignore{
- πHOLCONST
-‹ $€õc› : NF ≠ NF
-˜¸¸¸¸¸¸
-‹ 
- ∞
-} %ignore
 
 \section{NFU}
 \subsection{Technical Prelude for NFU}
@@ -2081,12 +1882,6 @@ val ∂_CWFcategory_thm = save_pop_thm "∂_CWFcategory_thm";
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{NF.th}
-}  %\let
-
-{\let\Section\section
-\def\section#1{\Section{#1}
-\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{NFU.th}
 }  %\let
 
@@ -2125,8 +1920,6 @@ val ∂_CWFcategory_thm = save_pop_thm "∂_CWFcategory_thm";
 
 \end{document}
 =SML
-open_theory "NF";
-output_theory{out_file="NF.th.doc", theory="NF"};
 open_theory "NFU";
 output_theory{out_file="NFU.th.doc", theory="NFU"};
 open_theory "PI";
