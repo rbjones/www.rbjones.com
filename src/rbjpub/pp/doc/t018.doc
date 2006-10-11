@@ -1,5 +1,5 @@
 =IGN
-$Id: t018.doc,v 1.5 2006/10/02 12:36:31 rbj01 Exp $
+$Id: t018.doc,v 1.6 2006/10/11 19:07:42 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -22,7 +22,7 @@ $Id: t018.doc,v 1.5 2006/10/02 12:36:31 rbj01 Exp $
 \makeindex
 \title{Category Theoretic Foundation Systems with Universal Categories}
 \makeindex
-\date{$ $Date: 2006/10/02 12:36:31 $ $}
+\date{$ $Date: 2006/10/11 19:07:42 $ $}
 \author{Roger Bishop Jones\\ rbj01@rbjones.com}
 
 \usepackage[pdftex]{hyperref}
@@ -31,13 +31,17 @@ $Id: t018.doc,v 1.5 2006/10/02 12:36:31 rbj01 Exp $
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This document is a formal exporation of the possibility of constructing a category theoretic foundation for mathematics by contructing and axiomatising a model from the sets in Quine's NF or NFU.
-It begins with axiomatisations of NF and NFU in {\Product-HOL} and proceeds from there conservatively, by constructing domains suitable for the proposed concrete reflexive category theory, defining new types based on these domains and deriving as theorems principles suitable for an independent axiomatic theory of this system.
+This document is a formal exporation of the possibility of constructing a category theoretic foundation for mathematics by contructing models based on those for set theoretic foundation systems, and then developing the theory of these structures.
+The exploration involves more than one set theoretic starting point, and more than one way of constructing concrete category theoretic structures from the chosen set theories.
+The interest is primarily in systems which combine a substantial collection of well-founded entities with a non-well-founded ontology including a universal set or category.
 \end{abstract}
+
 \vfill
+
 \begin{centering}
-Reference: rbjt0018; $ $Revision: 1.5 $ $
+Reference: rbjt018; $ $Revision: 1.6 $ $
 \end{centering}
+
 \thispagestyle{empty}
 \end{titlepage}
 \newpage
@@ -66,12 +70,10 @@ Everything.
 
 The material here concerns non-well-founded formal foundations for mathematics.
 
-It begins from material relating to non-well-founded set theories in books by Forster \cite{forster92} and Holmes \cite{holmes98} and engages in a process of ontological transformation, whereby the ontology for an established foundation system is used to construct an alternative ontology, for which a stuiable axiomatisation is formally established.
-
-More specifically we begin with axiomatisations in {\Product-HOL} of the non-well-founded set theories NF and NFU, the first based on an axiomatisation due to Hailperin, substantially (but not entirely) as presented in \cite{forster92} (and not developed futher here), the second based on (but not entirely the same as) the finite axiomatisation by Holmes presented in \cite{holmes98}.
-The formalisation of NFU is then used as a basis for the construction of domains of concrete categories and functors intended as models for a foundational theory of concrete categories and functors.
+It builds on formalisations of non-well-founded set theories in \cite{rbjt019} based on books by Forster \cite{forster92} and Holmes \cite{holmes98} and engages in a process of ontological transformation, whereby the ontology for an established foundation system is used to construct an alternative ontology, for which a suitable axiomatisation is formally established.
 
 The rationale here is as follows:
+
 \begin{itemize}
 
 \item It is natural, even in an untyped universe, to abstract away from the detailed coding of functions as sets by treating both sets and functions as primitive.
@@ -83,10 +85,11 @@ Sets and functions are special cases of Categories (which are sets with some str
 This more complex ontology subsumes in a very direct way the more primitive set/function ontology.
 A set is a discrete category, a function is a functor whose domain is discrete.
 
-\item all the above has nothing to do with universal sets or well=foundedness.
+\item all the above has nothing to do with universal sets or well-foundedness.
 The kind of construction described is easily done in a well-founded set theory, but I have found the prospective advantages in a well-founded context insufficient motivation to carry through from the construction to development of the resulting theory.
 Partly this is because category theory more conspicuously than set theory screams against the constraint of well-foundedness.
 When done in a non=well-founded context, the additional merit of a category theory in which talk about size becomes less pervasive is added to the incentive to see how the theory works out.
+
 \end{itemize}
 
 Two approaches to this construction are presented, the first based on the notion of pseudo-well-foundedness presented in \cite{forster92} and the second a ``Co-Inductive'' definition using methods from \cite{rbjt007}, one other is defined, {\it en passant} i.e. the well-founded inductive definition (which differs from the co-inductive case only in taking a least instead of a greatest fixed point), but taken not further.
@@ -143,971 +146,70 @@ To get a result which is not well-founded, we need to start with a non-well-foun
 For this purpose we have axiomatisations in {\Product} HOL of NF and NFU.
 The work is done by defining operators on set membersbip relations, so that the same construction can be applied to more than one set theory.
 
-\subsection{The Axioms}
+\section{PRE-FUNCTORS}
 
-I have decided to try two different axiomatisations.
-Randall Holmes's axiomatisation of NFU and Hailperin's finite axiomatisation of NF.
+This is a theory of the kind of functions which are suitable for use as the arrows in a concrete category.
+Since the concrete categories which are of interest here are all categories of categories, the arrows will be functors and it is therefore not inappropriate to call this special kind of function a ``pre-functor''.
 
-\subsubsection{NF following Hailperin}
+The sole difference between a prefunctor and a many-one relation in set theory is simply that the pre-functors have a defined codomain which may be distinct from its range.
+It does not have a domain which is distinct from the set of values for which it is defined, since we expect the functions in a concrete category and the functors in a category of categories to be total functions.
 
-This should be pretty close, the difficulties being not in transcription of the axioms but in developing the theory from them.
-Forster observes that these axioms tie you to the Wiener-Kuratovski representation of ordered pairs, but I can't see why that should be the case, though the axioms are presented using ordered pairs in that representation.
-I can't see anything which commits any further use of that representation, but probably I will do something agnostic, following Holmes on NFU, which just doesn't say what the representation of ordered pairs is.
-
-\subsubsection{NFU following Holmes}
-
-Here the game plan is to begin with a routine transcription into ProofPower HOL of the axioms and definitions for NFU as presented by Randall Holmes in his book (Cahiers du Centre Logique, Volume 10, also available from his web site).
-This will proceed initially no further than is necessay to interpret the stratified lambda calculus, and then attempt a construction of the domain of the stratified lambda calculus (conservatively over NFU).
-If this seems OK then, without developing the stratified lambda calculs further, I will see if I can figure our how to do something category theoretic.
-
-I will not necessarily be single-minded in heading for the category theoretic foundation, there may be aspects of NFU which will seem worth persuing en-route.
-
-The following deliberate deviations from Holmes' axioms may be noted:
-
-\begin{itemize}
-\item Holmes' axioms contain more conditions on things being sets than are strictly necessary.
-Since these conditions make theorem proving harder, I have omitted them where they are not essential.
-Typically this is the case in an axiom introducing an operation over sets.
-Such definitions will effectively treat atoms as if they were the empty set if the condition is removed, and I am supposing this is a harmless but convenient idosyncracy on my part.
-\end{itemize}
-
-
-\section{NFU}
-\subsection{Technical Prelude for NFU}
-
-First of all, we must give the the ML commands to  introduce the new theory ``NFU'' as a child of the theory ``hol''.
+This theory is a child of the formalisation of NFU in \cite{rbjt019} (roughly) following Holmes \cite{holmes98}.
 
 =SML
-open_theory "rbjmisc";
-force_new_theory "NFU";
-force_new_pc "nfu";
-set_merge_pcs["hol1", "nfu", "'savedthm_cs_¶_proof"];
+open_theory "nfu_f";
+force_new_theory "pre_func";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'nfu_f1"];
 =TEX
-
-In the context in which the development is taking place there is already a set theory, and we will make occasional use of it.
-The normal set theoretic symbols are interpreted in this prior set theory, and the new set theory (NFU) which we are introducing will therefore use symbols systematically subscripted with a small roman `n'.
-
-\subsection{The Set Concept}
-
-We introduce a new type which contains the sets of NFU.
-NFU is distinguished from NF by a weaker axiom of extensionality which allows that there may be {\it urelements}.
-In Holmes' axiomatisation the difference between sets and non-sets is treated explicitly, which he may have done for pedagogical reasons.
-However, this is less convenient for formalisation than a more lightweight treatment of non-sets, in which the distinctiveness of NFU is confined to the restriction of extensionality to non-empty sets, urelements being logically like extra empty sets.
-In this approach the Set predicate used by Holmes to distinguish sets from atoms is unnecessary and our only primitive is therefore the relation $¬‰u®$ which tells us what the members of a set are.
-
-=SML
-new_type("NFU",0);
-declare_infix(300, "‰u");
-new_const("‰u", ”NFU ­ NFU ­ BOOL®);
-=TEX
-
-=SML
-val Ext_ax = new_axiom (["Ext"],
-	¬µa b c· c ‰u a ´ (µx· x ‰u a ¤ x ‰u b) ´ a = b®);
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µa b c· c ‰u a ² c ‰u b ´ (a = b ¤ (µx· x ‰u a ¤ x ‰u b))®);
-a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (all_var_elim_asm_tac);
-(* *** Goal "2" *** *)
-a (all_fc_tac [Ext_ax]);
-(* *** Goal "3" *** *)
-a (all_var_elim_asm_tac);
-(* *** Goal "4" *** *)
-a (DROP_NTH_ASM_T 1 (asm_tac o map_eq_sym_rule));
-a (strip_asm_tac (list_µ_elim [¬b®, ¬a®, ¬c®] Ext_ax)
-	THEN_TRY asm_rewrite_tac[]);
-a (spec_nth_asm_tac 3 ¬x®);
-a (spec_nth_asm_tac 3 ¬x®);
-val Extèuê_thm = save_pop_thm "Extèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-Extèuê_thm =
-   ô µ a b c· c ‰u a ² c ‰u b ´ ((a = b) ¤ (µ x· x ‰u a = x ‰u b))
-=TEX
-
-\subsubsection{The Empty Set}
-
-
-=SML
-new_const("š‰u", ”NFU®);
-val šèuê_ax = new_axiom (["š‰u"], ¬µx· ³ x ‰u š‰u®);
-=TEX
-
-There may be more things with no members but we think of the others as urelements, only this one is the empty set (we will make sure that none of the others ever results from an operation over sets).
-
-Once we have complements we will define the universe.
-
-\subsubsection{Sets and Urelements}
-
-We can now define predicates for sets and urelements.
 
 ¹HOLCONST
-Ü ÛSet‰uİ : NFU ­ BOOL
+Ü ÛPreFunctorİ : SET‰nf ­ BOOL
 ÷üüüüüü
-Ü µa· Set‰u a ¤ a = š‰u ² ¶x· x ‰u a
-°
-
-¹HOLCONST
-Ü ÛUr‰uİ : NFU ­ BOOL
-÷üüüüüü
-Ü µa· Ur‰u a ¤ ³ Set‰u a
+Ü µp· PreFunctor p ¤ ¶x y· p = op(x, y) ± Rel x ± ManyOne x ± rng x €‰nf y   
 °
 
 \ignore{
 =SML
-val Setèuê_def = get_spec ¬Set‰u®;
-val Urèuê_def = get_spec ¬Ur‰u®;
-
-set_goal([], ¬Set‰u š‰u®);
-a (rewrite_tac[Setèuê_def]);
-val Setèuê_šèuê_thm = save_pop_thm "Setèuê_šèuê_thm";
-
-set_goal([], ¬µa b· Set‰u a ± Set‰u b ´ (a = b ¤ (µx· x ‰u a ¤ x ‰u b))®);
-a (rewrite_tac[Setèuê_def]);
-a (REPEAT_N 3 strip_tac);
-(* *** Goal "1" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (FC_T1 fc_¤_canon rewrite_tac [Extèuê_thm]);
-(* *** Goal "3" *** *)
-a (FC_T1 fc_¤_canon rewrite_tac [Extèuê_thm]);
-(* *** Goal "4" *** *)
-a (FC_T1 fc_¤_canon rewrite_tac [Extèuê_thm]);
-val Extèuê_set_thm = save_pop_thm "Extèuê_set_thm";
-=TEX
-}%ignore
-
-=GFT
-Extèuê_set_thm =
-   ô µ a b c· Set‰u a ± Set‰u b ´ (a = b ¤ (µ x· x ‰u a ¤ x ‰u b))
-=TEX
-
-\subsubsection{Comprehension}
-
-Notation for set comprehension will probably be useful.
-We have syntax for sets, which in this context will yield values of type
-=INLINEFT
-”NFU SET®
-=TEX
-, so we define two new constants, one to assert the existence of a set with a particular extension, and the other to convert an object of type 
-=INLINEFT
-”NFU SET®
-=TEX
- to one of type 
-=INLINEFT
-”NFU®
-=TEX
-.
-
-The constant
-=INLINEFT
-¬¶‰u®
-=TEX
- simply asserts the existence of a set with some particular extension.
-
-¹HOLCONST
-Ü Û¶‰uİ : NFU SET ­ BOOL
-÷üüüüüü
-Ü µs· ¶‰u s ¤ ¶a· Set‰u a ± µx· x ‰u a ¤ x  s
-°
-
-The constant 
-=INLINEFT
-¬•‰u®$
-=TEX
- simulates set comprehension in NFU.
-If applied to an extension (as an object of type
-=INLINEFT
-”(NFU)SET®
-=TEX
-) for which a set exists it yields that set.
-
-\ignore{
-=SML
-val ¶‰u_def = get_spec ¬¶‰u®;
-
-set_goal([], ¬¶ •‰u· µs· ¶‰u s ´ Set‰u (•‰u s) ± µx· x ‰u (•‰u s) ¤ x  s®);
-a (¶_tac ¬Ìs· Ån· Set‰u n ± µx· x ‰u n ¤ x  s® THEN rewrite_tac[]
-	THEN strip_tac THEN rewrite_tac [¶‰u_def]
-	THEN strip_tac
-	THEN strip_tac);
-(* *** Goal "1" *** *)
-a (Å_tac ¬Ån· Set‰u n ± µx· x ‰u n ¤ x  s®);
-a (¶_tac ¬a® THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (Å_tac ¬Ån· Set‰u n ± µx· x ‰u n ¤ x  s®);
-a (¶_tac ¬a® THEN asm_rewrite_tac[]);
-save_cs_¶_thm (pop_thm());
-=TEX
-} %ignore
-
-¹HOLCONST
-Ü Û•‰uİ : NFU SET ­ NFU
-÷üüüüüü
-Ü µs· ¶‰u s ´ Set‰u (•‰u s) ± µx· x ‰u (•‰u s) ¤ x  s
-°
-
-\ignore{
-=SML
-val ¶èuê_def = get_spec ¬¶‰u®;
-val •èuê_def = get_spec ¬•‰u®;
-=TEX
-}%ignore
-
-\ignore{
-=SML
-set_goal([], ¬¶‰u {}®);
-a (rewrite_tac[¶èuê_def]);
-a (¶_tac ¬š‰u® THEN rewrite_tac [šèuê_ax, Setèuê_def]);
-val ¶‰u_empty_thm = save_pop_thm "¶‰u_empty_thm";
-
-set_goal([], ¬•‰u {} = š‰u®);
-a (asm_tac ¶‰u_empty_thm THEN FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [•èuê_def]);
-a (asm_tac Setèuê_šèuê_thm);
-a (ALL_FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [•èuê_def]);
-a (ALL_FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [Extèuê_set_thm]);
-a (asm_rewrite_tac[šèuê_ax]);
-val •èuê_šèuê_thm = save_pop_thm "•èuê_šèuê_thm";
-=TEX
-}%ignore
-
-Of course this is all mere notation, there are no assertions made here about which sets exist.
-
-\subsection{Boolean Operations}
-
-In this area the theory NFU differs from the kind of typed set theory which we do in HOL only because of the complications arising from the possibility that there are atoms in the domain of discourse.
-The effect of this is that the theorems which characterise the operations over sets are all conditional.
-Whereas in HOL it is straightforward to eliminate this kind of set theoretic vocabulary, reducing equalities and inequalities to propositional logic or elementary theorems of quantifier theory, in NFU this is not quite so straightforward and requires a bit more machinary. 
-
-\subsubsection{Complement}
-
-The first clause of this axiom ensures that the complement operation always yields a set.
-
-=SML
-new_const("›c", ”NFU ­ NFU®);
-declare_postfix(310,"›c");
-val çcêèuê_ax = new_axiom (["›c"], ¬µa· Set‰u (a ›c) ± µx· x ‰u a ›c ¤ ³ x ‰u a®);
-=TEX
-
-\subsubsection{The Universe}
-
-The Universe is the complement of the empty set.
-
-¹HOLCONST
-Ü ÛV‰uİ : NFU
-÷üüüüüü
-Ü V‰u = š‰u ›c
-°
-
-\ignore{
-=SML
-val Vèuê_def = get_spec ¬V‰u®;
-
-set_goal([], ¬µx· x ‰u V‰u®);
-a (rewrite_tac[Vèuê_def, çcêèuê_ax, šèuê_ax]);
-val èuêVèuê_thm = save_pop_thm "èuêVèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-èuêVèuê_thm =
-   ô µ x· x ‰u V‰u
-=TEX
-
-\subsubsection{Union}
-
-=SML
-new_const("À‰u", ”NFU ­ NFU ­ NFU®);
-declare_infix(290, "À‰u");
-val Àèuê_ax = new_axiom (["À‰u"],
-	¬µa b· Set‰u (a À‰u b) ± µx· x ‰u (a À‰u b) ¤ x ‰u a ² x ‰u b®);
-=TEX
-
-\subsubsection{Intersection}
-
-We are now able to {\it define} intersection:
-
-=SML
-declare_infix(300, "¡‰u");
-=TEX
-
-¹HOLCONST
-Ü Û$¡‰uİ : NFU ­  NFU ­ NFU
-÷üüüüüü
-Ü µa b· (a ¡‰u b) = (a ›c À‰u b ›c)›c
-°
-
-\ignore{
-=SML
-val ¡‰u_def = get_spec ¬$¡‰u®;
-
-set_goal ([], ¬µa b· Set‰u (a ¡‰u b) ± µx· x ‰u (a ¡‰u b) ¤ x ‰u a ± x ‰u b®);
-a (rewrite_tac [¡‰u_def, Àèuê_ax, çcêèuê_ax] THEN REPEAT strip_tac);
-val ¡èuê_thm = save_pop_thm "¡èuê_thm";
-=TEX
-}%ignore
-
-=GFT
-¡èuê_thm
-	ô µ a b· Set‰u(a ¡‰u b) x· x ‰u a ¡‰u b ¤ (x ‰u a ± x ‰u b)
-=TEX
-
-\subsubsection{Relative Complement}
-
-=SML
-declare_infix(300, "\\‰u");
-=TEX
-
-¹HOLCONST
-Ü Û$\‰uİ : NFU ­  NFU ­ NFU
-÷üüüüüü
-Ü µa b· (a \‰u b) = a ¡‰u (b ›c)
-°
-
-\ignore{
-=SML
-val diff‰u_def = get_spec ¬$\‰u®;
-
-set_goal ([], ¬µa b· Set‰u (a \‰u b) ± µx· x ‰u (a \‰u b) ¤ x ‰u a ± ³ x ‰u b®);
-a (rewrite_tac[diff‰u_def, çcêèuê_ax, ¡‰u_def, Àèuê_ax]);
-a (REPEAT strip_tac);
-val diffèuê_thm  = save_pop_thm "diffèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-diffèuê_thm  =
-    ô µ a b· Set‰u(a \‰u b) µx· x ‰u a \‰u b ¤ x ‰u a ± ³ x ‰u b
-=TEX
-
-\subsubsection{Symmetric Difference}
-
-=SML
-declare_infix(300, "„‰u");
-=TEX
-
-¹HOLCONST
-Ü Û$„‰uİ : NFU ­  NFU ­ NFU
-÷üüüüüü
-Ü µa b· (a „‰u b) = (b \‰u a) À‰u (a \‰u b)
-°
-\ignore{
-=SML
-val „‰u_def = get_spec ¬$„‰u®;
-
-set_goal([], ¬µa b· Set‰u (a „‰u b)
-	± µx· x ‰u a „‰u b ¤ (x ‰u a ² x ‰u b) ± ³(x ‰u a ± x ‰u b)®);
-a (rewrite_tac[„‰u_def, çcêèuê_ax, ¡‰u_def, Àèuê_ax, diffèuê_thm]);
-a (REPEAT strip_tac);
-val „èuê_thm  = save_pop_thm "„èuê_thm";
-=TEX
-}%ignore
-
-\subsubsection{Inclusion}
-
-=SML
-declare_infix(290, "€‰u");
-declare_infix(290, " ‰u");
-=TEX
-
-¹HOLCONST
-Ü $Û€‰uİ : NFU ­  NFU ­ BOOL
-÷üüüüüü
-Ü µa b· (a €‰u b) ¤ µx· x ‰u a ´ x ‰u b
-°
-
-¹HOLCONST
-Ü $Û ‰uİ : NFU ­  NFU ­ BOOL
-÷üüüüüü
-Ü µa b· (a  ‰u b) ¤ (a €‰u b) ± ³ b €‰u a
-°
-
-\ignore{
-=SML
-val €èuê_def = get_spec ¬$€‰u®;
-val  èuê_def = get_spec ¬$ ‰u®;
-
-set_goal([], ¬µa· š‰u €‰u a®);
-a (rewrite_tac [€èuê_def, šèuê_ax]);
-val šèuê_€èuê_thm = save_pop_thm "šèuê_€èuê_thm";
+val PreFunctorèuê_def = get_spec ¬PreFunctor®;
 =IGN
-set_goal([], ¬µa b· Set‰u b ± a €‰u b ¤ a À‰u b = b®);
-a (rewrite_tac [€èuê_def, Àèuê_ax]
-	THEN REPEAT_N 2 strip_tac);
-a (cases_tac ¬Set‰u b® THEN asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (fc_tac [Setèuê_def] THEN1 asm_rewrite_tac[]);
-(* *** Goal "1.1" *** *)
-
-Ur‰u_def;
-a (strip_asm_tac (list_µ_elim [¬a À‰u b®, ¬b®] Ext_ax));
-val š‰u_€‰u_thm = save_pop_thm "š‰u_€‰u_thm";
-=TEX
-}%ignore
-
-\subsubsection{Distributed Union}
-
-=SML
-new_const("Ş‰u", ”NFU ­ NFU®);
-declare_prefix(310, "Ş‰u");
-val Ş‰u_ax = new_axiom (["Ş"],
-	¬µa· Set‰u (Ş‰u a) ± µx· x ‰u Ş‰u a ¤ ¶y· x ‰u y ± y ‰u Ş‰u a®);
-=TEX
-
-\subsubsection{Some Theorems}
-
-The limitation on extensionality in NFU makes a little difficulty in using extensional reasoning to establish equalities or inequalities.
-This will most frequently involve establishing that both operands are sets, though it may suffice to establish that one is non-empty.
-We therefore need some theorems telling us that things are sets.
-
-\ignore{
-=SML
-set_goal([], ¬Set‰u š‰u ± Set‰u V‰u
-	± µa b· Set‰u(a ›c)
-	  ± Set‰u (a ¡‰u b)
-	  ± Set‰u (a À‰u b)
-	  ± Set‰u (a \‰u b)
-	  ± Set‰u (a „‰u b)®);
-a (rewrite_tac [Vèuê_def, çcêèuê_ax, Àèuê_ax, Setèuê_šèuê_thm, ¡èuê_thm, diffèuê_thm, „èuê_thm]);
-val Setèuê_clauses = save_pop_thm "Setèuê_clauses";
-=TEX
-}%ignore
-
-In a set theory without urelements it is possible and useful to simplify away many occurrences of the empty set.
-In this context, an operation involving the empty set may have the effect of converting its other operand from a urelement to an empty set, and so the simplification may not be possible or desirable.
-This is reflected in the following theorem by the cases in which simplification is conditional on something being a set.
-
-\ignore{
-=SML
-set_goal ([], ¬
-	  V‰u ›c = š‰u
-	± š‰u ›c = V‰u
-®);
-a (rewrite_tac[Vèuê_def, çcêèuê_ax]);
-a (asm_tac Setèuê_šèuê_thm);
-a (lemma_tac ¬Set‰u (š‰u ›c ›c)® THEN1 rewrite_tac [çcêèuê_ax]);
-a (ALL_FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [Extèuê_set_thm]);
-a (asm_rewrite_tac[çcêèuê_ax]);
-val šèuêVèuê_clauses = save_pop_thm "šèuêVèuê_clauses";
-=TEX
-=IGN
-set_goal ([], ¬µa·
-		a ¡‰u š‰u = š‰u
-	  ±	š‰u ¡‰u a = š‰u
-	  ±	š‰u \‰u a = š‰u
-	  ±	a À‰u V‰u = V‰u
-	  ±	V‰u À‰u a = V‰u
-	  ±	a \‰u V‰u = š‰u
-®);
-a (strip_tac);
-a (lemma_tac ¬Set‰u š‰u ± Set‰u V‰u ± Set‰u(a ¡‰u š‰u) ± Set‰u(š‰u ¡‰u a) ± Set‰u(š‰u \‰u a) ± Set‰u(a À‰u V‰u) ± Set‰u(V‰u À‰u a) ± Set‰u(a \‰u V‰u)® THEN1 rewrite_tac[Setèuê_clauses]);
-a (ALL_FC_T1 fc_¤_canon rewrite_tac [Extèuê_set_thm]);
-a (rewrite_tac[çcêèuê_ax, Àèuê_ax, ¡‰u_def, diff‰u_def, „‰u_def, šèuêVèuê_clauses]);
-(* *** Goal "1" *** *)
-
-=TEX
-}%ignore
-
-=GFT
-val šèuêVèuê_clauses = ô V‰u ›c = š‰u ± š‰u ›c = V‰u
-=TEX
-
-\subsection{Building Finite Structures}
-
-\subsubsection{Singletons}
-
-=SML
-val Singleton_ax = new_axiom(["Singleton_ax"], ¬µx· ¶‰u {y | y = x}®);
-declare_prefix (320, "É‰u");
-=TEX
-
-¹HOLCONST
-Ü $ÛÉ‰uİ : NFU ­ NFU
-÷üüüüüü
-Ü µx· É‰u x = •‰u {y | y = x}
-°
-
-\ignore{
-=SML
-val Éèuê_def = get_spec ¬$É‰u®;
-
-set_goal([], ¬µy· Set‰u (É‰u y) ± µx· (x ‰u É‰u y ¤ x = y)®);
-a (rewrite_tac [Éèuê_def]
-	THEN REPEAT_N 2 strip_tac);
-(* *** Goal "1" *** *)
-a (asm_tac (µ_elim ¬y® Singleton_ax)
-	THEN FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [•èuê_def]
-	THEN strip_tac);
-(* *** Goal "2" *** *)
-a (asm_tac (µ_elim ¬y® Singleton_ax)
-	THEN FC_T1 fc_¤_canon (MAP_EVERY asm_tac) [•èuê_def]);
-a (asm_rewrite_tac[]);
-val Éèuê_thm = save_pop_thm "Éèuê_thm";
-
-set_goal([], ¬µx· x ‰u É‰u x®);
-a (rewrite_tac[Éèuê_thm]);
-val Éèuê_thm2 = save_pop_thm "Éèuê_thm2";
-
-set_goal([], ¬µx y· É‰u x = É‰u y ¤ x = y®);
-a (REPEAT µ_tac);
-a (lemma_tac ¬Set‰u (É‰u x) ± Set‰u (É‰u y)®
-	THEN1 rewrite_tac [Éèuê_thm]
-	THEN ALL_FC_T1 fc_¤_canon (rewrite_tac) [Extèuê_set_thm]); 
-a (REPEAT_N 3 strip_tac THEN_TRY asm_rewrite_tac[]);
-a (spec_nth_asm_tac 1 ¬x®
-	THEN DROP_NTH_ASM_T 2 ante_tac
-	THEN rewrite_tac [Éèuê_thm]);
-val Éèuê_eq_thm = save_pop_thm "Éèuê_eq_thm";
-=TEX
-}%ignore
-
-=GFT
-Éèuê_thm =
-   ô µ x· Set‰u (É‰u x) ± µy· (y ‰u É‰u x ¤ y = x)
-
-Éèuê_thm2 =
-   ô µ x· x ‰u É‰u x
-
-Éèuê_eq_thm =
-   ô µ x y· É‰u x = É‰u y ¤ x = y
-=TEX
-
-The constructor previously defined for converting a HOL set abstraction to an NFU set will work also for a HOL set display (note however that the elements in the display must be separated by semicolons rather than commas).
-
-\subsubsection{Pairs}
-
-A pair is the union of two singletons.
-
-¹HOLCONST
-Ü ÛPair‰uİ : NFU ¸ NFU ­ NFU
-÷üüüüüü
-Ü µx y· Pair‰u (x, y) = (É‰u x) À‰u (É‰u y)
-°
-
-\ignore{
-=SML
-val Pairèuê_def = get_spec ¬Pair‰u®;
-
-set_goal([],¬µa b· Set‰u (Pair‰u(a, b)) ± (µx· x ‰u Pair‰u(a, b) ¤ x = a ² x = b)®);
-a (rewrite_tac [Pairèuê_def, Àèuê_ax, Éèuê_thm]
-	THEN REPEAT_N 2 strip_tac);
-val Pairèuê_thm = save_pop_thm "Pairèuê_thm";
-
-set_goal([], ¬µa b c· É‰u a = Pair‰u(b, c) ¤ b = a ± c = a®);
-a (REPEAT_N 3 strip_tac);
-a (lemma_tac ¬Set‰u(É‰u a) ± Set‰u(Pair‰u(b, c))®
-	THEN1 rewrite_tac [Éèuê_thm, Pairèuê_thm]);
-a (ALL_FC_T1 fc_¤_canon (rewrite_tac)
-	[Extèuê_set_thm]);
-a (rewrite_tac [Éèuê_thm, Pairèuê_thm]
-	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-val Éèuê_eq_Pairèuê_thm = save_pop_thm "Éèuê_eq_Pairèuê_thm";
-
-set_goal([], ¬µa b c· Pair‰u(b, c) = É‰u a ¤ b = a ± c = a®);
-a (REPEAT_N 3 strip_tac);
-a (LEMMA_T ¬Pair‰u(b, c) = É‰u a ¤ É‰u a = Pair‰u(b, c)® rewrite_thm_tac
-	THEN1 (REPEAT strip_tac THEN asm_rewrite_tac[]));
-a (rewrite_tac [Éèuê_eq_Pairèuê_thm]);
-val Pairèuê_eq_Éèuê_thm = save_pop_thm "Pairèuê_eq_Éèuê_thm";
-
-set_goal([], ¬µa b c d· Pair‰u(a, b) = Pair‰u(c, d) ¤ a = c ± b = d ² a = d ± b = c®);
-a (REPEAT µ_tac);
-a (lemma_tac ¬Set‰u(Pair‰u(a,b)) ± Set‰u(Pair‰u(c,d))® THEN1 rewrite_tac[Pairèuê_thm]);
-a (ALL_FC_T1 fc_¤_canon rewrite_tac [list_µ_elim [¬Pair‰u(a,b)®, ¬Pair‰u(c,d)®] Extèuê_set_thm]);
-a (rewrite_tac [Pairèuê_thm] THEN REPEAT strip_tac
-	THEN_TRY all_var_elim_asm_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (spec_nth_asm_tac 2 ¬a®);
-(* *** Goal "2" *** *)
-a (spec_nth_asm_tac 2 ¬c®);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-a (asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
-a (asm_rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (lemma_tac ¬³d=b® THEN1 (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]));
-a (spec_nth_asm_tac 3 ¬d® THEN asm_rewrite_tac[]);
-(* *** Goal "4" *** *)
-a (spec_nth_asm_tac 2 ¬b® THEN asm_rewrite_tac[]);
-val Pairèuê_eq_Pairèuê_thm = save_pop_thm "Pairèuê_eq_Pairèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-Pairèuê_thm =
-   ô µ a b· Set‰u (Pair‰u (a, b)) ± (µ x· x ‰u Pair‰u (a, b) ¤ x = a ² x = b)
-
-Éèuê_eq_Pairèuê_thm =
-   ô µ a b c· É‰u a = Pair‰u (b, c) ¤ b = a ± c = a
-
-Pairèuê_eq_Éèuê_thm =
-   ô µ a b c· Pair‰u (b, c) = É‰u a ¤ b = a ± c = a
-=TEX
-
-\subsubsection{Ordered Pairs}
-
-¹HOLCONST
-Ü $ÛKp‰uİ : NFU ¸ NFU ­ NFU
-÷üüüüüü
-Ü µx y· Kp‰u (x, y) = Pair‰u (É‰u x, Pair‰u (x, y))
-°
-
-\ignore{
-=SML
-val Kpèuê_def = get_spec ¬Kp‰u®;
-
-set_goal([],¬µa b· Set‰u (Kp‰u(a,b)) ± µx· x ‰u Kp‰u(a,b) ¤ x=É‰u a ² x=Pair‰u(a, b)®);
-a (rewrite_tac [Kpèuê_def, Pairèuê_thm]);
-val Kpèuê_thm = pop_thm ();
-
-set_goal([], ¬µa b c d· Kp‰u(a, b) = Kp‰u(c, d) ¤ a = c ± b = d®);
-a (REPEAT µ_tac THEN strip_tac THEN strip_tac);
-(* *** Goal "1" *** *)
-a (lemma_tac ¬Set‰u(Kp‰u(a, b)) ± Set‰u(Kp‰u(c, d))® THEN1 rewrite_tac [Kpèuê_thm]);
-a (ALL_FC_T1 fc_¤_canon (rewrite_tac)
-	[list_µ_elim [¬Kp‰u(a, b)®, ¬Kp‰u(c, d)®] Extèuê_set_thm]
-	THEN asm_rewrite_tac[Kpèuê_thm] THEN strip_tac);
-a (SPEC_NTH_ASM_T 1 ¬É‰u a® (asm_tac o (rewrite_rule[Éèuê_eq_thm, Éèuê_eq_Pairèuê_thm])));
-a (lemma_tac ¬a = c® THEN1 (POP_ASM_T strip_asm_tac THEN asm_rewrite_tac[]));
-a (asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 3 ante_tac);
-a (asm_rewrite_tac[] THEN strip_tac);
-a (SPEC_NTH_ASM_T 1 ¬Pair‰u (d, b)® (ante_tac o (rewrite_rule[Éèuê_eq_thm, Éèuê_eq_Pairèuê_thm,
-		Pairèuê_eq_Éèuê_thm, Pairèuê_eq_Pairèuê_thm])));
-a (cases_tac ¬d = c® THEN asm_rewrite_tac[]);
-a (cases_tac ¬b = c® THEN asm_rewrite_tac[]);
-a (SPEC_NTH_ASM_T 3 ¬Pair‰u (c, b)® (ante_tac o (rewrite_rule[Éèuê_eq_thm, Éèuê_eq_Pairèuê_thm,
-		Pairèuê_eq_Éèuê_thm, Pairèuê_eq_Pairèuê_thm]))
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (strip_tac THEN asm_rewrite_tac[]);
-val Kpèuê_eq_Kpèuê_thm = pop_thm ();
-=TEX
-} %ignore
-
-The following theorems are proven and used in the introduction of $Op$.
-
-=GFT
-   ô µ a b· Set‰u (Kp‰u (a, b))
-         ± (µ x· x ‰u Kp‰u (a, b) ¤ x = É‰u a ² x = Pair‰u (a, b))
-
-   ô µ a b c d· Kp‰u (a, b) = Kp‰u (c, d) ¤ a = c ± b = d
-=TEX
-
-Having established that a pair constructor exists using a specific encoding, we can now introduce a new name for a pair constructor which is not tied to this particular coding.
-The introduction of this constant involves a consistency proof in which the {\it Kp} is used (script not shown).
-
-\ignore{
-=SML
-set_goal([], ¬¶ Op‰u: NFU ¸ NFU ­ NFU· µa b c d· Op‰u (a, b) = Op‰u(c, d)
-	¤ a = c ± b = d®);
-a (¶_tac ¬Kp‰u® THEN accept_tac Kpèuê_eq_Kpèuê_thm);
-save_cs_¶_thm(pop_thm());
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛOp‰uİ : NFU ¸ NFU ­ NFU
-÷üüüüüü
-Ü µa b c d· Op‰u (a, b) = Op‰u (c, d)
-Ü	¤ a = c ± b = d
-°
-
-\ignore{
-=SML
-val Op‰u_def = get_spec ¬Op‰u®;
-
-set_goal([], ¬¶ Fst‰u: NFU ­ NFU· µa b· Fst‰u (Op‰u (a, b)) = a®);
-a (¶_tac ¬Ìp:NFU· Åa:NFU· ¶b· p = Op‰u(a,b)® THEN rewrite_tac[]);
-a (Å_tac ¬Å a'· ¶ b'· Op‰u (a, b) = Op‰u (a', b')®);
-(* *** Goal "1" *** *)
-a (¶_tac ¬a® THEN ¶_tac ¬b® THEN rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (REPEAT strip_tac THEN rewrite_tac[Op‰u_def ]);
-a (Å_tac ¬Å a''· ¶ b'· a' = a'' ± b'' = b'®);
-(* *** Goal "2.1" *** *)
-a (¶_tac ¬a'® THEN ¶_tac ¬b''® THEN rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (SYM_ASMS_T rewrite_tac);
-save_cs_¶_thm(pop_thm());
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛFst‰uİ : NFU ­ NFU
-÷üüüüüü
-Ü µa b· Fst‰u (Op‰u (a, b)) = a
-°
-
-\ignore{
-=SML
-val Fstèuê_def = get_spec ¬Fst‰u®;
-
-set_goal([], ¬¶ Snd‰u: NFU ­ NFU· µa b· Snd‰u (Op‰u (a, b)) = b®);
-a (¶_tac ¬Ìp:NFU· Åb:NFU· ¶a· p = Op‰u(a,b)® THEN rewrite_tac[]);
-a (Å_tac ¬Å b'· ¶ a'· Op‰u (a, b) = Op‰u (a', b')®);
-(* *** Goal "1" *** *)
-a (¶_tac ¬b® THEN ¶_tac ¬a® THEN rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (REPEAT strip_tac THEN rewrite_tac[Op‰u_def ]);
-a (Å_tac ¬Å b''· ¶ a'· a' = a'' ± b'' = b'®);
-(* *** Goal "2.1" *** *)
-a (¶_tac ¬b'® THEN ¶_tac ¬a''® THEN rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (LEMMA_T ¬(Ìb''· ¶ a'· a'' = a' ± b' = b'') = (Ìb''·¶ a'· a' = a'' ± b'' = b')® asm_tac
-	THEN1 (strip_tac THEN strip_tac THEN rewrite_tac[] THEN REPEAT strip_tac));
-(* *** Goal "2.2.1" *** *)
-a (¶_tac ¬a''® THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (¶_tac ¬a''® THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.3" *** *)
-a (asm_rewrite_tac[]);
-save_cs_¶_thm(pop_thm());
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛSnd‰uİ : NFU ­ NFU
-÷üüüüü
-Ü µa b· Snd‰u (Op‰u (a, b)) = b
-°
-
-\subsubsection{Cartesian Products}
-
-First we assert the existence of cartesian products:
-
-=SML
-val Sndèuê_def = get_spec ¬Snd‰u®;
-
-new_const("¸‰u",”NFU ­ NFU ­ NFU®);
-declare_infix(300, "¸‰u");
-val Cart_prod_ax = new_axiom(["Cart_prod_ax"], 
-	¬µa b· Set‰u(a ¸‰u b) ± µz· z ‰u a ¸‰u b ¤ ¶x y· z = Op‰u(x,y) ± x ‰u a ± y ‰u b®);
-=TEX
-
-\subsection{The Theory of Relations}
-
-A relation is a set of ordered pairs.
-
-¹HOLCONST
-Ü ÛRel‰uİ : NFU ­ BOOL
-÷üüüüüü
-Ü µr· Rel‰u r ¤ µx· x ‰u r ´ µy z· x = Op‰u(y, z)
-°
-
-\ignore{
-=SML
-val Relèuê_def = get_spec ¬Rel‰u®;
-=IGN
-set_goal([], ¬Rel‰u š‰u®);
-a (rewrite_tac [Relèuê_def, šèuê_ax]);
-val Relèuê_šèuê_thm = save_pop_thm "Relèuê_šèuê_thm";
-=TEX
-}%ignore
-
-
-Every relation has an inverse.
-
-=SML
-new_const("›-›1‰u", ”NFU ­ NFU®);
-declare_postfix (320, "›-›1‰u");
-val rel_inv_ax = new_axiom (["rel_inv_ax"],
-	¬µr· Set‰u(r ›-›1‰u) ± µx· x ‰u r ›-›1‰u ¤ ¶y z· x = Op‰u(y, z) ± Op‰u(z, y) ‰u r®);
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬š‰u ›-›1‰u = š‰u®);
-a (lemma_tac ¬Set‰u (š‰u ›-›1‰u) ± Set‰u š‰u® THEN1 rewrite_tac [Setèuê_clauses, rel_inv_ax]);
-a (ALL_FC_T1 fc_¤_canon rewrite_tac [Extèuê_set_thm]);
-a (rewrite_tac [rel_inv_ax, šèuê_ax]);
-val rel_inv_šèuê_thm = save_pop_thm "rel_inv_šèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-rel_inv_šèuê_thm = ô š‰u ›-›1‰u = š‰u
-=TEX
-
-Relations can be composed.
-Relational composition is also known as relational product.
-
-=SML
-new_const("»‰u", ”NFU ­ NFU ­ NFU®);
-declare_infix (300, "»‰u");
-val rel_comp_ax = new_axiom (["rel_comp_ax"], ¬µr s· Set‰u(r »‰u s)
-	± µx· x ‰u r »‰u s ¤ ¶u v w· x = Op‰u(u, w) ± Op‰u(u, v) ‰u r ± Op‰u(v, w) ‰u s®);
-=TEX
-
-The domain of a relation is a set.
-
-\ignore{
-=SML
-new_const("dom‰u", ”NFU ­ NFU®);
-val domèuê_ax = new_axiom (["domèuê_ax"],
-	¬µr· Set‰u(dom‰u r) ± µx· x ‰u dom‰u r ¤ ¶y· Op‰u(x, y) ‰u r®);
-
-set_goal([], ¬dom‰u š‰u = š‰u®);
-a (lemma_tac ¬Set‰u (dom‰u š‰u) ± Set‰u š‰u®
-	THEN1 rewrite_tac [domèuê_ax, Setèuê_clauses]);
-a (ALL_FC_T1 fc_¤_canon rewrite_tac [Extèuê_set_thm]);
-a (rewrite_tac [domèuê_ax, šèuê_ax]);
-val domèuê_šèuê_thm = save_pop_thm "domèuê_šèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-domèuê_šèuê_thm = ô dom‰u š‰u = š‰u
-=TEX
-
-So is the range.
-
-¹HOLCONST
-Ü Ûrng‰uİ : NFU ­ NFU
-÷üüüüüü
-Ü µr· rng‰u r = dom‰u (r ›-›1‰u)
-°
-
-¹HOLCONST
-Ü Ûfield‰uİ : NFU ­ NFU
-÷üüüüüü
-Ü µr· field‰u r = (dom‰u r) À‰u (rng‰u r)
-°
-
-\ignore{
-=SML
-val rngèuê_def = get_spec ¬rng‰u®;
-val fieldèuê_def = get_spec ¬field‰u®;
-
-set_goal([], ¬rng‰u š‰u = š‰u®);
-a (rewrite_tac[rngèuê_def, rel_inv_šèuê_thm, domèuê_šèuê_thm]);
-val rngèuê_šèuê_thm = save_pop_thm "rngèuê_šèuê_thm";
-=TEX
-}%ignore
-
-=GFT
-rngèuê_šèuê_thm = ô rng‰u š‰u = š‰u
-=TEX
-
-Singleton images exists as follows:
-
-=SML
-new_const("si‰u", ”NFU ­ NFU®);
-val sièuê_ax = new_axiom (["sièuê_ax"],
-	¬µr· si‰u r = •‰u {z | ¶x y· Op‰u(x, y) ‰u r ± z = Op‰u(É‰u x, É‰u y)}®);
-=TEX
-
-=SML
-val diag_ax = new_axiom(["diag_ax"], ¬¶‰u {z | ¶x· z = Op‰u(x, x)}®);
-val left_proj_ax = new_axiom(["left_proj_ax"], ¬¶‰u {z | ¶x y· z = Op‰u(Op‰u(x, y), x)}®);
-val right_proj_ax = new_axiom(["right_proj_ax"], ¬¶‰u {z | ¶x y· z = Op‰u(Op‰u(x, y), y)}®);
-=TEX
-
-\subsection{Introducing Functions}
-
-Here I may begin to diverge more from Holmes, since the material on functions does not contribute to the axiom system, and I have in mind the use of functions in the appication of NFU to the construction of category theoretic foundations.
-
-A function is a many-one relation:
-
-¹HOLCONST
-Ü ÛManyOne‰uİ : NFU ­ BOOL
-÷üüüüüü
-Ü µr· ManyOne‰u r ¤ µx· x ‰u dom‰u r ´
-Ü	µy z· Op‰u(x, y) ‰u r ± Op‰u(x, z) ‰u r ´ y = z   
-°
-
-Identity functions will prove useful later:
-
-¹HOLCONST
-Ü ÛId‰uİ : NFU ­ NFU
-÷üüüüüü
-Ü µa· Id‰u a = •‰u {x | ¶y· y ‰u a ± x = Op‰u(y, y)}  
-°
-
-Function application is an infix suffix {\it u}.
-
-=SML
-declare_infix (320, "‰u");
-=TEX
-
-¹HOLCONST
-Ü $Û‰uİ : NFU ­ NFU ­ NFU
-÷üüüüüü
-Ü µf a v· Op‰u(a, v) ‰u f ´ f ‰u a = v 
-°
-
-\ignore{
-=SML
-val ManyOne_def = get_spec ¬ManyOne‰u®;
-=IGN
-val
-=TEX
-}%ignore
-
-
-\subsection{Pre-Functors}
-
-This section is not from Holmes.
-A functor is a function from one category to another which respects the structure on the category.
-When considered as an arrow in a category each functor has a definite codomain but need not be onto, and though it has a definite domain, it must be total, and so the domain can be recovered from the graph of the function.
-
-If we ignore the requirement for preservation of structure, then we get a notion of pre-functor which is similar to that of a function except that it carries with it its codomain.
-Thus, we may represent a pre-functor as an ordered pair of which the first element is the graph of a function, and the second is a set which includes the range of the function.
-
-¹HOLCONST
-Ü ÛPreFunctor‰uİ : NFU ­ BOOL
-÷üüüüüü
-Ü µp· PreFunctor‰u p ¤ ¶x y· p = Op‰u(x, y) ± Rel‰u x ± ManyOne‰u x ± rng‰u x €‰u y   
-°
-
-\ignore{
-=SML
-val PreFunctorèuê_def = get_spec ¬PreFunctor‰u®;
-=IGN
-set_goal([], ¬PreFunctor‰u (Op‰u(š‰u, š‰u))®);
-a (rewrite_tac[PreFunctorèuê_def]);
-a (¶_tac ¬š‰u® THEN ¶_tac ¬š‰u® THEN rewrite_tac[Relèuê_šèuê_thm, rngèuê_šèuê_thm]);
+set_goal([], ¬PreFunctor (op(š, š))®);
+a (rewrite_tac[PreFunctor_def]);
+a (¶_tac ¬š® THEN ¶_tac ¬š® THEN rewrite_tac[Relèuê_šèuê_thm, rngèuê_šèuê_thm]);
 =TEX
 }%ignore
 
 We define functions giving the graph, domain and codomain and field of a pre-functor and for application and composition of prefunctors.
 
 ¹HOLCONST
-Ü ÛPFgraph‰uİ : NFU ­ NFU
+Ü ÛPFgraphİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü PFgraph‰u = Fst‰u   
+Ü PFgraph = fst   
 °
 
 ¹HOLCONST
-Ü ÛPFdom‰uİ : NFU ­ NFU
+Ü ÛPFdomİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µp· PFdom‰u p = dom‰u (PFgraph‰u p)   
+Ü µp· PFdom p = dom (PFgraph p)   
 °
 
 ¹HOLCONST
-Ü ÛPFcod‰uİ : NFU ­ NFU
+Ü ÛPFcodİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü PFcod‰u = Snd‰u
+Ü PFcod = snd
 °
 
 ¹HOLCONST
-Ü ÛPFfield‰uİ : NFU ­ NFU
+Ü ÛPFfieldİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µp· PFfield‰u p = PFdom‰u p À‰u PFcod‰u p
+Ü µp· PFfield p = PFdom p À‰nf PFcod p
 °
 
 \ignore{
 =SML
-val PFgraphèuê_def = get_spec ¬PFgraph‰u®;
-val PFdomèuê_def = get_spec ¬PFdom‰u®;
-val PFcodèuê_def = get_spec ¬PFcod‰u®;
-val PFfieldèuê_def = get_spec ¬PFfield‰u®;
+val PFgraphèuê_def = get_spec ¬PFgraph®;
+val PFdomèuê_def = get_spec ¬PFdom®;
+val PFcodèuê_def = get_spec ¬PFcod®;
+val PFfieldèuê_def = get_spec ¬PFfield®;
 =TEX
 }%ignore
 
@@ -1118,31 +220,31 @@ declare_infix(300, "»‰p");
 This composition operator does not check that the pre-functors being compose have matching `types'.
 
 ¹HOLCONST
-Ü $Û»‰pİ : NFU ­ NFU ­ NFU
+Ü $Û»‰pİ : SET‰nf ­ SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µp q· p »‰p q = Op‰u((PFgraph‰u p) »‰u (PFgraph‰u q), PFcod‰u q)   
+Ü µp q· p »‰p q = op((PFgraph p) »‰nf (PFgraph q), PFcod q)   
 °
 
 The identity pre-functor over some set is:
 
 ¹HOLCONST
-Ü ÛPFid‰uİ : NFU ­ NFU
+Ü ÛPFidİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µa· PFid‰u a = Op‰u(Id‰u a, a)   
+Ü µa· PFid a = op(id a, a)   
 °
 
 We can now define the left and right identities for a pre-functor.
 
 ¹HOLCONST
-Ü ÛPFleft‰uİ : NFU ­ NFU
+Ü ÛPFleftİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µa· PFleft‰u a = PFid‰u (PFdom‰u a)   
+Ü µa· PFleft a = PFid (PFdom a)   
 °
 
 ¹HOLCONST
-Ü ÛPFright‰uİ : NFU ­ NFU
+Ü ÛPFrightİ : SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µa· PFright‰u a = PFid‰u (PFcod‰u a)   
+Ü µa· PFright a = PFid (PFcod a)   
 °
 
 Pre-functor composition is an infix suffix {\it p}.
@@ -1152,378 +254,11 @@ declare_infix (320, "‰p");
 =TEX
 
 ¹HOLCONST
-Ü $Û‰pİ : NFU ­ NFU ­ NFU
+Ü $Û‰pİ : SET‰nf ­ SET‰nf ­ SET‰nf
 ÷üüüüüü
-Ü µp c d· Op‰u(c, d) ‰u (PFgraph‰u p) ´ p ‰u c = d 
+Ü µp c d· op(c, d) ‰nf (PFgraph p) ´ p ‰nf c = d 
 °
 
-\ignore{
-
-\subsection{Proof Contexts}
-
-A proof context is a collection of theorems, tactics and other proof machinary suitable for reasoning in some particular context.
-To make reasoning in NFU reasonably convenient a proof context for NFU is essential.
-
-\subsubsection{Principles}
-
-The only principle I know of which assists with elementary proofs in set theory is the principle that set theoretic conjectures can be reduced to the predicate calculus by using extensional rules for relations and for operators.
-
-Too hasty a reduction can be overkill and may convert a simple conjecture into an unintelligible morass.
-We have sometimes in the past used made available two proof contexts, an aggressive extensional one, and a milder non-extensional one.
-However, the extensional rules for the operators are fairly harmless, expansion is triggered by the extensional rules for the relations (equality and subset), so a proof context containing the former together with a suitable theorem for the latter gives good control.
-
-So the main purpose of the proof context is to make really obvious rewrites happen by defailt (e.g. taking the first element of an ordered pair), to do the obvious thing whenever there is an obvious reduction of a membership predication with an operator on the right.
-Treating relations extensionally, which introduces membership predicates triggering further simplification, can be done without the aid of a specific proof context.
-
-The other point to mention is inductive proofs, which are beyond us unless an induction principle can be identified, which will not happen unless some axiom is introduced.
-The axiom of regularity is not available, and presumably actually refutable.
-Forster's suggestion of an axiom of pseudo-wellfouneation might be a good idea, if this were not realised in the only application of interest to us here, without depending on it being asserted in NFU.
-So induction principles will not appear in our NFU. but will appear in later theories.
-
-\subsubsection{Theorems Used Recklessly}
-
-This is pretty much guesswork, only time will tell whether this is the best collection.
-
-=SML
-val nfu_thms = [
-	šèuê_ax,	çcêèuê_ax,	Àèuê_ax,
-	Ş‰u_ax,	Urèuê_def,	Op‰u_def,
-	Fstèuê_def,	Sndèuê_def,	èuêVèuê_thm,
-	¡èuê_thm,	šèuê_€èuê_thm,	Éèuê_thm,
-	Éèuê_eq_thm,	Pairèuê_thm,	Éèuê_eq_Pairèuê_thm,
-	Pairèuê_eq_Éèuê_thm,	Pairèuê_eq_Pairèuê_thm
-	];
-
-val nfu_opext_clauses =
-	(all_µ_intro
-	o list_±_intro
-	o (map all_µ_elim))
-	nfu_thms;
-
-save_thm ("nfu_opext_clauses", nfu_opext_clauses);
-=TEX
-
-\subsubsection{Theorems Used Cautiously}
-
-The following theorems are too aggressive for general use in the proof context but are needed when attempting automatic proof.
-When an extensional proof is appropriate it can be initiated by a cautious (i.e. a "once") rewrite using the following clauses, after which the extensional rules in the proof context will be triggered.
-=GFT
-val nfu_relext_clauses =
-	(all_&forall;_intro
-	o list_&and;_intro
-	o (map all_&forall;_elim))
-	[gs_ext_axiom,
-	get_spec&qqtel;$&sube;<sub>g</sub>&qqter;];
-save_thm ("nfu_relext_clauses", nfu_relext_clauses);
-=TEX
-There are a number of important theorems, such as well-foundedness and galaxy closure which have not been mentioned in this context.
-The character of these theorems makes them unsuitable for the proof context, their application requires thought.
-
-The basic proof automation is augmented by adding a preliminary rewrite with the relational extensionality clauses.
-=SML
-fun nfu_prove_conv thl =
-	basic_prove_conv thl;
-=TEX
-
-=SML
-add_rw_thms nfu_thms "nfu";
-add_sc_thms nfu_thms "nfu";
-add_st_thms nfu_thms "nfu";
-set_pr_conv nfu_prove_conv "nfu";
-set_pr_tac
-	(conv_tac o nfu_prove_conv)
-	"nfu";
-commit_pc "nfu";
-=TEX
-
-Using the proof context "nfu" some elementary results in NFU are now provable automatically on demand.
-For this reason it is not necessary to prove in advance of needing them results such as the associativity of intersection, since they can be proven when required by an expression of the form "prove rule[] term" which proves {\it term} and returns it as a theorem.
-If the required proof context for doing this is not in place the form "merge\_pcs\_rule ["basic\_hol", gst-ax"] (prove\_rule []) term" may be used.
-Since this is a little cumbersome we define the function "gst\_ax\_rule" and illustrate its use as follows:
-
-=SML
-val nfu_rule =
-	(merge_pcs_rule1
-	["basic_hol", "nfu"]
-	prove_rule) [];
-val nfu_conv = 
-	MERGE_PCS_C1
-	["basic_hol", "nfu"]
-	prove_conv;
-val nfu_tac =
-	conv_tac o nfu_conv;
-
-=IGN
-nfu_rule ¬®
-=TEX
-}%ignore
-
-\section{(CO-)INDUCTIVE AND PSEUDO (CO-)INDUCTIVE DEFINITIONS}
-
-Forster \cite{forster92}, introduces pseudo well-foundedness as way of getting a kind of inductive proof principle in NF.
-A pseudo-well-founded universe is partitioned into two clasess, in a way which suggests that the desired split of the universe into categories and functors might be definable by adaptation of this principle.
-To see the connection observe that the `constituents' of categories are functors, and the constuents of functors are categories.
-This means that, in a well-founded universe, a slightly gerrimandered notion of rank (in which rank increases by exactly one as we pass from a functor to a category containing that functor or from a category to a functor over that category) assigns even ranks to categories and odd ranks to functors (we need to enhance the notion of odd and even to cover limit points, which I think need to be even). 
-Not only are categories and functors distinguished by the parity of their rank, there is a difference in parity for every descending path according to whether it begins at a category or a functor.
-This fits in with the game theoretic flavour of pseudo well-foundedness in which a game is just such a descending path, and the winner of the game is determined by the parity of its length.
-
-For these reasons I thought it might be interesting to see how a `pseudo-inductive` definition adapted from Forster's notion of pseudo-well-foundedness worked in this application.
-
-Since embarking on this path a second method occurred to me, which is to use co-induction.
-For the purposes which Forster had in mind (a principle which could be added to the axioms of NF to exclude certain possibly pathological sets (like a set which is its own unit set) while still leaving the important well-founded sets) co-induction would not suffice, since it looks like co-induction for what its worth, comes for free in NF.
-However, in this application, where we are filtering out all but categories and functors, the coinductive defintiion will actually do something, and the fact (if it is a fact) that a principle of co-well-foundedness is derivable in NF would suggest that this form of definitions will give the most liberal ontology of the selected kind.
-
-Once co-induction occurs as an alternative non-well-foundedness preserving definitional method, the question arised whether there is a similar dual to psuedo-well foundedness, and how this `pseudo-co-induction' differs from pseduo- and co-induction, if at all.
-
-Material on inductive and co=inductive definitions in {\Product} is available in \cite{rbjt007} and is therefore used by invoking its theory `fixp'.
-The material in this section may eventually be moved into that document.
-
-For this material (mainly on pseudo-induction) we introduce a new theory `pi'.
-
-=SML
-open_theory "rbjmisc";
-force_new_theory "PI";
-set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
-=TEX
-
-\subsection{Well Foundedness and Hereditarily Collections}
-
-It would be a good idea eventually to define these first and check back that they are special cases of the pseudo versions and that the well-founded functor/category collections are contained in the pseudo-well-founded collections.
-
-\subsection{Hereditarily and Co-Hereditarily PQ}
-
-Though \cite{rbjt007} defines methods for inductive and co-inductive definition which generalise the notion of a `hereditarily P' set for arbitrary properties of sets P, it does not explicitly cover the present requirement for mutually dependent inductive definitions.
-However, this can be achieved by two separate inductive definitions.
-
-No additional machinery is required, the application to yield purely inductive and co-inductive conceptions of category and functor are shown in the next section.
-
-\ignore{
-
-Here is a stab at a {\it hereditarily P} construction suitably generalised.
-
-¹HOLCONST
-Ü ÛHereditarilyPQİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) 
-Ü		­ ('X ğ ¸ 'X ğ)
-÷üüüüüü
-Ü µc d P Q· HereditarilyPQ (c, d, P, Q) = 
-Ü	(¥ {X' | µx· P x ± (µy z· y  (c x) ± z  (d y) ´ Q y ± z  X') ´ x  X'},
-Ü	 ¥ {Y' | µx· Q x ± (µy z· y  (d x) ± z  (c y) ´ P y ± z  Y') ´ x  Y'})
-°
-
-}%ignore
-
-\subsection{Pseudo-Well-Founded Collections}
-
-I have previously done the kind of category theoretic construction in well-founded set theories.
-The same method could be used here, but the result would be similar, the constructed domains would still be well-founded.
-
-I am therefore hoping to extract from Forster's discussion about pseudo-induction some idea about how to do the construction without throwing away the non-well-founded sets.
-
-First we define the concept ``pseudo-well-founded''.
-The set theoretic language here (membership relation and power set) is the one which comes with ProofPower HOL (and is set theoretic syntax for predicates in a type theory), the target set theory is modelled as a membership relation (r) over some type (*X).
-This is based on the definition in Thomas Forster's book, and is included mainly for reference.
-
-The presentation has been restructured.
-The restructuring serves three purposes.
-The first is to expose the two classes which partition the universe so that we can talk about them (in the original they are existentially quantified in the definition.
-This is done by splitting the definition into two parts, the existential quantification appearing in the second.
-The second is to include the claim that these two classes exhaust the type under consideration in the second part, so that the first definition can still be used in a set theory which is not known to be pseudo-well-founded for talking about its pseudo-well-founded part.
-Otherwise we would have to add an axiom to NFU for the construction we have in mind.
-The third change is to split our definitions of {\it I\_closed} and {\it II\_closed}, to make the structure of proofs more transparent.
-
-¹HOLCONST
-Ü ÛI_closedİ : ('X ­ 'X ­ BOOL) ­ 'X ğ ­ BOOL
-÷üüüüüü
-Ü µr w· I_closed r w
-Ü	¤ µx· (¶y· r y x ± µz· r z y ´ z  w) ´ x  w
-°
-¹HOLCONST
-Ü ÛII_closedİ : ('X ­ 'X ­ BOOL) ­ 'X ğ ­ BOOL
-÷üüüüüü
-Ü µr w· II_closed r w
-Ü	¤ µx· (µy· r y x ´ ¶z· r z y ± z  w) ´ x  w
-°
-¹HOLCONST
-Ü ÛI_closureİ : ('X ­ 'X ­ BOOL) ­ 'X ğ
-÷üüüüüü
-Ü µr· I_closure r = ¥{x | I_closed r x}
-°
-¹HOLCONST
-Ü ÛII_closureİ : ('X ­ 'X ­ BOOL) ­ 'X ğ
-÷üüüüüü
-Ü µr· II_closure r = ¥{x | II_closed r x}
-°
-
-¹HOLCONST
-Ü ÛPseudoWellFoundedİ : ('X ­ 'X ­ BOOL) ­ BOOL
-÷üüüüüü
-Ü µr· PseudoWellFounded r ¤
-Ü	(I_closure r) ¡ (II_closure r) = {}
-Ü   ±	(I_closure r) À (II_closure r) = Universe
-°
-
-\ignore{
-=SML
-val I_closed_def = get_spec ¬I_closed®;
-val II_closed_def = get_spec ¬II_closed®;
-val I_closure_def = get_spec ¬I_closure®;
-val II_closure_def = get_spec ¬II_closure®;
-val PseudoWellFounded_def = get_spec ¬PseudoWellFounded®;
-=IGN
-set_goal([], ¬µr ia iia ib iib· PWFC r (ia, iia) ± PWFC r (ib, iib) ´ ia = ib ± iia = iib®);
-a (REPEAT µ_tac THEN rewrite_tac [PWFC_def]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (lemma_tac ¬µ x· (¶ y· r y x ± (µ z· r z y ´ z  ib)) ´ x  ib®);
-a (REPEAT strip_tac);
-
-a (spec_nth_asm_tac 5 ¬ib®);
-=TEX
-}%ignore
-
-The idea is to use this to define a notion of "pseudo-hereditarily P" set for a property of sets P, analogously to the notion of a "heridtarily P" set in a well-founded set theory.
-
-This is a bit too simplistic, because the idea of heriditarily P sets is {\it thin} in the following sense.
-To prove that a set is hereditarily P you need only to know that each of its members is hereditarily P.
-So, in a sense you are only looking one level down.
-When you do this with categories and functors the categories and functors alternate as the rank increases.
-You either need mutually recursive definitions or else the independent definitions of categories and functors have to look down two levels to express the required condition.
-There is already something like this going on in the pseudo-well-foundedness condition.
-I've no idea at present whether these work together or not.
-
-\subsection{Pseudo-Well-Founded-PQ Collections}
-
-This is derived from pseudo-well-foundedness by the following generalisations:
-
-\begin{itemize}
-\item instead of looking down one level at a time according to the membership relation, the property is parameterised by a function which extracts the `content' from an object.
-This might be just the members, or it might be, say, the field of a function.
-\item for each of the two classes in question there is an additional parameterised property which is required to be satisfied.
-\end{itemize}
-
-Note that we have apparently lost the membership relation here, which is effectively hidden in the content extractors {\it c} and {\it d}.
-
-The structure of this definition is now broken down similarly to that of {\it PseudoWellFounded}.
-
-¹HOLCONST
-Ü ÛP_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-Ü		­ 'X ğ ­ BOOL
-÷üüüüüü
-Ü µc d P Q w· P_closed (c, d, P, Q) w
-Ü	¤ µx· P x ± (µy· y  (c x) ´ Q y ± (¶z· z  (d y) ± z  w)) ´ x  w
-°
-
-¹HOLCONST
-Ü ÛQ_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-Ü		­ 'X ğ ­ BOOL
-÷üüüüüü
-Ü µc d P Q w· Q_closed (c, d, P, Q) w
-Ü	¤ µx· Q x ± (¶y· y  (d x) ± P y ± µz· z  (c y) ´ z  w) ´ x  w
-°
-¹HOLCONST
-Ü ÛP_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-Ü		­ 'X ğ
-÷üüüüüü
-Ü µz· P_closure z = ¥{x | P_closed z x}
-°
-¹HOLCONST
-Ü ÛQ_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
-Ü		­ 'X ğ
-÷üüüüüü
-Ü µz· Q_closure z = ¥{x | Q_closed z x}
-°
-
-¹HOLCONST
-Ü ÛPseudoWellFoundedPQİ :
-Ü	(('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µz· PseudoWellFoundedPQ z ¤
-Ü	(P_closure z) ¡ (Q_closure z) = {}
-Ü   ±	(P_closure z) À (Q_closure z) = Universe
-°
-
-Need to check that this encompasses pseudo-well-foundedness when suitably parameterised and that the `pseudo' bit only makes a difference for non-well-founded membership structures.
-
-\ignore{
-=SML
-val P_closed_def = get_spec ¬P_closed®;
-val Q_closed_def = get_spec ¬Q_closed®;
-val P_closure_def = get_spec ¬P_closure®;
-val Q_closure_def = get_spec ¬Q_closure®;
-val PseudoWellFoundedPQ_def = get_spec ¬PseudoWellFoundedPQ®;
-
-set_goal([], ¬µc d P Q x· x  P_closure (c, d, P, Q) ´ P x®);
-a (REPEAT µ_tac THEN rewrite_tac[P_closure_def, P_closed_def]
-	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬{x | P x}®);
-val P_closed_´_P_thm = save_pop_thm "P_closed_´_P_thm";
-
-set_goal([], ¬µc d P Q x· x  Q_closure (c, d, P, Q) ´ Q x®);
-a (REPEAT µ_tac THEN rewrite_tac[Q_closure_def, Q_closed_def]
-	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬{x | Q x}®);
-val Q_closed_´_Q_thm = save_pop_thm "Q_closed_´_Q_thm";
-
-=IGN
-set_goal([], ¬µc d P Q· P_closed (c, d, P, Q) (P_closure (c, d, P, Q))®);
-a (REPEAT µ_tac THEN rewrite_tac[P_closed_def]
-	THEN REPEAT strip_tac);
-a (rewrite_tac[P_closure_def, P_closed_def] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-a (spec_nth_asm_tac 4 ¬y®);
-a (spec_nth_asm_tac 3 ¬z®);
-a (spec_nth_asm_tac 6 ¬z®);
-(* *** Goal "1" *** *)
-a (all_fc_tac [P_closed_´_P_thm]);
-(* *** Goal "2" *** *)
-a (spec_nth_asm_tac 9 ¬y'®);
-a (lemma_tac ¬P z® THEN1 all_fc_tac [P_closed_´_P_thm]);
-
-a (asm_fc_tac[]);
-
-val P_closed_´_P_thm = save_pop_thm "P_closed_´_P_thm";
-=TEX
-}%ignore
-
-=GFT
-P_closed_´_P_thm = ô µ c d P Q x· x  P_closure (c, d, P, Q) ´ P x
-
-Q_closed_´_Q_thm = ô µ c d P Q x· x  Q_closure (c, d, P, Q) ´ Q x
-=TEX
-
-\subsection{Pseudo-Hereditarily-PQ Collections}
-
-Even if we had a pseudo-well-founded universe in NFU, it would not be pseudo-well-founded-PQ for any interesting or useful properties P and Q.
-The whole idea is to use these properties to create a pair of useful subclasses of the universe.
-So what we want to do is just take the two closures resulting from P and Q, and use their union as new a psuedo-well-founded domain of discourse.
-In fact, we won't take the union at all, we will be looking for a two-sorted foundational theory.
-
-¹HOLCONST
-Ü ÛPseudoHereditarilyPQİ :
-Ü	(('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) ­ ('X ğ ¸ 'X ğ)
-÷üüüüüü
-Ü µz· PseudoHereditarilyPQ z = (P_closure z, Q_closure z)
-°
-
-Among the important properties which we hope this construction will have are:
-
-\begin{itemize}
-\item The values in the left collection will all have property P.
-\item The values in the right collection will all have property Q.
-\item Both collections will include the corresponding {\it HereditarilyPQ} sets.
-\end{itemize}
-
-I am by no means confident of any of these features at present.
-
-\ignore{
-=SML
-val P_closed_def = get_spec ¬P_closed®;
-val Q_closed_def = get_spec ¬Q_closed®;
-val P_closure_def = get_spec ¬P_closure®;
-val Q_closure_def = get_spec ¬Q_closure®;
-val PseudoHereditarilyPQ_def = get_spec ¬PseudoHereditarilyPQ®;
-=TEX
-}%ignore
 
 \section{CATEGORIES AND FUNCTORS}
 
@@ -1545,7 +280,7 @@ I propose to base the construction on NFU.
 
 =SML
 force_new_theory "catfun";
-new_parent "NFU";
+new_parent "fixp";
 =TEX
 
 A concrete category (here) is a set of functors (the arrows) which is closed under composition (where the domain and codomains match) and includes the identity functors on the domain and codomain of each functor.
@@ -1561,36 +296,36 @@ A concrete functor is an ordered pair of which:
 Note that the codomain is explicit in the right hand element of the functor, the domain is recovered from the graph on the left, hence all functors are total.
 
 ¹HOLCONST
-Ü ÛCatPropİ : NFU ­ BOOL
+Ü ÛCatPropİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µa· CatProp a ¤
-Ü	(µb· b ‰u a ´ PFleft‰u b ‰u a ± PFright‰u b ‰u a)
-Ü  ±	(µb c· b ‰u a ± c ‰u a ± PFdom‰u c = PFcod‰u b ´ (b »‰p c) ‰u a)
+Ü	(µb· b ‰nf a ´ PFleft b ‰nf a ± PFright b ‰nf a)
+Ü  ±	(µb c:SET‰nf· b ‰nf a ± c ‰nf a ± PFdom c = PFcod b ´ (b »‰p c) ‰nf a)
 °
 
 This function returns the set of functors in a category.
 
 ¹HOLCONST
-Ü ÛCatConİ : NFU ­ NFU ğ
+Ü ÛCatConİ : SET‰nf ­ SET‰nf ğ
 ÷üüüüüü
-Ü µa· CatCon a = {f | f ‰u a}
+Ü µa· CatCon a = {f | f ‰nf a}
 °
 
 ¹HOLCONST
-Ü ÛFuncPropİ : NFU ­ BOOL
+Ü ÛFuncPropİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µa· FuncProp a ¤
-Ü	rng‰u (PFgraph‰u a) €‰u (PFcod‰u a)
-Ü  ±	(µb c· b ‰u PFdom‰u a ± c ‰u PFdom‰u a ± PFcod‰u b = PFdom‰u c
-Ü		´ Op‰u (b »‰p c, (a ‰p b) »‰u (a ‰p c)) ‰u a)
+Ü	rng (PFgraph a) €‰nf (PFcod a)
+Ü  ±	(µb c· b ‰nf PFdom a ± c ‰nf PFdom a ± PFcod b = PFdom c
+Ü		´ op (b »‰p c, (a ‰p b) »‰nf (a ‰p c)) ‰nf a)
 °
 
 This function returns the set of categories in the field of a functor.
 
 ¹HOLCONST
-Ü ÛFuncConİ : NFU ­ NFU ğ
+Ü ÛFuncConİ : SET‰nf ­ SET‰nf ğ
 ÷üüüüüü
-Ü µf· FuncCon f = {PFdom‰u f; PFcod‰u f}
+Ü µf· FuncCon f = {PFdom f; PFcod f}
 °
 
 \ignore{
@@ -1605,7 +340,7 @@ val FuncCon_def = get_spec ¬FuncCon®;
 The following is a deeper category property, which asserts that the members of the category are all functors.
 
 ¹HOLCONST
-Ü ÛCatFuncPropİ : NFU ­ BOOL
+Ü ÛCatFuncPropİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µa· CatFuncProp a ¤ CatProp a ± µf· f  CatCon a ´ FuncProp f
 °
@@ -1614,7 +349,7 @@ If the deeper property is in use, a deep content function may also be needed.
 This gives for each category the set of categories which appear as the domain or codomain of one of the functors in the category.
 
 ¹HOLCONST
-Ü ÛCatFuncConİ : NFU ­ NFU ğ
+Ü ÛCatFuncConİ : SET‰nf ­ SET‰nf ğ
 ÷üüüüüü
 Ü µc· CatFuncCon c = Ş{fc | ¶f· f  CatCon c ± fc = FuncCon f}
 °
@@ -1622,7 +357,7 @@ This gives for each category the set of categories which appear as the domain or
 Next we have the corresponding deeper functor property which asserts that the domain and codomain of the functor are categories.
 
 ¹HOLCONST
-Ü ÛFuncCatPropİ : NFU ­ BOOL
+Ü ÛFuncCatPropİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µa· FuncCatProp a ¤ FuncProp a ± µc· c  FuncCon a ´ CatProp c
 °
@@ -1630,7 +365,7 @@ Next we have the corresponding deeper functor property which asserts that the do
 Similarly the deeper functor content: 
 
 ¹HOLCONST
-Ü ÛFuncCatConİ : NFU ­ NFU ğ
+Ü ÛFuncCatConİ : SET‰nf ­ SET‰nf ğ
 ÷üüüüüü
 Ü µf· FuncCatCon f = Ş{cf | ¶c· c  FuncCon f ± cf = CatCon c}
 °
@@ -1652,8 +387,8 @@ It maps each set to the set of objects which can be constructed from the members
 
 =SML
 force_new_theory "metapi";
-new_parent "NFU";
-new_parent "PI";
+new_parent "nfu_f";
+new_parent "fixp";
 set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
 =IGN
 open_theory "metapi";
@@ -1668,7 +403,7 @@ Looking at our definition of hereditarily above we see that the empty set can on
 We are now in a position to define the sets of pseudo-well-founded categories and functors.
 
 ¹HOLCONST
-Ü ÛPWFcfİ : NFU ğ ¸ NFU ğ
+Ü ÛPWFcfİ : SET‰nf ğ ¸ SET‰nf ğ
 ÷üüüüüü
 Ü PWFcf = PseudoHereditarilyPQ (CatCon, FuncCon, CatProp, FuncProp)
 °
@@ -1676,13 +411,13 @@ We are now in a position to define the sets of pseudo-well-founded categories an
 We need them as properties for introducing types.
 
 ¹HOLCONST
-Ü ÛPWFcategoryİ : NFU ­ BOOL
+Ü ÛPWFcategoryİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü PWFcategory = Ìc· c  (Fst PWFcf)
 °
 
 ¹HOLCONST
-Ü ÛPWFfunctorİ : NFU ­ BOOL
+Ü ÛPWFfunctorİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü PWFfunctor = Ìf· f  (Snd PWFcf)
 °
@@ -1696,55 +431,56 @@ val PWFcf_def = get_spec ¬PWFcf®;
 val PWFcategory_def = get_spec ¬PWFcategory®;
 val PWFfunctor_def = get_spec ¬PWFfunctor®;
 
-set_goal([], ¬PWFcategory š‰u®);
+set_goal([], ¬PWFcategory š®);
 a (rewrite_tac[PWFcategory_def, PWFcf_def, PseudoHereditarilyPQ_def,
 	P_closure_def, Q_closure_def, P_closed_def, Q_closed_def, CatCon_def]
 	THEN REPEAT strip_tac);
-a (strip_asm_tac šèuê_ax);
-a (spec_nth_asm_tac 2 ¬š‰u® THEN_TRY asm_fc_tac[]);
+a (strip_asm_tac (get_spec ¬š®));
+a (spec_nth_asm_tac 2 ¬š® THEN_TRY asm_fc_tac[]);
 a (swap_nth_asm_concl_tac 1);
 a (asm_rewrite_tac [CatProp_def]);
-val pwf_cat_š‰u_thm = save_pop_thm "pwf_cat_š‰u_thm";
+val pwf_cat_š_thm = save_pop_thm "pwf_cat_š_thm";
 
 set_goal([], ¬¶a· PWFcategory a®);
-a (¶_tac ¬š‰u® THEN accept_tac pwf_cat_š‰u_thm);
+a (¶_tac ¬š® THEN accept_tac pwf_cat_š_thm);
 val ¶_pwf_cat_thm = save_pop_thm "¶_pwf_cat_thm";
 
-set_goal([], ¬PWFfunctor (Op‰u(š‰u, š‰u))®);
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'nfu_f1"];
+
+set_goal([], ¬PWFfunctor (op(š, š))®);
 a (rewrite_tac[PWFfunctor_def, PWFcf_def, PseudoHereditarilyPQ_def,
 	P_closure_def, Q_closure_def, P_closed_def, Q_closed_def, CatCon_def]
 	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬Op‰u (š‰u, š‰u)®);
+a (spec_nth_asm_tac 1 ¬op (š, š)®);
 (* *** Goal "1" *** *)
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac [FuncProp_def]);
 a (strip_tac);
 (* *** Goal "1.1" *** *)
-a (rewrite_tac[PFgraphèuê_def, Fstèuê_def, rngèuê_def, domèuê_ax, PFcodèuê_def, Sndèuê_def]);
-a (lemma_tac ¬Set‰u(dom‰u (š‰u ›-›1‰u)) ± Set‰u(š‰u)® THEN1 rewrite_tac [Setèuê_def, domèuê_ax]);
-a (rewrite_tac[€èuê_def] THEN µ_tac THEN rewrite_tac[domèuê_ax, šèuê_ax, rel_inv_ax]);
+a (rewrite_tac[get_spec ¬PFgraph®, get_spec ¬PFcod®]);
+a (lemma_tac ¬Set(dom (š ›-›1›nf)) ± Set(š)® THEN1 rewrite_tac []);
+a (rewrite_tac[get_spec ¬$€‰nf®] THEN µ_tac THEN rewrite_tac[get_spec ¬$›-›1›nf®]);
 (* *** Goal "1.2" *** *)
-a (rewrite_tac[PFdomèuê_def, PFgraphèuê_def, Fstèuê_def, domèuê_ax, šèuê_ax]);
+a (rewrite_tac[PFdomèuê_def, PFgraphèuê_def]);
 (* *** Goal "2" *** *)
 a (swap_nth_asm_concl_tac 1);
 a (strip_tac);
-a (¶_tac ¬š‰u®);
-a (rewrite_tac[FuncCon_def, CatProp_def, PFgraphèuê_def, PFdomèuê_def, PFcodèuê_def,
-	Fstèuê_def, Sndèuê_def, domèuê_ax, šèuê_ax]);
+a (¶_tac ¬š®);
+a (rewrite_tac[FuncCon_def, CatProp_def, PFgraphèuê_def, PFdomèuê_def, PFcodèuê_def]);
 val š_pwf_func_thm = save_pop_thm "š_pwf_func_thm";
 
 set_goal([], ¬¶a· PWFfunctor a®);
-a (¶_tac ¬Op‰u(š‰u, š‰u)® THEN accept_tac š_pwf_func_thm);
+a (¶_tac ¬op(š, š)® THEN accept_tac š_pwf_func_thm);
 val ¶_pwf_func_thm = save_pop_thm "¶_pwf_func_thm";
 =TEX
 }%ignore
 
 =GFT
-pwf_cat_š‰u_thm = 	ô PWFcategory š‰u
+pwf_cat_š_thm = 	ô PWFcategory š
 
 ¶_pwf_cat_thm = 	ô ¶ a· PWFcategory a
 
-š_pwf_func_thm = 	ô PWFfunctor (Op‰u(š‰u, š‰u))
+š_pwf_func_thm = 	ô PWFfunctor (op(š, š))
 
 ¶_pwf_func_thm = 	ô ¶ a· PWFfunctor a
 =TEX
@@ -1768,7 +504,7 @@ The one we want here is co-induction, but we also show elements of the treatment
 =SML
 open_theory "catfun";
 force_new_theory "metaci";
-new_parent "NFU";
+new_parent "nfu_f";
 new_parent "fixp";
 set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
 =IGN
@@ -1783,13 +519,13 @@ In this case we take two of these, one giving the relation between a category an
 
 
 ¹HOLCONST
-Ü ÛCatRelİ : NFU ­ NFU ­ BOOL
+Ü ÛCatRelİ : SET‰nf ­ SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µc d· CatRel c d ¤ CatFuncProp d ± c  CatFuncCon d
 °
 
 ¹HOLCONST
-Ü ÛFuncRelİ : NFU ­ NFU ­ BOOL
+Ü ÛFuncRelİ : SET‰nf ­ SET‰nf ­ BOOL
 ÷üüüüüü
 Ü µf g· FuncRel f g ¤ FuncCatProp g ± f  FuncCatCon g
 °
@@ -1799,7 +535,7 @@ We may now use these two functions to obtain the least and greatest fixed points
 First the inductive case:
 
 ¹HOLCONST
-Ü ÛWFcfİ : NFU SET ¸ NFU SET
+Ü ÛWFcfİ : SET‰nf SET ¸ SET‰nf SET
 ÷üüüüüü
 Ü WFcf = (HeredRel CatRel, HeredRel FuncRel)
 °
@@ -1807,7 +543,7 @@ First the inductive case:
 Then the co-inductive case:
 
 ¹HOLCONST
-Ü ÛCWFcfİ : NFU SET ¸ NFU SET
+Ü ÛCWFcfİ : SET‰nf SET ¸ SET‰nf SET
 ÷üüüüüü
 Ü CWFcf = (CoHeredRel CatRel, CoHeredRel FuncRel)
 °
@@ -1815,13 +551,13 @@ Then the co-inductive case:
 For the purpose of introducing new types we need this as two properties:
 
 ¹HOLCONST
-Ü ÛCWFcategoryİ : NFU ­ BOOL
+Ü ÛCWFcategoryİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü   µc· CWFcategory c = c  Fst CWFcf
 °
 
 ¹HOLCONST
-Ü ÛCWFfunctorİ : NFU ­ BOOL
+Ü ÛCWFfunctorİ : SET‰nf ­ BOOL
 ÷üüüüüü
 Ü   µf· CWFfunctor f = f  Snd CWFcf
 °
@@ -1835,19 +571,21 @@ val CWFcategory_def = get_spec ¬CWFcategory®;
 val CWFfunctor_def = get_spec ¬CWFfunctor®;
 
 set_goal([], ¬¶c· CWFcategory c®);
-a (¶_tac ¬š‰u® THEN rewrite_tac ([CWFcf_def, CWFcategory_def] @
+a (¶_tac ¬š® THEN rewrite_tac ([CWFcf_def, CWFcategory_def] @
 	map get_spec [¬CoHeredRel®, ¬CoHeredFun®, ¬Gfp®, ¬Rel2Fun®, ¬Fun2MonoFun®, ¬$OpenUnder®]));
-a (¶_tac ¬{š‰u}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-a (¶_tac ¬{}® THEN rewrite_tac [CatRel_def, CatFuncCon_def, CatCon_def, šèuê_ax]);
+a (¶_tac ¬{š}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (¶_tac ¬{}® THEN rewrite_tac [CatRel_def, CatFuncCon_def, CatCon_def, CatFuncProp_def]);
+a (REPEAT strip_tac THEN swap_nth_asm_concl_tac 3);
+a (rewrite_tac[nfu_f_op_ext_clauses1]);
 val ¶_CWFcategory_thm = save_pop_thm "¶_CWFcategory_thm";
 
 =IGN
 set_goal([], ¬¶f· CWFfunctor f®);
-a (¶_tac ¬Op‰u(š‰u, š‰u)® THEN rewrite_tac ([CWFcf_def, CWFfunctor_def] @
+a (¶_tac ¬op(š, š)® THEN rewrite_tac ([CWFcf_def, CWFfunctor_def] @
 	map get_spec [¬CoHeredRel®, ¬CoHeredFun®, ¬Gfp®, ¬Rel2Fun®, ¬Fun2MonoFun®, ¬$OpenUnder®]));
-a (¶_tac ¬{š‰u; Op‰u(š‰u, š‰u)}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (¶_tac ¬{š; op(š, š)}® THEN rewrite_tac [] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (¶_tac ¬{š‰u}® THEN rewrite_tac
+a (¶_tac ¬{š}® THEN rewrite_tac
 	[FuncRel_def, FuncCatCon_def, FuncCatProp_def, FuncCon_def, FuncProp_def, šèuê_ax]);
 a (strip_tac);
 (* *** Goal "1.1" *** *)
@@ -1882,13 +620,7 @@ val ¶_CWFcategory_thm = save_pop_thm "¶_CWFcategory_thm";
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{NFU.th}
-}  %\let
-
-{\let\Section\section
-\def\section#1{\Section{#1}
-\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{PI.th}
+\include{pre_func.th}
 }  %\let
 
 {\let\Section\section
@@ -1920,10 +652,8 @@ val ¶_CWFcategory_thm = save_pop_thm "¶_CWFcategory_thm";
 
 \end{document}
 =SML
-open_theory "NFU";
-output_theory{out_file="NFU.th.doc", theory="NFU"};
-open_theory "PI";
-output_theory{out_file="PI.th.doc", theory="PI"};
+open_theory "pre_func";
+output_theory{out_file="pre_func.th.doc", theory="pre_func"};
 open_theory "catfun";
 output_theory{out_file="catfun.th.doc", theory="catfun"};
 open_theory "metapi";

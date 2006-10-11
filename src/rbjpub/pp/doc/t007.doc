@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.6 2006/09/25 20:00:47 rbj01 Exp $
+$Id: t007.doc,v 1.7 2006/10/11 19:07:42 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -17,11 +17,12 @@ $Id: t007.doc,v 1.6 2006/09/25 20:00:47 rbj01 Exp $
 \def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
 
-\title{Inductive and Coinductive Definitions in ProofPower}
+\title{Inductive, Co-inductive and Psuedo-(Co-)Inductive Definitions in ProofPower}
 \makeindex
 \author{Roger Bishop Jones \\ rbj01@rbjones.com}
-\date{\FormatDate{$Date: 2006/09/25 20:00:47 $%
-}}
+\date{$ $Date: 2006/10/11 19:07:42 $ $}
+\usepackage[pdftex]{hyperref}
+
 \begin{document}
 \vfill
 \maketitle
@@ -29,8 +30,12 @@ $Id: t007.doc,v 1.6 2006/09/25 20:00:47 rbj01 Exp $
 Systematic facilities for a range of different kinds of inductive and co-inductive definitions of sets and types in ProofPower HOL.
 \end{abstract}
 
-
 \vfill
+
+\begin{centering}
+Reference: rbjt007; $ $Revision: 1.7 $ $
+\end{centering}
+
 \newpage
 \tableofcontents
 
@@ -1047,6 +1052,273 @@ This whole process can be accomplished by a single function application to a lis
 Ü µ tf asrll · HCR tf asrll = HeredRel (CompoundRels tf asrll)
 °
 
+\section{PSEUDO (CO-)INDUCTIVE DEFINITIONS}
+
+Forster \cite{forster92}, introduces pseudo well-foundedness as way of getting a kind of inductive proof principle in NF.
+A pseudo-well-founded universe is partitioned into two clasess, in a way which suggests that the desired split of the universe into categories and functors might be definable by adaptation of this principle.
+To see the connection observe that the `constituents' of categories are functors, and the constuents of functors are categories.
+This means that, in a well-founded universe, a slightly gerrimandered notion of rank (in which rank increases by exactly one as we pass from a functor to a category containing that functor or from a category to a functor over that category) assigns even ranks to categories and odd ranks to functors (we need to enhance the notion of odd and even to cover limit points, which I think need to be even). 
+Not only are categories and functors distinguished by the parity of their rank, there is a difference in parity for every descending path according to whether it begins at a category or a functor.
+This fits in with the game theoretic flavour of pseudo well-foundedness in which a game is just such a descending path, and the winner of the game is determined by the parity of its length.
+
+For these reasons I thought it might be interesting to see how a `pseudo-inductive` definition adapted from Forster's notion of pseudo-well-foundedness worked in this application.
+
+Since embarking on this path a second method occurred to me, which is to use co-induction.
+For the purposes which Forster had in mind (a principle which could be added to the axioms of NF to exclude certain possibly pathological sets (like a set which is its own unit set) while still leaving the important well-founded sets) co-induction would not suffice, since it looks like co-induction for what its worth, comes for free in NF.
+However, in this application, where we are filtering out all but categories and functors, the coinductive defintiion will actually do something, and the fact (if it is a fact) that a principle of co-well-foundedness is derivable in NF would suggest that this form of definitions will give the most liberal ontology of the selected kind.
+
+Once co-induction occurs as an alternative non-well-foundedness preserving definitional method, the question arised whether there is a similar dual to psuedo-well foundedness, and how this `pseudo-co-induction' differs from pseduo- and co-induction, if at all.
+
+Material on inductive and co=inductive definitions in {\Product} is available in \cite{rbjt007} and is therefore used by invoking its theory `fixp'.
+The material in this section may eventually be moved into that document.
+
+=IGN
+open_theory "rbjmisc";
+force_new_theory "PI";
+set_merge_pcs["hol1", "'savedthm_cs_¶_proof"];
+=TEX
+
+\subsection{Well Foundedness and Hereditarily Collections}
+
+It would be a good idea eventually to define these first and check back that they are special cases of the pseudo versions and that the well-founded functor/category collections are contained in the pseudo-well-founded collections.
+
+\subsection{Hereditarily and Co-Hereditarily PQ}
+
+Though \cite{rbjt007} defines methods for inductive and co-inductive definition which generalise the notion of a `hereditarily P' set for arbitrary properties of sets P, it does not explicitly cover the present requirement for mutually dependent inductive definitions.
+However, this can be achieved by two separate inductive definitions.
+
+No additional machinery is required, the application to yield purely inductive and co-inductive conceptions of category and functor are shown in the next section.
+
+\ignore{
+
+Here is a stab at a {\it hereditarily P} construction suitably generalised.
+
+¹HOLCONST
+Ü ÛHereditarilyPQİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) 
+Ü		­ ('X ğ ¸ 'X ğ)
+÷üüüüüü
+Ü µc d P Q· HereditarilyPQ (c, d, P, Q) = 
+Ü	(¥ {X' | µx· P x ± (µy z· y  (c x) ± z  (d y) ´ Q y ± z  X') ´ x  X'},
+Ü	 ¥ {Y' | µx· Q x ± (µy z· y  (d x) ± z  (c y) ´ P y ± z  Y') ´ x  Y'})
+°
+
+}%ignore
+
+\subsection{Pseudo-Well-Founded Collections}
+
+I have previously done the kind of category theoretic construction in well-founded set theories.
+The same method could be used here, but the result would be similar, the constructed domains would still be well-founded.
+
+I am therefore hoping to extract from Forster's discussion about pseudo-induction some idea about how to do the construction without throwing away the non-well-founded sets.
+
+First we define the concept ``pseudo-well-founded''.
+The set theoretic language here (membership relation and power set) is the one which comes with ProofPower HOL (and is set theoretic syntax for predicates in a type theory), the target set theory is modelled as a membership relation (r) over some type (*X).
+This is based on the definition in Thomas Forster's book, and is included mainly for reference.
+
+The presentation has been restructured.
+The restructuring serves three purposes.
+The first is to expose the two classes which partition the universe so that we can talk about them (in the original they are existentially quantified in the definition.
+This is done by splitting the definition into two parts, the existential quantification appearing in the second.
+The second is to include the claim that these two classes exhaust the type under consideration in the second part, so that the first definition can still be used in a set theory which is not known to be pseudo-well-founded for talking about its pseudo-well-founded part.
+Otherwise we would have to add an axiom to NFU for the construction we have in mind.
+The third change is to split our definitions of {\it I\_closed} and {\it II\_closed}, to make the structure of proofs more transparent.
+
+¹HOLCONST
+Ü ÛI_closedİ : ('X ­ 'X ­ BOOL) ­ 'X ğ ­ BOOL
+÷üüüüüü
+Ü µr w· I_closed r w
+Ü	¤ µx· (¶y· r y x ± µz· r z y ´ z  w) ´ x  w
+°
+¹HOLCONST
+Ü ÛII_closedİ : ('X ­ 'X ­ BOOL) ­ 'X ğ ­ BOOL
+÷üüüüüü
+Ü µr w· II_closed r w
+Ü	¤ µx· (µy· r y x ´ ¶z· r z y ± z  w) ´ x  w
+°
+¹HOLCONST
+Ü ÛI_closureİ : ('X ­ 'X ­ BOOL) ­ 'X ğ
+÷üüüüüü
+Ü µr· I_closure r = ¥{x | I_closed r x}
+°
+¹HOLCONST
+Ü ÛII_closureİ : ('X ­ 'X ­ BOOL) ­ 'X ğ
+÷üüüüüü
+Ü µr· II_closure r = ¥{x | II_closed r x}
+°
+
+¹HOLCONST
+Ü ÛPseudoWellFoundedİ : ('X ­ 'X ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µr· PseudoWellFounded r ¤
+Ü	(I_closure r) ¡ (II_closure r) = {}
+Ü   ±	(I_closure r) À (II_closure r) = Universe
+°
+
+\ignore{
+=SML
+val I_closed_def = get_spec ¬I_closed®;
+val II_closed_def = get_spec ¬II_closed®;
+val I_closure_def = get_spec ¬I_closure®;
+val II_closure_def = get_spec ¬II_closure®;
+val PseudoWellFounded_def = get_spec ¬PseudoWellFounded®;
+=IGN
+set_goal([], ¬µr ia iia ib iib· PWFC r (ia, iia) ± PWFC r (ib, iib) ´ ia = ib ± iia = iib®);
+a (REPEAT µ_tac THEN rewrite_tac [PWFC_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬µ x· (¶ y· r y x ± (µ z· r z y ´ z  ib)) ´ x  ib®);
+a (REPEAT strip_tac);
+
+a (spec_nth_asm_tac 5 ¬ib®);
+=TEX
+}%ignore
+
+The idea is to use this to define a notion of "pseudo-hereditarily P" set for a property of sets P, analogously to the notion of a "heridtarily P" set in a well-founded set theory.
+
+This is a bit too simplistic, because the idea of heriditarily P sets is {\it thin} in the following sense.
+To prove that a set is hereditarily P you need only to know that each of its members is hereditarily P.
+So, in a sense you are only looking one level down.
+When you do this with categories and functors the categories and functors alternate as the rank increases.
+You either need mutually recursive definitions or else the independent definitions of categories and functors have to look down two levels to express the required condition.
+There is already something like this going on in the pseudo-well-foundedness condition.
+I've no idea at present whether these work together or not.
+
+\subsection{Pseudo-Well-Founded-PQ Collections}
+
+This is derived from pseudo-well-foundedness by the following generalisations:
+
+\begin{itemize}
+\item instead of looking down one level at a time according to the membership relation, the property is parameterised by a function which extracts the `content' from an object.
+This might be just the members, or it might be, say, the field of a function.
+\item for each of the two classes in question there is an additional parameterised property which is required to be satisfied.
+\end{itemize}
+
+Note that we have apparently lost the membership relation here, which is effectively hidden in the content extractors {\it c} and {\it d}.
+
+The structure of this definition is now broken down similarly to that of {\it PseudoWellFounded}.
+
+¹HOLCONST
+Ü ÛP_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
+Ü		­ 'X ğ ­ BOOL
+÷üüüüüü
+Ü µc d P Q w· P_closed (c, d, P, Q) w
+Ü	¤ µx· P x ± (µy· y  (c x) ´ Q y ± (¶z· z  (d y) ± z  w)) ´ x  w
+°
+
+¹HOLCONST
+Ü ÛQ_closedİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
+Ü		­ 'X ğ ­ BOOL
+÷üüüüüü
+Ü µc d P Q w· Q_closed (c, d, P, Q) w
+Ü	¤ µx· Q x ± (¶y· y  (d x) ± P y ± µz· z  (c y) ´ z  w) ´ x  w
+°
+¹HOLCONST
+Ü ÛP_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
+Ü		­ 'X ğ
+÷üüüüüü
+Ü µz· P_closure z = ¥{x | P_closed z x}
+°
+¹HOLCONST
+Ü ÛQ_closureİ : (('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL))
+Ü		­ 'X ğ
+÷üüüüüü
+Ü µz· Q_closure z = ¥{x | Q_closed z x}
+°
+
+¹HOLCONST
+Ü ÛPseudoWellFoundedPQİ :
+Ü	(('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µz· PseudoWellFoundedPQ z ¤
+Ü	(P_closure z) ¡ (Q_closure z) = {}
+Ü   ±	(P_closure z) À (Q_closure z) = Universe
+°
+
+Need to check that this encompasses pseudo-well-foundedness when suitably parameterised and that the `pseudo' bit only makes a difference for non-well-founded membership structures.
+
+\ignore{
+=SML
+val P_closed_def = get_spec ¬P_closed®;
+val Q_closed_def = get_spec ¬Q_closed®;
+val P_closure_def = get_spec ¬P_closure®;
+val Q_closure_def = get_spec ¬Q_closure®;
+val PseudoWellFoundedPQ_def = get_spec ¬PseudoWellFoundedPQ®;
+
+set_goal([], ¬µc d P Q x· x  P_closure (c, d, P, Q) ´ P x®);
+a (REPEAT µ_tac THEN rewrite_tac[P_closure_def, P_closed_def]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬{x | P x}®);
+val P_closed_´_P_thm = save_pop_thm "P_closed_´_P_thm";
+
+set_goal([], ¬µc d P Q x· x  Q_closure (c, d, P, Q) ´ Q x®);
+a (REPEAT µ_tac THEN rewrite_tac[Q_closure_def, Q_closed_def]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬{x | Q x}®);
+val Q_closed_´_Q_thm = save_pop_thm "Q_closed_´_Q_thm";
+
+=IGN
+set_goal([], ¬µc d P Q· P_closed (c, d, P, Q) (P_closure (c, d, P, Q))®);
+a (REPEAT µ_tac THEN rewrite_tac[P_closed_def]
+	THEN REPEAT strip_tac);
+a (rewrite_tac[P_closure_def, P_closed_def] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 4 ¬y®);
+a (spec_nth_asm_tac 3 ¬z®);
+a (spec_nth_asm_tac 6 ¬z®);
+(* *** Goal "1" *** *)
+a (all_fc_tac [P_closed_´_P_thm]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 9 ¬y'®);
+a (lemma_tac ¬P z® THEN1 all_fc_tac [P_closed_´_P_thm]);
+
+a (asm_fc_tac[]);
+
+val P_closed_´_P_thm = save_pop_thm "P_closed_´_P_thm";
+=TEX
+}%ignore
+
+=GFT
+P_closed_´_P_thm = ô µ c d P Q x· x  P_closure (c, d, P, Q) ´ P x
+
+Q_closed_´_Q_thm = ô µ c d P Q x· x  Q_closure (c, d, P, Q) ´ Q x
+=TEX
+
+\subsection{Pseudo-Hereditarily-PQ Collections}
+
+Even if we had a pseudo-well-founded universe in NFU, it would not be pseudo-well-founded-PQ for any interesting or useful properties P and Q.
+The whole idea is to use these properties to create a pair of useful subclasses of the universe.
+So what we want to do is just take the two closures resulting from P and Q, and use their union as new a psuedo-well-founded domain of discourse.
+In fact, we won't take the union at all, we will be looking for a two-sorted foundational theory.
+
+¹HOLCONST
+Ü ÛPseudoHereditarilyPQİ :
+Ü	(('X ­ 'X ğ) ¸ ('X ­ 'X ğ) ¸ ('X ­ BOOL) ¸ ('X ­ BOOL)) ­ ('X ğ ¸ 'X ğ)
+÷üüüüüü
+Ü µz· PseudoHereditarilyPQ z = (P_closure z, Q_closure z)
+°
+
+Among the important properties which we hope this construction will have are:
+
+\begin{itemize}
+\item The values in the left collection will all have property P.
+\item The values in the right collection will all have property Q.
+\item Both collections will include the corresponding {\it HereditarilyPQ} sets.
+\end{itemize}
+
+I am by no means confident of any of these features at present.
+
+\ignore{
+=SML
+val P_closed_def = get_spec ¬P_closed®;
+val Q_closed_def = get_spec ¬Q_closed®;
+val P_closure_def = get_spec ¬P_closure®;
+val Q_closure_def = get_spec ¬Q_closure®;
+val PseudoHereditarilyPQ_def = get_spec ¬PseudoHereditarilyPQ®;
+=TEX
+}%ignore
+
+
+
 \section{CODING CONSTRUCTIONS}
 
 It is proposed in the first instance to use HOL types as ways of describing constructions.
@@ -1554,8 +1826,6 @@ We might as well treat the necessary injection from the natural numbers into the
  ÷üüüüüü
 Ü µ (S, $‰m) (x,y)· MSUPair (S, $‰m) (x,y) = 
  °
-
-
 
 \subsection{Constructing a Fixed Point}
 

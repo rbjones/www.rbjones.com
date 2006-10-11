@@ -1,6 +1,6 @@
 ######################################################################
 #
-#	$Id: rbj.mkf,v 1.13 2006/10/04 18:43:48 rbj01 Exp $
+#	$Id: rbj.mkf,v 1.14 2006/10/11 19:07:42 rbj01 Exp $
 #
 #	makefile for Roger's things
 #
@@ -29,18 +29,12 @@ default:
 	@echo " "
 	@echo "The following are the three most useful make commands for users:"
 	@echo " "
-	@echo "make -f rbj.mkf dvi      - build database; typeset documents as DVI files"
 	@echo "make -f rbj.mkf pdf      - build database; typeset documents as PDF files"
 	@echo "make -f rbj.mkf bld      - just build database"
 	@echo " "
 	@echo "The make commands that build the database create a new ProofPower database"
-	@echo "called rbj and load the documents into it, thus typechecking the"
+	@echo "called rbjhol and load the documents into it, thus typechecking the"
 	@echo "specifications and replaying the proofs."
-	@echo " "
-	@echo "If your ProofPower system is not installed in /usr/local/pp, use for example:"
-	@echo " "
-	@echo "    PPHOME=/opt/pp make -f rbj.mkf dvi"
-	@echo " "
 
 ######################################################################
 #
@@ -63,7 +57,7 @@ STARTZEDDBNAME=zed
 RELDIR=release
 
 # The documents
-HOLDOCS= t001.doc t002.doc t003.doc t004.doc t006.doc t007.doc \
+HOLDOCS= t001.doc t002.doc t003.doc t004.doc t005.doc t006.doc t007.doc \
 	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc \
 	t015.doc t016.doc t017.doc t018.doc t019.doc
 
@@ -79,8 +73,7 @@ ZEDLDD=$(ZEDDOCS:.doc=.ldd)
 # Variations on the documents
 SMLFILES= $(SMLDOCS:.doc=.sml)
 LDDFILES= $(SMLDOCS:.doc=.ldd)
-DVIFILES= $(SMLDOCS:.doc=.dvi) $(OTHERDOCS:.doc=.dvi)
-PDFFILES= $(DVIFILES:.dvi=.pdf) 
+PDFFILES= $(SMLDOCS:.doc=.pdf) $(OTHERDOCS:.doc=.pdf)
 
 # packing list for a source release (target src)
 PACKINGLIST= $(SMLDOCS) $(OTHERDOCS) rbj.bib rbj.mkf rbjpp.ist docpdf texpdf
@@ -96,20 +89,21 @@ t001.ldd: t006.ldd
 t002.ldd: t003.ldd
 t003.ldd: t006.ldd
 t004.ldd: t009.ldd
-#t005.ldd: t006.ldd
+t005.ldd: t006.ldd
 t006.ldd: t010.ldd
 t007.ldd: t006.ldd
-t008.ldd: t007.ldd
+t008.ldd: t004.ldd t007.ldd
 t009.ldd: t006.ldd
 t010.ldd: rbjholdb.ldd
 t011.ldd: rbjholdb.ldd
 t012.ldd: t011.ldd
 t016.ldd: t006.ldd
 t017.ldd: t006.ldd t004.ldd
-t018.ldd: t006.ldd
+t018.ldd: t007.ldd t019.ldd
 t019.ldd: t004.ldd
-$(DVIFILES): rbj.bib
-$(PDFFILES): rbj.bib
+
+$(PDFFILES): rbj.bib rbjpp.ist
+
 README.txt:
 
 ######################################################################
@@ -118,16 +112,22 @@ README.txt:
 #
 ######################################################################
 
-THEORIES= catfun.th cfpi.th diffgeom.th fixp.th fixp_egs.th membership.th \
-	  metaci.th metapi.th NF.th NFU.th nf_h.th nfu_s.th nfu_f.th ordered_sets.th \
-	  PI.th rbjmisc.th t001a.th t002a.th U_orders.th X-Logic-1.th
+HTHS= catfun.th cfpi.th diffgeom.th fixp.th fixp_egs.th membership.th \
+	  metaci.th metapi.th nf_h.th nfu_s.th nfu_f.th ordered_sets.th \
+	  pre_func.th rbjmisc.th t001a.th t002a.th U_orders.th X-Logic-1.th \
+	  wfrel.th
+ZTHS=
+THEORIES=$(HTHS) $(ZTHS)
 
-THDOCS=$(THEORIES:.th=.th.doc)
+HTHDOCS=$(HTHS:.th=.th.doc)
+ZTHDOCS=$(ZTHS:.th=.th.doc)
+
+THDOCS=$(HTHDOCS) $(ZTHDOCS)
 THTEXS=$(THEORIES:.th=.th.tex)
 
 $(THTEXS): %.tex: %.doc
 	   doctex $*
-	   sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
+	   @sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 
 t001a.th.doc: t001.ldd
 
@@ -137,7 +137,7 @@ diffgeom.th.doc: t003.ldd
 
 membership.th.doc: t004.ldd
 
-#wfrel.th.doc: t005.ldd
+wfrel.th.doc: t005.ldd
 
 rbjmisc.th.doc: t006.ldd
 
@@ -159,7 +159,7 @@ t003.pdf: diffgeom.th.tex
 
 t004.pdf: membership.th.tex
 
-#t005.pdf: wfrel.th.tex
+t005.pdf: wfrel.th.tex
 
 t006.pdf: rbjmisc.th.tex
 
@@ -173,11 +173,7 @@ t016.pdf: X-Logic-1.th.tex X-Logic-2.th.tex
 
 t017.pdf: cat.th.tex
 
-NF.th.doc: t018.ldd
-
-NFU.th.doc: t018.ldd
-
-PI.th.doc: t018.ldd
+pre_func.th.doc: t018.ldd
 
 catfun.th.doc: t018.ldd
 
@@ -187,7 +183,7 @@ cfpi.th.doc: t018.ldd
 
 metaci.th.doc: t018.ldd
 
-t018.pdf: NFU.th.tex PI.th.tex catfun.th.tex metapi.th.tex cfpi.th.tex metaci.th.tex
+t018.pdf: pre_func.th.tex catfun.th.tex metapi.th.tex cfpi.th.tex metaci.th.tex
 
 nf_h.th.doc: t019.ldd
 
@@ -225,7 +221,8 @@ packinglist:
 #
 ######################################################################
 
-dvi: $(DVIFILES)
+doc_theories.tex: $(THTEXS)
+		  cat $(THTEXS) >| doc_theories.tex
 
 pdf: $(PDFFILES)
 
@@ -322,6 +319,18 @@ $(ZEDLDD): %.ldd: %.sml
 	@pp -d $(ZEDDBNAME) -f $< >$*.err
 	@mv $*.err $@
 
+$(HTHDOCS): %.th.doc:
+	@rm -f $@ $*.err 2>/dev/null
+	@echo "Listing hol theory: " $*
+	@hol_list -d $(HOLDBNAME) $* >$*.err
+	@mv $*.err $@
+
+$(ZTHDOCS): %.th.doc:
+	@rm -f $@ $*.err 2>/dev/null
+	@echo "Listing zed theory: " $*
+	@zed_list -d $(HOLDBNAME) $* >$*.err
+	@mv $*.err $@
+
 %.sml: %.doc
 	docsml $*
 
@@ -336,7 +345,7 @@ $(ZEDLDD): %.ldd: %.sml
 %.pdf: %.tex
 	TEXINPUTS=.:$(PPHOME)/tex: \
 	BSTINPUTS=.:$(PPHOME)/tex: \
-	BIBINPUTS=.:$(PPHOME)/tex: ./docpdf $*
+	BIBINPUTS=.:$(PPHOME)/tex: docpdf $*
 
 #%.pdf: %.dvi
 #	dvipdf -sPAPERSIZE=a4 $*
