@@ -1,5 +1,5 @@
 =IGN
-$Id: t020.doc,v 1.1 2006/10/15 12:02:54 rbj01 Exp $
+$Id: t020.doc,v 1.2 2006/10/15 20:39:25 rbj01 Exp $
 open_theory "poly-sets";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -21,26 +21,37 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\makeindex
 \title{PolySet Theory}
 \makeindex
 
 \author{Roger Bishop Jones\\ rbj01@rbjones.com}
-
+\date{$ $Date: 2006/10/15 20:39:25 $ $}
 \usepackage[pdftex]{hyperref}
 
 \begin{document}
 \begin{titlepage}
 \maketitle
 \begin{abstract}
+A construction similar in effect but rather different in method to the Oswald-Church construction is defined in a generic way.
+The purpose of the construction is to build from a well-founded extensional membership structure another membership structure containing the original but having many other sets in addition, often not well-founded, typically including a universal set.
+
+The generic construction is then applied to create a model which we call poly-sets.
+poly-sets are sets generated from a proforma set by filling in values for wildcards.
+The wildcards are represented by a subset of the ordinals, and as the wildcards are instantiated the remaining ordinals are reduced by the number of ordinals used as wildcards.
+
+This construction is intended to reflect the intuition that certain kinds of polymorphic function, particularly those which arise in the simple polymorphism found in LCF, ML and HOL, work by not looking at values whose type is a type varisble, so that only the superficial structure of the arguments is significant for such a function.
+The function can therefore be represented by a set which gives the graph using wildcards in the positions where such values are expected.
 \end{abstract}
 
 \vfill
 
 \begin{centering}
-$ $Id: t020.doc,v 1.1 2006/10/15 12:02:54 rbj01 Exp $ $
+
 \href{http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
+
+$ $Id: t020.doc,v 1.2 2006/10/15 20:39:25 rbj01 Exp $ $
+
 \end{centering}
 
 \thispagestyle{empty}
@@ -55,9 +66,8 @@ $ $Id: t020.doc,v 1.1 2006/10/15 12:02:54 rbj01 Exp $ $
 
 \subsection*{To Do}
 \begin{itemize}
-
-\item Introductory narrative.
-
+\item Poly-set specific definitions
+\item Proofs
 \end{itemize}
 
 {\raggedright
@@ -134,7 +144,32 @@ Having thus validated the putative axiomatisation, we could then work in the the
 
 Since my motivation for performing the construction is to use this as a basis for the a further construction, the theory will not need to be established as similar methods can be adopted in the second construction.
 
-\section{DEFINING POLY-SETS}
+\subsection{Church-Oswald Models}
+
+I wrote the above in ignorance of Church-Oswald models, which are described in the last chapter of \cite{forster85}.
+Then I thought I had better have a rummage around to see if there was anything similar already studied, just in case enough is known about this model to put me off it.
+
+There certainly are some similarities between the kind of cnstruction I have in mind here and the things that Forster describes as Church-Oswald constructions.
+So with only the most superficial knowledge of these things I will make a first sketch here of the similarities and differences.
+
+First the similarities.
+I think the basic idea with the CO constructions is that you start with a model of a well-founded set theory such as ZFC and use this to represent a broader collection of sets which includes a universal set.
+Slightly stronger than that, the construction provides for additional set forming operations such as, for example, complementation.
+
+The construction goes in several stages, first a set is chosen for taggings sets, with one element of the set used to identify the old fashioned set formation processes and the other elements to identify new operations.
+So in the simplest case there might be only two values one for ordinal set constructions, the other for forming a complement (and this simple case corresponds to Oswald's model).
+You have to have a bijection {\it k} between V and V ∏ K where K is the set of such tags and this is used in defining a new membership relation over V in which the new operations feature.
+
+What I have in mind may well be equivalent, I'm not sure yet so I will have to give that more consideration as I work my way through it.
+The idea is to work with the subset of V consisting of those sets which are hereditarily ordered pairs with elements of K on the left, and to define a new membership structure over these without needing a bijection between V and V ∏ K.
+
+Going beyond the generic procedure for constructing (what Forster calls) P-extensions of models of Z, there is the question of the details of the particular construction, and in this it seems more likely than my plan is novel.
+The notion of superficial sets described above provides a different take on what ill-founded sets are desirable.
+
+Forster says that extensionality is a big problem, and I therefore conclude that there must be something amiss with my naive plan to collapse the membership relationship into and extensional relationship using the function {\it ExtRel} defined in \cite{rbjt004}.
+Presumably I will eventually discover what the problem is when I start trying to do proofs about that function.
+
+\section{GENERIC P-EXTENSIONS}
 
 First we have a new theory.
 
@@ -168,51 +203,137 @@ Both of these will be themselves poly-sets
 \footnote{I don't know any reason why the ordinals from the membership structure rather than poly-set ordinals could not be used on the left, but my hunch is that it will work out better with poly-sets on both sides.}
 , and we therefore need the predicate ``ordinal'' for polysets to define this function.
 
-The construction is therefore undertaken in two stages.
-First poly-ordinals, then the rest of the poly-sets.
+The construction is therefore undertaken in three stages as follows:
 
-The poly-ordinals are of course all well-founded.
-The well founded poly-sets are the ones which have no ``wildcards'', and therefore have on the left the poly-set ordinal zero
- (which is the ordered pair of the empty set with itself).
-The best way to get the poly-ordinals is probably to define by transfinite recursion the mapping from the well-founded sets in a membership structure to the corresponding well-founded poly-set and then take the image under that map of the ordinals in the membership structure.
+\begin{itemize}
+\item define the injection from the well-founded sets into the poly-sets
+\item define a generic putative {\it P-extension} construction (since I now suspect the proposed procedure may be equivalent to a Church-Oswald construction, and a generic account may make it easier to check this out).
+\item define the specifics of the poly-sets construction for fitting into the generic construction.
+\end{itemize}
+
+\subsection{The Canonical Injection}
+
+As in Forster this is done by transfinite recursion.
+For the sake of making as much of this generic as possible the definition of the injection is parameterised by the zero element of K.
+In the particular construction I had in mind this would be the zero poly-ordinal, but it doesn't make sense to plumb that into the injection.
+
+The canonical injection works informally as follows.
+It takes the set and maps the canonical injection over the members of the set, and then puts the resulting set of poly-sets into the right hand element of an ordered pair of which the left element is the nominated "zero" K value.
 
 \ignore{
-=IGN
-stop;
-=IGN
-set_goal([], ¨∂wf_polyset∑ µ xms s∑ s ç Fst (WfPart (Carâx xms, Inâx xms))
-	¥ wf_polyset xms s = Opâx xms (Opâx xms (öâx xms, öâx xms),
-	Absâx xms {x | ∂y∑ Inâx xms y s ± x = wf_polyset xms y})Æ);
-a (∂_tac ¨Ãwfp∑ Æ);
-
+=SML
+set_goal([], ¨∂CanInj∑ µ xms z s∑ is_XMS xms ± s ç Carâx xms ¥
+‹	CanInj xms z s = Opâx xms
+‹	  (z, Absâx xms {x:'a | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
+Æ);
+a (prove_∂_tac THEN REPEAT strip_tac);
+a (lemma_tac ¨∂G:('a ≠ 'a) ≠ ('a ≠ 'a)∑ µf s∑ G f s = Opâx xms' (z',
+	Absâx xms' {x | ∂ y∑ y ç Carâx xms' ± Inâx xms' y s ± x = f y})Æ
+	THEN1 prove_∂_tac);
+a (lemma_tac ¨FunctRespects G (Carâx xms', Inâx xms')Æ
+	THEN1 (rewrite_tac [get_spec ¨FunctRespectsÆ]
+		THEN REPEAT strip_tac
+		THEN asm_rewrite_tac[]));
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨{x'|∂ y∑ y ç Carâx xms' ± Inâx xms' y x ± x' = g y}
+	= {x'|∂ y∑ y ç Carâx xms' ± Inâx xms' y x ± x' = h y}Æ
+	 rewrite_thm_tac
+	THEN1 (rewrite_tac[] THEN REPEAT strip_tac));
+(* *** Goal "1.1" *** *)
+a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN all_asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN ALL_ASM_FC_T rewrite_tac []);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨is_XMS xms' ¥ WellFounded (Carâx xms', Inâx xms')Æ
+	THEN1 (rewrite_tac [get_spec ¨is_XMSÆ]
+		THEN REPEAT strip_tac
+		THEN asm_rewrite_tac[]));
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨≈x∑ TÆ	THEN strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (fc_tac [recursion_theorem]);
+a (fc_tac [get_spec ¨UniquePartFixpÆ]);
+a (∂_tac ¨fÆ THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨PartFunEquivÆ]);
+a (ASM_FC_T (rewrite_tac o list_map_eq_sym_rule) []);
+a (asm_rewrite_tac []);
+save_cs_∂_thm(pop_thm());
 =TEX
 }%ignore
 
+Though the definition is quite simple, {\Product} does not have the competence automatically to prove its consistency.
+The author has supplied an appropriate proof script which has been checked by {\Product} before accepting the definition.
+
 πHOLCONST
-‹ €wf_polyset›: 'a XMS ≠ 'a ≠ 'a
+‹ €CanInj›: 'a XMS ≠ 'a ≠ 'a ≠ 'a
 ˜¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-‹ µ xms s∑ s ç Fst (WfPart (Carâx xms, Inâx xms)) ¥
-‹	wf_polyset xms s = Opâx xms
-‹	  (Opâx xms (öâx xms, öâx xms),
-‹	   Absâx xms {x | ∂y∑ Inâx xms y s ± x = wf_polyset xms y})
+‹ µ xms z s∑ is_XMS xms ± s ç Carâx xms ¥
+‹	CanInj xms z s = Opâx xms
+‹	  (z, Absâx xms {x | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
 ∞
+
+\subsection{The Domain of the New Structure}
+
+We now construct the domain of the new structure.
+Lets call these P-sets.
+A P-set is a hereditarily-ordered-pair of which the first element is an element of some arbitrary set of tags and the second is a set of P-sets.
+It is a transfinite recursive datatype.
+
+The definition is accomplished by defining the relationship which holds between a P-set and the P-sets which are its immediate constituents.
+A least fixed point is then taken of the function on sets which maps a set of (putative P-)sets into the set obtained by adding all the P-sets which can be formed immediately from the P-sets in the set.
+This relation is parameterised by the original membership structure and a set of tags.
 
 πHOLCONST
-‹ €polyset_content›: 'a MS ≠ 'a ≠ 'a ≠ BOOL
+‹ €Pset_content›: 'a XMS ≠ 'a SET ≠ 'a ≠ 'a ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µ ms s t∑ polyset_content ms s t §
-‹	∂or∑ ordinal_set ms or ± ms_wkp ms (or, t) s
+‹ µ xms tags s t∑ Pset_content xms tags s t §
+‹	∂tag psets∑ tag ç tags ± Inâx xms s psets ± t = Opâx xms (tag, psets)
 ∞
 
-The set of polysets is then defined:
+The set of Psets is then defined:
 
 πHOLCONST
-‹ €polysets›: 'a MS ≠ 'a SET
+‹ €Psets›: 'a XMS ≠ 'a SET ≠ 'a SET
 ˜¸¸¸¸¸¸
-‹ µ ms∑ polysets ms = HeredRel (polyset_content ms)
+‹ µ xms tags∑ Psets xms tags = HeredRel (Pset_content xms tags)
 ∞
 
-\subsection{Defining Membership Over Polysets}
+\subsection{Defining The Membership Relation}
+
+The membership relationship cannot of course be defined without more information specific to the Pset construction.
+
+The only things which are generic in this are the treatment of the "zero tag" and the conversion to an extensional relationship.
+
+Let us suppose that the specifics of the membership are given by an ordered pair of which the first is the zero tag and the second is a function from tag to a relationship between sets of P-sets and P-sets.
+
+πHOLCONST
+‹ €PsMemNx›: 'a XMS ≠ ('a SET ∏ 'a ∏ ('a ≠ 'a ≠ 'a ≠ BOOL)) ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µ xms (tags, zt, f) s t∑ PsMemNx xms (tags, zt, f) s t §
+‹	∂ tag psets∑ t = Opâx xms (tag, psets)
+‹		± if tag = zt then Inâx xms s psets else f tag psets s
+∞
+
+The we convert this into an extensional relationship (over equivalence classes of the original sets).
+
+πHOLCONST
+‹ €PsMem›: 'a XMS ≠ ('a SET ∏ 'a ∏ ('a ≠ 'a ≠ 'a ≠ BOOL)) ≠ ('a SET SET ∏ ('a SET ≠ 'a SET ≠ BOOL))
+˜¸¸¸¸¸¸
+‹ µ xms (tags, zt, f)∑ PsMem xms (tags, zt, f) = ExtRel (Psets xms tags, PsMemNx xms (tags, zt, f))
+∞
+
+\section{POLY-SETS}
+
+The tags for the poly-sets are to be the set of ordinal poly-sets.
+Everything continues to be parameterised by a î'a XMSÆ.
+
+\ignore{
+ πHOLCONST
+‹ €PolySetTags›: xms ≠ 
+˜¸¸¸¸¸¸
+‹ µ xms∑ PolySetTags = {t | }
+ ∞
+}%ignore
 
 \ignore{
 =SML
