@@ -1,7 +1,5 @@
 =IGN
-$Id: t004.doc,v 1.8 2006/10/11 19:07:42 rbj01 Exp $
-open_theory "well-orders";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+$Id: t004.doc,v 1.9 2006/10/15 12:02:54 rbj01 Exp $
 open_theory "membership";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 =TEX
@@ -24,7 +22,7 @@ set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 
 \title{Membership Structures}
 \author{Roger Bishop Jones}
-\date{$ $Date: 2006/10/11 19:07:42 $ $}
+\date{$ $Date: 2006/10/15 12:02:54 $ $}
 \vfill
 
 \makeindex
@@ -40,7 +38,7 @@ A queer way of doing set theory in HOL (together with some queer reasons for doi
 
 \begin{centering}
 
-Reference: rbjt004; $ $Revision: 1.8 $ $;
+Reference: rbjt004; $ $Revision: 1.9 $ $;
 
 Location: \href{http://www.rbjones.com/rbjpub/pp/doc/t004.pdf}{http://www.rbjones.com/rbjpub/pp/doc/t004.pdf}
 
@@ -61,8 +59,7 @@ Location: \href{http://www.rbjones.com/rbjpub/pp/doc/t004.pdf}{http://www.rbjone
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{rbj,fmu}
-} %\raggedright
+\bibliography{rbj,fmu}} %\raggedright
 
 %%%%
 %%%%
@@ -151,185 +148,15 @@ How to do this remains to be seen, it may be appropriate to consider a language 
 This last point suggests, as is indeed the case, that I am not exclusively concerned with membership structures, though this particular document may remain dedicated to them.
 I am interested in methods for transforming one foundational ontology into another, for example.
 
-\section{WELL-ORDERS}
-
-There is some material on well-orderings in the theory ``ordered\_sets'' \cite{rbjt009} which forms a starting point for this material.
-Here we extend the theory of well-orderings into areas which would normally belong to the theory of ordinals.
-The reasons for this are similar to the reasons for studying membership structures rather than working in a set theory.
-
-While the theory of orders (in \Product) and {\it WellOrderings} (in \cite{rbjt009}) work with things that look like first order structures (i.e. an explicit set which is the domain and a relation over that set), there is in the explicit domain an element of redundancy which complicates the development of the theory.
-I am not persuaded that there are any real benefits from that manner of treatment here, so this study of well-orders will work simply with certain kinds of relationship (in \Product-HOL).
-
-A second consideration is whether we should deal primarily with strict orderings or not.
-In less formal mathematics this issue can be ducked, a common way of doing this is to deal with both at the same time, using the appropriate relation symbol for the strict and non-strict orderings.
-In this context this solution will not work and a choice has to be made.
-In fact the choice seems to be determined by the prior choice to omit the explicit domain.
-In the case of a wellordering of length 1 the domain would not be recoverable from an anti-reflexive ordering, and so we had better use reflexive orderings.
-
-(I will call reflexive relations without explicit domain {\it well-orders} and the strict orders with explicit domain {\it well-orderings}.)
-
-
-=SML
-open_theory "ordered_sets";
-force_new_theory "well-orders";
-new_parent "rbjmisc";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
-=TEX
-
-We will be talking about relations a lot, so I propose to use a type abbreviation as follows:
-
-=SML
-declare_type_abbrev ("REL", ["'a"], ”'a ­ 'a ­ BOOL®);
-declare_infix (300, "¼èê");
-declare_infix (300, "¼‰a");
-declare_infix (300, "¼‰b");
-=TEX
-
-So here is the definition of a well-ordering.
-
-¹HOLCONST
-Ü Field: 'a REL ­ 'a SET
-÷üüüüüüüüüüü
-Ü µr· Field r = {x | ¶y· r x y ² r y x}
-°
-
-The following two functions convert between strict orders (without explicit domain) to reflexive orders with explicit domains (though applicable to relations in general).
-
-¹HOLCONST
-Ü Strict: 'a REL ­ ('a SET ¸ 'a REL)
-÷üüüüüüüüüüü
-Ü µr· Strict r = (Field r, Ìx y· r x y ± ³ x = y)
-°
-
-¹HOLCONST
-Ü ReflRel: ('a SET ¸ 'a REL) ­ 'a REL
-÷üüüüüüüüüüü
-Ü µ(X, r)·
-Ü	ReflRel(X, r) = Ìx y· x  X ± y  X ± (r x y ² x = y)
-°
-
-¹HOLCONST
-Ü WellOrder: 'a REL ­ BOOL
-÷üüüüüüüüüüü
-Ü µ$¼‰a· WellOrder $¼‰a ¤
-Ü	µA·A € Field $¼‰a ± ³A = {} ´ ¶‰1 x· x  A ± µy·y  A ´ x ¼‰a y
-°
-
-A {\it WellOrdering} is converted by {\it ReflRel} into a {\it WellOrder}.
-However, more useful here is that a {\it WellOrder} becomes a {\it WellOrdering} when its field is made explicit.
-
-=GFT
-WoWo_thm = ô µ r· WellOrder r ´ WellOrdering (Field r, r)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ(X:'a SET, r:'a REL)· Refl(X, ReflRel(X,r)) ± Field(ReflRel(X,r)) = X®);
-a (REPEAT µ_tac THEN rewrite_tac
-	[get_spec ¬ReflRel®, get_spec ¬Refl®, get_spec ¬Field®]
-	THEN REPEAT strip_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-val ReflRel_thm = save_pop_thm "ReflRel_thm";
-
-set_goal([], ¬µr· WellOrder r ´ WellOrdering (Field r, r)®);
-a (strip_tac THEN pure_rewrite_tac [get_spec ¬WellOrder®]);
-a (STRIP_T (strip_asm_tac o (fn th => rewrite_rule [th]
-	(list_µ_elim [¬Field r®, ¬r®] refl_well_ordering_lower_bounds_thm))));
-val WoWo_thm = save_pop_thm "WoWo_thm";
-=TEX
-}%ignore
-
-The interest here is in the isomorphism classes of well-orders (i.e. the ordinals) but the best we could do would be a polymorphic definition rather than one which transcended the type boundaries.
-I propose to define an appropriate notion of equivalence and confine the development to properties and functions which respect that notion.
-
-Here we find the first hint that using reflexive orderings may have disadvantages.
-In defining order morphisms, we need them to respect the strict ordering not the reflexive ordering.
-
-¹HOLCONST
-Ü WoHom: 'a REL ­ 'b REL ­ ('a ­ 'b) ­ BOOL
-÷üüüüüüüüüüü
-Ü µra rb m· WoHom ra rb m ¤
-Ü 	(µx y· ³ x = y ± ra x y ´ ³ (m x) = (m y) ± rb (m x) (m y))
-°
-
-We can then define an ordering of {\it WellOrder}s as follows:
-
-=SML
-declare_infix (300, "¼‰wo");
-=TEX
-
-¹HOLCONST
-Ü $¼‰wo: 'a REL ­ 'b REL ­ BOOL
-÷üüüüüüüüüüü
-Ü µra rb· ra ¼‰wo rb ¤ ¶m· WoHom ra rb m
-°
-
-=SML
-declare_alias ("¼èê", ¬$¼‰wo®);
-=TEX
-
-This is of course, almost a {\it WellOrder}.
-In fact only a pre-order.
-
-
-\ignore{
-=IGN
-set_goal([], ¬WellOrder $¼‰wo®);
-a (rewrite_tac [get_spec ¬$¼‰wo®, get_spec ¬WellOrder®,
-	get_spec ¬WoHom®]
-	THEN REPEAT strip_tac);
-=TEX
-}%ignore
-
-I'm looking for something close enough to ordinals for the recursion theorem to work so that I can define functions over the ordinals by transfinite recursion.
-
-Though the equivalence classes of these well-orders are typed and hence are not the full equivalence classes one might recognise in the metatheory, it will still give us a recursion theorem, since that is in a similar way polymorphic.
-
-However, there is more complexity in this than need be.
-The definition of the equivalence relation is unnecessary we can use a downward closed set of well-orders as an ordinal.
-
-¹HOLCONST
-Ü Ord: ('a REL SET) ­ BOOL
-÷üüüüüüüüüüü
-Ü µsr:'a REL SET· Ord sr ¤ µr1 r2:'a REL· r1  sr ± r2 ¼‰wo r1 ´ r2  sr
-°
-
-We need a strict ordering on these ``ordinals'' to apply the recursion theorem.
-
-=SML
-declare_infix (300, "<‰o");
-=TEX
-
-¹HOLCONST
-Ü $<‰o: 'a REL SET ­ 'a REL SET ­ BOOL
-÷üüüüüüüüüüü
-Ü µo1 o2· o1 <‰o o2 ¤ o1   o2
-°
-
-\ignore{
-=IGN
-set_goal([], ¬WellOrdering (Field $<‰o, $<‰o)®);
-a (rewrite_tac [get_spec ¬WellOrdering®, get_spec¬$<‰o®]
-	THEN strip_tac);
-(* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¬LinearOrder®,
-	get_spec ¬PartialOrder®,
-	get_spec ¬Trich®,
-	get_spec¬$<‰o®]);
-=TEX
-}%ignore
-
-
-
 \section{MEMBERSHIP STRUCTURES}
 
 Create new theory ``membership''.
 
 =SML
 set_flag("pp_use_alias", true);
-open_theory "Ûrbjmiscİ";
+open_theory "rbjmisc";
 force_new_theory "Ûmembershipİ";
-new_parent "well-orders";
+new_parent "ordered_sets";
 new_parent "bin_rel";
 set_merge_pcs["hol1", "'ú", "'savedthm_cs_¶_proof"];
 open RbjTactics1;
@@ -337,8 +164,6 @@ open RbjTactics1;
 open_theory "membership";
 set_merge_pcs["hol1", "'ú", "'savedthm_cs_¶_proof"];
 =TEX
-
-\section{BASIC PROPERTIES OF MEMBERSHIP RELATIONS}
 
 The following types are used:
 \begin{itemize}
@@ -368,6 +193,8 @@ The most obvious example of a property which is not first order is well-foundedn
 The obvious way to prove that well-foundedness is not first order is to prove that if it were we would could get from first order set theory a complete arithmetic.
 This route however presupposes a proof of the incompleteness of arithmetic, which is not so easy.
 
+\section{BASIC PROPERTIES OF MEMBERSHIP RELATIONS}
+
 The term ``membership relation'' is use purely to indicate motivation, this is not a non trivial subclass of binary relationships.
 
 The following are key properties which yield our broadest classification of membersip relations:
@@ -378,10 +205,13 @@ The following are key properties which yield our broadest classification of memb
 \item well-foundedness
 \end{enumerate}
 
+\subsection{Extensionality}
+
 None of these properties is essential for a membership relation.
-The one which is perhaps most conspiciously characteristic of set membership is extensionality, but constructive set theories are likely not to be extensional.
+The one which is perhaps most conspiciously characteristic of set membership is extensionality, but constructive set theories are likely not to be extensional, and set theories with urelements may have a qualified extensionality (as in NFU).
 
 A set theory is ``pure'' if everything in the domain of discourse is a set.
+This is connected with extensionality, since non-sets have no members and are therefore extensionally the same as the empty set (except for Quine atoms which are their own unit set, and permit something like urelements in a fully extensional theory).
 
 We are concerned here only with relations whose type is some instance of $”'a ­ 'a ­ BOOL®$ and so there is only one type of entity in the domain of discourse, and so in some sense everything is a set.
 However, if extensionality is weakened there may be any number of sets which have no members, and we may think of the extra ones as urelements.
@@ -397,9 +227,9 @@ If well-foundedness is absent or qualified then Quine's trick of treating urleme
 The following weakend extensionality is satisfied by models of NFU:
 
 ¹HOLCONST
-Ü Ûwkly_extensionalİ: 'a PMS
+Ü Ûweakly_extensionalİ: 'a PMS
 ÷üüüüüü
-Ü µ (X, $‰r)· wkly_extensional (X, $‰r) ¤ µs t·
+Ü µ (X, $‰r)· weakly_extensional (X, $‰r) ¤ µs t·
 Ü	s  X ± t  X ± (¶v· v  X ± v ‰r s) ´
 Ü	(s = t ¤ (µ u· u  X ´ (u ‰r s ¤ u ‰r t)))
 °
@@ -416,6 +246,44 @@ a (strip_tac THEN once_rewrite_tac [prove_rule [] ¬ms = (Fst ms, Snd ms)®]
 val extensional_thm = save_pop_thm "extensional_thm";
 =TEX
 }%ignore
+
+Any membership relation can be collapsed into one which is extensional, though in the worst case it might be trivial, by forming equivalence classes and redefining the relationship over those classes.
+
+We obtain the new membership structure by taking the domain to be equivalence classes of members under some equivalence relation and then defining a new membership operation over those classes as follows:
+
+It is convenient to use the theory {\it equiv\_rel} in which equivalences are curried binary relations rather than  sets of ordered pairs (as in theory {\it bin\_rel}).
+We need to take an intersection of a collection of such relations so this is defined first.
+
+¹HOLCONST
+Ü Û±‰rİ: ('a ­ 'a ­ BOOL) SET ­ ('a ­ 'a ­ BOOL)
+÷üüüüüü
+Ü µ sr· ±‰r sr = Ìx y· µz· z  sr ´ z x y
+°
+
+
+Then {\it ExtQuot} gives the set of sets of elements which must be identified to give an extensional relationship. 
+
+¹HOLCONST
+Ü ÛExtQuotİ: 'a MS ­ 'a SET SET
+÷üüüüüü
+Ü µ (X, $‰r)· ExtQuot (X, $‰r) =
+Ü	QuotientSet X (±‰r {r : 'a ­ 'a ­ BOOL
+Ü	   |  Equiv (X, r)
+Ü	      ± µx y· x  X ± y  X ± ((µz· z ‰r x ¤ z ‰r y)
+Ü		´ r x y)})
+°
+
+Finally we define the relationship:
+
+¹HOLCONST
+Ü ÛExtRelİ: 'a MS ­ 'a SET MS 
+÷üüüüüü
+Ü µ (X, $‰r)· ExtRel (X, $‰r) =
+Ü	let Y = ExtQuot (X, $‰r)
+	in (Y, Ìl r· ¶u v· u  l ± v  r ± u ‰r v)
+°
+
+\subsection{Well-Foundedness}
 
 The definition of well-foundedness used here is the concept {\it WellFounded} from the theory ``ordered\_sets''.
 
@@ -436,21 +304,30 @@ However, there are some preliminaries which seem to be necessary to adeqately ad
 To get ``full-width'' we want to say that at each stage all the subsets of the previous stage become sets.
 For this we need to be able to talk about the stages.
 
-\subsection{Ordinals}
+\subsection{Ordinals and Cardinals}
 
-[This section is to be superseded by the (more recent) section above attempting a treatment of ordinals based on orderings rather than on membership structures.
+[This is a mess!]
 
-Its not clear at this point whether any of this material will then be useful.]
+The reason for treating ordinals here is as follows.
+One of the important properties of structures is their height.
+Strong set theories are those with large cardinal axioms, which appear to be ensisting on the existence of very large sets, but which as is well know, do not succeed in their objective.
+Set theories with large cardinal axioms still have countable models.
+This is because {\it true} large cardinal properties are not expressible in first order logic, they are not first order properties of membership structures (as defined below).
+This should be easy to prove.
+So that we can talk about models which really do have large sets in them we need to define large cardinal {\it properties} as distinct from large cardinal axioms.
+It is desirable to do this independently of any particular axiomatisation of set theory.
+In our present context we could treat cardinals as equivalence classes of equipollent collections, but I propose nonetheless to follow more closely their treatment in well-founded set theories by taking them to be {\it alephs}, those ordinals which are larger than all their predecessors.
 
 The stages can be ordered using ordinals, and so first we need a concept of ordinal number.
-In fact, we can think of ordinals in terms of width, for the ordinals are among the membership relations of least width (which are those in which only one new set is introduced at each stage).
+We can think of ordinals in terms of width, for the ordinals are among the membership relations of least width (which are those in which only one new set is introduced at each stage).
 
-There are two kinds of ordinals of interest here.
+There are two kinds of (representation or realisation of) ordinals of interest here.
 The first kind of ordinal is an element in the domain of a membership relation.
 The second is a membership relation of which the domain as a whole is an ordinal (and may be thought of as the class of ordinals in its domain).
 
 Throughout the treatment of ordinals and cardinals adopted here we want to talk both about relations as being ordinals and about elements in the domain of relations as being ordinals.
-These notions are connected in that an element is an ordinal element iff the restriction of the membership relation in whose domain it appears to the members of that relation is an ordinal relation, and these two entities may be thought of as representing the same ordinal.
+These notions are connected in obvious ways.
+An element is an ordinal element iff the restriction of the membership relation in whose domain it appears to the members of that relation is an ordinal relation, and these two entities may be thought of as representing the same ordinal.
 
 Postfix subscripts are used to distinguish properties of ordinal relations from the corresponding property of ordinal elements.
 
@@ -461,7 +338,7 @@ Postfix subscripts are used to distinguish properties of ordinal relations from 
 °
 
 A {\it relation} is ``ordinal'' iff it is a transitive strict well-ordering.
-The concept of {\it WellOrdering} in $ordered\_sets$ does not require strictness so we define an ordinal using $WellFounded$ and $LinearOrder$
+The concept of {\it WellOrdering} in $ordered\_sets$ does not require strictness so we define an ordinal using $WellFounded$ (which does require strictness) and $LinearOrder$.
 
 ¹HOLCONST
 Ü Ûordinalİ: 'a PMS
@@ -469,7 +346,13 @@ The concept of {\it WellOrdering} in $ordered\_sets$ does not require strictness
 Ü µ mr· ordinal mr ¤ LinearOrder mr ± Trans mr ± WellFounded mr
 °
 
-We now introduce the idea that a membership relation is in the domain of some other membership domain, which may be though of as asserting that the class of sets under one membership relation is a set in the domain of the other.
+We now introduce the idea that a membership relation is in the domain of some other membership domain, which may be thought of as asserting that the class of sets under one membership relation is a set in the domain of the other.
+
+¹HOLCONST
+Ü Ûordinal_setİ: 'a MS ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ mr s· ordinal_set mr s ¤ ordinal (ordinal_relation mr s)
+°
 
 =SML
 declare_infix (305, "‰a");
@@ -487,8 +370,7 @@ declare_infix (305, "‰b");
 Ü Ûembeddingİ: ('a MS ¸ 'b MS) ­ ('a ­ 'b) ­ BOOL
 ÷üüüüüü
 Ü µ msa msb f· embedding (msa, msb) f ¤ 
-Ü	homomorph (msa, msb) f
-Ü	± OneOne f
+Ü	homomorph (msa, msb) f ± OneOne f
 °
 
 =SML
@@ -499,6 +381,41 @@ declare_infix (310, "ò‰m");
 Ü $Ûò‰mİ: ('a ­ BOOL) ­ 'a MS ­ 'a MS
 ÷üüüüüü
 Ü µ P (X, $‰a) · P ò‰m (X, $‰a) = (X ¡ {x | P x}, $‰a)
+°
+
+Membership structures need not be extensional. and so there may not be a unique set with no elements.
+It is convenient to be able to talk about the empty things.
+
+¹HOLCONST
+Ü $Ûms_šİ: 'a MS ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ (X, $‰a) s· ms_š (X, $‰a) s
+Ü	¤ s  X ± µz· z  X ´ ³ z ‰a s 
+°
+
+\subsection{WK Ordered Pairs}
+
+The following relation tells us when something in the domain of a relationship structure is an ordered pair.
+
+¹HOLCONST
+Ü $Ûms_pairİ: 'a MS ­ ('a ¸ 'a) ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ (X, $‰a) (l,r) p· ms_pair (X, $‰a) (l,r) p
+Ü	¤ p  X ± µz· z  X ´ (z ‰a p ¤ z = l ² z = r)
+°
+
+¹HOLCONST
+Ü $Ûms_unitİ: 'a MS ­ 'a ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ ms s u· ms_unit ms s u
+Ü	¤ ms_pair ms (s,s) u
+°
+
+¹HOLCONST
+Ü $Ûms_wkpİ: 'a MS ­ ('a ¸ 'a) ­ 'a ­ BOOL
+÷üüüüüü
+Ü µ ms (l,r) p· ms_wkp ms (l,r) p
+Ü	¤ ¶s t:'a· ms_unit ms l s ± ms_pair ms (l, r) t ± ms_pair ms (s,t) p  
 °
 
 \subsection{Standard Models}
@@ -1123,13 +1040,54 @@ So here goes:
 Ü		(va (InR One))  p mr (va o InL))
 °
 
-%%%%
-%%%%
-{\let\Section\section
-\def\section#1{\Section{#1}\label{well-orders.th}}
-\include{well-orders.th}
-}  %\let
+\section{EXTENDED MEMBERSHIP STRUCTURES}
 
+For some applications it seems possible that having just a little more structure will be helpful.
+The two elements which seem most desirable are the empty set and an ordered pair constructor (with projections).
+
+If there is an empty set, it can of course be identified from the membership relation, but there may be more than one, and it is sometimes important to chose one of them.
+There are of course ways of defining the ordered pair constructor, but most of the applications I have in mind would rather not have to make the choice.
+
+The following notion of extended membership structure is therefore introduced, and may be subject to adjustments or abandonment in the light of how useful it turns out to be.
+
+There are enough pieces to make use of a HOL labelled product type worthwhile.
+
+¹HOLLABPROD XMSüüüüüüüüüüüüüüüüü
+Ü	Car‰x	: 'a SET;
+Ü	In‰x	: 'a ­ 'a ­ BOOL;
+Ü	š‰x	: 'a;
+Ü	Op‰x	: ('a ¸ 'a) ­ 'a;
+Ü	Fst‰x	: 'a ­ 'a;
+Ü	Snd‰x	: 'a ­ 'a;
+Ü	Abs‰x	: 'a SET ­ 'a
+°üüüüüüüüüüüüüüüüüüüüüüüüü
+
+The minimal properties one would expect are:
+
+\begin{itemize}
+\item that the empty set is in the carrier and is empty
+\item that the ordered pairs are in the carrier and the projections deliver the right values
+\end{itemize}
+
+\ignore{
+
+¹HOLCONST
+Ü Ûis_XMSİ: 'a XMS ­ BOOL
+÷üüüüüü
+Ü µxms:'a XMS· is_XMS xms
+Ü ¤
+Ü	(š‰x xms  Car‰x xms ± ³ ¶s· s  Car‰x xms ± In‰x xms s (š‰x xms))
+Ü   ±	(µl r· l  Car‰x xms ± r  Car‰x xms
+Ü		´ Op‰x xms (l,r)  Car‰x xms
+Ü		± Fst‰x xms (Op‰x xms (l,r)) = l
+Ü		± Snd‰x xms (Op‰x xms (l,r)) = r)
+Ü   ±	(µs:'a SET· (¶t:'a· µu:'a· u  s ¤ (In‰x xms) u t) ´
+Ü		(µu:'a· u  s ¤ (In‰x xms) u (Abs‰x xms s)))
+°
+
+}%ignore
+%%%%
+%%%%
 {\let\Section\section
 \def\section#1{\Section{#1}\label{membership.th}}
 \include{membership.th}
@@ -1139,8 +1097,3 @@ So here goes:
 {\small\printindex}
 
 \end{document}
-=IGN
-(* this is now done using hol_list by the makefile *)
-output_theory{theory="well-orders", out_file="well-orders.th.doc"};
-output_theory{theory="membership", out_file="membership.th.doc"};
-=IGN

@@ -1,0 +1,245 @@
+=IGN
+$Id: t020.doc,v 1.1 2006/10/15 12:02:54 rbj01 Exp $
+open_theory "poly-sets";
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\usepackage{A4}
+\def\N{\mathbb{N}}
+\def\D{\mathbb{D}}
+\def\B{\mathbb{B}}
+\def\R{\mathbb{R}}
+\def\Z{\mathbb{Z}}
+\def\Q{\mathbb{Q}}
+
+\def\ExpName{\mbox{{\sf exp}}}
+\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\makeindex
+\title{PolySet Theory}
+\makeindex
+
+\author{Roger Bishop Jones\\ rbj01@rbjones.com}
+
+\usepackage[pdftex]{hyperref}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+\end{abstract}
+
+\vfill
+
+\begin{centering}
+$ $Id: t020.doc,v 1.1 2006/10/15 12:02:54 rbj01 Exp $ $
+\href{http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+\tableofcontents
+%\newpage
+%\subsection{Document cross references}
+
+\subsection*{To Do}
+\begin{itemize}
+
+\item Introductory narrative.
+
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+It is the purpose of this document to introduce a new 
+\footnote{As far as I know}
+set theory with a universal set.
+
+In this introduction I want to first of all give an account of how I arrived at the key ideas, which I hope will go some way toward motivating its study and use.
+I also want to say a few words about how this document goes about introducing this theory.
+
+\subsection{Origins}
+
+These ideas come after a fairly prolonged if intermittent interest on my part in non-well-founded foundation systems, which I first became actively interested in in 1095 when I concluded that they were desirable for the kind of logical approach to Artificial Intelligence which I was then considering.
+The seeds of antipathy to the constraint of well-foundedness had however been sown many years earlier, so that when I first came (for example) to Russell's writings on his Theory of Types I was disinclined to allow that circulariy was always, or even often vicious.
+I don't propose to go into this long history of (not very fruitful) interest here, for there are intelligible motivators in the near term.
+
+I have recently been attempting the construction of non-well-founded category theoretic foundation systems, following up the obvious possibility (which I have long neglected) that NF or NFU could be used as a base from which to construct such a system.
+I did this primarily in order to give me an entertaining task which would improve my acquaintance with NF and NFU.
+In this objective it has been successful in small measure, for I have come to understand rather early in this process how awkward it is to work (using my preferred tools) with NF or NFU.
+
+This provoked me into thinking anew about what kind of non-well-founded ontology would be more suitable for my present purposes.
+NF and NFU are based primarily on liberalisation of the constraint on abstraction in simple type theory along lines suggested by the typical ambiguity which Russell and Whitehead adopted in Principia Mathematica.
+The intuition here seems syntactic rather than semantic.
+
+I prefer to work, as well-founded set theories do, from an intuition about ontology to an axiomatisation of the theory of that ontology, rather than from an idea about liberalisation of theory not based in any definition conception ontology.
+Poly-sets are based on such an intuition, which is also rooted as it happens in something close to the notion of typical ambiguity in type theory, but which translated more readily into an ontology.
+
+We consider what kinds of non-well-founded set we want to have, then the examples which come to mind are the functions in the pure lambda calculus, for example the identity function.
+It is the fragmentation of this kind of function (considering predicates as propositional functions) which made typical ambiguity an essential expedient in the application of Russel's theory of types, and which lead Robin Milner to introduce a very simple kind of polymorphism into Scott's Logic for Computable Functions, and into the programming language ML, and later into Mike Gordon's adaptation of Church's Simple Theory of Types \cite{church40} for use in the HOL theorem prover.
+
+If we observe the kinds of non-well-founded function provided by this kind of polymorphism (usually identified by attribution to various combinations of Milner, Hindley and Henessey) we find that the sets non-well-founded sets all have what I will call here a {\it superficial} structure.
+The functions are polymorphic in the most simplistic way, they work because the parts of the structures which they manipulate which are polymorphic are simply ignored or copied, but never examined.
+To chose one of the most simple examples, the polymorphic function which computes the length of a list of values can be polymorphic in the type of the values because it works only on the structure of the list, and ignores the values in the list.
+However the great the complexity, however high the rank of a list of values supplied to it, the length function looks only at its superficial structure in order to determine its length.
+
+This suggests that this kind of non-well-founded function might be modelled by the use of sets which are permitted to contain wild-cards.
+The set described in this way would be one whose members are all those sets which can be obtained by some substitution of sets for the wildcard.
+
+We can implement the wildards as ordinals.
+A poly-set can be represented by an ordered pair of well-founded sets of which the first is a VonNeumann ordinal.
+Every occurence in the second set of an ordinal which is a member of the first set is interpreted as a wild card.
+Every occurrence of an ordinal which is not in that set (i.e. which is equal to or larger than the first set) is interpreted as that ordinal minus the number of wild cards.
+If the first set is zero, there are no wildcards and the second set is the value of the poly-set, so the poly-sets include all the well-founded sets.
+If the first set is non-sero then the second set is interpreted as a pro-forma for the elements of a non-well-founded poly-set whose elements are all the values which can be obtained from that proforma by substituting sets for the ordinals which are wild cards (the same value for different occurrences of the same wild card).
+Thus, the length function would be a poly-set in which the first set is the ordinal $\omega$.
+The second set would then be a countably infinite set of ordered pairs in which the flrst is a finite list of distinct finite ordinals and the second is the length of the list.
+
+The above sketch needs further elaboration in two respects, the details of which will appear in the formal treatment which follows.
+The purpose of these two elaborations is first to allow that the members of a poly-set be themselves poly-sets, and secondly to arrange for the resulting collection of poly-sets to be extensional.
+
+\subsection{The Formal Treatment}
+
+The idea here is to introduce a new theory by first constructing a model of that theory and then demonstrating properties suitable for use as axioms in a theory in which that model is the intended interpretation.
+I am working with software implementing a version of Higher Order Logic and the development including the necessary proofs will be formal and machine checked.
+
+The construction of the model for the theory of poly-sets will be based on an assumed model for a well-founded set theory.
+I have in mind a standard model of a pure well-founded set theory which is closed under the construction of grothendiek universes, i.e. in which every set is a member of a set with closure properties similar to those of ZF (notably closure under replacement).
+However, no specific well-founded set theory will be used.
+The construction will be based on some arbitrary membership structure, and the proofs of properties of the constructed model will be based on minimal assumptions about the properties of the membership structure on which it is built.
+
+The construction will take place following methods addressed in \cite{rbjt007} and \cite{rbjt004}.
+It will first use a generalised Hereditarily poly-set construction (analogous to the idea of hereditarily finite sets with the property of being a poly-set substituted for that of finiteness).
+It will then use the method from \cite{rbjt004} for collapsing an arbitrary membership relation into an extensional collection.
+
+We will then reason about the properties of the constructed model, formulate a property which corresponds to a reasonable axiomatisation of the theory and prove that this property obtains if the initial membership relationship is a standard model of a well-founded set theory with ``universes''.
+Having thus validated the putative axiomatisation, we could then work in the theory of poly-set by adopting this axiom system, or we could set up the system conservatively using a set theory in HOL already in place with adequate strength.
+
+Since my motivation for performing the construction is to use this as a basis for the a further construction, the theory will not need to be established as similar methods can be adopted in the second construction.
+
+\section{DEFINING POLY-SETS}
+
+First we have a new theory.
+
+=SML
+open_theory "membership";
+force_new_theory "poly-sets";
+new_parent "fixp";
+set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
+=TEX
+
+The plan is:
+
+\begin{itemize}
+\item Define an operator on membership structures which constructs a set of poly-sets.
+
+\item Define the membership relation over the poly-sets (in terms of the original membership relation, which will have to be well-founded).
+
+\item Collapse the new membership structure into an extensional membership structure.
+
+\item Derive properties of poly-sets from properties of the underlying well-founded sets.
+In particular we are looking to derive from strong closure properties of the underlying set theory similarly strong closure properties of the poly-sets.
+The principles derivable for the well-founded polysets should be identical to those on the underlying set theory.
+We also expect a principle of abstraction specific to non-well-founded poly-sets which reflects fairly directly the intuition and the construction.
+
+\end{itemize}
+
+\subsection{The Set of Poly-Sets}
+
+To define this set we define the relationship between a poly-set and the poly-sets from which it is constructed, i.e. the (Von-Neumann) ordinal on the left and the well-founded set on the right and then obtain a fixed point from this relationship.
+Both of these will be themselves poly-sets
+\footnote{I don't know any reason why the ordinals from the membership structure rather than poly-set ordinals could not be used on the left, but my hunch is that it will work out better with poly-sets on both sides.}
+, and we therefore need the predicate ``ordinal'' for polysets to define this function.
+
+The construction is therefore undertaken in two stages.
+First poly-ordinals, then the rest of the poly-sets.
+
+The poly-ordinals are of course all well-founded.
+The well founded poly-sets are the ones which have no ``wildcards'', and therefore have on the left the poly-set ordinal zero
+ (which is the ordered pair of the empty set with itself).
+The best way to get the poly-ordinals is probably to define by transfinite recursion the mapping from the well-founded sets in a membership structure to the corresponding well-founded poly-set and then take the image under that map of the ordinals in the membership structure.
+
+\ignore{
+=IGN
+stop;
+=IGN
+set_goal([], ¨∂wf_polyset∑ µ xms s∑ s ç Fst (WfPart (Carâx xms, Inâx xms))
+	¥ wf_polyset xms s = Opâx xms (Opâx xms (öâx xms, öâx xms),
+	Absâx xms {x | ∂y∑ Inâx xms y s ± x = wf_polyset xms y})Æ);
+a (∂_tac ¨Ãwfp∑ Æ);
+
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €wf_polyset›: 'a XMS ≠ 'a ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+‹ µ xms s∑ s ç Fst (WfPart (Carâx xms, Inâx xms)) ¥
+‹	wf_polyset xms s = Opâx xms
+‹	  (Opâx xms (öâx xms, öâx xms),
+‹	   Absâx xms {x | ∂y∑ Inâx xms y s ± x = wf_polyset xms y})
+∞
+
+πHOLCONST
+‹ €polyset_content›: 'a MS ≠ 'a ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ ms s t∑ polyset_content ms s t §
+‹	∂or∑ ordinal_set ms or ± ms_wkp ms (or, t) s
+∞
+
+The set of polysets is then defined:
+
+πHOLCONST
+‹ €polysets›: 'a MS ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µ ms∑ polysets ms = HeredRel (polyset_content ms)
+∞
+
+\subsection{Defining Membership Over Polysets}
+
+\ignore{
+=SML
+=TEX
+} %ignore
+
+\ignore{
+=SML
+=TEX
+} %ignore
+
+\ignore{
+ πHOLCONST
+‹ €› :
+˜¸¸¸¸¸¸
+‹
+ ∞
+} %ignore
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{poly-sets.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}
