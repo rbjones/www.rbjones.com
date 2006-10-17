@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.11 2006/10/02 12:31:53 rbj01 Exp $
+# $Id: rules.mk,v 1.12 2006/10/17 19:28:20 rbj01 Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
@@ -150,6 +150,7 @@ $(PPTHDOC) $(PPTHTODOC): %.th.doc: %.thd
 
 $(DOCTEX): %.tex: %.doc
 	doctex $*
+	sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 
 $(BASHBIN): % : %.sh
 	cp $< $*
