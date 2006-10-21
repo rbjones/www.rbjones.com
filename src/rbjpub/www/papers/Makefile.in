@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.8 2006/06/16 18:42:07 rbj01 Exp $
+# $Id: Makefile.in,v 1.9 2006/10/21 17:18:21 rbj01 Exp $
 
 include @top_srcdir@/top_srcdir.mk
 
@@ -11,12 +11,14 @@ PPXML=
 PPDOC=$(PPXML:.xml=.doc)
 # Plain ProofPower documents (not from XML)
 PPPDOC=
-KLUTEX=p000.tex p001.tex p002.tex p003.tex p004.tex p005.tex p006.tex p007.tex p008.tex p009.tex
+KLUTEX1=p001.tex p002.tex p003.tex p004.tex p005.tex p006.tex p007.tex p008.tex p009.tex
+KLUTEX=p000.tex $(KLUTEX1)
 PPLDS=$(PPXML:.xml=.lds)
 PPTH=
 PPTHD=$(PPTH:.th=.thd)
 
-XML007=$(PPXML) index.xml
+XML007=$(PPXML)
+XML008=index.xml
 
 ENTFILES=pp-symbol.ent
 KLUFILES=rbjk.cls
@@ -27,7 +29,7 @@ COMDIRCPY=$(KLUFILES)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-WEBFILES=$(HTML005) $(HTML007) $(PDF)
+WEBFILES=$(HTML005) $(HTML007) $(HTML008) $(PDF)
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -42,3 +44,14 @@ vpath %.xsl $(XLCOMDIR)
 
 $(PPTH): $(PPDB).dbts 
 	touch $@
+
+p000.pdf: p000abs.tex
+
+p000abs.tex: $(KLUTEX1)
+	texindex2tex $(KLUTEX1) > p000abs.tex
+
+indexmiddle.xml: $(KLUTEX)
+	texindex2xml 0 $(KLUTEX) > indexmiddle.xml
+
+index.xml: indexhead.xml indexmiddle.xml indextail.xml
+	cat $^ > index.xml
