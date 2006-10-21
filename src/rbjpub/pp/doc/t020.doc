@@ -1,5 +1,5 @@
 =IGN
-$Id: t020.doc,v 1.2 2006/10/15 20:39:25 rbj01 Exp $
+$Id: t020.doc,v 1.3 2006/10/21 16:53:33 rbj01 Exp $
 open_theory "poly-sets";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -8,12 +8,6 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \usepackage{ProofPower}
 \ftlinepenalty=9999
 \usepackage{A4}
-\def\N{\mathbb{N}}
-\def\D{\mathbb{D}}
-\def\B{\mathbb{B}}
-\def\R{\mathbb{R}}
-\def\Z{\mathbb{Z}}
-\def\Q{\mathbb{Q}}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
@@ -24,8 +18,8 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \title{PolySet Theory}
 \makeindex
 
-\author{Roger Bishop Jones\\ rbj01@rbjones.com}
-\date{$ $Date: 2006/10/15 20:39:25 $ $}
+\author{Roger Bishop Jones}
+\date{$ $Date: 2006/10/21 16:53:33 $ $}
 \usepackage[pdftex]{hyperref}
 
 \begin{document}
@@ -50,7 +44,9 @@ The function can therefore be represented by a set which gives the graph using w
 \href{http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
 
-$ $Id: t020.doc,v 1.2 2006/10/15 20:39:25 rbj01 Exp $ $
+$ $Id: t020.doc,v 1.3 2006/10/21 16:53:33 rbj01 Exp $ $
+
+\bf Copyright \copyright\ : Roger Bishop Jones \\
 
 \end{centering}
 
@@ -223,8 +219,8 @@ It takes the set and maps the canonical injection over the members of the set, a
 \ignore{
 =SML
 set_goal([], ¨∂CanInj∑ µ xms z s∑ is_XMS xms ± s ç Carâx xms ¥
-‹	CanInj xms z s = Opâx xms
-‹	  (z, Absâx xms {x:'a | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
+	CanInj xms z s = Opâx xms
+	  (z, Absâx xms {x:'a | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
 Æ);
 a (prove_∂_tac THEN REPEAT strip_tac);
 a (lemma_tac ¨∂G:('a ≠ 'a) ≠ ('a ≠ 'a)∑ µf s∑ G f s = Opâx xms' (z',
@@ -283,11 +279,18 @@ The definition is accomplished by defining the relationship which holds between 
 A least fixed point is then taken of the function on sets which maps a set of (putative P-)sets into the set obtained by adding all the P-sets which can be formed immediately from the P-sets in the set.
 This relation is parameterised by the original membership structure and a set of tags.
 
+I have some reservations about this method, and will probably find a nicer way to do this before attempting any proofs.
+The form of this relation is tailored to the requirements of the function {\it HeredRel} which gives the fixed point, and in particular it is required that a set which is not a candidate new set (e.g. because it is not an ordered pair, or for any reason other than that its constituents are not new sets, relates to at least itself, at as written here to everything else as well.
+This ensures that the existence of its constituents is never possible.
+Its a device for coding a well-formedness predicate into the content relation.
+
+
 πHOLCONST
 ‹ €Pset_content›: 'a XMS ≠ 'a SET ≠ 'a ≠ 'a ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µ xms tags s t∑ Pset_content xms tags s t §
-‹	∂tag psets∑ tag ç tags ± Inâx xms s psets ± t = Opâx xms (tag, psets)
+‹	(∂tag psets∑ tag ç tags ± psets ç (Carâx xms) ± Inâx xms s psets ± t = Opâx xms (tag, psets))
+‹ ≤	(≥∂ tag psets∑ tag ç tags ± psets ç (Carâx xms) ± t = Opâx xms (tag, psets))
 ∞
 
 The set of Psets is then defined:
@@ -326,6 +329,19 @@ The we convert this into an extensional relationship (over equivalence classes o
 
 The tags for the poly-sets are to be the set of ordinal poly-sets.
 Everything continues to be parameterised by a î'a XMSÆ.
+The main task here is to define the membership relation over the poly-sets.
+
+This works as follows.
+Lets call a poly-set with left zero an mpoly-set, or where the context allows simply mono.
+One with a non zero tag will be a ppoly-set or poly.
+The image of the canonical injection is the poly-sets which are hereditarily mono.
+The mpoly-sets are similar to the low sets (as defined by Forster) in a Church-Oswald construction.
+
+Ppoly-sets have a non-zero poly-set ordinal on the left, and this is the set of poly-sets whose occurrences in the set of poly-sets on the right should be treated as wild cards.
+The extension of a ppoly-set is the set of values which can be obtained by taking a member of the set on the right (a proforma) of the ppoly-set and an assignment of poly-sets to the poly-set ordinals which are wildcards, and substituting the sets in the assignment for the instances of the relevant ordinals in the proforma while subtracting the number of wild cards from every ordinal which is larger than all the wild cards.
+
+So to define membership we need to be able to apply a substitution to a poly-set while doing a bit of arithmetic on poly-set ordinals.
+Since we have no bound variables this should be straightforward.
 
 \ignore{
  πHOLCONST

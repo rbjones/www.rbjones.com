@@ -32,7 +32,7 @@ this to work.
 1    ProofPower
 2    Rob Arthan's "maths_egs" 
 
-     (both obtainable from www.lemma1.com
+     (both obtainable from www.lemma1.com)
 
 If you have a working ProofPower installation (and have set up your
 environment variables appropriately) and have built the
@@ -46,4 +46,4 @@ included in the various LaTeX related paths (which normaly include
 It will also be necessary to have an INDEXSTYLE variable with the
 build directory mentioned in it.
 
-If these instructions should prove inadquate I would appreciate some feedback.
+If these instructions should prove inadequate I would appreciate some feedback.
