@@ -1,0 +1,36 @@
+# $Id: IsaMakefile,v 1.1 2006/11/09 12:05:24 rbj01 Exp $
+
+SESSION_NAME =  X-Logic
+BASE_IMAGE = HOL
+SRC = $(ISABELLE_HOME)/src
+OUT = $(ISABELLE_OUTPUT)
+IMAGE_FILE=$(OUT)/$(SESSION_NAME)
+LOG = $(OUT)/log/$(BASE_IMAGE)$(SESSION_NAME).gz
+BI = $(ISABELLE_BROWSER_INFO)/$(BASE_IMAGE)/$(SESSION_NAME)
+DOCNAMES=$(SESSION_NAME) $(SESSION_NAME)-full
+DOCUMENTS=$(DOCNAMES:%=$(BI)/%.pdf) 
+
+## targets
+
+default: $(DOCUMENTS)
+images: $(IMAGE_FILE)
+test:
+
+all: default images test
+
+USEDIR = $(ISATOOL) usedir -v true -i true -d pdf -g true \
+	-V "document=-" -V "outline=-" \
+	-V $(SESSION_NAME)=/proof,/ML -V $(SESSION_NAME)-full=theory,proof,ML
+
+IUSEDIR = $(ISATOOL) usedir -v true -b
+
+$(DOCUMENTS): document/root.tex ROOT.ML *.thy
+	cd ..; $(USEDIR) $(BASE_IMAGE) $(SESSION_NAME)
+
+$(IMAGE_FILE): ROOT.ML *.thy
+	$(IUSEDIR) -b $(BASE_IMAGE) $(SESSION_NAME)
+
+## clean
+
+clean:
+	@rm -f $(LOG)

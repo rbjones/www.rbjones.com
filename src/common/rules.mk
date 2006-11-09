@@ -1,9 +1,9 @@
-# $Id: rules.mk,v 1.12 2006/10/17 19:28:20 rbj01 Exp $
+# $Id: rules.mk,v 1.13 2006/11/09 12:05:24 rbj01 Exp $
 
 .SUFFIXES:
-.SUFFIXES: .css .doc .gif .html .in .sml .xml .xdoc .xsl
+.SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
 .PHONY: build $(SUBBUILDS) vars thisinstall $(THISINSTALL) install \
-	uninstall $(UNINSTALL) $(SUBINSTALLS)
+	uninstall $(UNINSTALL) $(SUBINSTALLS) isablddummy
 
 vpath %.in $(SRCDIR)
 vpath %.xsl $(COMDIR)
@@ -267,3 +267,22 @@ $(HTML007i) $(HTML007m): $(HTML007f)
 $(HTML008): %.html: %.xmlt $(XLDPDIR)/xslt004s8.sxx pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt004s8.sxx root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
+
+$(ISAPDFO): %.pdf: %.ldd
+	cp $*/$@ .
+
+$(ISAPDFF): %-full.pdf: %.ldd
+	cp $*/$@ .
+
+$(ISATGZ): %.tgz: %.ldd
+	cd $(TOPSRCDIR)/$(RELSRCDIR); tar cfz $(TOPSRCDIR)/build/$(RELWEBDIR)/$*.tgz $*
+
+$(ISALDD): %.ldd : isablddummy
+	cd $(TOPSRCDIR)/$(RELSRCDIR)/$*; isatool make
+	touch $@
+
+$(ISAIMG): %.img : isablddummy
+	cd $(TOPSRCDIR)/$(RELSRCDIR)/$*; isatool make images
+	touch $@
+
+isablddummy:

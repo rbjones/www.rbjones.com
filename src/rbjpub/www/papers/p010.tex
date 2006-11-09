@@ -1,13 +1,23 @@
-% $Id: p010.tex,v 1.1 2006/10/22 13:38:40 rbj01 Exp $
+% $Id: p010.tex,v 1.2 2006/11/09 12:05:24 rbj01 Exp $
 % bibref{rbjp010} pdfname{p010} 
-\documentclass{rbjk}
+\documentclass[numreferences]{rbjk}
+\usepackage{makeidx}
+\newcommand{\ignore}[1]{}
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}}
+\hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
 
+%\newtheorem{def}{Definition}
+%\newtheorem{conj}{Conjecture}
+
+\makeindex
 \begin{document}                                                                                   
 \begin{article}
 \begin{opening}  
-\title{The Design of Deductive Foundation Systems}
+\title{The Design of a Deductive Foundation System}
 \runningtitle{Deductive Foundation Systems}
 \author{Roger Bishop \surname{Jones}}
+\date{$ $Date: 2006/11/09 12:05:24 $ $}
 \runningauthor{Roger Bishop Jones}
 
 \begin{abstract}
@@ -22,10 +32,461 @@ The outlines of a proposed system with a roadmap for turning the outline into a 
 
 \section{Preface}
 
-%{\raggedright
-%\bibliographystyle{klunamed}
-%\bibliography{rbj,fmu}
-%} %\raggedright
+This essay is concerned with certain aspects of the design of a ``logical foundation system''.
+
+I propose to begin with some discussion of how that expression is to be understood for present purposes and then to describe the gross structure of the following description.
+
+First of all, the notion of ``foundation system'' is to be understood as similar to the kinds of system which have been described as foundations for mathematics.
+However, the purpose is broader, and the intended scope encompasses all analytic truths, understanding that phrase to include the truths of mathematics.
+It is not my purpose here to further discuss the notion of analyticity.
+
+To clarify the kind of ``foundation system'' at stake I will mention briefly three different but related purpose which foundation systems might have.
+There are:
+
+\begin{description}
+\item[semantic]\ 
+
+A semantic foundation system is a language in which the semantics of other languages can be rendered.
+
+\item[proof theoretic]\ 
+
+A proof theoretic foundation system is a logic (a language together with an inference system) to which other logics may be reducible.
+
+\item[mechanisable formal]\ 
+
+A mechanisable formal foundation system is a language with a semantics and a deductive system which is suitable for mechanisation in the form of computer software which supports various aspects of the development of models and theories.
+\end{description}
+
+In all three cases is it a requirement of something being called a \emph{foundation system} in the present sense, that the application of the system requires no axiomatic extension, additional vocabulary as required for applications, being provided by \emph{definitions} or more liberally some notion of \emph{conservative extension} which must be so determined that such extensions do not risk the coherence of the system.
+
+A foundation system would be universal if \emph{all} \ semantics or deduction (as appropriate) was reducible to it.
+There is reason to doubt that there are universal foundations, but reason to hope that certain closely related families of foundation system may be universal (supposing all these concepts to have been made more precise).
+The strongest contender for universality is the theory of well-founded sets, both as a foundation for \emph{abstract} semantics and as proof theoretic foundation.
+The restriction here to abstract is important to the dual role, since, as I have argued elsewhere \cite{rbjp001} abstract semantics suffices for analyticity and deduction.
+
+The role of the first two kinds of foundation system is primarily theoretical.
+When logicians demonstrate that some result is provable in ZFC, they do not usually exhibit a formal proof in first order logic.
+They present a proof to the normal standards for mathematics, which is rigorous but not formal.
+
+It is only the third kind of foundation which is intended for use in formal derivations, which because of the very large number of minute steps involved, and practicable for extensive use only with appropriate suppoert from IT systems.
+Once formal systems are applied in this kind of way rather than being confined to metatheoretic investigations, a host of practical issues arise which introduce desiderata alien to the metatheory and which conflict with the simplicity which is conducive to transparent metatheory.
+
+The foundations of mathematics are of interest in several different academic disciplines, notably mathematics, mathematical logic, philosophy and computer science.
+There is a wide variety of formal systems which have been advocated in such a role, and diverse views of what a foundation system is and of attributes are desirable in a foundation system.
+It is therefore of concern here to present as clearly as possible the rationale for the choices which are presented.
+
+The essay which follows is an offshoot from certain theoretical studies which are intended to lead to the specification of a new foundation system for implementation in software and application in specifying and reasoning about formal abstract models in any application domain.
+This encompasses the whole of mathematics and many other application domains.
+The purpose of writing the essay is to help in the clarification of the objectives and methods of this exercise.
+
+The essay begins with some autobiographical material, whose purpose is to help elucidate the origin and motivation of various aspects of the foundation system sought and of the methods being used in its development,
+It is intended that this section be entirely dispensible, and the reader is recommended to begin his reading after this section and to refer back to it only if he feels the need for a better understanding of the reasons for the choices which have been made in the sequel.
+
+The next section presents the key choices which will determine the character of the foundation system choice.
+It is a statement of requirement, followed by some broad indications of how the requirements will be met.
+Then we come to a presentation of the method being progressed to yield a detailed formal specification of a foundation system meeting the stated requirements.
+
+\section{Autobiographical Background}
+
+\subsection{First Foundational Aspirations}
+
+My first acquaintance with the foundations of mathematics was during my early twenties while working as a programmer, mainly on the development of compilers for programming languages.
+Having begun with Russell's \emph{Introduction to Mathematical Philosophy} \cite{russell10} it was natural eventually to come down to (some of) the detail in \emph{Principia Mathematica} \cite{russell10} and \emph{Mathematical Logic as Based on The Theory of Types} \cite{russell08}.
+Coming to Russell's theory of types from a background in computing, I was immediately inclined to regard the vicious circle principle as heavy handed.
+The apparent proscription of recursive definitions (though the self reference in well-founded recursion turns out to be eliminable), and the real proscription of self-applicative functions is an enduring problem in the foundations of mathematics.
+
+It was another kind of reservation about Principia Mathematica which lead to my first conception of how the formal foundations of mathematics might be improved.
+This reservation was about how well the theory of types was defined in Principia Mathematica, which by contrast with the precision with which the syntactic aspects of programming languages were defined seemed very wooly and unclear.
+I had previously been impressed by the various simple languages for describing turing computable functions, and it seemed in the spirit of foundationalism to reduce the syntax of the foundation to one of these very simple languages.
+I chose post productions as the notation most appropriate for the description of syntax and set out briefly as an undergraduate to effect a description of Russell's theory of Types ultimately in post productions.
+I didn't get very far.
+
+This was the first of a long sequence of forays into the design of foundation systems which continue to the present day.
+
+\subsection{Reflection in Logical AI}
+
+When I graduated with my degree in Mathematics and Philosophy I intended to do a PhD relating to the development of software supporting the formal derivation of mathematics, and went to the Computer Science Department at the University of Warwick with that in mind.
+Personal problems interfered with this plan, and after less than one year at Warwick I abandoned my studies are took a job in software development.
+My interest in the foundations of mathematics then lay dormant for several years.
+
+It resurfaced after a period working in ``knowledge engineering'' \cite{jones82} while I was working on database query software.
+I then started to think about what kind of logical foundation system would be appropriate for use in a ``knowledge base'' in which the database was logically an suitably structured collection of definitions, query a process of inference in the theory determined by those definitions, and database update a process of extending or modifying these definitions \cite{jones85}.
+It seemed then to me that in order for this knowledge base to evolve towards intelligent behaviour it would have to be possible for it to reflect upon and modify its methods in the light of experience.
+The deductive system which maintained the knowledge would have to be stored in the knowledge base, it would represent a functional program operating on a functional data structure which included itself.
+
+In this way I came to seek a logical foundation system which was capable of reasoning about itself, and in particular, which was implemented as a function which was continually applied to an elaborate data structure which included itself.
+The foundation system would therefore have to admit functions which fell within their own domain.
+
+It was natural to look to combinatory logic for such a foundation system, particularly because combinatory logic had recently become fashionable in the implementation of functional programming langauges.
+I was disappointed when I eventually discoveed that combinatory logics were, when not inconsistent, rather weak.
+There then began a period in which I conceived of myself as in search of strong reflexive foundation systems.
+Though I might have been happy to adopt one if I could find it, it seemed likely that I would have to devise one for myself, for which task I was ill-equipped. 
+
+\subsection{Foundation Systems for Formal Specification and Verification}
+
+Having transferred from databases to the application of formal methods to the development of secure systems my interest in foundation systems developed further.
+
+There were first of all some instructive errors (see: \cite{jones86a,jones86b}).
+
+Consistency strength as a key element in a foundation system,
+
+\subsection{Semantics for Well-Founded Specification Languages}
+
+Semantics for VDM and Z.
+Alternate foundational ontologies.
+
+\subsection{Set Theories with a Universal Set}
+Set theories with a Universal Set.
+
+\section{Desiderata for Foundation Systems}
+
+\subsection{Beyond Well-Foundedness}
+
+\subsection{Structuring the Namespace}
+
+\section{Methods}
+
+The method is \emph{semantics first}, \emph{syntax last}.
+
+We begin with the standard, reasonably tall, ontology of a pure well-founded set theory.
+\emph{Standard} here means that the power sets are complete, which entails (for typical axiomatisations) that the ontology really is well-founded, though the well-foundedness is probably sufficient for our purposes.
+\emph{reasonably tall} here means that every set is a member of a set with strong closure properties (closed under replacement).
+
+We then transform this ontology in stages.
+
+Three general kinds of transformation are employed which I call:
+
+\begin{itemize}
+\item[Inductive Transformations]
+\item[Co-inductive Transformations]
+\end{itemize}
+
+Both of these involve obtaining a subset of the previous domain by some transfinite process which yields a domain of similar size to the original but in which the elements share various chosen structural features, and then defining new relations and/or operations over the domains which exploit this additional structure.
+
+To describe this in a little more detail we give an account first of the well-founded sets, and then of the operation of the inductive and co-inductive definitions.
+
+\subsection{Pure Well-Founded Sets}
+
+Our ontological starting point is the pure well-founded sets.
+
+Abstract ontology provides us with the building blocks for abstract models which ultimately can be used for reasoning about the real world, and form the subject matters of mathematical theories.
+
+If we consider the ways in which complex structures might be built, these may all be thought of as consisting in putting together various components in specified ways to realise a larger structure of which the components are a part.
+Such a structure might be described using a parts list and a method of construction.
+
+Set theory confines itself to the very simplest way of combining parts into wholes, simple aggregation.
+To know what how a set is built you need only know what are its members (which for present purposes are its parts).
+The members of set are not arranged in any particular way, there can be no two distinct sets with the same members.
+This is the principle of extensionality, which characterises the notion of set.
+
+It turns out that this very simple method of combination cannot be surpasses, in the sense that the range of abstract structures obtainable by more complex methods of combination does not surpass what can be done with this most simple method of combination.
+For this reason set theory is a prime candidate for an ontological foundation for abstract modelling.
+
+What we have discussed so far is what kind of thing a set is.
+To make our foundation we need to have a rich collection of sets, and it turns out that simple ideas for what that collection might be (such as ``all'' sets) do not yield satisfactory results.
+Some further decisions have to be made to determine a suitable collection of sets.
+This may be said to be the insight which first arose from the work of Frege on the foundations of mathematics when confronted with ``Russell's paradox, and the seemingly arbitrary choices about ontology which seem necessary in choosing a foundation system are one of the reasons why the instincts of Frege and Russell in thinking mathematics reducible to logic gave way to the view that set theory and any reasonable foundation for mathematics go beyond logic into some other domain.
+
+To progress from the concept of set to a more or less determinate ontology of sets it is helpful to refine the concept a little.
+
+The concept of a \emph{pure, well-founded collection} (for which we will use here the term ``pwf-set'') can be defined informally by transfinite recursion as follows:
+
+\index{set}\index{set!pwf-set}
+
+\begin{centering}
+a pwf-set is any definite collection of pwf-sets (and nothing else is)
+\end{centering}
+
+From this definition we can conclude that the empty collection is a pwf-set.
+Very explicitly the definition enables us to infer of any definite collection all of whose members are known to be sets, that the collection is also a set.
+It also follows, not quite so trivially, that pwf-sets are indeed well-founded.
+
+However, it appears that the concept of a pwf-set is cannot be definite, for if it were the pwf-sets would constitute a definite collection of pwf-sets, and a contradiction ensues.
+In the context of some prior understanding about ontology the definition serves to distinguish the pure well-founded sets from any others there might be, but in a foundational context the extension of the concept it defines only becomes definite if some choice is made to limit the process implicit in the definition.
+
+The definition corresponds closely to the more usual presentation known as the iterative or cumulative hierarchy of sets.
+In this the formation of a domain of sets is described as taking place in stages, at each stage forming all new sets which can be formed from elements obtained in previous stages.
+The formation of ``all'' sets at each stage is crowned by the supposition that the universe is then formed as this process runs through all possible stages.
+
+The argument above contradicts this last possibility.
+The misfortune of being unable to complete this process has a useful side effect which we will exploit.
+However large the domain of pwf-sets we take our foundational ontology to be, there will always be more to be had, the first of which will be the domain itself.
+This means that we can take our staring ontology and perform further constructions upon it.
+
+\subsection{Inductive Transformations}
+
+\subsection{New Relations for Old - Leaving Well-Foundedness}
+
+\subsection{Co-Inductive Transformation}
+
+\section{Specifics}
+
+\subsection{Poly-Sets}
+
+\subsubsection{Preamble}
+
+For a formal treatment of this topic see \cite{rbjt020}.
+
+The poly-sets are a conception of set which includes the pure well-founded collections (as many of them as you like) and also a similar number of non-well-founded collections.
+The non-well-founded supplements are designed to encompass two kinds of entity.
+
+Firstly there are some of the functions belonging to the pure lambda calculus which are well-typed.
+This is not of course the same as those of the simply typed lambda calculus, for these have well-founded graphs and are already available to us.
+The special feature of the well-typed functions of the type-free calculus, is that the same function has many different types.
+In the type free calculus we have an identity function which can be applied to anything, In the typed calculus we have many identity functions, each defined only over some part of the universe.
+
+Secondly there are the kinds of non-well-founded entities which would abound in category theory if only they existed.
+Any kind of algebraic structure, like the groups, gives rise to a category which, because the objects in it are too diverse, is not well-founded.
+There does not exist a category formed from all the groups, because there are groups over every set, and the category would therefore be too close for comfort to a universal set.
+This is the kind of foundational problem which Saunders Mac Lane described at the beginning of his book ``Category Theory for the Working Mathematician''.
+When Saunders Mac Lane came later to make definite foundational proposals they were completely irrelevant to this kind of problem, and so from the category theoretic point of view this foundational proposal is one which is intended to address Mac Lanes early foundational misgivings rather than those later ones (perhaps!) which led to his set theoretic ideas.
+
+The intuition about these kinds of structure which informs the notion of a \emph{poly-set} comes from just a little knowledge of how functions are implemented in some polymorphically typed functional programming languages.
+The situation is similar to that of type assignment in the pure type-free lambda calculus.
+The type discipline is diagnostically and in other ways valuable, but a polymorphic function is just a single function, not a family of functions.
+When we consider how it is possible for the same polymorphic function in these languages to apply to objects of different types, there is a simple answer.
+This can be illustrated by the case of the polymorphic \emph{length} function over lists.
+The reason why a single function can compute the length of a list without knowing the type of the values in the list, is that the values in the list are irrelevant to the length of the list and hence to the evaluation of the function.
+The function needs to know how lists are structured.
+It does not need to know anything about the structure of the members of the list.
+
+Such functions examine only the superficial structure of their arguments, and by the time the computation reaches values whose type is not known (except as a type variable) they have already extracted all the information they need and probe no deeper.
+
+In the case of computable functions, the superficial structure of arguments which will be used in a computation are finite.
+In the case of mathematical functions more generally, this need not be the case, but the idea that a polymorphically-typable function depends only upon (some generous conception of) the superficial structure of its arguments provides us with an extension of the notion of a function which can be made to yield a model for a non-well-founded set theory in which such functions exist.
+
+The more extended notion of superficiality is as follows.
+A set is superficial in this way if every element in it is in it because it conforms to a ``pro-forma'', such that every other set conforming to that pro-forma is also a member.
+A pro-forma is a set with some ``free variables'' in it, and a set conforms to that pro forma if it is an instance of it obtained by uniformly replacing the free variables by sets.
+The most simple examples are firstly the universe V, which is obtained with a proforma consisting of the ordinal zero, and the identity function, for which the proforma would be the ordered pair of zero with itself.
+These have extremely superficial structure, but structure may be arbitrarily deep and still be superficial in the required sense.
+The distinction between superficial and non-superficial is very loosely analogous to that between set and class.
+We may talk of a collection being a class if it is ``too large'' to be a set, even though there is no limit to how large a set might be.
+A class is perhaps too large to have a size.
+A better analogy is perhaps with the distinction between well-founded and non-well-founded.
+Superficial structure is always well-founded, there is a bound on the length of the descending paths through the superficial structure.
+
+To make this idea more precise I proceed as follows.
+
+I construct representatives of the poly-sets in a well-founded set theory, then define a new membership relation over these representatives reflecting the intended extension of the poly-sets, finally this relation is lifted to operate over sets of the original representatives (unit sets in the first instance) and extensionalise the relationship by taking the smallest equvalence relation over the representation relative to which the lifted membership relation is extensional.
+
+\subsubsection{Version 1}
+
+The representatives of the poly-sets are defined by transfinite recursion, relative to some standard well-founded set theory.
+The definition is done in three stages, first sero, then the Von Neumann ordinals and then the rest.
+
+\begin{quote}\label{def:poly-set rep}
+{\it
+The poly-set rep of the empty set is the empty set.
+}
+\end{quote}
+\index{poly-set rep}
+
+\begin{quote}
+\emph{
+The poly-set rep of a non-zero ordinal is the ordered pair with the empty set on the left and and the set of poly-set reps of its members on the right.
+}
+\end{quote}
+
+The poly-set reps of the ordinals are called the poly-set ordinal reps.
+
+A poly-set membership relationship is defined over the poly-set ordinal reps as follows:
+
+\begin{quote}
+\emph{
+The poly-set ordinal rep is a poly-set member of some other poly-set ordinal rep if it is a member of the set on the right of the ordered pair.
+}
+\end{quote}
+
+The poly-set reps are then defined:
+
+\begin{quote}
+{\it
+A poly-set rep is an ordered pair of which the left hand is a poly-set ordinal rep and the right hand is a set of poly-set reps.
+}
+\end{quote}
+
+Using the terms ``lhs'' and ``rhs'' respectively for the left and right hand members of an ordered pair, the membership relationship is then defined over the poly-set reps as follows:
+
+\begin{quotation}
+{\it
+A poly-set rep A is a member of a poly-set rep B if there exists:
+\begin{enumerate}
+\item a function \textsf{subs} defined over the (poly-)members of the poly-set ordinal rep \textsf{lhs B} with values in the poly-set reps
+\item a member \textsf{m} of \textsf{rhs B}
+\end{enumerate}
+such that A is obtained by instantiating \textsf{m} regarded as a proforma with the values for free variables determined by \textsf{subs} (the occurrences in \textsf{m} of ordinals in the domain of \textsf{subs} are considered to be free variables).
+}
+\end{quotation}
+
+If the ordinal \textsf{lhs B} is zero, then this indicates that the proformas in \textsf{rhs B} have no free variables.
+Only the empty substitution may be applied, and \textsf{A} must then be a member of \textsf{rhs B} to meet the poly-set membership requirement.
+
+The details of how to instantiate a pro-forma are of course crucial here and this is defined more carefully, by transfinite recursion as follows.
+
+\begin{quote}
+{\it
+The instance of a poly-set rep \textsf{A} resulting from a substitution \textsf{subs} is:
+\begin{itemize}
+
+\item if \textsf{A} is a poly-set ordinal rep which is in \textsf{dom(subs)} then the value of the instance is the value of \textsf{subs} at \textsf{A}.
+
+\item if \textsf{A} is a poly-set ordinal rep which is not in \textsf{dom(subs)} and \textsf{B} is the a poly-set ordinal rep such that \textsf{dom(Subs) + B = A} then the value of the instance is \textsf{B}.
+
+\item if \textsf{A} is not a poly-set ordinal rep, but is the ordered pair \textsf{(C, D)} where \textsf{C} is a poly-set ordinal rep and \textsf{D} is a set of poly-set reps, then the instance is the ordered pair \textsf{(C,E)} where E is the set of poly-set reps obtained by applying substition \textsf{subs} to each of the members of \textsf{D}.
+\end{itemize}.
+}
+\end{quote}
+
+\subsubsection{Version 2}
+
+Version 1 seemed a bit tortuous, so I thought I'd try a more concise statement.
+
+I define a model for ``poly-set'' theory by defining within a well-founded (extensional) membership structure \textsf{(WF,R)} a new structure \textsf{(PS,R')} where \textsf{PS} is a subset of \textsf{WF}, and \textsf{R'} is a non-well-founded (and non-extensional) relation over \textsf{PS}. From this an extensional structure is obtained by taking a quotient.
+
+\textsf{PS}, the set of poly-sets, is defined in two stages.
+It will contain an isomorphic image of the original membership structure the members of which are called the ``hereditarily low'' poly-sets.
+It is convenient to define the injection from \textsf{WF} to these poly-sets first,
+
+The image of the empty set is the empty set.
+The image of every other well-founded set is an ordered pair with the empty set on the left and the set of images of the elements of the set on the right.
+The restriction of \textsf{R'} to the hereditarily low poly-sets is that induced by this injection so that they form an isomorphic copy of \textsf{(WF,R)} in \textsf{(PS,R')}.
+The restriction of \textsf{(PS,R')} to these sets is well-founded and extensional, and is preserved unchanged when quotients are taken to recover extensionality across the whole of \textsf{R'}.
+
+The \emph{poly-set ordinals} are the poly-sets which are in the image of the Von-Neumann ordinals under this injection.
+
+The poly-sets are then the well-founded sets which are hereditarily either the empty set or an ordered pair with a poly-set ordinal on the left and a set of poly-sets on the right.
+
+\textsf{R'} is then defined:
+
+\textsf{R' x y} iff y is the ordered pair \textsf{(n,s)} and:
+
+\begin{enumerate}
+\item n is the empty set (the zero poly-set ordinal) and \textsf{R x s} 
+
+or
+\item n is not the empty set and there exist an assignment of poly-sets to the ordinals below n and a member of s such that when s (taken as a pro-forma over n-1 variables) is instantiated using the assignment, the result is x 
+\end{enumerate}
+
+When a poly set is ``taken as a proforma over n-1 variables'' then occurrences in it of the first n-1 ordinals are taken as free variables.
+When an instantiation takes place according to some assignment, occurrences of the free variables are replaced by their assigned values, and the number of free variables is deducted from the value of any other occurrences of ordinals (i.e. of ordinals not less than n).
+
+Lets try that again!
+
+Instantiation of a poly-set according to a variable assignment is defined as follows.
+
+The instance of a poly-set \emph{s} according to an assignment \emph{a} with an offset (count of bound variables) \emph{o} is:
+
+The instance of a poly-set \emph{s} according to an assignment \emph{a} is:
+\begin{itemize}
+\item if \emph{s} is a poly-set ordinal less than the number of variables in the assignment then the value assigned to that variable (\emph{s-o}) is the result of the instantiation
+\item if \emph{s} is a poly-set ordinal greater than the number of variables then its value is decreased by the number of variables.
+\item if \emph{s} is not a poly-set ordinal but is $(n,t)$ then its value after instantiation is $(n,t')$ where $t'$ is the set of instances of members of $t$ according to assignment $a$.
+\end{itemize}
+
+We only ever instantiate a polyset with an assignment whose domain is the left hand element of the poly-set,
+
+\subsubsection{Extensionality}
+
+We next lift the membership operation to operate over equivalence classes of poly-set reps, and take the smallest equivalence relation such the membership relation induced on the equivalence sets is extensional.
+The induced relation is: [A] is a member of [B] if there exist C and D such that $C \backsimeq A$ and $D \backsimeq B$ and C is a member of D.
+
+In the following discussion of the properties of this structure I use the term {\it mon} for a poly set with a representative whose lhs is the empty set, poly for other poly-set reps, and WF for the hereditarily mono poly-set reps.
+
+The characteristics of the resulting membership structure depend upon those of the original.
+Certain minimal conditions are necessary for the construction to yield an extensional membership relation, and these give some further properties of that relation.
+Thereafter the properties of the resulting membership relation depend on the properties of the original, in particularly 
+
+\begin{enumerate}
+\item The restriction to the hereditarily mono poly-sets is isomorphic to the initial well-founded set theory.
+\item 
+\end{enumerate}
+
+\subsubsection{Properties of Poly-Sets}
+
+It is not my intention that the poly-sets be the subject of a first order theory, in the manner of ZFC or NF.
+It is intended that they form a stage in a series of constructions which ends in some kind of type theory.
+
+However, it is necessary to understand the properties of this membership structure and one might think of this as considering how the theory might be axiomatised.
+
+This section is (at this stage) devoted to conjectures about what the interesting properties are.
+Ultimately it may describe those properties which have actually been established.
+
+The conjectures are based on the hunch that the final stage in the process described above, in which the relation is extensionalised, really doesn't do much else, and that the closure properties of the non-extensional version are retained.
+I also assume that the original well-founded relation on which the construction is based is standard (full power sets) and tall enough that every set is a member of a set closed under union, power set and (higher order) replacement.
+
+The term ``set'' refers to something in the domain of the original well-founded membership structure, the term ``poly-set'' is used for the sets in the constructed non-well-founded membership structure.
+The term ``poly-set rep'' refers to members of the domain of the non-extensional non-well-founded membership structure over which the ``poly-set'' are a quotient. 
+
+The terminology of ``low'' and ``high'' (poly-)sets associated with Church-Oswald constructions (as in \cite{forster92,forster2005}) is used, and (the closest analogue of) Forster's definition of low is adopted.
+A poly-set is low if it is the empty set or the lhs of (any one of) its ordered pair representatives is the empty set.
+Otherwise it is high.
+
+\begin{itemize}
+
+\item[well-founded galaxies]\ 
+
+The first property is that the hereditarily low poly-sets are isomorphic to the well-founded sets, and hence that every well-founded poly-set is a member of a ``poly-galaxy'' closed under union, power set and replacement.
+
+\item[other galaxies]\ 
+
+The formation of galaxies is independent of the starting point, so every poly-set (high or low) is a member of something like a galaxy.
+The definition of galaxy for this purpose has to be careful, for though the well founded galaxies are transitive, the others are not, and in particular we do not have separation from high sets.
+
+\item[properties of low poly-sets]\ 
+
+\item[no gratuitous failures of $\in$ foundation]\ 
+
+This heading comes from Forster's paper \cite{forster2006} and I use it here because we seem to have extreme versions of some of the characteristics he is considering there.
+
+All high poly-sets have the size and are larger than any low poly-set.
+The only self-membered set is V.
+All $\in$ loops involve at least one high poly-set.
+$\in$ restricted to sets smaller than V (i.e. to low sets) is well-founded.
+
+
+\item[Properties of CO constructions]\ 
+
+The poly-sets are not obtained by Church-Oswald construction (see: \cite{forster2005}) though perhaps they could have been.
+It seems close enough that they seem to have several of the properties of CO constructions proven by Forster in \cite{forster2005}.
+Many of these are obvious consequences of properties already stated,
+
+\begin{itemize}
+
+\item[H$_{low}$]\ 
+
+I suspect that H$_{low}$ is the set of hereditarily low sets.
+
+\item[Low Comprehension]\ 
+
+There will be something analogous to low comprehension.
+Any set of poly-sets is a low poly-set.
+High poly-sets are all classes of poly-sets.
+
+\item[12.] The set of low poly-sets is not a poly-set.
+
+\item[13.] An image of a low poly-set is low, subsets of low poly-sets are low.
+
+\item[14.] A low poly-set has a low power set.
+
+\item[15.] Low poly-sets of low poly-sets have low sumsets.
+
+\end{itemize}
+\end{itemize}
+
+\subsection{Poly-Categories and Functors}
+
+\subsection{First Order Axiomatisation}
+
+\subsection{Structured Type Theory}
+
+{\raggedright
+\bibliographystyle{klunum}
+\bibliography{rbjk}
+} %\raggedright
+
+\twocolumn[\section{Index}\label{Index}]
+{\small\printindex}
 
 \end{article}
 \end{document}

@@ -1,0 +1,41 @@
+# $Id: Makefile.in,v 1.1 2006/11/09 12:05:24 rbj01 Exp $
+
+include @top_srcdir@/top_srcdir.mk
+RELSRCDIR=src/rbjpub/isar
+RELWEBDIR=rbjpub/isar
+SUBDIRS=HOL
+
+XML007=
+XML008=index.xml
+
+XMLFILES=$(XML007) $(XML008)
+
+ENTFILES=pp-symbol.ent
+
+XLDPDIRCPY=$(ENTFILES)
+
+include $(TOPSRCDIR)/build/common/vars.mk
+
+WEBFILES=$(HTML007) $(HTML008)
+
+include $(TOPSRCDIR)/src/common/rules.mk
+
+ISADOCTEX=X-Logic/document/root.tex Membership/document/root.tex
+ISADOCTEXSRC=$(ISADOCTEX:%=$(TOPSRCDIR)/$(RELSRCDIR)/HOL/%)
+
+# Paths
+
+vpath %.in $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(XLCOMDIR)
+
+# Dependencies
+
+p000abs.tex: $(ISADOCTEXSRC)
+	texindex2tex $(ISADOCTEXSRC) > p000abs.tex
+
+indexmiddle.xml: $(ISADOCTEXSRC)
+	texindex2xml 0 "HOL/" $(ISADOCTEXSRC) > indexmiddle.xml
+
+index.xml: indexhead.xml indexmiddle.xml indextail.xml
+	cat $^ > index.xml
