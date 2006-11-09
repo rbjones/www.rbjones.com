@@ -5,7 +5,9 @@ imports Main
 begin
 
 text{*
-First type abbreviations are introduced for membership structures (i.e. interpretations of a set theory) and for properties of membership structures (the kind of thing expressed by an axiom of set theory).
+$Id: MembershipStructures.thy,v 1.2 2006/11/09 12:23:05 rbj01 Exp $
+
+First, type abbreviations are introduced for membership structures (i.e. interpretations of a set theory) and for properties of membership structures (the kind of thing expressed by an axiom of set theory).
 
 Normally a membership structure is considered as a set with a binary relation.
 However, there is in most cases some redundancy in this, since the set is the field of the relatioin, and can be recovered from it.

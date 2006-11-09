@@ -1,10 +1,10 @@
 header{*Introduction*}
 
-text{* $Id: XLMM2.thy,v 1.1 2006/11/09 12:05:24 rbj01 Exp $ ^}
-
 theory XLMM2
 imports Main
 begin
+
+text{* $ $Id: XLMM2.thy,v 1.2 2006/11/09 12:23:05 rbj01 Exp $ $ *}
 
 subsection{*theory XLMM2*}
 
