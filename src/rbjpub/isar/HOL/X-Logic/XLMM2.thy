@@ -1,16 +1,13 @@
-header{*Introduction*}
+header{* A Meta-Model *}
 
 theory XLMM2
 imports Main
 begin
 
-text{* $ $Id: XLMM2.thy,v 1.2 2006/11/09 12:23:05 rbj01 Exp $ $ *}
-
-subsection{*theory XLMM2*}
-
 text{*
-Theory XLMM2 is a theory in isabelle HOL, formed by extending theory ``Main''.
-In it we model a metalanguage for X-Logic.
+In theory XLMM2
+\footnote{$ $Id: XLMM2.thy,v 1.3 2006/11/13 07:12:37 rbj01 Exp $ $}
+we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
 *}
@@ -19,7 +16,7 @@ text{*
 This second in a series of models in which the metatheory of X-Logic is developed, improves on the first model by allowing that programs read and write multiple documents, and by introducing the use of digital signatures to provide degrees of confidence in the truth of documents and the soundness of programs.
 *}
 
-section{*Abstract Syntax*}
+subsection{*Abstract Syntax*}
 
 text{*
 The abstract syntax of our metalanguage is defined using a datatype in isabelle HOL.
@@ -36,7 +33,7 @@ types URI = string
    program = URI
    authority = URI
 
-subsection{*sentences*}
+subsubsection{* Sentences *}
 
 text{*
 The subject matter of the metalanguage is the truth of documents.
@@ -62,7 +59,7 @@ text{*
 The significance of endorsements will become clearer shortly.
 *}
 
-subsection{* judgements *}
+subsubsection{* Judgements *}
 
 text{*
 In general sentences are not proven absolutely, but on the assurance of various authorities (sometimes called oracles).
@@ -103,13 +100,13 @@ An authority has been "hitherto infallible" if all the judgements which it has s
 In fallibility and truth are therefore mutually defined, the numbers attached to judgements relativise infallibility so as to make the mutual recursion well-founded.
 *}
 
-section{* Semantics *}
+subsection{* Semantics *}
 
 text{*
 The semantics of sentences and judgements is defined as truth valuations relative to appropriate interpretations.
 *}
 
-subsection{* sentence interpretations *}
+subsubsection{* Sentence Interpretations *}
 
 types
 	document_map = "document \<Rightarrow> string"
@@ -121,7 +118,7 @@ record Sinterp =
   langmap:: language_map
   progmap:: program_map
 
-subsection{* true sentences *}
+subsubsection{* True Sentences *}
 
 consts
 	truedoclist :: "[Sinterp, document list, language list] \<Rightarrow> bool"
@@ -153,7 +150,7 @@ primrec
    "truesen i (ProgSpec p ill oll) = trueprogspec i p ill oll"
    "truesen i (Compute p idl odl) = truecompute i p idl odl"
 
-subsection{* judgement interpretations *}
+subsubsection{* Judgement Interpretations *}
 
 text{*
 A judgement is true if infallibility of its authorities implies the truth of its sentence.
@@ -169,7 +166,7 @@ record Jinterp =
    sinterp::Sinterp
    judgemap::judgement_map
 
-subsection{* infallibility *}
+subsubsection{* Infallibility *}
 
 text{*
 Informally an authority is infallible if it only asserts true judgements.
@@ -222,7 +219,7 @@ constdefs
    hitherto_infallible  :: "nat \<Rightarrow> authority \<Rightarrow> Jinterp \<Rightarrow> bool"
    "hitherto_infallible n == fst (hijt n) n"
 
-subsection{* true judgements *}
+subsubsection{* True Judgements *}
 
 consts
    truej  :: "Jinterp \<Rightarrow> judgement \<Rightarrow> bool"
@@ -232,8 +229,8 @@ primrec
     = snd (hijt stamp) (Assert stamp auths sent) ji"
    "truej ji (Endorse auth auths) = True"
 
-section{* Proof Rules *}
-subsection {* inference *}
+subsection{* Proof Rules *}
+subsubsection {* Inference *}
 
 consts
    thms :: "judgement set \<Rightarrow> judgement set"

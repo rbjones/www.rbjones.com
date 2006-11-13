@@ -5,7 +5,7 @@ imports Main
 begin
 
 text{*
-$Id: MembershipStructures.thy,v 1.2 2006/11/09 12:23:05 rbj01 Exp $
+\footnote{$ $Id: MembershipStructures.thy,v 1.3 2006/11/13 07:12:37 rbj01 Exp $ $}
 
 First, type abbreviations are introduced for membership structures (i.e. interpretations of a set theory) and for properties of membership structures (the kind of thing expressed by an axiom of set theory).
 
@@ -31,11 +31,11 @@ The main purpose of this is to enable us to use the set theoretic language alrea
 *}
 
 constdefs
-  Ex :: "'a MS \<Rightarrow> 'a \<Rightarrow> ('a set)"
-  "Ex r x == {y . (y,x):r}"
+  Ext :: "'a MS \<Rightarrow> 'a \<Rightarrow> ('a set)"
+  "Ext r x == {y . (y,x):r}"
 
   Co :: "'a MS \<Rightarrow> ('a set) \<Rightarrow> 'a"
-  "Co r s == (THE x. x:Field r \<and> Ex r x = s)"
+  "Co r s == (THE x. x:Field r \<and> Ext r x = s)"
 
 text{*
 My concern here is exclusively with extensional concepts of set, extensionality being considered in some circles the quintessence of sethood.
@@ -54,46 +54,58 @@ constdefs
      \<longrightarrow> (ALL z. (z, x):ms = ((z,y):ms)) \<longrightarrow> x = y"
 
 
-lemma FullExt1: "\<lbrakk>FullExt ms; x:(Field ms); y:(Field ms); (ALL z. (z, x):ms = ((z,y):ms))\<rbrakk> \<Longrightarrow> x = y"
+lemma FullExt1:
+   "\<lbrakk>FullExt ms; x:(Field ms); y:(Field ms); (ALL z. (z, x):ms = ((z,y):ms))\<rbrakk>
+    \<Longrightarrow> x = y"
 apply (simp add:FullExt_def)
 done
 
-subsection{* *}
-
-locale ExtMs =
+locale Ms =
 
 fixes
-    mr :: "('a * 'a)set"
+    ms :: "('a * 'a)set"
+
+locale ExtMs = Ms +
+
+fixes
+    X  :: "'a \<Rightarrow> 'a set"
+and C  :: "'a set \<Rightarrow> 'a"
 
 assumes
   FullExt: "FullExt ms"
 
-lemma "A \<longrightarrow> A"
-proof
-assume A
-show A .
-qed
+defines X_def: "X == Ext ms"
+and     C_def: "C == Co ms"
 
+lemma (in ExtMs) ExtMs1 :
+  "\<lbrakk>x:(Field ms); y:(Field ms); (ALL z. (z, x):ms = ((z,y):ms))\<rbrakk> \<Longrightarrow> x = y"
+apply (insert FullExt)
+apply (simp add: FullExt_def)
+done
 
-text{*
-\ignore{
-lemma (in ExtMs) ExtMs1 : "\<lbrakk>x:(Field mr); y:(Field mr); (ALL z. (z, x):mr = ((z,y):mr))\<rbrakk> \<Longrightarrow> x = y"
-
-lemma (in ExtMs) ExCo_inv :"ALL x. x : Field ms \<longrightarrow> Co ms (Ex ms x) = x"
-apply (simp add:Ex_def Co_def)
-apply auto
+lemma (in ExtMs) ExCo_inv :
+  assumes "x : Field ms"
+  shows   "Co ms (Ext ms x) = x"
+apply (unfold Ext_def Co_def)
 apply (rule the_equality)
-apply simp
-apply (rule FullExt1)
-assume "xa \<in> Field ms"
-show 
-qed
-apply (rule FullExt)
-}
-*}
+apply (simp, assumption)
+apply auto
+apply (rule ExtMs1, assumption, assumption)
+apply auto
+done
 
+lemma (in ExtMs) XC_inv :
+  assumes "x : Field ms"
+  shows   "C (X x) = x"
+apply (unfold C_def X_def)
+apply (rule ExCo_inv, assumption)
+done
 
-text{*
-*}
+subsection{* Well-Foundedness *}
+
+locale WfMs = Ms + 
+assumes wf : "wf ms"
+
+locale WfExtMs = ExtMs + WfMs
 
 end
