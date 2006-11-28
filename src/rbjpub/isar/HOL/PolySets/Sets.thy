@@ -5,7 +5,7 @@ imports Main
 begin
 
 text{*
-The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.1 2006/11/17 14:57:38 rbj01 Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
+The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.2 2006/11/28 16:50:49 rbj01 Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
 I did at first attempt the construction without axiomatising a particular set theory, so that the poly-sets could be built from an arbitrary membership structure with suitable properties, but the advantages of this are overwhelmed by the extra complexity it causes, and I have concluded that maximising the intelligibility of the poly-sets (and of further constructions based on them) is incompatible with the innovation of treating set theory as a theory \emph{about} membership structures, rather than a theory about the sets in \emph{in} one such structure,
 
 The reader should beware that what follows is an axiomatic set theory presented in the context of a Higher Order Logic which has its own set theoretic vocabulary.
@@ -43,11 +43,11 @@ consts mem :: "Set \<Rightarrow> Set \<Rightarrow> bool" (infix "\<in>\<^isub>g"
 axioms
    Ext: "\<forall> x (y::Set). (x = y) = (\<forall>z::Set. z \<in>\<^isub>g x = z \<in>\<^isub>g y)"
 
-axioms
    Wf:  "\<forall>P. (\<forall>s. (\<forall>t. t \<in>\<^isub>g s \<longrightarrow> P t) \<longrightarrow> P s) \<longrightarrow> (\<forall>u. P u)"
 
 text{*
-The axiom \emph{Wf} is similar to the definition of the predicate \emph{wf} in theory \emph{WellFounded\_recursion}, except that the latter is a property of relations while \emph{Wf} is simply a sentence.
+The axiom \emph{Wf} is related to the definition of the predicate \emph{wf} in theory \emph{WellFounded\_recursion}.
+The latter is a property of relations while \emph{Wf} is simply a sentence (which distinguishes the set of relations which satisfy it),
 The following lemma connects the property with the axiom, and will be used to justify recursive definitions.
 *}
 
@@ -62,8 +62,10 @@ text{*
 
 Having tied down what kind of thing a set is, the final axiom tells us that there are many of them. 
 It says that every set is a member of a ``galaxy'' (\emph{Gy}) which is the kind of thing which most people call a universe.
-Curiosities about the galaxies include  that the empty set and the hereditarily finite sets are galaxies, and the next one is a model of ZFC.
+The empty set and the hereditarily finite sets are galaxies, and the next one is a model of ZFC.
 (Note that we inherit choice from our context)
+Galaxies are closed under full power-set, sumset and replacement.
+The universe is also closed under replacement (you don't have to show that the image of a set is a subset of a galaxy for it to be a set, though it won't otherwise be a member of the galaxy).
 
 I hope that it makes things easier to read if the available set theoretic vocabulary is used, and to that end define a constant $X_g$ which gives the extension of a \emph{Set} as a \emph{set} of Sets.
 *}
@@ -75,9 +77,9 @@ constdefs
   Gy :: "Set \<Rightarrow> bool"
      "Gy g == (\<forall>x. x \<in> X\<^isub>g g \<longrightarrow>
               (\<exists>y. y \<in> X\<^isub>g g \<and> X\<^isub>g y = \<Union>{z. \<exists>v. v \<in>\<^isub>g x \<and> z = X\<^isub>g v})
-            \<and> (\<forall>x. x \<in> X\<^isub>g g \<longrightarrow> (\<exists>y. y \<in> X\<^isub>g g \<and> X\<^isub>g y = {z . X\<^isub>g z \<subseteq> X\<^isub>g x}))
-            \<and> (\<forall>r::(Set * Set)set. single_valued r
-                   \<longrightarrow> (\<exists>y. y \<in> X\<^isub>g g \<and> X\<^isub>g y = r `` (X\<^isub>g x))))"
+           \<and> (\<forall>x. x \<in> X\<^isub>g g \<longrightarrow> (\<exists>y. y \<in> X\<^isub>g g \<and> X\<^isub>g y = {z . X\<^isub>g z \<subseteq> X\<^isub>g x}))
+           \<and> (\<forall>r::(Set * Set)set. single_valued r
+                   \<longrightarrow> (\<exists>y. X\<^isub>g y = r `` (X\<^isub>g x) \<and> ((X\<^isub>g y) \<subseteq> (X\<^isub>g g) \<longrightarrow> y \<in> X\<^isub>g g))))"
 
 lemma ext_xt [simp]: "X\<^isub>g x = X\<^isub>g y \<Longrightarrow> x = y"
 apply (unfold X\<^isub>g_def)
@@ -102,24 +104,26 @@ The first expresses the existence of a set with some extension, the second desig
 
 constdefs
 
-  Es :: "Set set \<Rightarrow> bool"
-  "Es ss == \<exists>s. X\<^isub>g s = ss"
+  E\<^isub>g :: "Set set \<Rightarrow> bool"
+     "E\<^isub>g ss == \<exists>s. X\<^isub>g s = ss"
  
-  Co :: "Set set \<Rightarrow> Set"
-  "Co s == (THE x. X\<^isub>g x = s)"
+  C\<^isub>g :: "Set set \<Rightarrow> Set"
+     "C\<^isub>g s == (THE x. X\<^isub>g x = s)"
 
   XX\<^isub>g :: "Set \<Rightarrow> Set set set"
      "XX\<^isub>g s == {x. \<exists>y. y \<in>\<^isub>g s \<and> x = X\<^isub>g y}"
 
-lemma CoX\<^isub>g [simp]: "\<forall>s. Co(X\<^isub>g s) = s"
-apply (simp add: Co_def X\<^isub>g_def)
+lemma C\<^isub>gX\<^isub>g [simp]:
+   "\<forall>s. C\<^isub>g(X\<^isub>g s) = s"
+apply (simp add: C\<^isub>g_def X\<^isub>g_def)
 apply (rule allI) 
 apply (rule the_equality, auto)
 apply (simp add:Ext, auto)
 done
 
-lemma EsCo [simp]:  "Es s \<Longrightarrow> X\<^isub>g (Co s) = s"
-apply (unfold Es_def Co_def)
+lemma E\<^isub>gC\<^isub>g [simp]:
+   "E\<^isub>g s \<Longrightarrow> X\<^isub>g (C\<^isub>g s) = s"
+apply (unfold E\<^isub>g_def C\<^isub>g_def)
 apply (erule exE)
 apply (subgoal_tac "(THE x. X\<^isub>g x = s) = sa")
 apply auto
@@ -128,17 +132,19 @@ done
 subsection{* Pairs *}
 
 text{*
-The constructor for Weiner-Kuratovski ordered pairs is defined here,
+The constructor for Wiener-Kuratowski ordered pairs is defined here,
 It remains to be established whether pairs always exist.
 *}
 
 constdefs
-  Wkp :: "(Set * Set) \<Rightarrow> Set"
-     "Wkp == \<lambda>(x,y). Co{Co{x},Co{x,y}}"
-  Fst :: "Set \<Rightarrow> Set"
-     "Fst s == THE x. \<exists>y. s = Wkp(x,y)"
-  Snd :: "Set \<Rightarrow> Set"
-     "Snd s == THE y. \<exists>x. s = Wkp(x,y)"
+   Wkp :: "(Set * Set) \<Rightarrow> Set"
+      "Wkp == \<lambda>(x,y). C\<^isub>g{C\<^isub>g{x},C\<^isub>g{x,y}}"
+
+   Fst :: "Set \<Rightarrow> Set"
+      "Fst s == THE x. \<exists>y. s = Wkp(x,y)"
+
+   Snd :: "Set \<Rightarrow> Set"
+      "Snd s == THE y. \<exists>x. s = Wkp(x,y)"
 
 subsection{* Ordinals *}
 
@@ -152,15 +158,19 @@ The last two are just set union (notionally restricted to appropriate sets of or
 
 constdefs
   zero  :: "Set"
-     "zero == Co {}"
+     "zero == C\<^isub>g {}"
+
   succ  :: "Set \<Rightarrow> Set"
-     "succ s == Co (X\<^isub>g s \<union> {s})"
-  Union :: "Set \<Rightarrow> Set"
-     "Union s == Co (\<Union>{x. \<exists>y. y \<in>\<^isub>g s \<and> x = X\<^isub>g y})"
+     "succ s == C\<^isub>g (X\<^isub>g s \<union> {s})"
+
+  SetUnion :: "Set \<Rightarrow> Set" 
+     "SetUnion s == C\<^isub>g (\<Union>{x. \<exists>y. y \<in>\<^isub>g s \<and> x = X\<^isub>g y})"
+
   limit :: "Set \<Rightarrow> Set"
-     "limit == Union"
+     "limit == SetUnion"
+
   pred  :: "Set \<Rightarrow> Set"
-     "pred == Union"
+     "pred == SetUnion"
 
 text{*
 The ordinals are now defined inductively.
@@ -186,7 +196,8 @@ Since the ordinals are not a type this is more awkward that it would otherwise b
 I couldn't get the definition by recursion through isabelle so I ended up using an inductive set definition.
 *}
 
-lemma subset_mono: "A \<subseteq> B \<Longrightarrow>  x \<subseteq> A \<longrightarrow> x \<subseteq> B"
+lemma subset_mono:
+   "A \<subseteq> B \<Longrightarrow>  x \<subseteq> A \<longrightarrow> x \<subseteq> B"
 by auto
 
 consts
@@ -198,16 +209,17 @@ intros
    asI: "y = succ v \<Longrightarrow> (v,z) \<in> oplusx x \<Longrightarrow> (y, succ z) \<in> oplusx x"
    alI: "y = limit s
              \<Longrightarrow> (\<exists>r. r \<subseteq> oplusx x
-                \<and> single_valued r
-                \<and> Domain r = X\<^isub>g s
-                \<and> z = limit (Co (Range r)))
+                   \<and> single_valued r
+                   \<and> Domain r = X\<^isub>g s
+                   \<and> z = limit (C\<^isub>g (Range r)))
              \<Longrightarrow> (y,z) \<in> oplusx x"
 monos subset_mono
 
 constdefs
    oplus ::   "Set \<Rightarrow> Set \<Rightarrow> Set" (infixl "{+}" 60)
-   "oplus x y == THE z. (y,z) \<in> (oplusx x)"
+      "oplus x y == THE z. (y,z) \<in> (oplusx x)"
+
    olminus :: "Set \<Rightarrow> Set \<Rightarrow> Set" (infixr "{|-}" 60)
-   "olminus x y == THE z. y = x {+} z"
+      "olminus x y == THE z. y = x {+} z"
 
 end
