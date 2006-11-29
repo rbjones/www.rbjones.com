@@ -1,0 +1,379 @@
+=IGN
+$Id: t021.doc,v 1.1 2006/11/29 21:48:10 rbj01 Exp $
+open_theory "";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\usepackage{A4}
+
+\def\ExpName{\mbox{{\sf exp}}}
+\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\title{Interpretations of Set Theory}
+\makeindex
+
+\author{Roger Bishop Jones}
+
+\date{\footnotesize Created: 29 Nov 2006\\
+Last Change $ $Date: 2006/11/29 21:48:10 $ $}
+\usepackage[pdftex]{hyperref}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+This paper continues the line of thought which lead to the PolySet interpretation of set theory, and is essentially a discussion of how to extend the method used for the PolySets so that a fuller ontology can be realised.
+It contains a sketch of a general method, written down while I am still on this topic with a view to deeper exploration at some later date.
+\end{abstract}
+
+\vfill
+
+\begin{centering}
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
+
+$ $Id: t021.doc,v 1.1 2006/11/29 21:48:10 rbj01 Exp $ $
+
+\bf Copyright \copyright\ : Roger Bishop Jones \\
+
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+\tableofcontents
+%\newpage
+%\subsection{Document cross references}
+
+\subsection*{To Do}
+\begin{itemize}
+\item 
+\item 
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+It is the purpose of this document to discuss some general methods for obtaining models for non-well founded set theories.
+It may be thought of as broadly similar to the ``Church-Oswald'' constructions decribed by Forster in \cite{forster1995,forster2005}, in that it works from an interpretation of a well-founded set theory and constructs non-well-founded interpretations from them in which a copy of the original interpretation may be found.
+
+This follows on from \emph{PolySet} theory \cite{rbjt020} in which an interpretation of set theory is arrived at via an intuition based on the polymorphic functions in standard ML.
+After thinking about PolySet theory for a while I concluded that it would indeed give the ML-polymorphic functions (integrated into a full well-founded classical set theory), and hence, might lead to a foundation for formal mathematics with an ML-like let clause.
+But it seemed, contrary to my first thoughts, unlikely to meet my other desiderata relating to abstract algebra, and in general the use of context in formal methematical developments.
+
+So I turned my mind to larger ontologies.
+
+The construction of PolySets was quite simple, because of the motivating intuition about the kinds of extra sets to be added.
+It seemed to be (though this remains to be formally established) feasible to define the membership relationship over the representatives for PolySets without taking care to make it extensional, since it seemed (and still does seem) probable that taking a quotient after the definition of membership was comeplete would permit the membership to be upgraded to an extensional one.
+It seemed however, as soon as I decided that they PolySets would not suffice, that the same method would be unlikely to suffice.
+
+The first objective therefore of this essay is to adapt the method used in the construction of the PolySets so that it can be applied for a wider range of less placid methods of set constructions, particularly ones which cannot properly be defined on representatives without knowing which represenatatives are equivalent.
+Of these the simplest to understand is the operation of set complement.
+Given a set of representatives of a equivalence classes, it is not possible to compute a complete set of representatives for the excluded equivalence classes without actually knowing what the equivalence relationship is,
+
+The definition of membership over the PolySets was very simple.
+Only the definition of instantiation involves recursion and this is well-founded with respect to the original membership relationship.
+The definition of membership is not then recursive. 
+
+Once you need to talk about membership in the new structure while defining that membership relationship, or to talk about equivalence (i.e. when two representatives represent the same set) then recursion comes in, and there may not be any obvious well-founded relationship to show that such recursion terminates.
+
+My aim here is to hit this problem head on, and adopt a method which copes with an account of the semantics of the new sets (i.e. a definition of the new membership relationship) which is not known to be well-founded.
+
+There is not a lot of proof in this document, I need to kick around some specifications before I decide whether any proofs are worth attempting.
+Until then it will be a study in proof evasion.
+
+\subsection{Outline of The Method}
+
+The following stages are involved.
+
+\begin{enumerate}
+\item Identify informally a {\it kind} of properties (of sets) whose extensions will be the extensions of the new sets.
+\item Chose a way of describing these properties using well-founded sets (I like something that looks like an infinitary language defined like a recursive datatype).
+\item Define the semantics of these notations by assigning to each set an extension.
+To allow for the recursive elements mentioned above, this is done relative to some arbitrary given membership structure, subject only to the constraint that the domain of the relationship is a partition of a subset of the representatives chosen for the new sets.
+\item Note that the membership relationship will bring with it a notion of extensional equality.
+\item Now the hard bit! Find a partial fixed point for the functor just defined (which takes one membership structure over equivalence classes and returns another).
+This required some explication of the relevant kinds of partial fixed point.
+\end{enumerate}
+
+The idea I have in mind is to make definite choices early in this process, e.g. at items 1 to 3, and then to explore what fixed points are available.
+
+\section{GALACTIC SET THEORY}
+
+Ideally I would do the construction relative to an arbitrary membership structure \cite{rbjt004} and then relate properties of the first structure to those of the constructed structure.
+However because of precisely the problems in dealing with context that I am seeking to resolve, this is awkward, and I can make better progress by adopting a higher order axiomatisation of a classical set theory and then performing the constructions in the context of that specific set theory.
+
+This is basically a higher order set theory with ``universes'' which I insist on calling ``galaxies''.
+I'm going to follow an approach first adopted for the formalisation of the theory of PolySets in Isabell-HOL, in which I make maximal use of the set theoretic vocabulary already available in HOL by defining maps from sets in galactic set theory and the sets (subsets of types) already available in HOL,
+
+First we have a new theory.
+
+=SML
+open_theory "rbjmisc";
+force_new_theory "GS";
+new_parent "fixp";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+=TEX
+
+Now the new type and the primitive constant, membership:
+=SML
+new_type("GS", 0);
+new_const("‰g", ”GS ­ GS ­ BOOL®);
+declare_infix (70, "‰g");
+=TEX
+
+The axioms of extensionality and well-foundedness can be stated immediately:
+
+=SML
+val ÛGS_Ext_axİ = new_axiom(["ÛExtİ"],
+   ¬µx y· x=y ¤ µz· z ‰g x ¤ z ‰g y®);
+
+val ÛGS_wf_axİ = new_axiom(["ÛWfİ"],
+   ¬µP· (µs· (µt· t ‰g s ´ P t) ´ P s) ´ µx· P x®);
+=TEX
+
+The final axiom states that every set is a member of a galaxy, and also asserts a more global version of replacement.
+First the notion of Galaxy is defined.
+To do this I first introduce some mappings between GS's and set so GS's.
+
+¹HOLCONST
+Ü ÛX‰gİ : GS ­ GS SET
+÷üüüüüüüüü
+Ü µs· X‰g s = {x | x ‰g s}
+°
+
+¹HOLCONST
+Ü ÛXX‰gİ : GS ­ GS SET SET
+÷üüüüüüüüü
+Ü µs· XX‰g s = {x | ¶y· y ‰g s ± x = X‰g y}
+°
+
+¹HOLCONST
+Ü Û¶‰gİ : GS SET ­ BOOL
+÷üüüüüüüüü
+Ü µs· ¶‰g s ¤ ¶t· X‰g t = s
+°
+
+\ignore{
+=SML
+set_goal([],¬¶C‰g· µs:GS SET· ¶‰g s ´ X‰g (C‰g s) = s®);
+a (rewrite_tac [get_spec ¬¶‰g®]);
+a (prove_¶_tac THEN strip_tac);
+a (¶_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®
+	THEN strip_tac);
+a (Å_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®);
+a (¶_tac ¬t® THEN strip_tac);
+a (asm_rewrite_tac[]);
+save_cs_¶_thm(pop_thm());
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛC‰gİ : GS SET ­ GS
+÷üüüüüüüüü
+Ü µs· ¶‰g s ´ X‰g (C‰g s) = s
+°
+
+We are now in a position to define galaxies.
+
+¹HOLCONST
+Ü ÛG‰gİ : GS ­ BOOL
+÷üüüüüüüüü
+Ü µs· G‰g s ¤ µx· x ‰g s ´
+Ü	(¶v· v ‰g s ± X‰g v = Ş(XX‰g x))
+Ü      ± (¶v· v ‰g s ± XX‰g v = {z | z € X‰g x})
+Ü      ± (µr· r  Functional ´ ¶v· v ‰g x ± X‰g v = r Image (X‰g x))
+°
+
+The primarily ontological axiom is then:
+
+=SML
+val G_ax = new_axiom(["G"], 
+   ¬µx· ¶g· x ‰g g ± G‰x g®);
+=TEX
+
+I might possibly also need a global replacement axiom.
+
+
+We will need an ordered pair, for which the Wiener-Kuratowski version will do:
+
+¹HOLCONST
+Ü ÛWkp‰gİ: GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µl r· Wkp‰g (l,r) = C‰g {C‰g{l}; C‰g{l;r}}
+°
+
+
+
+\section{REPRESENTATIVES}
+
+The rest doesn't belong with the set theory, so we'll have another theory.
+
+=SML
+open_theory "GS";
+force_new_theory "defsets";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+=TEX
+
+The idea is to chose a substantial collection of pure well-founded sets as a starting material, and to use these to represent some more encompassing notion of sethood, in such a way as to keep a copy of the originals alongside the newly introduced exotica.
+
+I think its useful to think of this as a kind of infinitary language in which sets sometimes should be read just like set displays.
+On paper I can write $\{1,2,3\}$, and we think in some cases of the sets as being similar bits of infinitary syntax in which notionally the set is displaying its members and may be thought of as a term denoting itself.
+In fact we have something almost exactly like this as one of the components of our recursive datatype.
+One leg says something like ``from any (old) set of NewSets (coded up as old sets) you can form a NewSet''.
+This is the clause which gives you a copy of the old set, but also allows a similar kind of liberal collecting of all the new kinds of set into more new sets.
+
+In this kind of ``syntax'' we have sets which can be regarded as infinite terms and which permit any well-founded set to be written out as a nested display in a manner analogous to more conventional finite expressions of set displays.
+
+The other clauses of the recursive datatype are there to allow for sets which are not well-founded, and we may think of this as effecting a merge between a concept of set as explicit extensional graph and that of a set as a rule of some kind, in which a prospective member is check-out in a manner more sophisticated than literal identity comparisons.
+
+The use of rules rather than graphs helps us round a difficulty which appears as soon as we admit non-well-founded sets, in the form of Cantor's theorem.
+We are allowing functions whose domain is the entire domain of discourse (which includes these functions) but we can't have them all, there are too many.
+Having a language of rules allows you to cap the number of sets or functions admitted in a systematic way.
+
+However, cardinality is not the end of the problems.
+Though V isn't one of them, there are sets which you just can't have.
+The concept of a barber who shaves everyone who doesn't shave himself, is too problematic to have an extension.
+So either on their own, or in combination, ontological principles may be inconsistent.
+
+I intend here to explore the possiblity that the first stages in the construction can be done recklessly, encompassing a collection of properties of sets which is in itself incoherent, and then restricted to obtain coherent interpretations.
+For this reason I will formalise for exploration an interpretation in which nominally appear a transfinite extrapolation of the complete range of first order properties of sets (which will not of course yield an interpretation without being trimmed back).
+I would have been inclined to extend the construction for the PolySets but the purpose here is exploratory and methodological, and it will probably be faster and easier to understand if I forget about the PolySets for now.
+In principle, if there is an interpretation for NF, then it ought to be obtainable in this way (which doesn't mean that it would facilitate any proof of coherence).
+
+I'm going to use a fairly crude way of capuring the notion of definability of sets in an infinitary first order set theory.
+We imagine a formula built up using the infinitary terms with variables in them, equality, membership, negation conjunction, universal quantification and comprehension.
+
+Here is an abstract syntax:
+
+=GFT
+term    ::= SetDisp set of terms
+          | SetComp formula
+
+formula ::= term = term
+          | term  term
+          | formula ± formula
+          | ³ formula
+          | µ formula
+=TEX
+
+I'm going to hand-crank an appropriate recursive datatype.
+
+It will be useful to be able to have names for the finite ordinals:
+
+¹HOLCONST
+Ü ÛSucc‰gİ: GS ­ GS
+÷üüüüüüüüüüü
+Ü µn· Succ‰g n = C‰g {z | z ‰g n ² z = n}
+°
+
+¹HOLCONST
+Ü ÛOn‰gİ: î ­ GS
+÷üüüüüüüüüüü
+Ü       On‰g 0 = C‰g {}
+Ü ± µn· On‰g (n+1) = Succ‰g (On‰g n)
+°
+
+The following define realisations of the constructors for the abstract syntax:
+
+¹HOLCONST
+Ü ÛSetDispİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µgs· SetDisp gs = Wkp‰g(On‰g 1, gs)
+°
+
+¹HOLCONST
+Ü ÛSetCmpİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µf· SetCmp f = Wkp‰g(On‰g 2, f)
+°
+
+¹HOLCONST
+Ü ÛEqİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µl r· Eq (l,r) = Wkp‰g(On‰g 3, Wkp‰g(l,r))
+°
+
+¹HOLCONST
+Ü ÛMemİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µ l r·  Mem (l, r) = Wkp‰g(On‰g 4, Wkp‰g(l, r))
+°
+
+¹HOLCONST
+Ü ÛAndİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µl r· And (l, r) = Wkp‰g(On‰g 5, Wkp‰g(l, r))
+°
+
+¹HOLCONST
+Ü ÛNotİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µf·  Not f = Wkp‰g(On‰g 6, f)
+°
+
+¹HOLCONST
+Ü ÛForallİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µf· Forall f = Wkp‰g(On‰g 7, f)
+°
+
+¹HOLCONST
+Ü ÛRepClosedİ: GS SET ¸ GS SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ sf st· RepClosed (sf, st) ¤
+Ü µst2 f t1 t2 f1 f2:GS· X‰g st2 € st ± {f1; f2} € sf ± {t1; t2} € st
+Ü   ´	SetDisp st2  st
+Ü  ±	SetCmp f1  st
+Ü  ±	Eq (t1,t2)  sf
+Ü  ±	Mem (t1,t2)  sf
+Ü  ±	And (f1,f2)  sf
+Ü  ±	Not f1  sf
+Ü  ±	Forall f1  sf
+°
+
+I'm not sure this works!
+Its intended to give a least fixed point.
+
+¹HOLCONST
+Ü ÛDefFormsİ : GS SET
+÷üüüüüüüüüüü
+Ü DefForms = ¥{x | ¶y· RepClosed y ± x = Fst y}
+°
+
+¹HOLCONST
+Ü ÛDefTermsİ : GS SET
+÷üüüüüüüüüüü
+Ü DefTerms = ¥{x | ¶y· RepClosed y ± x = Snd y}
+°
+
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{GS.th}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{defsets.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}
