@@ -1,5 +1,5 @@
 =IGN
-$Id: t021.doc,v 1.3 2006/11/30 14:39:33 rbj01 Exp $
+$Id: t021.doc,v 1.4 2006/12/11 12:14:52 rbj01 Exp $
 open_theory "";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 =TEX
@@ -17,7 +17,9 @@ set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 
 \title{Interpretations of Set Theory}
 \makeindex
-\usepackage[pdftex]{hyperref}
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}}
+\hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
 
 \author{Roger Bishop Jones}
 \date{\ }
@@ -36,13 +38,14 @@ It contains a sketch of a general method, written down while I am still on this 
 
 {\footnotesize
 
-\date{Created: 2006/11/29\\
-Last Change $ $Date: 2006/11/30 14:39:33 $ $}
+Created: 2006/11/29
+
+Last Change $ $Date: 2006/12/11 12:14:52 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.3 2006/11/30 14:39:33 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.4 2006/12/11 12:14:52 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -56,7 +59,7 @@ $ $Id: t021.doc,v 1.3 2006/11/30 14:39:33 rbj01 Exp $ $
 \addtocounter{page}{1}
 %\section{DOCUMENT CONTROL}
 %\subsection{Contents list}
-\tableofcontents
+{\parskip=0pt\tableofcontents}
 %\newpage
 %\subsection{Document cross references}
 
@@ -119,120 +122,12 @@ This requires some explication of the relevant kinds of partial fixed point.
 The idea I have in mind is to make definite choices early in this process, e.g. at items 1 to 3, and then to explore what fixed points are available.
 
 \newpage
-\section{GALACTIC SET THEORY}
-
-Ideally I would do the construction relative to an arbitrary membership structure \cite{rbjt004} and then relate properties of the first structure to those of the constructed structure.
-However because of precisely the problems in dealing with context that I am seeking to resolve, this is awkward, and I can make better progress by adopting a higher order axiomatisation of a classical set theory and then performing the constructions in the context of that specific set theory.
-
-This is basically a higher order set theory with ``universes'' which I insist on calling ``galaxies''.
-I'm going to follow an approach first adopted for the formalisation of the theory of PolySets in Isabell-HOL, in which I make maximal use of the set theoretic vocabulary already available in HOL by defining maps from sets in galactic set theory and the sets (subsets of types) already available in HOL,
-
-First we have a new theory.
-
-=SML
-open_theory "rbjmisc";
-force_new_theory "GS";
-new_parent "fixp";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
-=TEX
-
-Now the new type and the primitive constant, membership:
-=SML
-new_type("GS", 0);
-new_const("‰g", ”GS ­ GS ­ BOOL®);
-declare_infix (70, "‰g");
-=TEX
-
-The axioms of extensionality and well-foundedness can be stated immediately:
-
-=SML
-val ÛGS_Ext_axİ = new_axiom(["ÛExtİ"],
-   ¬µx y· x=y ¤ µz· z ‰g x ¤ z ‰g y®);
-
-val ÛGS_wf_axİ = new_axiom(["ÛWfİ"],
-   ¬µP· (µs· (µt· t ‰g s ´ P t) ´ P s) ´ µx· P x®);
-=TEX
-
-The final axiom states that every set is a member of a galaxy, and also asserts a more global version of replacement.
-First the notion of Galaxy is defined.
-To do this I first introduce some mappings between GS's and set so GS's.
-
-¹HOLCONST
-Ü ÛX‰gİ : GS ­ GS SET
-÷üüüüüüüüü
-Ü µs· X‰g s = {x | x ‰g s}
-°
-
-¹HOLCONST
-Ü ÛXX‰gİ : GS ­ GS SET SET
-÷üüüüüüüüü
-Ü µs· XX‰g s = {x | ¶y· y ‰g s ± x = X‰g y}
-°
-
-¹HOLCONST
-Ü Û¶‰gİ : GS SET ­ BOOL
-÷üüüüüüüüü
-Ü µs· ¶‰g s ¤ ¶t· X‰g t = s
-°
-
-\ignore{
-=SML
-set_goal([],¬¶C‰g· µs:GS SET· ¶‰g s ´ X‰g (C‰g s) = s®);
-a (rewrite_tac [get_spec ¬¶‰g®]);
-a (prove_¶_tac THEN strip_tac);
-a (¶_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®
-	THEN strip_tac);
-a (Å_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®);
-a (¶_tac ¬t® THEN strip_tac);
-a (asm_rewrite_tac[]);
-save_cs_¶_thm(pop_thm());
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛC‰gİ : GS SET ­ GS
-÷üüüüüüüüü
-Ü µs· ¶‰g s ´ X‰g (C‰g s) = s
-°
-
-We are now in a position to define galaxies.
-
-¹HOLCONST
-Ü ÛG‰gİ : GS ­ BOOL
-÷üüüüüüüüü
-Ü µs· G‰g s ¤ µx· x ‰g s ´
-Ü	(¶v· v ‰g s ± X‰g v = Ş(XX‰g x))
-Ü      ± (¶v· v ‰g s ± XX‰g v = {z | z € X‰g x})
-Ü      ± (µr· r  Functional ´ ¶v· v ‰g x ± X‰g v = r Image (X‰g x))
-°
-
-The primarily ontological axiom is then:
-
-=SML
-val G_ax = new_axiom(["G"], 
-   ¬µx· ¶g· x ‰g g ± G‰x g®);
-=TEX
-
-I might possibly also need a global replacement axiom.
-
-
-We will need an ordered pair, for which the Wiener-Kuratowski version will do:
-
-¹HOLCONST
-Ü ÛWkp‰gİ: GS ¸ GS ­ GS
-÷üüüüüüüüüüü
-Ü µl r· Wkp‰g (l,r) = C‰g {C‰g{l}; C‰g{l;r}}
-°
-
-\newpage
 \section{SYNTAX}
-
-The rest doesn't belong with the set theory, so we'll have another theory.
 
 =SML
 open_theory "GS";
 force_new_theory "defsets";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
 =TEX
 
 The idea is to chose a substantial collection of pure well-founded sets as a starting material, and to use these to represent some more encompassing notion of sethood, in such a way as to keep a copy of the originals alongside the newly introduced exotica.
@@ -299,43 +194,43 @@ The following define realisations of the constructors for the abstract syntax:
 ¹HOLCONST
 Ü ÛSetDispİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü    µgs· SetDisp gs = Wkp‰g(On‰g 1, gs)
+Ü    µgs· SetDisp gs = (On‰g 1) í‰g gs
 °
 
 ¹HOLCONST
 Ü ÛSetCmpİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü    µf· SetCmp f = Wkp‰g(On‰g 2, f)
+Ü    µf· SetCmp f = (On‰g 2) í‰g f
 °
 
 ¹HOLCONST
 Ü ÛEqİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µl r· Eq (l,r) = Wkp‰g(On‰g 3, Wkp‰g(l,r))
+Ü µl r· Eq (l,r) = (On‰g 3) í‰g (l í‰g r)
 °
 
 ¹HOLCONST
 Ü ÛMemİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µ l r·  Mem (l, r) = Wkp‰g(On‰g 4, Wkp‰g(l, r))
+Ü µ l r·  Mem (l, r) = (On‰g 4) í‰g (l í‰g r)
 °
 
 ¹HOLCONST
 Ü ÛAndİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µl r· And (l, r) = Wkp‰g(On‰g 5, Wkp‰g(l, r))
+Ü µl r· And (l, r) = (On‰g 5) í‰g (l í‰g r)
 °
 
 ¹HOLCONST
 Ü ÛNotİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü µf·  Not f = Wkp‰g(On‰g 6, f)
+Ü µf·  Not f = (On‰g 6) í‰g f
 °
 
 ¹HOLCONST
 Ü ÛForallİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü µf· Forall f = Wkp‰g(On‰g 7, f)
+Ü µf· Forall f = (On‰g 7) í‰g f
 °
 
 ¹HOLCONST
@@ -384,9 +279,6 @@ The semantics is therefore defined in a piecemeal way for each constructor in tu
 
 {\let\Section\section
 \newcounter{ThyNum}
-\def\section#1{\Section{#1}
-\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{GS.th}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{defsets.th}

@@ -5,7 +5,7 @@ imports Main
 begin
 
 text{*
-The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.2 2006/11/28 16:50:49 rbj01 Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
+The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.3 2006/12/11 12:14:52 rbj01 Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
 I did at first attempt the construction without axiomatising a particular set theory, so that the poly-sets could be built from an arbitrary membership structure with suitable properties, but the advantages of this are overwhelmed by the extra complexity it causes, and I have concluded that maximising the intelligibility of the poly-sets (and of further constructions based on them) is incompatible with the innovation of treating set theory as a theory \emph{about} membership structures, rather than a theory about the sets in \emph{in} one such structure,
 
 The reader should beware that what follows is an axiomatic set theory presented in the context of a Higher Order Logic which has its own set theoretic vocabulary.
@@ -149,7 +149,7 @@ constdefs
 subsection{* Ordinals *}
 
 text{*
-The ordinals are defined in Jech \cite{jech2000} as those sets which are transitive and well-ordered by membership.
+The ordinals are defined in Jech \cite{jech2002} as those sets which are transitive and well-ordered by membership.
 However, I think I might get more milage from a recursive definition of ordinals so that's what I'll do.
 
 First I define zero, the sucessor relationship, the limit of a set of ordinals and the predecessor of a successor ordinal.
