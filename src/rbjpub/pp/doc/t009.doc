@@ -1,18 +1,20 @@
 =IGN
-$Id: t009.doc,v 1.4 2006/10/21 16:53:33 rbj01 Exp $
+$Id: t009.doc,v 1.5 2006/12/15 19:51:21 rbj01 Exp $
 =TEX
 \documentclass[12pt]{article}
 \usepackage{ProofPower}
 \usepackage{A4}
 \usepackage{latexsym}
 \usepackage{epsf}
-\usepackage[pdftex]{hyperref}
-\def\ZAxDesLabel{}
-\def\ZGenericLabel{}
-\def\ZOtherLabel{}
-\def\ZSchemaLabel{}
-\def\Hide#1{\relax}
-%Macros for references (to be converted to bibtex presently).
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Rob Arthan and Roger Bishop Jones}}
+\hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
+
+%\def\ZAxDesLabel{}
+%\def\ZGenericLabel{}
+%\def\ZOtherLabel{}
+%\def\ZSchemaLabel{}
+%\def\Hide#1{\relax}
 
 \ftlinepenalty=9999
 
@@ -20,7 +22,7 @@ $Id: t009.doc,v 1.4 2006/10/21 16:53:33 rbj01 Exp $
 \newcommand{\ignore}[1]{}
 
 \title{Well-orderings and Well-foundedness}
-\date{$ $Date: 2006/10/21 16:53:33 $ $}
+\date{$ $Date: 2006/12/15 19:51:21 $ $}
 \author{R.D. Arthan and R.B. Jones}
 \vfill
 \makeindex
@@ -34,19 +36,31 @@ This document consists of two parts.
 The first is a theory of well-orderings prepared by Rob Arthan for possible inclusion in the ProofPower theory of ordered sets.
 The second is material on well-foundedness, mainly consisting in the proof of the recursion theorem which is needed for consistency proofs of definitions by transfinite recursion respecting (if that's the right term) some well founded relationship.
 \end{abstract}
+
 \vfill
 
 \begin{centering}
 
+{\footnotesize
+
+Created 2004/10/03
+
+Last Change $ $Date: 2006/12/15 19:51:21 $ $
+
 \href{http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 
-$ $Id: t009.doc,v 1.4 2006/10/21 16:53:33 rbj01 Exp $ $
+$ $Id: t009.doc,v 1.5 2006/12/15 19:51:21 rbj01 Exp $ $
+
+\copyright\ Rob Arthan and Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnotesize
 
 \end{centering}
 
 \newpage
-\tableofcontents
+
+{\parskip=0pt\tableofcontents}
 
 %%%%
 
@@ -404,6 +418,7 @@ val Ûdef_thmsÝ = [
 	@ existing_defs;
 =TEX
 }%
+
 
 \section{WELL-ORDERING}\label{WELL-ORDERING}
 
@@ -975,6 +990,320 @@ a(REPEAT strip_tac THEN all_asm_ufc_tac[]);
 a(all_asm_ufc_tac[]);
 save_pop_thm "well_ordering_thm"
 );
+=TEX
+}%ignore
+
+\section{ORDINALS AND CARDINALS}
+
+The material in this section is primarily oriented towards expressing strong axioms of infinity.
+It does this by treating well-orderings as if they were ordinals and cardinals.
+
+Having made a preliminary exploration of this possibility, it does not look promising.
+I do not propose to progress this line further and this material is likely eventually to be discarded.
+
+Using the order types of well-orderings would be pukka, but the full order types are not available to us because ot the HOL type system, and taking the well-orderings themselves is probably better than using the kinds of order-types which can come up with.
+The situation is slightly further complicated by the fact that exactly the same well ordering of the same set has more than one representative, a strict (irreflexive) relationship a reflexive relationship, and a variety of muddles which are neither reflexive not irreflexive.
+
+I could insist on treating only the strict relationships as ordinals and cardinals, but so far as I can see at present there is no need to do that.
+The main problem I see at the moment is that two representatives of the same ordinal will not necessarily be isomorphic relations.
+I suppose that's pretty bad so I will insist on ordinals being strict well-orderings.
+
+I'll define that here, so that I have a single place to alter if I change my mind.
+
+¹HOLCONST
+Ü ÛOrdinal‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<)· Ordinal‰o (X, $<<) ¤ Irrefl (X, $<<) ± WellOrdering (X, $<<)
+°
+
+\subsection{Relation Morphisms}
+
+A morphism between two relations is a function between the carriers of the relations which maps pairs related under the first relation to pairs related under the second.
+
+¹HOLCONST
+Ü ÛRelMorphÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL))
+Ü			­ ('a ­ 'b) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<) (Y, $<<<) f·
+Ü	RelMorph (X, $<<) (Y, $<<<) f
+Ü ¤	µx y· x  X ± y  X ´ f x  Y ± f y  Y ±  (x << y ¤ f x <<< f y)
+°
+
+=SML
+declare_infix(300, "¼‰rel");
+declare_infix(300, "~‰rel");
+declare_infix(300, "<‰rel");
+=TEX
+
+¹HOLCONST
+Ü $Û¼‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<) (Y, $<<<)·
+Ü	(X, $<<) ¼‰rel (Y, $<<<)
+Ü ¤	¶f· RelMorph (X, $<<) (Y, $<<<) f
+°
+
+¹HOLCONST
+Ü $Û<‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<) (Y, $<<<)·
+Ü	(X, $<<) <‰rel (Y, $<<<)
+Ü ¤	(X, $<<) ¼‰rel (Y, $<<<) ± ³ (Y, $<<<) ¼‰rel (X, $<<)
+°
+
+A relation isomorphism is a relation morphism which has an inverse morphism.
+
+¹HOLCONST
+Ü ÛRelIsoÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL))
+Ü			­ ('a ­ 'b) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<) (Y, $<<<) f·
+Ü	RelIso (X, $<<) (Y, $<<<) f
+Ü ¤	RelMorph (X, $<<) (Y, $<<<) f
+Ü	± (¶g·
+Ü		RelMorph (Y, $<<<) (X, $<<) g
+Ü		± (µx· x  X ´ g (f x) = x)
+Ü		± (µy· y  Y ´ f (g y) = y)
+Ü	)
+°
+
+¹HOLCONST
+Ü $Û~‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<) (Y, $<<<)·
+Ü	(X, $<<) ~‰rel (Y, $<<<)
+Ü ¤	¶f· RelIso (X, $<<) (Y, $<<<) f
+°
+
+\ignore{
+=SML
+set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´ (Y, $<<<) ~‰rel (X, $<<)®);
+a (rewrite_tac [get_spec ¬$~‰rel®, get_spec ¬RelIso®] THEN REPEAT strip_tac);
+a (¶_tac ¬g® THEN REPEAT strip_tac);
+a (¶_tac ¬f® THEN asm_rewrite_tac[]);
+val reliso_sym_lemma1 = save_pop_thm "reliso_sym_lemma1";
+
+set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ¤ (Y, $<<<) ~‰rel (X, $<<)®);
+a (REPEAT strip_tac THEN all_fc_tac [reliso_sym_lemma1]);
+val reliso_sym_lemma2 = save_pop_thm "reliso_sym_lemma2";
+
+set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´
+	(Antisym (X, $<<) ´ Antisym (Y, $<<<))®);
+a (rewrite_tac (map get_spec [¬$~‰rel®, ¬RelIso®, ¬RelMorph®, ¬Antisym®]));
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (lemma_tac ¬g y << g x®);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬f (g y) <<< f (g x)®
+	THEN1 (asm_rewrite_tac[]));
+a (lemma_tac ¬f (g y)  Y ± f (g x)  Y® THEN1 asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac 15 [¬y®, ¬x®]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬³ (g x) << (g y)®);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬³ g x = g y® THEN1 swap_nth_asm_concl_tac 7);
+(* *** Goal "2.1.1" *** *)
+a (SYM_ASMS_T once_rewrite_tac);
+a (POP_ASM_T rewrite_thm_tac);
+(* *** Goal "2.1.2" *** *)
+a (list_spec_nth_asm_tac 11 [¬g x®, ¬g y®]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬f (g x)  Y ± f (g y)  Y® THEN1 asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac 16 [¬x®, ¬y®]);
+val reliso_antisym_lemma1 = save_pop_thm "reliso_antisym_lemma1";
+
+set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´
+	(Antisym (X, $<<) ¤ Antisym (Y, $<<<))®);
+a (REPEAT strip_tac THEN all_fc_tac [reliso_antisym_lemma1]);
+a (all_fc_tac [reliso_sym_lemma2]);
+a (all_fc_tac [reliso_antisym_lemma1]);
+val reliso_antisym_lemma2 = save_pop_thm "reliso_antisym_lemma2";
+
+=IGN
+set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) <‰rel (Y, $<<<) ´
+	(PartialOrder (X, $<<) ´ PartialOrder (Y, $<<<))®);
+a (rewrite_tac (map get_spec [¬$<‰rel®, ¬RelMorph®, ¬PartialOrder®]));
+=TEX
+}%ignore
+
+=GFT
+reliso_sym_lemma1 =
+   ô µ (X, $<<) (Y, $<<<)
+     · (X, $<<) ~‰rel (Y, $<<<) ´ (Y, $<<<) ~‰rel (X, $<<)
+
+reliso_sym_lemma2 =
+   ô µ (X, $<<) (Y, $<<<)
+     · (X, $<<) ~‰rel (Y, $<<<) ¤ (Y, $<<<) ~‰rel (X, $<<)
+
+reliso_antisym_lemma1 =
+   ô µ (X, $<<) (Y, $<<<)
+     · (X, $<<) ~‰rel (Y, $<<<) ´ Antisym (X, $<<) ´ Antisym (Y, $<<<)
+
+reliso_antisym_lemma2 =
+   ô µ (X, $<<) (Y, $<<<)
+     · (X, $<<) ~‰rel (Y, $<<<) ´ (Antisym (X, $<<) ¤ Antisym (Y, $<<<))
+=TEX
+
+\subsection{Successor and Limit Ordinals}
+
+
+¹HOLCONST
+Ü $ÛSuccessor‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<)· Successor‰o (X, $<<)
+Ü	¤ Ordinal‰o (X, $<<) ± ¶x· x  X ± µy· y  X ´ y << x
+°
+
+¹HOLCONST
+Ü $ÛLimit‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<)· Limit‰o (X, $<<)
+Ü	¤ Ordinal‰o (X, $<<) ± ³ Successor‰o (X, $<<)
+°
+
+\subsection{Cardinality and Cardinals}
+
+The relations defined here with subscript \emph{s} on their names are cardinality comparisons on sets.
+
+=SML
+declare_infix(300, "¼‰s");
+declare_infix(300, "<‰s");
+declare_infix(300, "~‰s");
+=TEX
+
+¹HOLCONST
+Ü $Û¼‰sÝ : 'a SET ­ 'b SET ­ BOOL
+÷üüüüüü
+Ü µ A B· A ¼‰s B ¤ ¶f·
+Ü	µx y· x  A ± y  A ´ f x  B ± f y  B ± (f x = f y ´ x = y)
+°
+
+¹HOLCONST
+Ü $Û<‰sÝ : 'a SET ­ 'b SET ­ BOOL
+÷üüüüüü
+Ü µ A B· A <‰s B ¤ A ¼‰s B ± ³ B ¼‰s A
+°
+
+¹HOLCONST
+Ü $Û~‰sÝ : 'a SET ­ 'b SET ­ BOOL
+÷üüüüüü
+Ü µ A B·
+Ü	A ~‰s B ¤ ¶f g·
+Ü		(µx· x  A ´ f x  B ± g (f x) = x)
+Ü	±	(µy· y  B ´ g y  A ± f (g y) = y)
+°
+
+\ignore{
+=SML
+set_flag("pp_show_HOL_types", false);
+push_pc "hol";
+
+set_goal([], ¬µx y z· (x ~‰s x)
+		± (x ~‰s y ¤ y ~‰s x)
+		± (x ~‰s y ± y ~‰s z ´ x ~‰s z)®);
+a (rewrite_tac [get_spec ¬$~‰s®] THEN prove_tac[]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬Ìx:'b· x® THEN ¶_tac ¬Ìx:'b· x® THEN prove_tac[]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬f' o f® THEN ¶_tac ¬g o g'® THEN rewrite_tac[o_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2.2" *** *)
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 5 ¬f x'®);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.3" *** *)
+a (REPEAT_N 2 (asm_fc_tac[]));
+(* *** Goal "2.4" *** *)
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 6 ¬g' y'®);
+a (asm_rewrite_tac[]);
+val card_equiv_lemma = save_pop_thm "card_equiv_lemma";
+
+pop_pc();
+=TEX
+}%ignore
+
+=GFT
+card_equiv_lemma =
+   ô µ x y z· x ~‰c x ± (x ~‰c y ¤ y ~‰c x) ± (x ~‰c y ± y ~‰c z ´ x ~‰c z)
+
+=TEX
+
+The property (of ordinals) of being a cardinal is now defined.
+In this context using ordinals as representatives of cardinals is even more silly than some advocates of set theory with a Universal Set have suggested it is in set theory.
+This is because here we have a relation in the representation which is completely irrelevant to its cardinality.
+At least in set theory the ordinals which represent cardinals are just representative sets of the right size.
+Here however, our interest in cardinals is simply to  the property of being an inaccessible.
+
+
+¹HOLCONST
+Ü ÛCardinalÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ(X, $<<)· Cardinal (X, $<<) ¤ Ordinal‰o (X, $<<)
+Ü	± ³ ¶Y· Ordinal‰o (Y, $<<) ± (Y, $<<) <‰rel (X, $<<) ± X ~‰s Y
+°
+
+The ordering of cardinals by cardinality is:
+
+=SML
+declare_infix (300, "<‰c");
+=TEX
+
+¹HOLCONST
+Ü $Û<‰cÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ(X, $<<) (Y, $<<<)· (X, $<<) <‰c (Y, $<<<) ¤ X <‰s Y
+°
+
+
+\subsection{Cofinality, Regularity, Singularity}
+
+¹HOLCONST
+Ü ÛInfiniteÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ(X, $<<)· Infinite (X, $<<) ¤ (Universe:'a SET) ¼‰s X
+°
+
+¹HOLCONST
+Ü ÛRegularÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ(X, $<<)· Regular (X, $<<) ¤ Cardinal (X, $<<) ± Infinite (X, $<<)
+Ü	± ³ ¶SX· SX € ð X ± (µs x y· s  SX ± x  X ± y  s ± x << y ´ x  s)
+Ü		±  Þ SX = X ± (SX, $ ) <‰rel (X, $<<)
+°
+
+¹HOLCONST
+Ü ÛSingularÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ(X, $<<)· Singular (X, $<<) ¤ Cardinal (X, $<<) ± Infinite (X, $<<) ± ³ Regular (X, $<<)
+°
+
+\subsection{Powers of Ordinals}
+
+My aim in introducing this topic is to be able to state strong axioms of infinity without getting into set theory.
+To do this we may treat well-orderings as if they were ordinals and aim to define properties such as {\it inaccessible}.
+To what extent it is necessary to be dealing with well-orderings rather than relations in general is not yet clear to me.
+
+To express inaccessiblity I need the notion of a strong limit, which requires exponentiation.
+If suffices to define the powers of 2.
+
+¹HOLCONST
+Ü $Ûð‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
+Ü		­ ('a SET SET ¸ ('a SET ­ 'a SET ­ BOOL))
+÷üüüüüü
+Ü µ (X, $<<)·
+Ü	ð‰rel (X, $<<)
+Ü =	(ð X, Ìx y· ¶z· (µv· v << z ´ (v  x ¤ v  y)) ± z  x ± ³ z  y)
+°
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¬µ(X, $<<)· WellOrdering (X, $<<) ´ WellOrdering (ð‰rel (X, $<<))®);
+a (rewrite_tac (map get_spec [¬ð‰rel®]) THEN REPEAT strip_tac);
+
 =TEX
 }%ignore
 
