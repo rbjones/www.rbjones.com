@@ -1,5 +1,5 @@
 =IGN
-$Id: t020.doc,v 1.6 2006/12/15 19:51:21 rbj01 Exp $
+$Id: t020.doc,v 1.7 2006/12/20 09:06:08 rbj01 Exp $
 open_theory "poly-sets";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -28,8 +28,20 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-A construction similar in effect but rather different in method to the Oswald-Church construction is defined in a generic way.
-The purpose of the construction is to build from a well-founded extensional membership structure another membership structure containing the original but having many other sets in addition, often not well-founded, typically including a universal set.
+This document contains an approach to providing an interpretation of the first order language of set theory.
+The purpose of the interpretation is to provide semantic foundation for logical systems which are suitable for the large scale formalisation of mathematics and its applications.
+Improved support is sought for the management of context both in the small (as in the ML ``let'' clause) and in the large (as in the handling of theories or modules, and in the development and appication of abstract mathematical structures).
+The right kinds of ``Polymorphism'' are important at all levels, as is illustrated in the small by the differences between the ``let'' clause in ML and its much less satisfactory rendition in HOL.
+
+A series of innovations (at least, of techniques which I have devised in ignorance of any prior use) have been deployed to this end, for the details of which read on.
+However, the trail began with a single insight into the nature of polymorphic functions in ML which inspired a particular conception of what non-well-founded sets should be included in the ontology.
+
+This intuition of what sets there should be was realised in the first instance by a construction based on a well-founded set theoretic ontology yielding an extended ontology, including both the original well-founded sets and a collection of non-well-founded sets intended to include (inter alia) the graphs of the polymorphic functions definable in ML.
+This done with a somewhat naive hope that this kind of polymorphism might not only provide us in a logical context with better management of local context (i.e. an ML-like `let' clause in a HOL-like language), but would also provide better management of the larger scale context (defining abstract algebraic structures and applying the resulting theories in diverse other contexts).
+
+Eventually I concluded that more was needed.
+The most conspicuous absence was complementation, but the richness of the poly-sets as extrapolated into set theory from ML-polymorphism appeared to be inconsistent with the existence of all complements.
+Combined with set abstraction capabilities which included infinitary unions (suggestive of existential quantification) complementation threatens to provide the effect of full comprehension.
 
 The generic construction is then applied to create a model which we call poly-sets.
 poly-sets are sets generated from a proforma set by filling in values for wildcards.
@@ -45,12 +57,12 @@ The function can therefore be represented by a set which gives the graph using w
 {\footnotesize
 Created 2006/10/15
 
-Last Changed $ $Date: 2006/12/15 19:51:21 $ $
+Last Changed $ $Date: 2006/12/20 09:06:08 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t020.pdf}
 
-$ $Id: t020.doc,v 1.6 2006/12/15 19:51:21 rbj01 Exp $ $
+$ $Id: t020.doc,v 1.7 2006/12/20 09:06:08 rbj01 Exp $ $
 
 \copyright\  Roger Bishop Jones; Licenced under Gnu LGPL \\
 
@@ -82,19 +94,14 @@ set theory with a universal set.
 In this introduction I want to first of all give an account of how I arrived at the key ideas, which I hope will go some way toward motivating its study and use.
 I also want to say a few words about how this document goes about introducing this theory.
 
-\subsection{Origins}
+\subsection{Historical Note}
 
 These ideas come after a fairly prolonged if intermittent interest on my part in non-well-founded foundation systems, which I first became actively interested in in 1095 when I concluded that they were desirable for the kind of logical approach to Artificial Intelligence which I was then considering.
 The seeds of antipathy to the constraint of well-foundedness had however been sown many years earlier, so that when I first came (for example) to Russell's writings on his Theory of Types I was disinclined to allow that circulariy was always, or even often vicious.
 I don't propose to go into this long history of (not very fruitful) interest here, for there are intelligible motivators in the near term.
 
-I have recently been attempting the construction of non-well-founded category theoretic foundation systems, following up the obvious possibility (which I have long neglected) that NF or NFU could be used as a base from which to construct such a system.
-I did this primarily in order to give me an entertaining task which would improve my acquaintance with NF and NFU.
-In this objective it has been successful in small measure, for I have come to understand rather early in this process how awkward it is to work (using my preferred tools) with NF or NFU.
-
-This provoked me into thinking anew about what kind of non-well-founded ontology would be more suitable for my present purposes.
-NF and NFU are based primarily on liberalisation of the constraint on abstraction in simple type theory along lines suggested by the typical ambiguity which Russell and Whitehead adopted in Principia Mathematica.
-The intuition here seems syntactic rather than semantic.
+In September 2006 I with a view to improving my understanding of NF in anticipation of a meeting on NF planned by Thomas Forster for the next year, I began to explore the construction of non-well-founded category theoretic foundation systems, following up the obvious possibility (which I have long neglected) that NF or NFU could be used as a base from which to construct such a system.
+Before long I became dissatisfied with NF, primarily because of the lack of a convincing story about ontology, which gave me no basis for confidence that it would provide the right collection of non-well-founded sets for my purposes.
 
 I prefer to work, as well-founded set theories do, from an intuition about ontology to an axiomatisation of the theory of that ontology, rather than from an idea about liberalisation of theory not based in any definition conception ontology.
 Poly-sets are based on such an intuition, which is also rooted as it happens in something close to the notion of typical ambiguity in type theory, but which translated more readily into an ontology.
@@ -174,103 +181,73 @@ Such an extension of a well-founded interpretation, in which the original interp
 First we have a new theory.
 
 =SML
-open_theory "membership";
+open_theory "GS";
 force_new_theory "poly-sets";
 new_parent "fixp";
+new_parent "bvi";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
 
 The plan is:
 
 \begin{itemize}
-\item Define an operator on membership structures which constructs a set of poly-sets.
+\item In a well-founded set theory construct a set of representatives for poly-sets.
 
-\item Define the membership relation over the poly-sets (in terms of the original membership relation, which will have to be well-founded).
+\item Define a functor over boolean valued interpretations which captures the intended meaning of the representatives and the notion of extensional equivalence over these representatives.
 
-\item Collapse the new membership structure into an extensional membership structure.
-
-\item Derive properties of poly-sets from properties of the underlying well-founded sets.
-In particular we are looking to derive from strong closure properties of the underlying set theory similarly strong closure properties of the poly-sets.
-The principles derivable for the well-founded polysets should be identical to those on the underlying set theory.
-We also expect a principle of abstraction specific to non-well-founded poly-sets which reflects fairly directly the intuition and the construction.
+\item Explore the partial fixed points of this functor.
 
 \end{itemize}
 
 \subsection{The Set of Poly-Sets}
 
-To define this set we define the relationship between a poly-set and the poly-sets from which it is constructed, i.e. the (Von-Neumann) ordinal on the left and the well-founded set on the right and then obtain a fixed point from this relationship.
-Both of these will be themselves poly-sets
-\footnote{I don't know any reason why the ordinals from the membership structure rather than poly-set ordinals could not be used on the left, but my hunch is that it will work out better with poly-sets on both sides.}
-, and we therefore need the predicate ``ordinal'' for polysets to define this function.
+This is done in stages.
 
-The construction is therefore undertaken in three stages as follows:
+First the a subset of the Poly-Set representatives isomorphic to the Von Neumann ordinals in well-founded set theory is defined.
+Then the full set of Poly-Set representatives is defined using that special representation of ordinals.
 
-\begin{itemize}
-\item define the injection from the well-founded sets into the poly-sets
-\item define a generic putative {\it P-extension} construction (since I now suspect the proposed procedure may be equivalent to a Church-Oswald construction, and a generic account may make it easier to check this out).
-\item define the specifics of the poly-sets construction for fitting into the generic construction.
-\end{itemize}
+The set is defined inductively as a fixed point of a monotonic function.
 
-\subsection{The Canonical Injection}
+πHOLCONST
+‹ €mk_PSR›: GS ∏ GS ≠ GS
+˜¸¸¸¸¸¸
+‹ µor s∑ mk_PSR (or, s) = or Ìâg s 
+∞
 
-As in Forster this is done by transfinite recursion.
-For the sake of making as much of this generic as possible the definition of the injection is parameterised by the zero element of K.
-In the particular construction I had in mind this would be the zero poly-ordinal, but it doesn't make sense to plumb that into the injection.
+The following functor maps a set of sets to the set of PSRs which can be constructed from it (assuming that they are all themselves PSRs).
 
-The canonical injection works informally as follows.
-It takes the set and maps the canonical injection over the members of the set, and then puts the resulting set of poly-sets into the right hand element of an ordered pair of which the left element is the nominated "zero" K value.
+πHOLCONST
+‹ €PSR_func›: GS SET ≠ GS SET
+˜¸¸¸¸¸¸
+‹ µgss∑ PSR_func gss =
+‹	{s
+‹	| ∂or psrs∑ Ordinal or
+‹	± Xâg psrs Ä gss
+‹	± s = mk_PSR (or, psrs)}
+∞
+
+Now we take the least fixed point.
+
+πHOLCONST
+‹ €PSR›: GS SET
+˜¸¸¸¸¸¸
+‹ PSR = HeredFun PSR_func
+∞
 
 \ignore{
 =SML
-set_goal([], ¨∂CanInj∑ µ xms z s∑ is_XMS xms ± s ç Carâx xms ¥
-	CanInj xms z s = Opâx xms
-	  (z, Absâx xms {x:'a | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
-Æ);
-a (prove_∂_tac THEN REPEAT strip_tac);
-a (lemma_tac ¨∂G:('a ≠ 'a) ≠ ('a ≠ 'a)∑ µf s∑ G f s = Opâx xms' (z',
-	Absâx xms' {x | ∂ y∑ y ç Carâx xms' ± Inâx xms' y s ± x = f y})Æ
-	THEN1 prove_∂_tac);
-a (lemma_tac ¨FunctRespects G (Carâx xms', Inâx xms')Æ
-	THEN1 (rewrite_tac [get_spec ¨FunctRespectsÆ]
-		THEN REPEAT strip_tac
-		THEN asm_rewrite_tac[]));
-(* *** Goal "1" *** *)
-a (LEMMA_T ¨{x'|∂ y∑ y ç Carâx xms' ± Inâx xms' y x ± x' = g y}
-	= {x'|∂ y∑ y ç Carâx xms' ± Inâx xms' y x ± x' = h y}Æ
-	 rewrite_thm_tac
-	THEN1 (rewrite_tac[] THEN REPEAT strip_tac));
-(* *** Goal "1.1" *** *)
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN all_asm_fc_tac[]);
-(* *** Goal "1.2" *** *)
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN ALL_ASM_FC_T rewrite_tac []);
-(* *** Goal "2" *** *)
-a (lemma_tac ¨is_XMS xms' ¥ WellFounded (Carâx xms', Inâx xms')Æ
-	THEN1 (rewrite_tac [get_spec ¨is_XMSÆ]
-		THEN REPEAT strip_tac
-		THEN asm_rewrite_tac[]));
-(* *** Goal "2.1" *** *)
-a (∂_tac ¨≈x∑ TÆ	THEN strip_tac THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (fc_tac [recursion_theorem]);
-a (fc_tac [get_spec ¨UniquePartFixpÆ]);
-a (∂_tac ¨fÆ THEN REPEAT strip_tac);
-a (fc_tac [get_spec ¨PartFunEquivÆ]);
-a (ASM_FC_T (rewrite_tac o list_map_eq_sym_rule) []);
-a (asm_rewrite_tac []);
-save_cs_∂_thm(pop_thm());
+push_pc "hol";
+set_goal([], ¨µs∑ (µt∑ t Ä s ¥ PSR_func t Ä s) ¥ PSR Ä sÆ);
+a (rewrite_tac [get_spec ¨PSRÆ, HeredFun_induction_thm2]);
+val PSR_induction_thm = save_pop_thm "PSR_induction_thm";
+pop_pc();
 =TEX
 }%ignore
 
-Though the definition is quite simple, {\Product} does not have the competence automatically to prove its consistency.
-The author has supplied an appropriate proof script which has been checked by {\Product} before accepting the definition.
-
-πHOLCONST
-‹ €CanInj›: 'a XMS ≠ 'a ≠ 'a ≠ 'a
-˜¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-‹ µ xms z s∑ is_XMS xms ± s ç Carâx xms ¥
-‹	CanInj xms z s = Opâx xms
-‹	  (z, Absâx xms {x | ∂y∑ y ç Carâx xms ± Inâx xms y s ± x = CanInj xms z y})
-∞
+=GFT
+PSR_induction_thm =
+	Ù µ s∑ (µ t∑ t Ä s ¥ PSR_func t Ä s) ¥ PSR Ä s
+=TEX
 
 \subsection{The Domain of the New Structure}
 
@@ -288,23 +265,6 @@ The form of this relation is tailored to the requirements of the function {\it H
 This ensures that the existence of its constituents is never possible.
 Its a device for coding a well-formedness predicate into the content relation.
 
-
-πHOLCONST
-‹ €Pset_content›: 'a XMS ≠ 'a SET ≠ 'a ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ xms tags s t∑ Pset_content xms tags s t §
-‹	(∂tag psets∑ tag ç tags ± psets ç (Carâx xms) ± Inâx xms s psets ± t = Opâx xms (tag, psets))
-‹ ≤	(≥∂ tag psets∑ tag ç tags ± psets ç (Carâx xms) ± t = Opâx xms (tag, psets))
-∞
-
-The set of Psets is then defined:
-
-πHOLCONST
-‹ €Psets›: 'a XMS ≠ 'a SET ≠ 'a SET
-˜¸¸¸¸¸¸
-‹ µ xms tags∑ Psets xms tags = HeredRel (Pset_content xms tags)
-∞
-
 \subsection{Defining The Membership Relation}
 
 The membership relationship cannot of course be defined without more information specific to the Pset construction.
@@ -313,21 +273,6 @@ The only things which are generic in this are the treatment of the "zero tag" an
 
 Let us suppose that the specifics of the membership are given by an ordered pair of which the first is the zero tag and the second is a function from tag to a relationship between sets of P-sets and P-sets.
 
-πHOLCONST
-‹ €PsMemNx›: 'a XMS ≠ ('a SET ∏ 'a ∏ ('a ≠ 'a ≠ 'a ≠ BOOL)) ≠ ('a ≠ 'a ≠ BOOL)
-˜¸¸¸¸¸¸
-‹ µ xms (tags, zt, f) s t∑ PsMemNx xms (tags, zt, f) s t §
-‹	∂ tag psets∑ t = Opâx xms (tag, psets)
-‹		± if tag = zt then Inâx xms s psets else f tag psets s
-∞
-
-The we convert this into an extensional relationship (over equivalence classes of the original sets).
-
-πHOLCONST
-‹ €PsMem›: 'a XMS ≠ ('a SET ∏ 'a ∏ ('a ≠ 'a ≠ 'a ≠ BOOL)) ≠ ('a SET SET ∏ ('a SET ≠ 'a SET ≠ BOOL))
-˜¸¸¸¸¸¸
-‹ µ xms (tags, zt, f)∑ PsMem xms (tags, zt, f) = ExtRel (Psets xms tags, PsMemNx xms (tags, zt, f))
-∞
 
 \section{POLY-SETS}
 
