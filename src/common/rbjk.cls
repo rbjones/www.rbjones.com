@@ -1092,9 +1092,10 @@
   \ \thefirstpage--\thelastpage \fi\fi}
 \def\@prin{Printed in}
 \@ifundefined{textcopyright}{\def\textcopyright{\copyright}}{}
-\def\copyrightline{\textcopyright~\i@oldseries\@pubyear\
-  {\it\@copyrightowner.%~~\@prin\ \@country.
-                       % Omit the Printed in country part of the copyright line
+\def\copyrightline{\hfill\textcopyright~\i@oldseries\
+  {\@copyrightowner; Licenced under Gnu LGPL
+			%~~\@prin\ \@country.
+			% Omit the Printed in country part of the copyright line
 }\hfill\hbox{}}
 \def\volsep{: }
 \def\thejournal{\ifx\@journal\empty\else\leavevmode \i@oldseries
