@@ -1,0 +1,97 @@
+# $Id: Makefile.in,v 1.1 2007/01/05 14:40:09 rbj01 Exp $
+
+include @top_srcdir@/top_srcdir.mk
+
+RELSRCDIR=src/rbjpub/www/books/philrev
+RELWEBDIR=rbjpub/www/books/philrev
+SUBDIRS=
+
+PPDB=
+PPDBDIR=
+PPXML=
+PPDOC=$(PPXML:.xml=.doc)
+# Plain ProofPower documents (not from XML)
+PPPDOC=
+
+DBXML=$(MPXML)
+PPLDS=$(PPXML:.xml=.lds)
+PPTH=
+PPTHD=$(PPTH:.th=.thd)
+
+XML005=$(PPXML)
+
+ENTFILES=pp-symbol.ent
+
+PHILREVTEX = prt.tex intro.tex bf.tex rl.tex ac.tex lc.tex pc.tex pre.tex
+SRCDIRBIB = #philrev.bib
+
+SRCDIRCPY=$(PPPDOC) $(DBXML) $(PHILREVTEX) pr.tex
+XLDPDIRCPY=$(ENTFILES)
+
+include $(TOPSRCDIR)/build/common/vars.mk
+
+WEBFILES=$(HTML005) philrev.pdf
+
+include $(TOPSRCDIR)/src/common/rules.mk
+
+# Paths
+
+vpath %.bib $(COMDIR)
+vpath %.in $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(XLCOMDIR)
+
+# Rules
+
+$(PPTH): $(PPDB).dbts 
+	touch $@
+
+
+help:
+	@echo "Makefile for Philosophical Revolutions"
+	@echo "iall	 	= philrev.htm"
+	@echo "all	 	= build ps pdf"
+	@echo "build 	= philrev.dvi philrev.html"
+	@echo "install	= copy for export"
+	@echo "wc 		= wc *.tex"
+	@echo "ps 		= philrev.ps"
+	@echo "pdf		= philrev.pdf"
+	@echo "xall	 	= install (for export)"
+
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .bib .css .dvi .gif .htm .gz .in .pdf .ps .tex .tgz
+
+# Paths
+
+# Variables
+
+# General rules
+
+%.htm: %.tex %.dvi
+	latex2html -short_extn -split 3 -link 2 -toc_depth 5 -show_section_numbers \
+		-info "" -up_url "../index.htm" -up_title "Factasia Books" $<
+	touch $*.htm
+
+# Qualified rules
+
+# Specific rules
+
+philrev.dvi: philrev.tex
+	echo $(TEXINPUTS)
+	latex $*
+	makeindex philrev.idx
+	bibtex $*
+	latex $*
+
+philrev.tex: $(PHILREVTEX)
+	cat $(PHILREVTEX) >philrev.tex
+
+#pr.dvi: pr.tex
+#	echo $(TEXINPUTS)
+#	latex $*
+#	makeindex pr.idx
+#	bibtex $*
+#	latex $*
+
+# Phonies
