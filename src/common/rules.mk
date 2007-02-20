@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.13 2006/11/09 12:05:24 rbj01 Exp $
+# $Id: rules.mk,v 1.14 2007/02/20 22:14:05 rbj01 Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -208,9 +208,13 @@ installsmllibs:
 	if test "" != "$(SMLLIBFILES)"; \
 	then $(INSTALL) -m 644 $(SMLLIBFILES) $(SMLLIBDIR); cp -r CM $(SMLLIBDIR); fi
 
-installweb: $(WEBFILES)
+installweb: $(WEBFILES) $(WEBDIRS)
 	@if ! test -d $(RWEBDIR) &&  test "" != "$(WEBFILES)"; then $(INSTALL) -d -m 755 $(RWEBDIR); fi
 	if test "" != "$(WEBFILES)"; then $(INSTALL) -m 644 $(WEBFILES) $(RWEBDIR); fi
+# note that this only works if WEBDIRS is just one directory
+# to be included, not copied.  This is intended for html prepared by latex2html
+	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.htm $(RWEBDIR); \
+		cp $(WEBDIRS)/*.png $(RWEBDIR); cp $(WEBDIRS)/*.css $(RWEBDIR); fi
 
 THISINSTALL=installweb installdata installbins installlibs installperllibs installsmllibs
 
@@ -286,3 +290,8 @@ $(ISAIMG): %.img : isablddummy
 	touch $@
 
 isablddummy:
+
+$(LATEX2HTML): %.htm: %.tex %.dvi
+	latex2html -short_extn -split 3 -link 2 -toc_depth 5 -show_section_numbers \
+		-info "" -up_url "../index.htm" -up_title "up" $<
+	touch $@
