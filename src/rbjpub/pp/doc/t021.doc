@@ -1,5 +1,5 @@
 =IGN
-$Id: t021.doc,v 1.4 2006/12/11 12:14:52 rbj01 Exp $
+$Id: t021.doc,v 1.5 2007/04/25 19:10:22 rbj01 Exp $
 open_theory "";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -40,12 +40,12 @@ It contains a sketch of a general method, written down while I am still on this 
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2006/12/11 12:14:52 $ $
+Last Change $ $Date: 2007/04/25 19:10:22 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.4 2006/12/11 12:14:52 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.5 2007/04/25 19:10:22 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -111,15 +111,15 @@ The following stages are involved.
 
 \begin{enumerate}
 \item Identify informally a {\it kind} of properties (of sets) whose extensions will be the extensions of the new sets.
-\item Chose a way of describing these properties using well-founded sets (I like something that looks like an infinitary language defined like a recursive datatype).
+\item Chose a way of representing these properties using well-founded sets (I like something that looks like an infinitary language defined like a recursive datatype).
+i.e. code up the syntax of an infinitary first order set theory as well-founded sets.
 \item Define the semantics of these notations by assigning to each set an extension.
 To allow for the recursive elements mentioned above, this is done relative to some arbitrary given membership structure, subject only to the constraint that the domain of the relationship is a partition of a subset of the representatives chosen for the new sets.
 \item Note that the membership relationship will bring with it a notion of extensional equality.
-\item Now the hard bit! Find a partial fixed point for the functor just defined (which takes one membership structure over equivalence classes and returns another).
-This requires some explication of the relevant kinds of partial fixed point.
+\item The partial fixed points of this functor will yield interpretation of set theory.
+A general investigation of these partial fixed points will help in chosing which partial fixed point to use.
+I am inclined to define some notion of maximal partial fixed point and work with a loosely defined interpretation based on that.
 \end{enumerate}
-
-The idea I have in mind is to make definite choices early in this process, e.g. at items 1 to 3, and then to explore what fixed points are available.
 
 \newpage
 \section{SYNTAX}
@@ -130,21 +130,20 @@ force_new_theory "defsets";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'GS1"];
 =TEX
 
-The idea is to chose a substantial collection of pure well-founded sets as a starting material, and to use these to represent some more encompassing notion of sethood, in such a way as to keep a copy of the originals alongside the newly introduced exotica.
+The idea is to chose a substantial collection of pure well-founded sets as a starting material (V($\alpha$) for suitable $\alpha$), and to use these to represent some more encompassing notion of sethood, in such a way as to keep a copy of the originals alongside the newly introduced exotica.
 
-I think its useful to think of this as a kind of infinitary language in which sets sometimes should be read just like set displays.
-On paper I can write $\{1,2,3\}$, and we think in some cases of the sets as being similar bits of infinitary syntax in which notionally the set is displaying its members and may be thought of as a term denoting itself.
-In fact we have something almost exactly like this as one of the components of our recursive datatype.
-One leg says something like ``from any (old) set of NewSets (coded up as old sets) you can form a NewSet''.
-This is the clause which gives you a copy of the old set, but also allows a similar kind of liberal collecting of all the new kinds of set into more new sets.
+It may be useful to think of this as a kind of infinitary language in which arbitrary sets are terms and denote themselves, however, though I did at first have such infinitary set displays these do now have to be rendered as set abstractions.
 
-In this kind of ``syntax'' we have sets which can be regarded as infinite terms and which permit any well-founded set to be written out as a nested display in a manner analogous to more conventional finite expressions of set displays.
+The set display $\{1,2,3\}$, can alternatively be rendered as the abstraction "$\{x | x=1 ≤ x=2 ≤ x=3\}$" and by nesting such abstractions terms can be constructed representing arbitrary well founded sets provided that we are allowed infinitary disjunctions of sufficiently unreasonable cardinality.
+In the language which we adopt there are infinitary disjunctions, and also infinitary quantifiers allowing that there may be excessive numbers of variables quantified over in the body of an abstraction (formulae are defined only for use in set abstractions).
 
-The other clauses of the recursive datatype are there to allow for sets which are not well-founded, and we may think of this as effecting a merge between a concept of set as explicit extensional graph and that of a set as a rule of some kind, in which a prospective member is check-out in a manner more sophisticated than literal identity comparisons.
+The language allows also for sets which are not well-founded, and we may think of this as effecting a merge between a concept of set as explicit extensional graph and that of a set as a rule of some kind, in which a prospective member is checked-out in a manner more sophisticated than literal identity comparisons.
 
 The use of rules rather than graphs helps us round a difficulty which appears as soon as we admit non-well-founded sets, in the form of Cantor's theorem.
 We are allowing functions whose domain is the entire domain of discourse (which includes these functions) but we can't have them all, there are too many.
 Having a language of rules allows you to cap the number of sets or functions admitted in a systematic way.
+It replaces the so-called limitation of size principle, which is helpfull in the context of well-founded sets in determining which belong to the interpretation in question, with a liberal limitation on the size of the description of a set.
+If you imagine even the largest well-founded sets as being explicitly described by an infinitary structure, then descriptions even of ill-founded sets which are of that size will be admitted.
 
 However, cardinality is not the end of the problems.
 Though V isn't one of them, there are sets which you just can't have.
@@ -162,19 +161,24 @@ We imagine a formula built up using the infinitary terms with variables in them,
 Here is an abstract syntax:
 
 =GFT
-term    ::= SetDisp set of terms
-          | SetComp formula
+term    ::= ordinal
+	 | SetComp ordinal formula
 
 formula ::= term = term
           | term ç term
-          | formula ± formula
+          | å ( formula)
           | ≥ formula
-          | µ formula
+          | µ ordinal formula
 =TEX
+
+The ordinals here are used as variables, and Von Neumann ordinals are required.
+The ordinal in the variable binding constructs (comprehension and quantification) is to be understood as a set of ordinals and binds all those ordinals considered as variables, i.e. all ordinals less than the specified ordinal.
+In the body of the construct ordinals not bound by this construct are interpreted as that ordinal less than the number of ordinals bound by the construct (this is a transfinite version of ``de Bruijn indices'').
+The other infinitary construct is an infinitary conjunction.
 
 I'm going to hand-crank an appropriate recursive datatype.
 
-It will be useful to be able to have names for the finite ordinals:
+It will be useful to be able to have names for the finite ordinals, which are used as tags in the syntax:
 
 πHOLCONST
 ‹ €Succâg›: GS ≠ GS
@@ -192,15 +196,9 @@ It will be useful to be able to have names for the finite ordinals:
 The following define realisations of the constructors for the abstract syntax:
 
 πHOLCONST
-‹ €SetDisp› : GS ≠ GS
+‹ €SetCmp› : GS ≠ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µgs∑ SetDisp gs = (Onâg 1) Ìâg gs
-∞
-
-πHOLCONST
-‹ €SetCmp› : GS ≠ GS
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µf∑ SetCmp f = (Onâg 2) Ìâg f
+‹    µf vars∑ SetCmp vars f = (Onâg 2) Ìâg (vars Ìâg f)
 ∞
 
 πHOLCONST
@@ -216,9 +214,9 @@ The following define realisations of the constructors for the abstract syntax:
 ∞
 
 πHOLCONST
-‹ €And› : GS ∏ GS ≠ GS
+‹ €And› : GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µl r∑ And (l, r) = (Onâg 5) Ìâg (l Ìâg r)
+‹ µconjs∑ And conjs = (Onâg 5) Ìâg conjs
 ∞
 
 πHOLCONST
@@ -228,23 +226,24 @@ The following define realisations of the constructors for the abstract syntax:
 ∞
 
 πHOLCONST
-‹ €Forall› : GS ≠ GS
+‹ €Forall› : GS ≠ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µf∑ Forall f = (Onâg 7) Ìâg f
+‹ µvars f∑ Forall vars f = (Onâg 7) Ìâg (vars Ìâg f)
 ∞
 
 πHOLCONST
 ‹ €RepClosed›: GS SET ∏ GS SET ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ sf st∑ RepClosed (sf, st) §
-‹ µst2 f t1 t2 f1 f2:GS∑ Xâg st2 Ä st ± {f1; f2} Ä sf ± {t1; t2} Ä st
-‹   ¥	SetDisp st2 ç st
-‹  ±	SetCmp f1 ç st
+‹ µf1 f2 conjs t1 t2 st2 vars∑
+‹	{f1; f2} Ä sf ± Xâg conjs Ä sf
+‹	± {t1; t2} Ä st± Xâg st2 Ä st ± Ordinal vars
+‹   ¥	SetCmp vars f1 ç st
 ‹  ±	Eq (t1,t2) ç sf
 ‹  ±	Mem (t1,t2) ç sf
-‹  ±	And (f1,f2) ç sf
+‹  ±	And conjs ç sf
 ‹  ±	Not f1 ç sf
-‹  ±	Forall f1 ç sf
+‹  ±	Forall vars f1 ç sf
 ∞
 
 I'm not sure this works!
@@ -274,6 +273,13 @@ These extensions are collected to give both a new membership relation and an equ
 The membership relations concerned are over equivalance classes of representatives, and the domains of the structures are partial partitions of the set of representations.
 
 The semantics is therefore defined in a piecemeal way for each constructor in turn and then sewn together to give the required functor.
+
+The fact that we have inter-defined membership and equality relationships, and also that we are expecting at best partial fixed points, together hint that we might benefit from working in the more general context of ``Boolean Values Models'' (see, for example, \cite{Jech2002}), so I propose to begin in that more general context and see how it goes.
+i.e. the equality and membership relations will be functions yielding values in an arbitrary boolean algebra rather than classical relationships, and the relationship between them will be as prescribed for boolean valued models unless a problem is found with this.
+
+
+
+
 
 
 

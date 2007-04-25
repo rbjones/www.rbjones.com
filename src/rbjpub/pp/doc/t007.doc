@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.10 2006/12/27 17:09:12 rbj01 Exp $
+$Id: t007.doc,v 1.11 2007/04/25 19:10:22 rbj01 Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -34,12 +34,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2006/12/27 17:09:12 $ $
+Last Change $ $Date: 2007/04/25 19:10:22 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.10 2006/12/27 17:09:12 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.11 2007/04/25 19:10:22 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1126,6 +1126,10 @@ This whole process can be accomplished by a single function application to a lis
 
 \section{PSEUDO (CO-)INDUCTIVE DEFINITIONS}
 
+This discussion is tainted by the attempt to support a tendentious application of the notion of pseudo-inductive definition to the construction of pure, non-well-founded ontologies of concrete categories and functors.
+I don't now have much inclination to believe that it will serve that purpose, but nevertheless would like to understand the notion of pseudo-inductiveness and get some idea of what it is good for.
+I therefore propose to remove from this section the material motivated by category theoretic ontology, and in the first instance focus on working over the ideas presented in \cite{forster92}.
+
 Forster \cite{forster92}, introduces pseudo well-foundedness as way of getting a kind of inductive proof principle in NF.
 A pseudo-well-founded universe is partitioned into two clasess, in a way which suggests that the desired split of the universe into categories and functors might be definable by adaptation of this principle.
 To see the connection observe that the `constituents' of categories are functors, and the constuents of functors are categories.
@@ -1140,9 +1144,6 @@ For the purposes which Forster had in mind (a principle which could be added to 
 However, in this application, where we are filtering out all but categories and functors, the coinductive defintiion will actually do something, and the fact (if it is a fact) that a principle of co-well-foundedness is derivable in NF would suggest that this form of definitions will give the most liberal ontology of the selected kind.
 
 Once co-induction occurs as an alternative non-well-foundedness preserving definitional method, the question arised whether there is a similar dual to psuedo-well foundedness, and how this `pseudo-co-induction' differs from pseduo- and co-induction, if at all.
-
-Material on inductive and co=inductive definitions in {\Product} is available in \cite{rbjt007} and is therefore used by invoking its theory `fixp'.
-The material in this section may eventually be moved into that document.
 
 =IGN
 open_theory "rbjmisc";
@@ -1222,8 +1223,7 @@ The third change is to split our definitions of {\it I\_closed} and {\it II\_clo
 ‹ €PseudoWellFounded› : ('X ≠ 'X ≠ BOOL) ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µr∑ PseudoWellFounded r §
-‹	(I_closure r) ° (II_closure r) = {}
-‹   ±	(I_closure r) ¿ (II_closure r) = Universe
+‹	(I_closure r) ¿ (II_closure r) = Universe
 ∞
 
 \ignore{
@@ -1234,16 +1234,133 @@ val I_closure_def = get_spec ¨I_closureÆ;
 val II_closure_def = get_spec ¨II_closureÆ;
 val PseudoWellFounded_def = get_spec ¨PseudoWellFoundedÆ;
 =IGN
-set_goal([], ¨µr ia iia ib iib∑ PWFC r (ia, iia) ± PWFC r (ib, iib) ¥ ia = ib ± iia = iibÆ);
-a (REPEAT µ_tac THEN rewrite_tac [PWFC_def]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (lemma_tac ¨µ x∑ (∂ y∑ r y x ± (µ z∑ r z y ¥ z ç ib)) ¥ x ç ibÆ);
-a (REPEAT strip_tac);
+set_goal([], ¨µR∑ I_closure R ° II_closure R = {}Æ);
+a (rewrite_tac [I_closure_def, II_closure_def, I_closed_def, II_closed_def]);
+a (PC_T1 "hol1" rewrite_tac [] THEN contr_tac);
 
-a (spec_nth_asm_tac 5 ¨ibÆ);
+set_goal([], ¨µR∑ I_closure R ° II_closure R = {}Æ);
+a (rewrite_tac [I_closure_def, II_closure_def]);
+a (PC_T1 "hol1" rewrite_tac [] THEN contr_tac);
+=SML
+set_goal([], ¨µX' R∑ I_closed R X' ¥ I_closure R Ä X'Æ);
+a (rewrite_tac [I_closure_def] THEN REPEAT strip_tac);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val I_closure_lemma1 = pop_thm ();
+
+set_goal([], ¨µX' R∑ II_closed R X' ¥ II_closure R Ä X'Æ);
+a (rewrite_tac [II_closure_def] THEN REPEAT strip_tac);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val II_closure_lemma1 = pop_thm ();
+
+val p_induct_thm1 = save_thm ("p_induct_thm1", rewrite_rule [I_closed_def] I_closure_lemma1);
+val p_induct_thm2 = save_thm ("p_induct_thm2", rewrite_rule [II_closed_def] II_closure_lemma1);
+
+set_goal([], ¨µR x∑ x ç I_closure R ¥ ≥ x ç II_closure RÆ);
+
+
+set_goal([], ¨µR∑ I_closure R ° II_closure R = {}Æ);
+
+set_goal([], ¨µR∑ PseudoWellFounded R §
+	∂Ic IIc∑ Ic ¿ IIc = Universe ± Ic ° IIc = {}
+	± (µ X' R∑ (µ x∑ (µ y∑ R y x ¥ (∂ z∑ R z y ± z ç X')) ¥ x ç X')
+		¥ IIc Ä X')
+	± (µ X' R∑ (µ x∑ (∂ y∑ R y x ± (µ z∑ R z y ¥ z ç X')) ¥ x ç X')
+		¥ Ic Ä X')
+Æ);
+
 =TEX
 }%ignore
+
+The following theorems correspond to the induction principles in \cite{Forster87}, p14.
+
+=GFT
+p_induct_thm1 =
+   Ù µ X' R
+     ∑ (µ x∑ (∂ y∑ R y x ± (µ z∑ R z y ¥ z ç X')) ¥ x ç X')
+         ¥ I_closure R Ä X'
+
+p_induct_thm2 =
+   Ù µ X' R
+     ∑ (µ x∑ (µ y∑ R y x ¥ (∂ z∑ R z y ± z ç X')) ¥ x ç X')
+         ¥ II_closure R Ä X'
+=TEX
+
+
+
+=GFT
+
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µR∑ I_closed R (I_closure R)Æ);
+a (PC_T1 "hol1" rewrite_tac [I_closure_def, I_closed_def] THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[]));
+val I_closed_closure_lemma = save_pop_thm "I_closed_closure_lemma";
+
+set_goal([], ¨µR∑ II_closed R (II_closure R)Æ);
+a (PC_T1 "hol1" rewrite_tac [II_closure_def, II_closed_def] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (REPEAT (asm_fc_tac[]));
+val II_closed_closure_lemma = save_pop_thm "II_closed_closure_lemma";
+
+set_goal([], ¨µR y∑ (µx∑ x ç y ¥ I_closed R x) ¥ I_closed R (•y)Æ);
+a (rewrite_tac [I_closed_def] THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[]));
+val I_closed_•_lemma = save_pop_thm "I_closed_•_lemma";
+
+set_goal([], ¨µR y∑ (µx∑ x ç y ¥ II_closed R x) ¥ II_closed R (•y)Æ);
+a (rewrite_tac [II_closed_def] THEN REPEAT strip_tac);
+a (asm_fc_tac []);
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (REPEAT (asm_fc_tac[]));
+val II_closed_•_lemma = save_pop_thm "II_closed_•_lemma";
+
+=TEX
+}
+
+=GFT
+I_closed_•_lemma =
+   Ù µ R y∑ (µ x∑ x ç y ¥ I_closed R x) ¥ I_closed R (• y)
+
+II_closed_•_lemma =
+   Ù µ R y∑ (µ x∑ x ç y ¥ II_closed R x) ¥ II_closed R (• y)
+
+I_closed_closure_lemma =
+   Ù µ R∑ I_closed R (I_closure R)
+
+II_closed_closure_lemma =
+   Ù µ R∑ II_closed R (II_closure R)
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¨µR∑ I_closure R Ä Universe \ (II_closure R)Æ);
+a strip_tac;
+a (bc_tac [list_µ_elim [¨Universe \ (II_closure R)Æ, ¨RÆ] p_induct_thm1]);
+a (PC_T1 "hol1" rewrite_tac [II_closure_def] THEN REPEAT strip_tac);
+a (∂_tac ¨•{s' | ∂z'∑ R z' y ± II_closed R s' ± ≥ z' ç s'}Æ
+	THEN PC_T1 "hol1" rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨µ x∑ x ç {s'|∂ z'∑ R z' y ± II_closed R s' ± ≥ z' ç s'} ¥ II_closed R xÆ
+	THEN1 (PC_T1 "hol1" prove_tac[]));
+a (fc_tac [II_closed_•_lemma]);
+(* *** Goal "2" *** *)
+
+a (asm_tac II_closed_•_lemma);
+
+rewrite_rule [II_closed_def] II_closed_closure_lemma;
+II_closure_def;
+
+a (PC_T1 "hol1" rewrite_tac [II_closure_def]);
+
+=TEX
+}%ignore
+
+
+\ignore{
+The following theorems show the correspondence between the definitions given above and definition 1.2.1 in \cite{Forster87}.
+}
 
 The idea is to use this to define a notion of "pseudo-hereditarily P" set for a property of sets P, analogously to the notion of a "heridtarily P" set in a well-founded set theory.
 
