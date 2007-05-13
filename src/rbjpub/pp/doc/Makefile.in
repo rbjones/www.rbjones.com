@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.21 2007/04/25 19:10:22 rbj01 Exp $
+# $Id: Makefile.in,v 1.22 2007/05/13 10:01:30 rbj01 Exp $
 
 include @top_srcdir@/top_srcdir.mk
 
@@ -42,18 +42,23 @@ RTDOC=t000.doc \
 
 GRAPHPDF= tp001d1.pdf
 
-TPDOC=tp001a.doc tp001b.doc
-TPDOCB=tp001.doc
+SEMDOC=tp001.doc tp002.doc
+SEMTEX=$(SEMDOC:.doc=.tex)
+SEMDVI=$(SEMDOC:.doc=.dvi)
+SEMPDF=$(SEMDOC:.doc=.pdf)
+
+TPDOC=tp003a.doc tp003b.doc
+TPTEX=$(TPDOC:.doc=.tex)
+TPPDF=$(TPDOC:.doc=.pdf)
+TPDOCB=tp003.doc
+TPPNG=tp003i1.png tp003i2.png
 
 TTEX=$(TDOC:.doc=.tex)
 RTTEX=$(RTDOC:.doc=.tex)
 TPDF=$(TDOC:.doc=.pdf)
 
-TPTEX=$(TPDOC:.doc=.tex)
-TPPDF=$(TPDOC:.doc=.pdf)
-
 COMDIRCPY=rbj.bib rbjfmu.bst rbjpp.ist texpdf docpdf LICENSE
-SRCDIRCPY=$(XML007) $(TDOC) $(TPDOC) $(TPDOCB) $(GRAPHPDF) \
+SRCDIRCPY=$(XML007) $(SEMDOC) $(TDOC) $(TPDOC) $(TPPNG) $(TPDOCB) $(GRAPHPDF) \
 	rbj.mkf README.txt indexhead.xml indextail.xml
 
 ENTFILES=pp-symbol.ent
@@ -62,7 +67,7 @@ XLDPDIRCPY=$(ENTFILES)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-WEBFILES=$(HTML007) $(HTML008) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm) $(TPDF) $(TPPDF) rbj.src.tgz
+WEBFILES=$(HTML007) $(HTML008) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm) $(SEMPDF) $(TPDF) $(TPPDF) rbj.src.tgz
 
 BUILDEXTRAS=
 
@@ -93,6 +98,10 @@ rbj.src.tgz: rbjmkf
 $(TPDF): %.pdf: %.doc rbj.mkf rbjmkf
 	make -f rbj.mkf $*.pdf
 
+#$(SEMPDF): %.pdf: %.dvi
+#	dvips -o '' -t landscape $*
+#	ps2pdf $*.ps
+
 doc_theories.tex:
 	make -f rbj.mkf doc_theories.tex
 
@@ -107,10 +116,21 @@ indexmiddle.xml: $(RTTEX)
 index.xml: indexhead.xml indexmiddle.xml indextail.xml
 	cat $^ > index.xml
 
-tp001.tex: tp001d1.pdf
+tp003a.tex: tp003.tex
 
-tp001a.tex: tp001.tex
+tp003b.tex: tp003.tex
 
-tp001b.tex: tp001.tex
+tp003a.pdf: tp003b.pdf
 
-tp001a.pdf: tp001b.pdf
+tp003b.pdf: tp003i1.png tp003i2.png
+
+# RULES
+
+$(SEMTEX): %.tex: %.doc
+	doctex $*
+
+$(SEMDVI): %.dvi: %.tex
+	texdvi $*
+
+$(SEMPDF): %.pdf: %.dvi
+	dvipdf $* 

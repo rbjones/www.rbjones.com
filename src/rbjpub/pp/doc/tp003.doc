@@ -1,0 +1,465 @@
+% $Id: tp003.doc,v 1.1 2007/05/13 09:59:14 rbj01 Exp $
+=TEX
+\usepackage{ProofPower}
+\vertbarfalse
+\ftlmargin=0.5in
+\mode<presentation>
+{
+  \usetheme{Berlin}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+\usepackage[english]{babel}
+% or whatever
+
+\usepackage[latin1]{inputenc}
+% or whatever
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+\title % [Short title] % (optional, use only with long paper titles)
+{PolySets}
+
+\subtitle
+{foundational ontologies for formal mathematics} % (optional)
+
+\author{Roger Bishop Jones\\
+rbj@rbjones.com}
+
+\date[Short Occasional] % (optional)
+{$$Date: 2007/05/13 09:59:14 $$}
+
+\subject{Non-well-founded interpretations for set theory engineered for the semantics of polymorphism and locales.}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%\begin{frame}
+%  \frametitle{Outline}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%\end{frame}
+
+% Since this a solution template for a generic talk, very little can
+% be said about how it should be structured. However, the talk length
+% of between 15min and 45min and the theme suggest that you stick to
+% the following rules:  
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+\section{Introduction}
+
+\begin{frame}
+\frametitle{Summary}
+
+\begin{itemize}
+\item The motivation for PolySets
+\item The intuition behind them
+\item The construction of the PolySets
+\item Evaluation
+\item More general methods
+\end{itemize}
+
+\end{frame}
+
+\section{Motivation}
+
+\begin{frame}
+\frametitle{Motivation}
+
+\begin{itemize}
+\item to provide an ontology suitable for mechanised formal mathematics
+\item specifically to enable ML-like local polymorphic definitions in HOL-like languages.
+\item also to support {\it locales} or other specification structuring features
+\item possibly to allow improved formal treatment of abstract mathematics such as category theory.
+\item to leave concrete mathematics (numbers, analysis, geometry) untouched.
+\end{itemize}
+
+\end{frame}
+
+%\subsection[]{Local Structure in Specifications}
+
+\begin{frame}[fragile, plain]
+  \frametitle{Let in ML - types}
+The simplest of polymorphic functions:
+=SML
+fun id x = x;
+=TEX
+\pause
+=GFT
+val id = fn : 'a -> 'a
+=TEX
+\pause
+=SML
+let fun id x = x in (id id) (id 0) end;
+=TEX
+\pause
+=GFT
+val it = 0 : int
+=TEX
+\end{frame}
+
+\begin{frame}[fragile, plain]
+  \frametitle{Let in HOL - types}
+
+πHOLCONST
+‹ €id› : 'a ≠ 'a
+˜¸¸¸¸¸¸
+‹ µx∑ id x = x
+∞
+\pause
+=GFT
+rewrite_conv [get_spec ¨idÆ] ¨(id id) (id 0)Æ;
+=TEX
+\pause
+=GFT
+val it = Ù id id (id 0) = 0 : THM
+=TEX
+\pause
+=GFT
+¨let id x = x in (id id) (id 0)Æ;
+=TEX
+\pause
+=GFT
+Type error in ¨id idÆ
+In ¨f aÆ where ¨a:”Æ, ¨fÆ must have type of the form ” ≠ ‘
+Cannot apply ¨id:(Ó≠Ó)Æ
+          to ¨id:(Ó≠Ó)Æ
+=TEX
+\end{frame}
+
+\begin{frame}[plain]
+  \frametitle{Let in ML - semantics and ontology}
+
+\begin{description}
+\item[Semantics]
+
+{\it id} denotes a function with the extension: $\{(x,y) | x = y\}$
+
+Just like ${\it (or Ãx.x)}$ in the type-free lambda calculus.
+
+\item[Ontology]
+
+ML semantics uses reflexive domains with continuous function spaces.
+This means you can have self-application of functions.
+
+\end{description}
+
+\end{frame}
+\begin{frame}[plain]
+  \frametitle{Let in HOL - semantics and ontology}
+
+\begin{description}
+\item[Semantics]
+
+In HOL {\it id} denotes family of functions with extension: $\{(X,f) | f = \{(x,x) | x ç X\}\}$
+
+more like the lambda expression: ${\it (ÃX.Ãx:X.x)}$
+
+\item[Ontology]
+
+\begin{itemize}
+\item the ontology is well-founded
+\item $\{(x,y) | x = y\} (or Ãx.x)$ {\it doesn't exist}
+\item therefore, make do with families of functions
+\end{itemize}
+
+\end{description}
+
+\end{frame}
+
+The difference in the type systems of ML and HOL may be attributed to a difference in the semantics of polymorphic functions.
+
+In ML (according to Milner's paper on polymorphism) a polymorphic function is a single function which has many types (one for each instance of the poly-type.
+In HOL a polymorphic function is a family of monomorphic functions.
+
+\begin{frame}[plain]
+\frametitle{Intuitions}
+
+\begin{itemize}
+\item Because the ontology underlying HOL is well-founded it lacks the values which polymorphic functions in ML denote.
+\item Can we contruct an ontology which includes both a full collection of well-founded sets, and those non-well-founded sets which are the graphs of polymorphic functions?
+\item Why is it possible to implement polymorphic functions?
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile, plain]
+\frametitle{A List}
+
+\includegraphics<1>{tp003i1.png}
+
+=SML
+fun length nil = 0
+|    length (h::t) = (length t) + 1;
+=TEX
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Intuitions}
+
+\begin{itemize}
+\item Because polymorphic functions never do anything with the variably typed constutients of their arguments except (possibly) copy them.
+\item Polymorphic functions only look at the superficial structure of their arguments.
+\item The graph of a polymorphic function can therefore be represented by a set of patterns.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{The polymorphic {\it length} function}
+
+\includegraphics<1>[height=6cm]{tp003i2.png}
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Constructing the PolySets}
+
+We define (using a higher order set theory):
+\begin{itemize}
+\item a class of well-founded sets (the PolySet reps)
+\item an injection of the well founded sets into the PolySet reps
+\item an operation of instantiation over sets intepreted as patterns
+\item a membership relation over the PolySet reps
+\item an equivalence relation which makes membership extensional
+\end{itemize}
+not quite in that order.
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{The injection of WF into the PolySet reps}
+
+$(x,y)$ is the ordered pair of $x$ and $y$.
+
+Let $WF$ be $V(\alpha)$ for some reasonably large ordinal $\alpha$ (say, a Mahlo cardinal).
+
+An injection from $WF$ into the $PolySet\ reps$ is defined thus:
+
+\begin{displaymath}
+psi(\{\}) = \{\}
+\end{displaymath}
+for non-empty \emph{x}:
+\begin{displaymath}
+psi(x) = (\{\}, psi `` x)
+\end{displaymath}
+
+Let $PsOn$ be the image under $psi$ of the (Von Neumann) ordinals in $WF$:
+
+\begin{displaymath}
+PsOn = psi `` Ord
+\end{displaymath}
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{The PolySet reps}
+
+The $PolySet\ reps\ (PolySetR)$ are then:
+
+\begin{displaymath}
+PolySetR = \{(o,s)\ |\ o \in PsOn \land s \in WF \land s \subseteq PolySetR\}
+\end{displaymath}
+
+The constituent $PolySet\ reps$ on the right of a $PolySet\ rep$ whose left element is non-zero are interpreted as patterns in which the ordinals less than $o$ are treated as variables and the rest of the ordinals are interpreted as representing an ordinal obtained by subtracting $o$ from the left.
+
+The semantics of these patterns is given by defining the operation of instantiation in which the variables are replaced by values determined by a variable assignment,
+
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Instantiation}
+
+A $PolySet rep$ assignment to a $PsOn$ $Po$ is a function with domain $Po$ (a $PolySet\ rep$ whose members are an initial segment of $PsOn$) with $PolySet$ values.
+
+An instance of a $PolySet\ rep$, $(Po, Pss)$, may be obtained by instantiating the PolySet according to an assignment of $PolySet\ reps$ to $Po$.
+
+Instantiation is defined as follows, in which `$+$' is addition over $PsOn$.
+
+=GFT
+if ps ç dom va
+then inst va ps = va ps
+
+else if ps ç PsOn \ dom va
+then inst va ps = ≈ps'∑ dom va + ps' = ps
+
+else if ps ç PolySetR \ PsOn
+then ps has the form (o, pss)
+and inst va (o, pss) = (o, (inst va) `` pss)
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile,plain]
+\frametitle{Membership}
+
+Membership over $PolySet\ reps$ is then defined:
+
+=GFT
+      psr é {}
+±
+      psr ç (o, psrs) §
+            ∂va psr2∑ (domain va = o
+                        ± psr2 ç psrs
+                        ± psr = inst va psr2)
+=TEX
+\end{frame}
+=TEX
+\begin{frame}[plain]
+\frametitle{Extensionality}
+
+We finally lift the membership operation over equivalence classes of polyset reps, taking the smallest equivalence relation such that the membership relation induced on the equivalence classes is extensional.
+The induced relation is: [A] is a member of [B] if there exist C and D such that $C \backsimeq A$ and $D \backsimeq B$ and C is a (polyset) member of D.
+
+\end{frame}
+
+\begin{frame}[plain]
+  \frametitle{Locales}
+
+A locale is a bit like a let clause:
+\begin{itemize}
+\item let sig1 | pred1 in spec
+
+\item Its natural to think of this as functor, but the domain is too large
+
+\item palliatives similar to polymorphism, but not ideal
+
+\item Locales ideally would require full comprehension
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Higher Order Axioms}
+
+It is natural to expect that this set theory can be axiomatised with three axioms as follows.
+There are two primitive constants, a binary membership relation and the predicate ``Low'' (whose negation is ``High'').
+
+\begin{enumerate}
+\item Full extensionality.
+
+\item Every set is a member of a Galaxy.
+
+A galaxy is a set which is closed under:
+
+\begin{itemize}
+\item [full low power set]\ 
+
+All the subsets of a low set are low sets and are collected in a low set.
+
+\item [low sumset]\ 
+
+All low sets have sumsets, low if all the members of the set are low, otherwise high.
+
+\item [low replacement]\ 
+
+The image of a low set under a functional relation is a low set.
+
+\end{itemize}
+
+\item polyset abstraction.
+
+Any set together with an ordinal determines a high set whose members are those sets which can be obtained by instantiating a member of the first set by a family of sets indexed by the ordinal.
+
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Other Properties}
+
+\begin{itemize}
+
+\item
+Few complements (V may be the only one).
+
+\item
+No Frege cardinals (stick to the Von Neumann ordinals and the alephs).
+
+\item
+No gratuitous failures of $\in$ foundation. 
+
+This heading comes from Forster's paper \cite{forster2006} and I use it here because we seem to have extreme versions of some of the characteristics he is considering there.
+
+All high polysets have the same size and are larger than any low polyset.
+The only self-membered set is V.
+All $\in$ loops involve at least one high polyset.
+$\in$ restricted to sets smaller than V (i.e. to low sets) is well-founded.
+
+\end{itemize}
+
+The polysets are not obtained using a Church-Oswald construction (see: \cite{forster2005}) though perhaps they could have been.
+They seem to have several of the properties of CO constructions proven by Forster in \cite{forster2005}.
+Many of these are obvious consequences of properties already stated,
+
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Similarities with CO constructions} 
+
+\begin{itemize}
+
+\item[Low] Forster's definition of a ``low'' set is one for which k=0.
+In our case the ordered pairs are the other way round, but with that adjustment the definition is good.
+The low sets are the special case of PolySets in which there are no pattern variables.
+
+\item[H$_{low}$]\ 
+
+I suspect that H$_{low}$ (as defined by Forster\cite{forster2005}) is (here) the set of hereditarily low sets.
+
+\item[Low Comprehension]\ 
+
+There will be something analogous to low comprehension.
+Any set of polysets is a low polyset.
+High polysets are all classes of polysets.
+(interpret ``set'' and ``class'' here as if in a set theoretic metalanguage)
+
+\item[12.] The set of low polysets is not a polyset (not even a high one).
+
+\item[13.] An image of a low polyset is low, subsets of low polysets are low.
+
+\item[14.] A low polyset has a low power set.
+
+\item[15.] Low polysets have sumsets. Low polysets of low polysets have low sumsets.
+
+\item[30.] H$_{low}$ is isomorphic to the original universe assuming that the original was V($\alpha$) for some $\alpha$, probably much weaker assumptions would suffice.
+
+\item[32.] a canonical injection from the original universe is readily definable, but not in quite the same way as for a Church-Oswald construction.
+
+\item[34.] The range of the canonical injection from the well-founded sets into the (hereditarily low) polysets is not a polyset (or a set).
+
+\end{itemize}
+
+\end{frame}
+
+\end{document}
+
+
