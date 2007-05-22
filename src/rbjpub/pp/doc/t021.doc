@@ -1,5 +1,5 @@
 =IGN
-$Id: t021.doc,v 1.6 2007/05/13 10:01:30 rbj01 Exp $
+$Id: t021.doc,v 1.7 2007/05/22 09:32:28 rbj01 Exp $
 open_theory "";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 =TEX
@@ -40,12 +40,12 @@ It contains a sketch of a general method, written down while I am still on this 
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2007/05/13 10:01:30 $ $
+Last Change $ $Date: 2007/05/22 09:32:28 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.6 2007/05/13 10:01:30 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.7 2007/05/22 09:32:28 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -284,13 +284,54 @@ i.e. the equality and membership relations will be functions yielding values in 
 The details of how to code up infinitary first order set theory are unimportant, and I want to talk about this method, so I'm going to just assume that the syntax has been encoded and that the semantics has been formalised in the manner discussed.
 
 =SML
+open_theory "GS";
+force_new_theory "ICS";
+new_parent "ordered_sets";
+=TEX
+The following is expected to be the type of abstract syntax trees for sets definable in an infinitary first order language of set theory, i.e. one with just two predicates, equality and membership.
+For present purposes we do not need to have this defined,
+=SML
 new_type ("SETREP", 0);
-new_const ("sf", ”((SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL))
-	­ (SETREP ­ SETREP ­ BOOL)®);
+=TEX
+The following declaration shows the type of functor which one might use as a recursive definition of the equality and membership relations over SETREP.
+It is parameterised by a subdomain of the set representatives, since the semantics will make the extension of some sets sensitive to the universe.
+=SML
+new_const ("sf1", ”(SETREP ­ BOOL)
+	­ (SETREP ­ SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL)
+	­ (SETREP ­ SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL)®);
+=TEX
+We don't have a recursion theorem which will work with that kind of functor, so we will need the functor to be converted in to one which operates on a single function, and the function will have to be uncurried.
+The two relations are therefore thought of as a function over ordered pairs which delivers an ordered pair of truth values.
+=SML
+new_const ("sf2", ”(SETREP ­ BOOL)
+	­ (SETREP ¸ SETREP ­ BOOL ¸ BOOL)
+	­ (SETREP ¸ SETREP ­ BOOL ¸ BOOL)®);
+=TEX
+Our recursion theorem has the form:
+=GFT
+recursion_theorem
+   ô µ (X, $<<) G
+     · FunctRespects G (X, $<<) ± WellFounded (X, $<<) ´ UniquePartFixp X G
 
 =TEX
+Where X is some set and $<<$ a well founded relation over it.
+Note that the relation is over pairs of SETREPs and so this does not require that membership be well-founded.
 
+{\it UniquePartFixp} asserts the existence of a unique partial fixed point of G over X.
 
+We can classify SETREPs according to how solidly defined they are under the semantics (sf2).
+The strongest case is that in which the extension of the set represented by the SETREP is completely unchangeable.
+This is true of representatives of the empty set.
+
+If we allow this to be conditional we may obtain a monotone operator on subsets of SETREP of which the least fixed point gives a non-trivial interpretation of set theory.
+So we want to talk about a set having a fixed extension in every subset whioh includes some particular set of SETREPS.
+
+¹HOLCONST
+  op1: SETREP ð ­ SETREP ð
+÷
+  µssr sr· sr  op1 ssr ¤
+	µsr2· sr2  op1 ssr ´ T 
+°
 
 
 {\let\Section\section

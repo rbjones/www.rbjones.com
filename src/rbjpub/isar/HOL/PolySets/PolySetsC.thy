@@ -6,7 +6,7 @@ begin
 
 text{*
 The theory \emph{PolySetsC}
-\footnote{$ $Id: PolySetsC.thy,v 1.2 2006/11/28 16:50:49 rbj01 Exp $ $}
+\footnote{$ $Id: PolySetsC.thy,v 1.3 2007/05/22 09:32:28 rbj01 Exp $ $}
 first provides a construction of a model of a set theory with a universal set (a membership relation).
 This is constructed in the context of the higher order axiomatisation of set theory in \emph{Sets.thy} and uses (well-founded) sets in the domain of that set theory to represent the non-well-founded sets in the domain of the new model.
 A membership relation over these new sets is then defined and we then proceed to establish properties of the model suitable for use in a higher order axiomatisation of a set theory with a universal set.
@@ -191,16 +191,6 @@ It is convenient to define first the extension (as a \emph{Set set}) of a polyse
 constdefs
   X\<^isub>r :: "Set \<Rightarrow> Set set"
      "X\<^isub>r t == {s. ps_mem s t}" 
-
-text{*
-The following definitions are useful whichever of thw two above approaches is adopted.
-We need to be able to talk about whether to PolySets have the same extension modulo some equivalence relationship.
-For this we define first an operator which lifts a membership relation over an equivalence relation to give a membership relation between equivalence classes.
-*}
-
-constdefs
-   liftmem :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<times> 'a)set \<Rightarrow> ('a set \<times> 'a set)set"
-      "liftmem r e == {(s,t). \<exists>v w. v \<in> s \<and> w \<in> t \<and> r v w}"
 
 text{*
 The following definitions give an operator on relations whose least fixed point will be the least equivalence relation for which the lifted membership relation is extensional.
