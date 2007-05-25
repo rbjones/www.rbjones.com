@@ -1,0 +1,392 @@
+% $Id: tp002.doc,v 1.1 2007/05/25 21:23:01 rbj01 Exp $
+=TEX
+\def\paws#1{\relax}
+%\def\paws#1{\pause}
+
+\mode<article>
+{
+  \usepackage{fullpage}
+  \usepackage{pgf}
+  \usepackage{hyperref}
+  \setjobnamebeamerversion{beamerexample2.beamer}
+}
+\mode<presentation>
+{
+  \usetheme{default}
+  \setbeamercovered{transparent}
+}
+
+\usepackage{ProofPower}
+\vertbarfalse
+\ftlmargin=0.0in
+
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+
+\title{The Automation of Deduction}
+
+\subtitle{a multidisciplinary perspective} % (optional)
+
+\author{Roger Bishop Jones\\
+rbj@rbjones.com}
+
+\date{2007/06/12}
+
+\subject{A survey of various topics in the Automation of Deduction}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}<beamer>
+%    \frametitle{Outline}
+%    \tableofcontents[currentsection,currentsubsection]
+%  \end{frame}
+%}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+%\beamerdefaultoverlayspecification{<+->}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+\end{abstract}
+\vfill
+\begin{centering}
+{\footnotesize
+
+Last Change $ $Date: 2007/05/25 21:23:01 $ $
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/tp002a.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/tp002a.pdf}
+
+$ $Id: tp002.doc,v 1.1 2007/05/25 21:23:01 rbj01 Exp $ $
+
+\copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnote
+\end{centering}
+\end{titlepage}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+\frametitle{Themes}
+
+\begin{itemize}
+\paws{}\item ARG philosophy
+
+\mode<article>{
+- some philosophical positions explicit or implicit in the work of the Cambridge Automated Reasoning Group contrasted with those prevalent in contemporary academic philosophy
+}
+
+\paws{}\item mixed marriages
+
+\mode<article>{
+- often a problem arising in one discipline which demands a solution in another demands inovative solutions, and intuitions arising from the problem facilitate that innovation}
+
+\paws{}\item interplay between philosophical and technical problems
+
+\mode<article>{
+- one mode of philosophising is to take an important but muddy problem and to find formal ways of making it more precise}
+
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Leibniz}
+
+Leibniz, though not an academic, was an intellectual innovator of the first rank, his work included:
+\begin{itemize}
+\item A philosophical system which was "unusually coherent and complete" (Russell)
+\item The integral and differential calculus
+\item 
+\end{itemize}
+
+He was "an encyclopedic savant whose philosophy was nourished by the study of all the sciences and in turn inspired all of his scientific discoveries" (Couturat)
+
+"Mathematicians have as much need to be philosophers as philosophers have to be mathematicians." (Leibniz)
+\end{frame}
+
+\begin{frame}
+\frametitle{Leibniz's Grand Projects}
+
+\begin{itemize}
+\item Universal Language
+\item Universal Encyclopaedia
+\item Lingua Characteristica and Calculus Ratiocinator
+\end{itemize}
+\end{frame}
+
+\section{Architecture}
+
+\begin{frame}
+\frametitle{}
+
+\begin{itemize}
+
+\item What is Architecture?
+
+\item Architectural Requirements and Principles
+
+\item A Formal Architectural Model
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{What is Architecture?}
+
+For the logically inclined, an architecture should supply:
+
+\begin{itemize}
+
+\paws{}\item The most important high level requirements
+
+\paws{}\item A high level model of the system sufficient to expose...
+
+\paws{}\item A rationale showing how or why the system will meet the requirements,
+
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Requirements}
+
+\begin{itemize}
+\paws{}\item
+An architecture for automated deductive reasoning, must of course be {\it deductive}, so what does that mean?
+
+\paws{}\item
+A demonstration is {\it deductive} if it accomplished exclusively by the use of sound rules of inference.
+
+\paws{}\item
+The single most important requirement is therefore that the system be sound.
+
+\end{itemize}
+
+\end{frame}
+
+
+\section{A Model}
+
+\begin{frame}[fragile]
+\frametitle{A Model}
+=GFT
+types URI = string
+   document = URI
+   language = URI
+   program = URI
+   authority = URI
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Sentences and Judgements}
+
+The language contains sentences which express the claims that:
+
+\begin{enumerate}
+\item certain documents are true documents of particular languages
+\item a certain program satisfies a specification formulated as soundness with respect to given lists of input and output languages
+\item a specified list of output documents was computed by a program from a list of input documents
+\end{enumerate}
+
+=GFT
+datatype sentence =
+ 	TrueDocs "document list" "language list"	
+|	ProgSpec program "language list" "language list"
+|	Compute  program "document list" "document list"
+=TXT
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Judgements}
+
+Judgements either assert sentences or endorse authorities:
+=GFT
+types stamp = nat
+
+datatype judgement =
+    Assert stamp "authority set" sentence |
+    Endorse authority "authority set"
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Sentence Interpretations}
+
+=GFT
+types
+	document_map = "document => string"
+	language_map = "language => string set"
+	program_map  = "program => (string list => string list)"
+
+record Sinterp =
+  docmap :: document_map
+  langmap:: language_map
+  progmap:: program_map
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{True Sentences - I}
+=GFT
+consts
+	truedoclist :: "[Sinterp, document list, language list] => bool"
+
+primrec
+   "truedoclist i (h_d#t_d) l_l = (case l_l of
+      []        => False |
+      (h_l#t_l)	=> (docmap i h_d):(langmap i h_l) & truedoclist i t_d t_l)"
+   "truedoclist i [] l_l = (case l_l of [] => True | (h_l#t_l) => False)"
+
+constdefs
+   trueprogspec :: "Sinterp => program => language list
+                                       => language list => bool"
+    "trueprogspec i p ill oll ==
+     (! idl . truedoclist i idl ill
+              --> truedoclist i (progmap i p idl) oll)"
+
+   truecompute :: "Sinterp => program => document list
+                                      => document list => bool"
+    "truecompute i p idl odl == (odl = progmap i p idl)"
+=TEX
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{True Sentences - II}
+
+=GFT
+consts
+   truesen :: "Sinterp => sentence => bool"
+
+primrec
+   "truesen i (TrueDocs dl ll)     = truedoclist i dl ll"
+   "truesen i (ProgSpec p ill oll) = trueprogspec i p ill oll"
+   "truesen i (Compute p idl odl)  = truecompute i p idl odl"
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Judgement Interpretations}
+\mode<article>{
+A judgement is true if infallibility of its authorities implies the truth of its sentence.
+To formalise this we need to talk about infallibility, and to talk about infallibility we need to have an interpretation which tells us which judgements have been affirmed by which authorities.
+
+We therefore devise an extended interpretation for judgements in which a judgement map is available mapping each authority to the judgements it has affirmed.
+}
+=GFT
+types
+	judgement_map = "authority => judgement set"
+
+record Jinterp =
+   sinterp::Sinterp
+   judgemap::judgement_map
+=TEX
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Infallibility}
+
+\mode<article>{
+Informally an authority is infallible if it only asserts true judgements.
+however, the definition of truth of a judgement will depend upon the infallibility of authorities, and this naive view does not lead to a well defined concept.
+
+this is fixed by slighly {\it strengthening} the meaning of judgements, so that their truth depends only on the truth of {\it previous} judgements, and it is for this reason that judgements have been given a "stamp".
+This leads us to the property of being "hitherto infallible" at some stamp value.
+this is the property that all judgements affirmed by the authority with smaller stamp values are true.
+It will be clear from the proof rules which we show later that this mechanism does not have to be implemented with timestamps.
+
+One further complication is necessary, arising from endorsement.
+the infallibility of an authority is conditional on the infallibility of the authorities it has endorsed in a way which cannot be allowed for by attaching a truth value to the judgement in which the endorsement takes place.
+this is because the truth value of the endorsement can only depend on that of previous judgements, but the infallibility of an authority at some time depends on judgements made by authorities he has endorsed between the time at which the endorsement took place and the later time at which an infallibility judgement may be taking place.
+
+Endorsements are therefore held to create a timeless partial ordering on authorities, and we require for the infallibility of an authority at some moment that neither he nor any greater authority has made a previous error.
+Greater in this case means directly or indirectly endorsed by the authority in question.
+}
+=GFT
+types
+	inftest = "nat ~ authority ~ Jinterp ~ bool"
+	truthtest = "judgement ~ Jinterp ~ bool"
+
+constdefs
+
+   authrel :: "judgement_map ~ (authority * authority)set"
+   "authrel jm == rtrancl {p. ? as. (snd p):as
+      & (Endorse (fst p) as):(jm (fst p))}"
+
+   hirec :: "nat ~ (inftest * truthtest) ~ inftest"
+   "hirec n1 tsts n2 auth ji == case n1 of
+     0       => True |
+     (Suc m) => !a. (auth,a):(authrel (judgemap ji))
+                 --> (!j. j:(judgemap ji a) & (jstamp j) <= m
+                         --> (snd tsts j ji))"
+
+   jtrec :: "nat ~ (inftest * truthtest) ~ truthtest"
+   "jtrec n tsts j ji == case n of
+     0       => snd tsts j ji |
+     (Suc m) => (!auth. auth:(jauths j) --> (fst tsts) (n - 1) auth ji)
+                --> snd tsts j ji"
+=TEX
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{}
+\end{frame}
+
+\section{Foundations}
+
+\begin{frame}
+\frametitle{}
+\end{frame}
+
+\section{Applications}
+
+\begin{frame}
+\frametitle{}
+\end{frame}
+
+\frame{
+\vfill
+Presentation slides and notes at:\\
+\vfill
+www.rbjones.com
+\vfill}
+
+
+\end{document}
+
+
