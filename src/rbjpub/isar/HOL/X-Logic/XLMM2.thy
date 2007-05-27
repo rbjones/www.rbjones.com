@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.4 2007/05/27 19:20:32 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.5 2007/05/27 19:31:49 rbj01 Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -172,7 +172,7 @@ text{*
 Informally An Authority Is Infallible If It Only Asserts True Judgements.
 However, The Definition Of Truth Of A Judgement Will Depend Upon The Infallibility Of Authorities, And This Naive View Does Not Lead To A Well Defined Concept.
 
-This Is Fixed By Slighly {\It Strengthening} The Meaning Of Judgements, So That Their Truth Depends Only On The Truth Of {\It Previous} Judgements, And It Is For This Reason That Judgements Have Been Given A "Stamp".
+This Is Fixed By Slighly {\it Strengthening} The Meaning Of Judgements, So That Their Truth Depends Only On The Truth Of {\it Previous} Judgements, And It Is For This Reason That Judgements Have Been Given A "Stamp".
 This Leads Us To The Property Of Being "Hitherto Infallible" At Some Stamp Value.
 This Is The Property That All Judgements Affirmed By The Authority With Smaller Stamp Values Are True.
 It Will Be Clear From The Proof Rules Which We Show Later That This Mechanism Does Not Have To Be Implemented With Timestamps.
@@ -209,7 +209,7 @@ constdefs
                 \<longrightarrow> snd tsts j ji"
 
 consts
-   hijt :: "nat => (inftest * truthtest)"
+   hijt :: "nat \<Rightarrow> (inftest * truthtest)"
 
 primrec
    "hijt 0       = ((%x y z. True), (%x y. True))"
