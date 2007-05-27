@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.3 2006/11/13 07:12:37 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.4 2007/05/27 19:20:32 rbj01 Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -169,20 +169,20 @@ record Jinterp =
 subsubsection{* Infallibility *}
 
 text{*
-Informally an authority is infallible if it only asserts true judgements.
-However, the definition of truth of a judgement will depend upon the infallibility of authorities, and this naive view does not lead to a well defined concept.
+Informally An Authority Is Infallible If It Only Asserts True Judgements.
+However, The Definition Of Truth Of A Judgement Will Depend Upon The Infallibility Of Authorities, And This Naive View Does Not Lead To A Well Defined Concept.
 
-This is fixed by slighly {\it strengthening} the meaning of judgements, so that their truth depends only on the truth of {\it previous} judgements, and it is for this reason that judgements have been given a "stamp".
-This leads us to the property of being "hitherto infallible" at some stamp value.
-This is the property that all judgements affirmed by the authority with smaller stamp values are true.
-It will be clear from the proof rules which we show later that this mechanism does not have to be implemented with timestamps.
+This Is Fixed By Slighly {\It Strengthening} The Meaning Of Judgements, So That Their Truth Depends Only On The Truth Of {\It Previous} Judgements, And It Is For This Reason That Judgements Have Been Given A "Stamp".
+This Leads Us To The Property Of Being "Hitherto Infallible" At Some Stamp Value.
+This Is The Property That All Judgements Affirmed By The Authority With Smaller Stamp Values Are True.
+It Will Be Clear From The Proof Rules Which We Show Later That This Mechanism Does Not Have To Be Implemented With Timestamps.
 
-One further complication is necessary, arising from endorsement.
-The infallibility of an authority is conditional on the infallibility of the authorities it has endorsed in a way which cannot be allowed for by attaching a truth value to the judgement in which the endorsement takes place.
-This is because the truth value of the endorsement can only depend on that of previous judgements, but the infallibility of an authority at some time depends on judgements made by authorities he has endorsed between the time at which the endorsement took place and the later time at which an infallibility judgement may be taking place.
+One Further Complication Is Necessary, Arising From Endorsement.
+The Infallibility Of An Authority Is Conditional On The Infallibility Of The Authorities It Has Endorsed In A Way Which Cannot Be Allowed For By Attaching A Truth Value To The Judgement In Which The Endorsement Takes Place.
+This Is Because The Truth Value Of The Endorsement Can Only Depend On That Of Previous Judgements, But The Infallibility Of An Authority At Some Time Depends On Judgements Made By Authorities He Has Endorsed Between The Time At Which The Endorsement Took Place And The Later Time At Which An Infallibility Judgement May Be Taking Place.
 
-Endorsements are therefore held to create a timeless partial ordering on authorities, and we require for the infallibility of an authority at some moment that neither he nor any greater authority has made a previous error.
-Greater in this case means directly or indirectly endorsed by the authority in question.
+Endorsements Are Therefore Held To Create A Timeless Partial Ordering On Authorities, And We Require For The Infallibility Of An Authority At Some Moment That Neither He Nor Any Greater Authority Has Made A Previous Error.
+Greater In This Case Means Directly Or Indirectly Endorsed By The Authority In Question.
 *}
 
 types
@@ -197,16 +197,16 @@ constdefs
 
    hirec :: "nat \<Rightarrow> (inftest * truthtest) \<Rightarrow> inftest"
    "hirec n1 tsts n2 auth ji == case n1 of
-     0       => True |
-     (Suc m) => !a. (auth,a):(authrel (judgemap ji))
-                 --> (!j. j:(judgemap ji a) & (jstamp j) <= m
-                         --> (snd tsts j ji))"
+     0       \<Rightarrow> True |
+     (Suc m) \<Rightarrow> !a. (auth,a):(authrel (judgemap ji))
+                 \<longrightarrow> (!j. j:(judgemap ji a) & (jstamp j) <= m
+                         \<longrightarrow> (snd tsts j ji))"
 
    jtrec :: "nat \<Rightarrow> (inftest * truthtest) \<Rightarrow> truthtest"
    "jtrec n tsts j ji == case n of
-     0       => snd tsts j ji |
-     (Suc m) => (!auth. auth:(jauths j) --> (fst tsts) (n - 1) auth ji)
-                --> snd tsts j ji"
+     0       \<Rightarrow> snd tsts j ji |
+     (Suc m) \<Rightarrow> (!auth. auth:(jauths j) \<longrightarrow> (fst tsts) (n - 1) auth ji)
+                \<longrightarrow> snd tsts j ji"
 
 consts
    hijt :: "nat => (inftest * truthtest)"
