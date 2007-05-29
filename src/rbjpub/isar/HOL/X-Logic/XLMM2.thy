@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.5 2007/05/27 19:31:49 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.6 2007/05/29 18:49:26 rbj01 Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -90,6 +90,8 @@ primrec
 primrec
     "jsent (Assert st as se) = se"
 
+subsection{* Semantics *}
+
 text{*
 The set of authorities can be empty, but when asserted a judgement must be signed by an authority.
 The meaning of a judgement is that {\it if} all the authorities cited in the list have been hitherto infallible then the sentence is true.
@@ -99,8 +101,6 @@ However, the judgement is known only with that degree of confidence which we att
 An authority has been "hitherto infallible" if all the judgements which it has signed with numbers less than that of the judgement in hand are true.
 In fallibility and truth are therefore mutually defined, the numbers attached to judgements relativise infallibility so as to make the mutual recursion well-founded.
 *}
-
-subsection{* Semantics *}
 
 text{*
 The semantics of sentences and judgements is defined as truth valuations relative to appropriate interpretations.
@@ -130,25 +130,14 @@ primrec
       (h_l#t_l) =>  (docmap i h_d):(langmap i h_l) & truedoclist i t_d t_l)"
    "truedoclist i [] l_l = (case l_l of [] => True | (h_l#t_l) => False)"
 
-constdefs
-   trueprogspec :: "Sinterp \<Rightarrow> program \<Rightarrow> language list \<Rightarrow> language list \<Rightarrow> bool"
-    "trueprogspec i p ill oll ==
-     (! idl . truedoclist i idl ill
-              --> truedoclist i (progmap i p idl) oll)"
-
-   truecompute :: "Sinterp \<Rightarrow> program \<Rightarrow> document list \<Rightarrow> document list \<Rightarrow> bool"
-    "truecompute i p idl odl == (odl = progmap i p idl)"
-
-   trueendorse :: "Sinterp \<Rightarrow> authority set \<Rightarrow> bool"
-    "trueendorse i al == True"
-
 consts
    truesen :: "Sinterp \<Rightarrow> sentence \<Rightarrow> bool"
 
 primrec
    "truesen i (TrueDocs dl ll) = truedoclist i dl ll"
-   "truesen i (ProgSpec p ill oll) = trueprogspec i p ill oll"
-   "truesen i (Compute p idl odl) = truecompute i p idl odl"
+   "truesen i (ProgSpec p ill oll) = (\<forall> idl . truedoclist i idl ill
+                                     --> truedoclist i (progmap i p idl) oll)"
+   "truesen i (Compute p idl odl) = (odl = progmap i p idl)"
 
 subsubsection{* Judgement Interpretations *}
 
@@ -169,20 +158,20 @@ record Jinterp =
 subsubsection{* Infallibility *}
 
 text{*
-Informally An Authority Is Infallible If It Only Asserts True Judgements.
-However, The Definition Of Truth Of A Judgement Will Depend Upon The Infallibility Of Authorities, And This Naive View Does Not Lead To A Well Defined Concept.
+Informally an authority is infallible if it only asserts true judgements.
+However, the definition of truth of a judgement will depend upon the infallibility of authorities, and this naive view does not lead to a well defined concept.
 
-This Is Fixed By Slighly {\it Strengthening} The Meaning Of Judgements, So That Their Truth Depends Only On The Truth Of {\it Previous} Judgements, And It Is For This Reason That Judgements Have Been Given A "Stamp".
-This Leads Us To The Property Of Being "Hitherto Infallible" At Some Stamp Value.
-This Is The Property That All Judgements Affirmed By The Authority With Smaller Stamp Values Are True.
-It Will Be Clear From The Proof Rules Which We Show Later That This Mechanism Does Not Have To Be Implemented With Timestamps.
+This is fixed by slighly {\it strengthening} the meaning of judgements, so that their truth depends only on the truth of {\it previous} judgements, and it is for this reason that judgements have been given a "stamp".
+This leads us to the property of being "hitherto infallible" at some stamp value.
+This is the property that all judgements affirmed by the authority with smaller stamp values are true.
+It will be clear from the proof rules which we show later that this mechanism does not have to be implemented with timestamps.
 
-One Further Complication Is Necessary, Arising From Endorsement.
-The Infallibility Of An Authority Is Conditional On The Infallibility Of The Authorities It Has Endorsed In A Way Which Cannot Be Allowed For By Attaching A Truth Value To The Judgement In Which The Endorsement Takes Place.
-This Is Because The Truth Value Of The Endorsement Can Only Depend On That Of Previous Judgements, But The Infallibility Of An Authority At Some Time Depends On Judgements Made By Authorities He Has Endorsed Between The Time At Which The Endorsement Took Place And The Later Time At Which An Infallibility Judgement May Be Taking Place.
+One further complication is necessary, arising from endorsement.
+The infallibility of an authority is conditional on the infallibility of the authorities it has endorsed in a way which cannot be allowed for by attaching a truth value to the judgement in which the endorsement takes place.
+This is because the truth value of the endorsement can only depend on that of previous judgements, but the infallibility of an authority at some time depends on judgements made by authorities he has endorsed between the time at which the endorsement took place and the later time at which an infallibility judgement may be taking place.
 
-Endorsements Are Therefore Held To Create A Timeless Partial Ordering On Authorities, And We Require For The Infallibility Of An Authority At Some Moment That Neither He Nor Any Greater Authority Has Made A Previous Error.
-Greater In This Case Means Directly Or Indirectly Endorsed By The Authority In Question.
+Endorsements are therefore held to create a timeless partial ordering on authorities, and we require for the infallibility of an authority at some moment that neither he nor any greater authority has made a previous error.
+Greater in this case means directly or indirectly endorsed by the authority in question.
 *}
 
 types
@@ -212,7 +201,7 @@ consts
    hijt :: "nat \<Rightarrow> (inftest * truthtest)"
 
 primrec
-   "hijt 0       = ((%x y z. True), (%x y. True))"
+   "hijt 0       = ((\<lambda>x y z. True), (\<lambda>x y. True))"
    "hijt (Suc n) = (hirec n (hijt n), jtrec n (hijt n))"
 
 constdefs
