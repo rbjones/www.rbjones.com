@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.6 2007/05/29 18:49:26 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.7 2007/06/09 11:48:03 rbj01 Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -76,17 +76,14 @@ datatype judgement =
 
 consts
     "jstamp" :: "judgement \<Rightarrow> stamp"
-    "jauth"  :: "judgement \<Rightarrow> authority"
     "jauths" :: "judgement \<Rightarrow> authority set"
     "jsent"  :: "judgement \<Rightarrow> sentence"
 
 primrec
     "jstamp (Assert st as se) = st"
 primrec
-    "jauth (Endorse a as) = a"
-primrec
     "jauths (Assert st as se) = as"
-    "jauths (Endorse a as) = as"
+    "jauths (Endorse a as) = {a}"
 primrec
     "jsent (Assert st as se) = se"
 
@@ -111,7 +108,7 @@ subsubsection{* Sentence Interpretations *}
 types
 	document_map = "document \<Rightarrow> string"
 	language_map = "language \<Rightarrow> string set"
-	program_map = "program \<Rightarrow> (string list \<Rightarrow> string list)"
+	program_map  = "program \<Rightarrow> (string list \<Rightarrow> string list)"
 
 record Sinterp =
   docmap:: document_map
@@ -124,11 +121,10 @@ consts
 	truedoclist :: "[Sinterp, document list, language list] \<Rightarrow> bool"
 
 primrec
-   "truedoclist i (h_d#t_d) l_l =
-     (case l_l of
-      [] => False |
-      (h_l#t_l) =>  (docmap i h_d):(langmap i h_l) & truedoclist i t_d t_l)"
-   "truedoclist i [] l_l = (case l_l of [] => True | (h_l#t_l) => False)"
+   "truedoclist i (h_d#t_d) ll =
+     (case ll of [] => False |
+          (h_l#t_l) => (docmap i h_d) \<in> (langmap i h_l) & truedoclist i t_d t_l)"
+   "truedoclist i [] ll = (case ll of (h_l#t_l) => False | [] => True)"
 
 consts
    truesen :: "Sinterp \<Rightarrow> sentence \<Rightarrow> bool"
@@ -155,7 +151,7 @@ record Jinterp =
    sinterp::Sinterp
    judgemap::judgement_map
 
-subsubsection{* Infallibility *}
+subsubsection{* Infallibility and Truth *}
 
 text{*
 Informally an authority is infallible if it only asserts true judgements.
@@ -175,48 +171,44 @@ Greater in this case means directly or indirectly endorsed by the authority in q
 *}
 
 types
-	inftest = "nat \<Rightarrow> authority \<Rightarrow> Jinterp \<Rightarrow> bool"
+	inftest = "authority \<Rightarrow> Jinterp \<Rightarrow> bool"
 	truthtest = "judgement \<Rightarrow> Jinterp \<Rightarrow> bool"
 
 constdefs
 
+   authr :: "judgement set \<Rightarrow> (authority * authority)set"
+   "authr js == rtrancl {p. \<exists>as. snd p \<in> as
+      & Endorse (fst p) as \<in> js}"
+
    authrel :: "judgement_map \<Rightarrow> (authority * authority)set"
-   "authrel jm == rtrancl {p. ? as. (snd p):as
-      & (Endorse (fst p) as):(jm (fst p))}"
+   "authrel jm == rtrancl {p. \<exists>as. snd p \<in> as
+      & Endorse (fst p) as \<in> jm (fst p)}"
 
-   hirec :: "nat \<Rightarrow> (inftest * truthtest) \<Rightarrow> inftest"
-   "hirec n1 tsts n2 auth ji == case n1 of
-     0       \<Rightarrow> True |
-     (Suc m) \<Rightarrow> !a. (auth,a):(authrel (judgemap ji))
-                 \<longrightarrow> (!j. j:(judgemap ji a) & (jstamp j) <= m
-                         \<longrightarrow> (snd tsts j ji))"
+   basett :: "truthtest"
+   "basett j ji == case j of
+      (Endorse a as) \<Rightarrow> True |
+      (Assert n as s) \<Rightarrow> truesen (sinterp ji) s"
 
-   jtrec :: "nat \<Rightarrow> (inftest * truthtest) \<Rightarrow> truthtest"
-   "jtrec n tsts j ji == case n of
-     0       \<Rightarrow> snd tsts j ji |
-     (Suc m) \<Rightarrow> (!auth. auth:(jauths j) \<longrightarrow> (fst tsts) (n - 1) auth ji)
-                \<longrightarrow> snd tsts j ji"
+   itrec :: "nat \<Rightarrow> (inftest * truthtest) \<Rightarrow> inftest"
+   "itrec n tsts auth ji == \<forall>a. (auth,a) \<in> authrel (judgemap ji)
+          \<longrightarrow> (\<forall>j. j \<in> judgemap ji a & jstamp j < n \<longrightarrow> snd tsts j ji)"
 
+   ttrec :: "(inftest * truthtest) \<Rightarrow> truthtest"
+   "ttrec tsts j ji == (\<forall>auth. auth \<in> jauths j \<longrightarrow> (fst tsts) auth ji)
+                          \<longrightarrow> basett j ji"
 consts
-   hijt :: "nat \<Rightarrow> (inftest * truthtest)"
+   ittt :: "nat \<Rightarrow> (inftest * truthtest)"
 
 primrec
-   "hijt 0       = ((\<lambda>x y z. True), (\<lambda>x y. True))"
-   "hijt (Suc n) = (hirec n (hijt n), jtrec n (hijt n))"
+   "ittt 0       = ((\<lambda>x y. True), basett)"
+   "ittt (Suc n) = (itrec (Suc n) (ittt n), ttrec (ittt n))"
 
 constdefs
    hitherto_infallible  :: "nat \<Rightarrow> authority \<Rightarrow> Jinterp \<Rightarrow> bool"
-   "hitherto_infallible n == fst (hijt n) n"
+   "hitherto_infallible n == fst (ittt n)"
 
-subsubsection{* True Judgements *}
-
-consts
-   truej  :: "Jinterp \<Rightarrow> judgement \<Rightarrow> bool"
-
-primrec
-   "truej ji (Assert stamp auths sent)
-    = snd (hijt stamp) (Assert stamp auths sent) ji"
-   "truej ji (Endorse auth auths) = True"
+   true_judgement  :: "judgement \<Rightarrow> Jinterp \<Rightarrow> bool"
+   "true_judgement j == snd (ittt (jstamp j)) j"
 
 subsection{* Proof Rules *}
 subsubsection {* Inference *}
@@ -260,5 +252,33 @@ inductive "thms H"
          n2 < n4;
          n3 < n4 \<rbrakk>
        \<Longrightarrow> Assert n4 levels (TrueDocs odl oll):thms H"
+
+subsection{* Properties *}
+
+subsubsection{* Soundness *}
+
+text{*
+A deductive system is a map from a set of judgments to the set of its consequences.
+It is sound if the consquences are true whenever the premises are.
+*}
+
+constdefs
+   sound ::"(judgement set \<Rightarrow> judgement set) \<Rightarrow> bool"
+   "sound f == \<forall>ji js.
+               (\<forall>j. j:js \<longrightarrow> true_judgement j ji) \<longrightarrow> (\<forall>j. j:(f js) \<longrightarrow> true_judgement j ji)"
+
+subsubsection{* Assurance *}
+
+text{*
+This property expresses the requirement that lowly assured premises do not affect highly assured conclusions, i.e. if you add more lowly assured judgements into your stock you do not increase the number of highly assured conclusions you can draw.
+*}
+
+constdefs
+   filter ::"authority  set \<Rightarrow> judgement set \<Rightarrow> judgement set"
+   "filter as js == {j . jauths j \<subseteq> Image (authr js) as}"
+
+   assured ::"(judgement set \<Rightarrow> judgement set) \<Rightarrow> bool"
+   "assured f == \<forall>js1 js2 as. filter as js1 = filter as js2 \<longrightarrow>
+                              filter as (f js1) = filter as (f js2)"
 
 end
