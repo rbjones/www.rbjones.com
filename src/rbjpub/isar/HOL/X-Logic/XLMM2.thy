@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.7 2007/06/09 11:48:03 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.8 2007/06/11 20:48:54 rbj01 Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -81,6 +81,7 @@ consts
 
 primrec
     "jstamp (Assert st as se) = st"
+    "jstamp (Endorse a as) = 0"
 primrec
     "jauths (Assert st as se) = as"
     "jauths (Endorse a as) = {a}"
