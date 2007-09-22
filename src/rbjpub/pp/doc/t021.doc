@@ -1,5 +1,5 @@
 =IGN
-$Id: t021.doc,v 1.7 2007/05/22 09:32:28 rbj01 Exp $
+$Id: t021.doc,v 1.8 2007/09/22 20:47:22 rbj01 Exp $
 open_theory "";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 =TEX
@@ -9,7 +9,7 @@ set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 \ftlinepenalty=9999
 \usepackage{A4}
 
-\def\ExpName{\mbox{{\sf exp}}}
+\def\ExpName{\mbox{{\sf exp}
 \def\Exp#1{\ExpName(#1)}
 
 \tabstop=0.4in
@@ -40,12 +40,12 @@ It contains a sketch of a general method, written down while I am still on this 
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2007/05/22 09:32:28 $ $
+Last Change $ $Date: 2007/09/22 20:47:22 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.7 2007/05/22 09:32:28 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.8 2007/09/22 20:47:22 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -122,11 +122,11 @@ I am inclined to define some notion of maximal partial fixed point and work with
 \end{enumerate}
 
 \newpage
-\section{SYNTAX}
+\section{SYNTAX A}
 
 =SML
 open_theory "GS";
-force_new_theory "defsets";
+force_new_theory "t021sa";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
 =TEX
 
@@ -162,19 +162,17 @@ Here is an abstract syntax:
 
 =GFT
 term    ::= ordinal
-	 | SetComp ordinal formula
+	 | SetComp formula
 
 formula ::= term = term
           | term  term
-          | Œ (ğ formula)
-          | ³ formula
-          | µ ordinal formula
+          | Œ ordinal (ğ formula)
 =TEX
 
 The ordinals here are used as variables, and Von Neumann ordinals are required.
-The ordinal in the variable binding constructs (comprehension and quantification) is to be understood as a set of ordinals and binds all those ordinals considered as variables, i.e. all ordinals less than the specified ordinal.
-In the body of the construct ordinals not bound by this construct are interpreted as that ordinal less than the number of ordinals bound by the construct (this is a transfinite version of ``de Bruijn indices'').
-The other infinitary construct is an infinitary conjunction.
+They are in fact used like De Bruijn indices, so comprehension always binds the variable zero at the outermost level, and binds a higher numbered variable in inner scopes.
+A single constructor is provided for formulae (Œ) and is to be understood as the negation of the universal quantification of the conjunction of a set (of any cardinality) of formulae.
+This quantified simultaneously quantifies over any number of variables.
 
 I'm going to hand-crank an appropriate recursive datatype.
 
@@ -187,78 +185,412 @@ It will be useful to be able to have names for the finite ordinals, which are us
 °
 
 ¹HOLCONST
-Ü ÛOn‰gİ: î ­ GS
+Ü ÛNat‰gİ: î ­ GS
 ÷üüüüüüüüüüü
-Ü       On‰g 0 = C‰g {}
-Ü ± µn· On‰g (n+1) = Succ‰g (On‰g n)
+Ü       Nat‰g 0 = C‰g {}
+Ü ± µn· Nat‰g (n+1) = Succ‰g (Nat‰g n)
 °
 
 The following define realisations of the constructors for the abstract syntax:
 
 ¹HOLCONST
-Ü ÛSetCmpİ : GS ­ GS ­ GS
+Ü ÛTermİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü    µf vars· SetCmp vars f = (On‰g 2) í‰g (vars í‰g f)
+Ü    µt· Term t = (Nat‰g 0) í‰g t
+°
+
+¹HOLCONST
+Ü ÛTermsİ : GS SET ­ GS SET
+÷üüüüüüüüüüü
+Ü    µs· Terms s = {x | ¶t· x = Term t ± x  s}
+°
+
+¹HOLCONST
+Ü ÛFormulaİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µf· Formula f = (Nat‰g 1) í‰g f
+°
+
+¹HOLCONST
+Ü ÛFormulasİ : GS SET ­ GS SET
+÷üüüüüüüüüüü
+Ü    µs· Formulas s = {x | ¶f· x = Formula f ± x  s}
+°
+
+¹HOLCONST
+Ü ÛVarİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µord· Var ord = (Nat‰g 0) í‰g ord
+°
+
+¹HOLCONST
+Ü ÛSetCmpİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µf· SetCmp f = (Nat‰g 1) í‰g f
 °
 
 ¹HOLCONST
 Ü ÛEqİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µl r· Eq (l,r) = (On‰g 3) í‰g (l í‰g r)
+Ü µl r· Eq (l,r) = (Nat‰g 0) í‰g (l í‰g r)
 °
 
 ¹HOLCONST
 Ü ÛMemİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µ l r·  Mem (l, r) = (On‰g 4) í‰g (l í‰g r)
+Ü µ l r·  Mem (l, r) = (Nat‰g 1) í‰g (l í‰g r)
 °
 
 ¹HOLCONST
-Ü ÛAndİ : GS ­ GS
+Ü ÛŒİ : GS ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µconjs· And conjs = (On‰g 5) í‰g conjs
+Ü µvars conjs· Œ (vars, conjs) = (Nat‰g 2) í‰g (vars í‰g conjs)
 °
 
 ¹HOLCONST
-Ü ÛNotİ : GS ­ GS
+Ü ÛRepClosedİ: GS SET ­ BOOL
 ÷üüüüüüüüüüü
-Ü µf·  Not f = (On‰g 6) í‰g f
+Ü µ s· RepClosed s ¤
+Ü µord f fs t1 t2 ·
+Ü	Ordinal ord
+Ü  ±	(X‰g fs À {f}) € (Formulas s)
+Ü  ±	{t1; t2} € (Terms s)
+Ü  ´	Term (Var ord)  s
+Ü  ±    Term (SetCmp f)  s
+Ü  ±	Formula (Eq (t1,t2))  s
+Ü  ±	Formula (Mem (t1,t2))  s
+Ü  ±	Formula (Œ (ord, fs))  s
 °
+
+The syntax is then the smallest set closed under these constructions.
 
 ¹HOLCONST
-Ü ÛForallİ : GS ­ GS ­ GS
+Ü ÛSyntaxİ : GS SET
 ÷üüüüüüüüüüü
-Ü µvars f· Forall vars f = (On‰g 7) í‰g (vars í‰g f)
+Ü Syntax = ¥{x | RepClosed x}
 °
 
-¹HOLCONST
-Ü ÛRepClosedİ: GS SET ¸ GS SET ­ BOOL
-÷üüüüüüüüüüü
-Ü µ sf st· RepClosed (sf, st) ¤
-Ü µf1 f2 conjs t1 t2 st2 vars·
-Ü	{f1; f2} € sf ± X‰g conjs € sf
-Ü	± {t1; t2} € st± X‰g st2 € st ± Ordinal vars
-Ü   ´	SetCmp vars f1  st
-Ü  ±	Eq (t1,t2)  sf
-Ü  ±	Mem (t1,t2)  sf
-Ü  ±	And conjs  sf
-Ü  ±	Not f1  sf
-Ü  ±	Forall vars f1  sf
-°
+This is an ``inductive datatype'' so we should expect the usual kinds of theorem.
 
-I'm not sure this works!
-Its intended to give a least fixed point.
+Informally these should say:
+
+\begin{itemize}
+\item Everything in Syntax is either a Term or a Formula.
+\item Syntax is closed under the five syntactic constructors.
+\item The syntax constructors are all injections, have disjoint ranges, and partition syntax. 
+\item Any syntactic property which is preserved by the constructors (i.e. is true of any construction if it is true of all its syntactic constituents) is true of everything in syntax (this is an induction principle).
+\end{itemize}
+
+Formally these may be given thus:
+
+=GFT
+µx· x  Syntax ´ Term x ² Formula x
+
+RepClosed Syntax
+=TEX
+
+\ignore{
+=IGN
+
+=TEX
+}%ignore
+
 
 ¹HOLCONST
 Ü ÛDefFormsİ : GS SET
 ÷üüüüüüüüüüü
-Ü DefForms = ¥{x | ¶y· RepClosed y ± x = Fst y}
+Ü DefForms = Formulas Syntax
 °
 
 ¹HOLCONST
 Ü ÛDefTermsİ : GS SET
 ÷üüüüüüüüüüü
-Ü DefTerms = ¥{x | ¶y· RepClosed y ± x = Snd y}
+Ü DefTerms = Terms Syntax
+°
+
+\ignore{
+=IGN
+open_theory "t021sa";
+set_goal([], ¬RepClosed (DefForms À DefTerms)®);
+a (rewrite_tac (map get_spec [¬RepClosed®, ¬DefForms®, ¬DefTerms®]));
+
+=TEX
+}
+
+\section{SEMANTICS A}
+
+The semantics will be defined as a functor which transforms partial membership and equality relations, and is parameterised by a domain set (which gives the range of the quantifiers).
+
+We want to be able to evaluate membership claims between closed comprehensions.
+This is done by substituting the comprehension on the left for the variable zero in the body of the comprehension on the right and evaluating the result.
+Alternatively, evaluating the body of the comprehension on the right in a context which consists just of the assignment to variable zero of the comprehsion on the left.
+When we reach atomic equations and membership claims during this evaluation we look them up using the initial values for the equality and membership relations.
+We can only do this with closed comprehensions, so at this point, if not before we must substitute values from the context for the free variables in the comprehensions (these variables will be bound by quantifiers so we will be doing this substitution for every comprehension in turn).
+
+So we need to be able to evaluate and to instantiate, evaluation taking place down to the level of atomic formulae and instantiation below that level (note that the terms in an atomic formulae will usually be comprehesions and hence may contain non-atomic formulae).
+
+\subsec{Substitution}
+
+This will be an inductive definition over the relevant syntactic structures, but the definition is given in pieces.
+
+First substitution into terms:
+
+=SML
+declare_type_abbrev("TV", [], ”GS®);
+declare_type_abbrev("VA", [], ”GS ­ TV®);
+declare_type_abbrev("TD", [], ”VA ­ TV®);
+declare_type_abbrev("FD", [], ”VA ­ (BOOL + ONE)®);
+=TEX
+
+To define the semantics of comprehension we need to be able to modify a variable assignment.
+The modification required is to insert a new value for variable zero shifting all the existing values up one variable number.
+
+¹HOLCONST
+Ü ÛInsertVarİ : VA ­ TV ­ VA
+÷üüüüüüüüüüü
+Ü µva td ord· InsertVar va td ord = 
+Ü	if ord = Nat‰g 0 then td else va (Succ‰g ord)
+°
+
+This one concatenates two variable assignments.
+[placeholder]
+
+¹HOLCONST
+Ü ÛInsertVarsİ : VA ­ VA ­ VA
+÷üüüüüüüüüüü
+Ü µva1 va2· InsertVars va1 va2 = 
+Ü	va1
+°
+
+¹HOLCONST
+Ü ÛSubstVarİ : VA ­ GS ­ GS
+÷üüüüüüüüüüü
+Ü µva ord· SubstVar va ord = va ord
+°
+
+¹HOLCONST
+Ü ÛSubstCompİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
+÷üüüüüüüüüüü
+Ü µsf va comp· SubstComp sf va comp = sf (InsertVar 0‰g va) comp
+°
+
+¹HOLCONST
+Ü ÛSubstTermİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
+÷üüüüüüüüüüü
+Ü µsf va t· SubstTerm sf va t =
+	if Fst‰g t = 0
+	then 
+	else
+°
+
+¹HOLCONST
+Ü ÛSubstEqİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
+÷üüüüüüüüüüü
+Ü µsf va comp· SubstComp sf va comp = sf (InsertVar 0‰g va) comp
+°
+
+=SML
+stop;
+=TEX
+
+
+We now define functions which give the semantics of each indivual constructor as transformations over these denotations.
+
+¹HOLCONST
+Ü ÛVarSemİ : GS ­ TD
+÷üüüüüüüüüüü
+Ü µord va· VarSem ord va = va ord
+°
+
+A comprehension denotes itself?
+Or should we substitute in the values for the free variables?
+We'll pass on this one till we see whether we need anything here.
+
+The atomic formula just refer to the prior membership and equality relations.
+So only the compound formala constructor has a substantive semantics.
+
+
+¹HOLCONST
+Ü ÛŒSemİ : GS SET ¸ GS SET ¸ FD SET ­ FD
+÷üüüüüüüüüüü
+Ü µV vars fds va· ŒSem (V, vars, fds) va = 
+Ü	¶va2 fd· dom va2 = vars
+	± ran va2 € V
+	± fd  fds
+°
+
+
+
+\newpage
+\section{SYNTAX B}
+
+This version of the syntax is parameterised by a (well-founded) membership relationship.
+
+The general pattern followed is to use relationships rather than functions, because no assumptions are made about the closure properties of the membership relationship.
+
+We make use of the Wiener-Kuratovski ordered pairs, defined as follows.
+
+=SML
+open_theory "hol";
+force_new_theory "t021sb";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+declare_type_abbrev ("MR", ["MR"], ”'a ­ 'a ­ BOOL®);
+=TEX
+
+To simplify talking about sets as determined by some membership relation the following function yields the extension of some set according to some membership relation.
+
+¹HOLCONST
+Ü ÛXİ: 'a MR ­ 'a ­ 'a SET 
+÷üüüüüüüüüüü
+Ü µr s· X r s = {y | r y s}
+°
+
+¹HOLCONST
+Ü ÛXXİ: 'a MR ­ 'a ­ 'a SET SET
+÷üüüüüüüüüüü
+Ü µr s· XX r s = {y | ¶z· r z s ± y = X r z}
+°
+
+¹HOLCONST
+Ü ÛWkpİ: 'a MR ­ ('a ¸ 'a ¸ 'a) ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm l r p· Wkp m (l, r, p) ¤ XX m p = {{l;r};{l}}
+°
+
+The first thing we do with the ordered pairs is make some natural numbers for use as tags.
+
+¹HOLCONST
+Ü ÛEsİ: 'a MR ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm s· Es m s ¤ XX m s = {}
+°
+
+¹HOLCONST
+Ü ÛDUnionİ: 'a MR ­ ('a ¸ 'a) ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm s u·  DUnion m (s, u) ¤ X m u = Ş(XX m s)
+°
+
+¹HOLCONST
+Ü ÛBUnionİ: 'a MR ­ ('a ¸ 'a ¸ 'a) ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm s t u·  BUnion m (s, t, u) ¤ X m u = (X m s) À (X m t)
+°
+
+¹HOLCONST
+Ü ÛSuccİ: 'a MR ­ ('a ¸ 'a) ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm n s·  Succ m (n, s) ¤ X m s = (X m n) À {n} 
+°
+
+¹HOLCONST
+Ü ÛRnatİ: 'a MR ­ î ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm·	Rnat m 0 = (Ìs:'a· Es m s)
+Ü ±	µn· Rnat m (n + 1) = (Ìs:'a· ¶t:'a· Rnat m n t ± Succ m (t,s))
+°
+
+We now define the property of being an ordinal under a membership relationship.
+There will be some conditions on the relationship needed to ensure that the class of ordinals defined here is good (which I have not yet worked out).
+
+¹HOLCONST
+Ü ÛOrdİ: 'a MR ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm n·  Ord m n = µs· (µt u v· X m t € s ± X m u = Ş (XX m t) ± Succ m (u, v) ´ v  s) ´ n  s
+°
+
+Now we define the syntactic structures in our notation for sets definable by infinitary comprehension.
+
+Here is the syntax informally:
+
+=GFT
+<term> ::= Var <ordinal>
+	| Comp <formula>
+
+<formula> ::=
+	  Eq <term><term>
+	| In <term><term>
+	| Tf <ordinal> (<formula> Set)
+=TEX
+
+Where ``Tf'' is an infinitary negated existentially quantified disjunction (any cardinality of variables, any cardinality of disjuncts).
+
+Phrases will be ordered pairs of which the left is the phrase type, zero for a term one for a formula.
+
+The following predicate checks the type of a phrase.
+
+¹HOLCONST
+Ü ÛPhraseTypeİ: 'a MR ­ î ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm n t·  PhraseType m n t = ¶u v· Rnat m n u ± Wkp m (u, v, t)
+°
+
+This one check both the type and the value.
+
+¹HOLCONST
+Ü ÛPhraseİ: 'a MR ­ î ­ 'a ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm n p t·  Phrase m n p t = ¶u· Rnat m n u ± Wkp m (u, p, t)
+°
+
+Now we have one relation for each constructor.
+
+¹HOLCONST
+Ü ÛVarİ: 'a MR ­ 'a ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µm ord t·  Var m ord t ¤ Phrase m 0 ord t
+°
+
+¹HOLCONST
+Ü ÛCompİ: 'a MR ­ 'a ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µm c t·  Comp m c t ¤ Phrase m 1 c t
+°
+
+¹HOLCONST
+Ü ÛEqİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm t1 t2 f·  Eq m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 0 p f
+°
+
+¹HOLCONST
+Ü ÛInİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm t1 t2 f·  In m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 1 p f
+°
+
+¹HOLCONST
+Ü ÛTfİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm t1 t2 f·  Tf m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 1 p f
+°
+
+To obtain the class of syntactic structures we take the intersection of classes closed under the five constructors.
+
+¹HOLCONST
+Ü ÛSynClosedİ: 'a MR ­ ('a ­ BOOL) ­ BOOL 
+÷üüüüüüüüüüü
+Ü µm c· SynClosed m c ¤
+Ü	(µord· Ord m ord ´ ¶v· Var m ord v ± c v)
+Ü  ±
+	µt1 t2 ord f1 fs·
+		c t1 ± PhraseType m 0 t1
+	±	c t2 ± PhraseType m 0 t1
+	±	Ord m ord
+	±	c f1 ± PhraseType m 1 f1
+	±	(µf· m f fs ´ c f ± PhraseType m 1 f)
+
+    ´		(¶comp· c comp ± Comp m f1 comp)
+	±	(¶eq· c eq ± Eq m (t1, t2) eq)
+	±	(¶inn· c inn ± In m (t1, t2) inn)
+	±	(¶tf· c tf ± Tf m (ord, fs) tf)
+°
+
+¹HOLCONST
+Ü ÛSynClosureİ: 'a MR ­ ('a ­ BOOL) 
+÷üüüüüüüüüüü
+Ü µm c· SynClosure m c ¤
+Ü	µp· SynClosed m p ´ p c
 °
 
 \newpage
@@ -277,9 +609,7 @@ The semantics is therefore defined in a piecemeal way for each constructor in tu
 The fact that we have inter-defined membership and equality relationships, and also that we are expecting at best partial fixed points, together hint that we might benefit from working in the more general context of ``Boolean Values Models'' (see, for example, \cite{Jech2002}), so I propose to begin in that more general context and see how it goes.
 i.e. the equality and membership relations will be functions yielding values in an arbitrary boolean algebra rather than classical relationships, and the relationship between them will be as prescribed for boolean valued models unless a problem is found with this.
 
-
 \section{PLAN B}
-
 
 The details of how to code up infinitary first order set theory are unimportant, and I want to talk about this method, so I'm going to just assume that the syntax has been encoded and that the semantics has been formalised in the manner discussed.
 
@@ -333,6 +663,71 @@ So we want to talk about a set having a fixed extension in every subset whioh in
 	µsr2· sr2  op1 ssr ´ T 
 °
 
+\section{SEMANTICS B}
+
+This approach to semantics is specific to SYNTAX B.
+
+The semantics is rendered as a functor over partial assignments of meaning to membership and equality relations over comprehensions.
+
+We introduce a type abbreviation for these partial relations:
+
+=SML
+open_theory "t021sb";
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+declare_type_abbrev ("VA", ["VA"], ”'a ­ 'a + ONE®);
+declare_type_abbrev ("PMA", ["PMA"], ”'a ¸ 'a ­ BOOL + ONE®);
+=TEX
+
+
+\subsection{Constructor Definitions}
+
+We begin with the definitions of semantics for the individual constructors.
+These have in common that they are supplied:
+
+\begin{enumerate}
+\item A syntactic domain
+\item The subset of that domain which are deemed valid comprehensions
+\item A partial membership relation over the comprehensions
+\item A partial equivalence relation over the comprehensions
+\end{enumerate}
+
+In addition there will be constructor specific parameters corresponding to the semantics of the constituent components.
+
+The type of the semantic values are as follows.
+Terms are partial functions over variable assignments, yielding sets of comprehensions
+Formulae are partial functions over variable assignments yielding truth values.
+
+¹HOLCONST
+  VarCon: 'a ­ 'a VA ­ ('a + ONE)
+÷
+  µord va· VarCon ord va = va ord
+°
+
+To specify comprehension we need an auxiliary function which shifts left a variable assignment and adds in a new value for zero.
+
+
+¹HOLCONST
+  EqCon: 'a PMA ­ ('a ¸ 'a) ­ 'a VA ­ (BOOL + ONE)
+÷
+  µeq l r va· EqCon eq (l, r) va = eq (l, r)
+°
+
+¹HOLCONST
+  MemCon: 'a PMA ­ ('a ¸ 'a) ­ 'a VA ­ (BOOL + ONE)
+÷
+  µmem l r va· MemCon mem (l, r) va = mem (l, r)
+°
+
+\subsection{The Semantic Functor}
+
+The functor defined below takes a seed membership relation, a partial equality over the infinitary comprehensions generated from that relation, and a partial membership relation over those comprehensions, and yields a new membership relation.
+The new equality relation will be obtained from the new membership relation.
+
+¹HOLCONST
+  new_mem: 'a MR ­ 'a PMA ­ 'a PMA ­ 'a PMA
+÷
+  µr eq mem c1 c2· new_mem r eq mem (c1, c2) = InR One
+°
 
 {\let\Section\section
 \newcounter{ThyNum}
