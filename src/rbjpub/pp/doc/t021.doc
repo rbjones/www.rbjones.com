@@ -1,5 +1,5 @@
 =IGN
-$Id: t021.doc,v 1.8 2007/09/22 20:47:22 rbj01 Exp $
+$Id: t021.doc,v 1.9 2007/09/28 15:24:53 rbj01 Exp $
 open_theory "";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -9,13 +9,13 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \ftlinepenalty=9999
 \usepackage{A4}
 
-\def\ExpName{\mbox{{\sf exp}
-\def\Exp#1{\ExpName(#1)}
+%\def\ExpName{\mbox{{\sf exp}
+%\def\Exp#1{\ExpName(#1)}
 
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\title{Interpretations of Set Theory}
+\title{Set Theory as Consistent Infinitary Comprehension}
 \makeindex
 \usepackage[unicode,pdftex]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
@@ -28,8 +28,8 @@ set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This paper continues the line of thought which lead to the PolySet interpretation of set theory, and is essentially a discussion of how to extend the method used for the PolySets so that a fuller ontology can be realised.
-It contains a sketch of a general method, written down while I am still on this topic with a view to deeper exploration at some later date.
+This paper is concerned with set theory conceived as being a maximal consistent theory of set comprehension.
+This is done by looking for large subdomains of a notation for infinitary comprehension. 
 \end{abstract}
 
 \vfill
@@ -40,12 +40,12 @@ It contains a sketch of a general method, written down while I am still on this 
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2007/09/22 20:47:22 $ $
+Last Change $ $Date: 2007/09/28 15:24:53 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.8 2007/09/22 20:47:22 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.9 2007/09/28 15:24:53 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -77,86 +77,26 @@ $ $Id: t021.doc,v 1.8 2007/09/22 20:47:22 rbj01 Exp $ $
 \newpage
 \section{INTRODUCTION}
 
-It is the purpose of this document to discuss some general methods for obtaining models for non-well founded set theories.
-It may be thought of as broadly similar to the ``Church-Oswald'' constructions decribed by Forster in \cite{forster92,forster2005}, in that it works from an interpretation of a well-founded set theory and constructs non-well-founded interpretations from them in which a copy of the original interpretation may be found.
+The plan is:
 
-This follows on from \emph{PolySet} theory \cite{rbjt020} in which an interpretation of set theory is arrived at via an intuition based on the polymorphic functions in standard ML.
-After thinking about PolySet theory for a while I concluded that it would indeed give the ML-polymorphic functions (integrated into a full well-founded classical set theory), and hence, might lead to a foundation for formal mathematics with an ML-like let clause.
-But it seemed, contrary to my first thoughts, unlikely to meet my other desiderata relating to abstract algebra, and in general the use of context in formal methematical developments.
+\begin{itemize}
 
-So I turned my mind to larger ontologies.
+\item Define using the ontology of a well-founded set theory a notation for infinitary comprehension (this will be a transfinite inductive definition of a way of coding up set comprehension in an infinitary language for set theory).
 
-The construction of PolySets was quite simple, because of the motivating intuition about the kinds of extra sets to be added.
-It seemed to be (though this remains to be formally established) feasible to define the membership relationship over the representatives for PolySets without taking care to make it extensional, since it seemed (and still does seem) probable that taking a quotient after the definition of membership was comeplete would permit the membership to be upgraded to an extensional one.
-It seemed however, as soon as I decided that they PolySets would not suffice, that the same method would be unlikely to suffice.
+\item Give a semantics to this notation as a functor which transforms pairs of partial equality and membership relations over closed comprehensions.
 
-The first objective therefore of this essay is to adapt the method used in the construction of the PolySets so that it can be applied for a wider range of less placid methods of set constructions, particularly ones which cannot properly be defined on representatives without knowing which represenatatives are equivalent.
-Of these the simplest to understand is the operation of set complement.
-Given a set of representatives of a equivalence classes, it is not possible to compute a complete set of representatives for the excluded equivalence classes without actually knowing what the equivalence relationship is,
+\item Find maximal subsets of the class of closed comprehensions over which the functor has a fixed point, and consider the theory which arises when these subsets with the fixedpoint semantics are taken as interpretations of set theory.
 
-The definition of membership over the PolySets was very simple.
-Only the definition of instantiation involves recursion and this is well-founded with respect to the original membership relationship.
-The definition of membership is not then recursive. 
-
-Once you need to talk about membership in the new structure while defining that membership relationship, or to talk about equivalence (i.e. when two representatives represent the same set) then recursion comes in, and there may not be any obvious well-founded relationship to show that such recursion terminates.
-
-My aim here is to hit this problem head on, and adopt a method which copes with an account of the semantics of the new sets (i.e. a definition of the new membership relationship) which is not known to be well-founded.
-
-There is not a lot of proof in this document, I need to kick around some specifications before I decide whether any proofs are worth attempting.
-Until then it will be a study in proof evasion.
-
-\subsection{Outline of The Method}
-
-The following stages are involved.
-
-\begin{enumerate}
-\item Identify informally a {\it kind} of properties (of sets) whose extensions will be the extensions of the new sets.
-\item Chose a way of representing these properties using well-founded sets (I like something that looks like an infinitary language defined like a recursive datatype).
-i.e. code up the syntax of an infinitary first order set theory as well-founded sets.
-\item Define the semantics of these notations by assigning to each set an extension.
-To allow for the recursive elements mentioned above, this is done relative to some arbitrary given membership structure, subject only to the constraint that the domain of the relationship is a partition of a subset of the representatives chosen for the new sets.
-\item Note that the membership relationship will bring with it a notion of extensional equality.
-\item The partial fixed points of this functor will yield interpretation of set theory.
-A general investigation of these partial fixed points will help in chosing which partial fixed point to use.
-I am inclined to define some notion of maximal partial fixed point and work with a loosely defined interpretation based on that.
-\end{enumerate}
+\end{itemize}
 
 \newpage
-\section{SYNTAX A}
+\section{SYNTAX}
 
 =SML
 open_theory "GS";
-force_new_theory "t021sa";
+force_new_theory "t021";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof", "'GS1"];
 =TEX
-
-The idea is to chose a substantial collection of pure well-founded sets as a starting material (V($\alpha$) for suitable $\alpha$), and to use these to represent some more encompassing notion of sethood, in such a way as to keep a copy of the originals alongside the newly introduced exotica.
-
-It may be useful to think of this as a kind of infinitary language in which arbitrary sets are terms and denote themselves, however, though I did at first have such infinitary set displays these do now have to be rendered as set abstractions.
-
-The set display $\{1,2,3\}$, can alternatively be rendered as the abstraction "$\{x | x=1 ≤ x=2 ≤ x=3\}$" and by nesting such abstractions terms can be constructed representing arbitrary well founded sets provided that we are allowed infinitary disjunctions of sufficiently unreasonable cardinality.
-In the language which we adopt there are infinitary disjunctions, and also infinitary quantifiers allowing that there may be excessive numbers of variables quantified over in the body of an abstraction (formulae are defined only for use in set abstractions).
-
-The language allows also for sets which are not well-founded, and we may think of this as effecting a merge between a concept of set as explicit extensional graph and that of a set as a rule of some kind, in which a prospective member is checked-out in a manner more sophisticated than literal identity comparisons.
-
-The use of rules rather than graphs helps us round a difficulty which appears as soon as we admit non-well-founded sets, in the form of Cantor's theorem.
-We are allowing functions whose domain is the entire domain of discourse (which includes these functions) but we can't have them all, there are too many.
-Having a language of rules allows you to cap the number of sets or functions admitted in a systematic way.
-It replaces the so-called limitation of size principle, which is helpfull in the context of well-founded sets in determining which belong to the interpretation in question, with a liberal limitation on the size of the description of a set.
-If you imagine even the largest well-founded sets as being explicitly described by an infinitary structure, then descriptions even of ill-founded sets which are of that size will be admitted.
-
-However, cardinality is not the end of the problems.
-Though V isn't one of them, there are sets which you just can't have.
-The concept of a barber who shaves everyone who doesn't shave himself, is too problematic to have an extension.
-So either on their own, or in combination, ontological principles may be inconsistent.
-
-I intend here to explore the possiblity that the first stages in the construction can be done recklessly, encompassing a collection of properties of sets which is in itself incoherent, and then restricted to obtain coherent interpretations.
-For this reason I will formalise for exploration an interpretation in which nominally appear a transfinite extrapolation of the complete range of first order properties of sets (which will not of course yield an interpretation without being trimmed back).
-I would have been inclined to extend the construction for the PolySets but the purpose here is exploratory and methodological, and it will probably be faster and easier to understand if I forget about the PolySets for now.
-In principle, if there is an interpretation for NF, then it ought to be obtainable in this way (which doesn't mean that it would facilitate any proof of coherence).
-
-I'm going to use a fairly crude way of capuring the notion of definability of sets in an infinitary first order set theory.
-We imagine a formula built up using the infinitary terms with variables in them, equality, membership, negation conjunction, universal quantification and comprehension.
 
 Here is an abstract syntax:
 
@@ -174,35 +114,33 @@ They are in fact used like De Bruijn indices, so comprehension always binds the 
 A single constructor is provided for formulae (å) and is to be understood as the negation of the universal quantification of the conjunction of a set (of any cardinality) of formulae.
 This quantified simultaneously quantifies over any number of variables.
 
-I'm going to hand-crank an appropriate recursive datatype.
-
 It will be useful to be able to have names for the finite ordinals, which are used as tags in the syntax:
-
-πHOLCONST
-‹ €Succâg›: GS ≠ GS
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µn∑ Succâg n = Câg {z | z çâg n ≤ z = n}
-∞
 
 πHOLCONST
 ‹ €Natâg›: Ó ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹       Natâg 0 = Câg {}
-‹ ± µn∑ Natâg (n+1) = Succâg (Natâg n)
+‹       Natâg 0 = öâg
+‹ ± µn∑ Natâg (n+1) = sucâo (Natâg n)
 ∞
 
 The following define realisations of the constructors for the abstract syntax:
 
 πHOLCONST
-‹ €Term› : GS ≠ GS
+‹ €MkTerm› : GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µt∑ Term t = (Natâg 0) Ìâg t
+‹    µt∑ MkTerm t = (Natâg 0) Ìâg t
+∞
+
+πHOLCONST
+‹ €IsTerm› : GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹    µt∑ IsTerm t = fst t = (Natâg 0)
 ∞
 
 πHOLCONST
 ‹ €Terms› : GS SET ≠ GS SET
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µs∑ Terms s = {x | ∂t∑ x = Term t ± x ç s}
+‹    µs∑ Terms s = {x | ∂t∑ x = MkTerm t ± x ç s}
 ∞
 
 πHOLCONST
@@ -252,11 +190,11 @@ The following define realisations of the constructors for the abstract syntax:
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ s∑ RepClosed s §
 ‹ µord f fs t1 t2 ∑
-‹	Ordinal ord
+‹	ordinal ord
 ‹  ±	(Xâg fs ¿ {f}) Ä (Formulas s)
 ‹  ±	{t1; t2} Ä (Terms s)
-‹  ¥	Term (Var ord) ç s
-‹  ±    Term (SetCmp f) ç s
+‹  ¥	MkTerm (Var ord) ç s
+‹  ±    MkTerm (SetCmp f) ç s
 ‹  ±	Formula (Eq (t1,t2)) ç s
 ‹  ±	Formula (Mem (t1,t2)) ç s
 ‹  ±	Formula (å (ord, fs)) ç s
@@ -284,7 +222,7 @@ Informally these should say:
 Formally these may be given thus:
 
 =GFT
-µx∑ x ç Syntax ¥ Term x ≤ Formula x
+µx∑ x ç Syntax ¥ MkTerm x ≤ Formula x
 
 RepClosed Syntax
 =TEX
@@ -329,7 +267,7 @@ We can only do this with closed comprehensions, so at this point, if not before 
 
 So we need to be able to evaluate and to instantiate, evaluation taking place down to the level of atomic formulae and instantiation below that level (note that the terms in an atomic formulae will usually be comprehesions and hence may contain non-atomic formulae).
 
-\subsec{Substitution}
+\subsection{Substitution}
 
 This will be an inductive definition over the relevant syntactic structures, but the definition is given in pieces.
 
@@ -349,7 +287,7 @@ The modification required is to insert a new value for variable zero shifting al
 ‹ €InsertVar› : VA ≠ TV ≠ VA
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µva td ord∑ InsertVar va td ord = 
-‹	if ord = Natâg 0 then td else va (Succâg ord)
+‹	if ord = Natâg 0 then td else va (sucâo ord)
 ∞
 
 This one concatenates two variable assignments.
@@ -371,26 +309,26 @@ This one concatenates two variable assignments.
 πHOLCONST
 ‹ €SubstComp› : (VA ≠ GS ≠ GS) ≠ VA ≠ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µsf va comp∑ SubstComp sf va comp = sf (InsertVar 0âg va) comp
+‹ µsf va comp∑ SubstComp sf va comp = sf (InsertVar va (Natâg 0)) comp
 ∞
 
 πHOLCONST
 ‹ €SubstTerm› : (VA ≠ GS ≠ GS) ≠ VA ≠ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µsf va t∑ SubstTerm sf va t =
-	if Fstâg t = 0
-	then 
-	else
+	if fst t = Natâg 0
+	then va (snd t)
+	else t
 ∞
 
 πHOLCONST
 ‹ €SubstEq› : (VA ≠ GS ≠ GS) ≠ VA ≠ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µsf va comp∑ SubstComp sf va comp = sf (InsertVar 0âg va) comp
+‹ µsf va comp∑ SubstComp sf va comp = sf (InsertVar va (Natâg 0)) comp
 ∞
 
 =SML
-stop;
+
 =TEX
 
 
@@ -409,17 +347,12 @@ We'll pass on this one till we see whether we need anything here.
 The atomic formula just refer to the prior membership and equality relations.
 So only the compound formala constructor has a substantive semantics.
 
-
 πHOLCONST
-‹ €åSem› : GS SET ∏ GS SET ∏ FD SET ≠ FD
+‹ €å_Sem› : GS SET ∏ GS SET ∏ FD SET ≠ FD
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV vars fds va∑ åSem (V, vars, fds) va = 
-‹	∂va2 fd∑ dom va2 = vars
-	± ran va2 Ä V
-	± fd ç fds
+‹ µV vars fds va∑ å_Sem (V, vars, fds) va = 
+‹	InL T
 ∞
-
-
 
 \newpage
 \section{SYNTAX B}
@@ -733,7 +666,7 @@ The new equality relation will be obtained from the new membership relation.
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{defsets.th}
+\include{t021.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]

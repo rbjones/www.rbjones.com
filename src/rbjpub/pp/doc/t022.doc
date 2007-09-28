@@ -1,6 +1,6 @@
 =IGN
-$Id: t022.doc,v 1.5 2007/09/22 20:47:22 rbj01 Exp $
-open_theory "GS";
+$Id: t022.doc,v 1.6 2007/09/28 15:24:53 rbj01 Exp $
+open_theory "GST";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 =TEX
 \documentclass[11pt,a4paper]{article}
@@ -39,12 +39,12 @@ This document is an exploration into formalisation of geometric algebra and anal
 
 Created 2006/12/04
 
-Last Change $ $Date: 2007/09/22 20:47:22 $ $
+Last Change $ $Date: 2007/09/28 15:24:53 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t022.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t022.pdf}
 
-$ $Id: t022.doc,v 1.5 2007/09/22 20:47:22 rbj01 Exp $ $
+$ $Id: t022.doc,v 1.6 2007/09/28 15:24:53 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -187,6 +187,11 @@ Though I can give some credence to this objection, there are many aspects of mod
 My own intuitions object to the idea that there might really be singularities in the physical universe, but the theories I seek to formalise embrace that possibility and must therefore depend on a conception of space and time which goes beyond my intuitions.
 The possibilities which arise once gravitational fields are eliminated by incorporation into the curvature of space time (for example, worm holes) seem to go beyond anything for which we have direct observational evidence.
 
+
+
+
+
+
 \subsubsection{Other Motivations}
 
 My other motivation I declared as curiousity, but since it probably has the upper hand at present it may be worth my while to tease that out a bit more.
@@ -214,7 +219,7 @@ First we have a new theory.
 
 =SML
 open_theory "rbjmisc";
-force_new_theory "GS";
+force_new_theory "GST";
 new_parent "fixp";
 new_parent "ordered_sets";
 set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
@@ -222,84 +227,50 @@ set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 
 Now the new type and the primitive constant, membership:
 =SML
-new_type("GS", 0);
-new_const("‰g", ”GS ­ GS ­ BOOL®);
+new_type("GST", 0);
+new_const("‰g", ”GST ­ GST ­ BOOL®);
 declare_infix (70, "‰g");
 =TEX
 
 The axioms of extensionality and well-foundedness can be stated immediately:
 
 =SML
-val ÛGS_Ext_axİ = new_axiom(["ÛExtİ"],
+val ÛGST_Ext_axİ = new_axiom(["ÛExtİ"],
    ¬µx y· x=y ¤ µz· z ‰g x ¤ z ‰g y®);
 
-val ÛGS_wf_axİ = new_axiom(["ÛWfİ"],
+val ÛGST_wf_axİ = new_axiom(["ÛWfİ"],
    ¬µP· (µs· (µt· t ‰g s ´ P t) ´ P s) ´ µx· P x®);
 =TEX
 
 The final axiom states that every set is a member of a galaxy, and also asserts a more global version of replacement.
 First the notion of Galaxy is defined.
-
-The following functions will be helpful.
-
-One to give the extension of a GS as a SET.
+To do this I first introduce some mappings between GST's and set so GST's.
 
 ¹HOLCONST
-Ü ÛX‰gİ : GS ­ GS SET
+Ü ÛX‰gİ : GST ­ GST SET
 ÷üüüüüüüüü
 Ü µs· X‰g s = {x | x ‰g s}
 °
 
-=GFT
-X‰g_lem1 = ô µ g x· x  X‰g g ¤ x ‰g g
-=TEX
-
-\ignore{
-=SML
-set_goal([],¬µg x· x  X‰g g ¤ x ‰g g®);
-a (rewrite_tac [get_spec ¬X‰g®]);
-val X‰g_lem1 = save_pop_thm "X‰g_lem1";
-=TEX
-}%ignore
-
-
-Then one which gives the SET of the extensions of the members of a set.
-
 ¹HOLCONST
-Ü ÛXX‰gİ : GS ­ GS SET SET
+Ü ÛXX‰gİ : GST ­ GST SET SET
 ÷üüüüüüüüü
 Ü µs· XX‰g s = {x | ¶y· y ‰g s ± x = X‰g y}
 °
 
-=GFT
-
-=TEX
-
-\ignore{
-=IGN
-set_goal([],¬µg x· x  XX‰g g ¤ C‰g x ‰g g®);
-a (rewrite_tac [get_spec ¬XX‰g®]);
-val X‰g_lem1 = save_pop_thm "X‰g_lem1";
-=TEX
-}%ignore
-
-Then a property of GS SETs which tells you whether there exists a GS with that extension.
-
 ¹HOLCONST
-Ü Û¶‰gİ : GS SET ­ BOOL
+Ü Û¶‰gİ : GST SET ­ BOOL
 ÷üüüüüüüüü
 Ü µs· ¶‰g s ¤ ¶t· X‰g t = s
 °
 
-And an operator which gives the GS with some extension if there is one.
-
-
 \ignore{
 =SML
-set_goal([],¬¶C‰g· µs:GS SET· ¶‰g s ´ X‰g (C‰g s) = s®);
+set_goal([],¬¶C‰g· µs:GST SET· ¶‰g s ´ X‰g (C‰g s) = s®);
 a (rewrite_tac [get_spec ¬¶‰g®]);
 a (prove_¶_tac THEN strip_tac);
-a (¶_tac ¬Åt· µ x· x  X‰g t ¤ x  s'® THEN strip_tac);
+a (¶_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®
+	THEN strip_tac);
 a (Å_tac ¬Åt· µ x· x  X‰g t ¤ x  s'®);
 a (¶_tac ¬t® THEN strip_tac);
 a (asm_rewrite_tac[]);
@@ -308,46 +279,15 @@ save_cs_¶_thm(pop_thm());
 }%ignore
 
 ¹HOLCONST
-Ü ÛC‰gİ : GS SET ­ GS
+Ü ÛC‰gİ : GST SET ­ GST
 ÷üüüüüüüüü
 Ü µs· ¶‰g s ´ X‰g (C‰g s) = s
 °
 
-=GFT
-XX_lem1 = ô µ s x· x  XX‰g s ´ ¶‰g x
-XX_lem2 = ô µ s x· x  XX‰g s ´ (µ y· y ‰g C‰g x ¤ y  x) 
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µs x· x  XX‰g s ´ ¶‰g x®);
-a (rewrite_tac (map get_spec [¬XX‰g®, ¬¶‰g®])
-	THEN REPEAT strip_tac);
-a (¶_tac ¬y® THEN asm_rewrite_tac[]);
-val XX_lem1 = save_pop_thm "XX_lem1";
-
-set_goal([], ¬µs x· x  XX‰g s ´ µy· y ‰g (C‰g x) ¤ y  x®);
-a (REPEAT_N 3 strip_tac
-	THEN fc_tac [XX_lem1]);
-a (ante_tac (µ_elim ¬x® (get_spec ¬C‰g®))
-	THEN rewrite_tac [get_spec ¬X‰g®]
-	THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val XX_lem2 = save_pop_thm "XX_lem2";
-=IGN
-set_goal([], ¬µs x· x  XX‰g s ´ (C‰g x) ‰g s®);
-a (REPEAT strip_tac
-	THEN fc_tac [XX_lem1]);
-a (ante_tac (µ_elim ¬x® (get_spec ¬C‰g®))
-	THEN rewrite_tac [get_spec ¬X‰g®]
-	THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val XX_lem2 = save_pop_thm "XX_lem2";
-=TEX
-}%ignore
-
 We are now in a position to define galaxies.
 
 ¹HOLCONST
-Ü ÛG‰gİ : GS ­ BOOL
+Ü ÛG‰gİ : GST ­ BOOL
 ÷üüüüüüüüü
 Ü µs· G‰g s ¤ µx· x ‰g s ´
 Ü	(¶v· v ‰g s ± X‰g v = Ş(XX‰g x))
@@ -362,16 +302,16 @@ Galaxies have the following properties:
 set_goal([], ¬µx· G‰g x ´ ¶‰g {}®);
 a (rewrite_tac (map get_spec [¬G‰g®, ¬¶‰g®])
 	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬Åv:GS· v ‰g x®);
+a (spec_nth_asm_tac 1 ¬Åv:GST· v ‰g x®);
 (* *** Goal "1" *** *)
 a (¶_tac ¬x® THEN rewrite_tac [get_spec ¬X‰g®] THEN strip_tac);
 a (swap_nth_asm_concl_tac 1);
 a (Å_tac ¬Å v· v ‰g x®);
 a (¶_tac ¬x'® THEN strip_tac);
 (* *** Goal "2" *** *)
-a (lemma_tac ¬{x: GS¸GS | F}  Functional®
+a (lemma_tac ¬{x: GST¸GST | F}  Functional®
 	THEN1 rewrite_tac[get_spec ¬Functional®]);
-a (spec_nth_asm_tac 2 ¬{x: GS¸GS | F}®);
+a (spec_nth_asm_tac 2 ¬{x: GST¸GST | F}®);
 a (¶_tac ¬v''® THEN strip_tac);
 a (spec_nth_asm_tac 1 ¬x'®);
 a (swap_nth_asm_concl_tac 2
@@ -386,7 +326,7 @@ G_´_š_lemma =
 =TEX
 
 
-The primary ontological axiom is then:
+The primarily ontological axiom is then:
 
 =SML
 val G_ax = new_axiom(["G"], 
@@ -398,7 +338,7 @@ The ontological consequences of this need to be teased out.
 \ignore{
 =SML
 set_goal([], ¬¶‰g{}®);
-a (strip_asm_tac (µ_elim ¬Åx:GS·T® G_ax));
+a (strip_asm_tac (µ_elim ¬Åx:GST·T® G_ax));
 a (fc_tac [G_´_š_lemma]);
 val ¶_š_lemma = save_pop_thm "¶_š_lemma";
 =TEX
@@ -419,56 +359,28 @@ declare_infix (50, " ‰g");
 =TEX
 
 ¹HOLCONST
-Ü $Û€‰gİ: GS ­ GS ­ BOOL
+Ü $Û€‰gİ: GST ­ GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs t· s €‰g t ¤ µx· x ‰g s ´ x ‰g t
 °
 
 ¹HOLCONST
-Ü $Û ‰gİ: GS ­ GS ­ BOOL
+Ü $Û ‰gİ: GST ­ GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs t· s  ‰g t ¤ s €‰g t ± ³ s = t
 °
 
 
 ¹HOLCONST
-Ü ÛŞ‰gİ: GS ­ GS
+Ü ÛŞ‰gİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µs· Ş‰g s = C‰g (Ş (XX‰g s))
 °
 
-\ignore{
-=SML
-push_pc "hol";
-set_goal([], ¬µss· ¶‰g (Ş (XX‰g ss))®);
-a (strip_tac);
-a (strip_asm_tac (µ_elim ¬ss® G_ax));
-a (all_fc_tac [get_spec ¬G‰g®]);
-a (rewrite_tac (map get_spec [¬¶‰g®])
-	THEN REPEAT strip_tac);
-a (¶_tac ¬v® THEN strip_tac);
-val ¶Ş_lem = save_pop_thm "¶Ş_lem";
-pop_pc();
-=IGN
-set_goal([], ¬µss s· s ‰g (Ş‰g ss) ¤ ¶t· t ‰g ss ± s ‰g t®);
-a (rewrite_tac (map get_spec [¬$Ş‰g®]) THEN REPEAT_N 2 strip_tac);
-a (strip_asm_tac (µ_elim ¬ss® ¶Ş_lem));
-a (strip_asm_tac (µ_elim ¬Ş (XX‰g ss)® (get_spec ¬C‰g®)));
-a (POP_ASM_T ante_tac THEN PC_T1 "hol1" rewrite_tac [get_spec ¬X‰g®]
-	THEN strip_tac THEN asm_rewrite_tac[]
-	THEN REPEAT strip_tac);
-a (¶_tac ¬C‰g s'®);
-a (fc_tac [XX_lem1]);
-a (FC_T (MAP_EVERY ante_tac) [get_spec¬C‰g®]);
-a (rewrite_tac [get_spec ¬X‰g®]);
-=TEX
-}%ignore
-
-
 We will need an ordered pair, for which the Wiener-Kuratowski version will do:
 
 ¹HOLCONST
-Ü ÛWkp‰gİ: GS ­ GS ­ GS
+Ü ÛWkp‰gİ: GST ­ GST ­ GST
 ÷üüüüüüüüüüü
 Ü µl r· Wkp‰g l r = C‰g {C‰g{l}; C‰g{l;r}}
 °
@@ -480,12 +392,10 @@ declare_infix (1100, "í‰g");
 
 \subsection{Ordinals}
 
-The following will be a bit fluid until I find an acceptable way of getting good induction principles.
-
 Zero:
 
 ¹HOLCONST
-Ü Ûš‰gİ: GS
+Ü Ûš‰gİ: GST
 ÷üüüüüüüüüüü
 Ü š‰g = C‰g {}
 °
@@ -501,7 +411,7 @@ val ³š_thm = save_pop_thm "³š_thm" ;
 
 set_goal([], ¬C‰g {} = š‰g ± C‰g {x|F} = š‰g®);
 a (rewrite_tac [get_spec ¬š‰g®]);
-a (LEMMA_T ¬{x:GS|F} = {}® rewrite_thm_tac THEN1 prove_tac[]);
+a (LEMMA_T ¬{x:GST|F} = {}® rewrite_thm_tac THEN1 prove_tac[]);
 val C_š_lemma = save_pop_thm "C_š_lemma";
 
 set_goal([], ¬µs· š‰g €‰g s®);
@@ -522,75 +432,23 @@ C_š_lemma =
 and the successor function:
 
 ¹HOLCONST
-Ü Ûsucc‰gİ: GS ­ GS
+Ü Ûsucc‰gİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µon· succ‰g on = C‰g {x | x = on ² x ‰g on}
 °
 
-The limit operation defined here only makes sense when applied to sets of ordinals.
-
-¹HOLCONST
-Ü Ûolimit‰gİ: GS ­ GS
-÷üüüüüüüüüüü
-Ü µson· olimit‰g son = Ş‰g son
-°
-
-Now we combine these functions together to make the inductive definition.
-This is the strict supremum of a set of ordinals.
-
-¹HOLCONST
-Ü Ûssup‰gİ: GS ­ GS
-÷üüüüüüüüüüü
-Ü µson· ssup‰g son = olimit‰g (C‰g {s | ¶or· or ‰g son ± s = succ‰g or})
-°
-
-To use this for an inductive definition using the available machinary we need it to be presented as a function from SETs (of GS) to SETSs.
-
-¹HOLCONST
-Ü ÛSETssup‰gİ: GS SET ­ GS SET
-÷üüüüüüüüüüü
-Ü µson· SETssup‰g son = if ¶‰g son then X‰g (ssup‰g (C‰g son)) else {}
-°
-
-¹HOLCONST
-Ü Ûordinal‰g1İ: GS SET
-÷üüüüüüüüüüü
-Ü ordinal‰g1 = HeredFun SETssup‰g
-°
-
-\ignore{
-=IGN
-push_pc "hol";
-set_goal([], ¬µp· (µor· or  ordinal‰g1 ´ (µs· s ‰g or ´ p s) ´ p or)
-	´ µs· s  ordinal‰g1 ´ p s®);
-a (REPEAT strip_tac);
-
-set_goal([], ¬µ s· (µ t· X‰g t € s ´ ssup‰g t  s) ´ ordinal‰g1 € s®);
-a (rewrite_tac [get_spec ¬SETssup‰g®]);
-
-set_goal([], ¬µ s· (µ t· t € s ´ SETssup‰g t € s) ´ ordinal‰g1 € s®);
-a (rewrite_tac [get_spec ¬SETssup‰g®]);
-
-pc_rule1 "hol" rewrite_rule (map get_spec [¬SETssup‰g®, ¬HeredFun®, ¬Fun2MonoFun®, ¬Lfp®])
-(µ_elim ¬SETssup‰g® HeredFun_induction_thm2);
-=TEX
-}%ignore
-
-=GFT
-=TEX
-
 A property of sets is ordinal closed if it is true of the empty set and is closed under successor and limit constructions.
 
 ¹HOLCONST
-Ü ÛOclosedİ: (GS ­ BOOL) ­ BOOL
+Ü ÛOclosedİ: (GST ­ BOOL) ­ BOOL
 ÷üüüüüüüüüüü
 Ü µps· Oclosed ps ¤ ps š‰g
 Ü	± (µx· ps x ´ ps (succ‰g x))
-Ü	± (µss· (µx· x ‰g ss ´ ps x) ´ ps (olimit‰g ss)) 
+Ü	± (µss· (µx· x ‰g ss ´ ps x) ´ ps (Ş‰g ss)) 
 °
 
 ¹HOLCONST
-Ü ÛOrdinalİ: GS ­ BOOL
+Ü ÛOrdinalİ: GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs· Ordinal s ¤ µps· Oclosed ps ´ ps s
 °
@@ -613,14 +471,14 @@ ord_š_lemma =
 =TEX
 
 ¹HOLCONST
-Ü Û1‰gİ Û2‰gİ: GS
+Ü Û1‰gİ Û2‰gİ: GST
 ÷üüüüüüüüüüü
 Ü 1‰g = succ‰g š‰g ± 2‰g = succ‰g 1‰g 
 °
 
 
 ¹HOLCONST
-Ü ÛTransitive‰gİ: GS ­ BOOL
+Ü ÛTransitive‰gİ: GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs· Transitive‰g s ¤ µt· t ‰g s ´ t €‰g s
 °
@@ -634,7 +492,7 @@ a (rewrite_tac [get_spec ¬Transitive‰g®]);
 set_goal([], ¬WellFounded (ordinals, $ ‰g)®);
 a (rewrite_tac [well_founded_induction_thm, get_spec ¬$ ‰g®, get_spec ¬$€‰g®]
 	THEN REPEAT strip_tac);
-a (asm_tac (((rewrite_rule []) o (µ_elim ¬Ìx· x  ordinals ´ p x®)) GS_wf_ax));
+a (asm_tac (((rewrite_rule []) o (µ_elim ¬Ìx· x  ordinals ´ p x®)) GST_wf_ax));
 a (lemma_tac ¬µ s· (µ t· t ‰g s ´ t  ordinals ´ p t) ´ s  ordinals ´ p s®
 	THEN1 REPEAT strip_tac);
 (* *** Goal "1" *** *)
@@ -647,9 +505,9 @@ a (spec_nth_asm_tac 5 ¬s®);
 \subsection{Relations and Functions}
 
 ¹HOLCONST
-Ü ÛRelationİ: GS ­ BOOL
+Ü ÛRelationİ: GST ­ BOOL
 ÷üüüüüüüüüüü
-Ü µs· Relation s ¤ µx· x ‰g s ´ ¶l r:GS· x = l í‰g r 
+Ü µs· Relation s ¤ µx· x ‰g s ´ ¶l r:GST· x = l í‰g r 
 °
 
 \ignore{
@@ -666,9 +524,9 @@ rel_š_lemma =
 =TEX
 
 ¹HOLCONST
-Ü ÛFunctionİ: GS ­ BOOL
+Ü ÛFunctionİ: GST ­ BOOL
 ÷üüüüüüüüüüü
-Ü µs· Function s ¤ Relation s ± µx y z:GS· x í‰g y ‰g s ± x í‰g z ‰g s ´ y = z   
+Ü µs· Function s ¤ Relation s ± µx y z:GST· x í‰g y ‰g s ± x í‰g z ‰g s ´ y = z   
 °
 
 \ignore{
@@ -685,7 +543,7 @@ func_š_lemma =
 =TEX
 
 ¹HOLCONST
-Ü Ûdomainİ: GS ­ GS
+Ü Ûdomainİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µs· domain s = C‰g {x | ¶y· x í‰g y ‰g s}   
 °
@@ -704,7 +562,7 @@ dom_š_lemma =
 =TEX
 
 ¹HOLCONST
-Ü Ûrangeİ: GS ­ GS
+Ü Ûrangeİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µs· range s = C‰g {y | ¶x· x í‰g y ‰g s}   
 °
@@ -729,9 +587,9 @@ declare_infix (900, "¸‰g");
 Cartesian product:
 
 ¹HOLCONST
-Ü $Û¸‰gİ: GS ­ GS ­ GS
+Ü $Û¸‰gİ: GST ­ GST ­ GST
 ÷üüüüüüüüüüü
-Ü µs t· s ¸‰g t = C‰g {p:GS | ¶l r· l ‰g s ± r ‰g t ± p = l í‰g r}   
+Ü µs t· s ¸‰g t = C‰g {p:GST | ¶l r· l ‰g s ± r ‰g t ± p = l í‰g r}   
 °
 
 =GFT
@@ -753,12 +611,12 @@ set_goal([], ¬C‰g {} = š‰g
 
 a (rewrite_tac [C_š_lemma, €‰gš_lemma, ord_š_lemma, rel_š_lemma, func_š_lemma,
 	dom_š_lemma, ran_š_lemma]);
-val GS_š_clauses = save_pop_thm "GS_š_clauses";
+val GST_š_clauses = save_pop_thm "GST_š_clauses";
 =TEX
 }%ignore
 
 =GFT
-GS_š_clauses =
+GST_š_clauses =
    ô C‰g {} = š‰g
        ± C‰g {x|F} = š‰g
        ± (µ s· š‰g €‰g s)
@@ -771,10 +629,10 @@ GS_š_clauses =
 
 \ignore{
 =SML
-force_new_pc "'GS1";
-add_rw_thms [GS_š_clauses] "'GS1";
-add_sc_thms [GS_š_clauses] "'GS1";
-add_st_thms [GS_š_clauses] "'GS1";
+force_new_pc "'GST1";
+add_rw_thms [GST_š_clauses] "'GST1";
+add_sc_thms [GST_š_clauses] "'GST1";
+add_st_thms [GST_š_clauses] "'GST1";
 =IGN
 force_new_pc "'nfu_f2";
 set_rw_eqn_cxt ([(¬x = y®, nfu_f_eq_ext_conv)]) "'nfu_f2";
@@ -783,7 +641,7 @@ add_rw_thms [get_spec ¬$€‰nf®, nfu_f_op_ext_clauses2] "'nfu_f2";
 set_pr_conv nfu_f_prove_conv "'nfu_f2";
 set_pr_tac nfu_f_prove_tac "'nfu_f2";
 =SML
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GST1"];
 =TEX
 }%ignore
 
@@ -914,7 +772,7 @@ new_axiom (["SInfAx"], ¬
 ®);
 =TEX
 
-The weak axiom of infinity has some similarity with the galactic closure axiom for GS.
+The weak axiom of infinity has some similarity with the galactic closure axiom for GST.
 Taking the idea of a galaxy but limiting the closure properties to closure under replacement, we get the following axiom.
 Think of it in terms of ordinals which we may think of according the the Von Neumann conception (though the model behind the surreals is not the same) in which each ordinal is the set of its predecessors (in the surreals it is more like an ordinal is the set of numbers of smaller rank).
 So we are asserting that for every surreal ordinal $s$ there is a large ordinal $g$ which is ``closed under replacement'', i.e. the image of an ordinal $x$ under a function $f$ is bounded in the galaxy if it is a subset of it.
@@ -933,9 +791,9 @@ new_axiom (["WInfAx"], ¬
 \subsection{Constructing the Surreal Numbers}
 
 =SML
-open_theory "GS";
+open_theory "GST";
 force_new_theory "src";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GST1"];
 =TEX
 
 \subsubsection{The Representation of Surreals}
@@ -946,7 +804,7 @@ The first method is to use transfinite binary expansions which I have done follo
 A surreal number is a function whose domain is an ordinal and whose range is a subset of $2‰g$:
 
 ¹HOLCONST
-Ü ÛSurreal_repİ: GS ­ BOOL
+Ü ÛSurreal_repİ: GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs· Surreal_rep s ¤ Function s ± Ordinal (domain s) ± (range s) €‰g 2‰g   
 °
@@ -969,7 +827,7 @@ Surreal_exists_thm =
 Sometimes its handy to have this as a set:
 
 ¹HOLCONST
-Ü Ûsurreal_repsİ: GS SET
+Ü Ûsurreal_repsİ: GST SET
 ÷üüüüüüüüüüü
 Ü surreal_reps = {s | Surreal_rep s}
 °
@@ -984,7 +842,7 @@ declare_infix (70, "<<‰srr");
 =TEX
 
 ¹HOLCONST
-Ü $Û<<‰srrİ: GS ­ GS ­ BOOL
+Ü $Û<<‰srrİ: GST ­ GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µx y· x <<‰srr y ¤ Surreal_rep x ± Surreal_rep y ± domain x  ‰g domain y
 °
@@ -995,7 +853,7 @@ stop;
 set_goal([], ¬WellFounded (surreal_reps, $<<‰srr)®);
 a (rewrite_tac [get_spec ¬surreal_reps®, well_founded_induction_thm, get_spec ¬$<<‰srr®]);
 a (REPEAT strip_tac);
-a (asm_tac (µ_elim ¬p® GS_wf_ax));
+a (asm_tac (µ_elim ¬p® GST_wf_ax));
 a (lemma_tac ¬(µ s· (µ t· t ‰g s ´ p t) ´ p s)®
 	THEN REPEAT strip_tac);
 
@@ -1011,7 +869,7 @@ declare_infix (70, "<‰srr");
 
 The next key element of the construction is the usual linear ordering of the surreals.
 ¹HOLCONST
-Ü $Û<‰srrİ: GS ­ GS ­ BOOL
+Ü $Û<‰srrİ: GST ­ GST ­ BOOL
 ÷üüüüüüüüüüü
 Ü µs t· s <‰srr t ¤
 Ü	s €‰g t ± (domain s í‰g 1‰g) ‰g t
@@ -1025,12 +883,12 @@ In order to do this we need to define some auxiliary functions which translate b
 First, from a number obtain a left and a right set of numbers:
 
 ¹HOLCONST
-Ü ÛLİ: GS ­ GS
+Ü ÛLİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µn· L n =  C‰g{m | m  ‰g n ± domain m í‰g 1‰g ‰g n}   
 °
 ¹HOLCONST
-Ü ÛRİ: GS ­ GS
+Ü ÛRİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µn· R n =  C‰g {m | m  ‰g n ± domain m í‰g š‰g ‰g n}   
 °
@@ -1040,7 +898,7 @@ Each pair of sets of numbers $L$, $R$ such that every element of $L$ is less tha
 This does not correspond precisely to the WIkpedia account, since in it $Ó(L,R)$ is supposed to be strictly between $L$ and $R$, and right now I can't see how to do that in the case that one half contains a number which is an initial segment of a number in the other half.
 
 ¹HOLCONST
-Ü ÛÓİ: GS ¸ GS ­ GS
+Ü ÛÓİ: GST ¸ GST ­ GST
 ÷üüüüüüüüüüü
 Ü µls rs· Ó(ls, rs) =  C‰g (Ş {i | ¶le re· le ‰g ls ± re ‰g rs ± i = (X‰g le) ¡ (X‰g re)})
 °
@@ -1080,7 +938,7 @@ recursion_theorem
 }%ignore
 
 ¹HOLCONST
-Ü $Û+‰srrİ: GS ­ GS ­ GS
+Ü $Û+‰srrİ: GST ­ GST ­ GST
 ÷üüüüüüüüüüü
 Ü µx y· Surreal_rep x ± Surreal_rep y ´
 Ü     x +‰srr y = Ó(
@@ -1089,21 +947,21 @@ recursion_theorem
 °
 
 ¹HOLCONST
-Ü $Û~‰srrİ: GS ­ GS
+Ü $Û~‰srrİ: GST ­ GST
 ÷üüüüüüüüüüü
 Ü µx· Surreal_rep x ´
 Ü     ~‰srr x = C‰g{z | ¶u v· z = u í‰g v ± u í‰g (if v = š‰g then 1‰g else š‰g) ‰g x}
 °
 
 ¹HOLCONST
-Ü $Û-‰srrİ: GS ­ GS ­ GS
+Ü $Û-‰srrİ: GST ­ GST ­ GST
 ÷üüüüüüüüüüü
 Ü µx y· Surreal_rep x ± Surreal_rep y ´
 Ü     x -‰srr y = x +‰srr (~‰srr y)
 °
 
 ¹HOLCONST
-Ü $Û*‰srrİ: GS ­ GS ­ GS
+Ü $Û*‰srrİ: GST ­ GST ­ GST
 ÷üüüüüüüüüüü
 Ü µx y· Surreal_rep x ± Surreal_rep y ´
 Ü     x *‰srr y = Ó(
@@ -1125,7 +983,7 @@ recursion_theorem
 =SML
 open_theory "src";
 force_new_theory "sr";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
+set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GST1"];
 new_type_defn (["sr"], "sr", [], Surreal_exists_thm);
 =TEX
 
@@ -1139,7 +997,7 @@ new_type_defn (["sr"], "sr", [], Surreal_exists_thm);
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{GS.th}
+\include{GST.th}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{sra.th}
