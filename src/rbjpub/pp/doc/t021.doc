@@ -1,7 +1,9 @@
 =IGN
-$Id: t021.doc,v 1.9 2007/09/28 15:24:53 rbj01 Exp $
-open_theory "";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+$Id: t021.doc,v 1.10 2007/10/21 19:54:19 rbj01 Exp $
+open_theory "ICsyn";
+set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
+open_theory "ICsem";
+set_merge_pcs ["hol", "'GS1", "'ICsyn", "'ICsem"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -28,8 +30,8 @@ set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This paper is concerned with set theory conceived as being a maximal consistent theory of set comprehension.
-This is done by looking for large subdomains of a notation for infinitary comprehension. 
+This paper is concerned with set theory conceived as a maximal consistent theory of set comprehension.
+This is interpreted by looking for large subdomains of a notation for infinitary comprehension, and the theory is developed from such interpretations.
 \end{abstract}
 
 \vfill
@@ -40,12 +42,12 @@ This is done by looking for large subdomains of a notation for infinitary compre
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2007/09/28 15:24:53 $ $
+Last Change $ $Date: 2007/10/21 19:54:19 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.9 2007/09/28 15:24:53 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.10 2007/10/21 19:54:19 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -77,11 +79,37 @@ $ $Id: t021.doc,v 1.9 2007/09/28 15:24:53 rbj01 Exp $ $
 \newpage
 \section{INTRODUCTION}
 
+The idea is to come up with a set theory whose subject matter combines the well-founded sets of the cumulative heirarchy with a similarly rich non-well-founded ontology.
+
+The well-founded ontology is based on a simple ontological principle embodied in the following informal definition (transfinite, inductive) of ``well-founded set'':
+{\quote a well-founded set is any definite collection of well-founded sets}
+
+Analysis and futher explication of this definition is worthwhile, but is not our present purpose, for which we will assume that the above description suffices and proceed to the non-well-founded sets.
+
+There are different conceptions of well-founded-set from which we may chose, and I do not know of any single all encompassing conception.
+Probably the single most prominent conception comes from the idea of set comprehension, viz. that to some useful subset of the properties of sets there correspond sets which are the extensions of the properties.
+In the beginnings, Frege allowed unrestrained comprehension, which resulted in inconsistency.
+A variety of set theories may then be regarded as limitations on the ideal of unrestrained comprehension sufficient to avoid incoherence.
+One of these yields the well-founded sets (or some of them).
+
+If the incoherence of unrestricted comprehension could be located in specific properties then sets correponding to their extension could be omitted from the the domain of discourse and a maximal consistent theory of set comprehension might result.
+There is however no obvious way to do this.
+The properties are themselves all equally coherent, it is only when we attempt to realise an ontology of sets whose extensions correpond to the properties that we run into trouble, and when this happens it is not so easy to say which properties are at fault.
+Nevertheless, this is what we are going to attempt here.
+
+There is another problem which must be mentioned here.
+When we seek a full theory of comprehension, we are looking for a set theory in which the set properties of sets is the same as the set of sets itself.
+There is a problem of cardinality here, which forces us to limit our selection of properties.
+This problem we address by taking, instead of the notion of property in general, the notion of definable property or rule will be used.
+The number of such definable properties depends upon the language in which the definition takes place, and we arrange for the cardinality of the syntax of this language to be the same as the cardinality of the domain of our set theory (which will also be the cardinality of the well-founded part of the domain).
+This effect can be achieved by coding up the properties in an infinitary language whose syntax is made from well-founded sets.
+The language will have sufficent syntax for every well-founded set to correspond to a definable property as well as the non-well-founded sets, and we therefore by means of this infinitary syntax assimilate both non well-founded and well-founded sets, but also the notion of set as graph an set as rule.
+
 The plan is:
 
 \begin{itemize}
 
-\item Define using the ontology of a well-founded set theory a notation for infinitary comprehension (this will be a transfinite inductive definition of a way of coding up set comprehension in an infinitary language for set theory).
+\item Define using the ontology of a well-founded set theory (GS) a notation for infinitary comprehension (this will be a transfinite inductive definition of a way of coding up set comprehension in an infinitary language for set theory).
 
 \item Give a semantics to this notation as a functor which transforms pairs of partial equality and membership relations over closed comprehensions.
 
@@ -90,29 +118,23 @@ The plan is:
 \end{itemize}
 
 \newpage
-\section{SYNTAX}
 
 =SML
 open_theory "GS";
-force_new_theory "t021";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof", "'GS1"];
+force_new_theory "ICsyn";
+new_parent "U_orders";
+force_new_pc "'ICsyn";
+merge_pcs ["'savedthm_cs_¶_proof"] "'ICsyn";
+set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
 =TEX
 
-Here is an abstract syntax:
+\section{MISCELLANEA}
 
-=GFT
-term    ::= ordinal
-	 | SetComp formula
+I am at present using a set theory based on an old version of the theory of well-foundedness and well-founded recursion.
 
-formula ::= term = term
-          | term  term
-          | Œ ordinal (ğ formula)
-=TEX
+Some definitions are supplied here which patch over the differences between the new and old treatments of well-foundedness.
 
-The ordinals here are used as variables, and Von Neumann ordinals are required.
-They are in fact used like De Bruijn indices, so comprehension always binds the variable zero at the outermost level, and binds a higher numbered variable in inner scopes.
-A single constructor is provided for formulae (Œ) and is to be understood as the negation of the universal quantification of the conjunction of a set (of any cardinality) of formulae.
-This quantified simultaneously quantifies over any number of variables.
+\subsection{Naming the Natural Numbers}
 
 It will be useful to be able to have names for the finite ordinals, which are used as tags in the syntax:
 
@@ -123,81 +145,448 @@ It will be useful to be able to have names for the finite ordinals, which are us
 Ü ± µn· Nat‰g (n+1) = suc‰o (Nat‰g n)
 °
 
+We will need to know that these are all distinct ordinals.
+
+=GFT
+ord_nat_thm =
+	ô µ n· ordinal (Nat‰g n)
+
+not_suc_nat_zero_thm =
+	ô µ n· ³ suc‰o (Nat‰g n) = š‰g
+
+less_sum_thm =
+	ô µ x y· x ¼ y ´ (¶ z· x + z = y)
+
+natg_mono_thm =
+	ô µ x y· Nat‰g x ¼‰o Nat‰g (x + y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µn· ordinal (Nat‰g n)®);
+a (strip_tac);
+a (induction_tac ¬n®);
+a (rewrite_tac [get_spec ¬Nat‰g®, ordinal_š‰g]);
+a (rewrite_tac [get_spec ¬Nat‰g®]);
+a (fc_tac [ord_suc_ord_thm]);
+val ord_nat_thm = save_pop_thm "ord_nat_thm";
+
+set_goal([], ¬µn· ³ suc‰o (Nat‰g n) = š‰g®);
+a (asm_tac ord_nat_thm);
+a (strip_asm_tac š‰g_not_suc‰o_thm);
+a strip_tac;
+a (spec_nth_asm_tac 1 ¬Nat‰g n®);
+val not_suc_nat_zero_thm = save_pop_thm "not_suc_nat_zero_thm";
+
+set_goal([], ¬µx y:î· x ¼ y ´ ¶z· x + z = y®);
+a (REPEAT µ_tac);
+a (induction_tac ¬y®);
+(* *** Goal "1" *** *)
+a (strip_tac THEN ¶_tac ¬0® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac THEN ¶_tac ¬0®
+	THEN (PC_T1 "lin_arith" asm_prove_tac[]));
+(* *** Goal "3" *** *)
+a (strip_tac THEN ¶_tac ¬z + 1®
+	THEN (PC_T1 "lin_arith" asm_prove_tac[]));
+val less_sum_thm = save_pop_thm "less_sum_thm";
+
+set_goal([], ¬µx y:î· Nat‰g x ¼‰o Nat‰g (x + y)®);
+a (REPEAT µ_tac);
+a (induction_tac ¬y®);
+(* *** Goal "1" *** *)
+a (rewrite_tac [leo_lo_thm, ord_nat_thm]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬Nat‰g®,
+	pc_rule1 "lin_arith" prove_rule [] ¬x + y + 1 = (x + y) + 1®]);
+a (asm_tac leo_suc_thm);
+a (asm_tac ord_nat_thm);
+a (spec_nth_asm_tac 1 ¬x+y®);
+a (asm_fc_tac []);
+a (all_asm_fc_tac [leo_trans_thm]);
+val natg_mono_thm = save_pop_thm "natg_mono_thm";
+
+set_goal([], ¬µx y· Nat‰g x = Nat‰g y ´ x = y®);
+a (REPEAT µ_tac);
+a (strip_asm_tac (list_µ_elim [¬x®, ¬y®] ¼_cases_thm));
+(* *** Goal "1" *** *)
+a (fc_tac [less_sum_thm]);
+a (POP_ASM_T ante_tac THEN induction_tac ¬z®);
+(* *** Goal "1.1" *** *)
+a (rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (strip_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (lemma_tac ¬Nat‰g x ¼‰o Nat‰g (x + z)®
+	THEN1 rewrite_tac [natg_mono_thm]);
+a (lemma_tac ¬Nat‰g (x + z) <‰o Nat‰g (x + z + 1)®);
+(* *** Goal "1.2.1" *** *)
+a (rewrite_tac [pc_rule1 "lin_arith" prove_rule [] ¬x + z + 1 = (x + z) + 1®]);
+a (rewrite_tac [get_spec ¬Nat‰g®]);
+a (asm_tac (µ_elim ¬x+z® ord_nat_thm));
+a (FC_T rewrite_tac [lo_suc_thm]);
+(* *** Goal "1.2.2" *** *)
+a (all_fc_tac [leo_lo_trans_thm]);
+a (POP_ASM_T ante_tac
+	THEN (rewrite_tac [get_spec ¬$<‰o®])
+	THEN REPEAT strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac [wf_l1]);
+(* *** Goal "1.3" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "1.4" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [less_sum_thm]);
+a (POP_ASM_T ante_tac THEN induction_tac ¬z®);
+(* *** Goal "2.1" *** *)
+a (rewrite_tac[] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (strip_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (lemma_tac ¬Nat‰g y ¼‰o Nat‰g (y + z)®
+	THEN1 rewrite_tac [natg_mono_thm]);
+a (lemma_tac ¬Nat‰g (y + z) <‰o Nat‰g (y + z + 1)®);
+(* *** Goal "2.2.1" *** *)
+a (rewrite_tac [pc_rule1 "lin_arith" prove_rule [] ¬y + z + 1 = (y + z) + 1®]);
+a (rewrite_tac [get_spec ¬Nat‰g®]);
+a (asm_tac (µ_elim ¬y+z® ord_nat_thm));
+a (FC_T rewrite_tac [lo_suc_thm]);
+(* *** Goal "2.2.2" *** *)
+a (all_fc_tac [leo_lo_trans_thm]);
+a (POP_ASM_T ante_tac
+	THEN (rewrite_tac [get_spec ¬$<‰o®])
+	THEN REPEAT strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac [wf_l1]);
+(* *** Goal "2.3" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.4" *** *)
+a (asm_rewrite_tac[]);
+val natg_one_one_thm = save_pop_thm "natg_one_one_thm";
+
+=IGN
+set_goal([], ¬µx y· Nat‰g (x+y) = (Nat‰g x) +‰o (Nat‰g y)®);
+a (REPEAT µ_tac);
+a (induction_tac ¬y®);
+a (rewrite_tac[get_spec ¬$+‰o®, get_spec ¬Nat‰g®]);
+a (rewrite_tac [pc_rule1 "lin_arith" prove_rule [] ¬x + y + 1 = (x + y) + 1®]);
+a (asm_rewrite_tac[get_spec¬Nat‰g®]);
+=TEX
+}%ignore
+
+\subsection{Some Synonyms}
+
+=GFT
+tc_TranClsr_thm =
+	ô µ r· (Universe, tc r) = TranClsr (Universe, r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µr· (Universe, tc r) = TranClsr (Universe, r)®);
+a (rewrite_tac (map get_spec [
+	¬tc®,
+	¬TranClsr®,
+	¬trans®,
+	¬Trans®]));
+val tc_TranClsr_thm = save_pop_thm "tc_TranClsr_thm";
+=TEX
+}%ignore
+
+\section{SYNTAX}
+
+Here is an abstract syntax:
+
+=GFT
+term    ::= ordinal
+	 | SetComp formula
+
+formula ::= term = term
+          | term  term
+          | tf ordinal (ğ formula)
+=TEX
+
+The ordinals here are used as variables, and Von Neumann ordinals are required.
+They are in fact used like De Bruijn indices, so comprehension always binds the variable zero at the outermost level, and binds a higher numbered variable in inner scopes.
+A single constructor is provided for truth functional expressions and is to be understood as the negation of the universal quantification of the conjunction of a set (of any cardinality) of formulae.
+This quantified simultaneously quantifies over any number of variables.
+
 The following define realisations of the constructors for the abstract syntax:
 
+
 ¹HOLCONST
-Ü ÛMkTermİ : GS ­ GS
+Ü ÛMkVarİ : GS ­ GS
 ÷üüüüüüüüüüü
-Ü    µt· MkTerm t = (Nat‰g 0) í‰g t
+Ü    µv· MkVar v = (Nat‰g 0) í‰g v
+°
+
+¹HOLCONST
+Ü ÛIsVarİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsVar t = fst t = (Nat‰g 0)
+°
+
+¹HOLCONST
+Ü ÛVarNumİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    VarNum = snd
+°
+
+¹HOLCONST
+Ü ÛMkCompİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    µf· MkComp f = (Nat‰g 1) í‰g f
+°
+
+¹HOLCONST
+Ü ÛIsCompİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsComp t = fst t = (Nat‰g 1)
+°
+
+¹HOLCONST
+Ü ÛCompBodyİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü    CompBody = snd
+°
+
+¹HOLCONST
+Ü ÛMkEqİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µlr· MkEq lr = (Nat‰g 2) í‰g ((Fst lr) í‰g (Snd lr))
+°
+
+¹HOLCONST
+Ü ÛIsEqİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsEq t = fst t = (Nat‰g 2)
+°
+
+¹HOLCONST
+Ü ÛMkMemİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µ lr·  MkMem lr = (Nat‰g 3) í‰g ((Fst lr) í‰g (Snd lr))
+°
+
+¹HOLCONST
+Ü ÛIsMemİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µt· IsMem t = fst t = (Nat‰g 3)
+°
+
+¹HOLCONST
+Ü ÛAtomLhsİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  AtomLhs = Ìx· fst(snd x)
+°
+
+¹HOLCONST
+Ü ÛAtomRhsİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  AtomRhs = Ìx· snd(snd x)
+°
+
+¹HOLCONST
+Ü ÛMkTfİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvc· MkTf vc = (Nat‰g 4) í‰g ((Fst vc) í‰g (Snd vc))
+°
+
+¹HOLCONST
+Ü ÛIsTfİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTf t = fst t = (Nat‰g 4)
+°
+
+¹HOLCONST
+Ü ÛTfVarsİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  TfVars = Ìx· fst(snd x)
+°
+
+¹HOLCONST
+Ü ÛTfFormsİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  TfForms = Ìx· snd(snd x)
+°
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬(µv· IsVar (MkVar v))
+	± (µf· ³ IsVar (MkComp f))
+	± (µlr· ³ IsVar (MkEq lr))
+	± (µlr· ³ IsVar (MkMem lr))
+	± (µvc· ³ IsVar (MkTf vc))®);
+a (rewrite_tac [get_spec ¬IsVar®,
+	get_spec ¬MkVar®,
+	get_spec ¬MkComp®,
+	get_spec ¬MkEq®,
+	get_spec ¬MkMem®,
+	get_spec ¬MkTf®]);
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
+	THEN PC_T1 "lin_arith" prove_tac[]);
+val IsVar_clauses = save_pop_thm "IsVar_clauses";
+
+set_goal([], ¬(µv· ³ IsComp (MkVar v))
+	± (µf· IsComp (MkComp f))
+	± (µlr· ³ IsComp (MkEq lr))
+	± (µlr· ³ IsComp (MkMem lr))
+	± (µvc· ³ IsComp (MkTf vc))®);
+a (rewrite_tac [get_spec ¬IsComp®,
+	get_spec ¬MkVar®,
+	get_spec ¬MkComp®,
+	get_spec ¬MkEq®,
+	get_spec ¬MkMem®,
+	get_spec ¬MkTf®]);
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
+	THEN PC_T1 "lin_arith" prove_tac[]);
+val IsComp_clauses = save_pop_thm "IsComp_clauses";
+
+set_goal([], ¬(µv· ³ IsEq (MkVar v))
+	± (µf· ³ IsEq (MkComp f))
+	± (µlr· IsEq (MkEq lr))
+	± (µlr· ³ IsEq (MkMem lr))
+	± (µvc· ³ IsEq (MkTf vc))®);
+a (rewrite_tac [get_spec ¬IsEq®,
+	get_spec ¬MkVar®,
+	get_spec ¬MkComp®,
+	get_spec ¬MkEq®,
+	get_spec ¬MkMem®,
+	get_spec ¬MkTf®]);
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
+	THEN PC_T1 "lin_arith" prove_tac[]);
+val IsEq_clauses = save_pop_thm "IsEq_clauses";
+
+set_goal([], ¬(µv· ³ IsMem (MkVar v))
+	± (µf· ³ IsMem (MkComp f))
+	± (µlr· ³ IsMem (MkEq lr))
+	± (µlr· IsMem (MkMem lr))
+	± (µvc· ³ IsMem (MkTf vc))®);
+a (rewrite_tac [get_spec ¬IsMem®,
+	get_spec ¬MkVar®,
+	get_spec ¬MkComp®,
+	get_spec ¬MkEq®,
+	get_spec ¬MkMem®,
+	get_spec ¬MkTf®]);
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
+	THEN PC_T1 "lin_arith" prove_tac[]);
+val IsMem_clauses = save_pop_thm "IsMem_clauses";
+
+set_goal([], ¬(µv· ³ IsTf (MkVar v))
+	± (µf· ³ IsTf (MkComp f))
+	± (µlr· ³ IsTf (MkEq lr))
+	± (µlr· ³ IsTf (MkMem lr))
+	± (µvc· IsTf (MkTf vc))®);
+a (rewrite_tac [get_spec ¬IsTf®,
+	get_spec ¬MkVar®,
+	get_spec ¬MkComp®,
+	get_spec ¬MkEq®,
+	get_spec ¬MkMem®,
+	get_spec ¬MkTf®]);
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
+	THEN PC_T1 "lin_arith" prove_tac[]);
+val IsTf_clauses = save_pop_thm "IsTf_clauses";
+
+val Is_clauses = list_±_intro [IsVar_clauses, IsComp_clauses, IsEq_clauses, IsMem_clauses, IsTf_clauses];
+
+add_pc_thms "'ICsyn" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
+
+=SML
+set_goal ([], ¬
+	(µx· IsVar x ´ ³ IsComp x ± ³ IsEq x ± ³ IsMem x ± ³ IsTf x)
+±	(µx· IsComp x ´ ³ IsVar x ± ³ IsEq x ± ³ IsMem x ± ³ IsTf x)
+±	(µx· IsEq x ´ ³ IsComp x ± ³ IsVar x ± ³ IsMem x ± ³ IsTf x)
+±	(µx· IsMem x ´ ³ IsComp x ± ³ IsVar x ± ³ IsEq x ± ³ IsTf x)
+±	(µx· IsTf x ´ ³ IsComp x ± ³ IsVar x ± ³ IsEq x ± ³ IsMem x)
+®);
+a (rewrite_tac (map get_spec [¬IsVar®, ¬IsComp®, ¬IsEq®, ¬IsMem®, ¬IsTf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN PC_T1 "lin_arith" rewrite_tac[]);
+val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses";
+=TEX
+
+}%ignore
+
+Some derived syntax:
+
+¹HOLCONST
+Ü ÛMkNotİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µf· MkNot f = MkTf (š‰g, Pair f f)
 °
 
 ¹HOLCONST
 Ü ÛIsTermİ : GS ­ BOOL
 ÷üüüüüüüüüüü
-Ü    µt· IsTerm t = fst t = (Nat‰g 0)
+Ü    µt· IsTerm t ¤ IsVar t ² IsComp t
 °
 
 ¹HOLCONST
 Ü ÛTermsİ : GS SET ­ GS SET
 ÷üüüüüüüüüüü
-Ü    µs· Terms s = {x | ¶t· x = MkTerm t ± x  s}
+Ü    µs· Terms s = {x | x  s ± IsTerm x}
 °
 
+=GFT
+terms_mono_thm =
+	ô µ s t· s € t ´ Terms s € Terms t
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µs t· s € t ´ Terms s € Terms t®);
+a (rewrite_tac [get_spec ¬Terms®] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val terms_mono_thm = save_pop_thm "terms_mono_thm";
+=TEX
+}%ignore
+
+
 ¹HOLCONST
-Ü ÛFormulaİ : GS ­ GS
+Ü ÛIsFormİ : GS ­ BOOL
 ÷üüüüüüüüüüü
-Ü    µf· Formula f = (Nat‰g 1) í‰g f
+Ü    µx· IsForm x ¤ IsMem x ² IsEq x ² IsTf x
 °
 
 ¹HOLCONST
 Ü ÛFormulasİ : GS SET ­ GS SET
 ÷üüüüüüüüüüü
-Ü    µs· Formulas s = {x | ¶f· x = Formula f ± x  s}
+Ü    µs· Formulas s = {x | x  s ± IsForm x}
 °
 
-¹HOLCONST
-Ü ÛVarİ : GS ­ GS
-÷üüüüüüüüüüü
-Ü    µord· Var ord = (Nat‰g 0) í‰g ord
-°
+=GFT
+formulas_mono_thm =
+	ô µ s t· s € t ´ Formulas s € Formulas t
+=TEX
 
-¹HOLCONST
-Ü ÛSetCmpİ : GS ­ GS
-÷üüüüüüüüüüü
-Ü    µf· SetCmp f = (Nat‰g 1) í‰g f
-°
+\ignore{
+=SML
+set_goal([], ¬µs t· s € t ´ Formulas s € Formulas t®);
+a (rewrite_tac [get_spec ¬Formulas®]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val formulas_mono_thm = save_pop_thm "formulas_mono_thm";
+=TEX
+}%ignore
 
-¹HOLCONST
-Ü ÛEqİ : GS ¸ GS ­ GS
-÷üüüüüüüüüüü
-Ü µl r· Eq (l,r) = (Nat‰g 0) í‰g (l í‰g r)
-°
-
-¹HOLCONST
-Ü ÛMemİ : GS ¸ GS ­ GS
-÷üüüüüüüüüüü
-Ü µ l r·  Mem (l, r) = (Nat‰g 1) í‰g (l í‰g r)
-°
-
-¹HOLCONST
-Ü ÛŒİ : GS ¸ GS ­ GS
-÷üüüüüüüüüüü
-Ü µvars conjs· Œ (vars, conjs) = (Nat‰g 2) í‰g (vars í‰g conjs)
-°
 
 ¹HOLCONST
 Ü ÛRepClosedİ: GS SET ­ BOOL
 ÷üüüüüüüüüüü
 Ü µ s· RepClosed s ¤
-Ü µord f fs t1 t2 ·
-Ü	ordinal ord
-Ü  ±	(X‰g fs À {f}) € (Formulas s)
-Ü  ±	{t1; t2} € (Terms s)
-Ü  ´	MkTerm (Var ord)  s
-Ü  ±    MkTerm (SetCmp f)  s
-Ü  ±	Formula (Eq (t1,t2))  s
-Ü  ±	Formula (Mem (t1,t2))  s
-Ü  ±	Formula (Œ (ord, fs))  s
+	(µ ord·  ordinal ord ´ MkVar ord  s)
+±	(µ f· f  Formulas s ´ MkComp f  s)
+±	(µ t1 t2· t1  Terms s ± t2  Terms s
+		´ MkEq (t1, t2)  s
+           	± MkMem (t1, t2)  s)
+±	(µ ord fs· ordinal ord ± X‰g fs € Formulas s
+         ´ MkTf (ord, fs)  s)
 °
 
 The syntax is then the smallest set closed under these constructions.
@@ -208,6 +597,34 @@ The syntax is then the smallest set closed under these constructions.
 Ü Syntax = ¥{x | RepClosed x}
 °
 
+=GFT
+syntax_€_repclosed_thm =
+	ô µ s· RepClosed s ´ Syntax € s
+repclosed_term_thm =
+	ô µ t· RepClosed t ´ Terms Syntax € Terms t
+reclosed_forn_thm =
+	ô µ t· RepClosed t ´ Formulas Syntax € Formulas t
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µs· RepClosed s ´ Syntax € s®);
+a (rewrite_tac [get_spec ¬Syntax®]
+	THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val syntax_€_repclosed_thm = save_pop_thm "syntax_€_repclosed_thm";
+
+val repclosed_term_thm = save_thm ("repclosed_term_thm",
+all_µ_intro (´_trans_rule
+(µ_elim ¬t:GS SET® syntax_€_repclosed_thm)
+(list_µ_elim [¬Syntax®, ¬t:GS SET®] terms_mono_thm)));
+
+val repclosed_form_thm = save_thm ("repclosed_form_thm",
+all_µ_intro (´_trans_rule
+(µ_elim ¬t:GS SET® syntax_€_repclosed_thm)
+(list_µ_elim [¬Syntax®, ¬t:GS SET®] formulas_mono_thm)));
+=TEX
+}%ignore
+
 This is an ``inductive datatype'' so we should expect the usual kinds of theorem.
 
 Informally these should say:
@@ -215,23 +632,178 @@ Informally these should say:
 \begin{itemize}
 \item Everything in Syntax is either a Term or a Formula.
 \item Syntax is closed under the five syntactic constructors.
-\item The syntax constructors are all injections, have disjoint ranges, and partition syntax. 
+\item The syntax constructors are all injections, have disjoint ranges, and partition the syntax. 
 \item Any syntactic property which is preserved by the constructors (i.e. is true of any construction if it is true of all its syntactic constituents) is true of everything in syntax (this is an induction principle).
 \end{itemize}
 
 Formally these may be given thus:
 
 =GFT
-µx· x  Syntax ´ MkTerm x ² Formula x
+Syntax = Formulas Syntax À Terms Syntax
 
 RepClosed Syntax
 =TEX
 
-\ignore{
-=IGN
+=GFT
+repclosed_syntax_thm =
+	ô RepClosed Syntax
 
+repclosed_syntax_thm1 =
+   ô (µ ord· ordinal ord ´ MkVar ord  Syntax)
+       ± (µ f· f  Formulas Syntax ´ MkComp f  Syntax)
+       ± (µ t1 t2
+       · t1  Terms Syntax ± t2  Terms Syntax
+           ´ MkEq (t1, t2)  Syntax ± MkMem (t1, t2)  Syntax)
+       ± (µ ord fs
+       · ordinal ord ± (µ x· x  X‰g fs ´ x  Formulas Syntax)
+           ´ MkTf (ord, fs)  Syntax)
+
+syntax_induction_thm =
+	ô µ s· RepClosed s ´ Syntax € s
+
+syntax_induction_thm2 =
+	ô µ p· RepClosed {x|p x} ´ (µ x· x  Syntax ´ p x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬RepClosed Syntax®);
+a (rewrite_tac (map get_spec [¬RepClosed®])
+	THEN strip_tac);
+a (rewrite_tac (map get_spec [¬RepClosed®, ¬Syntax®])
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+a (REPEAT strip_tac);
+a (rewrite_tac (map get_spec [¬Syntax®])
+	THEN REPEAT strip_tac
+	THEN fc_tac [repclosed_form_thm]);
+a (asm_fc_tac[get_spec ¬RepClosed®]);
+a (asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (rewrite_tac (map get_spec [¬Syntax®])
+	THEN REPEAT strip_tac
+	THEN fc_tac [repclosed_term_thm]);
+a (asm_fc_tac[get_spec ¬RepClosed®]);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.3" *** *)
+a (rewrite_tac (map get_spec [¬Syntax®])
+	THEN REPEAT strip_tac
+	THEN fc_tac [repclosed_term_thm]);
+a (asm_fc_tac[get_spec ¬RepClosed®]);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.4" *** *)
+a (rewrite_tac (map get_spec [¬Syntax®])
+	THEN REPEAT strip_tac
+	THEN fc_tac [repclosed_form_thm]);
+a (asm_fc_tac[get_spec ¬RepClosed®]);
+a (lemma_tac ¬µ x· x  X‰g fs ´ x  Formulas s®
+	THEN1 (REPEAT strip_tac
+		THEN asm_prove_tac[]));
+a (all_asm_fc_tac[]);
+val repclosed_syntax_thm = save_pop_thm "repclosed_syntax_thm";
+
+val repclosed_syntax_thm1 = save_thm ("repclosed_syntax_thm1",
+	rewrite_rule [get_spec ¬RepClosed®] repclosed_syntax_thm);
+
+set_goal([], ¬µs· RepClosed s ´ Syntax € s®);
+a (rewrite_tac [get_spec ¬Syntax®]
+	THEN prove_tac[]);
+val syntax_induction_thm1 = save_pop_thm "syntax_induction_thm1";
+
+set_goal([], ¬µp· RepClosed {x | p x} ´ µx· x  Syntax ´ p x®);
+a (rewrite_tac [get_spec ¬Syntax®] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val syntax_induction_thm2 = save_pop_thm "syntax_induction_thm2";
+
+set_goal([], ¬µx· x  Syntax ´ IsTerm x ² IsForm x®);
+a (asm_tac (µ_elim ¬{x | IsTerm x ² IsForm x}® syntax_induction_thm1));
+a (lemma_tac ¬RepClosed {x|IsTerm x ² IsForm x}®
+	THEN1 (rewrite_tac (map get_spec [
+	¬RepClosed®, ¬IsTerm®, ¬IsForm®, ¬MkVar®, ¬IsVar®, ¬MkComp®, ¬IsComp®,
+	¬MkEq®, ¬IsEq®, ¬MkMem®, ¬IsMem®, ¬MkTf®, ¬IsTf®])));
+a (rewrite_tac [get_spec ¬Syntax®] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val term_or_formula_thm = save_pop_thm "term_or_formula_thm";
 =TEX
 }%ignore
+
+We need to be able to define functions by recursion over the syntax of comprehensions.
+For this we need a recursion theorem.
+We have a recursion theorem for well founded recursion already, so we can build on that.
+To use that recursion theorem we need to prove that the syntax of comprehensions is well-founded.
+This is itself equivalent to an induction principle, so we can try and derive it using the induction principles already available for the syntax of comprehension.
+
+We must first define the relation of priority over the syntax, i.e. the relation between an element of the syntax and its constitutents.
+
+¹HOLCONST
+Ü ÛScPrecİ : GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µÁ Ç· ScPrec Á Ç ¤
+Ü ¶ord fs Â· {Á; Â; Ç} € Syntax ± Á ‰g fs
+Ü  ±	(	Ç = MkComp Á
+Ü  	²	Ç = MkEq (Á, Â)
+Ü  	²	Ç = MkEq (Â, Á)
+Ü  	²	Ç = MkMem (Á, Â)
+Ü  	²	Ç = MkMem (Â, Á)
+Ü  	²	Ç = MkTf (ord, fs))
+°
+
+=GFT
+well_founded_ScPrec_thm =
+	ô well_founded ScPrec
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µx y· ScPrec x y ´ tc $‰g x y®);
+a (rewrite_tac (map get_spec [¬ScPrec®, ¬MkComp®, ¬MkEq®, ¬MkMem®, ¬MkTf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac [í_tc_thm]);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬tc $‰g x (x í‰g Â) ± tc $‰g (x í‰g Â) (Nat‰g 2 í‰g x í‰g Â)®
+	THEN1 rewrite_tac [í_tc_thm]);
+a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬tc $‰g x (Â í‰g x) ± tc $‰g (Â í‰g x) (Nat‰g 2 í‰g Â í‰g x)®
+	THEN1 rewrite_tac [í_tc_thm]);
+a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "3" *** *)
+a (lemma_tac ¬tc $‰g x (x í‰g Â) ± tc $‰g (x í‰g Â) (Nat‰g 3 í‰g x í‰g Â)®
+	THEN1 rewrite_tac [í_tc_thm]);
+a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "4" *** *)
+a (lemma_tac ¬tc $‰g x (Â í‰g x) ± tc $‰g (Â í‰g x) (Nat‰g 3 í‰g Â í‰g x)®
+	THEN1 rewrite_tac [í_tc_thm]);
+a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "5" *** *)
+a (lemma_tac ¬tc $‰g fs (ord í‰g fs) ± tc $‰g (ord í‰g fs) (Nat‰g 4 í‰g ord í‰g fs)®
+	THEN1 rewrite_tac [í_tc_thm]);
+a (all_fc_tac [tran_tc_thm2, tc_incr_thm]);
+a (all_fc_tac [tran_tc_thm2, tc_incr_thm]);
+val ScPrec_tc__thm = pop_thm ();
+
+set_goal ([], ¬well_founded ScPrec®);
+a (rewrite_tac [get_spec ¬well_founded®]);
+a (REPEAT strip_tac);
+a (asm_tac (µ_elim ¬s® gs_cv_ind_thm));
+a (lemma_tac ¬µ x· (µ y· tc $‰g y x ´ s y) ´ s x®
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬µ y· ScPrec y x ´ s y®
+	THEN1 (REPEAT strip_tac THEN all_fc_tac [ScPrec_tc__thm]
+		THEN asm_fc_tac []));
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+val well_founded_ScPrec_thm =  save_pop_thm "well_founded_ScPrec_thm";
+=TEX
+
+}%ignore
+
+=SML
+val SC_INDUCTION_T = WF_INDUCTION_T well_founded_ScPrec_thm;
+val sc_induction_tac = wf_induction_tac well_founded_ScPrec_thm;
+=TEX
 
 
 ¹HOLCONST
@@ -246,16 +818,187 @@ RepClosed Syntax
 Ü DefTerms = Terms Syntax
 °
 
-\ignore{
-=IGN
-open_theory "t021sa";
-set_goal([], ¬RepClosed (DefForms À DefTerms)®);
-a (rewrite_tac (map get_spec [¬RepClosed®, ¬DefForms®, ¬DefTerms®]));
+=GFT
+syntax_disj_thm =
+   ô µ x
+     · x  Syntax
+         ´ (¶ ord· ordinal ord ± x = MkVar ord)
+           ² (¶ f· f  DefForms ± x = MkComp f)
+           ² (¶ t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkEq (t1, t2))
+           ² (¶ t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkMem (t1, t2))
+           ² (¶ ord fs· ordinal ord ± X‰g fs € DefForms ± x = MkTf (ord, fs))
 
+is_fc_clauses =
+   ô µ x
+     · x  Syntax
+         ´ (IsVar x ´ (¶ ord· ordinal ord ± x = MkVar ord))
+           ± (IsComp x ´ (¶ f· f  DefForms ± x = MkComp f))
+           ± (IsEq x
+             ´ (¶ t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkEq (t1, t2)))
+           ± (IsMem x
+             ´ (¶ t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkMem (t1, t2)))
+           ± (IsTf x
+             ´ (¶ ord fs
+             · ordinal ord ± X‰g fs € DefForms ± x = MkTf (ord, fs)))
+
+syn_proj_clauses =
+    ô (µ ord· VarNum (MkVar ord) = ord)
+       ± (µ f· CompBody (MkComp f) = f)
+       ± (µ l r· AtomLhs (MkEq (l, r)) = l)
+       ± (µ l r· AtomRhs (MkEq (l, r)) = r)
+       ± (µ l r· AtomLhs (MkMem (l, r)) = l)
+       ± (µ l r· AtomRhs (MkMem (l, r)) = r)
+       ± (µ v f· TfVars (MkTf (v, f)) = v)
+       ± (µ v f· TfForms (MkTf (v, f)) = f)
 =TEX
-}
 
-\section{SEMANTICS A}
+\ignore{
+=SML
+set_goal([], ¬µx·	x  Syntax
+´	(¶ord· ordinal ord ± x = MkVar ord)
+  ²	(¶f· f  DefForms ± x = MkComp f)
+  ²	(¶t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkEq (t1,t2))
+  ²	(¶t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkMem (t1,t2))
+  ²	(¶ord fs· ordinal ord ± (X‰g fs) € DefForms ± x = MkTf (ord, fs))
+®);
+a (contr_tac);
+a (lemma_tac ¬RepClosed (Syntax \ {x})®
+	THEN1 (rewrite_tac [get_spec ¬RepClosed®]
+		THEN strip_tac));
+(* *** Goal "1" *** *)
+a (strip_tac THEN strip_tac
+	THEN asm_fc_tac [repclosed_syntax_thm1]
+	THEN asm_rewrite_tac[]);
+a (spec_nth_asm_tac 8 ¬ord®);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac);
+(* *** Goal "2.1" *** *)
+a (strip_tac THEN strip_tac);
+a (lemma_tac ¬f  Formulas (Syntax)®
+	THEN1(POP_ASM_T ante_tac
+		THEN rewrite_tac [get_spec ¬Formulas®]
+		THEN prove_tac[]));
+a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
+a (spec_nth_asm_tac 6 ¬f®);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [get_spec ¬DefForms®]);
+a (strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a strip_tac;
+a (REPEAT µ_tac THEN strip_tac);
+a (lemma_tac ¬t1  Terms (Syntax) ± t2  Terms (Syntax)®
+	THEN1(POP_ASM_T ante_tac
+		THEN POP_ASM_T ante_tac
+		THEN rewrite_tac [get_spec ¬Terms®]
+		THEN prove_tac[]));
+a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
+a (spec_nth_asm_tac 7 ¬t1®);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [get_spec ¬DefTerms®]);
+a (swap_nth_asm_concl_tac 1);
+a (spec_nth_asm_tac 1 ¬t2®);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.1.2" *** *)
+a (spec_nth_asm_tac 7 ¬t1®);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [get_spec ¬DefTerms®]);
+a (swap_nth_asm_concl_tac 1);
+a (spec_nth_asm_tac 1 ¬t2®);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2.1" *** *)
+a (lemma_tac ¬µ x· x  X‰g fs ´ x  Formulas Syntax®);
+a (POP_ASM_T ante_tac);
+a (rewrite_tac [get_spec ¬Formulas®]);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
+(* *** Goal "2.2.2.2" *** *)
+a (LEMMA_T ¬X‰g fs € DefForms® asm_tac
+	THEN1 (rewrite_tac [get_spec ¬DefForms®]
+		THEN POP_ASM_T ante_tac
+		THEN rewrite_tac [get_spec ¬Formulas®]
+		THEN REPEAT strip_tac
+		THEN asm_fc_tac[]));
+a (spec_nth_asm_tac 4 ¬ord®);
+a (SPEC_NTH_ASM_T 1 ¬fs® ante_tac);
+a (GET_NTH_ASM_T 4 rewrite_thm_tac);
+a (GET_NTH_ASM_T 2 (rewrite_thm_tac o (rewrite_rule[])));
+a (strip_tac);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (asm_tac syntax_induction_thm1);
+a (spec_nth_asm_tac 1 ¬Syntax \ {x}®);
+a (spec_nth_asm_tac 1 ¬x®);
+val syntax_disj_thm = save_pop_thm "syntax_disj_thm";
+
+set_goal([], ¬µx·	x  Syntax
+´	(IsVar x ´ ¶ord· ordinal ord ± x = MkVar ord)
+±	(IsComp x ´ ¶f· f  DefForms ± x = MkComp f)
+±	(IsEq x ´ ¶t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkEq (t1,t2))
+±	(IsMem x ´ ¶t1 t2· t1  DefTerms ± t2  DefTerms ± x = MkMem (t1,t2))
+±	(IsTf x ´ ¶ord fs· ordinal ord ± (X‰g fs) € DefForms ± x = MkTf (ord, fs))
+®);
+a (REPEAT_N 2 strip_tac);
+a (asm_tac syntax_disj_thm);
+a (asm_fc_tac[] THEN asm_rewrite_tac [Is_clauses]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬ord® THEN asm_rewrite_tac[]);
+a (¶_tac ¬f® THEN asm_rewrite_tac[]);
+a (¶_tac ¬t1® THEN ¶_tac ¬t2® THEN asm_rewrite_tac[]);
+a (¶_tac ¬t1® THEN ¶_tac ¬t2® THEN asm_rewrite_tac[]);
+a (¶_tac ¬ord® THEN ¶_tac ¬fs® THEN asm_rewrite_tac[]);
+val is_fc_clauses = save_pop_thm "is_fc_clauses";
+
+set_goal([], ¬(µord· VarNum (MkVar ord) = ord)
+	±	(µf· CompBody (MkComp f) = f)
+	±	(µl r· AtomLhs (MkEq (l, r)) = l)
+	±	(µl r· AtomRhs (MkEq (l, r)) = r)
+	±	(µl r· AtomLhs (MkMem (l, r)) = l)
+	±	(µl r· AtomRhs (MkMem (l, r)) = r)
+	±	(µv f· TfVars (MkTf (v, f)) = v)
+	±	(µv f· TfForms (MkTf (v, f)) = f)
+®);
+a (rewrite_tac (map get_spec [
+	¬VarNum®, ¬MkVar®, ¬CompBody®, ¬MkComp®,
+	¬AtomLhs®, ¬AtomRhs®, ¬MkEq®, ¬MkMem®,
+	¬TfVars®, ¬MkTf®, ¬TfForms®]));
+val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
+
+=IGN
+set_goal ([], ¬µt· t  Syntax ´ IsComp t ´ ScPrec (CompBody t) t®);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¬ScPrec®]);
+
+a (all_fc_tac [is_fc_clauses]);
+a (asm_rewrite_tac [syn_proj_clauses]);
+
+set_goal ([], ¬µt· t  Syntax ´ IsComp t ´ tc $‰g (CompBody t) t®);
+a (REPEAT strip_tac);
+a (all_fc_tac [is_fc_clauses]);
+a (asm_rewrite_tac [syn_proj_clauses]);
+
+get_spec ¬Syntax®;
+=TEX
+}%ignore
+
+\subsection{Proof Context}
+
+=SML
+=TEX
+
+\section{SEMANTICS}
+
+=SML
+open_theory "ICsyn";
+force_new_theory "ICsem";
+force_new_pc "'ICsem";
+merge_pcs ["'savedthm_cs_¶_proof"] "'ICsem";
+set_merge_pcs ["hol", "'GS1", "'ICsyn", "'ICsem"];
+=TEX
 
 The semantics will be defined as a functor which transforms partial membership and equality relations, and is parameterised by a domain set (which gives the range of the quantifiers).
 
@@ -267,6 +1010,36 @@ We can only do this with closed comprehensions, so at this point, if not before 
 
 So we need to be able to evaluate and to instantiate, evaluation taking place down to the level of atomic formulae and instantiation below that level (note that the terms in an atomic formulae will usually be comprehesions and hence may contain non-atomic formulae).
 
+\subsection{In SML}
+
+=IGN
+datatype Term = Var of int
+	|	Comp of Formula
+and Formula = Eq of Term * Term
+	|	Mem of Term * Term
+	|	Tf of int * (Formula list);
+
+fun tsubst s (Var i) = s i
+|   tsubst s (Comp f) = Comp (fsubst s f)
+
+and fsubst s (Eq (l,r)) = Eq (tsubst s l, tsubst s r)
+|   fsubst s (Mem (l,r)) = Mem (tsubst s l, tsubst s r)
+|   fsubst s (Tf (n, fl)) = Tf (n, (map (fsubst s) fl));
+
+fun feval (er, mr) s (Eq (l,r)) = er (tsubst s l, tsubst s r)
+|   feval (er, mr) s (Mem (l,r)) = mr (tsubst s l, tsubst s r)
+|   feval (er, mr) s (Tf (n, fl)) = not (all (map (feval (er,mr) s) fl) (fn x => x))
+;
+
+fun emfunc (er, mr) = (
+		fn x => y => feval (er, mr) (fn x => (Var x)) (Eq(x, y)),
+		fn x => y => feval (er, mr) (fn x => (Var x)) (Mem(x, y))
+);
+
+fun er (x, y) = 
+
+=TEX
+
 \subsection{Substitution}
 
 This will be an inductive definition over the relevant syntactic structures, but the definition is given in pieces.
@@ -275,9 +1048,10 @@ First substitution into terms:
 
 =SML
 declare_type_abbrev("TV", [], ”GS®);
-declare_type_abbrev("VA", [], ”GS ­ TV®);
+declare_type_abbrev("VA", [], ”GS ¸ (GS ­ TV)®);
 declare_type_abbrev("TD", [], ”VA ­ TV®);
 declare_type_abbrev("FD", [], ”VA ­ (BOOL + ONE)®);
+declare_type_abbrev("PR", [], ”GS ­ GS ­ (BOOL + ONE)®);
 =TEX
 
 To define the semantics of comprehension we need to be able to modify a variable assignment.
@@ -286,251 +1060,206 @@ The modification required is to insert a new value for variable zero shifting al
 ¹HOLCONST
 Ü ÛInsertVarİ : VA ­ TV ­ VA
 ÷üüüüüüüüüüü
-Ü µva td ord· InsertVar va td ord = 
-Ü	if ord = Nat‰g 0 then td else va (suc‰o ord)
+Ü µd f tv· InsertVar (d, f) tv = 
+Ü	(suc‰o d, ÌÂ· if Â = š‰g then tv else f (Â --‰o (Nat‰g 1)))
 °
 
 This one concatenates two variable assignments.
-[placeholder]
 
 ¹HOLCONST
 Ü ÛInsertVarsİ : VA ­ VA ­ VA
 ÷üüüüüüüüüüü
-Ü µva1 va2· InsertVars va1 va2 = 
-Ü	va1
+Ü µÁ Â f1 f2· InsertVars (Á, f1) (Â, f2) = 
+Ü	(Á +‰o Â, ÌÇ· if Ç <‰o Á then f1 Ç else f2 (Ç --‰o Á))
 °
+
+We now define the operation of substituting into a term or formula values for free variables as specified by an assignment.
+The substitution is for free variables and the operator requires as an argument the number of bound variables for any particular context (the numbers of the free variables a shifted upwards as bound variables are introduced.
 
 ¹HOLCONST
-Ü ÛSubstVarİ : VA ­ GS ­ GS
+Ü ÛSubstTermİ : ((GS ¸ VA) ¸ GS ­ GS) ­ (GS ¸ VA) ­ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µva ord· SubstVar va ord = va ord
+Ü SubstTerm = Ìsf (Á, (Â, f)) t·
+Ü	if t  DefTerms
+Ü	then	if IsVar t
+Ü		then if Á ¼‰o VarNum t ± VarNum t ¼‰o (Á +‰o Â)
+Ü		     then MkComp (f ((VarNum t) --‰o Á))
+Ü	    	     else t
+Ü		else sf ((Á, (InsertVar (Â, f) š‰g)), CompBody t)
+Ü	else t
 °
+
+The following gives us a well-founded ordering on the parameters to SubstForm which will be useful in proving its well-definedness.
 
 ¹HOLCONST
-Ü ÛSubstCompİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
+Ü ÛSubOrderİ : ('a ¸ GS) ­ ('a ¸ GS) ­ BOOL
 ÷üüüüüüüüüüü
-Ü µsf va comp· SubstComp sf va comp = sf (InsertVar va (Nat‰g 0)) comp
+Ü µs t u v· SubOrder (s, t) (u, v) = tc $‰g t v
 °
 
-¹HOLCONST
-Ü ÛSubstTermİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
-÷üüüüüüüüüüü
-Ü µsf va t· SubstTerm sf va t =
-	if fst t = Nat‰g 0
-	then va (snd t)
-	else t
-°
+The following results will be useful later in proving the existence of a fixed point.
 
-¹HOLCONST
-Ü ÛSubstEqİ : (VA ­ GS ­ GS) ­ VA ­ GS ­ GS
-÷üüüüüüüüüüü
-Ü µsf va comp· SubstComp sf va comp = sf (InsertVar va (Nat‰g 0)) comp
-°
-
-=SML
-
-=TEX
-
-
-We now define functions which give the semantics of each indivual constructor as transformations over these denotations.
-
-¹HOLCONST
-Ü ÛVarSemİ : GS ­ TD
-÷üüüüüüüüüüü
-Ü µord va· VarSem ord va = va ord
-°
-
-A comprehension denotes itself?
-Or should we substitute in the values for the free variables?
-We'll pass on this one till we see whether we need anything here.
-
-The atomic formula just refer to the prior membership and equality relations.
-So only the compound formala constructor has a substantive semantics.
-
-¹HOLCONST
-Ü ÛŒ_Semİ : GS SET ¸ GS SET ¸ FD SET ­ FD
-÷üüüüüüüüüüü
-Ü µV vars fds va· Œ_Sem (V, vars, fds) va = 
-Ü	InL T
-°
-
-\newpage
-\section{SYNTAX B}
-
-This version of the syntax is parameterised by a (well-founded) membership relationship.
-
-The general pattern followed is to use relationships rather than functions, because no assumptions are made about the closure properties of the membership relationship.
-
-We make use of the Wiener-Kuratovski ordered pairs, defined as follows.
-
-=SML
-open_theory "hol";
-force_new_theory "t021sb";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
-declare_type_abbrev ("MR", ["MR"], ”'a ­ 'a ­ BOOL®);
-=TEX
-
-To simplify talking about sets as determined by some membership relation the following function yields the extension of some set according to some membership relation.
-
-¹HOLCONST
-Ü ÛXİ: 'a MR ­ 'a ­ 'a SET 
-÷üüüüüüüüüüü
-Ü µr s· X r s = {y | r y s}
-°
-
-¹HOLCONST
-Ü ÛXXİ: 'a MR ­ 'a ­ 'a SET SET
-÷üüüüüüüüüüü
-Ü µr s· XX r s = {y | ¶z· r z s ± y = X r z}
-°
-
-¹HOLCONST
-Ü ÛWkpİ: 'a MR ­ ('a ¸ 'a ¸ 'a) ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm l r p· Wkp m (l, r, p) ¤ XX m p = {{l;r};{l}}
-°
-
-The first thing we do with the ordered pairs is make some natural numbers for use as tags.
-
-¹HOLCONST
-Ü ÛEsİ: 'a MR ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm s· Es m s ¤ XX m s = {}
-°
-
-¹HOLCONST
-Ü ÛDUnionİ: 'a MR ­ ('a ¸ 'a) ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm s u·  DUnion m (s, u) ¤ X m u = Ş(XX m s)
-°
-
-¹HOLCONST
-Ü ÛBUnionİ: 'a MR ­ ('a ¸ 'a ¸ 'a) ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm s t u·  BUnion m (s, t, u) ¤ X m u = (X m s) À (X m t)
-°
-
-¹HOLCONST
-Ü ÛSuccİ: 'a MR ­ ('a ¸ 'a) ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm n s·  Succ m (n, s) ¤ X m s = (X m n) À {n} 
-°
-
-¹HOLCONST
-Ü ÛRnatİ: 'a MR ­ î ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm·	Rnat m 0 = (Ìs:'a· Es m s)
-Ü ±	µn· Rnat m (n + 1) = (Ìs:'a· ¶t:'a· Rnat m n t ± Succ m (t,s))
-°
-
-We now define the property of being an ordinal under a membership relationship.
-There will be some conditions on the relationship needed to ensure that the class of ordinals defined here is good (which I have not yet worked out).
-
-¹HOLCONST
-Ü ÛOrdİ: 'a MR ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm n·  Ord m n = µs· (µt u v· X m t € s ± X m u = Ş (XX m t) ± Succ m (u, v) ´ v  s) ´ n  s
-°
-
-Now we define the syntactic structures in our notation for sets definable by infinitary comprehension.
-
-Here is the syntax informally:
+First some points about the constituents of terms.
 
 =GFT
-<term> ::= Var <ordinal>
-	| Comp <formula>
-
-<formula> ::=
-	  Eq <term><term>
-	| In <term><term>
-	| Tf <ordinal> (<formula> Set)
+SubOrder_í_lemma =
+   ô µ v s t· SubOrder (v, s) (v, s í‰g t) ± SubOrder (v, t) (v, s í‰g t)
 =TEX
 
-Where ``Tf'' is an infinitary negated existentially quantified disjunction (any cardinality of variables, any cardinality of disjuncts).
+\ignore{
+=SML
+set_goal([], ¬µv s t· SubOrder (v, s) (v, s í‰g t) ± SubOrder (v, t) (v, s í‰g t)®);
+a (rewrite_tac [get_spec ¬SubOrder®, í_tc_thm]);
+val SubOrder_í_lemma = pop_thm();
+=IGN
+stop;
+set_goal([], ¬µsf1 sf2 (t:GS)· (µ Á Â_f ·
+	(µ y:GS· tc SubOrder ((Á, Â_f), y) ((Á, Â_f), t) ´ sf1 ((Á, Â_f), y) = sf2 ((Á, Â_f), y)))
+		´ (µ Á Â_f ·SubstTerm sf1 (Á, Â_f) t = SubstTerm sf2 (Á, Â_f) t)®);
+a (rewrite_tac [get_spec ¬SubstTerm®] THEN REPEAT strip_tac);
+a (cases_tac ¬t  DefTerms® THEN asm_rewrite_tac[]);
+a (cases_tac ¬IsVar t® THEN asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule (map get_spec
+	[¬DefTerms®, ¬Terms®, ¬IsTerm®]))));
+a (lemma_tac ¬SubOrder ((Á, InsertVar Â_f š‰g), CompBody t) ((Á, InsertVar Â_f š‰g), t)®);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬SubOrder®]);
 
-Phrases will be ordered pairs of which the left is the phrase type, zero for a term one for a formula.
 
-The following predicate checks the type of a phrase.
 
-¹HOLCONST
-Ü ÛPhraseTypeİ: 'a MR ­ î ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm n t·  PhraseType m n t = ¶u v· Rnat m n u ± Wkp m (u, v, t)
-°
+a (lemma_tac ¬µÔ· tc
+               (Ì ((Á_1, va_1), f1) ((Á_2, va_2), f2)· f1 ‰g f2)
+               ((Á, InsertVar (Â, f) š‰g), snd Ô)
+               ((Á, Â, f), Ô)®);
+a (spec_nth_asm_tac 1 ¬((Á, InsertVar (Â, f) š‰g), snd (snd t))®);
+=TEX
+}%ignore
 
-This one check both the type and the value.
 
-¹HOLCONST
-Ü ÛPhraseİ: 'a MR ­ î ­ 'a ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm n p t·  Phrase m n p t = ¶u· Rnat m n u ± Wkp m (u, p, t)
-°
 
-Now we have one relation for each constructor.
-
-¹HOLCONST
-Ü ÛVarİ: 'a MR ­ 'a ­ 'a ­ BOOL
-÷üüüüüüüüüüü
-Ü µm ord t·  Var m ord t ¤ Phrase m 0 ord t
-°
-
-¹HOLCONST
-Ü ÛCompİ: 'a MR ­ 'a ­ 'a ­ BOOL
-÷üüüüüüüüüüü
-Ü µm c t·  Comp m c t ¤ Phrase m 1 c t
-°
-
-¹HOLCONST
-Ü ÛEqİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm t1 t2 f·  Eq m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 0 p f
-°
+Substitution over formulae is defined by recursion over the syntax and is thefore as the fixed point of a functor.
 
 ¹HOLCONST
-Ü ÛInİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
+Ü ÛSubstFormFunctİ : ((GS ¸ VA) ¸ GS ­ GS) ­ ((GS ¸ VA) ¸ GS ­ GS)
 ÷üüüüüüüüüüü
-Ü µm t1 t2 f·  In m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 1 p f
-°
-
-¹HOLCONST
-Ü ÛTfİ: 'a MR ­ ('a ¸ 'a) ­ 'a ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm t1 t2 f·  Tf m (t1, t2) f ¤ ¶p· Wkp m (t1, t2, p) ± Phrase m 1 p f
-°
-
-To obtain the class of syntactic structures we take the intersection of classes closed under the five constructors.
-
-¹HOLCONST
-Ü ÛSynClosedİ: 'a MR ­ ('a ­ BOOL) ­ BOOL 
-÷üüüüüüüüüüü
-Ü µm c· SynClosed m c ¤
-Ü	(µord· Ord m ord ´ ¶v· Var m ord v ± c v)
-Ü  ±
-	µt1 t2 ord f1 fs·
-		c t1 ± PhraseType m 0 t1
-	±	c t2 ± PhraseType m 0 t1
-	±	Ord m ord
-	±	c f1 ± PhraseType m 1 f1
-	±	(µf· m f fs ´ c f ± PhraseType m 1 f)
-
-    ´		(¶comp· c comp ± Comp m f1 comp)
-	±	(¶eq· c eq ± Eq m (t1, t2) eq)
-	±	(¶inn· c inn ± In m (t1, t2) inn)
-	±	(¶tf· c tf ± Tf m (ord, fs) tf)
+Ü SubstFormFunct = Ìsf ((Á, va), f)·
+Ü    (fst f í‰g
+Ü	let fb = snd f
+Ü	in 
+Ü		if IsEq fb ² IsMem fb
+Ü		then (fst fb í‰g (
+Ü			(SubstTerm sf (Á, va) (AtomLhs fb) í‰g
+Ü			 SubstTerm sf (Á, va) (AtomRhs fb)))
+Ü		     )
+Ü		else (	let Î = TfVars fb
+Ü			and fs = TfForms fb
+Ü			in (fst fb í‰g
+Ü			    (Î í‰g (Imagep (Ìf· sf ((Á, va), f)) fs))
+Ü			   )
+Ü		     )
+Ü    )
 °
 
 ¹HOLCONST
-Ü ÛSynClosureİ: 'a MR ­ ('a ­ BOOL) 
+Ü ÛSubstFormİ : (GS ¸ VA) ¸ GS ­ GS
 ÷üüüüüüüüüüü
-Ü µm c· SynClosure m c ¤
-Ü	µp· SynClosed m p ´ p c
+Ü SubstForm = fix SubstFormFunct
+° 
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¬SubstFormFunct respects (Ì((Á_1, va_1), f1) ((Á_2, va_2), f2)· f1 ‰g f2)®);
+a (rewrite_tac [get_spec ¬$respects®, get_spec ¬SubstFormFunct®]
+	THEN REPEAT strip_tac);
+
+=TEX
+}%ignore
+
+
+\subsection{Evaluation}
+
+Now we define the evaluation of formulae.
+The definition assumes that partial relations for the atomic formulae are available, and is the main part of the definition of a functor which transforms membership and equality relations.
+Interpretations of non-well-founded set theories are then sought as fixed points of this functor over subsets of the infinitary comprehensions.
+
+=SML
+declare_infix (300, "‰v");
+declare_infix (300, "=‰v");
+=TEX
+
+¹HOLCONST
+Ü ÛEvalFormİ : (GS ¸ PR ¸ PR) ­ VA ­ GS ­ BOOL + ONE
+÷üüüüüüüüüüü
+Ü µV ($‰v:PR) ($=‰v:PR)· EvalForm (V, $‰v, $=‰v) = fix (Ìef va f· 
+Ü	let fb = snd f
+Ü	in 
+Ü		if IsEq fb
+Ü		then 
+Ü		  (SubstTerm SubstForm (š‰g, va) (AtomLhs fb))
+Ü		  =‰v
+Ü		  (SubstTerm SubstForm (š‰g, va) (AtomRhs fb))
+Ü		else  if IsMem fb
+Ü		      then 
+Ü			(SubstTerm SubstForm (š‰g, va) (AtomLhs fb))
+Ü			‰v
+Ü			(SubstTerm SubstForm (š‰g, va) (AtomRhs fb))
+Ü		      else
+Ü	(let Î = TfVars fb
+Ü	 and fs = TfForms fb
+Ü	 in let results = {pb | ¶v f· f ‰g fs ± pb = ef (InsertVars (Î, v) va) f}
+Ü	    in
+Ü		if results = {InL T} then InL F
+Ü		else if (InL F)  results then InL T
+Ü		else InR One
+Ü	)
+Ü			)
 °
 
 \newpage
+
+\subsection{Membership and Equality}
+
+Note that in the evaluation of formulae above {\it EvalForm} atomic membership and equality relations are evaluated by reference to given membership and equality relationships.
+
+We are seeking a functor which when supplied with membership and equality relations will deliver new relationships at least as detailed as the original (they are partial relationships).
+This is what we now define.
+
+¹HOLCONST
+Ü ÛMemRelİ : (GS ¸ PR ¸ PR) ­ PR
+÷üüüüüüüüüüü
+Ü µV ($‰v:PR) ($=‰v:PR) e s· 
+Ü	MemRel (V, $‰v, $=‰v) e s =
+Ü		let va = (Nat‰g 1, Ìv· e)
+Ü		in EvalForm (V, $‰v, $=‰v) va (snd s)
+°
+
+The equality of two closed comprehensions is determined here by evaluating the formula in which the bodies of the two comprehensions are first combined into an equivalence and then universally quantified over the common variable.
+
+¹HOLCONST
+Ü ÛEqRelİ : (GS ¸ PR ¸ PR) ­ PR
+÷üüüüüüüüüüü
+Ü µV ($‰v:PR) ($=‰v:PR) l r·
+Ü	EqRel (V, $‰v, $=‰v) l r =
+Ü		let va = (š‰g, Ìv·v)
+Ü		and lb = snd l
+Ü		and rb = snd r
+Ü		in let nl = MkNot lb
+Ü		   and nr = MkNot rb
+Ü		   in  let nlnr = MkTf (š‰g, Pair l nr)
+Ü		       and nrnl = MkTf (š‰g, Pair r nl)
+Ü		       in let nallneqr = MkTf (Nat‰g 1, Pair nlnr nrnl)
+Ü                           in let allneqr = MkNot nallneqr
+Ü		              in EvalForm (V, $‰v, $=‰v) va allneqr
+°
+
+The semantics of equality and membership are to be combined into a parameterised functor of which we seek fixed points.
+These fixed points yield interpretations of non-well-founded set theories (or as a special and easy test case an image of our well-founded set theory).
+
 \section{SEMANTICS}
 
 Now meaning is attached to the representatives.
-This is done in such a way as to yield a functor from one membership structure to another, of which we will then be seeking useful partial fixed points.
+This is done in such a way as to yield a functor from one membership structure to another, of which we will then be seeking useful partial fixed points. 
 
 This functor will be compounded from maps for individual constructs which, parameterised by the incoming structure, return the extension of the interpreted construct in that context.
 These extensions are collected to give both a new membership relation and an equivalence relative to which that relation is extensional.
@@ -542,7 +1271,7 @@ The semantics is therefore defined in a piecemeal way for each constructor in tu
 The fact that we have inter-defined membership and equality relationships, and also that we are expecting at best partial fixed points, together hint that we might benefit from working in the more general context of ``Boolean Values Models'' (see, for example, \cite{Jech2002}), so I propose to begin in that more general context and see how it goes.
 i.e. the equality and membership relations will be functions yielding values in an arbitrary boolean algebra rather than classical relationships, and the relationship between them will be as prescribed for boolean valued models unless a problem is found with this.
 
-\section{PLAN B}
+\section{FUNCTOR TYPES}
 
 The details of how to code up infinitary first order set theory are unimportant, and I want to talk about this method, so I'm going to just assume that the syntax has been encoded and that the semantics has been formalised in the manner discussed.
 
@@ -551,32 +1280,41 @@ open_theory "GS";
 force_new_theory "ICS";
 new_parent "ordered_sets";
 =TEX
+
 The following is expected to be the type of abstract syntax trees for sets definable in an infinitary first order language of set theory, i.e. one with just two predicates, equality and membership.
 For present purposes we do not need to have this defined,
+
 =SML
 new_type ("SETREP", 0);
 =TEX
+
 The following declaration shows the type of functor which one might use as a recursive definition of the equality and membership relations over SETREP.
 It is parameterised by a subdomain of the set representatives, since the semantics will make the extension of some sets sensitive to the universe.
+
 =SML
 new_const ("sf1", ”(SETREP ­ BOOL)
 	­ (SETREP ­ SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL)
 	­ (SETREP ­ SETREP ­ BOOL) ¸ (SETREP ­ SETREP ­ BOOL)®);
 =TEX
+
 We don't have a recursion theorem which will work with that kind of functor, so we will need the functor to be converted in to one which operates on a single function, and the function will have to be uncurried.
 The two relations are therefore thought of as a function over ordered pairs which delivers an ordered pair of truth values.
+
 =SML
 new_const ("sf2", ”(SETREP ­ BOOL)
 	­ (SETREP ¸ SETREP ­ BOOL ¸ BOOL)
 	­ (SETREP ¸ SETREP ­ BOOL ¸ BOOL)®);
 =TEX
+
 Our recursion theorem has the form:
+
 =GFT
 recursion_theorem
    ô µ (X, $<<) G
      · FunctRespects G (X, $<<) ± WellFounded (X, $<<) ´ UniquePartFixp X G
 
 =TEX
+
 Where X is some set and $<<$ a well founded relation over it.
 Note that the relation is over pairs of SETREPs and so this does not require that membership be well-founded.
 
@@ -596,77 +1334,12 @@ So we want to talk about a set having a fixed extension in every subset whioh in
 	µsr2· sr2  op1 ssr ´ T 
 °
 
-\section{SEMANTICS B}
-
-This approach to semantics is specific to SYNTAX B.
-
-The semantics is rendered as a functor over partial assignments of meaning to membership and equality relations over comprehensions.
-
-We introduce a type abbreviation for these partial relations:
-
-=SML
-open_theory "t021sb";
-set_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
-declare_type_abbrev ("VA", ["VA"], ”'a ­ 'a + ONE®);
-declare_type_abbrev ("PMA", ["PMA"], ”'a ¸ 'a ­ BOOL + ONE®);
-=TEX
-
-
-\subsection{Constructor Definitions}
-
-We begin with the definitions of semantics for the individual constructors.
-These have in common that they are supplied:
-
-\begin{enumerate}
-\item A syntactic domain
-\item The subset of that domain which are deemed valid comprehensions
-\item A partial membership relation over the comprehensions
-\item A partial equivalence relation over the comprehensions
-\end{enumerate}
-
-In addition there will be constructor specific parameters corresponding to the semantics of the constituent components.
-
-The type of the semantic values are as follows.
-Terms are partial functions over variable assignments, yielding sets of comprehensions
-Formulae are partial functions over variable assignments yielding truth values.
-
-¹HOLCONST
-  VarCon: 'a ­ 'a VA ­ ('a + ONE)
-÷
-  µord va· VarCon ord va = va ord
-°
-
-To specify comprehension we need an auxiliary function which shifts left a variable assignment and adds in a new value for zero.
-
-
-¹HOLCONST
-  EqCon: 'a PMA ­ ('a ¸ 'a) ­ 'a VA ­ (BOOL + ONE)
-÷
-  µeq l r va· EqCon eq (l, r) va = eq (l, r)
-°
-
-¹HOLCONST
-  MemCon: 'a PMA ­ ('a ¸ 'a) ­ 'a VA ­ (BOOL + ONE)
-÷
-  µmem l r va· MemCon mem (l, r) va = mem (l, r)
-°
-
-\subsection{The Semantic Functor}
-
-The functor defined below takes a seed membership relation, a partial equality over the infinitary comprehensions generated from that relation, and a partial membership relation over those comprehensions, and yields a new membership relation.
-The new equality relation will be obtained from the new membership relation.
-
-¹HOLCONST
-  new_mem: 'a MR ­ 'a PMA ­ 'a PMA ­ 'a PMA
-÷
-  µr eq mem c1 c2· new_mem r eq mem (c1, c2) = InR One
-°
-
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{t021.th}
+\include{ICsyn.th}
+\include{ICsem.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]
