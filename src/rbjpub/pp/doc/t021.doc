@@ -1,5 +1,6 @@
+
 =IGN
-$Id: t021.doc,v 1.10 2007/10/21 19:54:19 rbj01 Exp $
+$Id: t021.doc,v 1.11 2007/11/05 16:55:52 rbj01 Exp $
 open_theory "ICsyn";
 set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
 open_theory "ICsem";
@@ -42,12 +43,12 @@ This is interpreted by looking for large subdomains of a notation for infinitary
 
 Created: 2006/11/29
 
-Last Change $ $Date: 2007/10/21 19:54:19 $ $
+Last Change $ $Date: 2007/11/05 16:55:52 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
 
-$ $Id: t021.doc,v 1.10 2007/10/21 19:54:19 rbj01 Exp $ $
+$ $Id: t021.doc,v 1.11 2007/11/05 16:55:52 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -727,6 +728,7 @@ val term_or_formula_thm = save_pop_thm "term_or_formula_thm";
 =TEX
 }%ignore
 
+
 We need to be able to define functions by recursion over the syntax of comprehensions.
 For this we need a recursion theorem.
 We have a recursion theorem for well founded recursion already, so we can build on that.
@@ -739,18 +741,23 @@ We must first define the relation of priority over the syntax, i.e. the relation
 ‹ €ScPrec› : GS ≠ GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ¡ «∑ ScPrec ¡ « §
-‹ ∂ord fs ¬∑ {¡; ¬; «} Ä Syntax ± ¡ çâg fs
-‹  ±	(	« = MkComp ¡
-‹  	≤	« = MkEq (¡, ¬)
-‹  	≤	« = MkEq (¬, ¡)
-‹  	≤	« = MkMem (¡, ¬)
-‹  	≤	« = MkMem (¬, ¡)
-‹  	≤	« = MkTf (ord, fs))
+‹	({¡; «} Ä Syntax ± « = MkComp ¡)
+‹  ≤	(∂¬∑ {¡; ¬; «} Ä Syntax ± « = MkEq (¡, ¬))
+‹  ≤	(∂¬∑ {¡; ¬; «} Ä Syntax ± « = MkEq (¬, ¡))
+‹  ≤	(∂¬∑ {¡; ¬; «} Ä Syntax ± « = MkMem (¡, ¬))
+‹  ≤	(∂¬∑ {¡; ¬; «} Ä Syntax ± « = MkMem (¬, ¡))
+‹  ≤	(∂ord fs∑ ¡ çâg fs ± {¡; «} Ä Syntax ± « = MkTf (ord, fs))
 ∞
 
 =GFT
-well_founded_ScPrec_thm =
+€ScPrec_tc_ç_thm› =
+	Ù µ x y∑ ScPrec x y ¥ tc $çâg x y
+
+€well_founded_ScPrec_thm› =
 	Ù well_founded ScPrec
+
+€well_founded_tcScPrec_thm› =
+	Ù well_founded (tc ScPrec)
 =TEX
 
 \ignore{
@@ -796,52 +803,66 @@ a (asm_fc_tac[]);
 a (asm_fc_tac[]);
 a (asm_rewrite_tac[]);
 val well_founded_ScPrec_thm =  save_pop_thm "well_founded_ScPrec_thm";
+
+set_goal([], ¨well_founded (tc ScPrec)Æ);
+a (asm_tac well_founded_ScPrec_thm);
+a (fc_tac [wf_tc_wf_thm]);
+val well_founded_tcScPrec_thm = save_pop_thm ("well_founded_tcScPrec_thm");
+
 =TEX
 
 }%ignore
 
 =SML
-val SC_INDUCTION_T = WF_INDUCTION_T well_founded_ScPrec_thm;
-val sc_induction_tac = wf_induction_tac well_founded_ScPrec_thm;
+val €SC_INDUCTION_T› = WF_INDUCTION_T well_founded_ScPrec_thm;
+val €sc_induction_tac› = wf_induction_tac well_founded_ScPrec_thm;
 =TEX
 
+The set Syntax gives us the syntactically well-formed phrases of our language.
+It will be useful to have some predicates which incorporate well-formedness, which are defined here.
 
 πHOLCONST
-‹ €DefForms› : GS SET
+‹ €WfTerms› : GS SET
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ DefForms = Formulas Syntax
+‹ WfTerms = Terms Syntax
 ∞
 
 πHOLCONST
-‹ €DefTerms› : GS SET
+‹ €WfComp› : GS SET
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ DefTerms = Terms Syntax
+‹    WfComp = {x | x ç WfTerms ± IsComp x}
+∞
+
+πHOLCONST
+‹ €WfForms› : GS SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ WfForms = Formulas Syntax
 ∞
 
 =GFT
-syntax_disj_thm =
+€syntax_disj_thm› =
    Ù µ x
      ∑ x ç Syntax
          ¥ (∂ ord∑ ordinal ord ± x = MkVar ord)
-           ≤ (∂ f∑ f ç DefForms ± x = MkComp f)
-           ≤ (∂ t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkEq (t1, t2))
-           ≤ (∂ t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkMem (t1, t2))
-           ≤ (∂ ord fs∑ ordinal ord ± Xâg fs Ä DefForms ± x = MkTf (ord, fs))
+           ≤ (∂ f∑ f ç WfForms ± x = MkComp f)
+           ≤ (∂ t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkEq (t1, t2))
+           ≤ (∂ t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkMem (t1, t2))
+           ≤ (∂ ord fs∑ ordinal ord ± Xâg fs Ä WfForms ± x = MkTf (ord, fs))
 
-is_fc_clauses =
+€is_fc_clauses› =
    Ù µ x
      ∑ x ç Syntax
          ¥ (IsVar x ¥ (∂ ord∑ ordinal ord ± x = MkVar ord))
-           ± (IsComp x ¥ (∂ f∑ f ç DefForms ± x = MkComp f))
+           ± (IsComp x ¥ (∂ f∑ f ç WfForms ± x = MkComp f))
            ± (IsEq x
-             ¥ (∂ t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkEq (t1, t2)))
+             ¥ (∂ t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkEq (t1, t2)))
            ± (IsMem x
-             ¥ (∂ t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkMem (t1, t2)))
+             ¥ (∂ t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkMem (t1, t2)))
            ± (IsTf x
              ¥ (∂ ord fs
-             ∑ ordinal ord ± Xâg fs Ä DefForms ± x = MkTf (ord, fs)))
+             ∑ ordinal ord ± Xâg fs Ä WfForms ± x = MkTf (ord, fs)))
 
-syn_proj_clauses =
+€syn_proj_clauses› =
     Ù (µ ord∑ VarNum (MkVar ord) = ord)
        ± (µ f∑ CompBody (MkComp f) = f)
        ± (µ l r∑ AtomLhs (MkEq (l, r)) = l)
@@ -850,16 +871,61 @@ syn_proj_clauses =
        ± (µ l r∑ AtomRhs (MkMem (l, r)) = r)
        ± (µ v f∑ TfVars (MkTf (v, f)) = v)
        ± (µ v f∑ TfForms (MkTf (v, f)) = f)
+
+€is_fc_clauses2› =
+   Ù µ x
+     ∑ x ç Syntax
+         ¥ (IsVar x ¥ ordinal (VarNum x))
+           ± (IsComp x ¥ CompBody x ç WfForms)
+           ± (IsEq x ¥ AtomLhs x ç WfTerms ± AtomRhs x ç WfTerms)
+           ± (IsMem x ¥ AtomLhs x ç WfTerms ± AtomRhs x ç WfTerms)
+           ± (IsTf x
+             ¥ ordinal (TfVars x) ± (µ y∑ y çâg TfForms x ¥ y ç WfForms))
+
+€syn_comp_fc_clauses› =
+   Ù (µ x∑ MkVar x ç Syntax ¥ ordinal x)
+       ± (µ x∑ MkComp x ç Syntax ¥ x ç WfForms)
+       ± (µ l r∑ MkEq (l, r) ç Syntax ¥ l ç WfTerms ± r ç WfTerms)
+       ± (µ l r∑ MkMem (l, r) ç Syntax ¥ l ç WfTerms ± r ç WfTerms)
+       ± (µ v f
+       ∑ MkTf (v, f) ç Syntax ¥ ordinal v ± (µ y∑ y çâg f ¥ y ç WfForms))=TEX
+
+€ft_syntax_thm› =
+   Ù µ x∑ x ç WfForms ≤ x ç WfTerms ¥ x ç Syntax
+
+€formula_cases_thm› =
+	Ù µ x∑ x ç WfForms ≤ IsForm x ¥ IsEq x ≤ IsMem x ≤ IsTf x
+
+€term_cases_thm› =
+	Ù µ x∑ x ç WfTerms ≤ IsTerm x ¥ IsVar x ≤ IsComp x
+
+€scprec_fc_clauses› =
+   Ù µ ¡ ¬ « ord fs
+     ∑ « ç Syntax
+         ¥ « = MkComp ¡
+           ≤ « = MkEq (¡, ¬)
+           ≤ « = MkEq (¬, ¡)
+           ≤ « = MkMem (¡, ¬)
+           ≤ « = MkMem (¬, ¡)
+           ≤ « = MkTf (ord, fs) ± ¡ çâg fs
+         ¥ ScPrec ¡ «
+
+€scprec_fc_clauses2› =
+   Ù µ t
+     ∑ t ç Syntax
+         ¥ (IsComp t ¥ ScPrec (CompBody t) t)
+           ± (IsEq t ≤ IsMem t ¥ ScPrec (AtomLhs t) t ± ScPrec (AtomRhs t) t)
+           ± (IsTf t ¥ (µ f∑ f çâg TfForms t ¥ ScPrec f t))
 =TEX
 
 \ignore{
 =SML
 set_goal([], ¨µx∑	x ç Syntax
 ¥	(∂ord∑ ordinal ord ± x = MkVar ord)
-  ≤	(∂f∑ f ç DefForms ± x = MkComp f)
-  ≤	(∂t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkEq (t1,t2))
-  ≤	(∂t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkMem (t1,t2))
-  ≤	(∂ord fs∑ ordinal ord ± (Xâg fs) Ä DefForms ± x = MkTf (ord, fs))
+  ≤	(∂f∑ f ç WfForms ± x = MkComp f)
+  ≤	(∂t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkEq (t1,t2))
+  ≤	(∂t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkMem (t1,t2))
+  ≤	(∂ord fs∑ ordinal ord ± (µy∑ y çâg fs ¥ y ç WfForms) ± x = MkTf (ord, fs))
 Æ);
 a (contr_tac);
 a (lemma_tac ¨RepClosed (Syntax \ {x})Æ
@@ -882,7 +948,7 @@ a (lemma_tac ¨f ç Formulas (Syntax)Æ
 a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
 a (spec_nth_asm_tac 6 ¨fÆ);
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac [get_spec ¨DefFormsÆ]);
+a (rewrite_tac [get_spec ¨WfFormsÆ]);
 a (strip_tac);
 a (swap_nth_asm_concl_tac 1);
 a (asm_rewrite_tac[]);
@@ -897,14 +963,14 @@ a (lemma_tac ¨t1 ç Terms (Syntax) ± t2 ç Terms (Syntax)Æ
 a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
 a (spec_nth_asm_tac 7 ¨t1Æ);
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac [get_spec ¨DefTermsÆ]);
+a (rewrite_tac [get_spec ¨WfTermsÆ]);
 a (swap_nth_asm_concl_tac 1);
 a (spec_nth_asm_tac 1 ¨t2Æ);
 a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.1.2" *** *)
 a (spec_nth_asm_tac 7 ¨t1Æ);
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac [get_spec ¨DefTermsÆ]);
+a (rewrite_tac [get_spec ¨WfTermsÆ]);
 a (swap_nth_asm_concl_tac 1);
 a (spec_nth_asm_tac 1 ¨t2Æ);
 a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
@@ -917,16 +983,17 @@ a (rewrite_tac [get_spec ¨FormulasÆ]);
 a (REPEAT strip_tac THEN asm_fc_tac[]);
 a (ALL_FC_T rewrite_tac [repclosed_syntax_thm1]);
 (* *** Goal "2.2.2.2" *** *)
-a (LEMMA_T ¨Xâg fs Ä DefFormsÆ asm_tac
-	THEN1 (rewrite_tac [get_spec ¨DefFormsÆ]
+a (LEMMA_T ¨µ y∑ y ç Xâg fs ¥ y ç WfFormsÆ ante_tac
+	THEN1 (rewrite_tac [get_spec ¨WfFormsÆ]
 		THEN POP_ASM_T ante_tac
 		THEN rewrite_tac [get_spec ¨FormulasÆ]
 		THEN REPEAT strip_tac
-		THEN asm_fc_tac[]));
+		THEN_TRY asm_fc_tac[]));
+a (rewrite_tac [get_spec ¨XâgÆ] THEN strip_tac);
 a (spec_nth_asm_tac 4 ¨ordÆ);
 a (SPEC_NTH_ASM_T 1 ¨fsÆ ante_tac);
 a (GET_NTH_ASM_T 4 rewrite_thm_tac);
-a (GET_NTH_ASM_T 2 (rewrite_thm_tac o (rewrite_rule[])));
+a (GET_NTH_ASM_T 2 (rewrite_thm_tac));
 a (strip_tac);
 a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
 (* *** Goal "3" *** *)
@@ -937,13 +1004,13 @@ val syntax_disj_thm = save_pop_thm "syntax_disj_thm";
 
 set_goal([], ¨µx∑	x ç Syntax
 ¥	(IsVar x ¥ ∂ord∑ ordinal ord ± x = MkVar ord)
-±	(IsComp x ¥ ∂f∑ f ç DefForms ± x = MkComp f)
-±	(IsEq x ¥ ∂t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkEq (t1,t2))
-±	(IsMem x ¥ ∂t1 t2∑ t1 ç DefTerms ± t2 ç DefTerms ± x = MkMem (t1,t2))
-±	(IsTf x ¥ ∂ord fs∑ ordinal ord ± (Xâg fs) Ä DefForms ± x = MkTf (ord, fs))
+±	(IsComp x ¥ ∂f∑ f ç WfForms ± x = MkComp f)
+±	(IsEq x ¥ ∂t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkEq (t1,t2))
+±	(IsMem x ¥ ∂t1 t2∑ t1 ç WfTerms ± t2 ç WfTerms ± x = MkMem (t1,t2))
+±	(IsTf x ¥ ∂ord fs∑ ordinal ord ± (µy∑ y çâg fs ¥ y ç WfForms) ± x = MkTf (ord, fs))
 Æ);
 a (REPEAT_N 2 strip_tac);
-a (asm_tac syntax_disj_thm);
+a (asm_tac (syntax_disj_thm));
 a (asm_fc_tac[] THEN asm_rewrite_tac [Is_clauses]);
 (* *** Goal "1" *** *)
 a (∂_tac ¨ordÆ THEN asm_rewrite_tac[]);
@@ -968,26 +1035,178 @@ a (rewrite_tac (map get_spec [
 	¨TfVarsÆ, ¨MkTfÆ, ¨TfFormsÆ]));
 val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
 
-=IGN
-set_goal ([], ¨µt∑ t ç Syntax ¥ IsComp t ¥ ScPrec (CompBody t) tÆ);
+add_pc_thms "'ICsyn" [syn_proj_clauses];
+set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
+
+set_goal([], ¨µx∑	x ç Syntax
+¥	(IsVar x ¥ ordinal (VarNum x))
+±	(IsComp x ¥ CompBody x ç WfForms)
+±	(IsEq x ¥ AtomLhs x ç WfTerms ± AtomRhs x ç WfTerms)
+±	(IsMem x ¥ AtomLhs x ç WfTerms ± AtomRhs x ç WfTerms)
+±	(IsTf x ¥ ordinal (TfVars x) ± (µy∑ y çâg (TfForms x) ¥ y ç WfForms))
+Æ);
+a (REPEAT strip_tac
+	THEN all_fc_tac [is_fc_clauses]
+	THEN GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN_TRY asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [])));
+a (all_asm_fc_tac[]);
+val is_fc_clauses2 = save_pop_thm "is_fc_clauses2";
+
+set_goal([], ¨µv f lr vf∑
+		≥ MkVar v = MkComp f
+	±	≥ MkVar v = MkEq lr
+	±	≥ MkVar v = MkMem lr
+	±	≥ MkVar v = MkTf vf
+	±	≥ MkComp f = MkVar v
+	±	≥ MkComp f = MkEq lr
+	±	≥ MkComp f = MkMem lr
+	±	≥ MkComp f = MkTf vf
+	±	≥ MkEq lr = MkVar v
+	±	≥ MkEq lr = MkComp f
+	±	≥ MkEq lr = MkMem lr
+	±	≥ MkEq lr = MkTf vf
+	±	≥ MkMem lr = MkVar v
+	±	≥ MkMem lr = MkComp f
+	±	≥ MkMem lr = MkEq lr
+	±	≥ MkMem lr = MkTf vf
+	±	≥ MkTf vf = MkVar v
+	±	≥ MkTf vf = MkComp f
+	±	≥ MkTf vf = MkEq lr
+	±	≥ MkTf vf = MkMem lr
+Æ);
+a (rewrite_tac (map get_spec [¨MkVarÆ, ¨MkCompÆ, ¨MkEqÆ, ¨MkMemÆ, ¨MkTfÆ]));
+a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN (PC_T1 "lin_arith" rewrite_tac[]));
+val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
+
+add_pc_thms "'ICsyn" [syn_con_neq_clauses];
+set_merge_pcs ["hol1", "'GS1", "'ICsyn"];
+
+set_goal([], ¨(µx∑ MkVar x ç Syntax ¥ ordinal x)
+±	(µx∑ MkComp x ç Syntax ¥ x ç WfForms)
+±	(µl r∑ MkEq (l, r) ç Syntax ¥ l ç WfTerms ± r ç WfTerms)
+±	(µl r∑ MkMem (l, r) ç Syntax ¥ l ç WfTerms ± r ç WfTerms)
+±	(µv f∑ MkTf (v, f) ç Syntax ¥ ordinal v ± (µy∑ y çâg f ¥ y ç WfForms))Æ);
+a (REPEAT strip_tac
+	THEN FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule []))) [is_fc_clauses2]);
+a (asm_fc_tac[]);
+val syn_comp_fc_clauses = save_pop_thm "syn_comp_fc_clauses";
+
+set_goal([], ¨µx∑ x ç WfForms ≤ x ç WfTerms ¥ x ç SyntaxÆ);
+a (rewrite_tac (map get_spec [¨WfFormsÆ, ¨WfTermsÆ, ¨FormulasÆ, ¨TermsÆ])
+	THEN REPEAT strip_tac);
+val ft_syntax_thm = save_pop_thm "ft_syntax_thm";
+
+set_goal([], ¨µx∑ x ç WfForms ≤ IsForm x ¥ IsEq x ≤ IsMem x ≤ IsTf xÆ);
+a (rewrite_tac (map get_spec [¨WfFormsÆ, ¨IsFormÆ, ¨FormulasÆ]));
 a (REPEAT strip_tac);
+val formula_cases_thm = save_pop_thm "formula_cases_thm";
+
+set_goal([], ¨µx∑ x ç WfTerms ≤ IsTerm x ¥ IsVar x ≤ IsComp xÆ);
+a (rewrite_tac (map get_spec [¨WfTermsÆ, ¨IsTermÆ, ¨TermsÆ]));
+a (REPEAT strip_tac);
+val term_cases_thm = save_pop_thm "term_cases_thm";
+
+set_goal([], ¨µ¡ ¬ « ord fs∑ « ç Syntax ¥
+		(« = MkComp ¡
+	≤	« = MkEq (¡, ¬)
+	≤	« = MkEq (¬, ¡)
+	≤	« = MkMem (¡, ¬)
+	≤	« = MkMem (¬, ¡)
+	≤	« = MkTf (ord, fs) ± ¡ çâg fs) ¥ ScPrec ¡ «
+Æ);
 a (rewrite_tac [get_spec ¨ScPrecÆ]);
+a (REPEAT µ_tac THEN strip_tac THEN strip_tac);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN fc_tac [ft_syntax_thm] THEN rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN fc_tac [ft_syntax_thm] THEN_TRY rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 3 ¨¬Æ);
+a (var_elim_asm_tac  ¨x = ¡Æ);
+a (var_elim_asm_tac  ¨x = ¬Æ);
+a (var_elim_asm_tac  ¨x = MkEq (¡, ¬)Æ);
+(* *** Goal "3" *** *)
+a (GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN fc_tac [ft_syntax_thm] THEN_TRY rewrite_tac[]
+	THEN contr_tac);
+a (spec_nth_asm_tac 3 ¨¬Æ);
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+(* *** Goal "4" *** *)
+a (GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN fc_tac [ft_syntax_thm] THEN_TRY rewrite_tac[]
+	THEN contr_tac);
+a (spec_nth_asm_tac 2 ¨¬Æ);
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+(* *** Goal "5" *** *)
+a (GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN fc_tac [ft_syntax_thm] THEN_TRY rewrite_tac[]
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨¬Æ);
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+(* *** Goal "6" *** *)
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl)
+	THEN fc_tac [syn_comp_fc_clauses]
+	THEN asm_fc_tac[]
+	THEN fc_tac [ft_syntax_thm] THEN_TRY rewrite_tac[]
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨ordÆ);
+a (spec_nth_asm_tac 1 ¨fsÆ);
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+a (GET_NTH_ASM_T 2 (var_elim_asm_tac o concl));
+val scprec_fc_clauses = save_pop_thm "scprec_fc_clauses";
 
-a (all_fc_tac [is_fc_clauses]);
-a (asm_rewrite_tac [syn_proj_clauses]);
-
-set_goal ([], ¨µt∑ t ç Syntax ¥ IsComp t ¥ tc $çâg (CompBody t) tÆ);
-a (REPEAT strip_tac);
-a (all_fc_tac [is_fc_clauses]);
-a (asm_rewrite_tac [syn_proj_clauses]);
-
-get_spec ¨SyntaxÆ;
+set_goal ([], ¨µt∑ t ç Syntax ¥ (IsComp t ¥ ScPrec (CompBody t) t)
+	± (IsEq t ≤ IsMem t ¥ ScPrec (AtomLhs t) t ± ScPrec (AtomRhs t) t)
+	± (IsTf t ¥ µf∑ f çâg TfForms t ¥ ScPrec (f) t)Æ);
+a (REPEAT strip_tac
+	THEN all_fc_tac [is_fc_clauses]
+	THEN all_fc_tac [scprec_fc_clauses]
+	THEN POP_ASM_T ante_tac
+	THEN_TRY asm_rewrite_tac []);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (strip_tac);
+a (DROP_NTH_ASM_T 4 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN strip_tac
+	THEN all_fc_tac [scprec_fc_clauses]);
+a (SYM_ASMS_T rewrite_tac);
+val scprec_fc_clauses2 = save_pop_thm "scprec_fc_clauses2";
 =TEX
 }%ignore
 
-\subsection{Proof Context}
+\subsection{Proof Contexts}
 
 =SML
+add_pc_thms "'ICsyn" [];
+commit_pc "'ICsyn";
+
+force_new_pc "ICsyn";
+merge_pcs ["hol", "'GS1", "'ICsyn"] "ICsyn";
+commit_pc "ICsyn";
+
+force_new_pc "ICsyn1";
+merge_pcs ["hol1", "'GS1", "'ICsyn"] "ICsyn1";
+commit_pc "ICsyn1";
 =TEX
 
 \section{SEMANTICS}
@@ -997,7 +1216,8 @@ open_theory "ICsyn";
 force_new_theory "ICsem";
 force_new_pc "'ICsem";
 merge_pcs ["'savedthm_cs_∂_proof"] "'ICsem";
-set_merge_pcs ["hol", "'GS1", "'ICsyn", "'ICsem"];
+(* set_merge_pcs ["hol", "'GS1", "'ICsyn", "'ICsem"]; *)
+set_merge_pcs ["ICsyn", "'ICsem"];
 =TEX
 
 The semantics will be defined as a functor which transforms partial membership and equality relations, and is parameterised by a domain set (which gives the range of the quantifiers).
@@ -1010,55 +1230,41 @@ We can only do this with closed comprehensions, so at this point, if not before 
 
 So we need to be able to evaluate and to instantiate, evaluation taking place down to the level of atomic formulae and instantiation below that level (note that the terms in an atomic formulae will usually be comprehesions and hence may contain non-atomic formulae).
 
-\subsection{In SML}
-
-=IGN
-datatype Term = Var of int
-	|	Comp of Formula
-and Formula = Eq of Term * Term
-	|	Mem of Term * Term
-	|	Tf of int * (Formula list);
-
-fun tsubst s (Var i) = s i
-|   tsubst s (Comp f) = Comp (fsubst s f)
-
-and fsubst s (Eq (l,r)) = Eq (tsubst s l, tsubst s r)
-|   fsubst s (Mem (l,r)) = Mem (tsubst s l, tsubst s r)
-|   fsubst s (Tf (n, fl)) = Tf (n, (map (fsubst s) fl));
-
-fun feval (er, mr) s (Eq (l,r)) = er (tsubst s l, tsubst s r)
-|   feval (er, mr) s (Mem (l,r)) = mr (tsubst s l, tsubst s r)
-|   feval (er, mr) s (Tf (n, fl)) = not (all (map (feval (er,mr) s) fl) (fn x => x))
-;
-
-fun emfunc (er, mr) = (
-		fn x => y => feval (er, mr) (fn x => (Var x)) (Eq(x, y)),
-		fn x => y => feval (er, mr) (fn x => (Var x)) (Mem(x, y))
-);
-
-fun er (x, y) = 
-
-=TEX
-
 \subsection{Substitution}
 
 This will be an inductive definition over the relevant syntactic structures, but the definition is given in pieces.
 
-First substitution into terms:
+The following type abbreviations are intended to make the specification more readable:
+
+\begin{description}
+\item{EV} Expression value
+\item{VA} Variable assignment
+\item{TD} Term denotation
+\item{TV} Truth value
+\item{FD} Formula denotation
+\item{PR} Partial relation
+\end{description}
 
 =SML
-declare_type_abbrev("TV", [], îGSÆ);
-declare_type_abbrev("VA", [], îGS ∏ (GS ≠ TV)Æ);
-declare_type_abbrev("TD", [], îVA ≠ TVÆ);
-declare_type_abbrev("FD", [], îVA ≠ (BOOL + ONE)Æ);
-declare_type_abbrev("PR", [], îGS ≠ GS ≠ (BOOL + ONE)Æ);
+declare_type_abbrev("EV", [], îGSÆ);
+declare_type_abbrev("VA", [], îGS ∏ (GS ≠ EV)Æ);
+declare_type_abbrev("TD", [], îVA ≠ EVÆ);
+declare_type_abbrev("TV", [], îBOOL + ONEÆ);
+declare_type_abbrev("FD", [], îVA ≠ TVÆ);
+declare_type_abbrev("PR", [], îGS ≠ GS ≠ TVÆ);
 =TEX
 
 To define the semantics of comprehension we need to be able to modify a variable assignment.
 The modification required is to insert a new value for variable zero shifting all the existing values up one variable number.
 
 πHOLCONST
-‹ €InsertVar› : VA ≠ TV ≠ VA
+‹ €VaRan› : VA ≠ EV SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µva∑ VaRan va = {tv | ∂¡∑ ¡ <âo Fst va ± tv = Snd va ¡}
+∞
+
+πHOLCONST
+‹ €InsertVar› : VA ≠ EV ≠ VA
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µd f tv∑ InsertVar (d, f) tv = 
 ‹	(sucâo d, Ã¬∑ if ¬ = öâg then tv else f (¬ --âo (Natâg 1)))
@@ -1077,13 +1283,13 @@ We now define the operation of substituting into a term or formula values for fr
 The substitution is for free variables and the operator requires as an argument the number of bound variables for any particular context (the numbers of the free variables a shifted upwards as bound variables are introduced.
 
 πHOLCONST
-‹ €SubstTerm› : ((GS ∏ VA) ∏ GS ≠ GS) ≠ (GS ∏ VA) ≠ GS ≠ GS
+‹ €SubstTerm› : ((GS ∏ VA) ∏ GS ≠ GS) ≠ ((GS ∏ VA) ∏ GS) ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ SubstTerm = Ãsf (¡, (¬, f)) t∑
-‹	if t ç DefTerms
+‹ SubstTerm = Ãsf ((¡, (¬, f)), t)∑
+‹	if t ç WfTerms
 ‹	then	if IsVar t
-‹		then if ¡ ºâo VarNum t ± VarNum t ºâo (¡ +âo ¬)
-‹		     then MkComp (f ((VarNum t) --âo ¡))
+‹		then if ¡ ºâo VarNum t ± VarNum t <âo (¡ +âo ¬)
+‹		     then f ((VarNum t) --âo ¡)
 ‹	    	     else t
 ‹		else sf ((¡, (InsertVar (¬, f) öâg)), CompBody t)
 ‹	else t
@@ -1092,9 +1298,9 @@ The substitution is for free variables and the operator requires as an argument 
 The following gives us a well-founded ordering on the parameters to SubstForm which will be useful in proving its well-definedness.
 
 πHOLCONST
-‹ €SubOrder› : ('a ∏ GS) ≠ ('a ∏ GS) ≠ BOOL
+‹ €SubOrder› : ((GS ∏ VA) ∏ GS) ≠ ((GS ∏ VA) ∏ GS) ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs t u v∑ SubOrder (s, t) (u, v) = tc $çâg t v
+‹ SubOrder = Ãs t∑ tc ScPrec (Snd s) (Snd t)
 ∞
 
 The following results will be useful later in proving the existence of a fixed point.
@@ -1102,63 +1308,267 @@ The following results will be useful later in proving the existence of a fixed p
 First some points about the constituents of terms.
 
 =GFT
-SubOrder_Ì_lemma =
-   Ù µ v s t∑ SubOrder (v, s) (v, s Ìâg t) ± SubOrder (v, t) (v, s Ìâg t)
+€tran_suborder_thm› =
+   Ù trans SubOrder
+
+€tran_suborder_thm2› =
+	Ù µ s t u∑ SubOrder s t ± SubOrder t u ¥ SubOrder s u
+
+€substterm_lemma1› =
+   Ù µ sf1 sf2 t
+     ∑ (µ ¡ ¬_f y
+         ∑ SubOrder ((¡, ¬_f), y) ((¡, ¬_f), t)
+             ¥ sf1 ((¡, ¬_f), y) = sf2 ((¡, ¬_f), y))
+         ¥ (µ ¡ ¬_f∑ SubstTerm sf1 ((¡, ¬_f), t) = SubstTerm sf2 ((¡, ¬_f), t))
+
+€well_founded_SubOrder_thm› =
+   Ù well_founded SubOrder
+
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µv s t∑ SubOrder (v, s) (v, s Ìâg t) ± SubOrder (v, t) (v, s Ìâg t)Æ);
-a (rewrite_tac [get_spec ¨SubOrderÆ, Ì_tc_thm]);
-val SubOrder_Ì_lemma = pop_thm();
-=IGN
-stop;
-set_goal([], ¨µsf1 sf2 (t:GS)∑ (µ ¡ ¬_f ∑
-	(µ y:GS∑ tc SubOrder ((¡, ¬_f), y) ((¡, ¬_f), t) ¥ sf1 ((¡, ¬_f), y) = sf2 ((¡, ¬_f), y)))
-		¥ (µ ¡ ¬_f ∑SubstTerm sf1 (¡, ¬_f) t = SubstTerm sf2 (¡, ¬_f) t)Æ);
+set_goal([], ¨trans SubOrderÆ);
+a (rewrite_tac [get_spec ¨SubOrderÆ, get_spec ¨transÆ]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [tran_tc_thm2]);
+val tran_suborder_thm = save_pop_thm "tran_suborder_thm";
+
+val tran_suborder_thm2 = save_thm ("tran_suborder_thm2", rewrite_rule [get_spec ¨transÆ] tran_suborder_thm);
+
+set_goal([], ¨well_founded SubOrderÆ);
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (asm_tac (µ_elim ¨Snd: (GS ∏ VA) ∏ GS ≠ GSÆ
+(¥_elim (µ_elim ¨tc ScPrecÆ wf_image_wf_thm) well_founded_tcScPrec_thm)));
+a (strip_tac);
+val well_founded_SubOrder_thm = save_pop_thm "well_founded_SubOrder_thm";
+
+set_goal([], ¨µsf1 sf2 p∑
+	(µ y∑ SubOrder y p ¥ sf1 y = sf2 y)
+		¥ SubstTerm sf1 p = SubstTerm sf2 pÆ);
 a (rewrite_tac [get_spec ¨SubstTermÆ] THEN REPEAT strip_tac);
-a (cases_tac ¨t ç DefTermsÆ THEN asm_rewrite_tac[]);
-a (cases_tac ¨IsVar tÆ THEN asm_rewrite_tac[]);
+a (cases_tac ¨Snd p ç WfTermsÆ THEN asm_rewrite_tac[]);
+a (cases_tac ¨IsVar (Snd p)Æ THEN asm_rewrite_tac[]);
 a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule (map get_spec
-	[¨DefTermsÆ, ¨TermsÆ, ¨IsTermÆ]))));
-a (lemma_tac ¨SubOrder ((¡, InsertVar ¬_f öâg), CompBody t) ((¡, InsertVar ¬_f öâg), t)Æ);
+	[¨WfTermsÆ, ¨TermsÆ, ¨IsTermÆ]))));
+a (lemma_tac ¨SubOrder ((Fst (Fst p), InsertVar (Snd (Fst p)) öâg), CompBody (Snd p)) (Fst p, Snd p)Æ);
 (* *** Goal "1" *** *)
 a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (lemma_tac ¨ScPrec (CompBody (Snd p)) (Snd p)Æ THEN1 all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
+a (strip_tac THEN asm_fc_tac []);
+val substterm_lemma1 = save_pop_thm "substterm_lemma1";
+=TEX
+}%ignore
 
+Substitution over formulae is defined by recursion over the syntax and is thefore as the fixed point of a functor.
 
+πHOLCONST
+‹ €SubstAtom› : ((GS ∏ VA) ∏ GS ≠ GS) ≠ ((GS ∏ VA) ∏ GS ≠ GS)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ SubstAtom = Ãsf ((¡, va), f)∑
+‹    (if IsEq f then MkEq else MkMem)
+‹	(SubstTerm sf ((¡, va), (AtomLhs f)),
+‹	 SubstTerm sf ((¡, va), (AtomRhs f)))
+∞
 
-a (lemma_tac ¨µ‘∑ tc
-               (Ã ((¡_1, va_1), f1) ((¡_2, va_2), f2)∑ f1 çâg f2)
-               ((¡, InsertVar (¬, f) öâg), snd ‘)
-               ((¡, ¬, f), ‘)Æ);
-a (spec_nth_asm_tac 1 ¨((¡, InsertVar (¬, f) öâg), snd (snd t))Æ);
+=GFT
+substatom_lemma1 =
+   Ù µ sf1 sf2 f
+     ∑ Snd f ç Syntax
+         ¥ IsEq (Snd f) ≤ IsMem (Snd f)
+         ¥ (µ y∑ SubOrder y f ¥ sf1 y = sf2 y)
+         ¥ SubstAtom sf1 f = SubstAtom sf2 f
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µsf1 sf2 f∑ Snd f ç Syntax ¥ (IsEq (Snd f) ≤ IsMem (Snd f)) ¥
+	(µ y∑ SubOrder y f ¥ sf1 y = sf2 y)
+		¥ SubstAtom sf1 f = SubstAtom sf2 fÆ);
+a (rewrite_tac [get_spec ¨SubstAtomÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨SubstTerm sf1 (Fst f, AtomLhs (Snd f))
+	   = SubstTerm sf2 (Fst f, AtomLhs (Snd f))Æ);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨(µ y∑ SubOrder y (Fst f, AtomLhs (Snd f)) ¥ sf1 y = sf2 y)Æ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1.1.1" *** *)
+a (lemma_tac ¨SubOrder (Fst f, AtomLhs (Snd f)) (Fst f, Snd f)Æ);
+(* *** Goal "1.1.1.1" *** *)
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (lemma_tac ¨ScPrec (AtomLhs (Snd f)) (Snd f)Æ);
+(* *** Goal "1.1.1.1.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "1.1.1.1.2" *** *)
+a (ALL_FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [tran_suborder_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "1.1.2" *** *)
+a (fc_tac [substterm_lemma1]);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+a (lemma_tac ¨(µ y∑ SubOrder y (Fst f, AtomRhs (Snd f)) ¥ sf1 y = sf2 y)Æ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1.2.1" *** *)
+a (lemma_tac ¨SubOrder (Fst f, AtomRhs (Snd f)) (Fst f, Snd f)Æ);
+(* *** Goal "1.2.1.1" *** *)
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (lemma_tac ¨ScPrec (AtomRhs (Snd f)) (Snd f)Æ);
+(* *** Goal "1.2.1.1.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "1.2.1.2" *** *)
+a (ALL_FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [tran_suborder_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "1.2.2" *** *)
+a (fc_tac [substterm_lemma1]);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨SubstTerm sf1 (Fst f, AtomLhs (Snd f))
+	   = SubstTerm sf2 (Fst f, AtomLhs (Snd f))Æ);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨(µ y∑ SubOrder y (Fst f, AtomLhs (Snd f)) ¥ sf1 y = sf2 y)Æ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1.1.1" *** *)
+a (lemma_tac ¨SubOrder (Fst f, AtomLhs (Snd f)) (Fst f, Snd f)Æ);
+(* *** Goal "1.1.1.1" *** *)
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (lemma_tac ¨ScPrec (AtomLhs (Snd f)) (Snd f)Æ);
+(* *** Goal "1.1.1.1.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "1.1.1.1.2" *** *)
+a (ALL_FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [tran_suborder_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "1.1.2" *** *)
+a (fc_tac [substterm_lemma1]);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+a (lemma_tac ¨(µ y∑ SubOrder y (Fst f, AtomRhs (Snd f)) ¥ sf1 y = sf2 y)Æ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1.2.1" *** *)
+a (lemma_tac ¨SubOrder (Fst f, AtomRhs (Snd f)) (Fst f, Snd f)Æ);
+(* *** Goal "1.2.1.1" *** *)
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (lemma_tac ¨ScPrec (AtomRhs (Snd f)) (Snd f)Æ);
+(* *** Goal "1.2.1.1.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "1.2.1.2" *** *)
+a (ALL_FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [tran_suborder_thm2]);
+a (all_asm_fc_tac []);
+(* *** Goal "1.2.2" *** *)
+a (fc_tac [substterm_lemma1]);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+val substatom_lemma1 = save_pop_thm "substatom_lemma1";
 =TEX
 }%ignore
 
 
+πHOLCONST
+‹ €SubstTf› : ((GS ∏ VA) ∏ GS ≠ GS) ≠ ((GS ∏ VA) ∏ GS ≠ GS)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ SubstTf = Ãsf ((¡, va), f)∑
+‹	let Œ = TfVars f
+‹	and fs = TfForms f
+‹	in (MkTf (Œ, (Imagep (Ãf∑ sf ((Œ +âo ¡, va), f)) fs)))
+∞
 
-Substitution over formulae is defined by recursion over the syntax and is thefore as the fixed point of a functor.
+=GFT
+substtf_lemma1 =
+   Ù µ sf1 sf2 f
+     ∑ Snd f ç Syntax
+         ¥ IsTf (Snd f)
+         ¥ (µ y∑ SubOrder y f ¥ sf1 y = sf2 y)
+         ¥ SubstTf sf1 f = SubstTf sf2 f
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µsf1 sf2 f∑ Snd f ç Syntax ¥ IsTf (Snd f) ¥
+	(µ y∑ SubOrder y f ¥ sf1 y = sf2 y)
+		¥ SubstTf sf1 f = SubstTf sf2 fÆ);
+a (rewrite_tac [get_spec ¨SubstTfÆ, let_def] THEN REPEAT strip_tac);
+a (lemma_tac ¨µg∑ g çâg (TfForms (Snd f)) ¥
+	SubOrder ((TfVars (Snd f) +âo Fst (Fst f), Snd (Fst f)), g) fÆ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¨SubOrderÆ]);
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨µg∑ g çâg (TfForms (Snd f)) ¥
+	  sf1 ((TfVars (Snd f) +âo Fst (Fst f), Snd (Fst f)), g)
+	= sf2 ((TfVars (Snd f) +âo Fst (Fst f), Snd (Fst f)), g)Æ
+	THEN1 (REPEAT strip_tac
+		THEN all_asm_fc_tac[]
+		THEN all_asm_fc_tac[]));
+a (lemma_tac ¨Imagep (Ã f''∑ sf1 ((TfVars (Snd f) +âo Fst (Fst f), Snd (Fst f)), f''))
+                       (TfForms (Snd f))
+	   = Imagep (Ã f''∑ sf2 ((TfVars (Snd f) +âo Fst (Fst f), Snd (Fst f)), f'')) (TfForms (Snd f))Æ
+	THEN1 (once_rewrite_tac [gs_ext_axiom]
+	       THEN rewrite_tac [get_spec ¨ImagepÆ]));
+(* *** Goal "2.1" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+(* *** Goal "2.2" *** *)
+a (asm_rewrite_tac[]);
+val substtf_lemma1 = save_pop_thm "substtf_lemma1";
+=TEX
+}%ignore
 
 πHOLCONST
 ‹ €SubstFormFunct› : ((GS ∏ VA) ∏ GS ≠ GS) ≠ ((GS ∏ VA) ∏ GS ≠ GS)
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ SubstFormFunct = Ãsf ((¡, va), f)∑
-‹    (fst f Ìâg
-‹	let fb = snd f
-‹	in 
-‹		if IsEq fb ≤ IsMem fb
-‹		then (fst fb Ìâg (
-‹			(SubstTerm sf (¡, va) (AtomLhs fb) Ìâg
-‹			 SubstTerm sf (¡, va) (AtomRhs fb)))
-‹		     )
-‹		else (	let Œ = TfVars fb
-‹			and fs = TfForms fb
-‹			in (fst fb Ìâg
-‹			    (Œ Ìâg (Imagep (Ãf∑ sf ((¡, va), f)) fs))
-‹			   )
-‹		     )
-‹    )
+‹    if f ç Syntax
+‹    then if IsEq f ≤ IsMem f
+‹	  then SubstAtom sf ((¡, va), f)
+‹	  else if IsTf f
+‹		then SubstTf sf ((¡, va), f)
+‹		else öâg
+‹    else öâg
 ∞
+
+=GFT
+substformfunct_lemma1 =
+	Ù SubstFormFunct respects SubOrder
+=TEX
+\ignore{
+=SML
+set_goal([], ¨SubstFormFunct respects SubOrderÆ);
+a (rewrite_tac [get_spec ¨$respectsÆ, get_spec ¨SubstFormFunctÆ]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨Snd x ç SyntaxÆ THEN asm_rewrite_tac[]);
+a (lemma_tac ¨µ y∑ SubOrder y x ¥ g y = h yÆ
+	THEN1 (REPEAT strip_tac
+		THEN fc_tac [tc_incr_thm]
+		THEN asm_fc_tac[]));
+a (cases_tac ¨IsEq (Snd x) ≤ IsMem (Snd x)Æ THEN asm_rewrite_tac []);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¨gÆ, ¨hÆ, ¨xÆ] substatom_lemma1));
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨gÆ, ¨hÆ, ¨xÆ] substatom_lemma1));
+a (asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (cases_tac ¨IsTf (Snd x)Æ THEN asm_rewrite_tac []);
+a (strip_asm_tac (list_µ_elim [¨gÆ, ¨hÆ, ¨xÆ] substtf_lemma1));
+a (asm_fc_tac[]);
+val substformfunct_lemma1 = save_pop_thm "substformfunct_lemma1";
+=TEX
+}%ignore
+
 
 πHOLCONST
 ‹ €SubstForm› : (GS ∏ VA) ∏ GS ≠ GS
@@ -1166,16 +1576,52 @@ Substitution over formulae is defined by recursion over the syntax and is thefor
 ‹ SubstForm = fix SubstFormFunct
 ∞ 
 
-\ignore{
-=IGN
-stop;
-set_goal([], ¨SubstFormFunct respects (Ã((¡_1, va_1), f1) ((¡_2, va_2), f2)∑ f1 çâg f2)Æ);
-a (rewrite_tac [get_spec ¨$respectsÆ, get_spec ¨SubstFormFunctÆ]
-	THEN REPEAT strip_tac);
+=GFT
+substformfunct_fixp_lemma =
+	Ù SubstForm = SubstFormFunct SubstForm
 
+substformfunct_thm =
+   Ù SubstForm
+       = (Ã ((¡, va), f)
+       ∑ if f ç Syntax
+         then
+           if IsEq f ≤ IsMem f
+           then SubstAtom SubstForm ((¡, va), f)
+           else if IsTf f
+           then SubstTf SubstForm ((¡, va), f)
+           else öâg
+         else öâg)
+
+€substformfunct_thm2› =
+   Ù µ x
+     ∑ SubstForm x
+         = (if Snd x ç Syntax
+           then
+             if IsEq (Snd x) ≤ IsMem (Snd x)
+             then SubstAtom SubstForm x
+             else if IsTf (Snd x)
+             then SubstTf SubstForm x
+             else öâg
+           else öâg)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨SubstForm = SubstFormFunct SubstFormÆ);
+a (asm_tac well_founded_SubOrder_thm);
+a (asm_tac substformfunct_lemma1);
+a (fc_tac [µ_elim ¨SubOrderÆ (µ_elim ¨SubstFormFunctÆ (get_spec ¨fixÆ))]);
+a (rewrite_tac [get_spec ¨SubstFormÆ]);
+a (asm_rewrite_tac[]);
+val substformfunct_fixp_lemma = save_pop_thm "substformfunct_fixp_lemma";
+
+val substformfunct_thm = save_thm ("substformfunct_thm",
+	rewrite_rule [get_spec ¨SubstFormFunctÆ] substformfunct_fixp_lemma);
+
+val substformfunct_thm2 = save_thm ("substformfunct_thm2",
+	rewrite_rule [ext_thm] substformfunct_thm);
 =TEX
 }%ignore
-
 
 \subsection{Evaluation}
 
@@ -1183,38 +1629,308 @@ Now we define the evaluation of formulae.
 The definition assumes that partial relations for the atomic formulae are available, and is the main part of the definition of a functor which transforms membership and equality relations.
 Interpretations of non-well-founded set theories are then sought as fixed points of this functor over subsets of the infinitary comprehensions.
 
+Partial relations are represented by curried functions with values of type îBOOL + ONEÆ, a type abbreviated as îTVÆ.
+To improve readability of the specification the three truth values are give names as follows:
+
+
+πHOLCONST
+‹ €pTrue› : TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pTrue = InL T
+∞
+πHOLCONST
+‹ €pFalse› : TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pFalse = InL F
+∞
+πHOLCONST
+‹ €pU› : TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pU = InR One
+∞
+
+=GFT
+tv_cases_thm =
+	Ù µ x∑ x = pTrue ≤ x = pFalse ≤ x = pU
+
+tv_distinct_clauses =
+	Ù ≥ pTrue = pFalse
+             ± ≥ pTrue = pU
+             ± ≥ pFalse = pTrue
+             ± ≥ pFalse = pU
+             ± ≥ pU = pTrue
+             ± ≥ pU = pFalse
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ x = pTrue ≤ x = pFalse ≤ x = pUÆ);
+a (rewrite_tac (map get_spec [¨pTrueÆ, ¨pFalseÆ, ¨pUÆ]) THEN prove_tac[]);
+a (strip_asm_tac (µ_elim ¨xÆ sum_cases_thm));
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac);
+a (LEMMA_T ¨y = T ≤ y = FÆ (STRIP_THM_THEN asm_tac) THEN1 prove_tac[]
+	THEN var_elim_nth_asm_tac 1
+	THEN strip_tac);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[one_def]);
+val tv_cases_thm = save_pop_thm "tv_cases_thm";
+
+set_goal([], ¨≥ pTrue = pFalse
+	± ≥ pTrue = pU
+	± ≥ pFalse = pTrue
+	± ≥ pFalse = pU
+	± ≥ pU = pTrue
+	± ≥ pU = pFalse
+Æ);
+a (rewrite_tac (map get_spec [¨pTrueÆ, ¨pFalseÆ, ¨pUÆ]) THEN prove_tac[]);
+val tv_distinct_clauses = save_pop_thm "tv_distinct_clauses";
+
+add_pc_thms "'ICsem" (map get_spec [] @ [tv_distinct_clauses]);
+set_merge_pcs ["ICsyn", "'ICsem"];
+
+=TEX
+}%ignore
+
+
+
 =SML
 declare_infix (300, "çâv");
 declare_infix (300, "=âv");
 =TEX
 
+Now we begin the specification of evaluation with the evaluation of atomic formulae.
+
 πHOLCONST
-‹ €EvalForm› : (GS ∏ PR ∏ PR) ≠ VA ≠ GS ≠ BOOL + ONE
+‹ €EvalAtom› : (PR ∏ PR) ≠ (VA ∏ GS) ≠ TV
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV ($çâv:PR) ($=âv:PR)∑ EvalForm (V, $çâv, $=âv) = fix (Ãef va f∑ 
-‹	let fb = snd f
-‹	in 
-‹		if IsEq fb
-‹		then 
-‹		  (SubstTerm SubstForm (öâg, va) (AtomLhs fb))
-‹		  =âv
-‹		  (SubstTerm SubstForm (öâg, va) (AtomRhs fb))
-‹		else  if IsMem fb
-‹		      then 
-‹			(SubstTerm SubstForm (öâg, va) (AtomLhs fb))
-‹			çâv
-‹			(SubstTerm SubstForm (öâg, va) (AtomRhs fb))
-‹		      else
-‹	(let Œ = TfVars fb
-‹	 and fs = TfForms fb
-‹	 in let results = {pb | ∂v f∑ f çâg fs ± pb = ef (InsertVars (Œ, v) va) f}
-‹	    in
-‹		if results = {InL T} then InL F
-‹		else if (InL F) ç results then InL T
-‹		else InR One
-‹	)
-‹			)
+‹ µ($çâv:PR) ($=âv:PR)∑ EvalAtom ($çâv, $=âv) = (Ã(va, f)∑ 
+‹	(if IsEq f then $=âv else $çâv) 
+‹		  (SubstTerm SubstForm ((öâg, va), (AtomLhs f)))
+‹		  (SubstTerm SubstForm ((öâg, va), (AtomRhs f))))
 ∞
+
+It is helpful for the subsequent proofs to structure the specification of {\it EvalTf}, pulling out the following definition, which shows the set of truth values arising from the quantification occuring in this construct.
+
+πHOLCONST
+‹ €EvalTf_results› : GS SET ≠ ((VA ∏ GS) ≠ TV) ≠ (VA ∏ GS) ≠ (TV) SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV∑ EvalTf_results V = Ãef (va, f)∑ 
+‹	 let Œ = TfVars f
+‹	 and fs = TfForms f
+‹	 in {pb |
+‹		∂v f∑ VaRan (Œ, v) Ä V
+‹		± f çâg fs
+‹		± pb = ef (InsertVars (Œ, v) va, f)}
+∞
+
+πHOLCONST
+‹ €EvalTf_tf› : TV SET ≠ TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µresults∑ EvalTf_tf results = 
+‹	if results Ä {pTrue} then pFalse
+‹		else if (pFalse) ç results then pTrue
+‹		else pU
+∞
+
+πHOLCONST
+‹ €EvalTf› : (GS SET ∏ PR ∏ PR) ≠ ((VA ∏ GS) ≠ TV) ≠ (VA ∏ GS) ≠ TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV ($çâv:PR) ($=âv:PR)∑ EvalTf (V, $çâv, $=âv) = Ãef (va, f)∑ 
+‹	 EvalTf_tf (EvalTf_results V ef (va, f))
+∞
+
+πHOLCONST
+‹ €SubOrder2› : (VA ∏ GS) ≠ (VA ∏ GS) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ SubOrder2 = Ãs t∑ tc ScPrec (Snd s) (Snd t)
+∞
+
+=GFT
+€tran_suborder2_thm› =
+   Ù trans SubOrder2
+
+€tran_suborder2_thm2› =
+	Ù µ s t u∑ SubOrder2 s t ± SubOrder2 t u ¥ SubOrder2 s u
+
+€well_founded_SubOrder2_thm› =
+   Ù well_founded SubOrder2
+
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨trans SubOrder2Æ);
+a (rewrite_tac [get_spec ¨SubOrder2Æ, get_spec ¨transÆ]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [tran_tc_thm2]);
+val tran_suborder2_thm = save_pop_thm "tran_suborder2_thm";
+
+val tran_suborder2_thm2 = save_thm ("tran_suborder2_thm2", rewrite_rule [get_spec ¨transÆ] tran_suborder2_thm);
+
+set_goal([], ¨well_founded SubOrder2Æ);
+a (rewrite_tac [get_spec ¨SubOrder2Æ]);
+a (asm_tac (µ_elim ¨Snd: (GS ∏ (GS ≠ GS)) ∏ GS ≠ GSÆ
+(¥_elim (µ_elim ¨tc ScPrecÆ wf_image_wf_thm) well_founded_tcScPrec_thm)));
+a (strip_tac);
+val well_founded_SubOrder2_thm = save_pop_thm "well_founded_SubOrder2_thm";
+=TEX
+}%ignore
+
+=GFT
+evaltf_lemma1 =
+   Ù µ (v, m, e) ef1 ef2 vaf
+     ∑ Snd vaf ç Syntax
+         ¥ IsTf (Snd vaf)
+         ¥ (µ y∑ SubOrder2 y vaf ¥ ef1 y = ef2 y)
+         ¥ EvalTf (v, m, e) ef1 vaf = EvalTf (v, m, e) ef2 vaf
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(v, m, e) ef1 ef2 vaf∑ Snd vaf ç Syntax
+	¥ IsTf (Snd vaf)
+	¥ (µ y∑ SubOrder2 y vaf ¥ ef1 y = ef2 y)
+	¥ EvalTf (v, m, e) ef1 vaf = EvalTf (v, m, e) ef2 vaf
+Æ);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨EvalTfÆ]);
+a (LEMMA_T ¨EvalTf_results v ef1 vaf
+	= EvalTf_results v ef2 vafÆ rewrite_thm_tac);
+a (rewrite_tac [get_spec ¨EvalTf_resultsÆ, sets_ext_clauses, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨v'Æ THEN ∂_tac ¨f'Æ THEN asm_rewrite_tac[]);
+a (spec_nth_asm_tac 4 ¨(InsertVars (TfVars (Snd vaf), v') (Fst vaf), f')Æ);
+a (swap_nth_asm_concl_tac 1 THEN DROP_NTH_ASM_T 1 discard_tac);
+a (rewrite_tac [get_spec ¨SubOrder2Æ]);
+a (lemma_tac ¨ScPrec f' (Snd vaf)Æ);
+(* *** Goal "1.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+(* *** Goal "1.2" *** *)
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨v'Æ THEN ∂_tac ¨f'Æ THEN asm_rewrite_tac[]);
+a (spec_nth_asm_tac 4 ¨(InsertVars (TfVars (Snd vaf), v') (Fst vaf), f')Æ
+	THEN_TRY asm_rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1 THEN DROP_NTH_ASM_T 1 discard_tac);
+a (rewrite_tac [get_spec ¨SubOrder2Æ]);
+a (lemma_tac ¨ScPrec f' (Snd vaf)Æ);
+(* *** Goal "2.1" *** *)
+a (all_fc_tac [scprec_fc_clauses2]);
+(* *** Goal "2.2" *** *)
+a (fc_tac [tc_incr_thm]);
+val evaltf_lemma1 = save_pop_thm "evaltf_lemma1";
+
+set_goal([], ¨µ(v, m, e) ef1 ef2 vaf∑ Snd vaf ç Syntax
+	¥ IsTf (Snd vaf)
+	¥ (µ y∑ SubOrder2 y vaf ¥ ef1 y = ef2 y)
+	¥ EvalTf (v, m, e) ef1 vaf = EvalTf (v, m, e) ef2 vafÆ);
+
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €EvalFormFunct› : (GS SET ∏ PR ∏ PR) ≠ (VA ∏ GS ≠ TV)	
+‹			≠ (VA ∏ GS ≠ TV)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV ($çâv:PR) ($=âv:PR)∑ EvalFormFunct (V, $çâv, $=âv) = (Ãef (va, f)∑ 
+‹	if f ç WfForms
+‹	then
+‹		if IsEq f ≤ IsMem f
+‹		then EvalAtom ($çâv, $=âv) (va, f)
+‹		else EvalTf (V, $çâv, $=âv) ef (va, f)
+‹	else pU)
+∞
+
+=GFT
+
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv, $=âv)∑ (EvalFormFunct (V, $çâv, $=âv)) respects SubOrder2Æ);
+a (rewrite_tac [get_spec ¨EvalFormFunctÆ, get_spec ¨$respectsÆ]);
+a (REPEAT strip_tac);
+a (cases_tac ¨Snd x ç WfFormsÆ THEN asm_rewrite_tac[]);
+a (fc_tac [ft_syntax_thm]);
+a (fc_tac [formula_cases_thm] THEN_TRY asm_rewrite_tac[]);
+a (cases_tac ¨IsEq (Snd x) ≤ IsMem (Snd x)Æ THEN asm_rewrite_tac[]);
+a (fc_tac [evaltf_lemma1]);
+a (asm_fc_tac[]);
+a (list_spec_nth_asm_tac 1 [¨gÆ, ¨hÆ, ¨VÆ, ¨$çâvÆ, ¨$=âvÆ]);
+a (swap_nth_asm_concl_tac 1 THEN POP_ASM_T discard_tac
+	THEN POP_ASM_T ante_tac);
+a (DROP_NTH_ASM_T 8 ante_tac THEN rewrite_tac [get_spec ¨SubOrder2Æ]);
+a (REPEAT strip_tac);
+a (lemma_tac ¨trans (Ã (s : (GS ∏ (GS ≠ GS)) ∏ GS) t∑ tc ScPrec (Snd s) (Snd t))Æ
+	THEN1 rewrite_tac [get_spec ¨transÆ, tran_tc_thm2]);
+a (fc_tac [tran_tc_id_thm]);
+a (SPEC_NTH_ASM_T 4 ¨yÆ ante_tac);
+a (GET_NTH_ASM_T 1 rewrite_thm_tac);
+a (strip_tac THEN asm_fc_tac[]);
+val evalformfunct_lemma1 = save_pop_thm "evalformfunct_lemma1";
+=TEX
+}%ignore
+
+
+πHOLCONST
+‹ €EvalForm› : (GS SET ∏ PR ∏ PR) ≠ VA ∏ GS ≠ TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV ($çâv:PR) ($=âv:PR)∑ EvalForm (V, $çâv, $=âv) = fix (EvalFormFunct (V, $çâv, $=âv))
+∞
+
+=GFT
+evalformfunct_fixp_lemma =
+   Ù µ (V, $çâv, $=âv)
+     ∑ EvalForm (V, $çâv, $=âv)
+         = EvalFormFunct (V, $çâv, $=âv) (EvalForm (V, $çâv, $=âv))
+
+evalformfunct_thm =
+   Ù µ (V, $çâv, $=âv)
+     ∑ EvalForm (V, $çâv, $=âv)
+         = (Ã (va, f)
+         ∑ if f ç WfForms
+           then
+             if IsEq f ≤ IsMem f
+             then EvalAtom ($çâv, $=âv) (va, f)
+             else EvalTf (V, $çâv, $=âv) (EvalForm (V, $çâv, $=âv)) (va, f)
+           else pU)
+
+evalformfunct_thm2 =
+   Ù µ (V, $çâv, $=âv) x
+     ∑ EvalForm (V, $çâv, $=âv) x
+         = (if Snd x ç WfForms
+           then
+             if IsEq (Snd x) ≤ IsMem (Snd x)
+             then EvalAtom ($çâv, $=âv) x
+             else EvalTf (V, $çâv, $=âv) (EvalForm (V, $çâv, $=âv)) x
+           else pU)
+=TEX
+
+\ignore{
+=SML
+set_flag ("pp_show_HOL_types", false);
+
+set_goal([], ¨µ(V, $çâv, $=âv)∑ EvalForm (V, $çâv, $=âv)
+	= (EvalFormFunct(V, $çâv, $=âv)) (EvalForm(V, $çâv, $=âv))Æ);
+a (asm_tac well_founded_SubOrder2_thm);
+a (asm_tac evalformfunct_lemma1);
+a (fc_tac [µ_elim ¨SubOrder2Æ (µ_elim ¨EvalFormFunct(V, $çâv, $=âv)Æ (get_spec ¨fixÆ))]);
+a (rewrite_tac [get_spec ¨EvalFormÆ]);
+a (REPEAT µ_tac);
+a (list_spec_nth_asm_tac 2 [¨(V, $çâv, $=âv)Æ]);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+
+val evalformfunct_thm = save_thm ("evalformfunct_thm",
+	rewrite_rule [get_spec ¨EvalFormFunctÆ] evalformfunct_fixp_lemma);
+
+val evalformfunct_thm2 = save_thm ("evalformfunct_thm2",
+	rewrite_rule [ext_thm] evalformfunct_thm);
+=TEX
+}%ignore
 
 \newpage
 
@@ -1226,35 +1942,603 @@ We are seeking a functor which when supplied with membership and equality relati
 This is what we now define.
 
 πHOLCONST
-‹ €MemRel› : (GS ∏ PR ∏ PR) ≠ PR
+‹ €MemRel› : (GS SET ∏ PR ∏ PR) ≠ PR
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV ($çâv:PR) ($=âv:PR) e s∑ 
-‹	MemRel (V, $çâv, $=âv) e s =
+‹ µV ($çâv:PR) ($=âv:PR)∑ 
+‹	MemRel (V, $çâv, $=âv) = Ãe s∑
 ‹		let va = (Natâg 1, Ãv∑ e)
-‹		in EvalForm (V, $çâv, $=âv) va (snd s)
+‹		in EvalForm (V, $çâv, $=âv) (va, (snd s))
 ∞
 
 The equality of two closed comprehensions is determined here by evaluating the formula in which the bodies of the two comprehensions are first combined into an equivalence and then universally quantified over the common variable.
 
 πHOLCONST
-‹ €EqRel› : (GS ∏ PR ∏ PR) ≠ PR
+‹ €EqRel› : (GS SET ∏ PR ∏ PR) ≠ PR
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV ($çâv:PR) ($=âv:PR) l r∑
-‹	EqRel (V, $çâv, $=âv) l r =
-‹		let va = (öâg, Ãv∑v)
-‹		and lb = snd l
-‹		and rb = snd r
-‹		in let nl = MkNot lb
-‹		   and nr = MkNot rb
-‹		   in  let nlnr = MkTf (öâg, Pair l nr)
-‹		       and nrnl = MkTf (öâg, Pair r nl)
-‹		       in let nallneqr = MkTf (Natâg 1, Pair nlnr nrnl)
-‹                           in let allneqr = MkNot nallneqr
-‹		              in EvalForm (V, $çâv, $=âv) va allneqr
+‹ µV ($çâv:PR) ($=âv:PR)∑ EqRel (V, $çâv, $=âv) = Ãl r∑
+‹	if l ç V ± r ç V
+‹	then
+‹		if ∂c∑ c ç V ± ((c çâv l) = pU ≤ (c çâv r) = pU)
+‹		then pU
+‹		else if ((Ãc∑ c ç V ± ≥ (c çâv l) = pU) = (Ãc∑ c ç V ± ≥ (c çâv r) = pU))
+			then pTrue else pFalse
+‹	else pU	
 ∞
 
 The semantics of equality and membership are to be combined into a parameterised functor of which we seek fixed points.
 These fixed points yield interpretations of non-well-founded set theories (or as a special and easy test case an image of our well-founded set theory).
+
+\subsection{The Semantic Functor}
+
+The required functor is a monotonic functor over equality and membership relation pairs, parameterised by the domain of discourse V.
+
+πHOLCONST
+‹ €SemanticFunctor› : GS SET ≠ (PR ∏ PR) ≠ (PR ∏ PR)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV ($çâv:PR) ($=âv:PR)∑ 
+‹	SemanticFunctor V = Ã($çâv, $=âv)∑ (MemRel (V, $çâv, $=âv), EqRel (V, $çâv, $=âv))
+∞
+
+Minor variations on this are possible, such as obtaining the equality relation from the new rather than the old membership relation, or even iterating the construction of the equality to an extensional fixed point in each application of the semantic functor.
+However, these devices are unlikely to affect the fixed points and their effect on the complexity of proofs might as well be negative as positive.
+
+\section{THE EXISTENCE OF FIXED POINTS}
+
+When I began working with infinitary comprehension the idea was to use it for interpretations of the usual first order language of set theory.
+This was to have been realised by identifying large subsets V of {\it WfComp} for which there exists a fixed point of the functor {\it SemanticFunctor V} in which the equality and membership relations are total over V.
+It is easy to believe that there are such subsets which include copies of the well-founded sets we started out with, and also, for example, all the PolySets and many other useful non-well-founded sets.
+
+Before reaching the stage at which reasoning about such fixed points could be undertaken it occurred to me that for my intended application, the classical set theories might well be dispensed with, possibly resulting in significant savings.
+
+The intended application was to languages suitable for the formal computer assisted development of mathematics and its applications, and the next stage in the construction of such languages was to be an illative lambda calculus.
+An illative lambda calculus must be effectively a many valued logic, for there is no type system or other means which prevents the consideration of arbitrary lambda terms as propositions.
+For application in this context, the effort of coming up with a two-valued membership relation may not be beneficial.
+There must still be a system of type assignment which allows the user to work with subdomains better behaved than the whole ontology, and if this works as well as it needs to work, then the presence of sets which are not really sets in the classical sense will not be problematic, and effort directed toward their elimination may prove not to be beneficial.
+
+I therefore propose at least initially to explore the option of going straight from partial fixed points (meaning in this case, fixed points, over the whole of {\it WfComp}, which are partial membership and equality relations) to an illative lambda calculus whose domain of discourse is a partition of the whole of {\it WfComp}.
+
+At this stage it is not clear whether any old fixed point will do or whether we have to be more fussy than that, so I will start with an arbitrary fixed point and see how far I get.
+To do this I do have to prove that there does exist a fixed point, and this is to be realised by demonstrating that the semantic functor is monotone and therefore has a least fixed point.
+
+\subsection{Monotonicity}
+
+To establish the existence of fixed points it is helpful to show that the semantic functor is monotonic.
+
+It is therefore necessary to define the ordering relative to which it is monotonic.
+
+=SML
+declare_infix(300, "ºâT");
+=TEX
+
+First an ordering on the ``truth values'' is defined.
+
+πHOLCONST
+‹ €$ºâT› : (TV) ≠ (TV) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ t1 t2∑ 
+‹	t1 ºâT t2 § t1 = t2 ≤ t1 = pU	
+∞
+
+=GFT
+ºâT_refl_thm =
+	Ù µ x∑ x ºâT x
+
+ºâT_trans_thm =
+	Ù µ x y z∑ x ºâT y ± y ºâT z ¥ x ºâT z
+
+ºâT_clauses =
+   Ù pU ºâT pTrue
+       ± pU ºâT pFalse
+       ± ≥ pTrue ºâT pU
+       ± ≥ pFalse ºâT pU
+       ± ≥ pFalse ºâT pTrue
+       ± ≥ pTrue ºâT pFalse
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ x ºâT xÆ);
+a (rewrite_tac [get_spec ¨$ºâTÆ]);
+val ºâT_refl_thm = save_pop_thm "ºâT_refl_thm";
+
+set_goal([], ¨µx y z∑ x ºâT y ± y ºâT z ¥ x ºâT zÆ);
+a (rewrite_tac [get_spec ¨$ºâTÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (all_var_elim_asm_tac);
+val ºâT_trans_thm = save_pop_thm "ºâT_trans_thm";
+
+set_goal([], ¨(µx∑ pU ºâT x)
+	± ≥ pTrue ºâT pU
+	± ≥ pFalse ºâT pU
+	± ≥ pFalse ºâT pTrue
+	± ≥ pTrue ºâT pFalseÆ);
+a (rewrite_tac [get_spec ¨$ºâTÆ] THEN prove_tac[]);
+val ºâT_clauses = save_pop_thm "ºâT_clauses";
+
+add_pc_thms "'ICsem" (map get_spec [] @ [ºâT_refl_thm, ºâT_clauses]);
+set_merge_pcs ["ICsyn", "'ICsem"];
+=TEX
+}%ignore
+
+Then an ordering on partial relations over term values.
+
+πHOLCONST
+‹ €leâr› : PR ≠ PR ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r1 r2∑ 
+‹	leâr r1 r2 § µx y∑ (r1 x y) ºâT (r2 x y)	
+∞
+
+and an ordering over pairs of partial relations (membership and equality partial relations).
+
+πHOLCONST
+‹ €leâpâpâr› : (PR ∏ PR) ≠ (PR ∏ PR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r12 s12∑ 
+‹	leâpâpâr r12 s12 § leâr (Fst r12) (Fst s12) ± leâr (Snd r12) (Snd s12)	
+∞
+
+Our aim is to prove the monotonicity of the semantic functor for every domain which is a subset of the well formed comprehensions.
+The relevant notion of monotonicity is defined here.
+
+πHOLCONST
+‹ €MonoFunct› : ((PR ∏ PR) ≠ (PR ∏ PR)) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f∑  MonoFunct f § µv w x y∑ leâpâpâr (v,w) (x,y) ¥ leâpâpâr (f (v,w)) (f (x,y))
+∞
+
+In order to prove monotonicity of the semantic functor various lemmas about the functions used in defining the semantic functor are needed, often expressing monotonicity of objects of various types.
+
+\subsubsection{EvalAtom}
+
+The required characteristic of {\\it EvalAtom} is straightforward to define and prove.
+
+The following is the property of partial truth predicates parameterised by pairs of partial relations of being monotonic with respect to those relations.
+
+πHOLCONST
+‹ €MonoPprF› : ((PR ∏ PR) ≠ 'a ≠ TV) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µf∑ MonoPprF f § µ v w x y∑
+‹	leâpâpâr (v, w) (x, y) ¥ µz:'a∑ f (v, w) z ºâT f (x, y) z
+∞
+
+=GFT
+evalatom_monotone_lemma =
+   Ù µ v w x y
+     ∑ leâpâpâr (v, w) (x, y) ¥ (µ z∑ EvalAtom (v, w) z ºâT EvalAtom (x, y) z)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ v w x y
+           ∑ leâpâpâr (v, w) (x, y)
+               ¥ (µ z∑ EvalAtom (v, w) z ºâT EvalAtom (x, y) z)Æ);
+a (rewrite_tac (map get_spec [¨MonoPprFÆ, ¨EvalAtomÆ,
+	¨leârÆ, ¨$leâpâpârÆ])
+	THEN REPEAT strip_tac);
+a (cases_tac ¨IsEq (Snd z)Æ
+	THEN asm_rewrite_tac []);
+val evalatom_monotone_lemma = save_pop_thm "evalatom_monotone_lemma";
+=TEX
+}%ignore
+
+\subsubsection{Monotonicity of Membership and Equality}
+
+The following are lemmas specific to the definitions of {\it EqRel} and {\it MemRel}.
+
+=GFT
+eqrel_mono_thm =
+   Ù µ V v w x y
+     ∑ leâpâpâr (x, y) (v, w) ¥ leâr (EqRel (V, x, y)) (EqRel (V, v, w))
+
+monpprf_memrel_lemma1 =
+   Ù µ V
+     ∑ MonoPprF (Ã (m, e)∑ EvalForm (V, m, e))
+         ¥ MonoPprF (Ã (m, e) (l, r)∑ MemRel (V, m, e) l r)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µV∑ µv w x y∑ leâpâpâr (x,y) (v,w) ¥ leâr (EqRel (V,x,y)) (EqRel (V,v,w))Æ);
+a (rewrite_tac (map get_spec [¨EqRelÆ, ¨leârÆ])
+	THEN REPEAT strip_tac);
+a (cases_tac ¨x' ç V ± y' ç VÆ THEN asm_rewrite_tac[get_spec ¨$ºâTÆ]);
+a (fc_tac [get_spec ¨leâpâpârÆ]);
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule[]))) [get_spec ¨leârÆ]);
+a (CASES_T ¨∂ c∑ c ç V ± (x c x' = pU ≤ x c y' = pU)Æ asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (CASES_T ¨∂ c∑ c ç V ± (v c x' = pU ≤ v c y' = pU)Æ asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 3 ¨cÆ);
+a (list_spec_nth_asm_tac 6 [¨cÆ, ¨x'Æ]);
+a (fc_tac [get_spec ¨$ºâTÆ]);
+a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 3 ¨cÆ);
+a (list_spec_nth_asm_tac 6 [¨cÆ, ¨y'Æ]);
+a (fc_tac [get_spec ¨$ºâTÆ]);
+a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (DROP_NTH_ASM_T 1 ante_tac THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN strip_tac);
+a (LEMMA_T ¨≥ (if (Ã c∑ c ç V ± ≥ x c x' = pU) = (Ã c∑ c ç V ± ≥ x c y' = pU)
+                 then pTrue
+                 else pFalse)
+               = pUÆ rewrite_thm_tac
+	THEN1 (cases_tac ¨(Ã c∑ c ç V ± ≥ x c x' = pU) = (Ã c∑ c ç V ± ≥ x c y' = pU)Æ
+		THEN asm_rewrite_tac[]));
+a (LEMMA_T ¨(Ã c∑ c ç V ± ≥ x c x' = pU) = (Ã c∑ c ç V ± ≥ x c y' = pU)
+	§ (Ã c∑ c ç V ± ≥ v c x' = pU) = (Ã c∑ c ç V ± ≥ v c y' = pU)Æ
+	rewrite_thm_tac);
+a (rewrite_tac [ext_thm]
+	THEN contr_tac
+	THEN asm_fc_tac[]);
+val eqrel_mono_thm = save_pop_thm "eqrel_mono_thm";
+
+set_goal ([], ¨µ V∑ MonoPprF(Ã(m, e)∑ EvalForm (V,m,e))
+			¥ MonoPprF (Ã(m, e) (l,r)∑ MemRel (V, m, e) l r)Æ);
+a (rewrite_tac [get_spec ¨MonoPprFÆ, get_spec ¨MemRelÆ, let_def]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+val monpprf_memrel_lemma1 = save_pop_thm "monpprf_memrel_lemma1";
+=TEX
+}%ignore
+
+\subsubsection{Monotonicity of EvalTf}
+
+This result is more difficult.
+Because {\it EvalTf} participates in the recursion over the syntactic structure of comprehensions which is used to define evaluation of formulae, it is supplied with an evaluation function on whose behaviour its monotonicity depends.
+
+The definition of {\it EvalTf} has been split into three parts to break up the proof.
+The first part obtains a set of ``truth values'' (true, false or unknown) and we here define an ordering over these sets. 
+
+πHOLCONST
+‹ €leâtâs› : (TV SET) ≠ (TV SET) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ m n∑ 
+‹	leâtâs m n §
+‹		(µx∑ x ç m ¥ ∂y∑ y ç n ± x ºâT y)
+‹	±	(µy∑ y ç n ¥ ∂x∑ x ç m ± x ºâT y)
+∞
+
+=GFT
+letâtâs_clauses =
+   Ù µ s t
+     ∑ leâtâs s t
+         ¥ pTrue ç s
+         ¥ pTrue ç t ± pFalse ç s
+         ¥ pFalse ç t ± pU ç t
+         ¥ pU ç s ± (s = {} § t = {})
+
+mono_evaltf_leâtâs_lemma1 =
+   Ù µ s t∑ leâtâs s t ¥ s Ä {pTrue} ¥ s Ä {pTrue}
+
+mono_evaltftf_lemma =
+   Ù µ res1 res2∑ leâtâs res1 res2 ¥ EvalTf_tf res1 ºâT EvalTf_tf res2
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µrs∑ leâtâs rs rsÆ);
+a (rewrite_tac [get_spec ¨leâtâsÆ]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
+val leâtâs_refl_thm = save_pop_thm "leâtâs_refl_thm";
+
+add_pc_thms "'ICsem" (map get_spec [] @ [leâtâs_refl_thm]);
+set_merge_pcs ["ICsyn", "'ICsem"];
+
+set_goal([], ¨µs t∑ leâtâs s t ¥
+		(pTrue ç s ¥ pTrue ç t)
+	± 	(pFalse ç s ¥ pFalse ç t)
+	± 	(pU ç t ¥ pU ç s)
+	±	(s = {} § t = {})Æ);
+a (rewrite_tac [get_spec ¨$leâtâsÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¨pTrueÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ºâTÆ]);
+a (STRIP_T rewrite_thm_tac THEN strip_tac);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 ¨pFalseÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ºâTÆ]);
+a (STRIP_T rewrite_thm_tac THEN strip_tac);
+(* *** Goal "3" *** *)
+a (spec_nth_asm_tac 2 ¨pUÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ºâTÆ]);
+a strip_tac;
+a (var_elim_nth_asm_tac 1);
+(* *** Goal "4" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [sets_ext_clauses]
+	THEN contr_tac);
+a (spec_nth_asm_tac 3 ¨xÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ºâTÆ]);
+a (spec_nth_asm_tac 3 ¨x'Æ);
+(* *** Goal "5" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [sets_ext_clauses]
+	THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val leâtâs_fc_clauses = save_pop_thm "leâtâs_fc_clauses";
+
+set_goal([], ¨µs t∑ leâtâs s t ¥
+		(s Ä {pTrue} ¥ t Ä {pTrue})Æ);
+a (REPEAT strip_tac);
+a (cases_tac ¨s = {}Æ);
+(* *** Goal "1" *** *)
+a (all_fc_tac [leâtâs_fc_clauses]);
+a (asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨≥ t = {}Æ THEN1 FC_T1 fc_§_canon (MAP_EVERY asm_tac) [leâtâs_fc_clauses]);
+a (GET_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨leâtâsÆ]);
+a (rewrite_tac [sets_ext_clauses]);
+a (contr_tac);
+a (strip_asm_tac (µ_elim ¨xÆ tv_cases_thm));
+(* *** Goal "2.2.1" *** *)
+a (swap_nth_asm_concl_tac 3 THEN asm_rewrite_tac[] THEN contr_tac);
+a (spec_nth_asm_tac 5 ¨pFalseÆ);
+a (GET_NTH_ASM_T 10 ante_tac THEN rewrite_tac [sets_ext_clauses]
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+a (swap_nth_asm_concl_tac 3 THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (swap_nth_asm_concl_tac 3 THEN asm_rewrite_tac[] THEN contr_tac);
+a (spec_nth_asm_tac 5 ¨pUÆ);
+a (GET_NTH_ASM_T 10 ante_tac THEN rewrite_tac [sets_ext_clauses]
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+a (swap_nth_asm_concl_tac 3 THEN asm_rewrite_tac[]);
+val mono_evaltf_leâtâs_lemma1 = save_pop_thm "mono_evaltf_leâtâs_lemma1";
+
+set_goal([], ¨µres1 res2∑ leâtâs res1 res2
+	¥ EvalTf_tf res1 ºâT EvalTf_tf res2Æ);
+a (rewrite_tac [get_spec ¨EvalTf_tfÆ]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨res1 Ä {pTrue}Æ THEN asm_rewrite_tac[]);
+(* a (strip_asm_tac (list_µ_elim [¨res1Æ, ¨res2Æ] mono_evaltf_leâtâs_lemma1)
+	THEN asm_rewrite_tac[]); *)
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [mono_evaltf_leâtâs_lemma1]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨pFalse ç res1 ¥ pFalse ç res2Æ
+	THEN1 (strip_tac THEN all_fc_tac [leâtâs_fc_clauses])
+	THEN asm_rewrite_tac[]);
+a (lemma_tac ¨≥ res2 Ä {pTrue}Æ
+	THEN1 (rewrite_tac [sets_ext_clauses]
+		THEN REPEAT strip_tac
+		THEN ∂_tac ¨pFalseÆ
+		THEN asm_rewrite_tac[])
+	THEN asm_rewrite_tac[]);
+a (cases_tac ¨pFalse ç res1Æ THEN asm_rewrite_tac[]);
+val mono_evaltftf_lemma = save_pop_thm "mono_evaltftf_lemma";
+
+set_goal([], ¨µ V∑ MonoPprF(Ã(m, e)∑ EvalForm (V,m,e))Æ);
+a (rewrite_tac [get_spec ¨MonoPprFÆ]
+	THEN REPEAT_N 6 strip_tac);
+a (lemma_tac ¨µg va∑ EvalForm (V, v, w) (va, g) ºâT EvalForm (V, x, y)  (va, g)Æ
+	THEN1 strip_tac);
+(* *** Goal "1" *** *)
+a (sc_induction_tac ¨gÆ);
+a (strip_tac THEN rewrite_tac [evalformfunct_thm2]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨t ç WfFormsÆ THEN asm_rewrite_tac[]);
+a (cases_tac ¨IsEq t ≤ IsMem tÆ
+	THEN asm_rewrite_tac[]
+	THEN fc_tac [evalatom_monotone_lemma]
+	THEN_TRY asm_rewrite_tac[]);
+a (fc_tac [formula_cases_thm]);
+a (rewrite_tac [get_spec ¨EvalTfÆ, let_def]);
+a (LEMMA_T ¨∂res1 res2∑ res1 = EvalTf_results V (EvalForm (V, v, w)) (va, t)
+	± res2 = EvalTf_results V (EvalForm (V, x, y)) (va, t)Æ
+	(REPEAT_TTCL STRIP_THM_THEN
+	(fn x => (rewrite_thm_tac o map_eq_sym_rule) x THEN strip_asm_tac x)
+	)
+	THEN1 prove_∂_tac);
+a (lemma_tac ¨leâtâs res1 res2Æ
+	THEN1 (asm_rewrite_tac [get_spec ¨leâtâsÆ]
+		THEN REPEAT_N 2 strip_tac));
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨µ c∑ c çâg TfForms t ¥
+	µ va∑ EvalForm (V, v, w) (va, c) ºâT EvalForm (V, x, y) (va, c)Æ
+	THEN1 (REPEAT strip_tac));
+(* *** Goal "1.1.1" *** *)
+a (fc_tac [ft_syntax_thm]);
+a (lemma_tac ¨tc ScPrec c tÆ
+	THEN1 (all_fc_tac [scprec_fc_clauses2]
+		THEN fc_tac [tc_incr_thm]));
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2" *** *)
+a (rewrite_tac [get_spec ¨EvalTf_resultsÆ, let_def]);
+a (strip_tac);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨EvalForm (V, x, y) (InsertVars (TfVars t, v') va, f')Æ);
+a (strip_tac);
+(* *** Goal "1.1.2.1" *** *)
+a (∂_tac ¨v'Æ THEN ∂_tac ¨f'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (lemma_tac ¨µ c∑ c çâg TfForms t ¥
+	µ va∑ EvalForm (V, v, w) (va, c) ºâT EvalForm (V, x, y) (va, c)Æ
+	THEN1 (REPEAT strip_tac));
+(* *** Goal "1.2.1" *** *)
+a (fc_tac [ft_syntax_thm]);
+a (lemma_tac ¨tc ScPrec c tÆ
+	THEN1 (all_fc_tac [scprec_fc_clauses2]
+		THEN fc_tac [tc_incr_thm]));
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "1.2.2" *** *)
+a (rewrite_tac [get_spec ¨EvalTf_resultsÆ, let_def]);
+a (strip_tac);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨EvalForm (V, v, w) (InsertVars (TfVars t, v') va, f')Æ);
+a (strip_tac);
+(* *** Goal "1.2.2.1" *** *)
+a (∂_tac ¨v'Æ THEN ∂_tac ¨f'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "1.2.2.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨leâtâsÆ] THEN strip_tac);
+a (lemma_tac ¨res1 = {pTrue} ¥ res2 = {pTrue}Æ
+	THEN1 (rewrite_tac [sets_ext_clauses] THEN REPEAT strip_tac));
+(* *** Goal "1.3.1" *** *)
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[get_spec ¨$ºâTÆ]);
+a (STRIP_T rewrite_thm_tac);
+(* *** Goal "1.3.2" *** *)
+a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac
+	THEN strip_tac);
+a (all_asm_fc_tac[]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨$ºâTÆ]);
+a strip_tac;
+a (var_elim_nth_asm_tac 1);
+a (var_elim_nth_asm_tac 3);
+(* *** Goal "1.3.3" *** *)
+a (all_fc_tac [mono_evaltftf_lemma]);
+(* *** Goal "1.3.4" *** *)
+a (all_fc_tac [mono_evaltftf_lemma]);
+(* *** Goal "2" *** *)
+a (strip_tac);
+a (list_spec_nth_asm_tac 1 [¨Snd zÆ, ¨Fst zÆ]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
+val evalform_mono_thm = save_pop_thm "evalform_mono_thm";
+=TEX
+}%ignore
+
+\subsubsection{The Semantic Functor}
+
+=GFT
+mono_semanticfunct_lemma1 =
+   Ù µ V
+     ∑ MonoPprF (Ã (m, e)∑ EvalForm (V, m, e))
+         ¥ MonoFunct (SemanticFunctor V) 
+
+mono_semanticfunctor_thm =
+   Ù µ V∑ MonoFunct (SemanticFunctor V)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µ V∑ MonoPprF (Ã(m, e)∑ EvalForm (V,m,e))
+		¥ MonoFunct (SemanticFunctor V)Æ);
+a (rewrite_tac (map get_spec [¨MonoFunctÆ, ¨SemanticFunctorÆ] @ [let_def])
+	THEN REPEAT strip_tac);
+a (fc_tac [monpprf_memrel_lemma1]);
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (asm_tac eqrel_mono_thm);
+a (FC_T (MAP_EVERY (ante_tac o (rewrite_rule[]))) [get_spec ¨MonoPprFÆ]
+	THEN_TRY rewrite_tac []
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (asm_rewrite_tac [get_spec ¨leâpâpârÆ]);
+a (asm_rewrite_tac [get_spec ¨leârÆ]);
+a (REPEAT µ_tac);
+a (SPEC_NTH_ASM_T 2 ¨(x', y')Æ (rewrite_thm_tac o (rewrite_rule [])));
+val mono_semanticfunct_lemma1 = save_pop_thm "mono_semanticfunct_lemma1";
+
+set_goal([], ¨µV∑ MonoFunct (SemanticFunctor V)Æ);
+a strip_tac;
+a (asm_tac evalform_mono_thm);
+a (spec_nth_asm_tac 1 ¨VÆ);
+a (fc_tac [mono_semanticfunct_lemma1]);
+val mono_semanticfunctor_thm = save_pop_thm "mono_semanticfunctor_thm";
+=TEX
+}%ignore
+
+\subsection{The Least Partial Fixed Point}
+
+Having established the monotonicity of the semantic functor we can obtain a fixed point for any class V.
+This will not immediately yield an interpretation of first order set theory because the fixed point will be a pair of relations which are not total over V.
+
+To obtain interpretations of first order set theory we must chose V so as to omit sets which are problematic, and we may view this as seeking a notion of consistency appropriate to this context, i.e. a notion of when a property is consistently reifiable.
+
+The partial fixed points may however be independently useful in applications where the systems of interest are not first order set theories, as in our case where an illative lamdba calculus is sought.
+
+In order to obtain a least fixed point we must define the greatest lower bound of a set of pairs of relations.
+
+For this purpose we need to know the greatest lower bound of a set of truth values.
+
+πHOLCONST
+‹ €glbâtâs› : TV SET ≠ TV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ tvs∑ glbâtâs tvs =
+‹	if tvs = {pTrue} then pTrue
+‹	else if tvs= {pFalse} then pFalse
+‹	else pU
+∞
+
+The greatest lower bound of a set of partial relations is:
+
+πHOLCONST
+‹ €glbâsâpâr› : PR SET ≠ PR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ spr∑ glbâsâpâr spr =
+‹	Ãx y∑ glbâtâs {tv | ∂pr∑ pr ç spr ± pr x y = tv}	
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+
+=TEX
+}%ignore
+
+The greatest lower bound of a set of pairs of partial relations is then:
+
+πHOLCONST
+‹ €glbâsâpâpâr› : (PR ∏ PR) SET ≠ (PR ∏ PR)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ sppr∑ glbâsâpâpâr sppr =
+‹	(glbâsâpâr {pr | ∂ppr∑ ppr ç sppr ± pr = Fst ppr},
+‹	 glbâsâpâr {pr | ∂ppr∑ ppr ç sppr ± pr = Snd ppr})	
+∞
+
+and the least fixed point of a functor over pairs of partial relations is:
+
+πHOLCONST
+‹ €lfpâpâpâr› : ((PR ∏ PR) ≠ (PR ∏ PR)) ≠ (PR ∏ PR)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f∑ lfpâpâpâr f =
+‹	glbâsâpâpâr {ppr | leâpâpâr (f ppr) ppr}
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¨µf∑ MonoFunct f ¥ f(lfpâpâr f) = (lfpâpâr f)Æ);
+a (REPEAT strip_tac THEN asm_fc_tac [get_spec ¨MonoFunctÆ]);
+a (lemma_tac ¨leâpâpâr (f (lfpâpâr f)) (lfpâpâr f)Æ);
+(* *** Goal "1" *** *)
+a (rewrite_tac (map get_spec [¨leâpâpârÆ])
+	THEN REPEAT µ_tac);
+a (rewrite_tac (map get_spec [¨leâpâpârÆ, ¨leârÆ, ¨$ºâTÆ])
+	THEN REPEAT µ_tac);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨leâpâpâr (lfpâpâr f) Æ);
+
+=TEX
+}%ignore
+
+\subsection{Alternative Definition of Least Fixed Point}
+
+The proof that the above definition does yield a least fixed point is eluding me, so I thought I would try harder to make use of the fixed point result already available 
+
 
 \section{SEMANTICS}
 
@@ -1270,69 +2554,6 @@ The semantics is therefore defined in a piecemeal way for each constructor in tu
 
 The fact that we have inter-defined membership and equality relationships, and also that we are expecting at best partial fixed points, together hint that we might benefit from working in the more general context of ``Boolean Values Models'' (see, for example, \cite{Jech2002}), so I propose to begin in that more general context and see how it goes.
 i.e. the equality and membership relations will be functions yielding values in an arbitrary boolean algebra rather than classical relationships, and the relationship between them will be as prescribed for boolean valued models unless a problem is found with this.
-
-\section{FUNCTOR TYPES}
-
-The details of how to code up infinitary first order set theory are unimportant, and I want to talk about this method, so I'm going to just assume that the syntax has been encoded and that the semantics has been formalised in the manner discussed.
-
-=SML
-open_theory "GS";
-force_new_theory "ICS";
-new_parent "ordered_sets";
-=TEX
-
-The following is expected to be the type of abstract syntax trees for sets definable in an infinitary first order language of set theory, i.e. one with just two predicates, equality and membership.
-For present purposes we do not need to have this defined,
-
-=SML
-new_type ("SETREP", 0);
-=TEX
-
-The following declaration shows the type of functor which one might use as a recursive definition of the equality and membership relations over SETREP.
-It is parameterised by a subdomain of the set representatives, since the semantics will make the extension of some sets sensitive to the universe.
-
-=SML
-new_const ("sf1", î(SETREP ≠ BOOL)
-	≠ (SETREP ≠ SETREP ≠ BOOL) ∏ (SETREP ≠ SETREP ≠ BOOL)
-	≠ (SETREP ≠ SETREP ≠ BOOL) ∏ (SETREP ≠ SETREP ≠ BOOL)Æ);
-=TEX
-
-We don't have a recursion theorem which will work with that kind of functor, so we will need the functor to be converted in to one which operates on a single function, and the function will have to be uncurried.
-The two relations are therefore thought of as a function over ordered pairs which delivers an ordered pair of truth values.
-
-=SML
-new_const ("sf2", î(SETREP ≠ BOOL)
-	≠ (SETREP ∏ SETREP ≠ BOOL ∏ BOOL)
-	≠ (SETREP ∏ SETREP ≠ BOOL ∏ BOOL)Æ);
-=TEX
-
-Our recursion theorem has the form:
-
-=GFT
-recursion_theorem
-   Ù µ (X, $<<) G
-     ∑ FunctRespects G (X, $<<) ± WellFounded (X, $<<) ¥ UniquePartFixp X G
-
-=TEX
-
-Where X is some set and $<<$ a well founded relation over it.
-Note that the relation is over pairs of SETREPs and so this does not require that membership be well-founded.
-
-{\it UniquePartFixp} asserts the existence of a unique partial fixed point of G over X.
-
-We can classify SETREPs according to how solidly defined they are under the semantics (sf2).
-The strongest case is that in which the extension of the set represented by the SETREP is completely unchangeable.
-This is true of representatives of the empty set.
-
-If we allow this to be conditional we may obtain a monotone operator on subsets of SETREP of which the least fixed point gives a non-trivial interpretation of set theory.
-So we want to talk about a set having a fixed extension in every subset whioh includes some particular set of SETREPS.
-
-πHOLCONST
-  op1: SETREP  ≠ SETREP 
-˜
-  µssr sr∑ sr ç op1 ssr §
-	µsr2∑ sr2 ç op1 ssr ¥ T 
-∞
 
 {\let\Section\section
 \newcounter{ThyNum}
