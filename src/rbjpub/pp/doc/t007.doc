@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.12 2007/11/05 16:55:52 rbj01 Exp $
+$Id: t007.doc,v 1.13 2007/11/27 14:47:16 rbj01 Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'¯", "'savedthm_cs_¶_proof"];
 =TEX
@@ -36,12 +36,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2007/11/05 16:55:52 $ $
+Last Change $ $Date: 2007/11/27 14:47:16 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.12 2007/11/05 16:55:52 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.13 2007/11/27 14:47:16 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -122,6 +122,8 @@ Create new theory ``fixp''.
 =SML
 open_theory "rbjmisc";
 force_new_theory "fixp";
+new_parent "U_orders";
+new_parent "wf_relp";
 set_merge_pcs["hol", "'savedthm_cs_¶_proof"];
 =IGN
 set_pc "hol";
@@ -457,6 +459,1474 @@ set_goal([], ¬µf r g· MonotoneR r f ´ f (LfpR (r, g) f) = LfpR (r, g) f®);
 =TEX
 }%ignore
 
+\subsection{Fixed Points in CCPOs}
+
+A ccpo is a chain-complete partial order.
+The proof of the fixed point result in this context is more difficult than in the case of a complete lattice, and the following version of it is a kludge, but will have to do for now.
+
+The main point of this section is to obtain a least fixed point theorem for monotone functions over chain complete partial orders (CCPOs).
+It is simpler to do this specifically for reflexive partial orders, whereas the theory of orders already available is not specific to reflexive orders.
+The notion of of reflexive partial order is therefore defined first.
+
+Since the orders considered here are reflexive we will use the symbol $¼‰v$ as a variable ranging over these relations.
+Note however that the theory {\it ordered\_sets}, on which we draw, uses $<<$.
+Note also that we do not follow generally here the practice of reasoning about relations over sets.
+Usually we reason about relations over whole types.
+
+In the theory {\it ordered\_sets} ordering relations are treated in many areas with indifference as to whether they are reflexive or strict or inbetween.
+Here we work primarily with reflexive partial orders.
+The distinction is marked (perhaps not consistently) by the choice of symbol for relation variable.
+Where a reflexive relation is intended the symbol $¼‰v$ is used, where the relation need not be reflexive we follow {\it ordered\_sets} in using $<<$.
+Where I have used $r$ this is prior to my introducing this scheme and the relation is probably reflexive.
+
+=SML
+declare_infix (300, "Û¼‰vÝ");
+=TEX
+
+¹HOLCONST
+Ü ÛRpoÝ : ('a SET) ¸ ('a ­ 'a ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µr· Rpo r ¤ PartialOrder r ± Refl r
+°
+
+=GFT
+Ûrpo_fc_clausesÝ =
+   ô µ (X, $¼‰v)
+     · Rpo (X, $¼‰v)
+         ´ (µ x y· x  X ± y  X ± x ¼‰v y ± y ¼‰v x ´ x = y)
+           ± (µ x y z· x  X ± y  X ± z  X ± x ¼‰v y ± y ¼‰v z ´ x ¼‰v z)
+           ± (µ x· x  X ´ x ¼‰v x)
+
+Ûrpou_fc_clausesÝ =
+   ô µ $¼‰v
+     · Rpo (Universe, $¼‰v)
+         ´ (µ x y· x ¼‰v y ± y ¼‰v x ´ x = y)
+           ± (µ x y z· x ¼‰v y ± y ¼‰v z ´ x ¼‰v z)
+           ± (µ x· x ¼‰v x)
+
+Ûrpo_antisym_lemmaÝ =
+   ô µ X r f· Rpo (X, r) ´ Antisym (X, r)
+
+Ûrpo_¡_lemmaÝ =
+   ô µ X Y r· Rpo (X, r) ± Rpo (Y, r) ´ Rpo (X ¡ Y, r)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs ["hol1", "'savedthm_cs_¶_proof"];
+
+set_goal([], ¬µ(X, $¼‰v)· Rpo (X, $¼‰v)
+	´ (µ x y· x  X ± y  X ± x ¼‰v y ± y ¼‰v x ´ x = y)
+	± (µ x y z· x  X ± y  X ± z  X ± x ¼‰v y ± y ¼‰v z ´ x ¼‰v z)
+	± (µ x· x  X ´ x ¼‰v x)
+®);
+a (rewrite_tac (map get_spec [¬Rpo®, ¬PartialOrder®, ¬Antisym®, ¬Trans®, ¬Refl®])
+	THEN REPEAT_N 6 strip_tac
+	THEN REPEAT µ_tac
+	THEN_TRY asm_rewrite_tac[]
+	THEN contr_tac);
+a (all_asm_fc_tac[]);
+val rpo_fc_clauses = save_pop_thm "rpo_fc_clauses";
+
+set_goal([], ¬µ$¼‰v· Rpo (Universe, $¼‰v)
+	´ (µ x y· x ¼‰v y ± y ¼‰v x ´ x = y)
+	± (µ x y z· x ¼‰v y ± y ¼‰v z ´ x ¼‰v z)
+	± (µ x· x ¼‰v x)
+®);
+a (strip_tac THEN strip_tac
+	THEN (ASM_FC_T (MAP_EVERY ante_tac) [rpo_fc_clauses])
+	THEN PC_T1 "hol1" rewrite_tac[]
+	THEN contr_tac
+	THEN REPEAT (asm_fc_tac[]));
+val rpou_fc_clauses = save_pop_thm "rpou_fc_clauses";
+
+set_goal([], ¬µX r f· Rpo (X,r) ´ Antisym (X, r)®);
+a (rewrite_tac [get_spec ¬Antisym®]
+	THEN REPEAT strip_tac);
+a (fc_tac [rpo_fc_clauses]);
+a (list_spec_nth_asm_tac 1 [¬x®, ¬y®]);
+val rpo_antisym_lemma = pop_thm ();
+
+set_goal([], ¬µX Y r· Rpo (X,r) ± Rpo (Y,r) ´ Rpo (X ¡ Y,r)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¬Rpo®]
+	THEN strip_tac);
+a (asm_tac (pc_rule1 "hol1" prove_rule [] ¬X ¡ Y € X®));
+a (strip_asm_tac (list_µ_elim [¬Y®, ¬X ¡ Y®, ¬r®] subrel_partial_order_thm));
+a (strip_asm_tac (list_µ_elim [¬Y®, ¬X ¡ Y®, ¬r®] subrel_refl_thm));
+a contr_tac;
+val rpo_¡_lemma = pop_thm();
+
+=TEX
+}%ignore
+
+We need to talk about greatest lower bounds in establishing fixed points of the semantic functor.
+
+First lets say what a lower bound is:
+
+¹HOLCONST
+Ü ÛIsLbÝ : ('a ­ 'a ­ BOOL) ­ 'a SET ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s e· IsLb r s e = µx· x  s ´ r e x
+°
+
+¹HOLCONST
+Ü ÛIsUbÝ : ('a ­ 'a ­ BOOL) ­ 'a SET ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s e· IsUb r s e = µx· x  s ´ r x e
+°
+
+Often the domain of our relations does not have a unique maximal element, and so there may be no greatest lower bound for the empty set.
+However, this affects the applications rather than the concept:
+
+¹HOLCONST
+Ü ÛIsGlbÝ : ('a ­ 'a ­ BOOL) ­ 'a SET ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s e· IsGlb r s e ¤ IsLb r s e ± µx· IsLb r s x ´ r x e
+°
+
+¹HOLCONST
+Ü ÛIsLubÝ : ('a ­ 'a ­ BOOL) ­ 'a SET ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s e· IsLub r s e ¤ IsUb r s e ± µx· IsUb r s x ´ r e x
+°
+
+=GFT
+Ûlub_unique_lemmaÝ =
+   ô µ X r x y· Antisym (Universe, r) ´ IsLub r Y x ± IsLub r Y y ´ x = y
+=TEX
+
+Now we define the conditions for being a least fixed point.
+
+¹HOLCONST
+Ü ÛIsLfpÝ : ('a ­ 'a ­ BOOL) ­ ('a ­ 'a) ­ 'a ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r f e· IsLfp r f e ¤
+Ü	let fp = {x | f x = x}
+Ü	in e  fp ± IsGlb r fp e
+°
+
+
+=GFT
+Ûislfp_lemma1Ý =
+	ô µ r f e· IsLfp r f e ´ e = f e ± (µ x· x = f x ´ r e x)
+
+Ûislfp_lemma2Ý =
+	ô µ r f e· IsLfp r f e ´ f e = e ± (µ x· f x = x ´ r e x)
+
+Ûislfp_unique_lemmaÝ =
+	ô µ r f e d· Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ´ e = d
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µr f e· IsLfp r f e ´ e = f e
+	± (µx· x = f x ´ r e x)®);
+a (rewrite_tac [get_spec ¬IsLfp®, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¬IsGlb®]);
+a (fc_tac [get_spec ¬IsLb®]);
+a (DROP_NTH_ASM_T 4 (asm_tac o (conv_rule eq_sym_conv)));
+a (asm_fc_tac[]);
+val islfp_lemma1 = save_pop_thm "islfp_lemma1";
+
+set_goal([], ¬µr f e· IsLfp r f e ´ f e = e
+	± (µx· f x = x´ r e x)®);
+a (rewrite_tac [get_spec ¬IsLfp®, let_def]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¬IsGlb®]);
+a (fc_tac [get_spec ¬IsLb®]);
+a (all_asm_ante_tac THEN rewrite_tac[] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val islfp_lemma2 = save_pop_thm "islfp_lemma2";
+
+set_goal([], ¬µr f e d· Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ´ e = d®);
+a (REPEAT strip_tac THEN fc_tac [islfp_lemma1, get_spec ¬Antisym®]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [] THEN contr_tac);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+val islfp_unique_lemma = pop_thm();
+
+set_goal([], ¬¶Lfp‰c· µ r f· (¶ e· IsLfp r f e) ´ IsLfp r f (Lfp‰c r f)®);
+a (REPEAT strip_tac
+	THEN ¶_tac ¬Ìr f· Åe· IsLfp r f e®
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (Å_tac ¬Åe· IsLfp r f e®);
+a (¶_tac ¬e® THEN asm_rewrite_tac[]);
+save_cs_¶_thm (pop_thm());
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛLfp‰cÝ: ('a ­ 'a ­ BOOL) ­ ('a ­ 'a) ­ 'a
+÷üüüüüüüüü
+Ü µ r f· (¶ e· IsLfp r f e) ´ IsLfp r f (Lfp‰c r f)
+°
+
+=GFT
+Ûislfp_unique_lemma2Ý =
+   ô µ r f e· Antisym (Universe, r) ± IsLfp r f e ´ Lfp‰c r f = e
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µ r f e· Antisym(Universe, r) ± IsLfp r f e ´ (Lfp‰c r f) = e®);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¬Lfp‰c®]);
+a (all_fc_tac [islfp_unique_lemma]);
+val islfp_unique_lemma2 = pop_thm ();
+=TEX
+}%ignore
+
+\subsubsection{Directed Sets}
+
+These definitions are not actually used.
+
+We need the concept of a directed set.
+
+¹HOLCONST
+Ü ÛDirectedÝ : ('a ­ 'a ­ BOOL) ­ 'a SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s· Directed r s ¤ µx y· x  s ± y  s ´ ¶z· z  s ± IsUb r {x; y} z
+°
+
+Which we use to define the property of having directed upper bounds:
+
+¹HOLCONST
+Ü ÛDirectedUbÝ : ('a ­ 'a ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r· DirectedUb r ¤ µs· Directed r s ´ ¶x· IsUb r s x
+°
+
+We need to establish the existence of least fixed points of monotone functions and so we want a result to the effect that the greatest lower bound of closed elements is a fixed point.
+A closed element is one which maps to a point below itself in the ordering.
+
+¹HOLCONST
+Ü ÛIncreasingÝ : ('a ­ 'a ­ BOOL) ­ ('b ­ 'b ­ BOOL) ­ ('a ­ 'b) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r s f· Increasing r s f ¤ µx y· r x y ´ s (f x) (f y)
+°
+
+Since the least fixed point will be a greatest lower bound, we need to know that greatest lower bounds exist to prove that there is a fixed point.
+Since we don't have a top element we assert only the existence of a greatest lower bound for non-empty sets.
+
+¹HOLCONST
+Ü ÛNeGlbsExistÝ : ('a ­ 'a ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r· NeGlbsExist r ¤ µs· (¶d· d  s) ´ ¶e· IsGlb r s e
+°
+
+=GFT
+Ûmono_fixp_thmÝ =
+   ô µ f r
+     · Refl (Universe, r)
+           ± (µ x y· r x y ± r y x ´ x = y)
+           ± trans r
+           ± Increasing r r f
+           ± NeGlbsExist r
+           ± (¶ x· r (f x) x)
+         ´ (¶ e· IsGlb r {x|r (f x) x} e ± IsLfp r f e)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µX r x y· Antisym (Universe, r) ´ IsLub r X x ± IsLub r X y ´ x = y®);
+a (rewrite_tac [get_spec ¬IsLub®, get_spec ¬Antisym®] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val lub_unique_lemma = save_pop_thm "lub_unique_lemma";
+
+set_goal([], ¬µX r x y· Antisym (X, r) ± x  X ± y  X ´ IsLub r X x ± IsLub r X y ´ x = y®);
+a (rewrite_tac [get_spec ¬IsLub®, get_spec ¬Antisym®] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val lub_unique_lemma2 = save_pop_thm "lub_unique_lemma2";
+
+set_goal([], ¬µf r· Refl (Universe, r)
+	± (µx y· r x y ± r y x ´ x = y)
+	± trans r
+	± Increasing r r f
+	± NeGlbsExist r
+	± (¶x· r (f x) x)
+	´ ¶e· IsGlb r {x | r (f x) x} e ± IsLfp r f e®);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¬NeGlbsExist®]);
+a (list_spec_nth_asm_tac 1 [¬x®, ¬{x|r (f x) x}®]);
+a (¶_tac ¬e® THEN asm_rewrite_tac[]);
+a (rewrite_tac [get_spec ¬IsLfp®, let_def]);
+a (lemma_tac ¬f e = e® THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (fc_tac [get_spec ¬IsGlb®]);
+a (all_asm_fc_tac[]);
+a (fc_tac [get_spec ¬Increasing®]);
+a (lemma_tac ¬r (f e) e®);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 4 ¬f e®);
+a (swap_nth_asm_concl_tac 1
+	THEN rewrite_tac [get_spec ¬IsLb®]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¬IsLb®]);
+a (spec_nth_asm_tac 1 ¬f x®);
+(* *** Goal "1.1.1" *** *)
+a (list_spec_nth_asm_tac 5 [¬f x®, ¬x®]);
+(* *** Goal "1.1.2" *** *)
+a (fc_tac [get_spec ¬trans®]);
+a (REPEAT (all_asm_fc_tac[]));
+(* *** Goal "1.2" *** *)
+a (lemma_tac ¬r e (f e)®);
+(* *** Goal "1.2.1" *** *)
+a (lemma_tac ¬r (f (f e)) (f e)® THEN1 asm_fc_tac[]);
+a (fc_tac [get_spec ¬IsLb®]);
+a (spec_nth_asm_tac 1 ¬f e®);
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¬IsGlb®]);
+a (fc_tac [get_spec ¬IsLb®]);
+a (rewrite_tac [get_spec ¬IsGlb®, get_spec ¬IsLb®] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 2 ¬x'®);
+a (LEMMA_T ¬x  Universe® asm_tac THEN1 prove_tac[]);
+a (fc_tac [get_spec ¬Refl®]);
+a (spec_nth_asm_tac 1 ¬x'®);
+a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_asm_fc_tac[]);
+val mono_fixp_thm = save_pop_thm "mono_fixp_thm";
+=TEX
+}%ignore
+
+\subsubsection{Chain Complete Partial Orders}
+
+¹HOLCONST
+Ü ÛChainCompleteÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ X r· ChainComplete (X, r) ¤ µY· Y € X ± LinearOrder (Y, r) ´
+Ü	¶x· x  X ± IsLub r Y x
+°
+
+
+=IGN
+Ûchaincomplete_¡_lemmaÝ =
+   ô µ X Y r
+     · Rpo (Universe, r) ± ChainComplete (X, r) ± ChainComplete (Y, r)
+         ´ ChainComplete (X ¡ Y, r)
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¬µ X Y r· Rpo (X À Y,r)
+		± ChainComplete (X, r) ± ChainComplete (Y, r)
+		´ ChainComplete (X ¡ Y, r)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¬Y' € X ± Y' € Y®
+	THEN1 (GET_NTH_ASM_T 2 ante_tac
+		THEN PC_T1 "hol1" prove_tac[]));
+a (all_asm_fc_tac[]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (all_fc_tac [rpo_antisym_lemma]);
+a (LEMMA_T ¬x  (X À Y) ± x'  (X À Y)® (STRIP_THM_THEN asm_tac)
+	THEN1 (REPEAT_N 2 strip_tac THEN asm_rewrite_tac[]));
+
+a (all_fc_tac [subrel_antisym_thm]);
+a (all_fc_tac [lub_unique_lemma2]);
+a (var_elim_asm_tac ¬x' = x®);
+val chaincomplete_¡_lemma = pop_thm();
+
+a (all_fc_tac [get_spec ¬IsLub®]);
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛCcRpoÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r· CcRpo r ¤ Rpo r ± ChainComplete r
+°
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+
+set_goal([], ¬µX Y r· CcRpo (X, r) ± CcRpo (Y, r) ´ CcRpo (X ¡ Y,r)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¬CcRpo®]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+a (all_fc_tac [rpo_¡_lemma]);
+a (all_fc_tac [chaincomplete_¡_lemma]);
+val fclosed_¡_lemma = pop_thm();
+
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛCcRpoUÝ : ('a ­ 'a ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ r· CcRpoU r ¤ CcRpo (Universe, r)
+°
+
+¹HOLCONST
+Ü ÛFClosedÝ : ('a ­ 'a) ­ 'a SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ f X· FClosed f X ¤ (µx· x  X ´ f x  X)
+°
+
+=GFT
+fclosed_¡_lemma =
+   ô µ X Y f· FClosed f X ± FClosed f Y ´ FClosed f (X ¡ Y)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¬µX Y f· FClosed f X ± FClosed f Y ´ FClosed f (X ¡ Y)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¬FClosed®]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val fclosed_¡_lemma = pop_thm();
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛFChainClosedÝ : ('a ­ 'a) ­ ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüüüüüüü
+Ü µ f X r· FChainClosed f (X, r) ¤ 
+Ü	FClosed f X ± ChainComplete (X, r)
+°
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+
+set_goal([], ¬µ f X Y r· FChainClosed f (X, r) ± FChainClosed f (Y, r)
+		´ FChainClosed f (X ¡ Y, r)®);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¬FChainClosed®]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val fchainclosed_¡_lemma = pop_thm();
+
+=TEX
+}%ignore
+
+
+¹HOLCONST
+Ü ÛFChainÝ : ('a ­ 'a) ­ ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ 'a SET
+÷üüüüüüüüüüü
+Ü µ f X r· FChain f (X, r) = ¥ {Y | Y € X ± FChainClosed f (Y, r)}
+°
+
+=GFT
+Ûfcc_fchain_lemma1Ý =
+	ô (¶ V· V  W) ± (µ V· V  W ´ V € X) ± Y € ¥ W ´ Y € X
+
+Ûfchain_lemma1Ý =
+	ô µ X r f· FChainClosed f (X, r) ´ FChain f (X, r) € X
+
+Ûfchain_lemma2Ý =
+	ô µ X Y r f
+     · Rpo (Universe, r)
+           ± FChainClosed f (X, r)
+           ± Y € FChain f (X, r)
+           ± FChainClosed f (Y, r)
+         ´ Y = FChain f (X, r)
+
+Ûfchain_fchainclosed_lemmaÝ =
+   ô µ X r f
+     · Antisym (Universe, r) ± FChainClosed f (X, r)
+         ´ FChainClosed f (FChain f (X, r), r)
+
+Ûfchain_fchainclosed_lemma2Ý =
+   ô µ X r f
+     · Rpo (Universe, r) ± FChainClosed f (X, r)
+         ´ FChainClosed f (FChain f (X, r), r)
+
+Ûccrpo_fixp_lemma1Ý =
+   ô µ X r f
+     · Increasing r r f
+         ´ FClosed f {x|x  FChain f (X, r) ± (r x (f x) ² x = f x)}
+
+Ûccrpo_fixp_lemma2Ý =
+   ô µ X r f
+     · Increasing r r f ± Rpo (Universe, r) ± FChainClosed f (X, r)
+         ´ ChainComplete ({z|z  FChain f (X, r) ± (r z (f z) ² z = f z)}, r)
+
+Ûccrpo_fixp_lemma3Ý =
+   ô µ X r f
+     · Increasing r r f ± Rpo (Universe, r) ± FChainClosed f (X, r)
+         ´ FChainClosed
+           f
+           ({z|z  FChain f (X, r) ± (r z (f z) ² z = f z)}, r)
+
+Ûccrpo_fixp_lemma4Ý =
+   ô µ X r f
+     · Increasing r r f ± Rpo (Universe, r) ± FChainClosed f (X, r)
+         ´ (µ z· z  FChain f (X, r) ´ r z (f z) ² z = f z)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬(¶V· V  W) ± (µV· V  W ´ V € X) ± Y € ¥W ´ Y € X®);
+a (REPEAT strip_tac THEN REPEAT (asm_fc_tac[]));
+val fcc_fchain_lemma1 = pop_thm();
+
+set_goal([], ¬µX r f· FChainClosed f (X, r) ´ FChain f (X,r) € X®);
+a (rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬X®);
+val fchain_lemma1 = save_pop_thm "fchain_lemma1";
+
+push_merge_pcs ["hol", "'savedthm_cs_¶_proof"];
+
+set_goal([], ¬µX r f· Antisym (Universe, r) ± FChainClosed f (X, r)
+	´ FChainClosed f (FChain f (X,r), r)®);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (fc_tac [get_spec ¬FClosed®]);
+a (rewrite_tac [get_spec ¬FChainClosed®, get_spec ¬FClosed®]
+	THEN REPEAT µ_tac
+	THEN strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬FChainClosed®,
+		get_spec ¬FClosed®,
+		get_spec ¬FChain®,
+		get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¬ChainComplete®]);
+a (rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (fc_tac [fchain_lemma1]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¬µA B C· A € B ± B € C ´ A € C®]);
+a (all_asm_fc_tac []);
+a (¶_tac ¬x® THEN REPEAT strip_tac);
+a (REPEAT_N 3 (PC_T1 "hol1" once_rewrite_tac [get_spec ¬FChain®])
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (fc_tac [get_spec ¬FClosed®]);
+a (fc_tac [get_spec ¬ChainComplete®]);
+a (lemma_tac ¬FChain f (X, r) € s®
+	THEN1 (rewrite_tac [get_spec ¬FChain®] THEN REPEAT strip_tac
+		THEN (PC_T1 "hol1" asm_rewrite_tac [])
+		THEN REPEAT strip_tac THEN all_asm_fc_tac[]));
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¬µA B C· A € B ± B € C ´ A € C®]);
+a (all_asm_fc_tac[]);
+a (fc_tac [lub_unique_lemma]);
+a (all_asm_fc_tac[]);
+a (var_elim_nth_asm_tac 8);
+val fchain_fchainclosed_lemma = save_pop_thm "fchain_fchainclosed_lemma";
+
+set_goal([], ¬µX r f· Rpo (Universe, r) ± FChainClosed f (X, r)
+	´ FChainClosed f (FChain f (X,r), r)®);
+a (REPEAT strip_tac
+	THEN fc_tac [rpo_antisym_lemma]
+	THEN all_fc_tac [fchain_fchainclosed_lemma]);
+val fchain_fchainclosed_lemma2 = save_pop_thm "fchain_fchainclosed_lemma2";
+
+set_goal([], ¬µX r f· Rpo (Universe, r) ± FChainClosed f (X, r)
+	´ µx· x  FChain f (X,r) ´ f x  FChain f (X,r)®);
+a (REPEAT strip_tac);
+a (fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [fchain_fchainclosed_lemma]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬FClosed®]);
+val fc_fcclosed_fc_lemma = save_pop_thm "fc_fcclosed_fc_lemma";
+
+=IGN
+
+set_goal([], ¬µX Y r f· Rpo (Universe, r) ± FChainClosed f (X, r)
+	± FChainClosed f (Y, r) ´ FChain f (X, r) € Y®);
+a (REPEAT strip_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+a (GET_NTH_ASM_T 3 ante_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+
+=SML
+set_goal([], ¬µX Y r f· Rpo (Universe, r) ± FChainClosed f (X, r)
+	± Y € FChain f (X, r) ± FChainClosed f (Y, r)
+	´ Y = FChain f (X, r)®);
+a (REPEAT strip_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 5 ante_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¬Y®);
+a (fc_tac [fchain_lemma1]);
+a (ALL_ASM_FC_T (fc_tac o (map (pc_rule1 "hol1" rewrite_rule []))) [€_trans_thm]);
+val fchain_lemma2 = save_pop_thm "fchain_lemma2";
+
+set_goal([], ¬µX r f· Increasing r r f ´ FClosed f {x | x  FChain f (X,r) ± (r x (f x) ² x = (f x))}®);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¬FClosed®, get_spec ¬FChain®]
+	THEN REPEAT strip_tac THEN_TRY SYM_ASMS_T rewrite_tac);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 4 (fn x => all_fc_tac [rewrite_rule [] x]));
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (fc_tac [get_spec ¬FClosed®]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¬Increasing®]);
+a (asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (fc_tac [get_spec ¬Increasing®]);
+a (asm_fc_tac[]);
+val ccrpo_fixp_lemma1 = pop_thm ();
+
+set_goal([], ¬µX r f· Increasing r r f ± Rpo (Universe, r) ± FChainClosed f (X, r)
+	´ ChainComplete ({x | x  FChain f (X,r) ± (r x (f x) ² x = (f x))}, r)®);
+a (rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (fc_tac [ccrpo_fixp_lemma1]);
+a (lemma_tac ¬FChain f (X, r) € X®
+	THEN1 (PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+		THEN REPEAT strip_tac
+		THEN (spec_nth_asm_tac 1 ¬X®)));
+a (lemma_tac ¬Y € FChain f (X, r)®
+	THEN1 (PC_T1 "hol1" rewrite_tac []
+		THEN REPEAT strip_tac
+		THEN GET_NTH_ASM_T 5 (fn x => all_fc_tac [pc_rule1 "hol1" rewrite_rule [] x])));
+a (lemma_tac ¬Y € X®
+	THEN1 (all_fc_tac [pc_rule1 "hol1" prove_rule []
+	 ¬µA B C· A € B ± B € C ´ A € C®]));
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (strip_tac);
+(* *** Goal "1" *** *)
+a (PC_T1 "hol1" rewrite_tac [get_spec ¬FChain®]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (lemma_tac ¬Y € s®);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¬FChain f (X, r) € s®
+	THEN1 rewrite_tac [get_spec ¬FChain®]);
+(* *** Goal "1.1.1" *** *)
+a (LEMMA_T ¬s  {Y|Y € X ± FChainClosed f (Y, r)}® asm_tac
+	THEN1 (PC_T1 "hol1" asm_rewrite_tac []));
+a (bc_tac [pc_rule1 "hol1" prove_rule [] ¬s  A ´ ¥A € s®]
+	THEN CONTR_T check_asm_tac);
+(* *** Goal "1.1.2" *** *)
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¬µA B C· A € B ± B € C ´ A € C®]);
+(* *** Goal "1.2" *** *)
+a (GET_NTH_ASM_T 3 (fn x => (all_fc_tac [rewrite_rule [get_spec ¬ChainComplete®] x])));
+a (fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [lub_unique_lemma]);
+a (var_elim_nth_asm_tac 1);
+(* *** Goal "2" *** *)
+a (contr_tac);
+a (lemma_tac ¬IsUb r Y (f x)®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬r x' (f x') ² x' = f x'®
+	THEN1 GET_NTH_ASM_T 13 (fn x => asm_tac (pc_rule1 "hol1" rewrite_rule[] x)));
+(* *** Goal "2.1.1" *** *)
+a (spec_nth_asm_tac 1 ¬x'® THEN REPEAT strip_tac);
+(* *** Goal "2.1.2" *** *)
+a (lemma_tac ¬r x' x®);
+(* *** Goal "2.1.2.1" *** *)
+a (fc_tac [get_spec ¬IsLub®]);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬IsUb®]
+	THEN strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+a (fc_tac [get_spec ¬Increasing®]
+	THEN all_asm_fc_tac[]);
+a (FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[]))) [rpo_fc_clauses]);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.3" *** *)
+a (fc_tac [get_spec ¬IsLub®]);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬IsUb®]
+	THEN strip_tac
+	THEN asm_fc_tac[]);
+a (fc_tac [get_spec ¬Increasing®]
+	THEN all_asm_fc_tac[]);
+a (DROP_NTH_ASM_T 2 ante_tac THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "2.2" *** *)
+a (GET_NTH_ASM_T 4 ante_tac THEN rewrite_tac [get_spec ¬IsLub®]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+val ccrpo_fixp_lemma2 = pop_thm ();
+
+set_goal([], ¬µX r f· Increasing r r f ± Rpo(Universe,r) ± FChainClosed f (X, r)
+	´ FChainClosed f ({z|z  FChain f (X,r) ± (r z (f z) ² z = f z)}, r)®);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¬FChainClosed®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[ccrpo_fixp_lemma1]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[ccrpo_fixp_lemma1]);
+a (all_fc_tac[rpo_antisym_lemma]);
+a (all_fc_tac[fchain_fchainclosed_lemma]);
+a (all_fc_tac[ccrpo_fixp_lemma2]);
+val ccrpo_fixp_lemma3 = pop_thm ();
+
+set_goal([], ¬µX r f· Increasing r r f ± Rpo(Universe,r) ± FChainClosed f (X, r)
+	´ µz· z  FChain f (X,r) ´ r z (f z) ² z = f z®);
+a (REPEAT strip_tac);
+a (all_fc_tac [ccrpo_fixp_lemma3]);
+a (lemma_tac ¬{z|z  FChain f (X, r) ± (r z (f z) ² z = f z)} € FChain f (X, r)®
+	THEN1 (PC_T1 "hol1" rewrite_tac[]
+		THEN REPEAT strip_tac));
+a (all_fc_tac [fchain_lemma2]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T once_rewrite_tac);
+a (rewrite_tac[]);
+a (contr_tac);
+val ccrpo_fixp_lemma4 = save_pop_thm "ccrpo_fixp_lemma4";
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛSet2Ý : (('a ­ 'a) ¸ ('a SET ¸ ('a ­ 'a ­ BOOL))) ­ 'a SET
+÷üüüüüüüüüüü
+Ü µ f X $¼‰v· Set2 (f, X, $¼‰v) =
+Ü	{x | x  FChain f (X, $¼‰v) ± µy· y  FChain f (X, $¼‰v)
+		´ y ¼‰v x ± ³ y = x ´ f y ¼‰v x}
+°
+
+¹HOLCONST
+Ü ÛExtremeÝ : (('a ­ 'a) ¸ ('a SET ¸ ('a ­ 'a ­ BOOL))) ­ 'a SET
+÷üüüüüüüüüüü
+Ü µ f X $¼‰v· Extreme (f, X, $¼‰v) =
+Ü	{x | x  FChain f (X, $¼‰v) ± µy· y  FChain f (X, $¼‰v)
+Ü		´ y ¼‰v x ± ³ y = x ´ f y ¼‰v x}
+°
+
+¹HOLCONST
+Ü ÛSÝ : (('a ­ 'a) ¸ ('a SET ¸ ('a ­ 'a ­ BOOL))) ­ 'a ­ 'a SET
+÷üüüüüüüüüüü
+Ü µ f X $¼‰v x· S (f, X, $¼‰v) x =
+Ü	{y | y  FChain f (X, $¼‰v) ± (y ¼‰v x ² f x ¼‰v y)}
+°
+
+=GFT
+Ûccrpo_fixp_lemma5Ý =
+   ô µ X $¼‰v f x
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+           ± x  Extreme (f, X, $¼‰v)
+         ´ FClosed f (S (f, X, $¼‰v) x)
+
+Ûccrpo_fixp_lemma6Ý =
+   ô µ X $¼‰v f x
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+           ± x  Extreme (f, X, $¼‰v)
+         ´ ChainComplete (S (f, X, $¼‰v) x, $¼‰v)
+
+Ûccrpo_fixp_lemma7Ý =
+   ô µ X $¼‰v f x
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+           ± x  Extreme (f, X, $¼‰v)
+         ´ FChainClosed f (S (f, X, $¼‰v) x, $¼‰v)
+
+Ûccrpo_fixp_lemma8Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+           ± x  Extreme (f, X, $¼‰v)
+         ´ FChain f (X, $¼‰v) = S (f, X, $¼‰v) x
+
+Ûccrpo_fixp_lemma9Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ FClosed f (Extreme (f, X, $¼‰v))
+
+Ûccrpo_fixp_lemma10Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ ChainComplete (Extreme (f, X, $¼‰v), $¼‰v)
+
+Ûccrpo_fixp_lemma11Ý =
+   ô µ X $¼‰v f x
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ FChainClosed f (Extreme (f, X, $¼‰v), $¼‰v)
+
+Ûccrpo_fixp_lemma12Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ FChain f (X, $¼‰v) = Extreme (f, X, $¼‰v)
+
+Ûccrpo_fixp_lemma13Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ FChain f (X, $¼‰v)
+           = {x
+           |x  Extreme (f, X, $¼‰v) ± FChain f (X, $¼‰v) € S (f, X, $¼‰v) x}
+
+Ûccrpo_fixp_lemma14Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ (µ x y
+         · {x; y} € FChain f (X, $¼‰v)
+             ´ (x ¼‰v f x ² x = f x)
+               ± (y ¼‰v x ± ³ y = x ´ f y ¼‰v x)
+               ± (y ¼‰v x ² f x ¼‰v y))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µX $¼‰v f x· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v) ± x  Extreme (f, X, $¼‰v)
+	´ FClosed f (S (f, X, $¼‰v) x)®);
+a (rewrite_tac (map get_spec [¬FClosed®, ¬S®, ¬Extreme®])
+	THEN REPEAT_N 7 strip_tac);
+(* *** Goal "1" *** *)
+a (ALL_FC_T rewrite_tac [fc_fcclosed_fc_lemma]);
+a (cases_tac ¬x' = x® THEN1 var_elim_asm_tac ¬x' = x®);
+(* *** Goal "1.1" *** *)
+a (fc_tac [get_spec ¬Increasing®]
+	THEN all_asm_fc_tac []
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (ALL_FC_T rewrite_tac [fc_fcclosed_fc_lemma]);
+a (lemma_tac ¬x ¼‰v (f x) ² x = f x®
+	THEN1 (FC_T (MAP_EVERY (strip_asm_tac o (list_µ_elim [¬X®, ¬x®]))) [ccrpo_fixp_lemma4]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬x' ¼‰v (f x') ² x' = f x'®
+	THEN1 (FC_T (MAP_EVERY (strip_asm_tac o (list_µ_elim [¬X®, ¬x'®]))) [ccrpo_fixp_lemma4]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.1.1" *** *)
+a (FC_T (MAP_EVERY(strip_asm_tac o (rewrite_rule[]))) [rpo_fc_clauses]);
+a (all_asm_fc_tac[] THEN contr_tac);
+(* *** Goal "2.1.2" *** *)
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬x ¼‰v x'®
+	THEN1 (GET_NTH_ASM_T 2 ante_tac
+		THEN (POP_ASM_T (rewrite_thm_tac o map_eq_sym_rule))
+		THEN strip_tac));
+a (all_fc_tac [get_spec ¬Increasing®]);
+a (contr_tac);
+val ccrpo_fixp_lemma5 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f x· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v) ± x  Extreme (f, X, $¼‰v)
+	´ ChainComplete (S (f, X, $¼‰v) x, $¼‰v)®);
+a (rewrite_tac (map get_spec [¬ChainComplete®, ¬S®, ¬Extreme®])
+	THEN REPEAT_N 7 strip_tac);
+a (lemma_tac ¬Y € FChain f (X, $¼‰v)®);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 2 (asm_tac o (pc_rule1 "hol1" rewrite_rule[]))); 
+a (PC_T "hol1" (REPEAT strip_tac));
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x'®
+	THEN asm_rewrite_tac[]);
+a (cases_tac ¬µc· c  Y ´ c ¼‰v x®);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬x' ¼‰v x®);
+(* *** Goal "2.1.1" *** *)
+a (lemma_tac ¬IsUb $¼‰v Y x®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN REPEAT strip_tac THEN asm_fc_tac[]));
+a (all_fc_tac [get_spec ¬IsLub®]);
+(* *** Goal "2.1.2" *** *)
+a (contr_tac);
+(* *** Goal "2.2" *** *)
+a (DROP_NTH_ASM_T 12 (asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+a (all_asm_fc_tac[]);
+a (all_fc_tac[get_spec ¬IsLub®]);
+a (all_fc_tac[get_spec ¬IsUb®]);
+a (all_fc_tac[rpou_fc_clauses]);
+a contr_tac;
+val ccrpo_fixp_lemma6 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f x· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v) ± x  Extreme (f, X, $¼‰v)
+	´ FChainClosed f (S (f, X, $¼‰v) x, $¼‰v)®);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¬FChainClosed®]
+	THEN all_fc_tac [ccrpo_fixp_lemma5]
+	THEN all_fc_tac [ccrpo_fixp_lemma6]
+	THEN contr_tac);
+val ccrpo_fixp_lemma7 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v) ± x  Extreme (f, X, $¼‰v)
+	´ FChain f (X, $¼‰v) = S (f, X, $¼‰v)  x®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma7]);
+a (all_fc_tac[get_spec ¬FChainClosed®]);
+a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac
+	THEN all_fc_tac [get_spec ¬FClosed®]);
+a (lemma_tac ¬S (f, X, $¼‰v) x € FChain f (X, $¼‰v)®
+	THEN1 (rewrite_tac [get_spec ¬S®]
+		THEN PC_T "hol1" (REPEAT strip_tac)));
+a (all_fc_tac [fchain_lemma2]
+	THEN asm_rewrite_tac[]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¬S®]
+		THEN PC_T "hol1" (REPEAT strip_tac));
+val ccrpo_fixp_lemma8 = pop_thm();
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ FClosed f (Extreme (f, X, $¼‰v))®);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¬FClosed®]
+	THEN REPEAT strip_tac);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬Extreme®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬FClosed®]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [ccrpo_fixp_lemma8]);
+a (GET_NTH_ASM_T 4 ante_tac
+	THEN GET_NTH_ASM_T 1 rewrite_thm_tac
+	THEN rewrite_tac [get_spec ¬S®]
+	THEN strip_tac); 
+(* *** Goal "2.1" *** *)
+a (all_fc_tac [get_spec ¬Increasing®]);
+(* *** Goal "2.2" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+val ccrpo_fixp_lemma9 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ ChainComplete (Extreme (f, X, $¼‰v), $¼‰v)®);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (GET_NTH_ASM_T 2 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule [get_spec ¬Extreme®])));
+a (lemma_tac ¬Y € FChain f (X, $¼‰v)®
+	THEN1 (PC_T "hol1" (REPEAT strip_tac)
+		THEN asm_fc_tac[]));
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x®
+	THEN asm_rewrite_tac[]);
+a (rewrite_tac [get_spec ¬Extreme®]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¬¶b· b  Y ± ³ b ¼‰v y®
+	THEN1 contr_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬IsUb $¼‰v Y y®
+	THEN1 rewrite_tac [get_spec ¬IsUb®]);
+(* *** Goal "1.1" *** *)
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬x'®);
+(* *** Goal "1.2" *** *)
+a (fc_tac [list_µ_elim [¬$¼‰v®, ¬Y®, ¬x®] (get_spec ¬IsLub®)]);
+a (spec_nth_asm_tac 2 ¬y®);
+a (all_fc_tac [rpou_fc_clauses]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬b  Extreme (f, X, $¼‰v)®
+	THEN1 (GET_NTH_ASM_T 16 ante_tac
+	THEN PC_T1 "hol1" rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]));
+a (all_fc_tac [ccrpo_fixp_lemma8]);
+a (GET_NTH_ASM_T 7 ante_tac
+	THEN GET_NTH_ASM_T 1 rewrite_thm_tac
+	THEN rewrite_tac [get_spec ¬S®]
+	THEN strip_tac); 
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬³ y = b®
+	THEN1 (contr_tac
+		THEN all_fc_tac [rpou_fc_clauses]
+		THEN var_elim_nth_asm_tac 2
+		THEN asm_fc_tac[]));
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬Extreme®])));
+a (lemma_tac ¬f y ¼‰v b® THEN1 all_asm_fc_tac[]);
+a (lemma_tac ¬b ¼‰v x®);
+(* *** Goal "2.1.1" *** *)
+a (lemma_tac ¬IsUb $¼‰v Y x®  THEN1 fc_tac [get_spec ¬IsLub®]);
+a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¬IsUb®])));
+a (asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬b  FChain f (X, $¼‰v)®
+	THEN1 (GET_NTH_ASM_T 16 (fn x => fc_tac [pc_rule1 "hol1" rewrite_rule [] x])));
+a (strip_asm_tac (list_µ_elim [¬X®, ¬$¼‰v®, ¬f®] ccrpo_fixp_lemma4));
+a (spec_nth_asm_tac 1 ¬b®);
+(* *** Goal "2.2.1" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+(* *** Goal "2.2.2" *** *)
+a (DROP_NTH_ASM_T 4 ante_tac
+	THEN SYM_ASMS_T rewrite_tac
+	THEN contr_tac);
+val ccrpo_fixp_lemma10 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f x· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v) 
+	´ FChainClosed f (Extreme (f, X, $¼‰v), $¼‰v)®);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¬FChainClosed®]
+	THEN all_fc_tac [ccrpo_fixp_lemma9]
+	THEN all_fc_tac [ccrpo_fixp_lemma10]
+	THEN contr_tac);
+val ccrpo_fixp_lemma11 = pop_thm ();
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ FChain f (X, $¼‰v) = Extreme (f, X, $¼‰v)®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma7]);
+a (all_fc_tac[get_spec ¬FChainClosed®]);
+a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac
+	THEN all_fc_tac [get_spec ¬FClosed®]);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬Extreme (f, X, $¼‰v) € FChain f (X, $¼‰v)®
+	THEN1 (rewrite_tac [get_spec ¬Extreme®]
+		THEN PC_T "hol1" (REPEAT strip_tac)));
+a (all_fc_tac [ccrpo_fixp_lemma11]);
+a (all_fc_tac [fchain_lemma2]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¬Extreme®]
+		THEN PC_T "hol1" (REPEAT strip_tac));
+val ccrpo_fixp_lemma12 = pop_thm();
+
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ FChain f (X, $¼‰v) = {x | x  Extreme (f, X, $¼‰v)
+		± FChain f (X, $¼‰v) € S (f,X, $¼‰v) x}®);
+a (PC_T "hol1" (REPEAT_N 9 strip_tac));
+(* *** Goal "1" *** *)
+a (all_fc_tac [ccrpo_fixp_lemma12]);
+a (GET_NTH_ASM_T 2 (asm_tac o (rewrite_rule [asm_rule ¬FChain f (X, $¼‰v) = Extreme (f, X, $¼‰v)®])));
+a (REPEAT strip_tac);
+a (all_fc_tac [ccrpo_fixp_lemma8]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [ccrpo_fixp_lemma12]
+	THEN asm_rewrite_tac[]);
+val ccrpo_fixp_lemma13 = pop_thm();
+ 
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ µx y· {x; y} € FChain f (X, $¼‰v)
+		´ (y ¼‰v x ± ³ y = x ´ f y ¼‰v x)
+		± (y ¼‰v x ² f x ¼‰v y)
+		®);
+a (REPEAT_N 6 strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma13]);
+a (once_asm_rewrite_tac[]);
+a (rewrite_tac[get_spec ¬Extreme®, get_spec ¬S®]);
+a (PC_T "hol1" strip_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (spec_nth_asm_tac 4 ¬y®);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 7 ¬y®);
+(* *** Goal "2" *** *)
+a (GET_NTH_ASM_T 5 ante_tac THEN PC_T1 "hol1" rewrite_tac[]
+	THEN strip_tac);
+a (spec_nth_asm_tac 1 ¬y®);
+val ccrpo_fixp_lemma14 = pop_thm();
+ 
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ µx y· {x; y} € FChain f (X, $¼‰v)
+		´ (x ¼‰v f x ² x = f x)
+		± (y ¼‰v x ± ³ y = x ´ f y ¼‰v x)
+		± (y ¼‰v x ² f x ¼‰v y)
+		®);
+a (REPEAT_N 6 strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma13]);
+a (once_asm_rewrite_tac[]);
+a (rewrite_tac[get_spec ¬Extreme®, get_spec ¬S®]);
+a (PC_T "hol1" strip_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (spec_nth_asm_tac 4 ¬y®);
+a (strip_tac);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¬X®, ¬$¼‰v®, ¬f®] ccrpo_fixp_lemma4));
+a (spec_nth_asm_tac 1 ¬x® THEN contr_tac);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 7 ¬y®);
+(* *** Goal "2.2" *** *)
+a (GET_NTH_ASM_T 5 ante_tac THEN PC_T1 "hol1" rewrite_tac[]
+	THEN strip_tac);
+a (spec_nth_asm_tac 1 ¬y®);
+val ccrpo_fixp_lemma14 = pop_thm();
+=TEX
+}%ignore
+
+=GFT
+Ûccrpo_fixp_lemma15Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ Trich (FChain f (X, $¼‰v), $¼‰v)
+
+Ûccrpo_fixp_lemma16Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ LinearOrder (FChain f (X, $¼‰v), $¼‰v)
+
+Ûccrpo_fixp_lemma17Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ (¶ e
+         · IsLub $¼‰v (FChain f (X, $¼‰v)) e
+             ± e = f e
+             ± e  FChain f (X, $¼‰v))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ Trich (FChain f (X, $¼‰v), $¼‰v)	®);
+a (REPEAT µ_tac);
+a (REPEAT strip_tac
+	THEN strip_asm_tac (list_µ_elim [¬X®, ¬$¼‰v®, ¬f®] ccrpo_fixp_lemma14)
+	THEN rewrite_tac [get_spec ¬Trich®]
+	THEN REPEAT strip_tac);
+a (PC_T "hol1" (list_spec_nth_asm_tac 5 [¬x®, ¬y®])
+	THEN_TRY (var_elim_nth_asm_tac 2));
+(* *** Goal "1" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+(* *** Goal "3" *** *)
+a (POP_ASM_T ante_tac
+	THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "4" *** *)
+a (POP_ASM_T ante_tac
+	THEN SYM_ASMS_T rewrite_tac);
+val ccrpo_fixp_lemma15 = pop_thm();
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ LinearOrder (FChain f (X, $¼‰v), $¼‰v)®);
+a (REPEAT strip_tac
+	THEN all_asm_fc_tac [ccrpo_fixp_lemma15]
+	THEN rewrite_tac [get_spec ¬LinearOrder®]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¬Rpo®]);
+a (LEMMA_T ¬FChain f (X, $¼‰v) € Universe® asm_tac THEN1 PC_T1 "hol1" prove_tac[]);
+a (all_fc_tac [subrel_partial_order_thm]);
+val ccrpo_fixp_lemma16 = pop_thm ();
+
+=IGN
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ ¶e· IsLub $¼‰v (FChain f (X, $¼‰v)) e ± e = f e®);
+a (REPEAT strip_tac);
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (fc_tac[fchain_lemma1]);
+a (all_fc_tac [ccrpo_fixp_lemma16]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (LEMMA_T ¬FChain f (X, $¼‰v) € FChain f (X, $¼‰v)® asm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬f x  FChain f (X, $¼‰v)®
+	THEN1 (all_fc_tac [get_spec ¬FClosed®]));
+a (strip_asm_tac (list_µ_elim [¬X®, ¬$¼‰v®, ¬f®] ccrpo_fixp_lemma4));
+a (spec_nth_asm_tac 1 ¬x®);
+a (lemma_tac ¬f x ¼‰v x®);
+a (all_fc_tac [get_spec ¬IsLub®]);
+a (strip_asm_tac (list_µ_elim [¬$¼‰v®, ¬FChain f (X, $¼‰v)®, ¬x®]
+			(get_spec ¬IsUb®)));
+(* *** Goal "1.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+val ccrpo_fixp_lemma17a = pop_thm ();
+=SML
+
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ ¶e· IsLub $¼‰v (FChain f (X, $¼‰v)) e ± e = f e ± e  FChain f (X, $¼‰v)®);
+a (REPEAT strip_tac);
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (fc_tac[fchain_lemma1]);
+a (all_fc_tac [ccrpo_fixp_lemma16]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (LEMMA_T ¬FChain f (X, $¼‰v) € FChain f (X, $¼‰v)® asm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬f x  FChain f (X, $¼‰v)®
+	THEN1 (all_fc_tac [get_spec ¬FClosed®]));
+a (strip_asm_tac (list_µ_elim [¬X®, ¬$¼‰v®, ¬f®] ccrpo_fixp_lemma4));
+a (spec_nth_asm_tac 1 ¬x®);
+a (lemma_tac ¬f x ¼‰v x®);
+a (all_fc_tac [get_spec ¬IsLub®]);
+a (strip_asm_tac (list_µ_elim [¬$¼‰v®, ¬FChain f (X, $¼‰v)®, ¬x®]
+			(get_spec ¬IsUb®)));
+(* *** Goal "1.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [rpou_fc_clauses]);
+val ccrpo_fixp_lemma17 = pop_thm ();
+=TEX
+}%ignore
+
+=GFT
+Ûccrpo_fixp_lemma18Ý =
+   ô µ X $¼‰v f
+     · Increasing $¼‰v $¼‰v f
+           ± Rpo (Universe, $¼‰v)
+           ± FChainClosed f (X, $¼‰v)
+         ´ (¶ l· IsLub $¼‰v (FChain f (X, $¼‰v)) l ± IsLfp $¼‰v f l)
+
+Ûccrpo_fixp_lemma19Ý =
+   ô µ r f· CcRpo (Universe, r) ± Increasing r r f ´ (¶ e· IsLfp r f e)
+
+ÛCcRpoU_fixp_induction_thmÝ =
+   ô µ r f p
+     · CcRpoU r
+           ± Increasing r r f
+           ± (µ x· p x ´ p (f x))
+           ± (µ s
+           · (µ x· x  s ´ p x) ± LinearOrder (s, r)
+               ´ (¶ y· p y ± IsLub r s y))
+         ´ p (Lfp‰c r f)
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ ¶l· IsLub $¼‰v (FChain f (X, $¼‰v)) l ± IsLfp $¼‰v f l®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma17]);
+a (¶_tac ¬e® THEN (SYM_ASMS_T rewrite_tac));
+a (rewrite_tac [get_spec ¬IsLfp®, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬IsGlb®, get_spec ¬IsLb®]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬FChainClosed f ({y | y  FChain f (X, $¼‰v) ± y ¼‰v x}, $¼‰v)®
+	THEN1 (rewrite_tac [get_spec ¬FChainClosed®]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.1.1" *** *)
+a (rewrite_tac [get_spec ¬FClosed®]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.1.1.1" *** *)
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬FClosed®]);
+(* *** Goal "2.1.1.2" *** *)
+a (all_fc_tac [get_spec ¬Increasing®]);
+a (POP_ASM_T ante_tac
+	THEN GET_NTH_ASM_T 3 rewrite_thm_tac);
+(* *** Goal "2.1.2" *** *)
+a (rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (lemma_tac ¬Y € FChain f (X, $¼‰v)®
+	THEN1 (GET_NTH_ASM_T 7 ante_tac
+		THEN PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x'® THEN REPEAT strip_tac);
+a (lemma_tac ¬IsUb $¼‰v Y x®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN GET_NTH_ASM_T 10 ante_tac
+		THEN PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [get_spec ¬IsLub®]);
+(* *** Goal "2.1.3" *** *)
+a (lemma_tac ¬{y|y  FChain f (X, $¼‰v) ± y ¼‰v x} € FChain f (X, $¼‰v)®
+	THEN1 (PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [fchain_lemma2]);
+a (lemma_tac ¬µ x'· x'  FChain f (X, $¼‰v) ´ x' ¼‰v x®
+	THEN1 (POP_ASM_T ante_tac THEN PC_T1 "hol1" prove_tac[]));
+a (lemma_tac ¬IsUb $¼‰v (FChain f (X, $¼‰v)) x®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN REPEAT strip_tac
+		THEN asm_fc_tac[]));
+a (all_fc_tac [get_spec ¬IsLub®]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 ¬e®);
+a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
+val ccrpo_fixp_lemma18 = pop_thm ();
+
+=IGN
+set_goal([], ¬µX $¼‰v f· Increasing $¼‰v $¼‰v f ± Rpo(Universe,$¼‰v)
+	± FChainClosed f (X, $¼‰v)
+	´ IsLfp $¼‰v f (Lfp‰c $¼‰v f)®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma17]);
+a (lemma_tac ¬¶l· IsLfp $¼‰v f l®);
+(* *** Goal "1" *** *)
+a (¶_tac ¬e®
+	THEN rewrite_tac [get_spec ¬IsLfp®, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "1.2" *** *)
+a (rewrite_tac [get_spec ¬IsGlb®, get_spec ¬IsLb®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1.2.1" *** *)
+a (lemma_tac ¬FChainClosed f ({y | y  FChain f (X, $¼‰v) ± y ¼‰v x}, $¼‰v)®
+	THEN1 (rewrite_tac [get_spec ¬FChainClosed®]
+		THEN REPEAT strip_tac));
+(* *** Goal "1.2.1.1" *** *)
+a (rewrite_tac [get_spec ¬FClosed®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1.2.1.1.1" *** *)
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (all_fc_tac [get_spec ¬FClosed®]);
+(* *** Goal "1.2.1.1.2" *** *)
+a (all_fc_tac [get_spec ¬Increasing®]);
+a (POP_ASM_T ante_tac
+	THEN GET_NTH_ASM_T 3 rewrite_thm_tac);
+(* *** Goal "1.2.1.2" *** *)
+a (rewrite_tac [get_spec ¬ChainComplete®]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [fchain_fchainclosed_lemma2]);
+a (all_fc_tac [get_spec ¬FChainClosed®]);
+a (lemma_tac ¬Y € FChain f (X, $¼‰v)®
+	THEN1 (GET_NTH_ASM_T 7 ante_tac
+		THEN PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [get_spec ¬ChainComplete®]);
+a (¶_tac ¬x'® THEN REPEAT strip_tac);
+a (lemma_tac ¬IsUb $¼‰v Y x®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN GET_NTH_ASM_T 10 ante_tac
+		THEN PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [get_spec ¬IsLub®]);
+(* *** Goal "1.2.1.3" *** *)
+a (lemma_tac ¬{y|y  FChain f (X, $¼‰v) ± y ¼‰v x} € FChain f (X, $¼‰v)®
+	THEN1 (PC_T1 "hol1" prove_tac[]));
+a (all_fc_tac [fchain_lemma2]);
+a (lemma_tac ¬µ x'· x'  FChain f (X, $¼‰v) ´ x' ¼‰v x®
+	THEN1 (POP_ASM_T ante_tac THEN PC_T1 "hol1" prove_tac[]));
+a (lemma_tac ¬IsUb $¼‰v (FChain f (X, $¼‰v)) x®
+	THEN1 (rewrite_tac [get_spec ¬IsUb®]
+		THEN REPEAT strip_tac
+		THEN asm_fc_tac[]));
+a (all_fc_tac [get_spec ¬IsLub®]);
+(* *** Goal "1.2.2" *** *)
+a (spec_nth_asm_tac 1 ¬e®);
+a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "2" *** *)
+a (all_fc_tac [get_spec ¬Lfp‰c®]);
+val ccrpo_fixp_lemma18 = pop_thm ();
+
+=SML
+set_goal([], ¬µr f· CcRpoU r
+	± Increasing r r f
+	´ (¶ e· IsLfp r f e)®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [get_spec ¬CcRpoU®]
+	THEN all_fc_tac [get_spec ¬CcRpo®]);
+a (lemma_tac ¬FClosed f Universe®
+	THEN1 rewrite_tac [get_spec ¬FClosed®]);
+a (lemma_tac ¬FChainClosed f (Universe, r)®
+	THEN1 asm_rewrite_tac[get_spec¬FChainClosed®]);
+a (all_fc_tac [ccrpo_fixp_lemma18]);
+a (¶_tac ¬l® THEN contr_tac);
+val ccrpo_fixp_lemma19 = pop_thm ();
+
+set_goal([], ¬µr f p· CcRpoU r 
+	± Increasing r r f
+	± (µx· p x ´ p (f x))
+	± (µs· (µx· x  s ´ p x) ± LinearOrder (s, r) ´ ¶y· p y ± (IsLub r s y))
+	´ p (Lfp‰c r f)
+	®);
+a (REPEAT strip_tac
+	THEN all_fc_tac [ccrpo_fixp_lemma19]);
+a (lemma_tac ¬FChainClosed f ({x | p x}, r)®
+	THEN1 (rewrite_tac [get_spec ¬FChainClosed®]
+		THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬FClosed®]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬ChainComplete®]
+	THEN (PC_T1 "hol1" rewrite_tac [])
+	THEN (PC_T1 "hol1" REPEAT strip_tac)
+	THEN all_asm_fc_tac[]);
+a (all_fc_tac [get_spec ¬CcRpoU®]);
+a (all_fc_tac [get_spec ¬CcRpo®]);
+a (fc_tac [get_spec ¬ChainComplete®]);
+a (POP_ASM_T (fn x => fc_tac [rewrite_rule[] x]));
+a (¶_tac ¬x®
+	THEN asm_rewrite_tac[]);
+a (all_fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [lub_unique_lemma]);
+a (var_elim_nth_asm_tac 1);
+(* *** Goal "3" *** *)
+a (FC_T (MAP_EVERY(asm_tac o (pc_rule1 "hol1" rewrite_rule[]))) [fchain_lemma1]);
+a (fc_tac [get_spec ¬FChainClosed®]);
+a (fc_tac [get_spec ¬CcRpoU®]);
+a (all_fc_tac [get_spec ¬CcRpo®]);
+a (all_fc_tac [ccrpo_fixp_lemma16]);
+a (all_asm_fc_tac[]);
+a (all_fc_tac [ccrpo_fixp_lemma17]);
+a (all_fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [lub_unique_lemma]);
+a (var_elim_asm_tac ¬e' = y®);
+a (all_fc_tac [ccrpo_fixp_lemma19]);
+a (all_fc_tac [ccrpo_fixp_lemma18]);
+a (all_fc_tac [lub_unique_lemma]);
+a (var_elim_asm_tac ¬l = y®);
+a (lemma_tac ¬Lfp‰c r f = y® THEN1 all_fc_tac [islfp_unique_lemma2]);
+a (rewrite_tac[asm_rule ¬Lfp‰c r f = y®]);
+a (contr_tac);
+val CcRpoU_fixp_induction_thm = save_pop_thm "CcRpoU_fixp_induction_thm"; 
+
+pop_pc();
+pop_pc();
+=TEX
+}%ignore
 
 \section{INDUCTIVE DEFINITIONS OF SETS}
 
