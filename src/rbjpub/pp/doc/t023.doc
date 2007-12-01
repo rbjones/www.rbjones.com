@@ -1,5 +1,5 @@
 =IGN
-$Id: t023.doc,v 1.2 2007/11/27 14:47:16 rbj01 Exp $
+$Id: t023.doc,v 1.3 2007/12/01 15:53:40 rbj01 Exp $
 open_theory "GS";
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-ord", "'savedthm_cs_¶_proof"];
 
@@ -42,12 +42,12 @@ An axiomatic development in ProofPower-HOL of a higher order set theory.
 
 Created 2007/09/25
 
-Last Change $ $Date: 2007/11/27 14:47:16 $ $
+Last Change $ $Date: 2007/12/01 15:53:40 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t023.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t023.pdf}
 
-$ $Id: t023.doc,v 1.2 2007/11/27 14:47:16 rbj01 Exp $ $
+$ $Id: t023.doc,v 1.3 2007/12/01 15:53:40 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -2754,19 +2754,25 @@ val ¸‰g_spec = get_spec ¬$¸‰g®;
 =TEX
 }%ignore
 
-\subsubsection{Pair-Projection inverse theorem}
+=GFT
+fí‰gs_thm =
+	ô µ s t p· p ‰g s ¸‰g t ´ fst p í‰g snd p = p
 
+v‰g¸‰g_thm =
+	ô µ p s t· p ‰g s ¸‰g t ´ fst p ‰g s ± snd p ‰g t
+
+í‰g‰g¸‰g_thm =
+	ô µ l r s t· l í‰g r ‰g s ¸‰g t ¤ (l ‰g s ± r ‰g t)
+=TEX
+
+\ignore{
 =SML
 set_goal ([],¬µs t p· p ‰g s ¸‰g t
 	´ fst(p) í‰g snd(p) = p®);
 a (prove_tac[¸‰g_spec]);
 a (asm_rewrite_tac[]);
 val fí‰gs_thm = save_pop_thm "fí‰gs_thm";
-=TEX
 
-\subsubsection{Var in Product theorem}
-
-=SML
 set_goal([],¬µp s t·
 	p ‰g (s ¸‰g t)
 	´ fst p ‰g s ± snd p ‰g t®);
@@ -2774,13 +2780,12 @@ a (prove_tac[get_spec¬$¸‰g®]
       THEN_TRY asm_rewrite_tac[]);
 val v‰g¸‰g_thm = 
 	save_pop_thm "v‰g¸‰g_thm";
+
+(*
 add_pc_thms "'gst-fun" [v‰g¸‰g_thm];
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
-=TEX
+*)
 
-\subsubsection{Pair in Product theorem}
-
-=SML
 set_goal([],¬µl r s t·
 	(l í‰g r) ‰g (s ¸‰g t)
 	¤ l ‰g s ± r ‰g t®);
@@ -2789,9 +2794,11 @@ a (¶_tac ¬l®
 	THEN ¶_tac ¬r®
 	THEN asm_prove_tac[]);
 val í‰g‰g¸‰g_thm = save_pop_thm "í‰g‰g¸‰g_thm";
+
 add_pc_thms "'gst-fun" [í‰g‰g¸‰g_thm];
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
 =TEX
+}%ignore
 
 \subsubsection{Relation Space}
 
@@ -3710,6 +3717,77 @@ val id_clauses = save_pop_thm "id_clauses";
 
 add_pc_thms "'gst-fun" ([id_clauses]);
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
+=TEX
+}%ignore
+
+\subsection{Override}
+
+Override is an operator over sets which is intended primarily for use with functions.
+It may be used to change the value of the function over any part of its domain by overriding it with a function which is defined only for those values.
+
+=SML
+declare_infix (250,"«‰g");
+=TEX
+
+¹HOLCONST
+ $Û«‰gİ : GS ­ GS ­ GS
+÷
+µs t· s «‰g t = Sep (s À‰g t)
+	Ìx· if fst x ‰g dom t then x ‰g t else x ‰g s 
+°
+
+=GFT
+Û‰g«‰g_thmİ =
+   ô µ s t x· x ‰g s «‰g t = (if fst x ‰g dom t then x ‰g t else x ‰g s)
+
+Ûí‰g‰g«‰g_thmİ =
+   ô µ s t x y
+     · x í‰g y ‰g s «‰g t = (x í‰g y ‰g t ² ³ x ‰g dom t ± x í‰g y ‰g s)
+
+Û«‰g_rel_thmİ =
+   ô µ s t· rel s ± rel t ´ rel (s «‰g t)
+
+Û«‰g_fun_thmİ =
+   ô µ s t· fun s ± fun t ´ fun (s «‰g t)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¬µs t x· x ‰g (s «‰g t) ¤
+	   if fst x ‰g dom t then x ‰g t else x ‰g s®);
+a (rewrite_tac [get_spec ¬$«‰g®]
+	THEN REPEAT strip_tac);
+val ‰g«‰g_thm = save_pop_thm "‰g«‰g_thm";
+
+set_goal ([], ¬µs t x y· x í‰g y ‰g (s «‰g t) ¤
+	   x í‰g y ‰g t
+	² ³ (x ‰g dom t)
+	   ± x í‰g y ‰g s
+®);
+a (rewrite_tac [get_spec ¬$«‰g®] THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac THEN rewrite_tac [dom_thm]
+	THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val í‰g‰g«‰g_thm = save_pop_thm "í‰g‰g«‰g_thm";
+
+set_goal([], ¬µs t· rel s ± rel t ´ rel (s «‰g t)®);
+a (rewrite_tac [get_spec ¬rel®, ‰g«‰g_thm]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]
+	THEN ¶_tac ¬s'® THEN ¶_tac ¬t'® THEN strip_tac);
+val «‰g_rel_thm = save_pop_thm "«‰g_rel_thm";
+
+set_goal([], ¬µs t· fun s ± fun t ´ fun (s «‰g t)®);
+a (rewrite_tac [get_spec ¬fun®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[«‰g_rel_thm]);
+(* *** Goal "2" *** *)
+a (REPEAT_N 2 (POP_ASM_T ante_tac)
+	THEN rewrite_tac [í‰g‰g«‰g_thm, dom_thm]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val «‰g_fun_thm = save_pop_thm "«‰g_fun_thm";
 =TEX
 }%ignore
 
