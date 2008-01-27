@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.15 2007/12/22 09:31:53 rbj01 Exp $
+$Id: t007.doc,v 1.16 2008/01/27 16:14:27 rbj01 Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -36,12 +36,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2007/12/22 09:31:53 $ $
+Last Change $ $Date: 2008/01/27 16:14:27 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.15 2007/12/22 09:31:53 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.16 2008/01/27 16:14:27 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -499,10 +499,25 @@ declare_infix (300, "€ºâv›");
          ¥ (µ x y∑ x ç X ± y ç X ± x ºâv y ± y ºâv x ¥ x = y)
            ± (µ x y z∑ x ç X ± y ç X ± z ç X ± x ºâv y ± y ºâv z ¥ x ºâv z)
            ± (µ x∑ x ç X ¥ x ºâv x)
+=TEX
 
+πHOLCONST
+‹ €RpoU›: ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ r∑ RpoU r § Rpo (Universe, r)
+∞
+
+=GFT
 €rpou_fc_clauses› =
    Ù µ $ºâv
      ∑ Rpo (Universe, $ºâv)
+         ¥ (µ x y∑ x ºâv y ± y ºâv x ¥ x = y)
+           ± (µ x y z∑ x ºâv y ± y ºâv z ¥ x ºâv z)
+           ± (µ x∑ x ºâv x)
+
+€rpou_fc_clauses2› =
+   Ù µ $ºâv
+     ∑ RpoU $ºâv
          ¥ (µ x y∑ x ºâv y ± y ºâv x ¥ x = y)
            ± (µ x y z∑ x ºâv y ± y ºâv z ¥ x ºâv z)
            ± (µ x∑ x ºâv x)
@@ -542,6 +557,18 @@ a (strip_tac THEN strip_tac
 	THEN contr_tac
 	THEN REPEAT (asm_fc_tac[]));
 val rpou_fc_clauses = save_pop_thm "rpou_fc_clauses";
+
+set_goal([], ¨µ$ºâv∑ RpoU $ºâv
+	¥ (µ x y∑ x ºâv y ± y ºâv x ¥ x = y)
+	± (µ x y z∑ x ºâv y ± y ºâv z ¥ x ºâv z)
+	± (µ x∑ x ºâv x)
+Æ);
+a (rewrite_tac [get_spec ¨RpoUÆ] THEN REPEAT strip_tac
+	THEN fc_tac [rpou_fc_clauses]
+	THEN asm_fc_tac[]
+	THEN asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+val rpou_fc_clauses2 = save_pop_thm "rpou_fc_clauses2";
 
 set_goal([], ¨µX r f∑ Rpo (X,r) ¥ Antisym (X, r)Æ);
 a (rewrite_tac [get_spec ¨AntisymÆ]
@@ -643,6 +670,18 @@ set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X
 a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
 a (REPEAT (asm_fc_tac[]));
 val glb_unique_lemma2 = save_pop_thm "glb_unique_lemma2";
+
+set_goal([], ¨µX r∑ (∂z∑ IsLub r X z) ¥ IsLub r X (Lub r X)Æ);
+a (rewrite_tac[get_spec ¨LubÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsLub r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+val lub_lub_lemma = save_pop_thm "lub_lub_lemma";
+
+set_goal([], ¨µX r∑ (∂z∑ IsGlb r X z) ¥ IsGlb r X (Glb r X)Æ);
+a (rewrite_tac[get_spec ¨GlbÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsGlb r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+val glb_glb_lemma = save_pop_thm "glb_glb_lemma";
 =TEX
 }%ignore
 
@@ -833,6 +872,34 @@ A closed element is one which maps to a point below itself in the ordering.
 ‹ µ r s f∑ Increasing r s f § µx y∑ r x y ¥ s (f x) (f y)
 ∞
 
+=GFT
+€increasing_funcomp_thm› =
+   Ù µ r1 r2 r3 f g
+     ∑ Increasing r1 r2 f ± Increasing r2 r3 g ¥ Increasing r1 r3 (g o f)
+
+€increasing_funcomp_thm2› =
+   Ù µ r1 r2 r3 f g
+     ∑ Increasing r1 r2 f ± Increasing r2 r3 g ¥ Increasing r1 r3 (Ãx∑ g(f(x)))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr1 r2 r3 f g∑ Increasing r1 r2 f ± Increasing r2 r3 g ¥ Increasing r1 r3 (g o f)Æ);
+a (rewrite_tac [get_spec ¨IncreasingÆ]
+	THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val increasing_funcomp_thm = save_pop_thm "increasing_funcomp_thm";
+
+set_goal([], ¨µr1 r2 r3 f g∑ Increasing r1 r2 f ± Increasing r2 r3 g ¥ Increasing r1 r3 (Ãx∑ g(f(x)))Æ);
+a (rewrite_tac [get_spec ¨IncreasingÆ]
+	THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val increasing_funcomp_thm2 = save_pop_thm "increasing_funcomp_thm2";
+=TEX
+}%ignore
+
+
+
 Since the least fixed point will be a greatest lower bound, we need to know that greatest lower bounds exist to prove that there is a fixed point.
 Since we don't have a top element we assert only the existence of a greatest lower bound for non-empty sets.
 
@@ -855,6 +922,12 @@ Since we don't have a top element we assert only the existence of a greatest low
 ∞
 
 =GFT
+€lub_lub_lemma2› =
+   Ù µ r X∑ LubsExist r ¥ IsLub r X (Lub r X)
+
+€glb_glb_lemma2› =
+   Ù µ r X∑ GlbsExist r ¥ IsGlb r X (Glb r X)
+
 €mono_fixp_thm› =
    Ù µ f r
      ∑ Refl (Universe, r)
@@ -886,6 +959,22 @@ Since we don't have a top element we assert only the existence of a greatest low
 
 \ignore{
 =SML
+set_goal([], ¨µr X∑ LubsExist r ¥ IsLub r X (Lub r X)Æ);
+a (rewrite_tac[get_spec ¨LubsExistÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] lub_lub_lemma));
+a (asm_fc_tac[]);
+val lub_lub_lemma2 = save_pop_thm "lub_lub_lemma2";
+
+set_goal([], ¨µr X∑ GlbsExist r ¥ IsGlb r X (Glb r X)Æ);
+a (rewrite_tac[get_spec ¨GlbsExistÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] glb_glb_lemma));
+a (asm_fc_tac[]);
+val glb_glb_lemma2 = save_pop_thm "glb_glb_lemma2";
+
 set_goal([], ¨µf r∑ Refl (Universe, r)
 	± (µx y∑ r x y ± r y x ¥ x = y)
 	± trans r
@@ -2177,7 +2266,116 @@ pop_pc();
 =TEX
 }%ignore
 
-\subsection{Lattices}
+\subsection{Complete Partial Orders}
+
+πHOLCONST
+‹ €CRpoU›: ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ r∑ CRpoU r § CRpo r ± LubsExist r ± GlbsExist r
+∞
+
+=GFT
+€crpou_lub_glb_ö_lemma› =
+   Ù µ r∑ CRpoU r ¥ (µ x∑ r (Lub r {}) x ± r x (Glb r {}))
+
+€crpou_fc_clauses› =
+   Ù µ r
+     ∑ CRpoU r
+         ¥ GlbsExist r
+           ± LubsExist r
+           ± (µ x∑ r x x)
+           ± (µ x y z∑ r x y ± r y z ¥ r x z)
+           ± (µ x y∑ r x y ± r y x ¥ x = y)
+
+€crpou_increasing_lfp_lemma1› =
+   Ù µ r f∑ CRpoU r ± Increasing r r f ¥ (∂ l∑ IsLfp r f l)
+
+€crpou_increasing_lfp_lemma2› =
+   Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsLfp r f (Lfpâc r f)
+
+€crpou_increasing_gfp_lemma1› =
+   Ù µ r f∑ CRpoU r ± Increasing r r f ¥ (∂ g∑ IsGfp r f g)
+
+€crpou_increasing_gfp_lemma2› =
+   Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsGfp r f (Gfpâc r f)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ CRpoU r ¥ µx∑ r (Lub r {}) x ± r x (Glb r {})Æ);
+a (rewrite_tac [get_spec ¨RpoUÆ, get_spec ¨CRpoUÆ, get_spec ¨LubsExistÆ, get_spec ¨GlbsExistÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 2 ¨{}Æ THEN fc_tac [lub_lub_lemma]);
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (lemma_tac ¨IsUb r {} xÆ
+	THEN1 rewrite_tac [get_spec ¨IsUbÆ]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨{}Æ THEN fc_tac [glb_glb_lemma]);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (lemma_tac ¨IsLb r {} xÆ
+	THEN1 rewrite_tac [get_spec ¨IsLbÆ]);
+a (asm_fc_tac[]);
+val crpou_lub_glb_ö_lemma = save_pop_thm "crpou_lub_glb_ö_lemma";
+
+set_goal([], ¨µr∑ CRpoU r ¥
+		GlbsExist r
+	±	LubsExist r
+	±	(µx∑ r x x)
+	±	(µx y z∑ r x y ± r y z ¥ r x z)
+	±	(µx y∑ r x y ± r y x ¥ x = y)Æ);
+a (REPEAT_N 2 strip_tac
+	THEN fc_tac [get_spec ¨CRpoUÆ]
+	THEN fc_tac [get_spec ¨CRpoÆ]
+	THEN fc_tac [get_spec ¨RpoUÆ]
+	THEN fc_tac [rpou_fc_clauses]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]
+	THEN_TRY asm_rewrite_tac[]);
+val crpou_fc_clauses = save_pop_thm "crpou_fc_clauses";
+
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂l∑ IsLfp r f lÆ);
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
+	THEN1 (contr_tac
+		THEN ASM_FC_T (MAP_EVERY (strip_asm_tac o (try (rewrite_rule []))))
+			[get_spec ¨AntisymÆ]
+		THEN all_asm_fc_tac[]));
+a (lemma_tac ¨trans rÆ
+	THEN1 (asm_rewrite_tac [get_spec ¨transÆ]));
+a (all_fc_tac [mono_fixp_thm2]);
+a (∂_tac ¨eÆ THEN strip_tac);
+val crpou_increasing_lfp_lemma1 = save_pop_thm "crpou_increasing_lfp_lemma1";
+
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ IsLfp r f (Lfpâc r f)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [crpou_increasing_lfp_lemma1]);
+a (bc_tac [get_spec ¨LfpâcÆ]);
+a (∂_tac ¨lÆ THEN strip_tac);
+val crpou_increasing_lfp_lemma2 = save_pop_thm "crpou_increasing_lfp_lemma2";
+
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂g∑ IsGfp r f gÆ);
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
+	THEN1 (contr_tac
+		THEN ASM_FC_T (MAP_EVERY (strip_asm_tac o (try (rewrite_rule []))))
+			[get_spec ¨AntisymÆ]
+		THEN all_asm_fc_tac[]));
+a (lemma_tac ¨trans rÆ
+	THEN1 (asm_rewrite_tac [get_spec ¨transÆ]));
+a (all_fc_tac [mono_fixp_thm3]);
+a (∂_tac ¨eÆ THEN strip_tac);
+val crpou_increasing_gfp_lemma1 = save_pop_thm "crpou_increasing_gfp_lemma1";
+
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ IsGfp r f (Gfpâc r f)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [crpou_increasing_gfp_lemma1]);
+a (bc_tac [get_spec ¨GfpâcÆ]);
+a (∂_tac ¨gÆ THEN strip_tac);
+val crpou_increasing_gfp_lemma2 = save_pop_thm "crpou_increasing_gfp_lemma2";
+=TEX
+}%ignore
+
 
 \section{INDUCTIVE DEFINITIONS OF SETS}
 
