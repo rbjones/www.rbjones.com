@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.16 2008/01/27 16:14:27 rbj01 Exp $
+$Id: t007.doc,v 1.17 2008/02/20 20:23:45 rbj01 Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -9,7 +9,6 @@ set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 \ftlinepenalty=9999
 \tabstop=0.25in
 \usepackage{A4}
-
 \def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
 
@@ -36,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/01/27 16:14:27 $ $
+Last Change $ $Date: 2008/02/20 20:23:45 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.16 2008/01/27 16:14:27 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.17 2008/02/20 20:23:45 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -2287,11 +2286,21 @@ pop_pc();
            ± (µ x y z∑ r x y ± r y z ¥ r x z)
            ± (µ x y∑ r x y ± r y x ¥ x = y)
 
+€crpou_glb_lfp_lemma1› =
+   Ù µ r f
+     ∑ CRpoU r ± Increasing r r f
+         ¥ (∂ e∑ IsGlb r {x|r (f x) x} e ± IsLfp r f e)
+
 €crpou_increasing_lfp_lemma1› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ (∂ l∑ IsLfp r f l)
 
 €crpou_increasing_lfp_lemma2› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsLfp r f (Lfpâc r f)
+
+€crpou_lub_gfp_lemma1› =
+   Ù µ r f
+     ∑ CRpoU r ± Increasing r r f
+         ¥ (∂ e∑ IsLub r {x|r x (f x)} e ± IsGfp r f e)
 
 €crpou_increasing_gfp_lemma1› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ (∂ g∑ IsGfp r f g)
@@ -2334,6 +2343,21 @@ a (REPEAT_N 2 strip_tac
 	THEN_TRY asm_rewrite_tac[]);
 val crpou_fc_clauses = save_pop_thm "crpou_fc_clauses";
 
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂ e∑ IsGlb r {x|r (f x) x} e ± IsLfp r f eÆ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
+	get_spec ¨TransÆ, get_spec ¨AntisymÆ]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
+	THEN1 (contr_tac
+		THEN ASM_FC_T (MAP_EVERY (strip_asm_tac o (try (rewrite_rule []))))
+			[get_spec ¨AntisymÆ]
+		THEN all_asm_fc_tac[]));
+a (lemma_tac ¨trans rÆ
+	THEN1 (asm_rewrite_tac [get_spec ¨transÆ]));
+a (all_fc_tac [mono_fixp_thm2]);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+val crpou_glb_lfp_lemma1 = save_pop_thm "crpou_glb_lfp_lemma1";
+
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂l∑ IsLfp r f lÆ);
 a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
 	THEN REPEAT strip_tac);
@@ -2354,6 +2378,21 @@ a (bc_tac [get_spec ¨LfpâcÆ]);
 a (∂_tac ¨lÆ THEN strip_tac);
 val crpou_increasing_lfp_lemma2 = save_pop_thm "crpou_increasing_lfp_lemma2";
 
+set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂ e∑ IsLub r {x|r x (f x)} e ± IsGfp r f eÆ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
+	get_spec ¨TransÆ, get_spec ¨AntisymÆ]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
+	THEN1 (contr_tac
+		THEN ASM_FC_T (MAP_EVERY (strip_asm_tac o (try (rewrite_rule []))))
+			[get_spec ¨AntisymÆ]
+		THEN all_asm_fc_tac[]));
+a (lemma_tac ¨trans rÆ
+	THEN1 (asm_rewrite_tac [get_spec ¨transÆ]));
+a (all_fc_tac [mono_fixp_thm3]);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+val crpou_lub_gfp_lemma1 = save_pop_thm "crpou_lub_gfp_lemma1";
+
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂g∑ IsGfp r f gÆ);
 a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
 	THEN REPEAT strip_tac);
@@ -2373,6 +2412,19 @@ a (REPEAT strip_tac THEN all_fc_tac [crpou_increasing_gfp_lemma1]);
 a (bc_tac [get_spec ¨GfpâcÆ]);
 a (∂_tac ¨gÆ THEN strip_tac);
 val crpou_increasing_gfp_lemma2 = save_pop_thm "crpou_increasing_gfp_lemma2";
+=IGN
+
+set_goal([], ¨µr f p∑ CRpoU r 
+	± Increasing r r f
+	± (µx∑ p x ¥ p (f x))
+	± (µs∑ (µx∑ x ç s ¥ p x) ¥ p (Lub r s))
+	¥ p (Lfpâc r f)
+	Æ);
+a (REPEAT strip_tac);
+a (all_fc_tac [crpou_glb_lfp_lemma1]);
+a (spec_nth_asm_tac 2 ¨{x | r x (f x)}Æ);
+
+
 =TEX
 }%ignore
 
