@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.17 2008/02/20 20:23:45 rbj01 Exp $
+$Id: t007.doc,v 1.18 2008/03/26 15:56:52 rbj01 Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/02/20 20:23:45 $ $
+Last Change $ $Date: 2008/03/26 15:56:52 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.17 2008/02/20 20:23:45 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.18 2008/03/26 15:56:52 rbj01 Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -434,41 +434,19 @@ gfp_coinduction_thm1 =
 \subsection{Monotonicity Against Other Relations}
 
 The above considers only functions on sets which are monotonic relative to the subset relationship.
-We consider here how monotonic functions over other kinds of entity can be dealt with.
 
-First we need a definition of monotonicity relativised to an arbitrary relation.
-The relation must have a glb operator.
+In order to get fixed points the relations relative to which our functions are monotone must have appropriate kinds of completeness.
+Ideally they will be simply ``complete'' i.e. having supremum and infimum of arbitrary sets of elements.
+This makes the domain into a complete lattice, but since we focus on the relation and do not have operators for supremum and infimum in the structure we are considering, what we are doing doesn't look like lattice theory.
 
-πHOLCONST
-‹ €MonotoneR› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a) ≠ BOOL
-˜
-‹ µr f∑ MonotoneR r f § µx y∑ r x y ¥ r (f x) (f y)
-∞
+However, we sometimes want to obtain fixed points relative to orderings which are not complete.
+We begin with chain-complete partial orders.
+I should for consistency have done chain co-complete partial orders as well but that didn't occur to me at the time.
 
+\subsection{Reflexive Partial Orders}
 
-πHOLCONST
-‹ €LfpR› : ('a ≠ 'a ≠ BOOL) ∏ ('a SET ≠ 'a) ≠ ('a ≠ 'a) ≠ 'a
-˜
-‹ µr g f∑ LfpR (r, g) f = g {x | r (f x) x}
-∞
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¨µf r g∑ MonotoneR r f ¥ f (LfpR (r, g) f) = LfpR (r, g) fÆ);
-=TEX
-}%ignore
-
-\subsection{Fixed Points in CCPOs}
-
-A ccpo is a chain-complete partial order.
-The proof of the fixed point result in this context is more difficult than in the case of a complete lattice, and the following version of it is a kludge, but will have to do for now.
-
-The main point of this section is to obtain a least fixed point theorem for monotone functions over chain complete partial orders (CCPOs).
 It is simpler to do this specifically for reflexive partial orders, whereas the theory of orders already available is not specific to reflexive orders.
-The notion of of reflexive partial order is therefore defined first.
+The notion of of reflexive partial order is therefore defined first, and various relevant concepts (upper and lower bounds etc.) are introduced in this context.
 
 Since the orders considered here are reflexive we will use the symbol $ºâv$ as a variable ranging over these relations.
 Note however that the theory {\it ordered\_sets}, on which we draw, uses $<<$.
@@ -862,6 +840,8 @@ Which we use to define the property of having directed upper bounds:
 ‹ µ r∑ DirectedUb r § µs∑ Directed r s ¥ ∂x∑ IsUb r s x
 ∞
 
+\subsection{Monotonicity}
+
 We need to establish the existence of least fixed points of monotone functions and so we want a result to the effect that the greatest lower bound of closed elements is a fixed point.
 A closed element is one which maps to a point below itself in the ordering.
 
@@ -1127,7 +1107,13 @@ val mono_fixp_thm3 = save_pop_thm "mono_fixp_thm3";
 =TEX
 }%ignore
 
-\subsubsection{Chain Complete Partial Orders}
+\subsection{Chain Complete Partial Orders}
+
+A ccpo is a chain-complete partial order.
+The proof of the fixed point result in this context is more difficult than in the case of a complete lattice, and the following version of it is a kludge, but will have to do for now.
+
+The main point of this section is to obtain a least fixed point theorem for monotone functions over chain complete partial orders (CCPOs).
+
 
 πHOLCONST
 ‹ €ChainComplete› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
@@ -1136,63 +1122,11 @@ val mono_fixp_thm3 = save_pop_thm "mono_fixp_thm3";
 ‹	∂x∑ x ç X ± IsLub r Y x
 ∞
 
-
-=IGN
-€chaincomplete_°_lemma› =
-   Ù µ X Y r
-     ∑ Rpo (Universe, r) ± ChainComplete (X, r) ± ChainComplete (Y, r)
-         ¥ ChainComplete (X ° Y, r)
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¨µ X Y r∑ Rpo (X ¿ Y,r)
-		± ChainComplete (X, r) ± ChainComplete (Y, r)
-		¥ ChainComplete (X ° Y, r)Æ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨ChainCompleteÆ]
-	THEN REPEAT strip_tac);
-a (lemma_tac ¨Y' Ä X ± Y' Ä YÆ
-	THEN1 (GET_NTH_ASM_T 2 ante_tac
-		THEN PC_T1 "hol1" prove_tac[]));
-a (all_asm_fc_tac[]);
-a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
-a (all_fc_tac [rpo_antisym_lemma]);
-a (LEMMA_T ¨x ç (X ¿ Y) ± x' ç (X ¿ Y)Æ (STRIP_THM_THEN asm_tac)
-	THEN1 (REPEAT_N 2 strip_tac THEN asm_rewrite_tac[]));
-
-a (all_fc_tac [subrel_antisym_thm]);
-a (all_fc_tac [lub_unique_lemma2]);
-a (var_elim_asm_tac ¨x' = xÆ);
-val chaincomplete_°_lemma = pop_thm();
-
-a (all_fc_tac [get_spec ¨IsLubÆ]);
-=TEX
-}%ignore
-
 πHOLCONST
 ‹ €CcRpo› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ r∑ CcRpo r § Rpo r ± ChainComplete r
 ∞
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-
-set_goal([], ¨µX Y r∑ CcRpo (X, r) ± CcRpo (Y, r) ¥ CcRpo (X ° Y,r)Æ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨CcRpoÆ]
-	THEN REPEAT strip_tac
-	THEN all_asm_fc_tac[]);
-a (all_fc_tac [rpo_°_lemma]);
-a (all_fc_tac [chaincomplete_°_lemma]);
-val fclosed_°_lemma = pop_thm();
-
-=TEX
-}%ignore
 
 πHOLCONST
 ‹ €CcRpoU› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
@@ -1235,24 +1169,6 @@ val fclosed_°_lemma = pop_thm();
 ‹	FClosed f X ± ChainComplete (X, r)
 ∞
 
-=GFT
-=TEX
-
-\ignore{
-=IGN
-
-set_goal([], ¨µ f X Y r∑ FChainClosed f (X, r) ± FChainClosed f (Y, r)
-		¥ FChainClosed f (X ° Y, r)Æ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨FChainClosedÆ]
-	THEN REPEAT strip_tac
-	THEN all_asm_fc_tac[]);
-val fchainclosed_°_lemma = pop_thm();
-
-=TEX
-}%ignore
-
-
 πHOLCONST
 ‹ €FChain› : ('a ≠ 'a) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a SET
 ˜¸¸¸¸¸¸¸¸¸¸¸
@@ -1266,14 +1182,6 @@ val fchainclosed_°_lemma = pop_thm();
 €fchain_lemma1› =
 	Ù µ X r f∑ FChainClosed f (X, r) ¥ FChain f (X, r) Ä X
 
-€fchain_lemma2› =
-	Ù µ X Y r f
-     ∑ Rpo (Universe, r)
-           ± FChainClosed f (X, r)
-           ± Y Ä FChain f (X, r)
-           ± FChainClosed f (Y, r)
-         ¥ Y = FChain f (X, r)
-
 €fchain_fchainclosed_lemma› =
    Ù µ X r f
      ∑ Antisym (Universe, r) ± FChainClosed f (X, r)
@@ -1283,6 +1191,14 @@ val fchainclosed_°_lemma = pop_thm();
    Ù µ X r f
      ∑ Rpo (Universe, r) ± FChainClosed f (X, r)
          ¥ FChainClosed f (FChain f (X, r), r)
+
+€fchain_lemma2› =
+	Ù µ X Y r f
+     ∑ Rpo (Universe, r)
+           ± FChainClosed f (X, r)
+           ± Y Ä FChain f (X, r)
+           ± FChainClosed f (Y, r)
+         ¥ Y = FChain f (X, r)
 
 €ccrpo_fixp_lemma1› =
    Ù µ X r f
@@ -1376,19 +1292,6 @@ a (all_fc_tac [get_spec ¨FChainClosedÆ]);
 a (all_fc_tac [get_spec ¨FClosedÆ]);
 val fc_fcclosed_fc_lemma = save_pop_thm "fc_fcclosed_fc_lemma";
 
-=IGN
-
-set_goal([], ¨µX Y r f∑ Rpo (Universe, r) ± FChainClosed f (X, r)
-	± FChainClosed f (Y, r) ¥ FChain f (X, r) Ä YÆ);
-a (REPEAT strip_tac
-	THEN PC_T1 "hol1" rewrite_tac [get_spec ¨FChainÆ]
-	THEN REPEAT strip_tac);
-a (GET_NTH_ASM_T 3 ante_tac
-	THEN PC_T1 "hol1" rewrite_tac [get_spec ¨FChainÆ]
-	THEN REPEAT strip_tac);
-a (all_asm_fc_tac[]);
-
-=SML
 set_goal([], ¨µX Y r f∑ Rpo (Universe, r) ± FChainClosed f (X, r)
 	± Y Ä FChain f (X, r) ± FChainClosed f (Y, r)
 	¥ Y = FChain f (X, r)Æ);
@@ -1406,7 +1309,8 @@ a (fc_tac [fchain_lemma1]);
 a (ALL_ASM_FC_T (fc_tac o (map (pc_rule1 "hol1" rewrite_rule []))) [Ä_trans_thm]);
 val fchain_lemma2 = save_pop_thm "fchain_lemma2";
 
-set_goal([], ¨µX r f∑ Increasing r r f ¥ FClosed f {x | x ç FChain f (X,r) ± (r x (f x) ≤ x = (f x))}Æ);
+set_goal([], ¨µX r f∑ Increasing r r f
+	¥ FClosed f {x | x ç FChain f (X,r) ± (r x (f x) ≤ x = (f x))}Æ);
 a (REPEAT strip_tac);
 a (rewrite_tac [get_spec ¨FClosedÆ, get_spec ¨FChainÆ]
 	THEN REPEAT strip_tac THEN_TRY SYM_ASMS_T rewrite_tac);
@@ -2059,7 +1963,7 @@ val ccrpo_fixp_lemma17 = pop_thm ();
 €ccrpo_fixp_lemma19› =
    Ù µ r f∑ CcRpo (Universe, r) ± Increasing r r f ¥ (∂ e∑ IsLfp r f e)
 
-€CcRpoU_fixp_induction_thm› =
+€ccrpou_fixp_induction_thm› =
    Ù µ r f p
      ∑ CcRpoU r
            ± Increasing r r f
@@ -2132,71 +2036,6 @@ a (spec_nth_asm_tac 1 ¨eÆ);
 a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
 val ccrpo_fixp_lemma18 = pop_thm ();
 
-=IGN
-set_goal([], ¨µX $ºâv f∑ Increasing $ºâv $ºâv f ± Rpo(Universe,$ºâv)
-	± FChainClosed f (X, $ºâv)
-	¥ IsLfp $ºâv f (Lfpâc $ºâv f)Æ);
-a (REPEAT strip_tac
-	THEN all_fc_tac [ccrpo_fixp_lemma17]);
-a (lemma_tac ¨∂l∑ IsLfp $ºâv f lÆ);
-(* *** Goal "1" *** *)
-a (∂_tac ¨eÆ
-	THEN rewrite_tac [get_spec ¨IsLfpÆ, let_def]
-	THEN REPEAT strip_tac);
-(* *** Goal "1.1" *** *)
-a (SYM_ASMS_T rewrite_tac);
-(* *** Goal "1.2" *** *)
-a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨IsLbÆ]
-	THEN REPEAT strip_tac);
-(* *** Goal "1.2.1" *** *)
-a (lemma_tac ¨FChainClosed f ({y | y ç FChain f (X, $ºâv) ± y ºâv x}, $ºâv)Æ
-	THEN1 (rewrite_tac [get_spec ¨FChainClosedÆ]
-		THEN REPEAT strip_tac));
-(* *** Goal "1.2.1.1" *** *)
-a (rewrite_tac [get_spec ¨FClosedÆ]
-	THEN REPEAT strip_tac);
-(* *** Goal "1.2.1.1.1" *** *)
-a (all_fc_tac [fchain_fchainclosed_lemma2]);
-a (all_fc_tac [get_spec ¨FChainClosedÆ]);
-a (all_fc_tac [get_spec ¨FClosedÆ]);
-(* *** Goal "1.2.1.1.2" *** *)
-a (all_fc_tac [get_spec ¨IncreasingÆ]);
-a (POP_ASM_T ante_tac
-	THEN GET_NTH_ASM_T 3 rewrite_thm_tac);
-(* *** Goal "1.2.1.2" *** *)
-a (rewrite_tac [get_spec ¨ChainCompleteÆ]
-	THEN REPEAT strip_tac);
-a (all_fc_tac [fchain_fchainclosed_lemma2]);
-a (all_fc_tac [get_spec ¨FChainClosedÆ]);
-a (lemma_tac ¨Y Ä FChain f (X, $ºâv)Æ
-	THEN1 (GET_NTH_ASM_T 7 ante_tac
-		THEN PC_T1 "hol1" prove_tac[]));
-a (all_fc_tac [get_spec ¨ChainCompleteÆ]);
-a (∂_tac ¨x'Æ THEN REPEAT strip_tac);
-a (lemma_tac ¨IsUb $ºâv Y xÆ
-	THEN1 (rewrite_tac [get_spec ¨IsUbÆ]
-		THEN GET_NTH_ASM_T 10 ante_tac
-		THEN PC_T1 "hol1" prove_tac[]));
-a (all_fc_tac [get_spec ¨IsLubÆ]);
-(* *** Goal "1.2.1.3" *** *)
-a (lemma_tac ¨{y|y ç FChain f (X, $ºâv) ± y ºâv x} Ä FChain f (X, $ºâv)Æ
-	THEN1 (PC_T1 "hol1" prove_tac[]));
-a (all_fc_tac [fchain_lemma2]);
-a (lemma_tac ¨µ x'∑ x' ç FChain f (X, $ºâv) ¥ x' ºâv xÆ
-	THEN1 (POP_ASM_T ante_tac THEN PC_T1 "hol1" prove_tac[]));
-a (lemma_tac ¨IsUb $ºâv (FChain f (X, $ºâv)) xÆ
-	THEN1 (rewrite_tac [get_spec ¨IsUbÆ]
-		THEN REPEAT strip_tac
-		THEN asm_fc_tac[]));
-a (all_fc_tac [get_spec ¨IsLubÆ]);
-(* *** Goal "1.2.2" *** *)
-a (spec_nth_asm_tac 1 ¨eÆ);
-a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
-(* *** Goal "2" *** *)
-a (all_fc_tac [get_spec ¨LfpâcÆ]);
-val ccrpo_fixp_lemma18 = pop_thm ();
-
-=SML
 set_goal([], ¨µr f∑ CcRpoU r
 	± Increasing r r f
 	¥ (∂ e∑ IsLfp r f e)Æ);
@@ -2258,12 +2097,632 @@ a (var_elim_asm_tac ¨l = yÆ);
 a (lemma_tac ¨Lfpâc r f = yÆ THEN1 all_fc_tac [islfp_unique_lemma2]);
 a (rewrite_tac[asm_rule ¨Lfpâc r f = yÆ]);
 a (contr_tac);
-val CcRpoU_fixp_induction_thm = save_pop_thm "CcRpoU_fixp_induction_thm"; 
+val ccrpou_fixp_induction_thm = save_pop_thm "ccrpou_fixp_induction_thm"; 
 
 pop_pc();
 pop_pc();
 =TEX
 }%ignore
+
+\subsection{Inverse Relations}
+
+In order to exploit the duality between induction and co-induction it is useful to have some results about the inverses of relations.
+
+First the definition.
+
+πHOLCONST
+‹ €RelInv› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ RelInv r = Ãx y∑ r y x
+∞
+
+Then we prove lemmas about various properties of relations and their inverses.
+
+=GFT
+€refl_inverse_lemma› =
+	Ù µ X r∑ Refl (X, RelInv r) = Refl (X, r)
+
+€antisym_inverse_lemma› =
+	Ù µ X r∑ Antisym (X, RelInv r) = Antisym (X, r)
+
+€trans_inverse_lemma› =
+	Ù µ X r∑ Trans (X, RelInv r) = Trans (X, r)
+
+€trans_inverse_lemma› =
+	Ù µ X r∑ Trans (X, RelInv r) = Trans (X, r)
+
+€trich_inverse_lemma› =
+	Ù µ X r∑ Trich (X, RelInv r) = Trich (X, r)
+
+€linearorder_inverse_lemma› =
+	Ù µ X r∑ LinearOrder (X, r) = LinearOrder (X, RelInv r)
+
+€rpo_inverse_lemma› =
+	Ù µ X r∑ Rpo (X, RelInv r) = Rpo (X, r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX r∑ Refl (X, RelInv r) § Refl (X, r)Æ);
+a (rewrite_tac [get_spec ¨ReflÆ, get_spec ¨RelInvÆ]);
+val refl_inverse_lemma = save_pop_thm "refl_inverse_lemma";
+
+set_goal([], ¨µX r∑ Antisym (X, RelInv r) § Antisym (X, r)Æ);
+a (rewrite_tac [get_spec ¨AntisymÆ, get_spec ¨RelInvÆ]);
+a (contr_tac THEN all_asm_fc_tac[]);
+val antisym_inverse_lemma = save_pop_thm "antisym_inverse_lemma";
+
+set_goal([], ¨µX r∑ Trans (X, RelInv r) § Trans (X, r)Æ);
+a (rewrite_tac [get_spec ¨TransÆ, get_spec ¨RelInvÆ] THEN contr_tac);
+a (list_spec_nth_asm_tac 7 [¨zÆ, ¨yÆ, ¨xÆ]);
+a (list_spec_nth_asm_tac 7 [¨zÆ, ¨yÆ, ¨xÆ]);
+val trans_inverse_lemma = save_pop_thm "trans_inverse_lemma";
+
+set_goal([], ¨µX r∑ PartialOrder (X, RelInv r) § PartialOrder (X, r)Æ);
+a (rewrite_tac [get_spec ¨PartialOrderÆ, antisym_inverse_lemma, trans_inverse_lemma]);
+val partialorder_inverse_lemma = save_pop_thm "partialorder_inverse_lemma";
+
+set_goal([], ¨µX r∑ Trich (X, RelInv r) § Trich (X, r)Æ);
+a (rewrite_tac [get_spec ¨TrichÆ, get_spec ¨RelInvÆ] THEN contr_tac
+	THEN all_asm_fc_tac[]);
+val trich_inverse_lemma = save_pop_thm "trich_inverse_lemma";
+
+set_goal([], ¨µX r∑ LinearOrder (X, RelInv r) § LinearOrder (X, r)Æ);
+a (rewrite_tac [get_spec ¨LinearOrderÆ, partialorder_inverse_lemma, trich_inverse_lemma]);
+val linearorder_inverse_lemma = save_pop_thm "linearorder_inverse_lemma";
+
+set_goal([], ¨µX r∑ Rpo (X, RelInv r) § Rpo (X, r)Æ);
+a (rewrite_tac [get_spec ¨RpoÆ, partialorder_inverse_lemma, refl_inverse_lemma]);
+val rpo_inverse_lemma = save_pop_thm "rpo_inverse_lemma";
+=TEX
+}%ignore
+
+=GFT
+€isub_inverse_lemma› =
+	Ù µ X r x∑ IsUb (RelInv r) X x = IsLb r X x
+
+€islb_inverse_lemma› =
+	Ù µ X r x∑ IsLb (RelInv r) X x = IsUb r X x
+
+€islub_inverse_lemma› =
+	Ù µ X r x∑ IsLub (RelInv r) X x = IsGlb r X x
+
+€isglb_inverse_lemma› =
+	Ù µ X r x∑ IsGlb (RelInv r) X x = IsLub r X x
+
+€islfp_inverse_lemma› =
+	Ù µ r f e∑ IsLfp (RelInv r) f e = IsGfp r f e
+
+€isgfp_inverse_lemma› =
+	Ù µ r f e∑ IsGfp (RelInv r) f e = IsLfp r f e
+
+€increasing_inverse_lemma› =
+   Ù µ r1 r2∑ Increasing (RelInv r1) (RelInv r2) = Increasing r1 r2
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX r x∑ IsUb (RelInv r) X x = IsLb r X xÆ);
+a (rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLbÆ, get_spec ¨RelInvÆ]);
+val isub_inverse_lemma = save_pop_thm "isub_inverse_lemma";
+
+set_goal([], ¨µX r x∑ IsLb (RelInv r) X x = IsUb r X xÆ);
+a (rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLbÆ, get_spec ¨RelInvÆ]);
+val islb_inverse_lemma = save_pop_thm "islb_inverse_lemma";
+
+set_goal([], ¨µX r x∑ IsLub (RelInv r) X x = IsGlb r X xÆ);
+a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨IsGlbÆ, get_spec ¨RelInvÆ,
+	isub_inverse_lemma]);
+val islub_inverse_lemma = save_pop_thm "islub_inverse_lemma";
+
+set_goal([], ¨µX r x∑ IsGlb (RelInv r) X x = IsLub r X xÆ);
+a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨IsLubÆ, get_spec ¨RelInvÆ,
+	islb_inverse_lemma]);
+val isglb_inverse_lemma = save_pop_thm "isglb_inverse_lemma";
+
+set_goal([], ¨µr f e∑ IsLfp (RelInv r) f e = IsGfp r f eÆ);
+a (rewrite_tac [get_spec ¨IsLfpÆ, get_spec ¨IsGfpÆ,
+	isglb_inverse_lemma]);
+val islfp_inverse_lemma = save_pop_thm "islfp_inverse_lemma";
+
+set_goal([], ¨µr f e∑ IsGfp (RelInv r) f e = IsLfp r f eÆ);
+a (rewrite_tac [get_spec ¨IsLfpÆ, get_spec ¨IsGfpÆ,
+	islub_inverse_lemma]);
+val isgfp_inverse_lemma = save_pop_thm "isgfp_inverse_lemma";
+
+set_goal([], ¨µr1 r2∑ Increasing (RelInv r1) (RelInv r2) = Increasing r1 r2Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [ext_thm, get_spec ¨IncreasingÆ, get_spec ¨RelInvÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val increasing_inverse_lemma = save_pop_thm "increasing_inverse_lemma";
+=TEX
+}%ignore
+
+\subsection{Chain Co-Complete Partial Orders}
+
+The results in this section could be achieved in either of two ways.
+The first is by systematic modifications to the proof above to obtain their duals.
+The second is by use of the original theorems on inverses of relationship.
+I have done some by the first method, which is a bit tedious.
+To use the second method here is the definition of the inverse of a relationship.
+
+πHOLCONST
+‹ €ChainCoComplete› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ X r∑ ChainCoComplete (X, r) § µY∑ Y Ä X ± LinearOrder (Y, r) ¥
+‹	∂x∑ x ç X ± IsGlb r Y x
+∞
+
+=GFT
+€chaincocomplete_dual_lemma› =
+   Ù µ X r∑ ChainCoComplete (X, r) = ChainComplete (X, RelInv r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX r∑ ChainCoComplete (X, r) § ChainComplete (X, RelInv r)Æ);
+a (rewrite_tac [get_spec ¨ChainCoCompleteÆ, get_spec ¨ChainCompleteÆ,
+	linearorder_inverse_lemma, islub_inverse_lemma]);
+val chaincocomplete_dual_lemma = save_pop_thm "chaincocomplete_dual_lemma";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €CoCcRpo› : ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ CoCcRpo r § Rpo r ± ChainCoComplete r
+∞
+
+=GFT
+€coccrpo_dual_lemma› =
+	Ù µ X r∑ CoCcRpo (X, r) = CcRpo (X, RelInv r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX r∑ CoCcRpo (X, r) § CcRpo (X, RelInv r)Æ);
+a (rewrite_tac [get_spec ¨CoCcRpoÆ, get_spec ¨CcRpoÆ,
+	chaincocomplete_dual_lemma, rpo_inverse_lemma]);
+val coccrpo_dual_lemma = save_pop_thm "coccrpo_dual_lemma";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €CoCcRpoU› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ CoCcRpoU r § CoCcRpo (Universe, r)
+∞
+
+=GFT
+€coccrpou_dual_lemma› =
+	Ù µ r∑ CoCcRpoU r = CcRpoU (RelInv r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ CoCcRpoU r § CcRpoU (RelInv r)Æ);
+a (rewrite_tac [get_spec ¨CoCcRpoUÆ, get_spec ¨CcRpoUÆ, coccrpo_dual_lemma]);
+val coccrpou_dual_lemma = save_pop_thm "coccrpou_dual_lemma";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €FCoChainClosed› : ('a ≠ 'a) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f X r∑ FCoChainClosed f (X, r) § 
+‹	FClosed f X ± ChainCoComplete (X, r)
+∞
+
+=GFT
+€fcochainclosed_dual_lemma› =
+   Ù µ f X r∑ FCoChainClosed f (X, r) = FChainClosed f (X, RelInv r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µf X r∑ FCoChainClosed f (X, r) § FChainClosed f (X, RelInv r)Æ);
+a (rewrite_tac [get_spec ¨FCoChainClosedÆ, get_spec ¨FChainClosedÆ,
+	chaincocomplete_dual_lemma]);
+val fcochainclosed_dual_lemma = save_pop_thm "fcochainclosed_dual_lemma";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €FCoChain› : ('a ≠ 'a) ≠ ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f X r∑ FCoChain f (X, r) = • {Y | Y Ä X ± FCoChainClosed f (Y, r)}
+∞
+
+=GFT
+€fcochain_dual_lemma› =
+	Ù µ X r f∑ FCoChain f (X, r) = FChain f (X, RelInv r)
+
+€fcochain_lemma1› =
+	Ù µ X r f∑ FCoChainClosed f (X, r) ¥ FCoChain f (X, r) Ä X
+
+€fcochain_fcochainclosed_lemma› =
+   Ù µ X r f
+     ∑ Antisym (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ FCoChainClosed f (FCoChain f (X, r), r)
+
+€fcochain_fcochainclosed_lemma2› =
+   Ù µ X r f
+     ∑ Rpo (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ FCoChainClosed f (FCoChain f (X, r), r)
+
+€fcoc_fcocclosed_fcoc_lemma› =
+   Ù µ X r f
+     ∑ Rpo (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ (µ x∑ x ç FCoChain f (X, r) ¥ f x ç FCoChain f (X, r))
+
+€fcochain_lemma2› =
+   Ù µ X Y r f
+     ∑ Rpo (Universe, r)
+           ± FCoChainClosed f (X, r)
+           ± Y Ä FCoChain f (X, r)
+           ± FCoChainClosed f (Y, r)
+         ¥ Y = FCoChain f (X, r)
+
+€coccrpo_fixp_lemma1› =
+   Ù µ X r f
+     ∑ Increasing r r f
+         ¥ FClosed f {x|x ç FCoChain f (X, r) ± (r (f x) x ≤ x = f x)}
+
+€coccrpo_fixp_lemma2› =
+   Ù µ X r f
+     ∑ Increasing r r f ± Rpo (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ ChainCoComplete
+           ({x|x ç FCoChain f (X, r) ± (r (f x) x ≤ x = f x)}, r)
+
+€coccrpo_fixp_lemma3› =
+   Ù µ X r f
+     ∑ Increasing r r f ± Rpo (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ FCoChainClosed
+           f
+           ({z|z ç FCoChain f (X, r) ± (r (f z) z ≤ z = f z)}, r)
+
+€coccrpo_fixp_lemma4› =
+   Ù µ X r f
+     ∑ Increasing r r f ± Rpo (Universe, r) ± FCoChainClosed f (X, r)
+         ¥ (µ z∑ z ç FCoChain f (X, r) ¥ r (f z) z ≤ z = f z)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
+
+set_goal([], ¨µX r f∑ FCoChain f (X, r) = FChain f (X, RelInv r)Æ);
+a (rewrite_tac [get_spec ¨FCoChainÆ, get_spec ¨FChainÆ, fcochainclosed_dual_lemma]
+	THEN REPEAT strip_tac);
+val fcochain_dual_lemma = save_pop_thm "fcochain_dual_lemma";
+
+
+set_goal([], ¨µX r f∑ FCoChainClosed f (X, r) ¥ FCoChain f (X,r) Ä XÆ);
+a (rewrite_tac [get_spec ¨FCoChainClosedÆ, get_spec ¨FCoChainÆ] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨XÆ);
+val fcochain_lemma1 = save_pop_thm "fcochain_lemma1";
+
+push_merge_pcs ["hol", "'savedthm_cs_∂_proof"];
+
+set_goal([], ¨µX r f∑ Antisym (Universe, r) ± FCoChainClosed f (X, r)
+	¥ FCoChainClosed f (FCoChain f (X,r), r)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (fc_tac [get_spec ¨FClosedÆ]);
+a (rewrite_tac [get_spec ¨FCoChainClosedÆ, get_spec ¨FClosedÆ]
+	THEN REPEAT µ_tac
+	THEN strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¨FCoChainClosedÆ,
+		get_spec ¨FClosedÆ,
+		get_spec ¨FCoChainÆ,
+		get_spec ¨ChainCoCompleteÆ]
+	THEN REPEAT strip_tac
+	THEN REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¨ChainCoCompleteÆ]);
+a (rewrite_tac [get_spec ¨ChainCoCompleteÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [fcochain_lemma1]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
+a (all_asm_fc_tac []);
+a (∂_tac ¨xÆ THEN REPEAT strip_tac);
+a (REPEAT_N 3 (PC_T1 "hol1" once_rewrite_tac [get_spec ¨FCoChainÆ])
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (fc_tac [get_spec ¨FClosedÆ]);
+a (fc_tac [get_spec ¨ChainCoCompleteÆ]);
+a (lemma_tac ¨FCoChain f (X, r) Ä sÆ
+	THEN1 (rewrite_tac [get_spec ¨FCoChainÆ] THEN REPEAT strip_tac
+		THEN (PC_T1 "hol1" asm_rewrite_tac [])
+		THEN REPEAT strip_tac THEN all_asm_fc_tac[]));
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
+a (all_asm_fc_tac[]);
+a (fc_tac [glb_unique_lemma]);
+a (all_asm_fc_tac[]);
+a (var_elim_nth_asm_tac 8);
+val fcochain_fcochainclosed_lemma = save_pop_thm "fcochain_fcochainclosed_lemma";
+
+set_goal([], ¨µX r f∑ Rpo (Universe, r) ± FCoChainClosed f (X, r)
+	¥ FCoChainClosed f (FCoChain f (X,r), r)Æ);
+a (REPEAT strip_tac
+	THEN fc_tac [rpo_antisym_lemma]
+	THEN all_fc_tac [fcochain_fcochainclosed_lemma]);
+val fcochain_fcochainclosed_lemma2 = save_pop_thm "fcochain_fcochainclosed_lemma2";
+
+set_goal([], ¨µX r f∑ Rpo (Universe, r) ± FCoChainClosed f (X, r)
+	¥ µx∑ x ç FCoChain f (X,r) ¥ f x ç FCoChain f (X,r)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [fcochain_fcochainclosed_lemma]);
+a (all_fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (all_fc_tac [get_spec ¨FClosedÆ]);
+val fcoc_fcocclosed_fcoc_lemma = save_pop_thm "fcoc_fcocclosed_fcoc_lemma";
+
+set_goal([], ¨µX Y r f∑ Rpo (Universe, r) ± FCoChainClosed f (X, r)
+	± Y Ä FCoChain f (X, r) ± FCoChainClosed f (Y, r)
+	¥ Y = FCoChain f (X, r)Æ);
+a (REPEAT strip_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¨FCoChainÆ]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 5 ante_tac
+	THEN PC_T1 "hol1" rewrite_tac [get_spec ¨FCoChainÆ]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨YÆ);
+a (fc_tac [fcochain_lemma1]);
+a (ALL_ASM_FC_T (fc_tac o (map (pc_rule1 "hol1" rewrite_rule []))) [Ä_trans_thm]);
+val fcochain_lemma2 = save_pop_thm "fcochain_lemma2";
+
+set_goal([], ¨µX r f∑ Increasing r r f
+	¥ FClosed f {x | x ç FCoChain f (X,r) ± (r (f x) x ≤ x = (f x))}Æ);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨FClosedÆ, get_spec ¨FCoChainÆ]
+	THEN REPEAT strip_tac THEN_TRY SYM_ASMS_T rewrite_tac);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 4 (fn x => all_fc_tac [rewrite_rule [] x]));
+a (fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (fc_tac [get_spec ¨FClosedÆ]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¨IncreasingÆ]);
+a (asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (fc_tac [get_spec ¨IncreasingÆ]);
+a (asm_fc_tac[]);
+val coccrpo_fixp_lemma1 = pop_thm ();
+
+set_goal([], ¨µX r f∑ Increasing r r f ± Rpo (Universe, r) ± FCoChainClosed f (X, r)
+	¥ ChainCoComplete ({x | x ç FCoChain f (X,r) ± (r (f x) x ≤ x = (f x))}, r)Æ);
+a (rewrite_tac [get_spec ¨ChainCoCompleteÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [coccrpo_fixp_lemma1]);
+a (lemma_tac ¨FCoChain f (X, r) Ä XÆ
+	THEN1 (PC_T1 "hol1" rewrite_tac [get_spec ¨FCoChainÆ]
+		THEN REPEAT strip_tac
+		THEN (spec_nth_asm_tac 1 ¨XÆ)));
+a (lemma_tac ¨Y Ä FCoChain f (X, r)Æ
+	THEN1 (PC_T1 "hol1" rewrite_tac []
+		THEN REPEAT strip_tac
+		THEN GET_NTH_ASM_T 5 (fn x => all_fc_tac [pc_rule1 "hol1" rewrite_rule [] x])));
+a (lemma_tac ¨Y Ä XÆ
+	THEN1 (all_fc_tac [pc_rule1 "hol1" prove_rule []
+	 ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]));
+a (fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (all_fc_tac [get_spec ¨ChainCoCompleteÆ]);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+a (strip_tac);
+(* *** Goal "1" *** *)
+a (PC_T1 "hol1" rewrite_tac [get_spec ¨FCoChainÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨FCoChainClosedÆ]);
+a (lemma_tac ¨Y Ä sÆ);
+(* *** Goal "1.1" *** *)
+a (lemma_tac ¨FCoChain f (X, r) Ä sÆ
+	THEN1 rewrite_tac [get_spec ¨FCoChainÆ]);
+(* *** Goal "1.1.1" *** *)
+a (LEMMA_T ¨s ç {Y|Y Ä X ± FCoChainClosed f (Y, r)}Æ asm_tac
+	THEN1 (PC_T1 "hol1" asm_rewrite_tac []));
+a (bc_tac [pc_rule1 "hol1" prove_rule [] ¨s ç A ¥ •A Ä sÆ]
+	THEN CONTR_T check_asm_tac);
+(* *** Goal "1.1.2" *** *)
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
+(* *** Goal "1.2" *** *)
+a (GET_NTH_ASM_T 3 (fn x => (all_fc_tac [rewrite_rule [get_spec ¨ChainCoCompleteÆ] x])));
+a (fc_tac [rpo_antisym_lemma]);
+a (all_fc_tac [glb_unique_lemma]);
+a (var_elim_nth_asm_tac 1);
+(* *** Goal "2" *** *)
+a (contr_tac);
+a (lemma_tac ¨IsLb r Y (f x)Æ
+	THEN1 (rewrite_tac [get_spec ¨IsLbÆ]
+		THEN REPEAT strip_tac));
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¨r (f x') x' ≤ x' = f x'Æ
+	THEN1 GET_NTH_ASM_T 13 (fn x => asm_tac (pc_rule1 "hol1" rewrite_rule[] x)));
+(* *** Goal "2.1.1" *** *)
+a (spec_nth_asm_tac 1 ¨x'Æ THEN REPEAT strip_tac);
+(* *** Goal "2.1.2" *** *)
+a (lemma_tac ¨r x x'Æ);
+(* *** Goal "2.1.2.1" *** *)
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨IsLbÆ]
+	THEN strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+a (fc_tac [get_spec ¨IncreasingÆ]
+	THEN all_asm_fc_tac[]);
+a (FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[]))) [rpo_fc_clauses]);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.3" *** *)
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨IsLbÆ]
+	THEN strip_tac
+	THEN asm_fc_tac[]);
+a (fc_tac [get_spec ¨IncreasingÆ]
+	THEN all_asm_fc_tac[]);
+a (DROP_NTH_ASM_T 2 ante_tac THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "2.2" *** *)
+a (GET_NTH_ASM_T 4 ante_tac THEN rewrite_tac [get_spec ¨IsGlbÆ]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+val coccrpo_fixp_lemma2 = pop_thm ();
+
+set_goal([], ¨µX r f∑ Increasing r r f ± Rpo(Universe,r) ± FCoChainClosed f (X, r)
+	¥ FCoChainClosed f ({z|z ç FCoChain f (X,r) ± (r (f z) z ≤ z = f z)}, r)Æ);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨FCoChainClosedÆ]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[coccrpo_fixp_lemma1]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[coccrpo_fixp_lemma1]);
+a (all_fc_tac[rpo_antisym_lemma]);
+a (all_fc_tac[fcochain_fcochainclosed_lemma]);
+a (all_fc_tac[coccrpo_fixp_lemma2]);
+val coccrpo_fixp_lemma3 = pop_thm ();
+
+set_goal([], ¨µX r f∑ Increasing r r f ± Rpo(Universe,r) ± FCoChainClosed f (X, r)
+	¥ µz∑ z ç FCoChain f (X,r) ¥ r (f z) z ≤ z = f zÆ);
+a (REPEAT strip_tac);
+a (all_fc_tac [coccrpo_fixp_lemma3]);
+a (lemma_tac ¨{z | z ç FCoChain f (X, r) ± (r (f z) z ≤ z = f z)} Ä FCoChain f (X, r)Æ
+	THEN1 (PC_T1 "hol1" rewrite_tac[]
+		THEN REPEAT strip_tac));
+a (all_fc_tac [fcochain_lemma2]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T once_rewrite_tac);
+a (rewrite_tac[]);
+a (contr_tac);
+val coccrpo_fixp_lemma4 = save_pop_thm "coccrpo_fixp_lemma4";
+=TEX
+}%ignore
+
+=GFT
+€coccrpo_fixp_lemma18› =
+   Ù µ X $ºâv f
+     ∑ Increasing $ºâv $ºâv f
+           ± Rpo (Universe, $ºâv)
+           ± FCoChainClosed f (X, $ºâv)
+         ¥ (∂ l∑ IsGlb $ºâv (FCoChain f (X, $ºâv)) l ± IsGfp $ºâv f l)
+
+€coccrpo_fixp_lemma19› =
+   Ù µ r f∑ CoCcRpoU r ± Increasing r r f ¥ (∂ e∑ IsGfp r f e)
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¨µX $ºâv f∑ Increasing $ºâv $ºâv f ± Rpo(Universe,$ºâv)
+	± FCoChainClosed f (X, $ºâv)
+	¥ ∂l∑ IsGlb $ºâv (FCoChain f (X, $ºâv)) l ± IsGfp $ºâv f lÆ);
+a (rewrite_tac [fcochainclosed_dual_lemma, isglb_inverse_lemma, fcochain_dual_lemma,
+	isgfp_inverse_lemma]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨Rpo (Universe, RelInv $ºâv)Æ
+	THEN1 asm_rewrite_tac [rpo_inverse_lemma]);
+a (DROP_ASM_T ¨Rpo (Universe, $ºâv)Æ discard_tac);
+a (lemma_tac ¨Increasing (RelInv $ºâv) (RelInv $ºâv) fÆ
+	THEN1 asm_rewrite_tac [increasing_inverse_lemma]);
+a (DROP_ASM_T ¨Increasing $ºâv $ºâv fÆ discard_tac);
+a (ALL_FC_T (MAP_EVERY ante_tac) [ccrpo_fixp_lemma18]
+	THEN rewrite_tac [islub_inverse_lemma, islfp_inverse_lemma]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨lÆ THEN asm_rewrite_tac[]);
+val coccrpo_fixp_lemma18 = pop_thm ();
+
+set_goal([], ¨µr f∑ CoCcRpoU r
+	± Increasing r r f
+	¥ (∂ e∑ IsGfp r f e)Æ);
+a (rewrite_tac [coccrpou_dual_lemma]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨Increasing (RelInv r) (RelInv r) fÆ
+	THEN1 asm_rewrite_tac [increasing_inverse_lemma]);
+a (DROP_ASM_T ¨Increasing r r fÆ discard_tac);
+a (ALL_FC_T (MAP_EVERY ante_tac) [ccrpo_fixp_lemma19]
+	THEN rewrite_tac [islfp_inverse_lemma]
+	THEN strip_tac);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+val coccrpo_fixp_lemma19 = pop_thm ();
+
+set_goal([], ¨µr f p∑ CoCcRpoU r 
+	± Increasing r r f
+	± (µx∑ p x ¥ p (f x))
+	± (µs∑ (µx∑ x ç s ¥ p x) ± LinearOrder (s, r) ¥ ∂y∑ p y ± (IsGlb r s y))
+	¥ p (Gfpâc r f)
+	Æ);
+a (rewrite_tac [coccrpou_dual_lemma] THEN REPEAT strip_tac);
+a (lemma_tac ¨Increasing (RelInv r) (RelInv r) fÆ
+	THEN1 asm_rewrite_tac [increasing_inverse_lemma]);
+a (DROP_ASM_T ¨Increasing r r fÆ discard_tac);
+a (lemma_tac ¨µs∑ (µx∑ x ç s ¥ p x) ± LinearOrder (s, RelInv r) ¥ ∂y∑ p y ± (IsLub (RelInv r) s y)Æ
+	THEN1 asm_rewrite_tac [linearorder_inverse_lemma, islub_inverse_lemma]);
+a (DROP_NTH_ASM_T 3 discard_tac);
+=IGN
+a (ALL_FC_T (MAP_EVERY ante_tac) [ccrpou_fixp_induction_thm]);
+	THEN rewrite_tac [lfp_dual_lemma]
+	THEN strip_tac);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+val ccrpou_fixp_induction_thm = save_pop_thm "ccrpou_fixp_induction_thm"; 
+
+=SML
+pop_pc();
+pop_pc();
+=TEX
+}%ignore
+
+\subsection{Closure}
+
+If you start from bottom and iterate a function over some complete partial order you get a least fixed point of the function.
+If you start somewhere else you get a ``closure''.
+From a monotone function you obtain by transfinite iteration a closure operator.
+
+The purpose of this subsection is to adapt the above material so that it can be applied to closure operators obtained in this way.
+
+For this to work we need only chain completeness, so we will do the theory first in that context.
+
+πHOLCONST
+‹ €Closedâc›: ('a ≠ 'a ≠ BOOL) ∏ ('a ≠ 'a) ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ $ºâv f x∑ Closedâc ($ºâv, f) x § f x ºâv x
+∞
+
+πHOLCONST
+‹ €Closureâc›: ('a ≠ 'a ≠ BOOL) ∏ ('a ≠ 'a) ≠ 'a ≠ 'a
+˜¸¸¸¸¸¸
+‹ µ $ºâv f x∑ Closureâc ($ºâv, f) x = Glb $ºâv {y | x ºâv y ± Closedâc ($ºâv, f) y}
+∞
+
+πHOLCONST
+‹ €Closureâd›: ('a ≠ 'a ≠ BOOL) ∏ ('a ≠ 'a) ≠ 'a ≠ 'a
+˜¸¸¸¸¸¸
+‹ µ $ºâv f x∑ Closureâd ($ºâv, f) x = Lub $ºâv (FChain f ({y | x ºâv y}, $ºâv))
+∞
+
+The first result I am looking for is that the closure of a function {\it f} maps each element {\it x} in its domain to the least fixed point of {\it f} which is greater than {\it x}.
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¨µX f $ºâv x∑ Increasing $ºâv $ºâv f ± ChainComplete (X, $ºâv)
+	¥ FChainClosed f ({y | y ç X ± x ºâv y}, $ºâv)Æ);
+a (rewrite_tac [get_spec ¨FChainClosedÆ, get_spec ¨IncreasingÆ,
+	get_spec ¨FClosedÆ, get_spec ¨ChainCompleteÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+
+
+set_goal([], ¨µ$ºâv f∑ let g = Closureâc ($ºâv, f) in g o g = gÆ);
+a (rewrite_tac [ext_thm, let_def, get_spec ¨ClosureâcÆ, get_spec ¨$o:(('a≠'c)≠(('b≠'a)≠('b≠'c)))Æ]);
+=TEX
+}%ignore
+
 
 \subsection{Complete Partial Orders}
 
@@ -2274,6 +2733,9 @@ pop_pc();
 ∞
 
 =GFT
+€crpou_ccrpou_lemma› =
+   Ù µ r∑ CRpoU r ¥ CcRpoU r
+
 €crpou_lub_glb_ö_lemma› =
    Ù µ r∑ CRpoU r ¥ (µ x∑ r (Lub r {}) x ± r x (Glb r {}))
 
@@ -2307,10 +2769,25 @@ pop_pc();
 
 €crpou_increasing_gfp_lemma2› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsGfp r f (Gfpâc r f)
+
+€crpou_induction_thm› =
+   Ù µ r f p
+     ∑ CRpoU r
+           ± Increasing r r f
+           ± (µ x∑ p x ¥ p (f x))
+           ± (µ s∑ (µ x∑ x ç s ¥ p x) ¥ p (Lub r s))
+         ¥ p (Lfpâc r f)
+
 =TEX
 
 \ignore{
 =SML
+set_goal([], ¨µr∑ CRpoU r ¥ CcRpoU rÆ);
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CcRpoUÆ, ¨CcRpoÆ, ¨CRpoÆ, ¨ChainCompleteÆ, ¨LubsExistÆ])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val crpou_ccrpou_lemma = save_pop_thm "crpou_ccrpou_lemma";
+
 set_goal([], ¨µr∑ CRpoU r ¥ µx∑ r (Lub r {}) x ± r x (Glb r {})Æ);
 a (rewrite_tac [get_spec ¨RpoUÆ, get_spec ¨CRpoUÆ, get_spec ¨LubsExistÆ, get_spec ¨GlbsExistÆ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
@@ -2421,12 +2898,20 @@ set_goal([], ¨µr f p∑ CRpoU r
 	¥ p (Lfpâc r f)
 	Æ);
 a (REPEAT strip_tac);
-a (all_fc_tac [crpou_glb_lfp_lemma1]);
-a (spec_nth_asm_tac 2 ¨{x | r x (f x)}Æ);
-
-
+a (fc_tac [crpou_ccrpou_lemma]);
+a (lemma_tac ¨µ s∑ (µ x∑ x ç s ¥ p x) ± LinearOrder (s, r) ¥ (∂ y∑ p y ± IsLub r s y)Æ
+	THEN1 (REPEAT strip_tac THEN all_asm_fc_tac[]));
+(* *** Goal "1" *** *)
+a (fc_tac [crpou_fc_clauses]);
+a (fc_tac [lub_lub_lemma2]);
+a (∂_tac ¨Lub r sÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [ccrpou_fixp_induction_thm]);
+val crpou_induction_thm = save_pop_thm "crpou_fixp_induction_thm";
 =TEX
 }%ignore
+
+
 
 
 \section{INDUCTIVE DEFINITIONS OF SETS}
@@ -2701,38 +3186,9 @@ a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
 a (FC_T rewrite_tac [gfp_open_thm]);
 val CoHeredFun_Open_thm = save_pop_thm "CoHeredFun_Open_thm";
-=TEX
-=SML
+
 set_goal([], ¨µs f∑ s OpenUnderFun f ¥ s Ä CoHeredFun fÆ);
 a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
-	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
-a (ALL_FC_T rewrite_tac [gfp_coinduction_thm]);
-val CoHeredFun_coinduction_thm = save_pop_thm "CoHeredFun_coinduction_thm";
-=IGN
-
-push_pc "hol";
-set_goal([], ¨µf s∑ (µt∑ s Ä t ¥ s Ä f t) ¥ s Ä CoHeredFun fÆ);
-a (rewrite_tac [CoHeredFun_def]);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
-	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
-a (FC_T (MAP_EVERY ante_tac) [gfp_coinduction_thm]);
-a (rewrite_tac [OpenUnder_def]);
-a (POP_ASM_T ante_tac THEN rewrite_tac [Monotonic_def]
-	THEN REPEAT strip_tac);
-
-val CoHeredFun_coinduction_thm1 = save_thm ("CoHeredFun_coinduction_thm1",
-	pc_rule1 "hol" rewrite_rule [OpenUnderFun_def, Fun2MonoFun_def] CoHeredFun_coinduction_thm);
-
-set_goal([], ¨µx f∑ x ç HeredFun f ¥ ∂s∑ x ç f s ± µy∑ y ç s ¥ y ç HeredFun fÆ);
-a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
-rewrite_rule [ClosedUnderFun_def] HeredFun_Closed_thm;
-rewrite_rule [OpenUnderFun_def] HeredFun_Closed_thm;
-rewrite_rule [ClosedUnder_def, sets_ext_clauses] lfp_closed_thm;
-rewrite_rule [OpenUnder_def, sets_ext_clauses] lfp_open_thm;
-
 a (REPEAT strip_tac);
 a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
