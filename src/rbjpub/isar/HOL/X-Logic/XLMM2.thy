@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.8 2007/06/11 20:48:54 rbj01 Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.9 2008/07/11 18:16:10 rbj Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
@@ -221,10 +221,10 @@ syntax
 translations
    "H \<turnstile> p" == "p : thms(H)"
 
-inductive "thms H"
-   intros
+inductive set "thms H"
+   where
 
-  H:  "p : H \<Longrightarrow> p : thms H"
+  H[intro]:  "p : H \<Longrightarrow> p : thms H"
 
   E:  "\<lbrakk> H \<turnstile> Assert n1 (ll Un levels1) sent;
          H \<turnstile> Endorse l ll;
@@ -232,7 +232,7 @@ inductive "thms H"
          n2 < n3 \<rbrakk>
        \<Longrightarrow> Assert n3 ({l} Un levels2) sent : thms H"
 
-  TI: "\<lbrakk> H \<turnstile> Assert n1 levels1 (TrueDocs [d] [l]);
+  TI[intro]: "\<lbrakk> H \<turnstile> Assert n1 levels1 (TrueDocs [d] [l]);
          H \<turnstile> Assert n2 levels2 (TrueDocs dl ll);
          n1 < n3;
          n2 < n3 \<rbrakk>
