@@ -1,0 +1,112 @@
+# $Id: Makefile.in,v 1.1 2008/07/11 18:16:10 rbj Exp $
+
+# This is the makefile for the "Anarchy is Order" book.
+#
+# This is a short book intended to be about 60,000 words long.
+# It is intended for publication in several forms, which are:
+#
+# A) small format book (5.25x8 inch) suitable for POD publication via amazon (PDF).
+# B) html from A by latex2html for rbjones.com (possibly only while in progress)
+# C) format suitable amazon ebook derived from A.
+# Its also possible to sell PDF or HTML electronic documents on amazon,
+# I shall keep that possibility under review.
+
+# I am trying to leave open the structure of the book in the following way.
+# I will identify certain subject matters each of which might form a chapter of the
+# book and write it as if they were chapters.
+# However, each of these chapters will be broken into sections and each section will
+# be in a separate file so that I can if I decide this is best, make a book in which
+# the subject areas are threaded through the chapters.
+
+# The files will be named with some system.
+# At a fist guess there will be 10 chapters 20 pages on average split into 10 sections.
+# That's 200 pages, 100 sections.
+# One file for each section plus one extra for each chapter which just contains the title.
+# So I will chose a name for each chapter, and add a two digit suffix for the section number.
+# It is possible there might be parts.  e.g. practical, theoretical
+
+# I have now decided to have three parts, past present and future.
+
+# Candidate chapter names are:
+
+# intro	Introduction
+# autob Autobiographical
+# evolu Evolution
+# ratio Rationality
+# socia Social
+# anarc Anarchism
+
+include @top_srcdir@/top_srcdir.mk
+
+RELSRCDIR=src/rbjpub/www/books/aobook
+RELWEBDIR=rbjpub/www/books/aobook
+SUBDIRS=
+
+AO01TEX=intro.tex
+AO02TEX=autob.tex autob01.tex
+AO03TEX=evolu.tex
+AO04TEX=ratio.tex
+AO05TEX=socia.tex
+AO06TEX=anarc01.tex anarc02.tex anarc03.tex
+
+PART1TEX=$(AO01TEX) part1.tex $(AO02TEX) $(AO03TEX) $(AO04TEX) $(AO05TEX)
+PART2TEX=part2.tex
+PART3TEX=part3.tex $(AO06TEX)
+AOBODYTEX=$(PART1TEX) $(PART2TEX) $(PART3TEX) 
+AOBOOKTEX=aobookt.tex $(AOBODYTEX) end.tex
+AOPAMTEX=aopamt.tex $(AOBODYTEX) end.tex
+AOTEX=$(AOBOOKTEX) aopamt.tex
+
+SRCDIRBIB=
+
+SRCDIRCPY= $(AOTEX)
+XLDPDIRCPY=$(ENTFILES)
+
+include $(TOPSRCDIR)/build/common/vars.mk
+
+LATEX2HTML=aobook.htm
+BUILDEXTRAS=$(LATEX2HTML)
+WEBFILES=aopam.pdf
+WEBDIRS=aobook
+
+include $(TOPSRCDIR)/src/common/rules.mk
+
+# Paths
+
+vpath %.bib $(COMDIR)
+vpath %.in $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(XLCOMDIR)
+
+# Rules
+
+SHELL = /bin/sh
+
+# Paths
+
+# Variables
+
+# General rules
+
+%.ind: %.idx
+	makeindex $*.idx
+
+# Qualified rules
+
+# Specific rules
+
+aobook.tex: $(AOBOOKTEX) 
+	cat $^ >$@
+
+aopam.tex: $(AOPAMTEX) 
+	cat $^ >$@
+
+# Phonies
+
+ao: aobook.htm
+
+# Dependencies
+
+aobook.pdf: aobook.tex aobook.ind
+
+aopam.pdf: aopam.tex aopam.ind

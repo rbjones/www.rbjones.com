@@ -1135,7 +1135,7 @@ EXECUTE {initialize.longest.label}
 ITERATE {longest.label.pass}
 
 FUNCTION {begin.bib}
-{ "% $Id: rbjfmu.bst,v 1.1 2008/07/11 18:16:10 rbj Exp $"  write$ newline$
+{ "% $Id: rbjfmu.bst,v 1.2 2008/07/11 18:16:11 rbj Exp $"  write$ newline$
   preamble$ empty$
     'skip$
     { preamble$ write$ newline$ }

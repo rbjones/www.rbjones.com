@@ -6,7 +6,7 @@ begin
 
 text{*
 In theory XLMM2
-\footnote{$ $Id: XLMM2.thy,v 1.9 2008/07/11 18:16:10 rbj Exp $ $}
+\footnote{$ $Id: XLMM2.thy,v 1.10 2008/07/11 18:16:11 rbj Exp $ $}
 we model a kind of metalanguage for X-Logic.
 A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
 This version includes the use of signatures.
