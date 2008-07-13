@@ -1,7 +1,7 @@
 =IGN
-$Id: t024.doc,v 1.11 2008/07/13 16:04:21 rbj Exp $
-open_theory "ifol";
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+$Id: t026.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $
+open_theory "ifos";
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -15,7 +15,7 @@ set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\title{Infinitarily Definable Non-Well-Founded Sets}
+\title{Infinitarily Definable Sets}
 \makeindex
 \usepackage[unicode,pdftex]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
@@ -28,8 +28,8 @@ set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This paper is my second approach to set theory conceived as a maximal consistent theory of set comprehension.
-The principle innovation in this version is to simplify the syntax by removing comprehension, so that the syntactic category of term is no longer required.
+This is my third approach to set theory conceived as a maximal consistent theory of set comprehension.
+It differs from the previous attempt (in t024) by simplification of the treatment of infinitary logic, allowing only a single binary relation.
 \end{abstract}
 
 \vfill
@@ -38,14 +38,14 @@ The principle innovation in this version is to simplify the syntax by removing c
 
 {\footnotesize
 
-Created: 2006/11/29
+Created: 2008/07/11
 
 Last Change $ $Date: 2008/07/13 16:04:21 $ $
 
-\href{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
-{http://www.rbjones.com/rbjpub/pp/doc/t021.pdf}
+\href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t024.doc,v 1.11 2008/07/13 16:04:21 rbj Exp $ $
+$ $Id: t026.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -85,13 +85,11 @@ I will put something better here if it works out.
 
 =SML
 open_theory "misc2";
-force_new_theory "€ifol›";
-force_new_pc "€'ifol›";
-merge_pcs ["'savedthm_cs_∂_proof"] "'ifol";
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+force_new_theory "€ifos›";
+force_new_pc €"'ifos"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'ifos";
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 =TEX
-
-
 
 \subsection{Syntax}
 
@@ -101,10 +99,8 @@ Preliminary to presenting the inductive definition of the required classes we de
 
 A constructor puts together some syntactic entity from its constituents, discriminators distinguist between the different kinds of entity and destructors take them apart.
 
-``Atomic'' formulae consist of a relation name together with an indexed collection of arguments.
-The relation name may be any set.
-The indexed set of arguments is any set which is a function, i.e. a many-one relation represented as a set of (Wiener-Kuratovski) ordered pairs.
-The distinction between atomic and compound formulae is made by tagging the former with the ordinal zero and the latter with the ordinal 1, a tagged value in this  case being an ordered pair of which the left element is the tag and the right element is the value.
+``Atomic'' formulae are just membership predicates.
+So its just an ordered pair of `terms' (and in our case that just means variable names)  tagged with a zero.
 
 πHOLCONST
 ‹ €MkAf› : GS ∏ GS ≠ GS
@@ -119,15 +115,15 @@ The distinction between atomic and compound formulae is made by tagging the form
 ∞
 
 πHOLCONST
-‹ €AfRel› : GS ≠ GS
+‹ €AfSet› : GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹  AfRel = Ãx∑ fst(snd x)
+‹  AfSet = Ãx∑ fst(snd x)
 ∞
 
 πHOLCONST
-‹ €AfPars› : GS ≠ GS
+‹ €AfMem› : GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹  AfPars = Ãx∑ snd(snd x)
+‹  AfMem = Ãx∑ snd(snd x)
 ∞
 
 πHOLCONST
@@ -180,8 +176,8 @@ a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN PC_T1 "lin_arith" prove_tac[]);
 val Is_clauses = pop_thm();
 
-add_pc_thms "'ifol" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+add_pc_thms "'ifos" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 
 set_goal ([], ¨
 	(µx∑ IsAf x ¥ ≥ IsCf x)
@@ -214,7 +210,7 @@ The closure condition is:
 ‹ €RepClosed›: GS SET ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ s∑ RepClosed s §
-‹	(µ n is∑ fun is ¥ MkAf (n, is) ç s)
+‹	(µ s2 m∑ MkAf (s2, m) ç s)
 ‹±	(µ vars fs∑ Xâg fs Ä s ¥ MkCf (vars, fs) ç s)
 ∞
 
@@ -255,7 +251,7 @@ Informally these should say:
 	Ù RepClosed Syntax
 
 €repclosed_syntax_thm› =
-	Ù (µ n is∑ fun is ¥ MkAf (n, is) ç Syntax)
+	Ù (µ s m∑ MkAf (s, m) ç Syntax)
        ± (µ vars fs
        ∑ (µ x∑ x ç Xâg fs ¥ x ç Syntax) ¥ MkCf (vars, fs) ç Syntax)
 
@@ -372,7 +368,7 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 €syntax_disj_thm› =
    Ù µ x
      ∑ x ç Syntax
-         ¥ (∂ r pars∑ fun pars ± x = MkAf (r, pars))
+         ¥ (∂ s m∑ x = MkAf (s, m))
            ≤ (∂ vars fs∑ (µ y∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs))
 
 €syntax_cases_thm› =
@@ -381,14 +377,14 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 €is_fc_clauses› =
    Ù µ x
      ∑ x ç Syntax
-         ¥ (IsAf x ¥ (∂ r pars∑ fun pars ± x = MkAf (r, pars)))
+         ¥ (IsAf x ¥ (∂ s m∑ x = MkAf (s, m)))
            ± (IsCf x
              ¥ (∂ vars fs
              ∑ (µ y∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs)))
 
 €syn_proj_clauses› =
-    Ù (µ l r∑ AfRel (MkAf (l, r)) = l)
-       ± (µ l r∑ AfPars (MkAf (l, r)) = r)
+    Ù (µ s m∑ AfSet (MkAf (s, m)) = s)
+       ± (µ s m∑ AfMem (MkAf (s, m)) = m)
        ± (µ v f∑ CfVars (MkCf (v, f)) = v)
        ± (µ v f∑ CfForms (MkCf (v, f)) = f)
 
@@ -411,7 +407,7 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 \ignore{
 =SML
 set_goal([], ¨µx∑	x ç Syntax
-¥	(∂r pars∑ fun pars ± x = MkAf (r,pars))
+¥	(∂s m∑ x = MkAf (s, m))
   ≤	(∂vars fs∑ (µy∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs))
 Æ);
 a (contr_tac);
@@ -419,11 +415,10 @@ a (lemma_tac ¨RepClosed (Syntax \ {x})Æ
 	THEN1 (rewrite_tac [get_spec ¨RepClosedÆ]
 		THEN strip_tac));
 (* *** Goal "1" *** *)
-a (strip_tac THEN strip_tac THEN strip_tac
-	THEN all_fc_tac [repclosed_syntax_thm]
-	THEN_TRY asm_rewrite_tac[]);
-a (spec_nth_asm_tac 4 ¨nÆ);
-a (spec_nth_asm_tac 1 ¨isÆ THEN1 asm_fc_tac[]);
+a (strip_tac THEN strip_tac
+	THEN rewrite_tac [repclosed_syntax_thm]);
+a (spec_nth_asm_tac 2 ¨s2Æ);
+a (spec_nth_asm_tac 1 ¨mÆ);
 a (swap_nth_asm_concl_tac 1 THEN (SYM_ASMS_T rewrite_tac));
 (* *** Goal "2" *** *)
 a (REPEAT_N 3 strip_tac);
@@ -451,30 +446,30 @@ a (REPEAT_N 2 strip_tac THEN fc_tac [syntax_disj_thm]
 val syntax_cases_thm = save_pop_thm "syntax_cases_thm";
 
 set_goal([], ¨µx∑	x ç Syntax
-¥	(IsAf x ¥ ∂r pars∑ fun pars ± x = MkAf (r, pars))
+¥	(IsAf x ¥ ∂s m∑ x = MkAf (s, m))
 ±	(IsCf x ¥ ∂vars fs∑ (µy∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs))
 Æ);
 a (REPEAT_N 2 strip_tac);
 a (asm_tac (syntax_disj_thm));
 a (asm_fc_tac[] THEN asm_rewrite_tac [Is_clauses]);
 (* *** Goal "1" *** *)
-a (∂_tac ¨rÆ THEN ∂_tac ¨parsÆ THEN asm_rewrite_tac[]);
+a (∂_tac ¨sÆ THEN ∂_tac ¨mÆ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
 a (∂_tac ¨varsÆ THEN ∂_tac ¨fsÆ THEN asm_rewrite_tac[]);
 val is_fc_clauses = save_pop_thm "is_fc_clauses";
 
-set_goal([], ¨(µl r∑ AfRel (MkAf (l, r)) = l)
-	±	(µl r∑ AfPars (MkAf (l, r)) = r)
+set_goal([], ¨(µs m∑ AfSet (MkAf (s, m)) = s)
+	±	(µs m∑ AfMem (MkAf (s, m)) = m)
 	±	(µv f∑ CfVars (MkCf (v, f)) = v)
 	±	(µv f∑ CfForms (MkCf (v, f)) = f)
 Æ);
 a (rewrite_tac (map get_spec [
 	¨MkAfÆ, ¨MkCfÆ,
-	¨AfRelÆ, ¨AfParsÆ, ¨CfVarsÆ, ¨CfFormsÆ]));
+	¨AfSetÆ, ¨AfMemÆ, ¨CfVarsÆ, ¨CfFormsÆ]));
 val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
 
-add_pc_thms "'ifol" [syn_proj_clauses];
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+add_pc_thms "'ifos" [syn_proj_clauses];
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 
 set_goal([], ¨µx∑	x ç Syntax
 ¥	(IsCf x ¥ (µy∑ y çâg (CfForms x) ¥ y ç Syntax))
@@ -493,8 +488,8 @@ a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN (PC_T1 "lin_arith" rewrite_tac[]));
 val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
 
-add_pc_thms "'ifol" [syn_con_neq_clauses];
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+add_pc_thms "'ifos" [syn_con_neq_clauses];
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 
 set_goal([], ¨
 	(µv f∑ MkCf (v, f) ç Syntax ¥ (µy∑ y çâg f ¥ y ç Syntax))Æ);
@@ -544,17 +539,17 @@ The following type abbreviations are introduced:
 
 \begin{description}
 \item{RV}
-Relation Value - the arguments to a relation can be represented by indexed sets (think of the indices as parameter names), and a relation is then a truth valued function over these indexed sets (a set of indexed sets won't do because we have three truth values).
-Note that relations need not have a definite arity, and the function representing a relation must be total over the entire type of indexed sets.
-There are questions about how best ordinary n-ary relations should be represented, one obvious choice would be to make the truth value undefined for any indexed sets which do not have exactly the right number of numerical indices.
+Relation Value - this is the type for the meaning of a formula with free variables.
+The parameters are the type of the domain of discourse and the type of truth values.
 \item{ST}
-Structure = a structure is a domain of disccourse (a set) together with an indexed set of relations over that domain.
-Ordinals are used for relation names as well as for variable names (no ambiguity arises) and a collection of relations can therefore be modelled in the same way as a relation valued variable assignment.
+Structure = a structure is a domain of discourse (a set) together with a binary relation (the membership relation) over that domain.
+The membership relation need not (and will not) be boolean.
+The parameters are the type of the domain of discourse and the type of truth values.
 \end{description}
 
 =SML
 declare_type_abbrev("€RV›", ["'a","'b"], î'a IS ≠ 'bÆ);
-declare_type_abbrev("€ST›", ["'a","'b"], î'a SET ∏ ('a, 'b) RV ISÆ);
+declare_type_abbrev("€ST›", ["'a","'b"], î'a SET ∏ ('a ≠ 'a ≠ 'b)Æ);
 =TEX
 
 To help in the location of fixed points we want a semantics which is monotonic, and therefore define here orderings on these domains relative to which we expect the sematantics to be monotonic.
@@ -580,19 +575,18 @@ The ordering on relations derives from the ordering on the truth values, using t
 set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (RvO r)Æ);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvOÆ]
-	THEN bc_tac [pw_lubs_exist_thm]
+	THEN REPEAT_N 2 (bc_tac [pw_lubs_exist_thm])
 	THEN strip_tac);
 val rvo_lubs_exist_thm = save_pop_thm "rvo_lubs_exist_thm";
 
 set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (RvO r)Æ);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvOÆ]
-	THEN bc_tac [pw_glbs_exist_thm]
+	THEN REPEAT_N 2 (bc_tac [pw_glbs_exist_thm])
 	THEN strip_tac);
 val rvo_glbs_exist_thm = save_pop_thm "rvo_glbs_exist_thm";
 =TEX
 }%ignore
-
 
 πHOLCONST
 ‹ €RvIsO› : ('b ≠ 'b ≠ BOOL) ≠ ('a, 'b) RV IS ≠ ('a, 'b) RV IS ≠ BOOL
@@ -626,66 +620,6 @@ a (REPEAT strip_tac
 	THEN strip_tac);
 val rviso_glbs_exist_thm = save_pop_thm "rviso_glbs_exist_thm";
 =TEX
-}%ignore
-
-[This one is probably not useful]
-
-πHOLCONST
-‹ €StO› : ('b ≠ 'b ≠ BOOL) ≠ ('a, 'b) ST ≠ ('a, 'b) ST ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µr∑ StO r = DerivedOrder Snd (IsEO (RvO r))
-∞
-
-=GFT
-€sto_lubs_exist_thm› =
-	Ù µ r∑ LubsExist r ¥ LubsExist (StO r)
-
-€sto_glbs_exist_thm› =
-	Ù µ r∑ GlbsExist r ¥ GlbsExist (StO r)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (StO r)Æ);
-a (REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨StOÆ]
-	THEN bc_tac [lubsexist_dosnd_thm]
-	THEN bc_tac [is_lubs_exist_thm]
-	THEN bc_tac [rvo_lubs_exist_thm]
-	THEN strip_tac);
-val sto_lubs_exist_thm = save_pop_thm "sto_lubs_exist_thm";
-
-set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (StO r)Æ);
-a (REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨StOÆ]
-	THEN bc_tac [glbsexist_dosnd_thm]
-	THEN bc_tac [is_glbs_exist_thm]
-	THEN bc_tac [rvo_glbs_exist_thm]
-	THEN strip_tac);
-val sto_glbs_exist_thm = save_pop_thm "sto_glbs_exist_thm";
-=TEX
-}%ignore
-
-\ignore{
-[not in use]
-
- πHOLCONST
-‹ €StrictFun› : ('a ≠ 'b) DPO ≠ 'a DPO ≠ 'b DPO
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µf∑ StrictFun f = Ãx∑
-	if dpoUdef f
-	then dpoB
-	else
-		if dpoOdef f
-		then dpoT
-		else
-			if dpoUdef x
-			then dpoB
-			else
-				if dpoOdef x
-				then dpoT
-				else dpoE (dpoV f (dpoV x))
- ∞
 }%ignore
 
 \subsubsection{Manipulating Valuations}
@@ -839,7 +773,7 @@ To use this definition we need to show that there exists a fixed point, for whic
 
 \ignore{
 =SML
-set_merge_pcs ["hol", "'GS1", "'misc2", "'ifol"];
+set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos"];
 
 set_goal([], ¨µcfe $ºât st∑ (EvalFormFunct (cfe, $ºât, st)) respects ScPrecÆ);
 a (rewrite_tac [get_spec ¨EvalFormFunctÆ, get_spec ¨$respectsÆ]
@@ -2388,23 +2322,23 @@ eqrel_ftrue_lemma;
 \subsubsection{Proof Contexts}
 
 =SML
-add_pc_thms "'ifol" [];
-commit_pc "'ifol";
+add_pc_thms "'ifos" [];
+commit_pc "'ifos";
 
-force_new_pc "€ifol›";
-merge_pcs ["hol", "'GS1", "'misc2", "'ifol"] "ifol";
-commit_pc "ifol";
+force_new_pc "€ifos›";
+merge_pcs ["hol", "'GS1", "'misc2", "'ifos"] "ifos";
+commit_pc "ifos";
 
-force_new_pc "€ifol1›";
-merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"] "ifol1";
-commit_pc "ifol1";
+force_new_pc "€ifos1›";
+merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"] "ifos1";
+commit_pc "ifos1";
 =TEX
 
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{ifol.th}
+\include{ifos.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]

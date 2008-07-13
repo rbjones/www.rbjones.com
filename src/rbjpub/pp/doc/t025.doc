@@ -1,0 +1,2708 @@
+=IGN
+$Id: t025.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $
+open_theory "ifol";
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifol"];
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\ftlinepenalty=9999
+\usepackage{A4}
+
+%\def\ExpName{\mbox{{\sf exp}
+%\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\title{More Miscellanea}
+\makeindex
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}}
+\hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
+
+\author{Roger Bishop Jones}
+\date{\ }
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+This contains the theory ``misc2'', which includes:
+\begin{itemize}
+\item some lemmas relevant to type definitions
+\item the type OPT
+\item the type DPO (discrete partial orders)
+\item indexed sets
+\item material on orders and preorders
+\end{itemize}
+\end{abstract}
+
+\vfill
+
+\begin{centering}
+
+{\footnotesize
+
+Created: 2008/07/11
+
+Last Change $ $Date: 2008/07/13 16:04:21 $ $
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
+
+$ $Id: t025.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $ $
+
+\copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnotesize
+
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+{\parskip=0pt\tableofcontents}
+%\newpage
+%\subsection{Document cross references}
+
+\subsection*{To Do}
+\begin{itemize}
+\item 
+\item 
+\end{itemize}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+This is material which used to be in t024 and is moved here so that it can also be used in t025.
+
+\section{MISCELLANEA}
+
+=SML
+open_theory "GS";
+force_new_theory "€misc2›";
+new_parent "fixp";
+force_new_pc "€'misc2›";
+merge_pcs ["'savedthm_cs_∂_proof"] "'misc2";
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+=TEX
+
+\subsection{Set Theory}
+
+=GFT
+insert_com_thm = 
+	Ù µ x y z∑ Insert x (Insert y z) = Insert y (Insert x z)
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¨µx y z∑ Insert x (Insert y z) = Insert y (Insert x z)Æ);
+a (rewrite_tac [sets_ext_clauses, get_spec ¨InsertÆ] THEN REPEAT strip_tac);
+val insert_com_thm = save_pop_thm "insert_com_thm";
+
+infix symdiff;
+
+fun x symdiff y = (x diff y) cup (y diff x);
+
+fun dest_enum l =
+	(fn DEnumSet els => els
+	|  Dö t => []) (dest_term l);
+
+fun enum_eq_sdiff t =
+	let val DEq (lhs, rhs) = dest_term t
+	in (dest_enum lhs) symdiff (dest_enum rhs)
+	end;
+
+fun false_enum_eq_conv t =
+	let val (dt :: _) = enum_eq_sdiff t
+	in 
+		tac_proof(([], ¨ëtÆ § FÆ),
+			rewrite_tac [sets_ext_clauses]
+			THEN ≥_in_tac
+			THEN ∂_tac dt THEN prove_tac[])
+	end handle _ => fail_conv t;
+=TEX
+}%ignore
+
+\subsection{Type OPT}
+
+=SML
+new_type_defn (["OPT"], "OPT", ["'a"], tac_proof (([], ¨∂x:'a+ONE∑ (Ãy∑T) xÆ), ∂_tac ¨InR OneÆ THEN prove_tac []) );
+=TEX
+
+=GFT
+type_lemmas_thm2 =
+   Ù µ pred
+     ∑ (∂ f∑ TypeDefn pred f)
+         ¥ (∂ abs rep
+         ∑ (µ a∑ abs (rep a) = a)
+             ± (µ r∑ pred r § rep (abs r) = r)
+             ± OneOne rep)
+
+type_defn_lemma1 =
+   Ù µ f g∑ (µ x∑ f (g x) = x) ¥ (µ x y∑ g x = g y ¥ x = y)
+
+type_defn_lemma2 =
+   Ù µ p f g
+     ∑ (µ x∑ p x ¥ f (g x) = x) ¥ (µ x y∑ p x ± p y ¥ g x = g y ¥ x = y)
+
+type_defn_lemma3 =
+   Ù (∂ f∑ TypeDefn (Ã x∑ T) f)
+       ¥ (∂ abs rep∑ (µ a∑ abs (rep a) = a) ± (µ r∑ rep (abs r) = r))
+
+oneone_contrapos_lemma =
+	Ù OneOne f ¥ (µ x y∑ ≥ x = y ¥ ≥ f x = f y)
+=TEX
+
+To make use of the type abbreviation `OPT' more readable the following constants are introduced:
+
+\ignore{
+=SML
+set_goal([], ¨µ pred
+     ∑ (∂ f: 'a ≠ 'b∑ TypeDefn pred f)
+         ¥ (∂ abs (rep: 'a ≠ 'b)
+         ∑ (µ a∑ abs (rep a) = a) ± (µ r∑ pred r § rep (abs r) = r)
+	± OneOne rep)Æ);
+a (REPEAT strip_tac THEN fc_tac [type_lemmas_thm]);
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ
+	THEN asm_rewrite_tac[get_spec ¨OneOneÆ]
+	THEN REPEAT strip_tac);
+a (LEMMA_T ¨abs (rep x1) = abs(rep x2)Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨µ a∑ abs (rep a) = aÆ]))
+	THEN1 rewrite_tac[asm_rule ¨rep x1 = rep x2Æ]);
+val type_lemmas_thm2 = save_pop_thm "type_lemmas_thm2";
+
+set_goal([], ¨µf g∑ (µx∑f(g(x)) = x) ¥ (µx y∑ g x = g y ¥ x = y)Æ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨f(g(x)) = f(g(y))Æ ante_tac THEN1 rewrite_tac[asm_rule ¨g x = g yÆ]
+	THEN asm_rewrite_tac[]);
+val type_defn_lemma1 = save_pop_thm "type_defn_lemma1";
+
+set_goal([], ¨µp f g∑ (µx∑ p x ¥ f(g(x)) = x) ¥ (µx y∑ p x ± p y ¥ g x = g y ¥ x = y)Æ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨f(g(x)) = f(g(y))Æ ante_tac THEN1 rewrite_tac[asm_rule ¨g x = g yÆ]);
+a (LEMMA_T ¨f (g x) = xÆ rewrite_thm_tac THEN1 asm_fc_tac[]);
+a (LEMMA_T ¨f (g y) = yÆ rewrite_thm_tac THEN1 asm_fc_tac[]);
+val type_defn_lemma2 = save_pop_thm "type_defn_lemma2";
+
+set_goal([], ¨(∂ f: 'a ≠ 'b∑ TypeDefn (Ãx∑T) f)
+         ¥ ∂ abs (rep: 'a ≠ 'b)∑
+	(µ a∑ abs (rep a) = a) ± (µ r∑ rep (abs r) = r)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [type_lemmas_thm2]);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
+val type_defn_lemma3 = save_pop_thm "type_defn_lemma3";
+
+set_goal([], ¨µf∑ OneOne f ¥ µx y∑ ≥ x = y ¥ ≥ f x = f yÆ);
+a (strip_tac THEN rewrite_tac [get_spec ¨OneOneÆ] THEN contr_tac);
+a (asm_fc_tac[]);
+val oneone_contrapos_lemma = save_pop_thm "oneone_contrapos_lemma";
+
+set_goal([], ¨∂(Value:'a ≠ 'a OPT) Undefined∑
+	OneOne Value
+	± (µx∑ ≥ Value x = Undefined)
+	± (µy∑ y = Undefined ≤ (∂z∑ y = Value z))Æ);
+a (strip_asm_tac (get_defn "-" "OPT"));
+a (fc_tac [type_lemmas_thm2]);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
+a (fc_tac [get_spec ¨OneOneÆ] THEN POP_ASM_T (asm_tac o rewrite_rule[]));
+a (∂_tac ¨Ãx∑ abs (InL x)Æ THEN ∂_tac ¨abs (InR One)Æ THEN rewrite_tac [] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac[ get_spec ¨OneOneÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨rep(abs(InL x1)) = rep(abs(InL x2))Æ THEN1 rewrite_tac[asm_rule ¨abs (InL x1) = abs (InL x2)Æ]);
+a (POP_ASM_T (asm_tac o (rewrite_rule [asm_rule ¨µ r∑ rep (abs r) = rÆ])));
+a strip_tac;
+(* *** Goal "2" *** *)
+a (contr_tac);
+a (LEMMA_T ¨rep(abs(InL x)) = rep(abs(InR One))Æ (strip_asm_tac o (rewrite_rule [asm_rule ¨µ r∑ rep (abs r) = rÆ]))
+	THEN1 rewrite_tac[asm_rule ¨abs (InL x) = abs (InR One)Æ]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (µ_elim ¨rep yÆ sum_cases_thm));
+(* *** Goal "3.1" *** *)
+a (∂_tac ¨y'Æ THEN rewrite_tac [map_eq_sym_rule (asm_rule ¨rep y = InL y'Æ), asm_rule ¨µ a∑ abs (rep a) = aÆ]);
+(* *** Goal "3.2" *** *)
+a (LEMMA_T ¨z = OneÆ asm_tac THEN1 rewrite_tac[]);
+a (var_elim_asm_tac ¨z = OneÆ);
+a (lemma_tac ¨abs(rep(y)) = abs(InR One)Æ THEN1 rewrite_tac[asm_rule ¨rep y = InR OneÆ]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €Value› : 'a ≠ 'a OPT;
+‹ €Undefined› : 'a OPT
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ OneOne Value
+‹	± (µx∑ ≥ Value x = Undefined)
+‹	± (µy∑ y = Undefined ≤ (∂z∑ y = Value z))
+∞
+
+=GFT
+€opt_cases_thm› =
+	Ù µ x∑ x = Undefined ≤ (∂ y∑ x = Value y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ x = Undefined ≤ (∂y∑ x = Value y)Æ);
+a strip_tac;
+a (strip_asm_tac (get_spec ¨ValueÆ));
+a (spec_nth_asm_tac 1 ¨xÆ THEN_TRY asm_rewrite_tac[]);
+val opt_cases_thm = save_pop_thm "opt_cases_thm";
+
+set_goal([], ¨∂ValueOf: 'a OPT ≠ 'a∑ µv∑ ValueOf (Value v) = vÆ);
+a (∂_tac ¨Ãx∑ ≈ y∑ Value y = xÆ THEN rewrite_tac[get_spec ¨ValueÆ]
+	THEN strip_tac);
+a (≈_tac ¨≈ y∑ Value y = Value vÆ);
+a (∂_tac ¨vÆ THEN rewrite_tac[]);
+a (strip_asm_tac (get_spec ¨ValueÆ));
+a (fc_tac [get_spec ¨OneOneÆ]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[] THEN strip_tac);
+a (all_asm_fc_tac []);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ValueOf› : 'a OPT ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µv∑ ValueOf (Value v) = v
+∞
+
+πHOLCONST
+‹ €IsDefined› : 'a OPT ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µv∑ IsDefined v § v = Undefined
+∞
+
+\ignore{
+=SML
+add_pc_thms "'misc2" (map get_spec [¨IsDefinedÆ, ¨ValueOfÆ]);
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+=TEX
+}%ignore
+
+\subsection{Discrete Partial Orders}
+
+=SML
+new_type_defn (["DPO"], "DPO", ["'a"], tac_proof (([], ¨∂x:'a+BOOL∑ (Ãy∑T) xÆ), ∂_tac ¨InR TÆ THEN prove_tac []) );
+=TEX
+
+=IGN
+declare_type_abbrev("€DPO›", ["'a"], î'a + BOOLÆ);
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¨∂ absDPO (repDPO: 'a DPO ≠ 'a + BOOL)
+         ∑ (µ a∑ absDPO (repDPO a) = a) ± (µ r∑ repDPO (absDPO r) = r)Æ);
+a (strip_asm_tac (get_defn "-" "DPO"));
+a (fc_tac [type_lemmas_thm2]);
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 2 (rewrite_thm_tac o (rewrite_rule[])));
+save_cs_∂_thm (pop_thm());
+=TEX
+}%
+
+πHOLCONST
+‹ €absDPO›: 'a + BOOL ≠ 'a DPO;
+‹ €repDPO›: 'a DPO ≠ 'a + BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹   (µ a∑ absDPO (repDPO a) = a)
+‹ ± (µ r∑ repDPO (absDPO r) = r)
+∞
+
+=GFT
+one_one_DPO_lemma =
+	Ù OneOne repDPO ± OneOne absDPO 
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨OneOne (repDPO: 'a DPO ≠ 'a + BOOL) ± OneOne (absDPO: 'a + BOOL ≠ 'a DPO)Æ);
+a (strip_asm_tac (get_spec ¨repDPOÆ));
+a (rewrite_tac[get_spec ¨OneOneÆ]);
+a (fc_tac [type_defn_lemma1] THEN asm_rewrite_tac[]);
+val one_one_DPO_lemma = save_pop_thm "one_one_DPO_lemma";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €dpoB› : 'a DPO
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ dpoB = absDPO(InR F)
+∞
+
+πHOLCONST
+‹ €dpoT› : 'a DPO
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ dpoT = absDPO(InR T)
+∞
+
+πHOLCONST
+‹ €dpoE› : 'a ≠ 'a DPO
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µe∑ dpoE e = absDPO(InL e)
+∞
+
+πHOLCONST
+‹ €dpoV› : 'a DPO ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ dpoV x = OutL (repDPO x)
+∞
+
+πHOLCONST
+‹ €dpoUdef› : 'a DPO ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ dpoUdef x § x = dpoB
+∞
+
+πHOLCONST
+‹ €dpoOdef› : 'a DPO ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ dpoOdef x § x = dpoT
+∞
+
+πHOLCONST
+‹ €Dpo› : 'a DPO ≠ 'a DPO ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx y∑ Dpo x y § x = y ≤ x = dpoB ≤ y = dpoT
+∞
+
+=GFT
+€dpo_distinct_clauses› =
+   Ù ≥ dpoT = dpoB
+       ± ≥ dpoB = dpoT
+       ± (µ e
+       ∑ ≥ dpoE e = dpoT
+           ± ≥ dpoE e = dpoB
+           ± ≥ dpoT = dpoE e
+           ± ≥ dpoB = dpoE e)
+
+€dpoe_inj_thm› =
+	Ù µ e f∑ (dpoE e = dpoE f) = e = f
+
+€dpoe_inj_lemma› =
+	Ù µ e f∑ (dpoE e = dpoE f) = e = f
+
+€dpove_lemma1› =
+	Ù µ e∑ dpoV (dpoE e) = e
+
+€dpodef_lemma1› =
+   Ù dpoUdef dpoB
+       ± dpoOdef dpoT
+       ± ≥ dpoUdef dpoT
+       ± ≥ dpoOdef dpoB
+       ± (µ e∑ ≥ dpoUdef (dpoE e) ± ≥ dpoOdef (dpoE e))
+
+€dpo_cases_thm› =
+	Ù µ x∑ x = dpoB ≤ x = dpoT ≤ (∂ e∑ x = dpoE e)
+
+€dpoev_lemma1› =
+	Ù µ x∑ ≥ dpoUdef x ± ≥ dpoOdef x ¥ dpoE (dpoV x) = x
+
+€dpo_rpou_lemma› =
+	Ù RpoU Dpo
+
+€dpo_glbs_exist_thm› =
+	Ù GlbsExist Dpo
+
+€dpo_lubs_exist_thm› =
+	Ù LubsExist Dpo
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨≥ dpoT = (dpoB:'a DPO)
+	± ≥ dpoB = (dpoT:'a DPO)
+	± (µe:'a∑ ≥ dpoE e = dpoT
+		± ≥ dpoE e = dpoB
+		± ≥ dpoT = dpoE e
+		± ≥ dpoB = dpoE e)Æ);
+a (rewrite_tac (map get_spec [¨dpoTÆ, ¨dpoBÆ, ¨dpoEÆ]));
+a (strip_asm_tac (get_spec ¨absDPOÆ));
+a (strip_asm_tac one_one_DPO_lemma);
+a (fc_tac [oneone_contrapos_lemma]);
+a (lemma_tac ¨≥ InR T = InR F:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+a (POP_ASM_T discard_tac);
+a (lemma_tac ¨≥ InR F = InR T:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+a (strip_tac);
+a (POP_ASM_T discard_tac);
+a (lemma_tac ¨≥ InL e = InR T:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+a (POP_ASM_T discard_tac);
+a (lemma_tac ¨≥ InL e = InR F:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+a (POP_ASM_T discard_tac);
+a (lemma_tac ¨≥ InR T = InL e:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+a (POP_ASM_T discard_tac);
+a (lemma_tac ¨≥ InR F = InL e:'a + BOOLÆ THEN1 rewrite_tac[]);
+a (ASM_FC_T rewrite_tac []);
+val dpo_distinct_clauses = save_pop_thm "dpo_distinct_clauses";
+
+add_pc_thms "'misc2" [dpo_distinct_clauses, get_spec ¨absDPOÆ];
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨(µe f:'a∑ ≥ e = f ¥ ≥ dpoE e = dpoE f)
+	± (µe f:'a∑ dpoE e = dpoE f ¥ e = f)Æ);
+a (rewrite_tac (map get_spec [¨dpoEÆ]));
+a (lemma_tac ¨µ e f∑ ≥ e = f ¥ ≥ absDPO (InL e) = absDPO (InL f)Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (contr_tac);
+a (LEMMA_T ¨repDPO(absDPO(InL (e:'a))) = repDPO(absDPO(InL f))Æ (strip_asm_tac o (rewrite_rule[]))
+	THEN1 (pure_rewrite_tac[asm_rule ¨absDPO (InL (e:'a)) = absDPO (InL f)Æ]
+		THEN rewrite_tac[]));
+(* *** Goal "2" *** *)
+a (contr_tac THEN asm_fc_tac[]);
+val dpo_distinct_fc_clauses = pop_thm ();
+
+set_goal([], ¨µe f∑ dpoE e = dpoE f § e = fÆ);
+a (REPEAT strip_tac THEN_TRY all_asm_fc_tac [dpo_distinct_fc_clauses]
+	THEN asm_rewrite_tac[]);
+val dpoe_inj_lemma = save_pop_thm "dpoe_inj_lemma";
+
+add_pc_thms "'misc2" [dpoe_inj_lemma];
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µx∑ x = dpoB ≤ x = dpoT ≤ (∂e∑ x = dpoE e)Æ);
+a (rewrite_tac [get_spec ¨dpoBÆ, get_spec ¨dpoTÆ, get_spec ¨dpoEÆ]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (µ_elim ¨repDPO xÆ sum_cases_thm));
+(* *** Goal "1" *** *)
+a (∂_tac ¨yÆ THEN (SYM_ASMS_T rewrite_tac));
+(* *** Goal "2" *** *)
+a (strip_asm_tac (one_one_DPO_lemma));
+a (fc_tac [oneone_contrapos_lemma]);
+a (ASM_FC_T (MAP_EVERY (ante_tac)) []);
+a (cases_tac ¨zÆ THEN_TRY asm_rewrite_tac[]);
+val dpo_cases_thm = save_pop_thm "dpo_cases_thm";
+
+set_goal([], ¨µe∑ dpoV(dpoE e) = eÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨dpoEÆ, get_spec ¨dpoVÆ]
+	THEN asm_rewrite_tac[]);
+val dpove_lemma1 = save_pop_thm "dpove_lemma1";
+
+add_pc_thms "'misc2" [dpove_lemma1];
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨dpoUdef dpoB ± dpoOdef dpoT
+	± ≥ dpoUdef dpoT ± ≥ dpoOdef dpoB
+	± µe∑ ≥ dpoUdef (dpoE e) ± ≥ dpoOdef (dpoE e)Æ);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac [get_spec ¨dpoUdefÆ, get_spec ¨dpoOdefÆ]);
+val dpodef_lemma1 = save_pop_thm "dpodef_lemma1";
+
+add_pc_thms "'misc2" [dpodef_lemma1];
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µx∑ ≥ dpoUdef x ± ≥ dpoOdef x ¥ dpoE(dpoV x) = xÆ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm) THEN_TRY asm_rewrite_tac[]);
+val dpoev_lemma1 = save_pop_thm "dpoev_lemma1";
+
+set_goal([], ¨RpoU DpoÆ);
+a (rewrite_tac (map get_spec [¨RpoUÆ, ¨RpoÆ, ¨ReflÆ, ¨PartialOrderÆ, ¨TransÆ, ¨AntisymÆ, ¨DpoÆ])
+	THEN contr_tac
+	THEN_TRY var_elim_nth_asm_tac 1
+	THEN_TRY rewrite_tac [dpo_distinct_clauses]
+	THEN_TRY all_var_elim_asm_tac);
+val dpo_rpou_lemma = save_pop_thm "dpo_rpou_lemma";
+
+set_goal([], ¨GlbsExist DpoÆ);
+a (rewrite_tac [get_spec ¨GlbsExistÆ, get_spec ¨IsGlbÆ, get_spec ¨IsLbÆ, get_spec ¨DpoÆ]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨dpoB ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (∂_tac ¨dpoBÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨dpoBÆ);
+(* *** Goal "2" *** *)
+a (PC_T1 "hol" cases_tac ¨s = {dpoT}Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨dpoTÆ THEN asm_rewrite_tac []
+	THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a (PC_T1 "hol" cases_tac ¨s = {}Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.1" *** *)
+a (∂_tac ¨dpoTÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (PC_T1 "hol" cases_tac ¨∂e∑ s = {dpoE e} Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.1" *** *)
+a (∂_tac ¨dpoE eÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.1.1" *** *)
+a (DROP_ASM_T ¨≥ dpoE e = xÆ ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.1.2" *** *)
+a (spec_nth_asm_tac 2 ¨dpoE eÆ);
+(* *** Goal "2.2.2.2" *** *)
+a (cases_tac ¨∂f g∑ ≥ f = g ± dpoE f ç s ± dpoE g ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.1" *** *)
+a (∂_tac ¨dpoBÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨dpoE fÆ);
+a (spec_nth_asm_tac 2 ¨dpoE gÆ);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2" *** *)
+a (cases_tac ¨∂h∑ dpoE h ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1" *** *)
+a (∂_tac ¨dpoE hÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1" *** *)
+a (asm_fc_tac[]);
+a (LEMMA_T ¨s = {dpoE h; dpoT}Æ asm_tac
+	THEN1 (asm_rewrite_tac [] THEN strip_tac));
+(* *** Goal "2.2.2.2.2.1.1.1" *** *)
+a (strip_asm_tac (µ_elim ¨x'Æ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1.1.1" *** *)
+a (lemma_tac ¨x = dpoTÆ
+	THEN1 (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm)
+		THEN_TRY asm_rewrite_tac[]));
+(* *** Goal "2.2.2.2.2.1.1.1.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (var_elim_asm_tac ¨x' = dpoTÆ);
+a (all_asm_fc_tac[]);
+a (var_elim_asm_tac ¨e = hÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.1.3" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.2" *** *)
+a (var_elim_asm_tac ¨x' = dpoE eÆ);
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2.2.2.1.1.1.2.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2.2.2.2.1.1.1.2.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1.2" *** *)
+a (var_elim_asm_tac ¨s = {dpoE h; dpoT}Æ);
+(* *** Goal "2.2.2.2.2.1.1.2.1" *** *)
+a (DROP_ASM_T ¨≥ dpoE h = xÆ ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1.2.2" *** *)
+a (DROP_ASM_T ¨≥ dpoE h = xÆ ante_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.2" *** *)
+a (spec_nth_asm_tac 2 ¨dpoE hÆ);
+(* *** Goal "2.2.2.2.2.2" *** *)
+a (swap_nth_asm_concl_tac 4
+	THEN rewrite_tac[]
+	THEN contr_tac);
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.2.2.2.2.2.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.2.2.2.2.2.2" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN contr_tac);
+(* *** Goal "2.2.2.2.2.2.2.1" *** *)
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.2.2.2.2.2.2.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.2.2.2.2.2.2.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2.2.2.2.2.2.2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.2.3" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (all_asm_fc_tac[]);
+val dpo_glbs_exist_thm = save_pop_thm "dpo_glbs_exist_thm";
+
+set_goal([], ¨LubsExist DpoÆ);
+a (rewrite_tac [get_spec ¨LubsExistÆ, get_spec ¨IsLubÆ, get_spec ¨IsUbÆ, get_spec ¨DpoÆ]
+	THEN REPEAT strip_tac);
+a (cases_tac ¨dpoT ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (∂_tac ¨dpoTÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨dpoTÆ);
+(* *** Goal "2" *** *)
+a (PC_T1 "hol" cases_tac ¨s = {dpoB}Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨dpoBÆ THEN asm_rewrite_tac []
+	THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a (PC_T1 "hol" cases_tac ¨s = {}Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.1" *** *)
+a (∂_tac ¨dpoBÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (PC_T1 "hol" cases_tac ¨∂f∑ s = {dpoE f} Æ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.1" *** *)
+a (∂_tac ¨dpoE fÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 2 ¨dpoE fÆ);
+(* *** Goal "2.2.2.2" *** *)
+a (cases_tac ¨∂f g∑ ≥ f = g ± dpoE f ç s ± dpoE g ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.1" *** *)
+a (∂_tac ¨dpoTÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 2 ¨dpoE fÆ);
+a (spec_nth_asm_tac 3 ¨dpoE gÆ);
+a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "2.2.2.2.2" *** *)
+a (cases_tac ¨∂h∑ dpoE h ç sÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1" *** *)
+a (∂_tac ¨dpoE hÆ THEN_TRY asm_rewrite_tac[]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1" *** *)
+a (asm_fc_tac[]);
+a (LEMMA_T ¨s = {dpoE h; dpoB}Æ asm_tac
+	THEN1 (asm_rewrite_tac [] THEN strip_tac));
+(* *** Goal "2.2.2.2.2.1.1.1" *** *)
+a (strip_asm_tac (µ_elim ¨x'Æ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2.2.1.1.1.1" *** *)
+a (lemma_tac ¨x = dpoBÆ
+	THEN1 (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm)
+		THEN_TRY asm_rewrite_tac[]));
+(* *** Goal "2.2.2.2.2.1.1.1.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (var_elim_asm_tac ¨x' = dpoBÆ);
+a (all_asm_fc_tac[]);
+a (var_elim_asm_tac ¨e = hÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.1.3" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.2.2.2.2.1.1.1.2" *** *)
+a (var_elim_asm_tac ¨x' = dpoE eÆ);
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2.2.2.1.1.1.2.1" *** *)
+a (all_asm_fc_tac[]);
+a (var_elim_asm_tac ¨e = hÆ);
+(* *** Goal "2.2.2.2.2.1.1.2" *** *)
+a (var_elim_asm_tac ¨s = {dpoE h; dpoB}Æ);
+(* *** Goal "2.2.2.2.2.1.2" *** *)
+a (spec_nth_asm_tac 2 ¨dpoE hÆ);
+(* *** Goal "2.2.2.2.2.2" *** *)
+a (swap_nth_asm_concl_tac 4
+	THEN rewrite_tac[]
+	THEN contr_tac);
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.2.2.2.2.2.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN contr_tac);
+(* *** Goal "2.2.2.2.2.2.1.1" *** *)
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.2.2.2.2.2.1.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.2.2.2.2.2.1.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2.2.2.2.2.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.2.2.2.2.2.2" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.2.2.2.2.2.3" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (all_asm_fc_tac[]);
+val dpo_lubs_exist_thm = save_pop_thm "dpo_lubs_exist_thm";
+=TEX
+}%ignore
+
+\subsection{Truth Values}
+
+I am uncertain at this point whether to work with three or four truth values, so both of these are provided for here.
+
+\subsubsection{Three Valued}
+
+=SML
+declare_type_abbrev("€TTV›", [], îBOOL OPTÆ);
+=TEX
+
+πHOLCONST
+‹ €pTrue› : TTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pTrue = Value T
+∞
+
+πHOLCONST
+‹ €pFalse› : TTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pFalse = Value F
+∞
+
+πHOLCONST
+‹ €pU› : TTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ pU = Undefined
+∞
+
+=GFT
+€tv_cases_thm› =
+	Ù µ x∑ x = pTrue ≤ x = pFalse ≤ x = pU
+
+€tv_distinct_clauses› =
+	Ù ≥ pTrue = pFalse
+             ± ≥ pTrue = pU
+             ± ≥ pFalse = pTrue
+             ± ≥ pFalse = pU
+             ± ≥ pU = pTrue
+             ± ≥ pU = pFalse
+=TEX
+
+\ignore{
+=SML
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+
+set_goal([], ¨µx∑ x = pTrue ≤ x = pFalse ≤ x = pUÆ);
+a (rewrite_tac (map get_spec [¨pTrueÆ, ¨pFalseÆ, ¨pUÆ]) THEN prove_tac[]);
+a (ante_tac (µ_elim ¨xÆ opt_cases_thm));
+a (PC_T "hol" strip_tac);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac);
+a (LEMMA_T ¨y = T ≤ y = FÆ (STRIP_THM_THEN asm_tac) THEN1 prove_tac[]
+	THEN var_elim_nth_asm_tac 1
+	THEN strip_tac);
+val tv_cases_thm = save_pop_thm "tv_cases_thm";
+
+set_goal([], ¨≥ pTrue = pFalse
+	± ≥ pTrue = pU
+	± ≥ pFalse = pTrue
+	± ≥ pFalse = pU
+	± ≥ pU = pTrue
+	± ≥ pU = pFalse
+Æ);
+a (rewrite_tac (map get_spec [¨pTrueÆ, ¨pFalseÆ, ¨pUÆ]));
+a (rewrite_tac [get_spec ¨UndefinedÆ]);
+a (strip_asm_tac (inst_type_rule [(îBOOLÆ, î'aÆ)] (get_spec ¨UndefinedÆ)));
+a (SYM_ASMS_T rewrite_tac);
+a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [get_spec ¨OneOneÆ])));
+a (contr_tac);
+a (asm_fc_tac[]);
+a (list_spec_nth_asm_tac 2 [¨FÆ, ¨TÆ]);
+val tv_distinct_clauses = save_pop_thm "tv_distinct_clauses";
+
+add_pc_thms "'misc2" (map get_spec [] @ [tv_distinct_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+=TEX
+}%ignore
+
+=SML
+declare_infix(300, "ºâtâ3");
+=TEX
+
+=SML
+declare_type_abbrev ("REL", ["'a"], î'a ≠ 'a ≠ BOOLÆ);
+=TEX
+
+First an ordering on the ``truth values'' is defined.
+
+πHOLCONST
+‹ €$ºâtâ3› : TTV REL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ t1 t2∑ 
+‹	t1 ºâtâ3 t2 § t1 = t2 ≤ t1 = pU	
+∞
+
+=GFT
+€ºâtâ3_refl_thm› =
+	Ù µ x∑ x ºâtâ3 x
+
+€ºâtâ3_trans_thm› =
+	Ù µ x y z∑ x ºâtâ3 y ± y ºâtâ3 z ¥ x ºâtâ3 z
+
+€ºâtâ3_antisym_thm› =
+	Ù µ x y∑ x ºâtâ3 y ± y ºâtâ3 x ¥ x = y
+
+€ºâtâ3_partialorder_thm› =
+	Ù µ Y∑ PartialOrder (Y, $ºâtâ3)
+
+€ºâtâ3_clauses› =
+   Ù pU ºâtâ3 pTrue
+       ± pU ºâtâ3 pFalse
+       ± ≥ pTrue ºâtâ3 pU
+       ± ≥ pFalse ºâtâ3 pU
+       ± ≥ pFalse ºâtâ3 pTrue
+       ± ≥ pTrue ºâtâ3 pFalse
+
+€lin_ºâtâ3_lemma› =
+   Ù µ Y∑ LinearOrder (Y, $ºâtâ3) § ≥ pTrue ç Y ≤ ≥ pFalse ç Y
+
+€lin_ºâtâ3_cases_lemma› =
+   Ù µ Y
+     ∑ LinearOrder (Y, $ºâtâ3)
+         § Y = {}
+           ≤ Y = {pU}
+           ≤ Y = {pTrue}
+           ≤ Y = {pFalse}
+           ≤ Y = {pU; pTrue}
+           ≤ Y = {pU; pFalse}
+
+€ºâtâ3_isub_cases_lemma› =
+   Ù µ Y
+     ∑ IsUb $ºâtâ3 {} = (Ã x∑ T)
+         ± IsUb $ºâtâ3 {pU} = (Ã x∑ T)
+         ± IsUb $ºâtâ3 {pTrue} = (Ã x∑ x = pTrue)
+         ± IsUb $ºâtâ3 {pFalse} = (Ã x∑ x = pFalse)
+         ± IsUb $ºâtâ3 {pU; pTrue} = (Ã x∑ x = pTrue)
+         ± IsUb $ºâtâ3 {pU; pFalse} = (Ã x∑ x = pFalse)
+
+€ºâtâ3_islub_cases_lemma› =
+   Ù µ Y
+     ∑ IsLub $ºâtâ3 {} pU
+         ± IsLub $ºâtâ3 {pU} pU
+         ± IsLub $ºâtâ3 {pTrue} pTrue
+         ± IsLub $ºâtâ3 {pFalse} pFalse
+         ± IsLub $ºâtâ3 {pU; pTrue} pTrue
+         ± IsLub $ºâtâ3 {pU; pFalse} pFalse
+
+€chaincomplete_ºâtâ3_kemma› =
+	Ù ChainComplete (Universe, $ºâtâ3)
+
+€ccrpou_ºâtâ3_thm› =
+	Ù CcRpoU $ºâtâ3
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ x ºâtâ3 xÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ3Æ]);
+val ºâtâ3_refl_thm = save_pop_thm "ºâtâ3_refl_thm";
+
+set_goal([], ¨µx y z∑ x ºâtâ3 y ± y ºâtâ3 z ¥ x ºâtâ3 zÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ3Æ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (all_var_elim_asm_tac);
+val ºâtâ3_trans_thm = save_pop_thm "ºâtâ3_trans_thm";
+
+set_goal([], ¨µx y∑ x ºâtâ3 y ± y ºâtâ3 x ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ3Æ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+val ºâtâ3_antisym_thm = save_pop_thm "ºâtâ3_antisym_thm";
+
+set_goal([], ¨(µx∑ pU ºâtâ3 x)
+	± ≥ pTrue ºâtâ3 pU
+	± ≥ pFalse ºâtâ3 pU
+	± ≥ pFalse ºâtâ3 pTrue
+	± ≥ pTrue ºâtâ3 pFalseÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ3Æ] THEN prove_tac[]);
+val ºâtâ3_clauses = save_pop_thm "ºâtâ3_clauses";
+
+add_pc_thms "'misc2" (map get_spec [] @ [ºâtâ3_refl_thm, ºâtâ3_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µY∑ PartialOrder (Y, $ºâtâ3)Æ);
+a (rewrite_tac (map get_spec [¨PartialOrderÆ, ¨AntisymÆ, ¨TransÆ])
+	THEN contr_tac);
+a (all_fc_tac [ºâtâ3_antisym_thm]);
+a (all_fc_tac [ºâtâ3_trans_thm]);
+val ºâtâ3_partialorder_thm = save_pop_thm "ºâtâ3_partialorder_thm";
+
+set_goal([], ¨µY∑ LinearOrder (Y, $ºâtâ3) § ≥ pTrue ç Y ≤ ≥ pFalse ç YÆ);
+a (rewrite_tac [get_spec ¨LinearOrderÆ, get_spec ¨TrichÆ, ºâtâ3_partialorder_thm]
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ] tv_cases_thm)
+	THEN asm_prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¨yÆ] tv_cases_thm)
+	THEN asm_prove_tac[]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ] tv_cases_thm)
+	THEN asm_prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¨yÆ] tv_cases_thm)
+	THEN asm_prove_tac[]);
+val lin_ºâtâ3_lemma = save_pop_thm "lin_ºâtâ3_lemma";
+
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+
+set_goal([], ¨µY∑ LinearOrder (Y, $ºâtâ3) §
+	  Y = {}
+	≤ Y = {pU} ≤ Y = {pTrue} ≤ Y = {pFalse}
+	≤ Y = {pU; pTrue} ≤ Y = {pU; pFalse}Æ);
+a (rewrite_tac [lin_ºâtâ3_lemma] THEN REPEAT µ_tac);
+a (		cases_tac ¨pTrue ç YÆ
+	THEN	cases_tac ¨pFalse ç YÆ
+	THEN	cases_tac ¨pU ç YÆ
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (contr_tac THEN var_elim_nth_asm_tac 1);
+(* *** Goal "2" *** *)
+a (contr_tac THEN var_elim_nth_asm_tac 1);
+(* *** Goal "3" *** *)
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+a (LEMMA_T ¨Y = {pU; pTrue}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (LEMMA_T ¨Y = {pTrue}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (LEMMA_T ¨Y = {pU; pFalse}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+a (LEMMA_T ¨Y = {pFalse}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "7" *** *)
+a (LEMMA_T ¨Y = {pU}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+(* *** Goal "8" *** *)
+a (LEMMA_T ¨Y = {}Æ asm_tac
+	THEN1 (asm_rewrite_tac[]
+		THEN µ_tac
+		THEN (strip_asm_tac (µ_elim ¨x:TTVÆ tv_cases_thm)
+		THEN asm_rewrite_tac[]))
+	THEN asm_rewrite_tac[]);
+val lin_ºâtâ3_cases_lemma = pop_thm ();
+
+set_goal([], ¨µY∑ 
+	  IsUb $ºâtâ3 {} = (Ãx∑ T)
+	± IsUb $ºâtâ3 {pU} = (Ãx∑ T) ± IsUb $ºâtâ3 {pTrue} = (Ãx∑ x = pTrue) ± IsUb $ºâtâ3 {pFalse} = (Ãx∑ x = pFalse)
+	± IsUb $ºâtâ3 {pU; pTrue} = (Ãx∑ x = pTrue) ± IsUb $ºâtâ3 {pU; pFalse} = (Ãx∑ x = pFalse)Æ);
+a (rewrite_tac [get_spec ¨IsUbÆ]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨pTrueÆ);
+a (strip_asm_tac (µ_elim ¨xÆ tv_cases_thm) THEN_TRY asm_rewrite_tac[]
+	THEN var_elim_nth_asm_tac 1);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨pFalseÆ);
+a (strip_asm_tac (µ_elim ¨xÆ tv_cases_thm) THEN_TRY asm_rewrite_tac[]
+	THEN var_elim_nth_asm_tac 1);
+(* *** Goal "3" *** *)
+a (spec_nth_asm_tac 1 ¨pTrueÆ);
+a (strip_asm_tac (µ_elim ¨xÆ tv_cases_thm) THEN_TRY asm_rewrite_tac[]
+	THEN var_elim_nth_asm_tac 1);
+(* *** Goal "4" *** *)
+a (spec_nth_asm_tac 1 ¨pFalseÆ);
+a (strip_asm_tac (µ_elim ¨xÆ tv_cases_thm) THEN_TRY asm_rewrite_tac[]
+	THEN var_elim_nth_asm_tac 1);
+val ºâtâ4_isub_cases_lemma = pop_thm ();
+
+set_goal([], ¨µY∑ 
+	  IsLub $ºâtâ3 {} pU
+	± IsLub $ºâtâ3 {pU} pU ± IsLub $ºâtâ3 {pTrue} pTrue ± IsLub $ºâtâ3 {pFalse} pFalse
+	± IsLub $ºâtâ3 {pU; pTrue} pTrue ± IsLub $ºâtâ3 {pU; pFalse} pFalseÆ);
+a (rewrite_tac [get_spec ¨IsLubÆ]);
+a (rewrite_tac [ºâtâ4_isub_cases_lemma]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+val ºâtâ4_islub_cases_lemma = pop_thm ();
+
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+
+set_goal([], ¨ChainComplete (Universe, $ºâtâ3)Æ);
+a (rewrite_tac (map get_spec [¨ChainCompleteÆ]));
+a (rewrite_tac [lin_ºâtâ3_cases_lemma]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (∂_tac ¨pUÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+a (∂_tac ¨pUÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+a (∂_tac ¨pTrueÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+a (∂_tac ¨pFalseÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+a (∂_tac ¨pTrueÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+a (∂_tac ¨pFalseÆ THEN rewrite_tac [ºâtâ4_islub_cases_lemma]);
+val chaincomplete_ºâtâ3_kemma = pop_thm ();
+
+set_goal([], ¨CcRpoU $ºâtâ3Æ);
+a (rewrite_tac (map get_spec [¨CcRpoUÆ, ¨CcRpoÆ, ¨RpoÆ, ¨ReflÆ]
+	@ [ºâtâ3_partialorder_thm, chaincomplete_ºâtâ3_kemma]));
+val ccrpou_ºâtâ3_thm = save_pop_thm "ccrpou_ºâtâ3_thm";
+=TEX
+}%ignore
+
+\subsubsection{Four Valued}
+
+=SML
+declare_type_abbrev("€FTV›", [], îBOOL DPOÆ);
+=TEX
+
+πHOLCONST
+‹ €fTrue› : FTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ fTrue = dpoE T
+∞
+
+πHOLCONST
+‹ €fFalse› : FTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ fFalse = dpoE F
+∞
+
+πHOLCONST
+‹ €fB› : FTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ fB = dpoB
+∞
+
+πHOLCONST
+‹ €fT› : FTV
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ fT = dpoT
+∞
+
+=GFT
+€ftv_cases_thm› =
+	Ù µ x∑ x = fTrue ≤ x = fFalse ≤ x = fB ≤ x = fT
+€ftv_distinct_clauses› =
+	Ù ≥ fTrue = fFalse
+       ± ≥ fTrue = fB
+       ± ≥ fTrue = fT
+       ± ≥ fFalse = fTrue
+       ± ≥ fFalse = fB
+       ± ≥ fFalse = fT
+       ± ≥ fB = fTrue
+       ± ≥ fB = fFalse
+       ± ≥ fB = fT
+       ± ≥ fT = fTrue
+       ± ≥ fT = fFalse
+       ± ≥ fT = fB
+
+€ftvs_cases_thm› =
+   Ù µ x
+     ∑ x = {}
+         ≤ x = {fB}
+         ≤ x = {fFalse}
+         ≤ x = {fTrue}
+         ≤ x = {fT}
+         ≤ x = {fB; fFalse}
+         ≤ x = {fB; fTrue}
+         ≤ x = {fB; fT}
+         ≤ x = {fFalse; fTrue}
+         ≤ x = {fFalse; fT}
+         ≤ x = {fTrue; fT}
+         ≤ x = {fB; fFalse; fTrue}
+         ≤ x = {fB; fFalse; fT}
+         ≤ x = {fB; fTrue; fT}
+         ≤ x = {fFalse; fTrue; fT}
+         ≤ x = {fB; fFalse; fTrue; fT}
+=TEX
+
+\ignore{
+=SML
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+
+set_goal([], ¨µx∑ x = fTrue ≤ x = fFalse ≤ x = fB ≤ x = fTÆ);
+a (rewrite_tac (map get_spec [¨fTrueÆ, ¨fFalseÆ, ¨fBÆ, ¨fTÆ]) THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm)
+	THEN asm_rewrite_tac[]);
+a (cases_tac ¨eÆ THEN asm_rewrite_tac[]);
+val ftv_cases_thm = save_pop_thm "ftv_cases_thm";
+
+set_goal([], ¨≥ fTrue = fFalse
+	± ≥ fTrue = fB
+	± ≥ fTrue = fT
+	± ≥ fFalse = fTrue
+	± ≥ fFalse = fB
+	± ≥ fFalse = fT
+	± ≥ fB = fTrue
+	± ≥ fB = fFalse
+	± ≥ fB = fT
+	± ≥ fT = fTrue
+	± ≥ fT = fFalse
+	± ≥ fT = fB
+Æ);
+a (LEMMA_T ¨≥ F = TÆ asm_tac THEN1 prove_tac[]);
+a (fc_tac [dpo_distinct_fc_clauses]);
+a (rewrite_tac (map get_spec [¨fTrueÆ, ¨fFalseÆ, ¨fBÆ, ¨fTÆ]) THEN prove_tac[dpo_distinct_clauses]);
+val ftv_distinct_clauses = save_pop_thm "ftv_distinct_clauses";
+
+add_pc_thms "'misc2" (map get_spec [] @ [ftv_distinct_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µx∑
+	x = {}
+	≤ x = {fB}
+	≤ x = {fFalse}
+	≤ x = {fTrue}
+	≤ x = {fT}
+	≤ x = {fB; fFalse}
+	≤ x = {fB; fTrue}
+	≤ x = {fB; fT}
+	≤ x = {fFalse; fTrue}
+	≤ x = {fFalse; fT}
+	≤ x = {fTrue; fT}
+	≤ x = {fB; fFalse; fTrue}
+	≤ x = {fB; fFalse; fT}
+	≤ x = {fB; fTrue; fT}
+	≤ x = {fFalse; fTrue; fT}
+	≤ x = {fB; fFalse; fTrue; fT}
+Æ);
+a (	strip_tac);
+a (	cases_tac ¨fTrue ç xÆ
+	THEN	cases_tac ¨fFalse ç xÆ
+	THEN	cases_tac ¨fB ç xÆ
+	THEN	cases_tac ¨fT ç xÆ);
+(* *** Goal "1" *** *)
+a (LEMMA_T  ¨x = {fB; fFalse; fTrue; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (LEMMA_T  ¨x = {fB; fFalse; fTrue}Æ (PC_T1 "hol1" rewrite_thm_tac)
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (LEMMA_T  ¨x = {fFalse; fTrue; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (LEMMA_T  ¨x = {fFalse; fTrue}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (LEMMA_T  ¨x = {fB; fTrue; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+a (LEMMA_T  ¨x = {fB; fTrue}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "7" *** *)
+a (LEMMA_T  ¨x = {fTrue; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "8" *** *)
+a (LEMMA_T  ¨x = {fTrue}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "9" *** *)
+a (LEMMA_T  ¨x = {fB; fFalse; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "10" *** *)
+a (LEMMA_T  ¨x = {fB; fFalse}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "11" *** *)
+a (LEMMA_T  ¨x = {fFalse; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "12" *** *)
+a (LEMMA_T  ¨x = {fFalse}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "13" *** *)
+a (LEMMA_T  ¨x = {fB; fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "14" *** *)
+a (LEMMA_T  ¨x = {fB}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "15" *** *)
+a (LEMMA_T  ¨x = {fT}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+(* *** Goal "16" *** *)
+a (LEMMA_T  ¨x = {}Æ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" rewrite_tac[]
+		THEN strip_tac);
+a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm) THEN asm_rewrite_tac[]);
+val ftvs_cases_thm = save_pop_thm "ftvs_cases_thm";
+=TEX
+}%ignore
+
+=SML
+declare_infix(300, "ºâtâ4");
+=TEX
+
+First an ordering on the ``truth values'' is defined.
+
+πHOLCONST
+‹ €$ºâtâ4› : FTV REL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ t1 t2∑ 
+‹	t1 ºâtâ4 t2 § t1 = t2 ≤ t1 = fB ≤ t2 = fT
+∞
+
+=GFT
+€ºâtâ4_dpo_thm› =
+	Ù $ºâtâ4 = Dpo
+
+€ºâtâ4_refl_thm› =
+	Ù µ x∑ x ºâtâ4 x
+
+€ºâtâ4_trans_thm› =
+	Ù µ x y z∑ x ºâtâ4 y ± y ºâtâ4 z ¥ x ºâtâ4 z
+
+€ºâtâ4_antisym_thm› =
+	Ù µ x y∑ x ºâtâ4 y ± y ºâtâ4 x ¥ x = y
+
+€ft_fb_thm› =
+	Ù µ x∑ (fT ºâtâ4 x § x = fT) ± (x ºâtâ4 fB § x = fB)
+
+€ºâtâ4_partialorder_thm› =
+	Ù µ Y∑ PartialOrder (Y, $ºâtâ4)
+
+€ºâtâ4_clauses› =
+   Ù fB ºâtâ4 fTrue
+       ± fB ºâtâ4 fFalse
+       ± ≥ fTrue ºâtâ4 fB
+       ± ≥ fFalse ºâtâ4 fB
+       ± ≥ fFalse ºâtâ4 fTrue
+       ± ≥ fTrue ºâtâ4 fFalse
+
+€ºâtâ4_lin_lemma› =
+   Ù µ Y∑ LinearOrder (Y, $ºâtâ4) § ≥ fTrue ç Y ≤ ≥ fFalse ç Y
+
+€ºâtâ4_lin_cases_lemma› =
+   Ù µ Y
+     ∑ LinearOrder (Y, $ºâtâ4)
+         § Y = {}
+           ≤ Y = {fB}
+           ≤ Y = {fTrue}
+           ≤ Y = {fFalse}
+           ≤ Y = {fB; fTrue}
+           ≤ Y = {fB; fFalse}
+
+€ºâtâ4_isub_cases_lemma› =
+   Ù µ Y
+     ∑ IsUb $ºâtâ4 {} = (Ã x∑ T)
+         ± IsUb $ºâtâ4 {fB} = (Ã x∑ T)
+         ± IsUb $ºâtâ4 {fTrue} = (Ã x∑ x = fTrue)
+         ± IsUb $ºâtâ4 {fFalse} = (Ã x∑ x = fFalse)
+         ± IsUb $ºâtâ4 {fB; fTrue} = (Ã x∑ x = fTrue)
+         ± IsUb $ºâtâ4 {fB; fFalse} = (Ã x∑ x = fFalse)
+
+€ºâtâ4_islub_cases_lemma› =
+   Ù µ Y
+     ∑ IsLub $ºâtâ4 {} fB
+         ± IsLub $ºâtâ4 {fB} fB
+         ± IsLub $ºâtâ4 {fTrue} fTrue
+         ± IsLub $ºâtâ4 {fFalse} fFalse
+         ± IsLub $ºâtâ4 {fB; fTrue} fTrue
+         ± IsLub $ºâtâ4 {fB; fFalse} fFalse
+
+€ºâtâ4_lin_cases_lemma› =
+   Ù µ Y
+     ∑ LinearOrder (Y, $ºâtâ4)
+         § Y = {}
+           ≤ Y = {fB}
+           ≤ Y = {fTrue}
+           ≤ Y = {fFalse}
+           ≤ Y = {fT}
+           ≤ Y = {fB; fTrue}
+           ≤ Y = {fB; fFalse}
+           ≤ Y = {fB; fT}
+           ≤ Y = {fTrue; fT}
+           ≤ Y = {fFalse; fT}
+           ≤ Y = {fB; fTrue; fT}
+           ≤ Y = {fB; fFalse; fT}
+
+€ºâtâ4_glbs_exist_thm› =
+	Ù GlbsExist $ºâtâ4
+
+€ºâtâ4_lubs_exist_thm› =
+	Ù LubsExist $ºâtâ4
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨$ºâtâ4 = DpoÆ);
+a (rewrite_tac (map get_spec [¨$ºâtâ4Æ, ¨DpoÆ, ¨fBÆ, ¨fTÆ, ¨fTrueÆ, ¨fFalseÆ])
+	THEN REPEAT strip_tac);
+val ºâtâ4_dpo_thm = save_pop_thm "ºâtâ4_dpo_thm";
+
+set_goal([], ¨µx∑ x ºâtâ4 xÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ4Æ]);
+val ºâtâ4_refl_thm = save_pop_thm "ºâtâ4_refl_thm";
+
+set_goal([], ¨µx y z∑ x ºâtâ4 y ± y ºâtâ4 z ¥ x ºâtâ4 zÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ4Æ]
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+val ºâtâ4_trans_thm = save_pop_thm "ºâtâ4_trans_thm";
+
+set_goal([], ¨µx y∑ x ºâtâ4 y ± y ºâtâ4 x ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ4Æ]
+	THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+val ºâtâ4_antisym_thm = save_pop_thm "ºâtâ4_antisym_thm";
+
+set_goal([], ¨(µx∑ fB ºâtâ4 x)
+	± (µx∑ x ºâtâ4 fT)
+	± ≥ fTrue ºâtâ4 fB
+	± ≥ fFalse ºâtâ4 fB
+	± ≥ fT ºâtâ4 fB
+	± ≥ fFalse ºâtâ4 fTrue
+	± ≥ fT ºâtâ4 fTrue
+	± ≥ fTrue ºâtâ4 fFalse
+	± ≥ fT ºâtâ4 fFalseÆ);
+a (rewrite_tac [get_spec ¨$ºâtâ4Æ] THEN prove_tac[]);
+val ºâtâ4_clauses = save_pop_thm "ºâtâ4_clauses";
+
+set_goal ([], ¨µx∑ (fT ºâtâ4 x § x = fT) ± (x ºâtâ4 fB § x = fB)Æ);
+a (prove_tac [get_spec ¨$ºâtâ4Æ]);
+val ft_fb_thm = save_pop_thm "ft_fb_thm";
+
+add_pc_thms "'misc2" (map get_spec [] @ [ºâtâ4_refl_thm, ºâtâ4_clauses]);
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µY∑ PartialOrder (Y, $ºâtâ4)Æ);
+a (rewrite_tac (map get_spec [¨PartialOrderÆ, ¨AntisymÆ, ¨TransÆ])
+	THEN contr_tac);
+a (all_fc_tac [ºâtâ4_antisym_thm]);
+a (all_fc_tac [ºâtâ4_trans_thm]);
+val ºâtâ4_partialorder_thm = save_pop_thm "ºâtâ4_partialorder_thm";
+
+set_goal([], ¨µY∑ LinearOrder (Y, $ºâtâ4) § ≥ fTrue ç Y ≤ ≥ fFalse ç YÆ);
+a (rewrite_tac [get_spec ¨LinearOrderÆ, get_spec ¨TrichÆ, ºâtâ4_partialorder_thm]
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (REPEAT (asm_fc_tac[]));
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ] ftv_cases_thm)
+	THEN asm_prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¨yÆ] ftv_cases_thm)
+	THEN asm_prove_tac[]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (list_µ_elim [¨xÆ] ftv_cases_thm)
+	THEN asm_prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¨yÆ] ftv_cases_thm)
+	THEN asm_prove_tac[]);
+val ºâtâ4_lin_lemma = save_pop_thm "ºâtâ4_lin_lemma";
+
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+set_goal([], ¨µY∑ LinearOrder (Y, $ºâtâ4) §
+	  Y = {}
+	≤ Y = {fB} ≤ Y = {fTrue} ≤ Y = {fFalse} ≤ Y = {fT}
+	≤ Y = {fB; fTrue} ≤ Y = {fB; fFalse} ≤ Y = {fB; fT}
+	≤ Y = {fTrue; fT} ≤ Y = {fFalse; fT}
+	≤ Y = {fB; fTrue; fT} ≤ Y = {fB; fFalse; fT}
+Æ);
+a (rewrite_tac [ºâtâ4_lin_lemma] THEN REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨YÆ ftvs_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN_TRY (conv_tac (MAP_C false_enum_eq_conv))
+	THEN_TRY PC_T1 "hol1" prove_tac[ftv_distinct_clauses]);
+val ºâtâ4_lin_cases_lemma = pop_thm ();
+
+set_goal([], ¨GlbsExist $ºâtâ4Æ);
+a (rewrite_tac[ºâtâ4_dpo_thm, dpo_glbs_exist_thm]);
+val ºâtâ4_glbs_exist_thm = save_pop_thm "ºâtâ4_glbs_exist_thm";
+
+set_goal([], ¨LubsExist $ºâtâ4Æ);
+a (rewrite_tac[ºâtâ4_dpo_thm, dpo_lubs_exist_thm]);
+val ºâtâ4_lubs_exist_thm = save_pop_thm "ºâtâ4_lubs_exist_thm";
+
+set_goal([], ¨CRpoU $ºâtâ4Æ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ,
+	ºâtâ4_glbs_exist_thm, ºâtâ4_lubs_exist_thm, get_spec ¨RpoÆ,
+	ºâtâ4_partialorder_thm, get_spec ¨ReflÆ]);
+val ºâtâ4_crpou_thm = save_pop_thm "ºâtâ4_crpou_thm";
+=TEX
+}%ignore
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¨µx∑ x Ä {fTrue; fFalse} ¥ (fTrue ºâtâ4 (Lub $ºâtâ4 x) § fTrue ç x)Æ);
+a (PC_T "hol1" (rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac));
+a (asm_tac ºâtâ4_lubs_exist_thm);
+a (FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [get_spec ¨IsLubÆ]))) [lub_lub_lemma2] );
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨xÆ);
+
+
+=TEX
+}%ignore
+
+\subsection{Indexed Sets}
+
+In this implementation of indexed sets we use discrete partial orders in the codomain, so that the resulting partial orders are complete.
+
+=SML
+declare_type_abbrev("€IS›", ["'a"], îGS ≠ 'a DPOÆ);
+=TEX
+
+πHOLCONST
+‹ €IsRan› : 'a IS ≠ 'a SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µis∑ IsRan is = {v | ∂¡∑ dpoE v = is ¡}
+∞
+
+πHOLCONST
+‹ €IsDom› : 'a IS ≠ GS SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µis∑ IsDom is = {i | ≥ (is i) = dpoB}
+∞
+
+πHOLCONST
+‹ €IsSDom› : 'a IS ≠ GS SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µis∑ IsSDom is = {i | ≥ ((is i) = dpoB ≤ (is i) = dpoT)}
+∞
+
+πHOLCONST
+‹ €IsOd› : 'a IS ≠ GS SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µis∑ IsOd is = {i | is i = dpoT}
+∞
+
+πHOLCONST
+‹ €IsOverRide› : 'a IS ≠ 'a IS ≠ 'a IS
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µis1 is2∑ IsOverRide is1 is2 =
+‹	Ãi∑ if ≥ dpoUdef (is2 i) then is2 i else is2 i 
+∞
+
+\subsection{Orders and Pre-orders}
+
+\subsubsection{Derived Orderings}
+
+I don't know a good name for these, but a common way to impose an order on a collection is by defining a function which maps the collection into some collection for which we have a suitable ordering.
+Often suitable means well-founded, but in our case it is completeness which is desired.
+
+πHOLCONST
+‹ €DerivedOrder› : ('b ≠ 'a) ≠ ('a ≠ 'a ≠ BOOL) ≠ ('b ≠ 'b ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µf r∑ DerivedOrder f r = Ãx y∑ r (f x) (f y)
+∞
+
+We require sufficient conditions for the result to be complete.
+
+=GFT
+€fi_isub_lemma› =
+   Ù µ f r s e∑ IsUb r (FunImage f s) (f e) ¥ IsUb (DerivedOrder f r) s e
+
+€do_isub_lemma› =
+   Ù µ f r s x∑ IsUb (DerivedOrder f r) s x ¥ IsUb r (FunImage f s) (f x)
+
+€fi_islub_lemma› =
+   Ù µ f r s e
+     ∑ IsLub r (FunImage f s) (f e) ¥ IsLub (DerivedOrder f r) s e
+
+€do_lubs_exist_thm› =
+   Ù µ f r∑ LubsExist r ± Onto f ¥ LubsExist (DerivedOrder f r)
+=TEX
+=GFT
+€fi_islb_lemma› =
+   Ù µ f r s e∑ IsLb r (FunImage f s) (f e) ¥ IsLb (DerivedOrder f r) s e
+
+€do_islb_lemma› =
+   Ù µ f r s x∑ IsLb (DerivedOrder f r) s x ¥ IsLb r (FunImage f s) (f x)
+
+€fi_isglb_lemma› =
+   Ù µ f r s e∑ IsGlb r (FunImage f s) (f e) ¥ IsGlb (DerivedOrder f r) s e
+
+€do_glbs_exist_thm› =
+   Ù µ f r∑ GlbsExist r ± Onto f ¥ GlbsExist (DerivedOrder f r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µf r s e∑ IsUb r (FunImage f s) (f e) ¥ IsUb (DerivedOrder f r) s eÆ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨DerivedOrderÆ, ¨IsUbÆ, ¨FunImageÆ])
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨f xÆ);
+a (spec_nth_asm_tac 1 ¨xÆ);
+val fi_isub_lemma = pop_thm ();
+
+set_goal([], ¨µf r s x∑ IsUb (DerivedOrder f r) s x ¥ IsUb r (FunImage f s) (f x)Æ);
+a (rewrite_tac (map get_spec [¨IsUbÆ, ¨DerivedOrderÆ, ¨FunImageÆ]) THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+val do_isub_lemma = pop_thm ();
+
+set_goal([], ¨µf r s e∑ IsLub r (FunImage f s) (f e) ¥ IsLub (DerivedOrder f r) s e Æ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨IsLubÆ]) THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [fi_isub_lemma]);
+(* *** Goal "2" *** *)
+a (fc_tac [do_isub_lemma]);
+a (all_asm_fc_tac[]);
+a (rewrite_tac (map get_spec [¨DerivedOrderÆ]) THEN REPEAT strip_tac);
+val fi_islub_lemma = pop_thm ();
+
+set_goal([], ¨µf r∑ LubsExist r ± Onto f ¥ LubsExist (DerivedOrder f r)Æ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨LubsExistÆ]) THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨FunImage f sÆ);
+a (spec_nth_asm_tac 2 ¨eÆ);
+a (var_elim_asm_tac ¨e = f xÆ THEN ∂_tac ¨xÆ THEN fc_tac [fi_islub_lemma] THEN asm_rewrite_tac[]);
+val do_lubs_exist_thm = save_pop_thm "do_lubs_exist_thm";
+
+set_goal([], ¨µf r s e∑ IsLb r (FunImage f s) (f e) ¥ IsLb (DerivedOrder f r) s eÆ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨DerivedOrderÆ, ¨IsLbÆ, ¨FunImageÆ])
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨f xÆ);
+a (spec_nth_asm_tac 1 ¨xÆ);
+val fi_islb_lemma = pop_thm ();
+
+set_goal([], ¨µf r s x∑ IsLb (DerivedOrder f r) s x ¥ IsLb r (FunImage f s) (f x)Æ);
+a (rewrite_tac (map get_spec [¨IsLbÆ, ¨DerivedOrderÆ, ¨FunImageÆ]) THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+val do_islb_lemma = pop_thm ();
+
+set_goal([], ¨µf r s e∑ IsGlb r (FunImage f s) (f e) ¥ IsGlb (DerivedOrder f r) s e Æ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨IsGlbÆ]) THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [fi_islb_lemma]);
+(* *** Goal "2" *** *)
+a (fc_tac [do_islb_lemma]);
+a (all_asm_fc_tac[]);
+a (rewrite_tac (map get_spec [¨DerivedOrderÆ]) THEN REPEAT strip_tac);
+val fi_isglb_lemma = pop_thm ();
+
+set_goal([], ¨µf r∑ GlbsExist r ± Onto f ¥ GlbsExist (DerivedOrder f r)Æ);
+a (rewrite_tac (map get_spec [¨OntoÆ, ¨GlbsExistÆ]) THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨FunImage f sÆ);
+a (spec_nth_asm_tac 2 ¨eÆ);
+a (var_elim_asm_tac ¨e = f xÆ THEN ∂_tac ¨xÆ THEN fc_tac [fi_isglb_lemma] THEN asm_rewrite_tac[]);
+val do_glbs_exist_thm = save_pop_thm "do_glbs_exist_thm";
+=TEX
+}%ignore
+
+\subsubsection{Projections}
+
+Projections are a special case of derived orderings in which the onto requirement can be taken for granted.
+
+=GFT
+€projections_onto_lemma› =
+   Ù Onto Fst ± Onto Snd
+
+€lubsexist_dofst_thm› =
+   Ù µ f r∑ LubsExist r ¥ LubsExist (DerivedOrder Fst r)
+
+€glbsexist_dofst_thm› =
+   Ù µ f r∑ GlbsExist r ¥ GlbsExist (DerivedOrder Fst r)
+
+€lubsexist_dosnd_thm› =
+   Ù µ f r∑ LubsExist r ¥ LubsExist (DerivedOrder Snd r)
+
+€glbsexist_dosnd_thm› =
+   Ù µ f r∑ GlbsExist r ¥ GlbsExist (DerivedOrder Snd r)
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¨Onto Fst ± Onto SndÆ);
+a (rewrite_tac (map get_spec [¨OntoÆ]) THEN REPEAT strip_tac);
+a (∂_tac ¨(y, z)Æ THEN rewrite_tac[]);
+a (∂_tac ¨(z, y)Æ THEN rewrite_tac[]);
+val projections_onto_lemma = pop_thm ();
+
+set_goal([], ¨µf r∑ LubsExist r ¥ LubsExist (DerivedOrder Fst r)Æ);
+a (REPEAT strip_tac THEN bc_tac [do_lubs_exist_thm]
+	THEN_TRY asm_rewrite_tac[projections_onto_lemma]);
+val lubsexist_dofst_thm = save_pop_thm "lubsexist_dofst_thm";
+
+set_goal([], ¨µf r∑ GlbsExist r ¥ GlbsExist (DerivedOrder Fst r)Æ);
+a (REPEAT strip_tac THEN bc_tac [do_glbs_exist_thm]
+	THEN_TRY asm_rewrite_tac[projections_onto_lemma]);
+val glbsexist_dofst_thm = save_pop_thm "glbsexist_dofst_thm";
+
+set_goal([], ¨µf r∑ LubsExist r ¥ LubsExist (DerivedOrder Snd r)Æ);
+a (REPEAT strip_tac THEN bc_tac [do_lubs_exist_thm]
+	THEN_TRY asm_rewrite_tac[projections_onto_lemma]);
+val lubsexist_dosnd_thm = save_pop_thm "lubsexist_dosnd_thm";
+
+set_goal([], ¨µf r∑ GlbsExist r ¥ GlbsExist (DerivedOrder Snd r)Æ);
+a (REPEAT strip_tac THEN bc_tac [do_glbs_exist_thm]
+	THEN_TRY asm_rewrite_tac[projections_onto_lemma]);
+val glbsexist_dosnd_thm = save_pop_thm "glbsexist_dosnd_thm";
+=TEX
+}%ignore
+
+\subsubsection{Functions}
+
+Most of our orderings are orderings of functions obtained from orderings of truth values by the following operation.
+
+πHOLCONST
+‹ €Pw› : ('a ≠ 'a ≠ BOOL) ≠ (('b ≠ 'a) ≠ ('b ≠ 'a) ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ Pw r = Ã lo ro∑ µx∑ r (lo x) (ro x)
+∞
+
+=GFT
+€pw_isub_lemma› =
+   Ù µ r G f∑ (µ v∑ IsUb r {w|∂ g∑ g ç G ± w = g v} (f v)) ¥ IsUb (Pw r) G f
+
+€pw_islb_lemma› =
+   Ù µ r G f∑ (µ v∑ IsLb r {w|∂ g∑ g ç G ± w = g v} (f v)) ¥ IsLb (Pw r) G f
+
+€pw_islub_lemma› =
+   Ù µ r G f
+     ∑ (µ v∑ IsLub r {w|∂ g∑ g ç G ± w = g v} (f v)) ¥ IsLub (Pw r) G f
+
+€pw_isglb_lemma› =
+   Ù µ r G f
+     ∑ (µ v∑ IsGlb r {w|∂ g∑ g ç G ± w = g v} (f v)) ¥ IsGlb (Pw r) G f
+
+€pw_rpo_lemma› =
+	Ù µ r∑ Rpo (Universe, r) ¥ Rpo (Universe, Pw r)
+
+€pw_cc_lemma› =
+	Ù µ r∑ CcRpo (Universe, r) ¥ ChainComplete (Universe, Pw r)
+
+€pw_ccrpou_thm› =
+	Ù µ r∑ CcRpoU r ¥ CcRpoU (Pw r)
+
+€pw_lubs_exist_thm› =
+	Ù µ r∑ LubsExist r ¥ LubsExist (Pw r)
+
+€pw_glbs_exist_thm› =
+	Ù µ r∑ GlbsExist r ¥ GlbsExist (Pw r)
+
+€pw_crpou_thm› =
+	Ù µ r∑ CRpoU r ¥ CRpoU (Pw r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr G f∑ (µ v∑ IsUb r {w | ∂g∑ g ç G ± w = g v} (f v))
+	¥ IsUb (Pw r) G fÆ);
+a (rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨PwÆ] THEN REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [¨x'Æ, ¨x x'Æ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+val pw_isub_lemma = pop_thm ();
+
+set_goal([], ¨µr G f∑ (µ v∑ IsLb r {w | ∂g∑ g ç G ± w = g v} (f v))
+	¥ IsLb (Pw r) G fÆ);
+a (rewrite_tac [get_spec ¨IsLbÆ, get_spec ¨PwÆ] THEN REPEAT strip_tac);
+a (list_spec_nth_asm_tac 2 [¨x'Æ, ¨x x'Æ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+val pw_islb_lemma = pop_thm ();
+
+set_goal([], ¨µr G f∑ (µ v∑ IsLub r {w | ∂g∑ g ç G ± w = g v} (f v))
+	¥ IsLub (Pw r) G fÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨IsLubÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨µ v∑ IsUb r {w|∂ g∑ g ç G ± w = g v} (f v)Æ
+	THEN1 (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨IsLubÆ]))
+		THEN asm_rewrite_tac[]));
+a (fc_tac [pw_isub_lemma]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨PwÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨x'Æ);
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (spec_nth_asm_tac 2 ¨x x'Æ);
+a (GET_ASM_T ¨IsUb (Pw r) G xÆ ante_tac
+	THEN rewrite_tac [get_spec ¨PwÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN rewrite_tac [get_spec ¨PwÆ, get_spec ¨IsUbÆ]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (spec_nth_asm_tac 2 ¨x'Æ
+	THEN POP_ASM_T ante_tac
+	THEN asm_rewrite_tac[]);
+val pw_islub_lemma = pop_thm ();
+
+set_goal([], ¨µr G f∑ (µ v∑ IsGlb r {w | ∂g∑ g ç G ± w = g v} (f v))
+	¥ IsGlb (Pw r) G fÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨IsGlbÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨µ v∑ IsLb r {w|∂ g∑ g ç G ± w = g v} (f v)Æ
+	THEN1 (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨IsGlbÆ]))
+		THEN asm_rewrite_tac[]));
+a (fc_tac [pw_islb_lemma]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨PwÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨x'Æ);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (spec_nth_asm_tac 2 ¨x x'Æ);
+a (GET_ASM_T ¨IsLb (Pw r) G xÆ ante_tac
+	THEN rewrite_tac [get_spec ¨PwÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN rewrite_tac [get_spec ¨PwÆ, get_spec ¨IsLbÆ]
+	THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (spec_nth_asm_tac 2 ¨x'Æ
+	THEN POP_ASM_T ante_tac
+	THEN asm_rewrite_tac[]);
+val pw_isglb_lemma = pop_thm ();
+
+set_merge_pcs ["hol1", "'GS1", "'misc2"];
+
+set_goal([], ¨µr∑ Rpo (Universe, r) ¥ Rpo (Universe, Pw r)Æ);
+a (REPEAT strip_tac
+	THEN fc_tac[rpou_fc_clauses]
+	THEN rewrite_tac (map get_spec [¨RpoÆ, ¨PwÆ, ¨PartialOrderÆ, ¨AntisymÆ, ¨TransÆ, ¨ReflÆ])
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 3 [¨x x'Æ, ¨y x'Æ]);
+(* *** Goal "1.1" *** *)
+a (∂_tac ¨x'Æ THEN strip_tac);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT_N 2 (spec_nth_asm_tac 2 ¨x'Æ)
+	THEN all_asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac[]);
+val pw_rpo_lemma = pop_thm ();
+
+set_goal([], ¨µr∑ RpoU r ¥ RpoU (Pw r)Æ);
+a (rewrite_tac [get_spec ¨RpoUÆ] THEN REPEAT strip_tac);
+a (fc_tac [pw_rpo_lemma]);
+val pw_rpou_lemma = pop_thm ();
+
+set_merge_pcs ["hol", "'GS1", "'misc2"];
+
+set_goal([], ¨µr∑ CcRpo (Universe, r) ¥ ChainComplete (Universe, Pw r)Æ);
+a (rewrite_tac (map get_spec [¨CcRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨AntisymÆ, ¨ChainCompleteÆ])
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨µv∑ LinearOrder ({w | ∂f∑ f ç Y ± w = f v}, r)Æ);
+(* *** Goal "1" *** *)
+a (rewrite_tac (map get_spec [¨LinearOrderÆ, ¨PartialOrderÆ, ¨AntisymÆ, ¨TransÆ, ¨TrichÆ])
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule[]))) [get_spec ¨TransÆ]);
+a (all_asm_fc_tac[]);
+(* *** Goal "1.3" *** *)
+a (fc_tac [get_spec ¨LinearOrderÆ]);
+a (fc_tac [get_spec ¨TrichÆ]);
+(* a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨PwÆ]
+	THEN REPEAT strip_tac); *)
+a (list_spec_nth_asm_tac 1 [¨fÆ, ¨f'Æ]);
+(* *** Goal "1.3.1" *** *)
+a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨PwÆ] THEN strip_tac);
+a (spec_nth_asm_tac 1 ¨vÆ);
+a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.3.3" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨PwÆ] THEN strip_tac);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨∂f∑ µv∑ IsLub r {w|∂ f∑ f ç Y ± w = f v} (f v)Æ
+	THEN1 prove_∂_tac);
+(* *** Goal "2.1" *** *)
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨v'Æ);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨xÆ THEN strip_tac);
+(* *** Goal "2.2" *** *)
+a (∂_tac ¨fÆ);
+a (bc_tac [pw_islub_lemma]);
+a (asm_rewrite_tac[]);
+val pw_cc_lemma = pop_thm ();
+
+set_goal([], ¨µr∑ CcRpoU r ¥ CcRpoU (Pw r)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¨CcRpoUÆ]);
+a (fc_tac [get_spec ¨CcRpoÆ]);
+a (fc_tac [pw_rpo_lemma]);
+a (fc_tac [pw_cc_lemma]);
+a (asm_rewrite_tac (map get_spec [¨CcRpoUÆ, ¨CcRpoÆ]));
+val pw_ccrpou_thm = save_pop_thm "pw_ccrpou_thm";
+
+set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (Pw r)Æ);
+a (rewrite_tac [get_spec ¨LubsExistÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨∂f∑ µv∑ IsLub r {w|∂ g∑ g ç s ± w = g v} (f v)Æ
+	THEN1 prove_∂_tac);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨{w|∂ g∑ g ç s ± w = g v'}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [pw_islub_lemma]);
+a (∂_tac ¨fÆ THEN asm_rewrite_tac[]);
+val pw_lubs_exist_thm = save_pop_thm "pw_lubs_exist_thm";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (Pw r)Æ);
+a (rewrite_tac [get_spec ¨GlbsExistÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨∂f∑ µv∑ IsGlb r {w|∂ g∑ g ç s ± w = g v} (f v)Æ
+	THEN1 prove_∂_tac);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨{w|∂ g∑ g ç s ± w = g v'}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [pw_isglb_lemma]);
+a (∂_tac ¨fÆ THEN asm_rewrite_tac[]);
+val pw_glbs_exist_thm = save_pop_thm "pw_glbs_exist_thm";
+
+set_goal([], ¨µr∑ CRpoU r ¥ CRpoU (Pw r)Æ);
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ]) THEN REPEAT strip_tac);
+a (fc_tac [pw_rpo_lemma]);
+a (fc_tac [pw_glbs_exist_thm]);
+a (fc_tac [pw_lubs_exist_thm]);
+val pw_crpou_thm = save_pop_thm "pw_crpou_thm";
+=TEX
+}%ignore
+
+\subsubsection{Products}
+
+We also need the following ordering over products.
+
+πHOLCONST
+‹ €PrO› : ('a ≠ 'a ≠ BOOL) ≠ ('b ≠ 'b ≠ BOOL) ≠ (('a ∏ 'b) ≠ ('a ∏ 'b) ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ ra rb∑ PrO ra rb = Ãl r∑ ra (Fst l) (Fst r) ± rb (Snd l) (Snd r)
+∞
+
+=GFT
+€pro_isub_lemma› =
+   Ù µ ra rb s lub rub
+     ∑ IsUb ra {w|∂ g∑ g ç s ± w = Fst g} lub
+           ± IsUb rb {w|∂ g∑ g ç s ± w = Snd g} rub
+         § IsUb (PrO ra rb) s (lub, rub)
+
+€pro_islb_lemma› =
+   Ù µ ra rb s llb rlb
+     ∑ IsLb ra {w|∂ g∑ g ç s ± w = Fst g} llb
+           ± IsLb rb {w|∂ g∑ g ç s ± w = Snd g} rlb
+         § IsLb (PrO ra rb) s (llb, rlb)
+
+€pro_islub_lemma› =
+   Ù µ ra rb s llub rlub
+     ∑ IsLub ra {w|∂ g∑ g ç s ± w = Fst g} llub
+           ± IsLub rb {w|∂ g∑ g ç s ± w = Snd g} rlub
+         ¥ IsLub (PrO ra rb) s (llub, rlub)
+
+€pro_isglb_lemma› =
+   Ù µ ra rb s lglb rglb
+     ∑ IsGlb ra {w|∂ g∑ g ç s ± w = Fst g} lglb
+           ± IsGlb rb {w|∂ g∑ g ç s ± w = Snd g} rglb
+         ¥ IsGlb (PrO ra rb) s (lglb, rglb)
+
+€pro_refl_lemma› =
+   Ù µ ra rb
+     ∑ Refl (Universe, ra) ± Refl (Universe, rb) ¥ Refl (Universe, PrO ra rb)
+
+€pro_partialorder_lemma› =
+   Ù µ ra rb
+     ∑ PartialOrder (Universe, ra) ± PartialOrder (Universe, rb)
+         ¥ PartialOrder (Universe, PrO ra rb)
+
+€pro_rpo_lemma› =
+   Ù µ ra rb
+     ∑ Rpo (Universe, ra) ± Rpo (Universe, rb) ¥ Rpo (Universe, PrO ra rb)
+
+€pro_lubs_exist_thm› =
+   Ù µ ra rb∑ LubsExist ra ± LubsExist rb ¥ LubsExist (PrO ra rb)
+
+€pro_glbs_exist_thm› =
+   Ù µ ra rb∑ GlbsExist ra ± GlbsExist rb ¥ GlbsExist (PrO ra rb)
+
+€pro_crpou_thm› =
+   Ù µ ra rb∑ CRpoU ra ± CRpoU rb ¥ CRpoU (PrO ra rb)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µra rb s lub rub ∑
+	  IsUb ra {w | ∂g∑ g ç s ± w = Fst g} lub
+	± IsUb rb {w | ∂g∑ g ç s ± w = Snd g} rub
+	§ IsUb (PrO ra rb) s (lub, rub)Æ);
+a (rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨PrOÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 3 [¨Fst xÆ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [¨Snd xÆ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3" *** *)
+a (asm_fc_tac [] THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (asm_fc_tac [] THEN asm_rewrite_tac[]);
+val pro_isub_lemma = pop_thm ();
+
+set_goal([], ¨µra rb s llb rlb∑
+	  IsLb ra {w | ∂g∑ g ç s ± w = Fst g} llb
+	± IsLb rb {w | ∂g∑ g ç s ± w = Snd g} rlb
+	§ IsLb (PrO ra rb) s (llb, rlb)Æ);
+a (rewrite_tac [get_spec ¨IsLbÆ, get_spec ¨PrOÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 3 [¨Fst xÆ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 2 [¨Snd xÆ]);
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3" *** *)
+a (asm_fc_tac [] THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (asm_fc_tac [] THEN asm_rewrite_tac[]);
+val pro_islb_lemma = pop_thm ();
+
+set_goal([], ¨µra rb s llub rlub ∑
+	  IsLub ra {w | ∂g∑ g ç s ± w = Fst g} llub
+	± IsLub rb {w | ∂g∑ g ç s ± w = Snd g} rlub
+	¥ IsLub (PrO ra rb) s (llub, rlub)Æ);
+a (rewrite_tac [get_spec ¨IsLubÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [pro_isub_lemma]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (rewrite_rule [] (list_µ_elim [¨raÆ, ¨rbÆ, ¨sÆ, ¨Fst xÆ, ¨Snd xÆ]
+	(map_eq_sym_rule pro_isub_lemma))));
+a (rewrite_tac [get_spec ¨PrOÆ]);
+a (all_asm_fc_tac[] THEN contr_tac);
+val pro_islub_lemma = pop_thm ();
+
+set_goal([], ¨µra rb s lglb rglb ∑
+	  IsGlb ra {w | ∂g∑ g ç s ± w = Fst g} lglb
+	± IsGlb rb {w | ∂g∑ g ç s ± w = Snd g} rglb
+	¥ IsGlb (PrO ra rb) s (lglb, rglb)Æ);
+a (rewrite_tac [get_spec ¨IsGlbÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [pro_islb_lemma]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (rewrite_rule [] (list_µ_elim [¨raÆ, ¨rbÆ, ¨sÆ, ¨Fst xÆ, ¨Snd xÆ]
+	(map_eq_sym_rule pro_islb_lemma))));
+a (rewrite_tac [get_spec ¨PrOÆ]);
+a (all_asm_fc_tac[] THEN contr_tac);
+val pro_isglb_lemma = pop_thm ();
+
+set_goal([], ¨µra rb∑ Refl (Universe, ra) ± Refl (Universe, rb) ¥ Refl (Universe, (PrO ra rb))Æ);
+a (rewrite_tac [get_spec ¨ReflÆ, get_spec ¨PrOÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+val pro_refl_lemma = save_pop_thm "pro_refl_lemma";
+
+set_goal([], ¨µra rb∑ PartialOrder (Universe, ra) ± PartialOrder (Universe, rb)
+	¥ PartialOrder (Universe, (PrO ra rb))Æ);
+a (rewrite_tac [get_spec ¨PartialOrderÆ, get_spec ¨PrOÆ, get_spec ¨AntisymÆ, get_spec ¨TransÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (contr_tac THEN all_asm_fc_tac[]);
+a (rename_tac[]);
+a (lemma_tac ¨≥ (Fst x = Fst y ± Snd x = Snd y)Æ
+	THEN1 contr_tac);
+a (DROP_NTH_ASM_T 11 ante_tac THEN pure_once_asm_rewrite_tac [prove_rule [] ¨µx∑ x = (Fst x, Snd x)Æ]); 
+a (asm_rewrite_tac []); 
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "1.3" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (all_asm_fc_tac[]);
+val pro_partialorder_lemma = save_pop_thm "pro_partialorder_lemma";
+
+set_goal([], ¨µra rb∑ Rpo (Universe, ra) ± Rpo (Universe, rb) ¥ Rpo (Universe, (PrO ra rb))Æ);
+a (rewrite_tac [get_spec ¨RpoÆ]
+	THEN REPEAT strip_tac
+	THEN all_fc_tac [pro_refl_lemma, pro_partialorder_lemma]);
+val pro_rpo_lemma = save_pop_thm "pro_rpo_lemma";
+
+set_goal([], ¨µra rb∑ LubsExist ra ± LubsExist rb ¥ LubsExist (PrO ra rb)Æ);
+a (rewrite_tac [get_spec ¨LubsExistÆ] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨{w | ∂ g∑ g ç s ± w = Fst g}Æ);
+a (spec_nth_asm_tac 2 ¨{w | ∂ g∑ g ç s ± w = Snd g}Æ);
+a (all_fc_tac [pro_islub_lemma]);
+a (∂_tac ¨(e, e')Æ THEN asm_rewrite_tac[]);
+val pro_lubs_exist_thm = save_pop_thm "pro_lubs_exist_thm";
+
+set_goal([], ¨µra rb∑ GlbsExist ra ± GlbsExist rb ¥ GlbsExist (PrO ra rb)Æ);
+a (rewrite_tac [get_spec ¨GlbsExistÆ] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨{w | ∂ g∑ g ç s ± w = Fst g}Æ);
+a (spec_nth_asm_tac 2 ¨{w | ∂ g∑ g ç s ± w = Snd g}Æ);
+a (all_fc_tac [pro_isglb_lemma]);
+a (∂_tac ¨(e, e')Æ THEN asm_rewrite_tac[]);
+val pro_glbs_exist_thm = save_pop_thm "pro_glbs_exist_thm";
+
+set_goal([], ¨µra rb∑ CRpoU ra ± CRpoU rb ¥ CRpoU (PrO ra rb)Æ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ]
+	THEN REPEAT strip_tac
+	THEN all_fc_tac [pro_rpo_lemma, pro_glbs_exist_thm, pro_lubs_exist_thm]);
+val pro_crpou_thm = save_pop_thm "pro_crpou_thm";
+=TEX
+}%ignore
+
+\subsubsection{Discrete Partial Orders}
+
+The things I am calling discrete partial orders come with the ordering of a discrete lattice.
+When these are used to construct indexed sets whose elements have some ordering then there will be another ordering which is derived from that ordering.
+This is defined for use in defining orderings over indexed sets.
+
+πHOLCONST
+‹ €DpoEO› : ('a ≠ 'a ≠ BOOL) ≠ ('a DPO ≠ 'a DPO ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µrl∑ DpoEO rl = Ãl r∑ dpoUdef l ≤ dpoOdef r
+‹		≤ ∂le re∑ rl le re ± l = dpoE le ± r = dpoE re
+∞
+
+=GFT
+€is_isub_lemma› =
+   Ù µ r G d
+     ∑ IsUb r G d ¥ IsUb (DpoEO r) {w|∂ v∑ v ç G ± w = dpoE v} (dpoE d)
+
+€is_islb_lemma› =
+   Ù µ r G d
+     ∑ IsLb r G d ¥ IsLb (DpoEO r) {w|∂ v∑ v ç G ± w = dpoE v} (dpoE d)
+
+€is_isub_lemma2› =
+   Ù µ r G d
+     ∑ IsUb (DpoEO r) G d
+         = (d = dpoT
+           ≤ G Ä {dpoB} ± d = dpoB
+           ≤ (∂ e∑ d = dpoE e ± IsUb r {w|dpoE w ç G} e) ± ≥ dpoT ç G)
+
+€is_islb_lemma2› =
+   Ù µ r G d
+     ∑ IsLb (DpoEO r) G d
+         = (d = dpoB
+           ≤ G Ä {dpoT} ± d = dpoT
+           ≤ (∂ e∑ d = dpoE e ± IsLb r {w|dpoE w ç G} e) ± ≥ dpoB ç G)
+
+€is_islub_lemma› =
+   Ù µ r G d
+     ∑ IsLub (DpoEO r) G d
+         = ((dpoT ç G ≤ (∂ w∑ dpoE w ç G) ± ≥ (∂ e∑ IsUb r {w|dpoE w ç G} e))
+             ± d = dpoT
+           ≤ G Ä {dpoB} ± d = dpoB
+           ≤ ≥ G Ä {dpoB}
+             ± (∂ e∑ d = dpoE e ± IsLub r {w|dpoE w ç G} e)
+             ± ≥ dpoT ç G)
+
+€is_isglb_lemma› =
+   Ù µ r G d
+     ∑ IsGlb (DpoEO r) G d
+         = ((dpoB ç G ≤ (∂ w∑ dpoE w ç G) ± ≥ (∂ e∑ IsLb r {w|dpoE w ç G} e))
+             ± d = dpoB
+           ≤ G Ä {dpoT} ± d = dpoT
+           ≤ ≥ G Ä {dpoT}
+             ± (∂ e∑ d = dpoE e ± IsGlb r {w|dpoE w ç G} e)
+             ± ≥ dpoB ç G)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr G d∑ IsUb r G d
+	¥ IsUb (DpoEO r) {w | ∂v∑ v ç G ± w = dpoE v} (dpoE d)Æ);
+a (rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨DpoEOÆ] THEN REPEAT strip_tac);
+a (∂_tac ¨vÆ THEN ∂_tac ¨dÆ THEN all_asm_fc_tac [] THEN asm_rewrite_tac[]);
+val dpoeo_isub_lemma = pop_thm ();
+
+set_goal([], ¨µr G d∑ IsLb r G d
+	¥ IsLb (DpoEO r) {w | ∂v∑ v ç G ± w = dpoE v} (dpoE d)Æ);
+a (rewrite_tac [get_spec ¨IsLbÆ, get_spec ¨DpoEOÆ] THEN REPEAT strip_tac);
+a (∂_tac ¨dÆ THEN ∂_tac ¨vÆ THEN all_asm_fc_tac [] THEN asm_rewrite_tac[]);
+val dpoeo_islb_lemma = pop_thm ();
+
+set_goal([], ¨µr G d∑ IsUb (DpoEO r) G d
+	§ d = dpoT
+		≤ G Ä {dpoB} ± d = dpoB
+		≤ (∂e∑ d = dpoE e ± IsUb r {w | dpoE w ç G} e) ± ≥ dpoT ç GÆ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨dÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[get_spec ¨DpoEOÆ, get_spec ¨IsUbÆ, get_spec ¨dpoUdefÆ]);
+(* *** Goal "1" *** *)
+a (PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[get_spec ¨IsUbÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 ¨dpoTÆ);
+(* *** Goal "2.3" *** *)
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.3.1" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.3.2" *** *)
+a (∂_tac ¨dpoV xÆ THEN ∂_tac ¨eÆ
+	THEN asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN rewrite_tac[get_spec ¨IsUbÆ]
+	THEN strip_tac);
+a (var_elim_asm_tac ¨x = dpoE e''Æ
+	THEN asm_fc_tac[]);
+a (LEMMA_T ¨e = e'Æ (fn x => asm_rewrite_tac[x]));
+a (var_elim_asm_tac ¨d = dpoE eÆ);
+val dpoeo_isub_lemma2 = pop_thm ();
+
+set_goal([], ¨µr G d∑ IsLb (DpoEO r) G d
+	§ d = dpoB
+		≤ G Ä {dpoT} ± d = dpoT
+		≤ (∂e∑ d = dpoE e ± IsLb r {w | dpoE w ç G} e) ± ≥ dpoB ç GÆ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨dÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[get_spec ¨DpoEOÆ, get_spec ¨IsLbÆ, get_spec ¨dpoOdefÆ]);
+(* *** Goal "1" *** *)
+a (PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[get_spec ¨IsLbÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 1 ¨dpoBÆ);
+(* *** Goal "2.3" *** *)
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm));
+(* *** Goal "2.3.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.3.2" *** *)
+a (∂_tac ¨eÆ THEN ∂_tac ¨dpoV xÆ
+	THEN asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN rewrite_tac[get_spec ¨IsLbÆ]
+	THEN strip_tac);
+a (var_elim_asm_tac ¨x = dpoE e''Æ
+	THEN asm_fc_tac[]);
+a (LEMMA_T ¨e = e'Æ (fn x => asm_rewrite_tac[x]));
+a (var_elim_asm_tac ¨d = dpoE eÆ);
+val dpoeo_islb_lemma2 = pop_thm ();
+
+set_goal([], ¨µr G d∑ IsLub (DpoEO r) G d
+	§ (dpoT ç G ≤ (∂w∑ dpoE w ç G) ± ≥ (∂e∑ IsUb r {w | dpoE w ç G} e)) ± d = dpoT
+		≤ G Ä {dpoB} ± d = dpoB
+		≤ ≥ G Ä {dpoB} ± (∂e∑ d = dpoE e ± IsLub r {w | dpoE w ç G} e) ± ≥ dpoT ç GÆ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨dÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[get_spec ¨IsLubÆ, dpoeo_isub_lemma2]);
+(* *** Goal "1" *** *)
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac [get_spec ¨DpoEOÆ]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac [get_spec ¨DpoEOÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 2 ¨dpoBÆ);
+a (DROP_NTH_ASM_T 2 ante_tac THEN PC_T "hol1" (REPEAT strip_tac));
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoTÆ);
+(* *** Goal "2.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 2 ¨dpoE eÆ
+	THEN spec_nth_asm_tac 1 ¨eÆ);
+(* *** Goal "2.3" *** *)
+a (DROP_ASM_T ¨G Ä {dpoB}Æ ante_tac
+	THEN PC_T "hol1" (REPEAT strip_tac)
+	THEN asm_fc_tac[]);
+(* *** Goal "2.4" *** *)
+a (spec_nth_asm_tac 3 ¨dpoV dpoTÆ);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨IsUbÆ]
+	THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN (PC_T "hol1" (REPEAT strip_tac))
+	THEN asm_fc_tac[]);
+(* *** Goal "2.5" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac [get_spec ¨DpoEOÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "3.1" *** *)
+a (spec_nth_asm_tac 1 ¨dpoBÆ);
+(* *** Goal "3.2" *** *)
+a (var_elim_asm_tac ¨d = dpoE e'Æ);
+a (var_elim_asm_tac ¨e' = eÆ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac [get_spec ¨IsLubÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨IsUbÆ]);
+(* *** Goal "3.2.1" *** *)
+a (spec_nth_asm_tac 4 ¨dpoE xÆ);
+(* *** Goal "3.2.1.1" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.1.2" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.1.3" *** *)
+a (all_var_elim_asm_tac);
+(* *** Goal "3.2.2" *** *)
+a (spec_nth_asm_tac 4 ¨dpoE xÆ);
+(* *** Goal "3.2.2.1" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.2.2" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.2.3" *** *)
+a (all_var_elim_asm_tac);
+(* *** Goal "3.3" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨IsLubÆ]);
+(* *** Goal "3.4" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3.5" *** *)
+a (var_elim_asm_tac ¨d = dpoE e'Æ);
+a (var_elim_asm_tac ¨e' = eÆ);
+a (∂_tac ¨eÆ THEN ∂_tac ¨e''Æ
+	THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (all_asm_fc_tac[]);
+val dpoeo_islub_lemma = pop_thm ();
+
+set_goal([], ¨µr G d∑ IsGlb (DpoEO r) G d
+	§ (dpoB ç G ≤ (∂w∑ dpoE w ç G) ± ≥ (∂e∑ IsLb r {w | dpoE w ç G} e)) ± d = dpoB
+		≤ G Ä {dpoT} ± d = dpoT
+		≤ ≥ G Ä {dpoT} ± (∂e∑ d = dpoE e ± IsGlb r {w | dpoE w ç G} e) ± ≥ dpoB ç GÆ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (µ_elim ¨dÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[get_spec ¨IsGlbÆ, dpoeo_islb_lemma2]);
+(* *** Goal "2" *** *)
+set_labelled_goal "2";
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac [get_spec ¨DpoEOÆ]);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac [get_spec ¨DpoEOÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 2 ¨dpoTÆ);
+a (DROP_NTH_ASM_T 2 ante_tac THEN PC_T "hol1" (REPEAT strip_tac));
+a (strip_asm_tac (µ_elim ¨xÆ dpo_cases_thm)
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+a (var_elim_asm_tac ¨x = dpoBÆ);
+(* *** Goal "2.1.2" *** *)
+a (var_elim_asm_tac ¨x = dpoE eÆ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 2 ¨dpoE eÆ
+	THEN spec_nth_asm_tac 1 ¨eÆ);
+(* *** Goal "2.3" *** *)
+a (DROP_ASM_T ¨G Ä {dpoT}Æ ante_tac
+	THEN PC_T "hol1" (REPEAT strip_tac)
+	THEN asm_fc_tac[]);
+(* *** Goal "2.4" *** *)
+a (spec_nth_asm_tac 3 ¨dpoV dpoBÆ);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨IsLbÆ]
+	THEN REPEAT strip_tac);
+a (DROP_NTH_ASM_T 3 ante_tac
+	THEN (PC_T "hol1" (REPEAT strip_tac))
+	THEN asm_fc_tac[]);
+(* *** Goal "2.5" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac [get_spec ¨DpoEOÆ]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "3.1" *** *)
+a (spec_nth_asm_tac 1 ¨dpoTÆ);
+(* *** Goal "3.2" *** *)
+a (var_elim_asm_tac ¨d = dpoE e'Æ);
+a (var_elim_asm_tac ¨e' = eÆ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac [get_spec ¨IsGlbÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨IsLbÆ]);
+(* *** Goal "3.2.1" *** *)
+a (spec_nth_asm_tac 4 ¨dpoE xÆ);
+(* *** Goal "3.2.1.1" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.1.2" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.1.3" *** *)
+a (all_var_elim_asm_tac);
+(* *** Goal "3.2.2" *** *)
+a (spec_nth_asm_tac 4 ¨dpoE xÆ);
+(* *** Goal "3.2.2.1" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.2.2" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+(* *** Goal "3.2.2.3" *** *)
+a (all_var_elim_asm_tac);
+(* *** Goal "3.3" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+(* *** Goal "3.4" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3.5" *** *)
+a (var_elim_asm_tac ¨d = dpoE e'Æ);
+a (var_elim_asm_tac ¨e' = eÆ);
+a (∂_tac ¨e''Æ THEN ∂_tac ¨eÆ
+	THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (all_asm_fc_tac[]);
+val dpoeo_isglb_lemma = pop_thm ();
+
+set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (DpoEO r)Æ);
+a (rewrite_tac [get_spec ¨LubsExistÆ, dpoeo_islub_lemma] THEN REPEAT strip_tac);
+a (∂_tac ¨
+	if dpoT ç s
+	then dpoT
+	else
+		if s Ä {dpoB}
+		then dpoB
+		else dpoE (Lub r {y | dpoE y ç s})Æ);
+a (cases_tac ¨dpoT ç sÆ THEN_TRY asm_rewrite_tac[]);
+a (cases_tac ¨s Ä {dpoB}Æ THEN_TRY asm_rewrite_tac[]);
+a (∂_tac ¨Lub r {y|dpoE y ç s}Æ THEN asm_rewrite_tac []);
+a (spec_nth_asm_tac 3 ¨{w|dpoE w ç s}Æ);
+a (all_fc_tac[lub_lub_lemma]);
+val dpoeo_lubs_exist_thm = save_pop_thm "dpoeo_lubs_exist_thm";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (DpoEO r)Æ);
+a (rewrite_tac [get_spec ¨GlbsExistÆ, dpoeo_isglb_lemma] THEN REPEAT strip_tac);
+a (∂_tac ¨
+	if dpoB ç s
+	then dpoB
+	else
+		if s Ä {dpoT}
+		then dpoT
+		else dpoE (Glb r {y | dpoE y ç s})Æ);
+a (cases_tac ¨dpoB ç sÆ THEN_TRY asm_rewrite_tac[]);
+a (cases_tac ¨s Ä {dpoT}Æ THEN_TRY asm_rewrite_tac[]);
+a (∂_tac ¨Glb r {y|dpoE y ç s}Æ THEN asm_rewrite_tac []);
+a (spec_nth_asm_tac 3 ¨{w | dpoE w ç s}Æ);
+a (all_fc_tac[glb_glb_lemma]);
+val dpoeo_glbs_exist_thm = save_pop_thm "dpoeo_glbs_exist_thm";
+=TEX
+}%ignore
+
+\subsubsection{Indexed Sets}
+
+Indexed sets are functions whose codomain is a discrete partial order.
+From any ordering of the codomain an ordering of the indexed sets may be obtained using {\it Pw}.
+This can be done with the discrete order, but we also need to do this with other orders.
+
+The following function lifts an ordering on the elements of the codomain to an ordering on the indexed sets.
+
+πHOLCONST
+‹ €IsEO› : ('a ≠ 'a ≠ BOOL) ≠ ('a IS ≠ 'a IS ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µr∑ IsEO r = Pw (DpoEO r)
+∞
+
+=GFT
+€is_lubs_exist_thm› =
+	Ù µ r∑ LubsExist r ¥ LubsExist (IsEO r)
+
+€is_glbs_exist_thm› =
+	Ù µ r∑ GlbsExist r ¥ GlbsExist (IsEO r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (IsEO r)Æ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨IsEOÆ]
+	THEN fc_tac [dpoeo_lubs_exist_thm]
+	THEN fc_tac [inst_type_rule [(îGSÆ, î'aÆ)] pw_lubs_exist_thm]
+	THEN strip_tac);
+val is_lubs_exist_thm = save_pop_thm "is_lubs_exist_thm";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (IsEO r)Æ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨IsEOÆ]
+	THEN fc_tac [dpoeo_glbs_exist_thm]
+	THEN fc_tac [inst_type_rule [(îGSÆ, î'aÆ)] pw_glbs_exist_thm]
+	THEN strip_tac);
+val is_glbs_exist_thm = save_pop_thm "is_glbs_exist_thm";
+=TEX
+}%ignore
+
+\subsubsection{A Pre-order on Sets}
+
+The following pre-order on sets based on a pre-order of the elements is used later with sets of truth values.
+
+πHOLCONST
+‹ €SetO› : ('a ≠ 'a ≠ BOOL) ≠ ('a SET) ≠ ('a SET) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ SetO r = Ãm n∑
+‹		(µx∑ x ç m ¥ ∂y∑ y ç n ± r x y)
+‹	±	(µy∑ y ç n ¥ ∂x∑ x ç m ± r x y)
+∞
+
+That turns out to be stronger than we need, this one simplifies matters.
+
+πHOLCONST
+‹ €SetO2› : ('a ≠ 'a ≠ BOOL) ≠ ('a SET) ≠ ('a SET) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ SetO2 r = Ãm n∑ µx∑ x ç m ¥ ∂y∑ r x y ± y ç n
+∞
+
+=GFT
+€trans_seto_lemma› =
+	Ù µ r∑ Trans (Universe, r) ¥ Trans (Universe, SetO r)
+
+€trans_seto2_lemma› =
+   Ù µ r∑ Trans (Universe, r) ¥ Trans (Universe, SetO2 r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ Trans (Universe, r) ¥ Trans (Universe, SetO r)Æ);
+a (rewrite_tac [get_spec ¨TransÆ, get_spec ¨SetOÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨y''Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨x''Æ THEN asm_rewrite_tac[]);
+val trans_seto_lemma = pop_thm ();
+
+set_goal([], ¨µr∑ Trans (Universe, r) ¥ Trans (Universe, SetO2 r)Æ);
+a (rewrite_tac [get_spec ¨TransÆ, get_spec ¨SetO2Æ] THEN REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (∂_tac ¨y''Æ THEN asm_rewrite_tac[]);
+val trans_seto2_lemma = pop_thm ();
+=TEX
+}%ignore
+
+\subsubsection{A Pre-order for Sets of Functions}
+
+To get a pre-order over sets of functions from an pre-order of the codomain of the functions, we could apply {\it Pw} and then {\it SetO}, however the following construction proves more useful.
+
+[Though I don't appear to have used it!]
+
+πHOLCONST
+‹ €FunSetO› : ('a ≠ 'a ≠ BOOL) ≠ ('b ≠ 'a) SET ≠ ('b ≠ 'a) SET ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r:('a ≠ 'a ≠ BOOL)∑ FunSetO r =
+‹	Ãs t∑ Pw (SetO r) (Ãx∑ {v | ∂y∑ y ç s ± v = y x}) (Ãx∑ {v | ∂y∑ y ç t ± v = y x})
+∞
+
+=IGN
+€trans_funseto_lemma› =
+	µ r∑ Trans (Universe, r) ¥ Trans (Universe, FunSetO r)
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¨µr∑ Trans (Universe, r) ¥ Trans (Universe, FunSetO r)Æ);
+a (rewrite_tac [get_spec ¨FunSetOÆ] THEN REPEAT strip_tac);
+a (fc_tac [trans_seto_lemma]);
+a (fc_tac [trans_seto_lemma]);
+ THEN POP_ASM_T ante_tac
+	THEN rewrite_tac [get_spec ¨TransÆ]);
+	THEN REPEAT strip_tac
+	THEN all_asm_ufc_tac[]
+	THEN asm_rewrite_tac[]);
+val trans_funseto_lemma = pop_thm ();
+=TEX
+}%ignore
+
+\subsection{Some Theorems}
+
+Monotonicity of Lub.
+
+=GFT
+€lub_increasing_lemma› =
+	Ù µ r∑ RpoU r ± LubsExist r ¥ Increasing (SetO r) r (Lub r)
+
+€lub_increasing2_lemma› =
+	Ù µ r∑ RpoU r ± LubsExist r ¥ Increasing (SetO2 r) r (Lub r)
+
+€lub_increasing_lemma2› =
+	Ù µ r∑ CRpoU r ¥ Increasing (SetO r) r (Lub r)
+
+€lub_increasing2_lemma2› =
+	Ù µ r∑ CRpoU r ¥ Increasing (SetO2 r) r (Lub r)
+
+€lub_increasing_lemma3› =
+	Ù µ r∑ CRpoU r ¥ (µ x y∑ SetO r x y ¥ r (Lub r x) (Lub r y))
+
+€lub_increasing2_lemma3› =
+   Ù µ r∑ CRpoU r ¥ (µ x y∑ SetO2 r x y ¥ r (Lub r x) (Lub r y))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ RpoU r ± LubsExist r ¥ Increasing (SetO r) r (Lub r)Æ);
+a (rewrite_tac (map get_spec [¨IncreasingÆ])
+	THEN REPEAT strip_tac);
+a (fc_tac [lub_lub_lemma2]);
+a (spec_nth_asm_tac 1 ¨xÆ
+	THEN spec_nth_asm_tac 2 ¨yÆ
+	THEN fc_tac [get_spec ¨IsLubÆ]);
+a (rename_tac[]);
+a (lemma_tac ¨IsUb r x (Lub r y)Æ);
+(* *** Goal "1" *** *)
+a (DROP_ASM_T ¨SetO r x yÆ ante_tac THEN rewrite_tac [get_spec ¨SetOÆ]
+	THEN strip_tac);
+a (rewrite_tac [get_spec ¨IsUbÆ] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (GET_NTH_ASM_T 8 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (fc_tac [rpou_fc_clauses2] THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val lub_increasing_lemma = save_pop_thm "lub_increasing_lemma";
+
+set_goal([], ¨µr∑ RpoU r ± LubsExist r ¥ Increasing (SetO2 r) r (Lub r)Æ);
+a (rewrite_tac (map get_spec [¨IncreasingÆ])
+	THEN REPEAT strip_tac);
+a (fc_tac [lub_lub_lemma2]);
+a (spec_nth_asm_tac 1 ¨xÆ
+	THEN spec_nth_asm_tac 2 ¨yÆ
+	THEN fc_tac [get_spec ¨IsLubÆ]);
+a (lemma_tac ¨IsUb r x (Lub r y)Æ);
+(* *** Goal "1" *** *)
+a (DROP_ASM_T ¨SetO2 r x yÆ ante_tac THEN rewrite_tac [get_spec ¨SetO2Æ]
+	THEN strip_tac);
+a (rewrite_tac [get_spec ¨IsUbÆ] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (GET_NTH_ASM_T 7 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (fc_tac [rpou_fc_clauses2] THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val lub_increasing2_lemma = save_pop_thm "lub_increasing2_lemma";
+
+set_goal([], ¨µ r∑ CRpoU r ¥ Increasing (SetO r) r (Lub r)Æ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [rewrite_rule [get_spec ¨RpoUÆ] lub_increasing_lemma]);
+val lub_increasing_lemma2 = save_pop_thm "lub_increasing_lemma2";
+
+set_goal([], ¨µ r∑ CRpoU r ¥ Increasing (SetO2 r) r (Lub r)Æ);
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ]
+	THEN REPEAT strip_tac);
+a (all_fc_tac [rewrite_rule [get_spec ¨RpoUÆ] lub_increasing2_lemma]);
+val lub_increasing2_lemma2 = save_pop_thm "lub_increasing2_lemma2";
+
+val lub_increasing_lemma3 = save_thm("lub_increasing_lemma3",
+	rewrite_rule [get_spec¨IncreasingÆ] lub_increasing_lemma2);
+
+val lub_increasing2_lemma3 = save_thm("lub_increasing2_lemma3",
+	rewrite_rule [get_spec¨IncreasingÆ] lub_increasing2_lemma2);
+=TEX
+}%ignore
+
+We now define the product of two functions:
+
+πHOLCONST
+‹ €FunProd› : ('a ≠ 'b) ≠ ('a ≠ 'c) ≠ ('a ≠ 'b ∏ 'c)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f g∑ FunProd f g = Ãx∑ (f x, g x)
+∞
+
+And prove that the product of two increasing functions is increasing.
+
+=GFT
+€funprod_increasing_thm› =
+   Ù µ f g ra rb rc
+     ∑ Increasing ra rb f ± Increasing ra rc g
+         ¥ Increasing ra (PrO rb rc) (FunProd f g)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µf g ra rb rc∑ Increasing ra rb f ± Increasing ra rc g
+	¥ Increasing ra (PrO rb rc) (FunProd f g)Æ);
+a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PrOÆ, get_spec ¨FunProdÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val funprod_increasing_thm = save_pop_thm "funprod_increasing_thm";
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €FunLeft› : ('a ∏ 'c ≠ 'b) ≠ ('a ∏ 'c ≠ 'b ∏ 'c)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f∑ FunLeft f = Ãx∑ (f x, Snd x)
+∞
+
+πHOLCONST
+‹ €FunRight› : ('c ∏ 'a ≠ 'b) ≠ ('c ∏ 'a ≠ 'c ∏ 'b)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ f∑ FunRight f = Ãx∑ (Fst x, f x)
+∞
+
+=GFT
+€funleft_increasing_thm› =
+   Ù µ f ra rb rc
+     ∑ Increasing (PrO ra rc) rb f
+         ¥ Increasing (PrO ra rc) (PrO rb rc) (FunLeft f)
+
+€funright_increasing_thm› =
+   Ù µ f ra rb rc
+     ∑ Increasing (PrO rc ra) rb f
+         ¥ Increasing (PrO rc ra) (PrO rc rb) (FunRight f)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µf ra rb rc∑ Increasing (PrO ra rc) rb f
+	¥ Increasing (PrO ra rc) (PrO rb rc) (FunLeft f)Æ);
+a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PrOÆ, get_spec ¨FunLeftÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val funleft_increasing_thm = save_pop_thm "funleft_increasing_thm";
+
+set_goal([], ¨µf ra rb rc∑ Increasing (PrO rc ra) rb f
+	¥ Increasing (PrO rc ra) (PrO rc rb) (FunRight f)Æ);
+a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PrOÆ, get_spec ¨FunRightÆ]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val funright_increasing_thm = save_pop_thm "funright_increasing_thm";
+=TEX
+}%ignore
+
+\subsubsection{Proof Contexts}
+
+=SML
+add_pc_thms "'misc2" [];
+commit_pc "'misc2";
+
+force_new_pc "€misc2›";
+merge_pcs ["hol", "'GS1", "'misc2"] "misc2";
+commit_pc "misc2";
+=TEX
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{misc2.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}
