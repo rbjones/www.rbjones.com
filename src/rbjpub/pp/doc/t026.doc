@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $
+$Id: t026.doc,v 1.2 2008/07/18 14:15:45 rbj Exp $
 open_theory "ifos";
 set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 =TEX
@@ -40,12 +40,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/07/13 16:04:21 $ $
+Last Change $ $Date: 2008/07/18 14:15:45 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $ $
+$ $Id: t026.doc,v 1.2 2008/07/18 14:15:45 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -78,10 +78,21 @@ $ $Id: t026.doc,v 1.1 2008/07/13 16:04:21 rbj Exp $ $
 \newpage
 \section{INTRODUCTION}
 
-See t021 for previous discussion.
-I will put something better here if it works out.
+The idea is to obtain exotic models of set theory using definability in first order set theory as a source of candidate sets.
 
-\section{INFINITARY LOGIC}
+To ensure that we get all the well-founded sets we start with definability in infinitary first order set theory ({\it ifos}).
+Given any membership structure, i.e. a domain of discourse and a membership relation over that domain, each formula of {\it ifos} with one free variable will define a subset of the domain of discourse (you may prefer to think of these as classes, since in the domains we work with they will mostly have very large size).
+
+If we take as our domain of discourse the formulae of {\it ifos}, then the semantics of {\it ifos} provides a functor which given one membership relation over that domain will yield another membership relation.
+If this functor had a fixed point then it would provide a rich interpretation of {\it ifos}.
+Over the entire set of formulae of {\it ifos} there can be no such fixed point, for the resulting interpretation would include paradoxical collections such as the Russell set.
+
+It seems clear however that some subsets of the formulae of {\it ifos} do have fixed points under the semantics of {\it ifos}.
+For example, the formulae denoting well-founded sets, or those denoting well-founded sets or their complements.
+
+It is the purpose of this work to see whether obtain models for rich non-well-founded set theories can be obtained in this way.
+
+\section{INFINITARY SET THEORY}
 
 =SML
 open_theory "misc2";
@@ -391,7 +402,7 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 Ûis_fc_clauses2İ =
    ô µ x· x  Syntax ´ IsCf x ´ (µ y· y ‰g CfForms x ´ y  Syntax)
 
-Ûstn_con_neq_clausesİ =
+Ûsyn_con_neq_clausesİ =
    ô µ x y· ³ MkAf x = MkCf y
 
 Ûsyn_comp_fc_clausesİ =
@@ -548,8 +559,9 @@ The parameters are the type of the domain of discourse and the type of truth val
 \end{description}
 
 =SML
+declare_type_abbrev (Û"BR"İ, ["'a", "'b"], ”'a ­ 'a ­ 'b®);
 declare_type_abbrev("ÛRVİ", ["'a","'b"], ”'a IS ­ 'b®);
-declare_type_abbrev("ÛSTİ", ["'a","'b"], ”'a SET ¸ ('a ­ 'a ­ 'b)®);
+declare_type_abbrev("ÛSTİ", ["'a","'b"], ”'a SET ¸ ('a, 'b)BR®);
 =TEX
 
 To help in the location of fixed points we want a semantics which is monotonic, and therefore define here orderings on these domains relative to which we expect the sematantics to be monotonic.
@@ -622,56 +634,71 @@ val rviso_glbs_exist_thm = save_pop_thm "rviso_glbs_exist_thm";
 =TEX
 }%ignore
 
-\subsubsection{Manipulating Valuations}
-
-In this syntax, by contrast with that in \cite{rbjt021}, we do not require variables to be ordinals, they may be arbitrary sets, since no steps are necessary to avoid variable capture.
-There was no need even in \cite{rbjt021}, the use of a transfinite version of DeBriujn indices was a hang over from the PolySets where something of the kind really was needed.
-
-This function is used in the evaluation of atomic formulae.
-Given a set of indices (the names of actual parameters to an atomic formula, which are always variables) and an indexed set (the values of the variables) this function returns an indexed set which contains the values for the actual parameters to the relation.
-
 ¹HOLCONST
-Ü ÛVarCompİ : GS ­ 'a IS ­ 'a IS
+Ü ÛStOİ : ('b ­ 'b ­ BOOL) ­ ('a, 'b) ST ­ ('a, 'b) ST ­ BOOL
 ÷üüüüüüüüüüü
-Ü µm is· VarComp m is = 
-Ü	Ìv· if v ‰g dom m then is (m ‰g v) else dpoB
+Ü µr· StO r = DerivedOrder Snd (Pw (Pw r))
 °
+
+=GFT
+Ûsto_lubs_exist_thmİ =
+	ô µ r· LubsExist r ´ LubsExist (StO r)
+
+Ûsto_glbs_exist_thmİ =
+	ô µ r· GlbsExist r ´ GlbsExist (StO r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µr· LubsExist r ´ LubsExist (StO r)®);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¬StO®]
+	THEN bc_tac [lubsexist_dosnd_thm]
+	THEN bc_tac [pw_lubs_exist_thm]
+	THEN bc_tac [pw_lubs_exist_thm]
+	THEN strip_tac);
+val sto_lubs_exist_thm = save_pop_thm "sto_lubs_exist_thm";
+
+set_goal([], ¬µr· GlbsExist r ´ GlbsExist (StO r)®);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¬StO®]
+	THEN bc_tac [glbsexist_dosnd_thm]
+	THEN bc_tac [pw_glbs_exist_thm]
+	THEN bc_tac [pw_glbs_exist_thm]
+	THEN strip_tac);
+val sto_glbs_exist_thm = save_pop_thm "sto_glbs_exist_thm";
+=TEX
+}%ignore
 
 \subsubsection{Formula Evaluation}
 
 Now we define the evaluation of formulae, i.e. the notion of truth in a structure given a variable assignment.
 
 There are two cases in the syntax, atomic and compound formulae.
-The truth values of the atomic formulae are obtained from an infinitary structure given the values of the arguments, which are always variables, i.e. to evaluate an atomic formula you look up the values of the arguments in the current context (variable assignment) and then look up the truth value of the stipulated relation for those arguments in the structure.
+
+The truth values of the atomic formulae (which are all membership claims) are obtained from a structure given the values of the arguments, which are always variables, i.e. to evaluate an atomic formula you look up the values of the arguments in the current context (variable assignment) and then look up the truth value of the membership relation for those arguments in the structure.
+Note that this specification is generic in the type of truth values.
 
 ¹HOLCONST
 Ü ÛEvalAfİ : 't REL ­ GS ­ ('a, 't) ST ­ ('a, 't) RV
 ÷üüüüüüüüüüü
 Ü µ$¼‰t (at:GS) (st:('a, 't) ST) (va:'a IS)· EvalAf $¼‰t at st va =
-Ü	let r = AfRel at
-Ü	and pars = AfPars at
+Ü	let set = AfSet at
+Ü	and mem = AfMem at
 Ü	in 
-Ü		let rv = (Snd st) r
-Ü		in
-Ü			if dpoUdef rv
-Ü			then Lub $¼‰t {}
-Ü			else
-Ü				if dpoOdef rv
-Ü				then Glb $¼‰t {}
-Ü				else (dpoV rv) (VarComp pars va)
+Ü		let rv = (Snd st)
+Ü		in rv (IsVal va set) (IsVal va mem)
 °
 
-To evaluate a compound formula you must first evaluate the constituent formulae in every context obtable by modification of the variables bound by the compound formula.
-You need only remember the resulting truth values, the compound formulae are in this sense ``truth functional'', and, though this may involve evaluating a very large number of instances of subformulae, it can only yield some subset of
-=INLINEFT
-{pTrue, pFalse, pU}
-=TEX
-.
+To evaluate a compound formula you must first evaluate the constituent formulae in every context obtainable by modification of those variables which are bound by the compound formula.
+You need only remember the resulting truth values, the compound formulae are in this sense ``truth functional'', and, though this may involve evaluating a very large number of instances of subformulae, it can only yield some subset of the available truth values.
 
-The following definition shows how the truth values of the constituents of a compound formula then determines the truth value of the compound formula.
+The definition of the truth function depends upon the type of truth values, and is therefore a parameter of the semantics.
+
+The relevant definitions for three and four valued truth types are given here.
 
 =SML
-declare_type_abbrev("ÛCFEİ", ["'t"], ”'t SET ­ 't®);
+declare_type_abbrev(Û"CFE"İ, ["'t"], ”'t SET ­ 't®);
 =TEX
 
 ¹HOLCONST
@@ -691,8 +718,6 @@ declare_type_abbrev("ÛCFEİ", ["'t"], ”'t SET ­ 't®);
 Ü		else if results € {fTrue; fB} then fB
 Ü		else if fT  results then fT else fTrue
 °
-
-
 
 This definition shows how the set of truth values of instances of the constituents is obtained from the denotations of the constituent formulae.
 
@@ -726,6 +751,8 @@ Now we define a parameterised functor of which the semantic function is a fixed 
 Ü	else Åx·T
 °
 
+The semantics of formulae is then given by:
+
 ¹HOLCONST
 Ü ÛEvalFormİ : 't CFE ¸ 't REL ¸ ('a, 't) ST ­ GS ­ ('a, 't) RV
 ÷üüüüüüüüüüü
@@ -736,37 +763,39 @@ To use this definition we need to show that there exists a fixed point, for whic
 
 =GFT
 Ûevalformfunct_respect_thmİ =
-   ô µ (V, r)· EvalFormFunct (V, r) respects ScPrec
+   ô µ cfe ¼‰t st· EvalFormFunct (cfe, ¼‰t, st) respects ScPrec
 
 Ûevalformfunct_fixp_lemmaİ =
-   ô µ st· EvalForm st = EvalFormFunct st (EvalForm st)
+   ô µ cfe ¼‰t st
+     · EvalForm (cfe, ¼‰t, st)
+         = EvalFormFunct (cfe, ¼‰t, st) (EvalForm (cfe, ¼‰t, st))
 
 Ûevalformfunct_thmİ =
-   ô µ st
-     · EvalForm st
+   ô µ cfe ¼‰t st
+     · EvalForm (cfe, ¼‰t, st)
          = (Ì f
          · if f  Syntax
            then
              if IsAf f
-             then EvalAf f st
+             then EvalAf ¼‰t f st
              else if IsCf f
              then
-               let rvs = FunImage (EvalForm st) (X‰g (CfForms f))
-               in EvalCf f st rvs
+               let rvs = FunImage (EvalForm (cfe, ¼‰t, st)) (X‰g (CfForms f))
+               in EvalCf cfe f st rvs
              else Å x· T
            else Å x· T)
 
 Ûevalformfunct_thm2İ =
-   ô µ st f
-     · EvalForm st f
+   ô µ cfe ¼‰t st f
+     · EvalForm (cfe, ¼‰t, st) f
          = (if f  Syntax
            then
              if IsAf f
-             then EvalAf f st
+             then EvalAf ¼‰t f st
              else if IsCf f
              then
-               let rvs = FunImage (EvalForm st) (X‰g (CfForms f))
-               in EvalCf f st rvs
+               let rvs = FunImage (EvalForm (cfe, ¼‰t, st)) (X‰g (CfForms f))
+               in EvalCf cfe f st rvs
              else Å f· T
            else Å f· T)
 =TEX
@@ -831,11 +860,14 @@ val evalformfunct_thm2 = save_pop_thm "evalformfunct_thm2";
 
 \subsubsection{Some Orderings}
 
+We will be looking for fixed points of the semantics and one approach to this is to take greatest of least fixed points over various subdomains of the formulae of this set theory.
+This is why we are working with non-standard truth value types, so that we can arrange for the semantics to be monotonic relative to orderings derived from that on the truth values.
+
 In order to prove that the semantics is monotonic, we must first define the partial orderings relative to which the semantics is monotonic, and we must obtain fixpoint theorems for the orderings.
 
 We have at present two cases under consideration, according to whether three or four truth values are adopted.
 
-The three valued case turns out in some respects more complex than the four valued case, because it is necessary to make do with chain completeness and the fixed point theorem is more difficult to prove.
+The three valued case turns out in some respects more complex than the four valued case, because it is necessary to make do with chain completeness and the fixed point theorem is more difficult to prove (though in fact the proof has been completed).
 I will therefore progress only the four valued case until I find a reason to further progress the three valued case.
 
 Here is the beginning of the three valued case which I started before.
@@ -1043,10 +1075,9 @@ a (spec_nth_asm_tac 8 ¬fT®);
 a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.2.2" *** *)
 a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val evalcf_tf4_increasing_lemma = pop_thm ();
+val evalcf_tf4_increasing_lemma = save_pop_thm "evalcf_tf4_increasing_lemma";
 =TEX
 }%ignore
-
 
 \subsubsection{Monotonicity}
 
@@ -1063,22 +1094,18 @@ a (rewrite_tac (map get_spec [¬Increasing®, ¬EvalAf®, ¬StO®, ¬RvO®,
 	THEN REPEAT strip_tac);
 a (rewrite_tac [let_def]);
 a (spec_nth_asm_tac 1 ¬AfRel g® THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (fc_tac [crpou_lub_glb_š_lemma] THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (fc_tac [crpou_lub_glb_š_lemma] THEN_TRY asm_rewrite_tac[]);
 val evalaf_increasing_lemma = pop_thm();
 =TEX
 }%ignore
 
-To get a monontonicity result for the semantics of first order logic it is necessary to adjust the type of the semantic function.
+To get a monotonicity result for the semantics of first order logic it is necessary to adjust the type of the semantic function.
 
-The function which we wish to be monotonic is the mappings for each fixed domain of discourse and each particular formula, which take an indexed set of relations (corresponding to some interpretation over the gived domain) and return the relation represented by the formulae in that context.
+The function which we wish to be monotonic is the mapping for each fixed domain of discourse and each particular formula, which take a membership structure (an interpretation of set theory over the gived domain) and returns the relation represented by the formula in that context.
 
 The following function accepts one compound argument containing the relevent context and yields a function which we expect to be monotonic:
 
 ¹HOLCONST
-Ü ÛMonoEvalFormİ : 't CFE ¸ 't REL ¸ 'a SET ¸ GS ­ ('a, 't) RV IS ­ ('a, 't) RV
+Ü ÛMonoEvalFormİ : 't CFE ¸ 't REL ¸ 'a SET ¸ GS ­ ('a, 't) BR ­ ('a, 't) RV
 ÷üüüüüüüüüüü
 Ü µc r s g ris· MonoEvalForm (c, r, s, g) ris = EvalForm (c, r, (s, ris)) g
 °
@@ -1087,18 +1114,18 @@ The following function accepts one compound argument containing the relevent con
 Ûmonoevalform_increasing_lemmaİ =
    ô µ c r s g
      · CRpoU r ± Increasing (SetO r) r c
-         ´ Increasing (RvIsO r) (RvO r) (MonoEvalForm (c, r, s, g))
+         ´ Increasing (Pw (Pw r)) (RvO r) (MonoEvalForm (c, r, s, g))
 
 Ûevalform_increasing_thmİ =
    ô µ c r s g
      · CRpoU r ± Increasing (SetO r) r c
-         ´ Increasing (RvIsO r) (RvO r) (Ì ris· EvalForm (c, r, s, ris) g)
+         ´ Increasing (Pw (Pw r)) (RvO r) (Ì ris· EvalForm (c, r, s, ris) g)
 =TEX
 
 \ignore{
 =SML
 set_goal ([], ¬µc r s g· CRpoU r ± Increasing (SetO r) r c
-	´ Increasing (RvIsO r) (RvO r) (MonoEvalForm (c,r,s,g))®);
+	´ Increasing (Pw (Pw r)) (RvO r) (MonoEvalForm (c,r,s,g))®);
 a (REPEAT strip_tac);
 a (sc_induction_tac ¬g® THEN_TRY asm_rewrite_tac[]);
 a (rewrite_tac ((map get_spec [¬Increasing®, ¬MonoEvalForm®, ¬RvO®, ¬RvIsO®])@[evalformfunct_thm2])
@@ -1178,7 +1205,7 @@ val monoevalform_increasing_lemma = pop_thm ();
 
 set_goal([], ¬µ c r s g
      · CRpoU r ± Increasing (SetO r) r c
-         ´ Increasing (RvIsO r) (RvO r) (Ìris·EvalForm (c, r, s, ris) g)®);
+         ´ Increasing (Pw (Pw r)) (RvO r) (Ìris·EvalForm (c, r, s, ris) g)®);
 a (REPEAT µ_tac);
 a (lemma_tac ¬(Ìris·EvalForm (c, r, s, ris) g) = MonoEvalForm (c, r, s, g)®
 	THEN1 rewrite_tac [ext_thm, get_spec ¬MonoEvalForm®]);
@@ -1186,1138 +1213,6 @@ a (asm_rewrite_tac[monoevalform_increasing_lemma]);
 val evalform_increasing_thm = save_pop_thm "evalform_increasing_thm";
 =TEX
 }%ignore
-
-\newpage
-\section{SET THEORY}
-
-We now narrow our interest to just one theory, set theory.
-This will be treated using the above formalisation of infinitary logic, and will be the infinitary language with just two binary relations, equality and membership.
-
-We consider set theory as the theory of extensions.
-The `naive' approach to this is the theory with equality and membership which has equality and extensionality axioms and the principle of set comprehension, according to which to every formula with one free variable there is a set whose extension is those elements for which the formula will be true if the free variable denotes that element.
-This theory unfortunately is inconsistent, but, more than one century after this discovery we still have neither a wholly satisfactory explanation of why this is the case, nor a theory which can be argued to be a maximal consistent weakening of that ontological principle.
-Of course, there may be no such theory, but it is our purpose here to look further into this matter.
-
-This will be done by looking for maximal subsets of the infinitarily definable properties which can be realised in a consistent set theory.
-The definition of infinitary first order logic above stipulated a class of properties relative to some give relational structure, and tells us the meaning of these formulae.
-We will be seeking subsets of the formulae which provide an interpretation of set theory.
-
-This will be done by formulating the semantics of set theory as a functor operating on the relational structure for which the existence of a fixed point determines the required interpretation.
-
-We are seeking a functor which when supplied with membership and equality relations will deliver new relationships at least as detailed as the original (they are partial relationships).
-This is what we now define.
-
-We define a functor which takes a relational structure containing a membership and an equality relation, over a domain which is some unspecified subset of the formulae of infinitary logic defined above, and computes a new similar structure.
-The new structure will be that of the sets infinitarily definable in the first structure by formulae in the domain of discourse.
-This functor may be view as the giving a semantics to the language of infinitary first order set theory, which is does by adding the the semantics of the logic above, an account of the meaning of the membership and equality relations.
-This account is recursive and is therefore expressed as a functor, and will be well-defined only if the functor has a fixed point.
-The functor will be monotone and will therefore have a fixed point, but this will be in general a pair of partial relations, and we will be seeking particular subsets of the language for which there is a definite fixed point such that the relations are everywhere either true or false.
-From such a definite fixed point an interpretation of the classical two-valued set theory may be constructed.
-
-\subsection{Packing and Unpacking Relationship Pairs}
-
-The format of a structure, as used in the specification of infinitary logic above, supports arbitrary structures as indexed sets.
-The definitions in this section provide for conversion between indexed sets and pairs of relationships.
-
-=SML
-declare_type_abbrev ("BR", ["'a", "'b"], ”'a ­ 'a ­ 'b®);
-declare_type_abbrev ("PR", ["'a", "'b"], ”('a, 'b) BR ¸ ('a, 'b) BR®);
-=TEX
-
-
-¹HOLCONST
-Ü ÛPackBinRelİ: ('a, 't DPO) BR ­ ('a, 't DPO) RV
-÷üüüüüüüüü
-Ü µ r· PackBinRel r = Ìisp: 'a IS·
-Ü	if IsDom isp = {Nat‰g 0; Nat‰g 1} ± IsOd isp = {}
-Ü	then r (dpoV (isp (Nat‰g 0))) (dpoV (isp (Nat‰g 1)))
-Ü	else if IsOd isp = {} then dpoB else dpoT
-°
-
-For the monotonicity proof it is useful to define the following ordering over binary relations:
-
-¹HOLCONST
-Ü ÛBrOİ: ('t, BOOL) BR ­ (('a,'t) BR, BOOL)BR
-÷üüüüüüüüüüü
-Ü µ r· BrO r = Pw (Pw r)
-°
-
-=GFT
-Ûpackbinrel_increasing_lemmaİ =
-   ô µ r· Rpo (Universe, r) ´ Increasing (BrO r) (RvO r) PackBinRel
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µr· RpoU r ´ RpoU (BrO r)®);
-a (rewrite_tac[get_spec ¬BrO®] THEN REPEAT strip_tac);
-a (bc_tac [pw_rpou_lemma]);
-a (bc_tac [pw_rpou_lemma]);
-a (strip_tac);
-val bro_rpou_lemma = pop_thm();
-
-set_goal([], ¬µr· Rpo (Universe, r) ´ Increasing (BrO r) (RvO r) PackBinRel®);
-a (rewrite_tac [get_spec ¬Increasing®, get_spec ¬PackBinRel®, get_spec ¬Pw®,
-	get_spec ¬RvO®, get_spec ¬BrO®]
-	THEN REPEAT strip_tac);
-a (fc_tac [rpou_fc_clauses]);
-a (cases_tac ¬IsDom x' = {Nat‰g 0; Nat‰g 1} ± IsOd x' = {}®
-	THEN_TRY asm_rewrite_tac[]);
-val packbinrel_increasing_lemma = pop_thm ();
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛUnpackBinRelİ : ('a, 't) RV ­ ('a, 't) BR
-÷üüüüüüüüüüü
-Ü µ rv· UnpackBinRel rv = Ìx y· rv
-Ü	(Ìp·
-Ü		if p = Nat‰g 0
-Ü		then dpoE x
-Ü		else
-Ü			if p = Nat‰g 1
-Ü			then dpoE y
-Ü			else dpoB)
-°
-
-=GFT
-Ûunpackbinrel_increasing_lemmaİ =
-   ô µ r· Increasing (RvO r) (BrO r) UnpackBinRel
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µr· Increasing (RvO r) (BrO r) UnpackBinRel®);
-a (rewrite_tac [get_spec ¬Increasing®, get_spec ¬UnpackBinRel®, get_spec ¬Pw®,
-	get_spec ¬RvO®, get_spec ¬BrO®]
-	THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[]);
-val unpackbinrel_increasing_lemma = pop_thm ();
-=TEX
-}%ignore
-
-
-¹HOLCONST
-Ü ÛPackRelPairİ : ('a, 't DPO) PR ­ ('a, 't DPO) RV IS
-÷üüüüüüüüüüü
-Ü µrp· PackRelPair rp =
-Ü	let ($=‰v, $‰v) = rp in
-Ü	Ìrn·
-Ü	if rn = Nat‰g 0 then dpoE (PackBinRel $=‰v)
-Ü	else if rn = Nat‰g 1 then dpoE (PackBinRel $=‰v)
-Ü	else dpoB
-°
-
-Here is the relevant ordering on pairs of binary relations:
-
-¹HOLCONST
-Ü ÛPbrOİ: ('t, BOOL)BR ­ (('a, 't) PR, BOOL) BR
-÷üüüüüüüüüüü
-Ü µ r· PbrO r = PrO (BrO r) (BrO r)
-°
-
-=GFT
-Ûpbro_crpou_thmİ =
-   ô µ r· CRpoU r ´ CRpoU (PbrO r)crpou_increasing_lfp_lemma2 =
-   ô µ r f· CRpoU r ± Increasing r r f ´ IsLfp r f (Lfp‰c r f)
-
-Ûpbro_¼‰t‰4_crpou_thmİ =
-   ô CRpoU (PbrO $¼‰t‰4)
-
-Ûpackrelpair_increasing_lemmaİ =
-   ô µ r
-     · Rpo (Universe, r)
-         ´ Increasing (PbrO r) (RvIsO r) PackRelPair
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µr· CRpoU r ´ CRpoU (PbrO r)®);
-a (rewrite_tac [get_spec ¬PbrO®, get_spec ¬BrO®] THEN REPEAT strip_tac);
-a (bc_tac [pro_crpou_thm]);
-a (bc_tac [pw_crpou_thm]);
-a (bc_tac [pw_crpou_thm]);
-a strip_tac;
-val pbro_crpou_thm = save_pop_thm "pbro_crpou_thm";
-
-set_goal([], ¬CRpoU (PbrO $¼‰t‰4)®);
-a (bc_tac [pbro_crpou_thm]);
-a (accept_tac ¼‰t‰4_crpou_thm);
-val pbro_¼‰t‰4_crpou_thm = save_pop_thm "pbro_¼‰t‰4_crpou_thm";
-
-set_goal([], ¬µr· Rpo (Universe, r)
-	´ Increasing (PbrO r) (RvIsO r) PackRelPair®);
-a (rewrite_tac [get_spec ¬Increasing®, get_spec ¬PackRelPair®, get_spec ¬Pw®, let_def,
-	get_spec ¬PbrO®, get_spec ¬BrO®,
-	get_spec ¬RvIsO®, get_spec ¬PrO®, get_spec ¬IsEO®, get_spec ¬DpoEO®, get_spec ¬RvO®]
-	THEN REPEAT_N 7 strip_tac);
-a (cases_tac ¬x' = Nat‰g 0® THEN asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (¶_tac ¬PackBinRel (Fst x)® THEN ¶_tac ¬PackBinRel (Fst y)®
-	THEN asm_rewrite_tac[get_spec ¬PackBinRel®]
-	THEN strip_tac);
-a (cases_tac ¬IsDom x'' = {Nat‰g 0; Nat‰g 1} ± IsOd x'' = {}®
-	THEN asm_rewrite_tac[]
-	THEN (FC_T rewrite_tac [rpou_fc_clauses]));
-(* *** Goal "2" *** *)
-a (REPEAT strip_tac);
-a (¶_tac ¬dpoV (if x' = Nat‰g 1 then dpoE (PackBinRel (Fst x)) else dpoB)®
-	THEN ¶_tac ¬dpoV (if x' = Nat‰g 1 then dpoE (PackBinRel (Fst y)) else dpoB)®);
-a (lemma_tac ¬x' = Nat‰g 1®
-	THEN1 (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[get_spec ¬dpoUdef®]
-		THEN once_rewrite_tac [prove_rule [] ¬µA B· ³ A ´ B ¤ ³ B ´ A®]
-		THEN strip_tac
-		THEN_TRY asm_rewrite_tac[])
-	THEN asm_rewrite_tac[]
-	THEN strip_tac);
-a (FC_T (MAP_EVERY ante_tac) [packbinrel_increasing_lemma]);
-a (rewrite_tac[get_spec ¬Increasing®, get_spec ¬Pw®, get_spec ¬RvO®, get_spec ¬BrO®]);
-a (strip_tac);
-a (asm_fc_tac[] THEN asm_rewrite_tac[]);
-val packrelpair_increasing_lemma = pop_thm ();
-=TEX
-}%ignore
-
-
-¹HOLCONST
-Ü ÛUnpackRelPairİ : ('a, 't DPO) RV IS ­ ('a, 't DPO) PR
-÷üüüüüüüüüüü
-Ü µrvis:('a, 't DPO) RV IS· UnpackRelPair rvis =
-Ü	let f = (Ìn·
-Ü			if dpoOdef (rvis n)
-Ü			then (Ì x y· dpoT)
-Ü			else
-Ü				if dpoUdef (rvis n)
-Ü				then (Ìx y· dpoB)
-Ü				else UnpackBinRel (dpoV (rvis n)))
-Ü	in (f (Nat‰g 0), f (Nat‰g 1))
-°
-
-=GFT
-Ûunpackrelpair_increasing_lemmaİ =
-   ô Increasing (RvIsO Dpo) (PbrO Dpo) UnpackRelPair
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬Increasing (RvIsO Dpo) (PbrO Dpo) UnpackRelPair®);
-a (rewrite_tac [get_spec ¬RvIsO®, get_spec ¬Increasing®, get_spec ¬UnpackRelPair®, get_spec ¬PbrO®,
-	get_spec ¬IsEO®, get_spec ¬PrO®, get_spec ¬DpoEO®, get_spec ¬Pw®, let_def]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (cases_tac ¬dpoOdef (x (Nat‰g 0))® THEN asm_rewrite_tac[]);
-(* *** Goal "1.1" *** *)
-a (cases_tac ¬dpoOdef (y (Nat‰g 0))® THEN asm_rewrite_tac[]);
-(* *** Goal "1.1.1" *** *)
-a (asm_tac (inst_type_rule [(”'b®, ”'a®)] dpo_rpou_lemma));
-a (fc_tac [bro_rpou_lemma]);
-a (lemma_tac ¬µ x:'a ­ 'a ­ 'b DPO· BrO Dpo x x® THEN1 fc_tac [rpou_fc_clauses2]);
-a (asm_rewrite_tac[]);
-(* *** Goal "1.1.2" *** *)
-a (lemma_tac ¬³ dpoUdef (x (Nat‰g 0))®
-	THEN1 (GET_NTH_ASM_T 2 ante_tac
-		THEN rewrite_tac[get_spec ¬dpoUdef®, get_spec ¬dpoOdef®]
-		THEN STRIP_T rewrite_thm_tac));
-a (spec_nth_asm_tac 4 ¬Nat‰g 0®);
-a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[get_spec ¬dpoOdef®]);
-(* *** Goal "1.2" *** *)
-a (cases_tac ¬dpoOdef (y (Nat‰g 0))® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.1" *** *)
-a (rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-(* *** Goal "1.2.2" *** *)
-a (cases_tac ¬dpoUdef (x (Nat‰g 0))® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.2.1" *** *)
-a (rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-(* *** Goal "1.2.2.2" *** *)
-a (spec_nth_asm_tac 4 ¬Nat‰g 0®);
-a (asm_rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-a (FC_T (MAP_EVERY ante_tac) [
-rewrite_rule (map get_spec [¬Increasing®, ¬BrO®, ¬Pw®, ¬Dpo®]) unpackbinrel_increasing_lemma]);
-a (rewrite_tac [get_spec ¬Dpo®]);
-(* *** Goal "2" *** *)
-a (cases_tac ¬dpoOdef (x (Nat‰g 1))® THEN asm_rewrite_tac[]);
-(* *** Goal "2.1" *** *)
-a (cases_tac ¬dpoOdef (y (Nat‰g 1))® THEN asm_rewrite_tac[]);
-(* *** Goal "2.1.1" *** *)
-a (asm_tac (inst_type_rule [(”'b®, ”'a®)] dpo_rpou_lemma));
-a (fc_tac [bro_rpou_lemma]);
-a (fc_tac [rpou_fc_clauses2] THEN asm_rewrite_tac[]);
-(* *** Goal "2.1.2" *** *)
-a (lemma_tac ¬³ dpoUdef (x (Nat‰g 1))®
-	THEN1 (GET_NTH_ASM_T 2 ante_tac
-		THEN rewrite_tac[get_spec ¬dpoUdef®, get_spec ¬dpoOdef®]
-		THEN STRIP_T rewrite_thm_tac));
-a (spec_nth_asm_tac 4 ¬Nat‰g 1®);
-a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[get_spec ¬dpoOdef®]);
-(* *** Goal "2.2" *** *)
-a (cases_tac ¬dpoOdef (y (Nat‰g 1))® THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.1" *** *)
-a (rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-(* *** Goal "2.2.2" *** *)
-a (cases_tac ¬dpoUdef (x (Nat‰g 1))® THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2.1" *** *)
-a (rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-(* *** Goal "2.2.2.2" *** *)
-a (spec_nth_asm_tac 4 ¬Nat‰g 1®);
-a (asm_rewrite_tac (map get_spec [¬BrO®, ¬Pw®, ¬Dpo®]));
-a (FC_T (MAP_EVERY ante_tac) [
-rewrite_rule (map get_spec [¬Increasing®, ¬BrO®, ¬Pw®, ¬Dpo®]) unpackbinrel_increasing_lemma]);
-a (rewrite_tac [get_spec ¬Dpo®]);
-val unpackbinrel_increasing_lemma = pop_thm();
-=TEX
-}%ignore
-
-\subsection{Recasting of EvalForm}
-
-We now recast {\it EvalForm} for the special case that the structure relative to which formulae are evaluated is a pair of binary relations.
-
-¹HOLCONST
-Ü ÛEvalFormPrİ : ('t DPO) CFE ¸ ('t DPO) REL ¸ 'a SET ¸ GS
-Ü			­ ('a, 't DPO) PR ­ ('a, 't DPO) RV
-÷üüüüüüüüüüü
-Ü µp· EvalFormPr p = (MonoEvalForm p) o PackRelPair
-°
-
-=GFT
-evalformpr_increasing_thm =
-   ô µ c r s g
-     · CRpoU r ± Increasing (SetO r) r c
-         ´ Increasing (PbrO r) (RvO r) (EvalFormPr (c, r, s, g))
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µc r (s:'b SET) g· CRpoU r ± Increasing (SetO r) r c
-	´ Increasing (PbrO r) (RvO r) (EvalFormPr (c, r, s, g))®);
-a (rewrite_tac (map get_spec [¬EvalFormPr®]) THEN REPEAT strip_tac);
-a (strip_asm_tac (list_µ_elim [¬c®, ¬r®, ¬s®, ¬g®] monoevalform_increasing_lemma));
-a (lemma_tac ¬Rpo (Universe, r)® 
-	THEN1 (fc_tac [get_spec ¬CRpoU®]
-		THEN fc_tac [get_spec ¬CRpo®]));
-a (all_fc_tac [inst_type_rule [(”'a®, ”'b®), (”'b®, ”'a®)] packrelpair_increasing_lemma]);
-a (strip_asm_tac (list_µ_elim [¬PbrO r®, ¬RvIsO r®, ¬RvO r®] increasing_funcomp_thm));
-a (asm_fc_tac[]);
-a (asm_fc_tac[]);
-val evalformpr_increasing_thm = save_pop_thm "evalformpr_increasing_thm";
-=TEX
-}%ignore
-
-\subsection{Membership and Equality}
-
-¹HOLCONST
-Ü ÛParamZeroİ : GS ­ GS IS
-÷üüüüüüüüüüü
-Ü µp· ParamZero p = Ìx· if x = Nat‰g 0 then dpoE p else dpoB
-°
-
-All the above material is generic in the type of truth values.
-The following material is specific to particular sets of truth values.
-
-=SML
-declare_infix (301, "Û‰vİ");
-declare_infix (301, "Û=‰vİ");
-=TEX
-
-In the following definitions, we are working with four truth values, which may be thought of as true. false, neither or both.
-So that the definitions are monotonic, the criteria for truth and falsity are given independently so that it may be possible for both truth values to apply.
-
-¹HOLCONST
-Ü ÛMemRelİ : GS SET ­ (GS, FTV) PR ­ (GS, FTV) BR
-÷üüüüüüüüüüü
-Ü µ V (pr: (GS, FTV) PR)· MemRel V pr =
-	   let ($=‰v, $‰v) = pr
-	   in Ìv w·
-		if v  V ± w  V
-		then EvalFormPr (EvalCf_tf4, $¼‰t‰4, V, w) pr (ParamZero v)
-		else fB
-°
-
-=GFT
-Ûmemrel_increasing_lemmaİ =
-   ô µ V· Increasing (PbrO $¼‰t‰4) (BrO $¼‰t‰4) (MemRel V)
-
-Ûmemrel_increasing_lemma2İ =
-   ô µ V x y· PbrO $¼‰t‰4 x y ´ BrO $¼‰t‰4 (MemRel V x) (MemRel V y)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ V· Increasing (PbrO $¼‰t‰4) (BrO $¼‰t‰4) (MemRel V)®);
-a (rewrite_tac ((map get_spec [¬Increasing®, ¬MemRel®, ¬BrO®, ¬Pw®])@[let_def])
-	THEN REPEAT strip_tac);
-a (CASES_T ¬x'  V ± x''  V® rewrite_thm_tac);
-a (asm_tac ¼‰t‰4_crpou_thm);
-a (asm_tac evalcf_tf4_increasing_lemma);
-a (strip_asm_tac (list_µ_elim [¬EvalCf_tf4®, ¬$¼‰t‰4®, ¬V®, ¬x''®]
-	(evalformpr_increasing_thm)));
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¬Increasing®, ¬RvO®, ¬Pw®])
-	THEN strip_tac);
-a (ALL_ASM_FC_T rewrite_tac []);
-val memrel_increasing_lemma = pop_thm ();
-
-val memrel_increasing_lemma2 = rewrite_rule [get_spec ¬Increasing®] memrel_increasing_lemma;
-
-=IGN
-set_goal([], ¬µV pr· let mem = MemRel V pr in
-	µz x y· x  V ± y  V ± z  V
-	± (µv· v  V ´ (fTrue ¼‰t‰4 (Snd pr) v x ¤ fTrue ¼‰t‰4 (Snd pr) v y))
-	± fTrue ¼‰t‰4 mem x z
-	´ fTrue ¼‰t‰4 mem y z®);
-a (REPEAT µ_tac THEN rewrite_tac [let_def] THEN µ_tac );
-a (sc_induction_tac ¬z®);
-a (rewrite_tac ((map get_spec [¬MemRel®, ¬EvalFormPr®, ¬MonoEvalForm®])
-		@[let_def, evalformfunct_thm2]));
-a (REPEAT strip_tac);
-val memrel_extensional_lemma = pop_thm();
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛEqRelİ : GS SET ­ (GS, FTV) BR ­ (GS, FTV) BR
-÷üüüüüüüüüüü
-Ü µ V  $‰v· EqRel V $‰v = (Ìv w· Lub $¼‰t‰4 {t | 
-	v = w ± t = fTrue
-	² (¶x· x  V ± (fTrue ¼‰t‰4 x ‰v v ± fFalse ¼‰t‰4 x ‰v w
-				² fFalse ¼‰t‰4 x ‰v v ± fTrue ¼‰t‰4 x ‰v w))
-		± t = fFalse
-	² (µx· (x  V ´ fTrue ¼‰t‰4 x ‰v v ± fTrue ¼‰t‰4 x ‰v w
-				² fFalse ¼‰t‰4 x ‰v v ± fFalse ¼‰t‰4 x ‰v w)
-		± t = fTrue)
-	})
-°
-
-=GFT
-Ûeqrel_increasing_lemmaİ =
-   ô µ V· Increasing (BrO $¼‰t‰4) (BrO $¼‰t‰4) (EqRel V)
-
-Ûeqrel_increasing_lemma2İ =
-   ô µ V x y· BrO $¼‰t‰4 x y ´ BrO $¼‰t‰4 (EqRel V x) (EqRel V y)
-
-Ûeqrel_refl_lemmaİ =
-   ô µ V pr x· x  V ´ EqRel V pr x x = fTrue
-
-Ûeqrel_sym_lemmaİ =
-   ô µ V pr x y· x  V ± y  V ´ EqRel V pr x y = EqRel V pr y x
-
-Ûeqrel_ftrue_lemmaİ =
-   ô µ V pr x y
-     · x  V ± y  V
-         ´ (EqRel V pr x y = fTrue
-           ¤ x = y
-             ² (µ z
-             · z  V
-                 ´ Snd pr z x = fTrue ± Snd pr z y = fTrue
-                   ² Snd pr z x = fFalse ± Snd pr z y = fFalse))
-
-Ûeqrel_trans_lemmaİ =
-   ô µ V pr x y z
-     · x  V ± y  V ± z  V
-         ´ EqRel V pr x y = fTrue ± EqRel V pr y z = fTrue
-         ´ EqRel V pr x z = fTrue
-
-Ûeqrel2_increasing_lemmaİ =
-   ô µ V· Increasing (BrO $¼‰t‰4) (BrO $¼‰t‰4) (EqRel2 V)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ V· Increasing (BrO $¼‰t‰4) (BrO $¼‰t‰4) (EqRel V)®);
-a (rewrite_tac ((map get_spec [¬Increasing®, ¬EqRel®, ¬BrO®, ¬Pw®])@[let_def])
-	THEN REPEAT strip_tac);
-a (asm_tac ¼‰t‰4_crpou_thm);
-a (fc_tac [lub_increasing2_lemma3]);
-a (bc_tac [asm_rule ¬µ x y· SetO2 $¼‰t‰4 x y ´ Lub $¼‰t‰4 x ¼‰t‰4 Lub $¼‰t‰4 y®]);
-a (rewrite_tac [get_spec ¬SetO2®] THEN REPEAT strip_tac
-	THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (¶_tac ¬fTrue® THEN rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (¶_tac ¬fFalse® THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a (lemma_tac ¬fTrue ¼‰t‰4 y x'''' x'®
-	THEN1 (list_spec_nth_asm_tac 7 [¬x''''®, ¬x'®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (lemma_tac ¬fFalse ¼‰t‰4 y x'''' x''®
-	THEN1 (list_spec_nth_asm_tac 8 [¬x''''®, ¬x''®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (¶_tac ¬x''''® THEN asm_rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (¶_tac ¬fFalse® THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a (lemma_tac ¬fTrue ¼‰t‰4 y x'''' x''®
-	THEN1 (list_spec_nth_asm_tac 7 [¬x''''®, ¬x''®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (lemma_tac ¬fFalse ¼‰t‰4 y x'''' x'®
-	THEN1 (list_spec_nth_asm_tac 8 [¬x''''®, ¬x'®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (¶_tac ¬x''''® THEN asm_rewrite_tac[]);
-(* *** Goal "4" *** *)
-a (¶_tac ¬fTrue® THEN asm_rewrite_tac[]);
-a (cases_tac ¬x' = x''® THEN asm_rewrite_tac[]);
-a (REPEAT_N 2 strip_tac);
-a (spec_nth_asm_tac 3 ¬x''''®);
-(* *** Goal "4.1" *** *)
-a (lemma_tac ¬fTrue ¼‰t‰4 y x'''' x'®
-	THEN1 (list_spec_nth_asm_tac 9 [¬x''''®, ¬x'®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (lemma_tac ¬fTrue ¼‰t‰4 y x'''' x''®
-	THEN1 (list_spec_nth_asm_tac 10 [¬x''''®, ¬x''®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (asm_rewrite_tac[]);
-(* *** Goal "4.2" *** *)
-a (lemma_tac ¬fFalse ¼‰t‰4 y x'''' x'®
-	THEN1 (list_spec_nth_asm_tac 9 [¬x''''®, ¬x'®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (lemma_tac ¬fFalse ¼‰t‰4 y x'''' x''®
-	THEN1 (list_spec_nth_asm_tac 10 [¬x''''®, ¬x''®] THEN all_asm_fc_tac [¼‰t‰4_trans_thm]));
-a (asm_rewrite_tac[]);
-val eqrel_increasing_lemma = pop_thm ();
-
-val eqrel_increasing_lemma2 = rewrite_rule [get_spec ¬Increasing®] eqrel_increasing_lemma;
-
-=IGN
-set_goal ([], ¬µV pr x· x  V ´ fTrue ¼‰t‰4 EqRel V pr x x®);
-a (rewrite_tac [get_spec ¬EqRel®, let_def] THEN REPEAT strip_tac
-	THEN_TRY asm_rewrite_tac[]);
-val eqrel_refl_lemma = pop_thm ();
-
-set_goal ([], ¬µV pr x y· x  V ± y  V ´ EqRel V pr x y = EqRel V pr y x®);
-a (rewrite_tac [get_spec ¬EqRel®, let_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-a (cases_tac ¬x = y® THEN_TRY asm_rewrite_tac[]);
-a (SYM_ASMS_T rewrite_tac);
-a (rewrite_tac [prove_rule []
-	¬µx'·(Snd pr x' y = fT ² Snd pr x' x = fT) = (Snd pr x' x = fT ² Snd pr x' y = fT)®]);
-a (rewrite_tac [prove_rule []
-	¬µx'· (Snd pr x' x = fTrue ± Snd pr x' y = fFalse
-                       ² Snd pr x' y = fTrue ± Snd pr x' x = fFalse)
-	¤ (Snd pr x' y = fTrue ± Snd pr x' x = fFalse
-                       ² Snd pr x' x = fTrue ± Snd pr x' y = fFalse)®]);
-a (rewrite_tac [prove_rule []
-	¬µx'· (Snd pr x' x = fB ² Snd pr x' y = fB)
-	¤ (Snd pr x' y = fB ² Snd pr x' x = fB)®]);
-val eqrel_sym_lemma = pop_thm ();
-
-set_goal ([], ¬µV pr x y· x  V ± y  V ´ (EqRel V pr x y = fTrue ¤
-	x = y ² µz· z  V ´
-		Snd pr z x = fTrue ± Snd pr z y = fTrue
-		² Snd pr z x = fFalse ± Snd pr z y = fFalse)®);
-a (rewrite_tac [get_spec ¬EqRel®, let_def] THEN REPEAT µ_tac THEN strip_tac);
-a (cases_tac ¬x = y® THEN asm_rewrite_tac[]);
-a (CASES_T ¬¶ x'· x'  V ± (Snd pr x' x = fT ² Snd pr x' y = fT)® asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (REPEAT strip_tac);
-a (POP_ASM_T (STRIP_THM_THEN asm_tac));
-a (¶_tac ¬x'®
-	THEN POP_ASM_T strip_asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (CASES_T ¬¶ x'
-                   · x'  V
-                       ± (Snd pr x' x = fTrue ± Snd pr x' y = fFalse
-                         ² Snd pr x' y = fTrue ± Snd pr x' x = fFalse)® asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.1" *** *)
-a (POP_ASM_T (STRIP_THM_THEN asm_tac));
-a (strip_tac THEN ¶_tac ¬x'®
-	THEN POP_ASM_T strip_asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (CASES_T ¬¶ x'· x'  V ± (Snd pr x' x = fB ² Snd pr x' y = fB)® asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.1" *** *)
-a (POP_ASM_T (STRIP_THM_THEN asm_tac));
-a (strip_tac THEN ¶_tac ¬x'®
-	THEN POP_ASM_T strip_asm_tac
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (REPEAT µ_tac);
-a (REPEAT_N 3 (DROP_NTH_ASM_T 3 strip_asm_tac));
-a (strip_tac);
-a (spec_nth_asm_tac 4 ¬z®);
-a (spec_nth_asm_tac 4 ¬z®);
-a (SPEC_NTH_ASM_T 7 ¬z® ante_tac THEN rewrite_tac [asm_rule ¬z  V®]);
-a (ante_tac (µ_elim ¬Snd pr z x® ftv_cases_thm) THEN asm_rewrite_tac[]);
-a (ante_tac (µ_elim ¬Snd pr z y® ftv_cases_thm) THEN asm_rewrite_tac[]);
-a (prove_tac[]);
-val eqrel_ftrue_lemma = pop_thm();
-
-set_goal ([], ¬µV pr x y z·
-	x  V ± y  V ± z  V
-	´ EqRel V pr x y = fTrue ± EqRel V pr y z = fTrue
-	´ EqRel V pr x z = fTrue®);
-a (REPEAT µ_tac THEN strip_tac);
-a (rewrite_tac [rewrite_rule [asm_rule ¬x  V®, asm_rule ¬y  V®]
-	(list_µ_elim [¬V®, ¬pr®, ¬x®, ¬y®] eqrel_ftrue_lemma)]);
-a (rewrite_tac [rewrite_rule [asm_rule ¬z  V®, asm_rule ¬y  V®]
-	(list_µ_elim [¬V®, ¬pr®, ¬y®, ¬z®] eqrel_ftrue_lemma)]);
-a (rewrite_tac [rewrite_rule [asm_rule ¬z  V®, asm_rule ¬x  V®]
-	(list_µ_elim [¬V®, ¬pr®, ¬x®, ¬z®] eqrel_ftrue_lemma)]);
-a (strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (REPEAT_N 4 strip_tac THEN var_elim_nth_asm_tac 3);
-a (SPEC_NTH_ASM_T 3 ¬z'® ante_tac THEN rewrite_tac [asm_rule ¬z'  V®]);
-(* *** Goal "2" *** *)
-a (REPEAT_N 4 strip_tac);
-a (SPEC_NTH_ASM_T 3 ¬z'® ante_tac THEN rewrite_tac [asm_rule ¬z'  V®]);
-a (SPEC_NTH_ASM_T 4 ¬z'® ante_tac THEN rewrite_tac [asm_rule ¬z'  V®]);
-a (prove_tac[]);
-(* *** Goal "2.1" *** *)
-a (DROP_NTH_ASM_T 11 ante_tac THEN rewrite_tac [asm_rule ¬Snd pr z' y = fFalse®]);
-(* *** Goal "2.2" *** *)
-a (DROP_NTH_ASM_T 11 ante_tac THEN rewrite_tac [asm_rule ¬Snd pr z' y = fTrue®]);
-val eqrel_trans_lemma = pop_thm ();
-=TEX
-}%ignore
-
-
-\subsection{The Semantic Functor}
-
-We now define a monotone functor of which, we hope, total fixed points yeild interpretations of the first order language of set theory.
-
-¹HOLCONST
-Ü ÛSemanticFunctorİ : GS SET ­ (GS, FTV) PR ­ (GS, FTV) PR
-÷üüüüüüüüüüü
-Ü µ V· SemanticFunctor V = Ì($=‰v, $‰v)· (EqRel V $‰v, MemRel V ($=‰v, $‰v))
-°
-
-=GFT
-Ûsemanticfunctor_increasing_thmİ =
-   ô µ V· Increasing (PbrO $¼‰t‰4) (PbrO $¼‰t‰4) (SemanticFunctor V)
-
-Ûsf_lfp_lemma1İ =
-   ô µ V
-     · IsLfp
-         (PbrO $¼‰t‰4)
-         (SemanticFunctor V)
-         (Lfp‰c (PbrO $¼‰t‰4) (SemanticFunctor V))
-
-Ûsf_gfp_lemma1İ =
-   ô µ V
-     · IsGfp
-         (PbrO $¼‰t‰4)
-         (SemanticFunctor V)
-         (Gfp‰c (PbrO $¼‰t‰4) (SemanticFunctor V))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV· Increasing (PbrO $¼‰t‰4) (PbrO $¼‰t‰4) (SemanticFunctor V)®);
-a (rewrite_tac [get_spec ¬SemanticFunctor®]
-	THEN strip_tac THEN bc_tac [increasing_funcomp_thm]);
-a (¶_tac ¬PbrO $¼‰t‰4® THEN rewrite_tac [get_spec ¬PbrO®] THEN strip_tac);
-(* *** Goal "1" *** *)
-a (bc_tac [funright_increasing_thm]);
-a (rewrite_tac [rewrite_rule [get_spec ¬PbrO®] memrel_increasing_lemma]);
-(* *** Goal "2" *** *)
-a (bc_tac [funleft_increasing_thm]);
-a (rewrite_tac [rewrite_rule [get_spec ¬PbrO®] exteqmem_increasing_lemma]);
-val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
-
-set_goal([], ¬µV· IsLfp (PbrO $¼‰t‰4) (SemanticFunctor V)
-			(Lfp‰c (PbrO $¼‰t‰4) (SemanticFunctor V))®);
-a (strip_tac THEN bc_tac [crpou_increasing_lfp_lemma2]
-	THEN rewrite_tac [pbro_¼‰t‰4_crpou_thm, semanticfunctor_increasing_thm]);
-val sf_lfp_lemma1 = pop_thm ();
-
-set_goal([], ¬µV· IsGfp (PbrO $¼‰t‰4) (SemanticFunctor V)
-			(Gfp‰c (PbrO $¼‰t‰4) (SemanticFunctor V))®);
-a (strip_tac THEN bc_tac [crpou_increasing_gfp_lemma2]
-	THEN rewrite_tac [pbro_¼‰t‰4_crpou_thm, semanticfunctor_increasing_thm]);
-val sf_gfp_lemma1 = pop_thm ();
-=TEX
-}%ignore
-
-\section{INFINITARILY DEFINABLE MEMBERSHIP STRUCTURES}
-
-We are now able to identify and analyse a large class of interpretations of set theory.
-
-Every fixedpoint of the semantic functor which is total, i.e. in which the equality and membership relations over the domain (the V parameter to the semantic functor) gives only true and false (not underdefined or overdefined) yields a membership structure in the usual sense, and this structure is extensional (i.e. satisfies the axiom of extensionality).
-
-In order to define this class of structures it is necessary to prove some facts about total fixedpoints of the semantic functor.
-We need to know first that the equality relation in such a fixed point will be an equivalence relation (the equivalence classes will be the elements in the domain of the structure).
-This enables us to define the class of structures, and our next objective is to prove that they are indeed extensional.
-
-From there we intend to proceed by identifying consistent constraints on the fixed points which effectively place lower bounds on the richness of the ontology and permit the proof of progressively stronger ontological principles, which may be thought of as an axiomatisation of a strong non-well-founded set theory.
-In this way we seek to approach a maximal theory of comprehension, i.e. of sets construed as the extensions of properties.
-
-First we define the notion of a total fixed point of the semantic functor, and then prove various properties of these fized points.
-
-¹HOLCONST
-Ü ÛTotalOverİ : 'a SET ­ ('a, FTV)BR ­ BOOL
-÷üüüüüüüüüüü
-Ü µ V r· TotalOver V r ¤ µx y·
-Ü	if x  V ± y  V
-Ü	then r x y = fTrue ² r x y = fFalse
-Ü	else r x y = fB
-°
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV· Upward r f ´ µx· TotalOver V (f x) ´ ®);
-
-set_goal([], ¬µV pr· TotalOver V (ExtMem V pr) ´
-	µx y· x  V ± y  V ´
-		(ExtMem V x y ¤ )®);
-
-
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛPrTotalOverİ : 'a SET ­ ('a, FTV)PR ­ BOOL
-÷üüüüüüüüüüü
-Ü µ V pr· PrTotalOver V pr ¤ TotalOver V (Fst pr) ± TotalOver V (Snd pr)
-°
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛSFFixpİ : GS SET ¸ (GS, FTV)PR ­ BOOL
-÷üüüüüüüüüüü
-Ü µp· SFFixp p = SemanticFunctor (Fst p) (Snd p) = (Snd p)
-°
-
-=GFT
-=TEX
-
-¹HOLCONST
-Ü ÛBoolRelİ : (GS, FTV)BR ­ (GS, BOOL)BR
-÷üüüüüüüüüüü
-Ü µr· BoolRel r = Ìx y· r x y = fTrue
-°
-
-=GFT
-Ûeqrel_equiv_lemmaİ =
-   ô µ V pr· TotalOver V (EqRel V pr) ´ Equiv (V, BoolRel (EqRel V pr))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV pr· TotalOver V (EqRel V pr) ´ Equiv (V, BoolRel (EqRel V pr))®);
-a (PC_T1 "hol1" rewrite_tac [get_spec ¬TotalOver®, get_spec ¬BoolRel®, get_spec ¬Equiv®]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¬Refl®, eqrel_refl_lemma]);
-(* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¬Sym®] THEN REPEAT strip_tac);
-a (POP_ASM_T ante_tac);
-a (ALL_FC_T rewrite_tac [eqrel_sym_lemma]);
-(* *** Goal "3" *** *)
-a (rewrite_tac [get_spec ¬Trans®] THEN REPEAT strip_tac);
-a (all_asm_fc_tac [eqrel_trans_lemma]);
-val eqrel_equiv_lemma = pop_thm ();
-=IGN
-
-set_goal([], ¬µV r $=‰v· PrTotalOver V ($=‰v, r) ± Equiv (V, BoolRel $=‰v)
-	´ ((BoolRel (ExtMem V ($=‰v, r))) Respects (BoolRel $=‰v)) V®);
-a (rewrite_tac (map get_spec [¬PrTotalOver®, ¬TotalOver®, ¬$Respects®, ¬ExtMem®, ¬BoolRel®]));
-a (REPEAT strip_tac);
-a (asm_rewrite_tac [ext_thm, let_def]);
-a (strip_tac);
-a (LEMMA_T ¬{t
-                     |x'  V
-                         ± (¶ v w
-                         · v  V
-                             ± w  V
-                             ± fTrue ¼‰t‰4 v =‰v x
-                             ± fTrue ¼‰t‰4 w =‰v x'
-                             ± t ¼‰t‰4 r v w)}
-  =
-{t
-                     |x'  V
-                         ± (¶ v w
-                         · v  V
-                             ± w  V
-                             ± fTrue ¼‰t‰4 v =‰v y
-                             ± fTrue ¼‰t‰4 w =‰v x'
-                             ± t ¼‰t‰4 r v w)}® rewrite_thm_tac);
-a (rewrite_tac [sets_ext_clauses]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (¶_tac ¬v® THEN ¶_tac ¬w® THEN asm_rewrite_tac[]);
-
-a (LEMMA_T ¬®
-=TEX
-}%ignore
-
-=GFT
-Ûeqrel_totalmem_extensional_lemmaİ =
-   ô µ V $=‰v $‰v
-     · TotalOver V $‰v
-         ´ (µ x y
-         · x  V ± y  V
-             ´ EqRel V ($=‰v, $‰v) x y
-               = (if µ z· z  V ´ z ‰v x = z ‰v y then fTrue else fFalse))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV $=‰v $‰v· TotalOver V $‰v ´
-	µx y· x  V ± y  V ´ EqRel V ($=‰v, $‰v) x y =
-		if µz· z  V ´ z ‰v x = z ‰v y
-		then fTrue
-		else fFalse®);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬EqRel®,
-	get_spec ¬PrTotalOver®, let_def]
-	THEN REPEAT strip_tac);
-a (asm_tac (rewrite_rule [get_spec ¬TotalOver®] (asm_rule ¬TotalOver V $‰v®)));
-a (cases_tac ¬x=y® THEN_TRY asm_rewrite_tac[]);
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fT ² x' ‰v y = fT)® rewrite_thm_tac
-	THEN1 REPEAT_N 3 strip_tac);
-(* *** Goal "1" *** *)
-a strip_tac;
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 3 [¬x'®, ¬y®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]
-	THEN LIST_SPEC_NTH_ASM_T 4 [¬x'®, ¬x®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬x  V®]))
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (CASES_T ¬µ z· z  V ´ z ‰v x = z ‰v y®
-	(fn x => TRY (rewrite_thm_tac x) THEN strip_asm_tac x));
-(* *** Goal "2.1" *** *)
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fB ² x' ‰v y = fB)® rewrite_thm_tac
-	THEN1 REPEAT_N 4 strip_tac);
-(* *** Goal "2.1.1" *** *)
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 4 [¬x'®, ¬y®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]
-	THEN LIST_SPEC_NTH_ASM_T 5 [¬x'®, ¬x®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬x  V®]))
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.1.2" *** *)
-a (LEMMA_T ¬³¶ x'
-                 · x'  V
-                     ± (x' ‰v x = fTrue ± x' ‰v y = fFalse
-                       ² x' ‰v y = fTrue ± x' ‰v x = fFalse)®
-	rewrite_thm_tac);
-a (REPEAT_N 3 strip_tac);
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (SPEC_NTH_ASM_T 2 ¬x'®
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 5 [¬x'®, ¬y®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fB ² x' ‰v y = fB)® rewrite_thm_tac
-	THEN1 REPEAT_N 3 strip_tac);
-(* *** Goal "2.2.1" *** *)
-a strip_tac;
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 5 [¬x'®, ¬y®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]
-	THEN LIST_SPEC_NTH_ASM_T 6 [¬x'®, ¬x®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬x'  V®, asm_rule ¬x  V®]))
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (LEMMA_T ¬¶ x'
-                 · x'  V
-                     ± (x' ‰v x = fTrue ± x' ‰v y = fFalse
-                       ² x' ‰v y = fTrue ± x' ‰v x = fFalse)®
-	rewrite_thm_tac);
-a (¶_tac ¬z® THEN asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 4 [¬z®, ¬y®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬z  V®, asm_rule ¬y  V®]))
-	THEN asm_rewrite_tac[]
-	THEN LIST_SPEC_NTH_ASM_T 5 [¬z®, ¬x®]
-		(strip_asm_tac o (rewrite_rule [asm_rule ¬z  V®, asm_rule ¬x  V®]))
-	THEN asm_rewrite_tac[]
-	THEN (DROP_ASM_T ¬³ z ‰v x = z ‰v y® ante_tac)
-	THEN asm_rewrite_tac[]);
-val eqrel_totalmem_extensional_lemma = pop_thm ();
-=IGN
-
-set_goal([], ¬µV $=‰v $‰v· PrTotalOver V ($=‰v, $‰v) ´
-	µx y v  w· x  V ± y  V ± v  V ± w  V ± fTrue ¼‰t‰4 x =‰v v ± fTrue ¼‰t‰4 y =‰v w
-		´ (fTrue ¼‰t‰4 ExtMem V ($=‰v, $‰v) x y ¤ fTrue ¼‰t‰4 ExtMem V ($=‰v, $‰v) v w)®);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬ExtMem®,
-	get_spec ¬PrTotalOver®, let_def]
-	THEN REPEAT_N 6 strip_tac);
-(* *** Goal "1" *** *)
-a (asm_tac (rewrite_rule [get_spec ¬TotalOver®] (asm_rule ¬TotalOver V $‰v®)));
-a (cases_tac ¬x=y® THEN_TRY asm_rewrite_tac[]);
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fT ² x' ‰v y = fT)® rewrite_thm_tac
-	THEN1 REPEAT_N 3 strip_tac);
-(* *** Goal "1" *** *)
-a strip_tac;
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 3 [¬x'®, ¬y®]
-	THEN asm_rewrite_tac[]
-	THEN list_spec_nth_asm_tac 4 [¬x'®, ¬x®]
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (CASES_T ¬µ z· z  V ´ z ‰v x = z ‰v y®
-	(fn x => TRY (rewrite_thm_tac x) THEN strip_asm_tac x));
-(* *** Goal "2.1" *** *)
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fB ² x' ‰v y = fB)® rewrite_thm_tac
-	THEN1 REPEAT_N 4 strip_tac);
-(* *** Goal "2.1.1" *** *)
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 4 [¬x'®, ¬x®]
-	THEN asm_rewrite_tac []
-	THEN list_spec_nth_asm_tac 5 [¬x'®, ¬y®]
-	THEN asm_rewrite_tac []);
-(* *** Goal "2.1.2" *** *)
-a (LEMMA_T ¬³¶ x'
-                 · x'  V
-                     ± (x' ‰v x = fTrue ± x' ‰v y = fFalse
-                       ² x' ‰v y = fTrue ± x' ‰v x = fFalse)®
-	rewrite_thm_tac);
-a (REPEAT_N 3 strip_tac);
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (spec_nth_asm_tac 2 ¬x'® THEN asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 5 [¬x'®, ¬y®] THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (LEMMA_T ¬³ ¶ x'· x'  V ± (x' ‰v x = fB ² x' ‰v y = fB)® rewrite_thm_tac
-	THEN1 REPEAT_N 3 strip_tac);
-(* *** Goal "2.2.1" *** *)
-a strip_tac;
-a (cases_tac ¬x'  V® THEN asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 5 [¬x'®, ¬y®]
-	THEN asm_rewrite_tac[]
-	THEN list_spec_nth_asm_tac 6 [¬x'®, ¬x®]
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (LEMMA_T ¬¶ x'
-                 · x'  V
-                     ± (x' ‰v x = fTrue ± x' ‰v y = fFalse
-                       ² x' ‰v y = fTrue ± x' ‰v x = fFalse)®
-	rewrite_thm_tac);
-a (¶_tac ¬z® THEN asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 4 [¬z®, ¬y®]
-	THEN asm_rewrite_tac[]
-	THEN list_spec_nth_asm_tac 5 [¬z®, ¬x®]
-	THEN asm_rewrite_tac[]
-	THEN (DROP_ASM_T ¬³ z ‰v x = z ‰v y® ante_tac)
-	THEN asm_rewrite_tac[]);
-val eqrel_totalmem_extensional_lemma = pop_thm ();
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛSFTotalFixpİ : GS SET ¸ (GS, FTV)PR ­ BOOL
-÷üüüüüüüüüüü
-Ü µp· SFTotalFixp p ¤ SFFixp p ± PrTotalOver (Fst p) (Snd p)
-°
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬®);
-
-
-=TEX
-}%ignore
-
-\subsubsection{Extensionality of Equality}
-
-For our purposes it is helpful to define the following notion of extensionality which applies to functions which operate on four-valued membership relations and yield four-valued relations.
-
-The idea is that a function is extensional if its value for any pair of elements depends only on the extension of the two elements.
-Since we are working with four truth values, the extensions under consideration are not sets, they are four-valued characteristic functions.
-However, if the characteristic functions yield the undefined truth value anywhere in the domain under consideration, they are not really knowm to be equal so we require that these characteristic functions are everywhere defined (or overdefined).
-
-
-¹HOLCONST
-Ü ÛFtvExtensionalİ : 'a SET ­ (('a, FTV) BR ­ ('a, FTV) BR) ­ BOOL
-÷üüüüüüüüüüü
-Ü µ V f· FtvExtensional V f = µ$‰v x y z· x  V ± y  V ± z  V
-Ü	± TotalOver V $‰v ± (µv· v  V ´ v ‰v x = v ‰v y)
-Ü	´ f $‰v x z = f $‰v y z ± f $‰v z x = f $‰v z y
-°
-
-We now show that {\it EqRel} is in this sense extensional.
-
-=GFT
-Ûeqrel_ftvextensional_lemmaİ =
-   ô µ V $=‰v· FtvExtensional V (Ì $‰v· EqRel V ($=‰v, $‰v))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV $=‰v· FtvExtensional V (Ì$‰v· EqRel V ($=‰v, $‰v))®);
-a (rewrite_tac [get_spec ¬FtvExtensional®, let_def]
-	THEN REPEAT_N 8 strip_tac);
-(* *** Goal "1" *** *)
-a (strip_asm_tac (list_µ_elim [¬V®, ¬$=‰v®, ¬$‰v®] eqrel_totalmem_extensional_lemma));
-a (list_spec_nth_asm_tac 1 [¬x®, ¬z®]);
-a (list_spec_nth_asm_tac 2 [¬y®, ¬z®]);
-a (asm_rewrite_tac[]);
-a (CASES_T ¬µ z'· z'  V ´ z' ‰v x = z' ‰v z® asm_tac
-	THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1.1" *** *)
-a (LEMMA_T ¬µ z'· z'  V ´ z' ‰v y = z' ‰v z® rewrite_thm_tac
-	THEN1 REPEAT strip_tac THEN ASM_FC_T (fn tl => TRY (rewrite_tac tl)) []);
-a (spec_nth_asm_tac 2 ¬z'® THEN POP_ASM_T ante_tac);
-a (spec_nth_asm_tac 6 ¬z'® THEN POP_ASM_T rewrite_thm_tac);
-(* *** Goal "1.2" *** *)
-a (LEMMA_T ¬³ µ z'· z'  V ´ z' ‰v y = z' ‰v z® rewrite_thm_tac
-	THEN1 REPEAT strip_tac THEN ASM_FC_T (fn tl => TRY (rewrite_tac tl)) []);
-a (POP_ASM_T strip_asm_tac);
-a (¶_tac ¬z'® THEN asm_rewrite_tac[]);
-a (swap_nth_asm_concl_tac 1);
-a (spec_nth_asm_tac 6 ¬z'® THEN asm_rewrite_tac []);
-(* *** Goal "2" *** *)
-a (strip_asm_tac (list_µ_elim [¬V®, ¬$=‰v®, ¬$‰v®] eqrel_totalmem_extensional_lemma));
-a (list_spec_nth_asm_tac 1 [¬z®, ¬x®]);
-a (list_spec_nth_asm_tac 2 [¬z®, ¬y®]);
-a (asm_rewrite_tac[]);
-a (CASES_T ¬µ z'· z'  V ´ z' ‰v z = z' ‰v x® asm_tac
-	THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "2.1" *** *)
-a (LEMMA_T ¬µ z'· z'  V ´ z' ‰v z = z' ‰v y® rewrite_thm_tac
-	THEN1 REPEAT strip_tac THEN ASM_FC_T (fn tl => TRY (rewrite_tac tl)) []);
-(* *** Goal "2.2" *** *)
-a (LEMMA_T ¬³ µ z'· z'  V ´ z' ‰v z = z' ‰v y® rewrite_thm_tac
-	THEN1 REPEAT strip_tac THEN ASM_FC_T (fn tl => TRY (rewrite_tac tl)) []);
-a (POP_ASM_T strip_asm_tac);
-a (¶_tac ¬z'® THEN asm_rewrite_tac[]);
-a (swap_nth_asm_concl_tac 1);
-a (spec_nth_asm_tac 6 ¬z'® THEN asm_rewrite_tac []);
-val eqrel_ftvextensional_lemma = pop_thm ();
-=TEX
-}%ignore
-
-
-=GFT
-Ûtotalfixp_extensional_lemmaİ =
-   ô µ V eq mem $=‰v $‰v
-     · SFTotalFixp (V, eq, mem)
-         ´ (let $=‰v = BoolRel eq and $‰v = BoolRel mem
-         in µ x y
-         · x  V ± y  V ´ (x =‰v y ¤ (µ z· z  V ´ (z ‰v x ¤ z ‰v y))))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µV eq mem· SFTotalFixp (V, eq, mem) ´
-	let $=‰v = BoolRel eq and $‰v = BoolRel mem
-	in µx y· x  V ± y  V ´ (x =‰v y ´ µz· z  V ´ (z ‰v x ¤ z ‰v y))®);
-
-
-set_goal([], ¬µV eq mem· SFTotalFixp (V, eq, mem) ´
-	let $=‰v = BoolRel eq and $‰v = BoolRel mem
-	in µx y· x  V ± y  V ´ (x =‰v y ¤ µz· z  V ´ (z ‰v x ¤ z ‰v y))®);
-a (rewrite_tac (map get_spec [¬SFTotalFixp®, ¬BoolRel®, ¬SFFixp®, ¬SemanticFunctor®,
-	¬FunLeft®, ¬FunRight®]));
-a (rewrite_tac [let_def]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (ante_tac (list_µ_elim [¬V®, ¬(eq, mem)®, ¬x'®, ¬y®] eqrel_ftrue_lemma));
-a (asm_rewrite_tac[]);
-a (strip_tac);
-(* *** Goal "1.1" *** *)
-a (var_elim_asm_tac ¬x' = y®);
-(* *** Goal "1.2" *** *)
-a (SPEC_NTH_ASM_T 1 ¬z® ante_tac);
-a (rewrite_tac[]);
-a (strip_tac);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (ante_tac (list_µ_elim [¬V®, ¬(eq, mem)®, ¬x'®, ¬y®] eqrel_ftrue_lemma));
-a (asm_rewrite_tac[]);
-a (strip_tac);
-(* *** Goal "2.1" *** *)
-a (var_elim_asm_tac ¬x' = y®);
-(* *** Goal "2.2" *** *)
-a (SPEC_NTH_ASM_T 1 ¬z® ante_tac);
-a (rewrite_tac[]);
-a (strip_tac);
-a (DROP_NTH_ASM_T 1 ante_tac THEN asm_rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (ante_tac (list_µ_elim [¬V®, ¬(eq, mem)®, ¬x'®, ¬y®] eqrel_ftrue_lemma));
-a (asm_rewrite_tac[]);
-a (STRIP_T rewrite_thm_tac);
-a (REPEAT_N 4 strip_tac);
-a (fc_tac [get_spec ¬PrTotalOver®]);
-a (fc_tac [get_spec ¬TotalOver®]);
-a (SPEC_NTH_ASM_T 7 ¬z® (rewrite_thm_tac o (rewrite_rule [asm_rule ¬z  V®])));
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
-a (lemma_tac ¬mem z y = fFalse ² mem z y = fTrue®
-	THEN1 (LIST_SPEC_NTH_ASM_T 1 [¬z®, ¬y®] ante_tac
-		THEN rewrite_tac [asm_rule ¬z  V®, asm_rule ¬y  V®]
-		THEN prove_tac[])
-	THEN asm_rewrite_tac[]);
-a (lemma_tac ¬mem z x' = fFalse ² mem z x' = fTrue®
-	THEN1 (LIST_SPEC_NTH_ASM_T 2 [¬z®, ¬x'®] ante_tac
-		THEN rewrite_tac [asm_rule ¬z  V®, asm_rule ¬x'  V®]
-		THEN prove_tac[])
-	THEN asm_rewrite_tac[]);
-a (all_asm_fc_tac[]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
-val totalfixp_extensional_lemma = save_pop_thm "totalfixp_extensional_lemma";
-
-=IGN
-set_goal([], ¬µV eq mem $=‰v $‰v· SFTotalFixp (V, eq, mem) ´
-	let $=‰v = BoolRel eq and $‰v = BoolRel mem
-	in µx y· x  V ± y  V ´ (x =‰v y ´ µz· z  V ´ (x ‰v z ¤ y ‰v z))®);
-a (rewrite_tac (map get_spec [¬SFTotalFixp®, ¬BoolRel®, ¬SFFixp®, ¬SemanticFunctor®,
-	¬FunLeft®, ¬FunRight®, ¬ExtEqMem®, ¬ExtMem®]));
-a (rewrite_tac [let_def]);
-a (REPEAT_N 4 strip_tac);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[asm_rule ¬EqRel V (eq, mem) = eq®])));
-(* *** Goal "1" *** *)
-a (ante_tac (list_µ_elim [¬V®, ¬(eq, mem)®, ¬x'®, ¬y®] eqrel_ftrue_lemma));
-a (asm_rewrite_tac[]);
-a (strip_tac);
-(* *** Goal "1.1" *** *)
-a (var_elim_asm_tac ¬x' = y®);
-(* *** Goal "1.2" *** *)
-a (SPEC_NTH_ASM_T 1 ¬z® ante_tac);
-a (rewrite_tac[]);
-a (strip_tac);
-(* *** Goal "1.2.1" *** *)
-a (DROP_NTH_ASM_T 3 (asm_tac o (rewrite_rule[])));
-
-=TEX
-}%ignore
-
-¹HOLCONST
-Ü ÛMSfromSFFİ : GS SET ¸ (GS, FTV) PR ­ GS SET SET ¸ (GS SET, BOOL) BR
-÷üüüüüüüüüüü
-Ü µ (V:GS SET) (pr:(GS, FTV) PR)· MSfromSFF (V, pr) =
-Ü	let ($=‰v, $‰v) = (BoolRel (Fst pr), BoolRel (Snd pr)) in
-Ü	(QuotientSet V $=, Ìs t· µx y· x  s ± y  t ´ x ‰v y)		 
-°
-
-=GFT
-=TEX
-
-=SML
-new_parent "membership";
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¬µ(V, $=‰v, $‰v)· SFFixp (V, ($=‰v, $‰v)) ± PrTotalOver V ($=‰v, $‰v)
-		´ extensional (MSfromSFF (V, ($=‰v, $‰v)))®);
-a (rewrite_tac [let_def, get_spec ¬SFFixp®, get_spec ¬MSfromSFF®, get_spec ¬extensional®,
-	get_spec ¬BoolRel®, get_spec ¬PrTotalOver®]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (var_elim_asm_tac ¬s = t®);
-a (all_asm_fc_tac[]);
-(* *** Goal "2" *** *)
-a (var_elim_asm_tac ¬s = t®);
-a (all_asm_fc_tac[]);
-(* *** Goal "3" *** *)
-a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [sets_ext_clauses] THEN strip_tac);
-a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [sets_ext_clauses] THEN strip_tac);
-a (strip_tac);
-a (swap_nth_asm_concl_tac 6);
-a (rewrite_tac (map get_spec [¬SemanticFunctor®, ¬FunLeft®, ¬FunRight®, ¬MemRel®, ¬EqRel®]));
-eqrel_ftrue_lemma;
-
-=TEX
-}%ignore
-
 
 \subsubsection{Proof Contexts}
 
@@ -2334,11 +1229,176 @@ merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"] "ifos1";
 commit_pc "ifos1";
 =TEX
 
+\newpage
+\section{SEMANTIC FIXED POINTS}
+
+We now look for fixed points of the semantics of infinitary set theory.
+
+=SML
+open_theory "ifos";
+force_new_theory "Ûsfpİ";
+force_new_pc Û"'sfp"İ;
+merge_pcs ["'savedthm_cs_¶_proof"] "'sfp";
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos", "'sfp"];
+=TEX
+
+\subsection{The Semantic Functor}
+
+First we use the semantics above to define a functor which transforms membership relations.
+
+The input membership relation is that in the membership structure relative to which the semantics is defined.
+
+The output membership relation is obtained by considering the sets determined by formulae whose sole free variable is the empty set.
+Thus. under this resulting membership relation, (which will be a four-valued relation) the truth value of the claim that {\it m} is a member of {\it s} (where {\it m} and {\it s} are elements of the domain of discourse, which is sets coding formulae of infinitary first order set theory) is the value under the semantics for the formulae coded by {\it s} in the context of the variable assignment in which only the variable coded by the empty set is assigned a value and that value is {\it t}.
+
+The following function creates a variable assignment with just a value for the empty set.
+
+¹HOLCONST
+Ü ÛParam_šİ : GS ­ GS IS
+÷üüüüüüüüüüü
+Ü µp· Param_š p = Ìx· if x = š‰g then dpoE p else dpoB
+°
+
+¹HOLCONST
+Ü ÛSemanticFunctorİ: GS SET ­ (GS, FTV) BR ­ (GS, FTV) BR
+÷üüüüüüüüü
+Ü µ d $‰v· SemanticFunctor d $‰v =
+	Ìs m· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)) s (Param_š m)
+°
+
+=GFT
+Ûsemanticfunctor_increasing_thmİ =
+   ô µ d· Increasing (Pw (Pw $¼‰t‰4)) (Pw (Pw $¼‰t‰4)) (SemanticFunctor d)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µd· Increasing (Pw (Pw $¼‰t‰4)) (Pw (Pw $¼‰t‰4)) (SemanticFunctor d)®);
+a (strip_tac THEN LEMMA_T
+	¬SemanticFunctor d = (Ìr s m· r s (Param_š m)) o (Ì$‰v· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)))®
+	rewrite_thm_tac
+	THEN1 rewrite_tac [get_spec ¬SemanticFunctor®]);
+a (bc_tac [increasing_funcomp_thm]);
+a (¶_tac ¬Pw (Pw $¼‰t‰4)® THEN strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬Increasing®]);
+a (REPEAT strip_tac);
+a (asm_tac ¼‰t‰4_crpou_thm);
+a (asm_tac evalcf_tf4_increasing_lemma);
+a (ALL_FC_T (MAP_EVERY (fn t => fc_tac [(rewrite_rule
+	[get_spec ¬Increasing®, get_spec ¬RvO®] t)])) [evalform_increasing_thm]);
+a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¬Pw®])));
+a (asm_rewrite_tac [get_spec ¬Pw®]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬Increasing®, get_spec ¬Pw®, get_spec ¬Param_š®]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
+=TEX
+}%ignore
+
+\subsection{Properties of Fixed Points}
+
+The first property of interest concerns the conditions under which a fixed point of the semantic functor yields an extensional model of set theory.
+
+I suppose we might start by saying what a fixed point is:
+
+¹HOLCONST
+Ü ÛSFFixpİ : GS SET ­ (GS, FTV)BR ­ BOOL
+÷üüüüüüüüüüü
+Ü µd r· SFFixp d r ¤ SemanticFunctor d r = r
+°
+
+I am interested in interpretations of classical two-valued set theory and therefore will consider only fixed points which are total over the domain.
+
+¹HOLCONST
+Ü ÛTotalOverİ : 'a SET ­ ('a, FTV)BR ­ BOOL
+÷üüüüüüüüüüü
+Ü µ V r· TotalOver V r ¤ µx y·
+Ü	if x  V ± y  V
+Ü	then r x y = fTrue ² r x y = fFalse
+Ü	else r x y = fB
+°
+
+If a relationship is total over some domain we can convert it to a boolean relation, without loss of information (provided we remember the domain).
+
+¹HOLCONST
+Ü ÛBoolRelİ : ('a, FTV)BR ­ ('a, BOOL)BR
+÷üüüüüüüüüüü
+Ü µ r:('a, FTV)BR· BoolRel r = Ìx y· fTrue ¼‰t‰4 r x y
+°
+
+
+¹HOLCONST
+Ü ÛEqRelİ : 'a SET ­ ('a, FTV)BR ­ ('a, FTV)BR
+÷üüüüüüüüüüü
+Ü µ V r· EqRel V r = Ìx y·
+Ü	if x  V ± y = x then fTrue
+Ü	else	if µz· z  V ´ r x z = r y z ± (r x z = fTrue ² r x z = fFalse)
+Ü		then fTrue
+Ü		else	if ¶z· z  V ± {r x z; r y z} = {fTrue; fFalse}
+Ü			then fFalse
+Ü			else fB
+°
+
+
+=GFT
+eqrel_refl_lemma =
+	ô µ V pr x· x  V ´ fTrue ¼‰t‰4 EqRel V pr x x
+=TEX
+
+\ignore{
+=IGN
+set_goal ([], ¬µV pr x· x  V ´ fTrue ¼‰t‰4 EqRel V pr x x®);
+a (rewrite_tac [get_spec ¬EqRel®, let_def] THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+val eqrel_refl_lemma = pop_thm ();
+
+set_goal([], ¬µV r· TotalOver V r ± PreExtensional V r ´ Equiv (V, BoolRel r)®);
+a (PC_T1 "hol1" rewrite_tac [get_spec ¬TotalOver®, get_spec ¬BoolRel®, get_spec ¬Equiv®, get_spec ¬PreExtensional®]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬Refl®, eqrel_refl_lemma] THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬Sym®] THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac);
+a (ALL_FC_T rewrite_tac [eqrel_sym_lemma]);
+(* *** Goal "3" *** *)
+a (rewrite_tac [get_spec ¬Trans®] THEN REPEAT strip_tac);
+a (all_asm_fc_tac [eqrel_trans_lemma]);
+val eqrel_equiv_lemma = pop_thm ();
+
+
+
+
+
+
+I am only looking for extensional theories.
+The notation for sets we are using here is not canonical so each set has multiple representatives and we do not have extensionality.
+However, we can hope to be able to obtain an extensional interpretation by taking a quotient relative to extensional equality.
+The following condition suffices for this to be possible.
+
+What this says is that whenever two sets are not the members of all the same sets then there is something which is a member of one but not the other.
+
+¹HOLCONST
+Ü ÛPreExtensionalİ : GS SET ­ (GS, FTV)BR ­ BOOL
+÷üüüüüüüüüüü
+Ü µd r· PreExtensional d r ¤ µx y· x  d ± y  d
+				´ (¶z· z  d ± IsLub $¼‰t‰4 {r z x; r z y} fT)
+Ü				´ (¶z· z  d ± IsLub $¼‰t‰4 {r x z; r y z} fT)
+°
+
+If a membership relation is total and pre-extensional over some domain, then we can obtain from it an extensional boolean membership structure whose domain is equivalence classes under co-extensionality of the original domain.
+
+I will be looking to establish reasonable conditions under which the fixed points of the semantic functor will be {\it PreExtensional}, but first I need to establish that {\it PreExtensional}ity suffices for a fixedpoint of the semantic functor to yield and extensional interpretation of first order set theory.
+
+
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{ifos.th}
+\include{sfp.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]
