@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.18 2008/03/26 15:56:52 rbj01 Exp $
+$Id: t007.doc,v 1.19 2008/07/27 19:56:06 rbj Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/03/26 15:56:52 $ $
+Last Change $ $Date: 2008/07/27 19:56:06 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.18 2008/03/26 15:56:52 rbj01 Exp $ $
+$ $Id: t007.doc,v 1.19 2008/07/27 19:56:06 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -130,6 +130,219 @@ set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 set_flag ("pp_use_alias", false);
 =TEX
 
+\section{ORDERS AND BOUNDS}
+
+We need to talk about greatest lower bounds etc.
+This would have gone in ``ordered\_sets'' but it doesn't follow the general treatment their, so for the time being its here.
+
+First lets say what a lower bound is:
+
+πHOLCONST
+‹ €IsLb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s e∑ IsLb r s e = µx∑ x ç s ¥ r e x
+∞
+
+πHOLCONST
+‹ €IsUb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s e∑ IsUb r s e = µx∑ x ç s ¥ r x e
+∞
+
+Often the domain of our relations does not have a unique maximal element, and so there may be no greatest lower bound for the empty set.
+However, this affects the applications rather than the concept:
+
+πHOLCONST
+‹ €IsGlb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s e∑ IsGlb r s e § IsLb r s e ± µx∑ IsLb r s x ¥ r x e
+∞
+
+πHOLCONST
+‹ €IsLub› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s e∑ IsLub r s e § IsUb r s e ± µx∑ IsUb r s x ¥ r e x
+∞
+
+πHOLCONST
+‹ €Lub› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s∑ Lub r s = ≈x∑ IsLub r s x
+∞
+
+πHOLCONST
+‹ €Glb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r s∑ Glb r s = ≈x∑ IsGlb r s x
+∞
+
+=GFT
+€lub_unique_lemma› =
+   Ù µ X r x y∑ Antisym (Universe, r) ¥ IsLub r Y x ± IsLub r Y y ¥ x = y
+
+€lub_unique_lemma2› =
+   Ù µ X r x y
+     ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsLub r X x ± IsLub r X y ¥ x = y
+
+€glb_unique_lemma› =
+   Ù µ X r x y∑ Antisym (Universe, r) ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
+
+€glb_unique_lemma2› =
+   Ù µ X r x y
+     ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val lub_unique_lemma = save_pop_thm "lub_unique_lemma";
+
+set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val lub_unique_lemma2 = save_pop_thm "lub_unique_lemma2";
+
+set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsGlb r X x ± IsGlb r X y ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val glb_unique_lemma = save_pop_thm "glb_unique_lemma";
+
+set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = yÆ);
+a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
+a (REPEAT (asm_fc_tac[]));
+val glb_unique_lemma2 = save_pop_thm "glb_unique_lemma2";
+
+set_goal([], ¨µX r∑ (∂z∑ IsLub r X z) ¥ IsLub r X (Lub r X)Æ);
+a (rewrite_tac[get_spec ¨LubÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsLub r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+val lub_lub_lemma = save_pop_thm "lub_lub_lemma";
+
+set_goal([], ¨µX r∑ (∂z∑ IsGlb r X z) ¥ IsGlb r X (Glb r X)Æ);
+a (rewrite_tac[get_spec ¨GlbÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsGlb r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+val glb_glb_lemma = save_pop_thm "glb_glb_lemma";
+=TEX
+}%ignore
+
+=GFT
+€lub_ub_lemma1› =
+	Ù µ r X y∑ IsLub r X y ¥ (µ x∑ x ç X ¥ r x y)
+€glb_lb_lemma1› =
+	Ù µ r X y∑ IsGlb r X y ¥ (µ x∑ x ç X ¥ r y x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr X y∑ IsLub r X y ¥ µx∑ x ç X ¥ r x yÆ);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsLubÆ]);
+a (all_asm_fc_tac[get_spec ¨IsUbÆ]);
+val lub_ub_lemma1 = save_pop_thm "lub_ub_lemma1";
+
+set_goal([], ¨µr X y∑ IsGlb r X y ¥ µx∑ x ç X ¥ r y xÆ);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsGlbÆ]);
+a (all_asm_fc_tac[get_spec ¨IsLbÆ]);
+val glb_lb_lemma1 = save_pop_thm "glb_lb_lemma1";
+=TEX
+}%ignore
+
+
+πHOLCONST
+‹ €NeGlbsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ NeGlbsExist r § µs∑ (∂d∑ d ç s) ¥ ∂e∑ IsGlb r s e
+∞
+
+πHOLCONST
+‹ €GlbsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ GlbsExist r § µs∑ ∂e∑ IsGlb r s e
+∞
+
+πHOLCONST
+‹ €LubsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ LubsExist r § µs∑ ∂e∑ IsLub r s e
+∞
+
+=GFT
+€lub_lub_lemma2› =
+   Ù µ r X∑ LubsExist r ¥ IsLub r X (Lub r X)
+
+€glb_glb_lemma2› =
+   Ù µ r X∑ GlbsExist r ¥ IsGlb r X (Glb r X)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr X∑ LubsExist r ¥ IsLub r X (Lub r X)Æ);
+a (rewrite_tac[get_spec ¨LubsExistÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] lub_lub_lemma));
+a (asm_fc_tac[]);
+val lub_lub_lemma2 = save_pop_thm "lub_lub_lemma2";
+
+set_goal([], ¨µr X∑ GlbsExist r ¥ IsGlb r X (Glb r X)Æ);
+a (rewrite_tac[get_spec ¨GlbsExistÆ]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] glb_glb_lemma));
+a (asm_fc_tac[]);
+val glb_glb_lemma2 = save_pop_thm "glb_glb_lemma2";
+=TEX
+}%ignore
+
+=GFT
+€less_lub_lemma› =
+	Ù µ r∑ LubsExist r ¥ (µ x X∑ x ç X ¥ r x (Lub r X))
+€gt_glb_lemma› =
+	Ù µ r∑ GlbsExist r ¥ (µ x X∑ x ç X ¥ r (Glb r X) x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ LubsExist r ¥ µx X∑ x ç X ¥ r x (Lub r X)Æ);
+a (REPEAT strip_tac THEN fc_tac [lub_lub_lemma2]);
+a (ufc_tac [lub_ub_lemma1]);
+a (asm_fc_tac[]);
+val less_lub_lemma = save_pop_thm "less_lub_lemma";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ µx X∑ x ç X ¥ r (Glb r X) xÆ);
+a (REPEAT strip_tac THEN fc_tac [glb_glb_lemma2]);
+a (ufc_tac [glb_lb_lemma1]);
+a (asm_fc_tac[]);
+val gt_glb_lemma = save_pop_thm "gt_glb_lemma";
+=TEX
+}%ignore
+
+=GFT
+€lub_sub_lemma› =
+   Ù µ r∑ LubsExist r ¥ (µ X Y∑ X Ä Y ¥ r (Lub r X) (Lub r Y))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ LubsExist r ¥ µX Y∑ X Ä Y ¥ r (Lub r X) (Lub r Y)Æ);
+a (REPEAT strip_tac THEN fc_tac [lub_lub_lemma2]);
+a (ufc_tac [get_spec ¨IsLubÆ]);
+a (lemma_tac ¨IsUb r X (Lub r Y)Æ
+	THEN1 (rewrite_tac [get_spec ¨IsUbÆ]
+		THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 5 (PC_T1 "hol1" strip_asm_tac));
+a (asm_fc_tac[]);
+a (fc_tac [less_lub_lemma]);
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨YÆ]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val lub_sub_lemma = save_pop_thm "lub_sub_lemma";
+=TEX
+}%ignore
+
 \section{FIXED POINTS}
 
 The general scheme involves finding closures of sets under varieties of operators.
@@ -176,6 +389,109 @@ declare_infix (300, "OpenUnder");
 ∞
 
 \subsection{Least and Greatest Fixed Points}
+
+Now we define the conditions for being a least fixed point.
+
+πHOLCONST
+‹ €IsLfp› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a) ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r f e∑ IsLfp r f e §
+‹	let fp = {x | f x = x}
+‹	in e ç fp ± IsGlb r fp e
+∞
+
+πHOLCONST
+‹ €IsGfp› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a) ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r f e∑ IsGfp r f e §
+‹	let fp = {x | f x = x}
+‹	in e ç fp ± IsLub r fp e
+∞
+
+=GFT
+€islfp_lemma1› =
+	Ù µ r f e∑ IsLfp r f e ¥ e = f e ± (µ x∑ x = f x ¥ r e x)
+
+€isgfp_lemma1› =
+	Ù µ r f e∑ IsGfp r f e ¥ e = f e ± (µ x∑ x = f x ¥ r x e)
+
+€islfp_lemma2› =
+	Ù µ r f e∑ IsLfp r f e ¥ f e = e ± (µ x∑ f x = x ¥ r e x)
+
+€isgfp_lemma2› =
+	Ù µ r f e∑ IsGfp r f e ¥ f e = e ± (µ x∑ f x = x ¥ r x e)
+
+€islfp_unique_lemma› =
+	Ù µ r f e d∑ Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ¥ e = d
+
+€isgfp_unique_lemma› =
+   Ù µ r f e d∑ Antisym (Universe, r) ± IsGfp r f e ± IsGfp r f d ¥ e = d
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr f e∑ IsLfp r f e ¥ e = f e
+	± (µx∑ x = f x ¥ r e x)Æ);
+a (rewrite_tac [get_spec ¨IsLfpÆ, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (fc_tac [get_spec ¨IsLbÆ]);
+a (DROP_NTH_ASM_T 4 (asm_tac o (conv_rule eq_sym_conv)));
+a (asm_fc_tac[]);
+val islfp_lemma1 = save_pop_thm "islfp_lemma1";
+
+set_goal([], ¨µr f e∑ IsGfp r f e ¥ e = f e
+	± (µx∑ x = f x ¥ r x e)Æ);
+a (rewrite_tac [get_spec ¨IsGfpÆ, let_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (fc_tac [get_spec ¨IsUbÆ]);
+a (DROP_NTH_ASM_T 4 (asm_tac o (conv_rule eq_sym_conv)));
+a (asm_fc_tac[]);
+val isgfp_lemma1 = save_pop_thm "isgfp_lemma1";
+
+set_goal([], ¨µr f e∑ IsLfp r f e ¥ f e = e
+	± (µx∑ f x = x¥ r e x)Æ);
+a (rewrite_tac [get_spec ¨IsLfpÆ, let_def]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (fc_tac [get_spec ¨IsLbÆ]);
+a (all_asm_ante_tac THEN rewrite_tac[] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val islfp_lemma2 = save_pop_thm "islfp_lemma2";
+
+set_goal([], ¨µr f e∑ IsGfp r f e ¥ f e = e
+	± (µx∑ f x = x ¥ r x e)Æ);
+a (rewrite_tac [get_spec ¨IsGfpÆ, let_def]
+	THEN REPEAT strip_tac);
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (fc_tac [get_spec ¨IsUbÆ]);
+a (all_asm_ante_tac THEN rewrite_tac[] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val isgfp_lemma2 = save_pop_thm "isgfp_lemma2";
+
+set_goal([], ¨µr f e d∑ Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ¥ e = dÆ);
+a (REPEAT strip_tac THEN fc_tac [islfp_lemma1, get_spec ¨AntisymÆ]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [] THEN contr_tac);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+val islfp_unique_lemma = pop_thm();
+
+set_goal([], ¨µr f e d∑ Antisym (Universe, r) ± IsGfp r f e ± IsGfp r f d ¥ e = dÆ);
+a (REPEAT strip_tac THEN fc_tac [isgfp_lemma1, get_spec ¨AntisymÆ]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [] THEN contr_tac);
+a (all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+val isgfp_unique_lemma = pop_thm();
+=TEX
+}%ignore
+
 
 πHOLCONST
 ‹ €Lfp› : ('a SET ≠ 'a SET) ≠ 'a SET
@@ -380,7 +696,7 @@ val gfp_open_thm1 = save_thm ("gfp_open_thm1",
 
 \subsection{Induction and Co-induction}
 
-To prove something about an inductively defined set you prove that all the operations which were used to define the set preserve the required property.
+To prove something about the members of an inductively defined set you prove that all the operations which were used to define the set preserve the required property.
 In our case, where the operator is defined over sets of elements and we think of ourselves as starting out with the empty set, there is no ``base case'' for the induction
 (alternatively think of the base case as the application of the operator to the empty set).
 
@@ -564,204 +880,6 @@ a (strip_asm_tac (list_µ_elim [¨YÆ, ¨X ° YÆ, ¨rÆ] subrel_refl_thm));
 a contr_tac;
 val rpo_°_lemma = pop_thm();
 
-=TEX
-}%ignore
-
-We need to talk about greatest lower bounds in establishing fixed points of the semantic functor.
-
-First lets say what a lower bound is:
-
-πHOLCONST
-‹ €IsLb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s e∑ IsLb r s e = µx∑ x ç s ¥ r e x
-∞
-
-πHOLCONST
-‹ €IsUb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s e∑ IsUb r s e = µx∑ x ç s ¥ r x e
-∞
-
-Often the domain of our relations does not have a unique maximal element, and so there may be no greatest lower bound for the empty set.
-However, this affects the applications rather than the concept:
-
-πHOLCONST
-‹ €IsGlb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s e∑ IsGlb r s e § IsLb r s e ± µx∑ IsLb r s x ¥ r x e
-∞
-
-πHOLCONST
-‹ €IsLub› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s e∑ IsLub r s e § IsUb r s e ± µx∑ IsUb r s x ¥ r e x
-∞
-
-πHOLCONST
-‹ €Lub› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s∑ Lub r s = ≈x∑ IsLub r s x
-∞
-
-πHOLCONST
-‹ €Glb› : ('a ≠ 'a ≠ BOOL) ≠ 'a SET ≠ 'a
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r s∑ Glb r s = ≈x∑ IsGlb r s x
-∞
-
-=GFT
-€lub_unique_lemma› =
-   Ù µ X r x y∑ Antisym (Universe, r) ¥ IsLub r Y x ± IsLub r Y y ¥ x = y
-
-€lub_unique_lemma2› =
-   Ù µ X r x y
-     ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsLub r X x ± IsLub r X y ¥ x = y
-
-€glb_unique_lemma› =
-   Ù µ X r x y∑ Antisym (Universe, r) ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
-
-€glb_unique_lemma2› =
-   Ù µ X r x y
-     ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
-a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
-a (REPEAT (asm_fc_tac[]));
-val lub_unique_lemma = save_pop_thm "lub_unique_lemma";
-
-set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
-a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
-a (REPEAT (asm_fc_tac[]));
-val lub_unique_lemma2 = save_pop_thm "lub_unique_lemma2";
-
-set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsGlb r X x ± IsGlb r X y ¥ x = yÆ);
-a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
-a (REPEAT (asm_fc_tac[]));
-val glb_unique_lemma = save_pop_thm "glb_unique_lemma";
-
-set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = yÆ);
-a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
-a (REPEAT (asm_fc_tac[]));
-val glb_unique_lemma2 = save_pop_thm "glb_unique_lemma2";
-
-set_goal([], ¨µX r∑ (∂z∑ IsLub r X z) ¥ IsLub r X (Lub r X)Æ);
-a (rewrite_tac[get_spec ¨LubÆ] THEN REPEAT strip_tac);
-a (≈_tac ¨≈ x∑ IsLub r X xÆ);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-val lub_lub_lemma = save_pop_thm "lub_lub_lemma";
-
-set_goal([], ¨µX r∑ (∂z∑ IsGlb r X z) ¥ IsGlb r X (Glb r X)Æ);
-a (rewrite_tac[get_spec ¨GlbÆ] THEN REPEAT strip_tac);
-a (≈_tac ¨≈ x∑ IsGlb r X xÆ);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-val glb_glb_lemma = save_pop_thm "glb_glb_lemma";
-=TEX
-}%ignore
-
-Now we define the conditions for being a least fixed point.
-
-πHOLCONST
-‹ €IsLfp› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a) ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r f e∑ IsLfp r f e §
-‹	let fp = {x | f x = x}
-‹	in e ç fp ± IsGlb r fp e
-∞
-
-πHOLCONST
-‹ €IsGfp› : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'a) ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r f e∑ IsGfp r f e §
-‹	let fp = {x | f x = x}
-‹	in e ç fp ± IsLub r fp e
-∞
-
-=GFT
-€islfp_lemma1› =
-	Ù µ r f e∑ IsLfp r f e ¥ e = f e ± (µ x∑ x = f x ¥ r e x)
-
-€isgfp_lemma1› =
-	Ù µ r f e∑ IsGfp r f e ¥ e = f e ± (µ x∑ x = f x ¥ r x e)
-
-€islfp_lemma2› =
-	Ù µ r f e∑ IsLfp r f e ¥ f e = e ± (µ x∑ f x = x ¥ r e x)
-
-€isgfp_lemma2› =
-	Ù µ r f e∑ IsGfp r f e ¥ f e = e ± (µ x∑ f x = x ¥ r x e)
-
-€islfp_unique_lemma› =
-	Ù µ r f e d∑ Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ¥ e = d
-
-€isgfp_unique_lemma› =
-   Ù µ r f e d∑ Antisym (Universe, r) ± IsGfp r f e ± IsGfp r f d ¥ e = d
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µr f e∑ IsLfp r f e ¥ e = f e
-	± (µx∑ x = f x ¥ r e x)Æ);
-a (rewrite_tac [get_spec ¨IsLfpÆ, let_def]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (fc_tac [get_spec ¨IsGlbÆ]);
-a (fc_tac [get_spec ¨IsLbÆ]);
-a (DROP_NTH_ASM_T 4 (asm_tac o (conv_rule eq_sym_conv)));
-a (asm_fc_tac[]);
-val islfp_lemma1 = save_pop_thm "islfp_lemma1";
-
-set_goal([], ¨µr f e∑ IsGfp r f e ¥ e = f e
-	± (µx∑ x = f x ¥ r x e)Æ);
-a (rewrite_tac [get_spec ¨IsGfpÆ, let_def]
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (fc_tac [get_spec ¨IsLubÆ]);
-a (fc_tac [get_spec ¨IsUbÆ]);
-a (DROP_NTH_ASM_T 4 (asm_tac o (conv_rule eq_sym_conv)));
-a (asm_fc_tac[]);
-val isgfp_lemma1 = save_pop_thm "isgfp_lemma1";
-
-set_goal([], ¨µr f e∑ IsLfp r f e ¥ f e = e
-	± (µx∑ f x = x¥ r e x)Æ);
-a (rewrite_tac [get_spec ¨IsLfpÆ, let_def]
-	THEN REPEAT strip_tac);
-a (fc_tac [get_spec ¨IsGlbÆ]);
-a (fc_tac [get_spec ¨IsLbÆ]);
-a (all_asm_ante_tac THEN rewrite_tac[] THEN REPEAT strip_tac
-	THEN asm_fc_tac[]);
-val islfp_lemma2 = save_pop_thm "islfp_lemma2";
-
-set_goal([], ¨µr f e∑ IsGfp r f e ¥ f e = e
-	± (µx∑ f x = x ¥ r x e)Æ);
-a (rewrite_tac [get_spec ¨IsGfpÆ, let_def]
-	THEN REPEAT strip_tac);
-a (fc_tac [get_spec ¨IsLubÆ]);
-a (fc_tac [get_spec ¨IsUbÆ]);
-a (all_asm_ante_tac THEN rewrite_tac[] THEN REPEAT strip_tac
-	THEN asm_fc_tac[]);
-val isgfp_lemma2 = save_pop_thm "isgfp_lemma2";
-
-set_goal([], ¨µr f e d∑ Antisym (Universe, r) ± IsLfp r f e ± IsLfp r f d ¥ e = dÆ);
-a (REPEAT strip_tac THEN fc_tac [islfp_lemma1, get_spec ¨AntisymÆ]);
-a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [] THEN contr_tac);
-a (all_asm_fc_tac[]);
-a (all_asm_fc_tac[]);
-val islfp_unique_lemma = pop_thm();
-
-set_goal([], ¨µr f e d∑ Antisym (Universe, r) ± IsGfp r f e ± IsGfp r f d ¥ e = dÆ);
-a (REPEAT strip_tac THEN fc_tac [isgfp_lemma1, get_spec ¨AntisymÆ]);
-a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [] THEN contr_tac);
-a (all_asm_fc_tac[]);
-a (all_asm_fc_tac[]);
-val isgfp_unique_lemma = pop_thm();
-
 set_goal([], ¨∂Lfpâc∑ µ r f∑ (∂ e∑ IsLfp r f e) ¥ IsLfp r f (Lfpâc r f)Æ);
 a (REPEAT strip_tac
 	THEN ∂_tac ¨Ãr f∑ ≈e∑ IsLfp r f eÆ
@@ -877,36 +995,10 @@ val increasing_funcomp_thm2 = save_pop_thm "increasing_funcomp_thm2";
 =TEX
 }%ignore
 
-
-
 Since the least fixed point will be a greatest lower bound, we need to know that greatest lower bounds exist to prove that there is a fixed point.
 Since we don't have a top element we assert only the existence of a greatest lower bound for non-empty sets.
 
-πHOLCONST
-‹ €NeGlbsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r∑ NeGlbsExist r § µs∑ (∂d∑ d ç s) ¥ ∂e∑ IsGlb r s e
-∞
-
-πHOLCONST
-‹ €GlbsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r∑ GlbsExist r § µs∑ ∂e∑ IsGlb r s e
-∞
-
-πHOLCONST
-‹ €LubsExist› : ('a ≠ 'a ≠ BOOL) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ r∑ LubsExist r § µs∑ ∂e∑ IsLub r s e
-∞
-
 =GFT
-€lub_lub_lemma2› =
-   Ù µ r X∑ LubsExist r ¥ IsLub r X (Lub r X)
-
-€glb_glb_lemma2› =
-   Ù µ r X∑ GlbsExist r ¥ IsGlb r X (Glb r X)
-
 €mono_fixp_thm› =
    Ù µ f r
      ∑ Refl (Universe, r)
@@ -938,22 +1030,6 @@ Since we don't have a top element we assert only the existence of a greatest low
 
 \ignore{
 =SML
-set_goal([], ¨µr X∑ LubsExist r ¥ IsLub r X (Lub r X)Æ);
-a (rewrite_tac[get_spec ¨LubsExistÆ]
-	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¨XÆ);
-a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] lub_lub_lemma));
-a (asm_fc_tac[]);
-val lub_lub_lemma2 = save_pop_thm "lub_lub_lemma2";
-
-set_goal([], ¨µr X∑ GlbsExist r ¥ IsGlb r X (Glb r X)Æ);
-a (rewrite_tac[get_spec ¨GlbsExistÆ]
-	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¨XÆ);
-a (strip_asm_tac (list_µ_elim [¨XÆ, ¨rÆ] glb_glb_lemma));
-a (asm_fc_tac[]);
-val glb_glb_lemma2 = save_pop_thm "glb_glb_lemma2";
-
 set_goal([], ¨µf r∑ Refl (Universe, r)
 	± (µx y∑ r x y ± r y x ¥ x = y)
 	± trans r
@@ -2769,15 +2845,6 @@ a (rewrite_tac [ext_thm, let_def, get_spec ¨ClosureâcÆ, get_spec ¨$o:(('a≠'c)≠((
 
 €crpou_increasing_gfp_lemma2› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsGfp r f (Gfpâc r f)
-
-€crpou_induction_thm› =
-   Ù µ r f p
-     ∑ CRpoU r
-           ± Increasing r r f
-           ± (µ x∑ p x ¥ p (f x))
-           ± (µ s∑ (µ x∑ x ç s ¥ p x) ¥ p (Lub r s))
-         ¥ p (Lfpâc r f)
-
 =TEX
 
 \ignore{
@@ -2889,8 +2956,39 @@ a (REPEAT strip_tac THEN all_fc_tac [crpou_increasing_gfp_lemma1]);
 a (bc_tac [get_spec ¨GfpâcÆ]);
 a (∂_tac ¨gÆ THEN strip_tac);
 val crpou_increasing_gfp_lemma2 = save_pop_thm "crpou_increasing_gfp_lemma2";
-=IGN
+=TEX
+}%ignore
 
+\subsection{Continuity and Induction}
+
+To prove the properties of least fixed points (not the properties of their members) one approach is to prove:
+
+\begin{itemize}
+\item that the bottom element has the property
+\item that the function preserves the property
+\item that the property is ``continuous''
+\end{itemize}
+
+The purpose of this section is to formulate suitable notions of continuity.
+
+I did consider using the theory "topology" but that seemed likely to be too difficult to bend to this context.
+
+
+Here's an induction principle:
+
+=GFT
+€crpou_induction_thm› =
+   Ù µ r f p
+     ∑ CRpoU r
+           ± Increasing r r f
+           ± (µ x∑ p x ¥ p (f x))
+           ± (µ s∑ (µ x∑ x ç s ¥ p x) ¥ p (Lub r s))
+         ¥ p (Lfpâc r f)
+
+=TEX
+
+\ignore{
+=SML
 set_goal([], ¨µr f p∑ CRpoU r 
 	± Increasing r r f
 	± (µx∑ p x ¥ p (f x))
@@ -2911,8 +3009,35 @@ val crpou_induction_thm = save_pop_thm "crpou_fixp_induction_thm";
 =TEX
 }%ignore
 
+I'm going to give a name to the condition required in this induction principle.
 
+πHOLCONST
+‹ €ContProp›: ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ r p∑ ContProp r p § µs∑ (µy∑ y ç s ¥ p y) ¥ p (Lub r s)
+∞
 
+And then restate the principle using the name:
+
+=GFT
+contprop_induction_thm =
+   Ù µ r f p
+     ∑ CRpoU r ± Increasing r r f ± (µ x∑ p x ¥ p (f x)) ± ContProp r p
+         ¥ p (Lfpâc r f)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr f p∑ CRpoU r 
+	± Increasing r r f
+	± (µx∑ p x ¥ p (f x))
+	± ContProp r p
+	¥ p (Lfpâc r f)
+	Æ);
+a (rewrite_tac [get_spec ¨ContPropÆ, crpou_induction_thm]);
+val contprop_induction_thm = save_pop_thm "contprop_induction_thm";
+=TEX
+}%ignore
 
 \section{INDUCTIVE DEFINITIONS OF SETS}
 
@@ -3733,7 +3858,7 @@ set_goal([], ¨µR∑ PseudoWellFounded R §
 =TEX
 }%ignore
 
-The following theorems correspond to the induction principles in \cite{Forster87}, p14.
+The following theorems correspond to the induction principles in \cite{forster92}, p14.
 
 =GFT
 p_induct_thm1 =
