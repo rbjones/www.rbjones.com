@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.3 2008/07/27 19:56:06 rbj Exp $
+$Id: t026.doc,v 1.4 2008/07/31 07:53:16 rbj Exp $
 open_theory "ifos";
 set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 =TEX
@@ -40,12 +40,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/07/27 19:56:06 $ $
+Last Change $ $Date: 2008/07/31 07:53:16 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.3 2008/07/27 19:56:06 rbj Exp $ $
+$ $Id: t026.doc,v 1.4 2008/07/31 07:53:16 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -122,7 +122,7 @@ So its just an ordered pair of `terms' (and in our case that just means variable
 πHOLCONST
 ‹ €IsAf› : GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µt∑ IsAf t = fst t = (Natâg 0)
+‹    µt∑ IsAf t § fst t = (Natâg 0)
 ∞
 
 πHOLCONST
@@ -146,7 +146,7 @@ So its just an ordered pair of `terms' (and in our case that just means variable
 πHOLCONST
 ‹ €IsCf› : GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µt∑ IsCf t = fst t = (Natâg 1)
+‹    µt∑ IsCf t § fst t = (Natâg 1)
 ∞
 
 πHOLCONST
@@ -1324,12 +1324,12 @@ I am interested in interpretations of classical two-valued set theory and theref
 €totover_true_lemma› =
    Ù µ V r
      ∑ TotalOver V r
-         ¥ (µ x y∑ x ç V ± y ç V ¥ fTrue ºâtâ4 r x y = r x y = fTrue)
+         ¥ (µ x y∑ x ç V ± y ç V ¥ (fTrue ºâtâ4 r x y § r x y = fTrue))
 
 €totover_false_lemma› =
   Ù µ V r
      ∑ TotalOver V r
-         ¥ (µ x y∑ x ç V ± y ç V ¥ fFalse ºâtâ4 r x y = r x y = fFalse)
+         ¥ (µ x y∑ x ç V ± y ç V ¥ (fFalse ºâtâ4 r x y § r x y = fFalse))
 =TEX
 
 \ignore{
@@ -1348,26 +1348,6 @@ val totover_false_lemma = save_pop_thm "totover_false_lemma";
 =TEX
 }%ignore
 
-However it is useful to consider some properties of partial relations in order to establish the properties of fixed points.
-
-πHOLCONST
-‹ €BelowEquiv› : GS SET ≠ (GS, FTV)BR ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ BelowEquiv V r § µx y z∑ x ç V ± y ç V ± z ç V
-‹			¥ (r x x) ºâtâ4 fTrue
-‹			± (fTrue ºâtâ4 (r x y) ± fTrue ºâtâ4 (r y z) ¥ (r x z) ºâtâ4 fTrue) 
-‹			± (fTrue ºâtâ4 (r x y) ¥ (r y x) ºâtâ4 fTrue) 
-∞
-
-πHOLCONST
-‹ €AboveEquiv› : GS SET ≠ (GS, FTV)BR ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ AboveEquiv V r § µx y z∑ x ç V ± y ç V ± z ç V
-‹			¥ fTrue ºâtâ4 (r x x)
-‹			± ((r x y) ºâtâ4 fTrue ± (r y z) ºâtâ4 fTrue ¥ (r x z) ºâtâ4 fTrue) 
-‹			± ((r x y) ºâtâ4 fTrue ¥ (r y x) ºâtâ4 fTrue) 
-∞
-
 If a relationship is total over some domain we can convert it to a boolean relation, without loss of information (provided we remember the domain).
 
 πHOLCONST
@@ -1377,52 +1357,31 @@ If a relationship is total over some domain we can convert it to a boolean relat
 ∞
 
 =GFT
-total_belowequiv_lemma =
-   Ù µ V r∑ BelowEquiv V r ± TotalOver V r ¥ Equiv (V, BoolRel r)
 =TEX
 
-\ignore{
-=SML
-set_goal([], ¨µ (V:GS SET) r ∑ BelowEquiv V r ± TotalOver V r ¥ Equiv (V, BoolRel r)Æ);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¨BelowEquivÆ, ¨TotalOverÆ, ¨EquivÆ, ¨BoolRelÆ])
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN all_asm_fc_tac[]);
-a (list_spec_nth_asm_tac 3 [¨xÆ, ¨xÆ] THEN_TRY asm_rewrite_tac[]
-	THEN DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac THEN all_asm_fc_tac[]);
-a (list_spec_nth_asm_tac 7 [¨yÆ, ¨xÆ] THEN_TRY asm_rewrite_tac[]
-	THEN DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac THEN all_asm_fc_tac[]);
-a (list_spec_nth_asm_tac 11 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]
-	THEN DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[]);
-val total_belowequiv_lemma = save_pop_thm "total_belowequiv_lemma";
-=TEX
-}%ignore
+This one probably isn't going to be useful.
 
 πHOLCONST
 ‹ €EqRel› : 'a SET ≠ ('a, FTV)BR ≠ ('a, FTV)BR
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ V r∑ EqRel V r = Ãx y∑
-	if x ç V ± y ç V
-	then
-	Lub $ºâtâ4 {t |
-		(x = y ≤ µz∑ z ç V ¥	fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z
-					≤ fFalse ºâtâ4 r x z ± fFalse ºâtâ4 r y z)
-		± t = fTrue
-	≤	(∂z∑ z ç V ± 	(fTrue ºâtâ4 r x z ± fFalse ºâtâ4 r y z
-					≤ fFalse ºâtâ4 r x z ± fTrue ºâtâ4 r y z))
-		± t = fFalse
-	}
-	else fB
+‹	if x ç V ± y ç V
+‹	then
+‹	Lub $ºâtâ4 {t |
+‹		(x = y ≤ µz∑ z ç V ¥
+‹				fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z
+‹				≤ fFalse ºâtâ4 r x z ± fFalse ºâtâ4 r y z)
+‹		± t = fTrue
+‹	≤	(∂z∑ z ç V ±
+‹				(fTrue ºâtâ4 r x z ± fFalse ºâtâ4 r y z
+‹				≤ fFalse ºâtâ4 r x z ± fTrue ºâtâ4 r y z))
+‹		± t = fFalse
+‹	}
+‹	else fB
 ∞
 
 =GFT
-€ftrue_eqrel_lemma› =
+€eqrel_ftrue_lemma› =
    Ù µ V r x y
      ∑ fTrue ºâtâ4 EqRel V r x y
          = (x ç V ± y ç V ±
@@ -1438,6 +1397,14 @@ val total_belowequiv_lemma = save_pop_thm "total_belowequiv_lemma";
    Ù µ V pr x y
      ∑ x ç V ± y ç V ± fTrue ºâtâ4 EqRel V pr x y
          ¥ fTrue ºâtâ4 EqRel V pr y x
+
+€eqrel_boolrel_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r
+         ¥ (µ x y
+         ∑ x ç V ± y ç V
+             ¥ (BoolRel (EqRel V r) x y
+               § (µ z∑ z ç V ¥ (BoolRel r x z § BoolRel r y z))))
 =TEX
 
 \ignore{
@@ -1476,19 +1443,50 @@ a (fc_tac [get_spec ¨IsLubÆ]);
 a (LEMMA_T ¨IsUb $ºâtâ4 {fFalse} fFalseÆ asm_tac THEN1 rewrite_tac[]);
 a (asm_fc_tac[]);
 a (strip_tac THEN all_asm_fc_tac [ºâtâ4_trans_thm]);
-val ftrue_eqrel_lemma = save_pop_thm "ftrue_eqrel_lemma";
+val eqrel_ftrue_lemma = save_pop_thm "eqrel_ftrue_lemma";
 
 set_goal ([], ¨µV pr x∑ x ç V ¥ fTrue ºâtâ4 EqRel V pr x xÆ);
-a (rewrite_tac [ftrue_eqrel_lemma]);
+a (rewrite_tac [eqrel_ftrue_lemma]);
 val eqrel_refl_lemma = pop_thm ();
 
 set_goal ([], ¨µV pr x y∑ x ç V ± y ç V ± fTrue ºâtâ4 EqRel V pr x y ¥ fTrue ºâtâ4 EqRel V pr y xÆ);
-a (rewrite_tac [ftrue_eqrel_lemma]
+a (rewrite_tac [eqrel_ftrue_lemma]
 	THEN REPEAT strip_tac 
 	THEN (asm_fc_tac[])
 	THEN_TRY asm_rewrite_tac[]
 	THEN var_elim_asm_tac ¨x = yÆ);
 val eqrel_sym_lemma = pop_thm ();
+
+set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥
+	(BoolRel (EqRel V r) x y § µz∑ z ç V ¥ (BoolRel r x z § BoolRel r y z))Æ);
+a (rewrite_tac [get_spec ¨BoolRelÆ, eqrel_ftrue_lemma]);
+a (REPEAT_N 6 strip_tac THEN asm_rewrite_tac[]);
+a (cases_tac ¨x=yÆ THEN asm_rewrite_tac[]);
+a (fc_tac [get_spec ¨TotalOverÆ]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+a (POP_ASM_T discard_tac THEN REPEAT_N 2 (POP_ASM_T ante_tac));
+a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+a (POP_ASM_T ante_tac THEN POP_ASM_T discard_tac THEN POP_ASM_T ante_tac);
+a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (POP_ASM_T ante_tac);
+a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (POP_ASM_T ante_tac);
+a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (POP_ASM_T ante_tac);
+a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o eq_sym_rule o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+a (POP_ASM_T ante_tac);
+a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val eqrel_boolrel_lemma = save_pop_thm "eqrel_boolrel_lemma";
 =TEX
 }%ignore
 
@@ -1496,13 +1494,50 @@ It turns out that {\it EqRel} is not transitive, and so its probably not going t
 It not clear that reformulation is required, since the equality relation can be defined as a function on the boolean version of a total fixed point, so there may be no need for a partial version.
 When I wrote it I thought it would figure in the reasoning about the required properties of total fixed points, but that was probably a mistake.
 
+Here's the definition over a boolean relationship:
 
-I am only looking for extensional theories.
+πHOLCONST
+‹ €BoolEqRel› : GS SET ≠ (GS, BOOL)BR ≠ (GS, BOOL)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ BoolEqRel V r = Ãx y∑ µz∑ z ç V ¥ (r z x § r z y)
+∞
+
+=GFT
+€booleqrel_equiv_lemma› =
+	Ù µ V r∑ Equiv (V, BoolEqRel V r)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µV r∑ Equiv (V, BoolEqRel V r)Æ);
+a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BoolEqRelÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+(* *** Goal "3" *** *)
+a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
+(* *** Goal "3.1" *** *)
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "3.2" *** *)
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (asm_rewrite_tac []);
+val booleqrel_equiv_lemma = save_pop_thm "booleqrel_equiv_lemma";
+=TEX
+}%ignore
+
 The notation for sets we are using here is not canonical so each set has multiple representatives and we do not have extensionality.
 However, we can hope to be able to obtain an extensional interpretation by taking a quotient relative to extensional equality.
 The following condition suffices for this to be possible.
 
-What this says is that whenever two sets are not the members of all the same sets then there is something which is a member of one but not the other.
+What this says is that whenever two sets are not the members of all the same sets then they do not have the same members.
 
 πHOLCONST
 ‹ €PreExtensional› : GS SET ≠ (GS, FTV)BR ≠ BOOL
@@ -1512,10 +1547,81 @@ What this says is that whenever two sets are not the members of all the same set
 ‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r x z; r y z} fT)
 ∞
 
+πHOLCONST
+‹ €PreExtensional2› : GS SET ≠ (GS, FTV)BR ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µd r∑ PreExtensional2 d r § µx y∑ x ç d ± y ç d
+‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r x z; r y z} fT)
+‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r z x; r z y} fT)
+∞
+
+I hope to prove that least fixed points of the semantic functor are always pre-extensional.
+This is true, I beleive, because the semantics is ``hyper-extensional''.
+If two sets have the same extension in the input relation to the semantic functor, then they are members of the same sets in the output relation.
+
+First we define the relevant notion of `same extension'.
+
+Two sets have the same extension over some domain if they have the same members in that domain.
+
+πHOLCONST
+‹ €SameExt› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ SameExt V r = Ãx y∑  µz∑ z ç V ¥ r x z = r y z
+∞
+
+πHOLCONST
+‹ €SameExt2› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ SameExt2 V r = Ãx y∑  µz∑ z ç V ¥ r z x = r z y
+∞
+
+Two sets have the same essence over some domain if they are members of the same sets in that domain.
+
+πHOLCONST
+‹ €SameEss› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ SameEss V r = Ãx y∑  µz∑ z ç V ¥ r z x = r z y
+∞
+
+πHOLCONST
+‹ €SameEss2› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ SameEss2 V r = Ãx y∑  µz∑ z ç V ¥ r x z = r y z
+∞
+
+A semantic functor is extensional over some domain if any two sets which have the same extension and the same essence over that domain  in the input relation have the same essence in the result of applying the functor. 
+
+πHOLCONST
+‹ €ExtSem› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ ExtSem V f § µr∑ µx y∑ x ç V ± y ç V
+‹	± SameExt V r x y ± SameEss V r x y
+‹	¥ SameEss V (f V r) x y 
+∞
+
+πHOLCONST
+‹ €ExtSem2› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ ExtSem2 V f § µr∑ µx y∑ x ç V ± y ç V
+‹	± SameExt2 V r x y ± SameEss2 V r x y
+‹	¥ SameEss2 V (f V r) x y 
+∞
+
 =GFT
 =TEX
 
 \ignore{
+=IGN
+stop;
+set_goal([], ¨µV∑ V Ä Syntax ¥ ExtSem V SemanticFunctorÆ);
+a (rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SemanticFunctorÆ, get_spec ¨SameExtÆ, get_spec ¨SameEssÆ, evalformfunct_thm2]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 6 ¨zÆ
+	THEN asm_rewrite_tac[]);
+a (cases_tac ¨IsAf zÆ THEN asm_rewrite_tac[]);
+
+a (strip_asm_tac (µ_elim ¨zÆ syntax_cases_thm) THEN asm_rewrite_tac[]);
+
 =IGN
 set_goal([], ¨µV r∑ PreExtensional V r ¥ PreExtensional V (SemanticFunctor V r)Æ);
 a (rewrite_tac [get_spec ¨PreExtensionalÆ, get_spec ¨SemanticFunctorÆ, evalformfunct_thm2]);
@@ -1523,8 +1629,6 @@ a (REPEAT strip_tac);
 
 =TEX
 }%ignore
-
-
 
 
 There is a corresponding property over the boolean version of a total partial relation.
@@ -1535,6 +1639,14 @@ There is a corresponding property over the boolean version of a total partial re
 ‹ µd r∑ TotExtensional d r § µx y∑ x ç d ± y ç d
 ‹				¥ (∂z∑ z ç d ± ≥(r z x § r z y))
 ‹				¥ (∂z∑ z ç d ± ≥(r x z § r y z))
+∞
+
+πHOLCONST
+‹ €TotExtensional2› : GS SET ≠ (GS, BOOL)BR ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µd r∑ TotExtensional2 d r § µx y∑ x ç d ± y ç d
+‹				¥ (∂z∑ z ç d ± ≥(r x z § r y z))
+‹				¥ (∂z∑ z ç d ± ≥(r z x § r z y))
 ∞
 
 =GFT
@@ -1599,6 +1711,61 @@ a (LEMMA_T ¨{fFalse; fFalse} = {fFalse}Æ rewrite_thm_tac
 a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
 a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
 val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
+
+set_goal ([], ¨µV pr∑ PreExtensional2 V pr ± TotalOver V pr ¥ TotExtensional2 V (BoolRel pr)Æ);
+a (rewrite_tac (map get_spec [¨PreExtensional2Æ, ¨TotExtensional2Æ, ¨BoolRelÆ])
+	THEN REPEAT_N 6 strip_tac);
+a (STRIP_T (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)) THEN POP_ASM_T ante_tac);
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨prÆ]  totover_true_lemma));
+a (LIST_SPEC_NTH_ASM_T 1 [¨xÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨x ç VÆ])));
+a (LIST_SPEC_NTH_ASM_T 1 [¨yÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨y ç VÆ])));
+a (STRIP_T asm_tac);
+a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨zÆ);
+a (swap_nth_asm_concl_tac 1);
+a (LEMMA_T ¨{pr x z; pr y z} = {fFalse; fTrue}Æ rewrite_thm_tac
+	THEN1 (asm_rewrite_tac[] THEN strip_tac));
+a (fc_tac [get_spec ¨TotalOverÆ]);
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨zÆ]);
+(* *** Goal "1.1" *** *)
+a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
+(* *** Goal "1.1.1" *** *)
+a (GET_NTH_ASM_T 8 strip_asm_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2" *** *)
+a (asm_rewrite_tac[] THEN contr_tac);
+(* *** Goal "1.2" *** *)
+a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
+(* *** Goal "1.2.1" *** *)
+a (asm_rewrite_tac[] THEN contr_tac);
+(* *** Goal "1.2.2" *** *)
+a (swap_nth_asm_concl_tac 8 THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
+a (SWAP_NTH_ASM_CONCL_T 1 (STRIP_THM_THEN asm_tac));
+a (fc_tac [get_spec ¨TotalOverÆ]);
+a (list_spec_nth_asm_tac 1 [¨z'Æ, ¨xÆ]);
+(* *** Goal "2.1" *** *)
+a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
+(* *** Goal "2.1.1" *** *)
+a (asm_rewrite_tac[]);
+a (LEMMA_T ¨{fTrue; fTrue} = {fTrue}Æ rewrite_thm_tac
+	THEN1 (prove_tac[]));
+a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
+a (∂_tac ¨fTrueÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]); 
+(* *** Goal "2.2" *** *)
+a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
+(* *** Goal "2.2.1" *** *)
+a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]); 
+(* *** Goal "2.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (LEMMA_T ¨{fFalse; fFalse} = {fFalse}Æ rewrite_thm_tac
+	THEN1 (prove_tac[]));
+a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
+a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
+val pre_tot_ext_lemma2 = save_pop_thm "pre_tot_ext_lemma2";
 =TEX
 }%ignore
 
@@ -1638,16 +1805,80 @@ val eqrel_equiv_lemma = pop_thm ();
 
 \ignore{
 =IGN
+stop;
+
 set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
-	THEN REPEAT_N 5 strip_tac);
+
+set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFF2Æ, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [pre_tot_ext_lemma]);
+a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
+a (REPEAT strip_tac);
+a (GET_NTH_ASM_T 5 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (asm_rewrite_tac[]);
+a (lemma_tac ¨Equiv (V, BoolEqRel V (BoolRel r))Æ THEN1 rewrite_tac[booleqrel_equiv_lemma]);
+a (FC_T1 (fc_§_canon)
+	(MAP_EVERY (rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨x' ç VÆ]) o (list_µ_elim [¨xÆ, ¨x'Æ])))
+	[equiv_class_eq_thm]);
+a (rewrite_tac [get_spec ¨BoolEqRelÆ]);
+a (strip_tac THEN strip_tac);
+a (lemma_tac ¨EquivClass (V, BoolEqRel V (BoolRel r)) z ç V / BoolEqRel V (BoolRel r)Æ
+	THEN1 rewrite_tac [get_spec ¨QuotientSetÆ]);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BoolEqRel V (BoolRel r)) zÆ 
+	(strip_asm_tac o (rewrite_rule[asm_rule ¨EquivClass (V, BoolEqRel V (BoolRel r)) z ç V / BoolEqRel V (BoolRel r)Æ])));
+
+
+(* *** Goal "2.1" *** *)
+a (swap_nth_asm_concl_tac 7 THEN REPEAT strip_tac);
+a (∂_tac ¨sÆ THEN strip_tac THEN strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (asm_rewrite_tac[get_spec ¨QuotientSetÆ]);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.1.2.1" *** *)
+a (GET_NTH_ASM_T 10 (ante_tac o (rewrite_rule [get_spec ¨EquivClassÆ])));
+a (rewrite_tac [sets_ext_clauses]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨yÆ);
+a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BoolEqRelÆ])));
+
+
+a (fc_tac [
+
+	rewrite_rule [booleqrel_equiv_lemma]
+	(list_µ_elim [¨VÆ, ¨BoolEqRel V (BoolRel r)Æ] quotient_rep_∂_thm);
+]
+);
+set_flag("pp_show_HOL_types", true);
+
+ [asm_rule ¨Æ]);
+ THEN REPEAT strip_tac);
+
+
+a (fc_tac [get_spec ¨QuotientSetÆ]);
+
+¨$/Æ;
+
+get_const_theory "QuotientSet";
+get_spec ¨$/Æ;
+
+
 a (lemma_tac ¨µx y∑ x ç t ± y ç t ¥ BoolRel r x yÆ);
 a (POP_ASM_T ante_tac THEN rewrite_tac[get_spec ¨QuotientSetÆ, get_spec ¨EquivClassÆ, get_spec ¨EqRelÆ]
 	THEN REPEAT strip_tac);
 
-(* *** Goal "1" *** *)
-a (spec_nth_asm_tac 5 ¨yÆ);
-a (REPEAT (asm_fc_tac[]));
+(* *** Goal "1" *** *)a (spec_nth_asm_tac 5 ¨yÆ);a (REPEAT (asm_fc_tac[]));
 (* *** Goal "2" *** *)
 a (REPEAT (asm_fc_tac[]));
 (* *** Goal "3" *** *)
@@ -1655,6 +1886,47 @@ a (fc_tac [get_spec ¨TotalOverÆ, get_spec ¨PreExtensionalÆ]);
 a (spec_nth_asm_tac 2 ¨sÆ);
 
 get_spec ¨BoolRelÆ;
+=TEX
+}%ignore
+
+
+πHOLCONST
+‹ €MSfromSFF2› : GS SET ∏ (GS, FTV) BR ≠ GS SET SET ∏ (GS SET, BOOL) BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ (V:GS SET) (r:(GS, FTV) BR)∑ MSfromSFF2 (V, r) =
+‹	let $çâv = BoolRel r
+‹	and $=âv = BoolEqRel V (BoolRel r)
+‹	in (QuotientSet V $=âv, Ãs t∑ µx y∑ x ç s ± y ç t ¥ x çâv y)		 
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+stop;
+set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFF2Æ, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (DROP_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (rewrite_tac [sets_ext_clauses] THEN contr_tac);
+(* *** Goal "2.1" *** *)
+a (swap_nth_asm_concl_tac 7 THEN REPEAT strip_tac);
+a (∂_tac ¨sÆ THEN strip_tac THEN strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (asm_rewrite_tac[get_spec ¨QuotientSetÆ]);
+a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (rename_tac[(¨x'Æ, "z")]);
+a (asm_rewrite_tac []);
+
 =TEX
 }%ignore
 
