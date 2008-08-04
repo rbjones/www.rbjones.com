@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.4 2008/07/31 07:53:16 rbj Exp $
+$Id: t026.doc,v 1.5 2008/08/04 18:22:26 rbj Exp $
 open_theory "ifos";
 set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 =TEX
@@ -40,12 +40,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/07/31 07:53:16 $ $
+Last Change $ $Date: 2008/08/04 18:22:26 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.4 2008/07/31 07:53:16 rbj Exp $ $
+$ $Id: t026.doc,v 1.5 2008/08/04 18:22:26 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1259,12 +1259,16 @@ The following function creates a variable assignment with just a value for the e
 ‹ µp∑ Param_ö p = Ãx∑ if x = öâg then dpoE p else dpoB
 ∞
 
+The ``semantic functor'', a parameterised partial relation transformation, is then defined thus:
+
 πHOLCONST
 ‹ €SemanticFunctor›: GS SET ≠ (GS, FTV) BR ≠ (GS, FTV) BR
 ˜¸¸¸¸¸¸¸¸¸
 ‹ µ d $çâv∑ SemanticFunctor d $çâv =
 	Ãs m∑ EvalForm (EvalCf_tf4, $ºâtâ4, (d, $çâv)) s (Param_ö m)
 ∞
+
+It is easily shown to be monotonic.
 
 =GFT
 €semanticfunctor_increasing_thm› =
@@ -1309,7 +1313,7 @@ I suppose we might start by saying what a fixed point is:
 ‹ µd r∑ SFFixp d r § SemanticFunctor d r = r
 ∞
 
-I am interested in interpretations of classical two-valued set theory and therefore will consider only fixed points which are total over the domain.
+I am interested in interpretations of classical two-valued set theory and therefore will consider mainly fixed points which are total over the domain.
 
 πHOLCONST
 ‹ €TotalOver› : 'a SET ≠ ('a, FTV)BR ≠ BOOL
@@ -1359,9 +1363,10 @@ If a relationship is total over some domain we can convert it to a boolean relat
 =GFT
 =TEX
 
+\ignore{
 This one probably isn't going to be useful.
 
-πHOLCONST
+ πHOLCONST
 ‹ €EqRel› : 'a SET ≠ ('a, FTV)BR ≠ ('a, FTV)BR
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ V r∑ EqRel V r = Ãx y∑
@@ -1378,7 +1383,7 @@ This one probably isn't going to be useful.
 ‹		± t = fFalse
 ‹	}
 ‹	else fB
-∞
+ ∞
 
 =GFT
 €eqrel_ftrue_lemma› =
@@ -1408,7 +1413,7 @@ This one probably isn't going to be useful.
 =TEX
 
 \ignore{
-=SML
+=IGN
 set_goal ([], ¨µ V r x y∑ fTrue ºâtâ4 EqRel V r x y
 	§ x ç V ± y ç V
 	± (x = y ≤ (µz∑ z ç V ¥	fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z
@@ -1494,23 +1499,80 @@ It turns out that {\it EqRel} is not transitive, and so its probably not going t
 It not clear that reformulation is required, since the equality relation can be defined as a function on the boolean version of a total fixed point, so there may be no need for a partial version.
 When I wrote it I thought it would figure in the reasoning about the required properties of total fixed points, but that was probably a mistake.
 
-Here's the definition over a boolean relationship:
+}%ignore
+
+Having chosen representatives for sets which are not canonical, we will be taking a quotient to eliminate redundancy.
+Two complementary concepts are useful in this, the {\it extension} of a set (which is the collection of its members) and the {\it essence} of a set (which is the collection of things of which it is a member).
+
+These concepts don't work out very tidily when we are dealing with partial membership relationships.
+It seems easier not to formally define them but to define the relationships between two representatives whose extensions and essences are the same.
+
+First we define the relevant notion of `same extension'.
+
+Two sets have the same extension over some domain if they have the same members in that domain.
 
 πHOLCONST
-‹ €BoolEqRel› : GS SET ≠ (GS, BOOL)BR ≠ (GS, BOOL)BR
+‹ €SameExt› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ BoolEqRel V r = Ãx y∑ µz∑ z ç V ¥ (r z x § r z y)
+‹ µV r∑ SameExt V r = Ãx y∑ µz∑ z ç V ¥ r z x = r z y
+∞
+
+Two sets have the same essence over some domain if they are members of the same sets in that domain.
+
+πHOLCONST
+‹ €SameEss› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ SameEss V r = Ãx y∑  µz∑ z ç V ¥ r x z = r y z
+∞
+
+We now provide two ways of defining an equality relation over a boolean membership relationship.
+
+The first is the obvious definition for set theoretic equality, two sets being equal if they have the same extension.
+
+πHOLCONST
+‹ €BEqRel› : GS SET ≠ (GS, BOOL)BR ≠ (GS, BOOL)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ BEqRel V r = Ãx y∑ µz∑ z ç V ¥ (r z x § r z y)
+∞
+
+The second is a stricter definition, two sets are equivalent if they have the same extension and the same essence,
+
+πHOLCONST
+‹ €BEqqRel› : GS SET ≠ (GS, BOOL)BR ≠ (GS, BOOL)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ BEqqRel V r = Ãx y∑ µz∑ z ç V ¥ (r z x § r z y) ± (r x z § r y z)
+∞
+
+πHOLCONST
+‹ €BoolEqRel› : GS SET ≠ (GS, FTV)BR ≠ (GS, BOOL)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ BoolEqRel V r = BEqRel V (BoolRel r)
+∞
+
+πHOLCONST
+‹ €BoolEqqRel› : GS SET ≠ (GS, FTV)BR ≠ (GS, BOOL)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ BoolEqqRel V r = BEqqRel V (BoolRel r)
 ∞
 
 =GFT
+€beqrel_equiv_lemma› =
+	Ù µ V r∑ Equiv (V, BEqRel V r)
+
+€beqqrel_equiv_lemma› =
+	Ù µ V r∑ Equiv (V, BEqqRel V r)
+
 €booleqrel_equiv_lemma› =
 	Ù µ V r∑ Equiv (V, BoolEqRel V r)
+
+€booleqqrel_equiv_lemma› =
+	Ù µ V r∑ Equiv (V, BoolEqqRel V r)
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µV r∑ Equiv (V, BoolEqRel V r)Æ);
-a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BoolEqRelÆ] THEN REPEAT strip_tac);
+set_goal([], ¨µV r∑ Equiv (V, BEqRel V r)Æ);
+a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqRelÆ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
@@ -1529,7 +1591,49 @@ a (SYM_ASMS_T rewrite_tac);
 a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
 a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
 a (asm_rewrite_tac []);
+val beqrel_equiv_lemma = save_pop_thm "beqrel_equiv_lemma";
+
+set_goal([], ¨µV r∑ Equiv (V, BEqqRel V r)Æ);
+a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqqRelÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+(* *** Goal "2.3" *** *)
+a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+(* *** Goal "2.4" *** *)
+a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+(* *** Goal "3" *** *)
+a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
+(* *** Goal "3.1" *** *)
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "3.2" *** *)
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (asm_rewrite_tac []);
+(* *** Goal "3.3" *** *)
+a (POP_ASM_T ante_tac);
+a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+(* *** Goal "3.3" *** *)
+a (POP_ASM_T ante_tac);
+a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val beqqrel_equiv_lemma = save_pop_thm "beqqrel_equiv_lemma";
+
+set_goal([], ¨µV r∑ Equiv (V, BoolEqRel V r)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqRelÆ, beqrel_equiv_lemma]);
 val booleqrel_equiv_lemma = save_pop_thm "booleqrel_equiv_lemma";
+
+set_goal([], ¨µV r∑ Equiv (V, BoolEqqRel V r)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqqRelÆ, beqqrel_equiv_lemma]);
+val booleqqrel_equiv_lemma = save_pop_thm "booleqqrel_equiv_lemma";
 =TEX
 }%ignore
 
@@ -1543,68 +1647,8 @@ What this says is that whenever two sets are not the members of all the same set
 ‹ €PreExtensional› : GS SET ≠ (GS, FTV)BR ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µd r∑ PreExtensional d r § µx y∑ x ç d ± y ç d
-‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r z x; r z y} fT)
-‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r x z; r y z} fT)
-∞
-
-πHOLCONST
-‹ €PreExtensional2› : GS SET ≠ (GS, FTV)BR ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µd r∑ PreExtensional2 d r § µx y∑ x ç d ± y ç d
 ‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r x z; r y z} fT)
 ‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r z x; r z y} fT)
-∞
-
-I hope to prove that least fixed points of the semantic functor are always pre-extensional.
-This is true, I beleive, because the semantics is ``hyper-extensional''.
-If two sets have the same extension in the input relation to the semantic functor, then they are members of the same sets in the output relation.
-
-First we define the relevant notion of `same extension'.
-
-Two sets have the same extension over some domain if they have the same members in that domain.
-
-πHOLCONST
-‹ €SameExt› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ SameExt V r = Ãx y∑  µz∑ z ç V ¥ r x z = r y z
-∞
-
-πHOLCONST
-‹ €SameExt2› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ SameExt2 V r = Ãx y∑  µz∑ z ç V ¥ r z x = r z y
-∞
-
-Two sets have the same essence over some domain if they are members of the same sets in that domain.
-
-πHOLCONST
-‹ €SameEss› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ SameEss V r = Ãx y∑  µz∑ z ç V ¥ r z x = r z y
-∞
-
-πHOLCONST
-‹ €SameEss2› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV r∑ SameEss2 V r = Ãx y∑  µz∑ z ç V ¥ r x z = r y z
-∞
-
-A semantic functor is extensional over some domain if any two sets which have the same extension and the same essence over that domain  in the input relation have the same essence in the result of applying the functor. 
-
-πHOLCONST
-‹ €ExtSem› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV f∑ ExtSem V f § µr∑ µx y∑ x ç V ± y ç V
-‹	± SameExt V r x y ± SameEss V r x y
-‹	¥ SameEss V (f V r) x y 
-∞
-
-πHOLCONST
-‹ €ExtSem2› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV f∑ ExtSem2 V f § µr∑ µx y∑ x ç V ± y ç V
-‹	± SameExt2 V r x y ± SameEss2 V r x y
-‹	¥ SameEss2 V (f V r) x y 
 ∞
 
 =GFT
@@ -1630,21 +1674,12 @@ a (REPEAT strip_tac);
 =TEX
 }%ignore
 
-
 There is a corresponding property over the boolean version of a total partial relation.
 
 πHOLCONST
 ‹ €TotExtensional› : GS SET ≠ (GS, BOOL)BR ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µd r∑ TotExtensional d r § µx y∑ x ç d ± y ç d
-‹				¥ (∂z∑ z ç d ± ≥(r z x § r z y))
-‹				¥ (∂z∑ z ç d ± ≥(r x z § r y z))
-∞
-
-πHOLCONST
-‹ €TotExtensional2› : GS SET ≠ (GS, BOOL)BR ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µd r∑ TotExtensional2 d r § µx y∑ x ç d ± y ç d
 ‹				¥ (∂z∑ z ç d ± ≥(r x z § r y z))
 ‹				¥ (∂z∑ z ç d ± ≥(r z x § r z y))
 ∞
@@ -1659,61 +1694,6 @@ There is a corresponding property over the boolean version of a total partial re
 =SML
 set_goal ([], ¨µV pr∑ PreExtensional V pr ± TotalOver V pr ¥ TotExtensional V (BoolRel pr)Æ);
 a (rewrite_tac (map get_spec [¨PreExtensionalÆ, ¨TotExtensionalÆ, ¨BoolRelÆ])
-	THEN REPEAT_N 6 strip_tac);
-a (STRIP_T (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)) THEN POP_ASM_T ante_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨prÆ]  totover_true_lemma));
-a (LIST_SPEC_NTH_ASM_T 1 [¨zÆ, ¨xÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨x ç VÆ])));
-a (LIST_SPEC_NTH_ASM_T 1 [¨zÆ, ¨yÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨y ç VÆ])));
-a (STRIP_T asm_tac);
-a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
-(* *** Goal "1" *** *)
-a (spec_nth_asm_tac 1 ¨zÆ);
-a (swap_nth_asm_concl_tac 1);
-a (LEMMA_T ¨{pr z x; pr z y} = {fFalse; fTrue}Æ rewrite_thm_tac
-	THEN1 (asm_rewrite_tac[] THEN strip_tac));
-a (fc_tac [get_spec ¨TotalOverÆ]);
-a (list_spec_nth_asm_tac 1 [¨zÆ, ¨xÆ]);
-(* *** Goal "1.1" *** *)
-a (list_spec_nth_asm_tac 2 [¨zÆ, ¨yÆ]);
-(* *** Goal "1.1.1" *** *)
-a (GET_NTH_ASM_T 8 strip_asm_tac THEN asm_rewrite_tac[]);
-(* *** Goal "1.1.2" *** *)
-a (asm_rewrite_tac[] THEN contr_tac);
-(* *** Goal "1.2" *** *)
-a (list_spec_nth_asm_tac 2 [¨zÆ, ¨yÆ]);
-(* *** Goal "1.2.1" *** *)
-a (asm_rewrite_tac[] THEN contr_tac);
-(* *** Goal "1.2.2" *** *)
-a (swap_nth_asm_concl_tac 8 THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
-a (SWAP_NTH_ASM_CONCL_T 1 (STRIP_THM_THEN asm_tac));
-a (fc_tac [get_spec ¨TotalOverÆ]);
-a (list_spec_nth_asm_tac 1 [¨xÆ, ¨z'Æ]);
-(* *** Goal "2.1" *** *)
-a (list_spec_nth_asm_tac 2 [¨yÆ, ¨z'Æ]);
-(* *** Goal "2.1.1" *** *)
-a (asm_rewrite_tac[]);
-a (LEMMA_T ¨{fTrue; fTrue} = {fTrue}Æ rewrite_thm_tac
-	THEN1 (prove_tac[]));
-a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
-a (∂_tac ¨fTrueÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
-(* *** Goal "2.1.2" *** *)
-a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]); 
-(* *** Goal "2.2" *** *)
-a (list_spec_nth_asm_tac 2 [¨yÆ, ¨z'Æ]);
-(* *** Goal "2.2.1" *** *)
-a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]); 
-(* *** Goal "2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (LEMMA_T ¨{fFalse; fFalse} = {fFalse}Æ rewrite_thm_tac
-	THEN1 (prove_tac[]));
-a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
-a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
-val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
-
-set_goal ([], ¨µV pr∑ PreExtensional2 V pr ± TotalOver V pr ¥ TotExtensional2 V (BoolRel pr)Æ);
-a (rewrite_tac (map get_spec [¨PreExtensional2Æ, ¨TotExtensional2Æ, ¨BoolRelÆ])
 	THEN REPEAT_N 6 strip_tac);
 a (STRIP_T (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)) THEN POP_ASM_T ante_tac);
 a (strip_asm_tac (list_µ_elim [¨VÆ, ¨prÆ]  totover_true_lemma));
@@ -1765,7 +1745,7 @@ a (LEMMA_T ¨{fFalse; fFalse} = {fFalse}Æ rewrite_thm_tac
 	THEN1 (prove_tac[]));
 a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
 a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
-val pre_tot_ext_lemma2 = save_pop_thm "pre_tot_ext_lemma2";
+val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
 =TEX
 }%ignore
 
@@ -1791,113 +1771,469 @@ val eqrel_equiv_lemma = pop_thm ();
 =TEX
 }%ignore
 
+My first shot at constructing a structure from a total fixed point used co-extensionality as equality, which is OK provided that the fixed point is pre-extensional, in which case the resulting structure is extensional.
+This is it:
+
 πHOLCONST
 ‹ €MSfromSFF› : GS SET ∏ (GS, FTV) BR ≠ GS SET SET ∏ (GS SET, BOOL) BR
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ (V:GS SET) (r:(GS, FTV) BR)∑ MSfromSFF (V, r) =
 ‹	let $çâv = BoolRel r
-‹	and $=âv = BoolRel (EqRel V r)
+‹	and $=âv = BEqRel V (BoolRel r)
 ‹	in (QuotientSet V $=âv, Ãs t∑ µx y∑ x ç s ± y ç t ¥ x çâv y)		 
 ∞
 
-=GFT
-=TEX
+However, it now seems to me better to define the structure with an equality relation which is stricter if the membership relation is not pre-extensional.
+The result is the same if it is pre-extensional (conjecture) but the advantage is that if it is not we still  get a sensible membership structure (though not an extensional one).
 
-\ignore{
-=IGN
-stop;
-
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
-
-set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
-
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFF2Æ, let_def]
-	THEN REPEAT_N 6 strip_tac);
-(* *** Goal "1" *** *)
-a (strip_tac THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (fc_tac [pre_tot_ext_lemma]);
-a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
-a (REPEAT strip_tac);
-a (GET_NTH_ASM_T 5 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (asm_rewrite_tac[]);
-a (lemma_tac ¨Equiv (V, BoolEqRel V (BoolRel r))Æ THEN1 rewrite_tac[booleqrel_equiv_lemma]);
-a (FC_T1 (fc_§_canon)
-	(MAP_EVERY (rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨x' ç VÆ]) o (list_µ_elim [¨xÆ, ¨x'Æ])))
-	[equiv_class_eq_thm]);
-a (rewrite_tac [get_spec ¨BoolEqRelÆ]);
-a (strip_tac THEN strip_tac);
-a (lemma_tac ¨EquivClass (V, BoolEqRel V (BoolRel r)) z ç V / BoolEqRel V (BoolRel r)Æ
-	THEN1 rewrite_tac [get_spec ¨QuotientSetÆ]);
-(* *** Goal "2.1" *** *)
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BoolEqRel V (BoolRel r)) zÆ 
-	(strip_asm_tac o (rewrite_rule[asm_rule ¨EquivClass (V, BoolEqRel V (BoolRel r)) z ç V / BoolEqRel V (BoolRel r)Æ])));
-
-
-(* *** Goal "2.1" *** *)
-a (swap_nth_asm_concl_tac 7 THEN REPEAT strip_tac);
-a (∂_tac ¨sÆ THEN strip_tac THEN strip_tac);
-(* *** Goal "2.1.1" *** *)
-a (asm_rewrite_tac[get_spec ¨QuotientSetÆ]);
-a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
-(* *** Goal "2.1.2" *** *)
-a (REPEAT strip_tac);
-(* *** Goal "2.1.2.1" *** *)
-a (GET_NTH_ASM_T 10 (ante_tac o (rewrite_rule [get_spec ¨EquivClassÆ])));
-a (rewrite_tac [sets_ext_clauses]);
-a (strip_tac);
-a (spec_nth_asm_tac 1 ¨yÆ);
-a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BoolEqRelÆ])));
-
-
-a (fc_tac [
-
-	rewrite_rule [booleqrel_equiv_lemma]
-	(list_µ_elim [¨VÆ, ¨BoolEqRel V (BoolRel r)Æ] quotient_rep_∂_thm);
-]
-);
-set_flag("pp_show_HOL_types", true);
-
- [asm_rule ¨Æ]);
- THEN REPEAT strip_tac);
-
-
-a (fc_tac [get_spec ¨QuotientSetÆ]);
-
-¨$/Æ;
-
-get_const_theory "QuotientSet";
-get_spec ¨$/Æ;
-
-
-a (lemma_tac ¨µx y∑ x ç t ± y ç t ¥ BoolRel r x yÆ);
-a (POP_ASM_T ante_tac THEN rewrite_tac[get_spec ¨QuotientSetÆ, get_spec ¨EquivClassÆ, get_spec ¨EqRelÆ]
-	THEN REPEAT strip_tac);
-
-(* *** Goal "1" *** *)a (spec_nth_asm_tac 5 ¨yÆ);a (REPEAT (asm_fc_tac[]));
-(* *** Goal "2" *** *)
-a (REPEAT (asm_fc_tac[]));
-(* *** Goal "3" *** *)
-a (fc_tac [get_spec ¨TotalOverÆ, get_spec ¨PreExtensionalÆ]);
-a (spec_nth_asm_tac 2 ¨sÆ);
-
-get_spec ¨BoolRelÆ;
-=TEX
-}%ignore
-
+Put another way, this corrects a defect in the first version, that it doesn't work for non-extensional fixed points.
+In order to get a good structure from a fixed point which is not pre-extensional, you have to regard two sets as distinct if they are not members of the same sets, even if they have the same extension.
+The result is that the axiom of extensionality will not hold unqualified.
+Admitting this possibility is a good idea since the kind of type structure I have in mind will probably be a model for stratified comprehension, and may not be compatible with full extensionality.
 
 πHOLCONST
 ‹ €MSfromSFF2› : GS SET ∏ (GS, FTV) BR ≠ GS SET SET ∏ (GS SET, BOOL) BR
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ (V:GS SET) (r:(GS, FTV) BR)∑ MSfromSFF2 (V, r) =
 ‹	let $çâv = BoolRel r
-‹	and $=âv = BoolEqRel V (BoolRel r)
+‹	and $=âv = BEqqRel V (BoolRel r)
 ‹	in (QuotientSet V $=âv, Ãs t∑ µx y∑ x ç s ± y ç t ¥ x çâv y)		 
 ∞
+
+=GFT
+€equivclass_mem_lemma› =
+   Ù µ V r x
+     ∑ x ç EquivClass (V, BEqRel V (BoolRel r)) z
+         § x ç V ± (µ y∑ y ç V ¥ (BoolRel r y x § BoolRel r y z))
+
+€equivclass_mem_lemma2› =
+   Ù µ V r x
+     ∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z
+         § x ç V
+           ± (µ y
+           ∑ y ç V
+               ¥ (BoolRel r y x § BoolRel r y z)
+                 ± (BoolRel r x y § BoolRel r z y))
+
+€rep_independence_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r
+         ¥ (µ s t
+         ∑ s ç V ± t ç V
+             ¥ (let u = EquivClass (V, BoolEqqRel V r) s
+               and v = EquivClass (V, BoolEqqRel V r) t
+             in (µ x y∑ x ç u ± y ç v ¥ BoolRel r x y)
+               § (∂ x y∑ x ç u ± y ç v ± BoolRel r x y)))
+
+€totpre_rep_independence_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r
+         ¥ (µ s t
+         ∑ s ç V ± t ç V
+             ¥ (let u = EquivClass (V, BoolEqRel V r) s
+               and v = EquivClass (V, BoolEqRel V r) t
+             in (µ x y∑ x ç u ± y ç v ¥ BoolRel r x y)
+               § (∂ x y∑ x ç u ± y ç v ± BoolRel r x y)))
+
+€totpre_rep_independence_lemma2› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r
+         ¥ (µ s t u v
+         ∑ s ç V
+               ± t ç V
+               ± u ç V
+               ± v ç V
+               ± BoolEqRel V r s u
+               ± BoolEqRel V r t v
+             ¥ (BoolRel r s t § BoolRel r u v))
+
+€rep_independence_lemma2› =
+   Ù µ V r
+     ∑ TotalOver V r
+         ¥ (µ s t u v
+         ∑ s ç V
+               ± t ç V
+               ± u ç V
+               ± v ç V
+               ± BoolEqqRel V r s u
+               ± BoolEqqRel V r t v
+             ¥ (BoolRel r s t § BoolRel r u v))
+
+€eq_eq_eqq_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r
+         ¥ (µ x y
+         ∑ x ç V ± y ç V
+             ¥ (BEqRel V (BoolRel r) x y § BEqqRel V (BoolRel r) x y))
+
+€msfromsff_eq_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r
+         ¥ MSfromSFF (V, r) = MSfromSFF2 (V, r)
+
+€preext_ext_lemma› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V, r))
+
+€preext_ext_lemma2› =
+   Ù µ V r
+     ∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V, r))
+=TEX
+
+\ignore{
+=SML
+set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos", "'sfp"];
+
+set_goal([],¨µV r x∑ x ç EquivClass (V, BEqRel V (BoolRel r)) z § x ç V ± µy∑ y ç V ¥ (BoolRel r y x § BoolRel r y z)Æ);
+a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ]);
+a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
+	THEN (ASM_FC_T1 fc_§_canon (rewrite_tac) []));
+val equivclass_mem_lemma = save_pop_thm "equivclass_mem_lemma";
+
+set_goal([],¨µV r x∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z §
+	x ç V ± µy∑ y ç V ¥ (BoolRel r y x § BoolRel r y z) ± (BoolRel r x y § BoolRel r z y)Æ);
+a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqqRelÆ]);
+a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
+	THEN (ASM_FC_T1 fc_§_canon (rewrite_tac) []));
+val equivclass_mem_lemma2 = save_pop_thm "equivclass_mem_lemma2";
+
+set_goal([],¨µV r∑ TotalOver V r ¥ µs t∑ s ç V ± t ç V ¥
+	let u = EquivClass (V, BoolEqqRel V r) s
+	and v = EquivClass (V, BoolEqqRel V r) t
+	in	((µx y∑ x ç u ± y ç v ¥ BoolRel r x y) § (∂x y∑ x ç u ± y ç v ± BoolRel r x y))Æ);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqqRelÆ, get_spec ¨EquivClassÆ, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma));
+a (ufc_tac [get_spec ¨EquivÆ]);
+a (ufc_tac [get_spec ¨ReflÆ]);
+a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
+	THEN_TRY (all_asm_fc_tac [])
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+a (lemma_tac ¨BEqqRel V (BoolRel r) x' x''Æ);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¨BEqqRel V (BoolRel r) x' sÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨x'Æ, ¨sÆ, ¨x''Æ])));
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨BoolRel r x' y'Æ);
+(* *** Goal "2.2.1" *** *)
+a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ);
+(* *** Goal "2.2.1.1" *** *)
+a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
+a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+a (swap_nth_asm_concl_tac 7);
+a (SPEC_NTH_ASM_T 2 ¨x'Æ (asm_rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
+(* *** Goal "2.2.2" *** *)
+a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨tÆ, ¨yÆ])));
+a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
+a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+a (swap_nth_asm_concl_tac 9);
+a (SPEC_NTH_ASM_T 2 ¨x'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
+a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+a (SPEC_NTH_ASM_T 1 ¨y'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨y' ç VÆ])));
+a contr_tac;
+val rep_independence_lemma = save_pop_thm "rep_independence_lemma";
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ µs t∑ s ç V ± t ç V ¥
+	let u = EquivClass (V, BoolEqRel V r) s
+	and v = EquivClass (V, BoolEqRel V r) t
+	in	((µx y∑ x ç u ± y ç v ¥ BoolRel r x y) § (∂x y∑ x ç u ± y ç v ± BoolRel r x y))Æ);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqRelÆ, get_spec ¨EquivClassÆ, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma));
+a (ufc_tac [get_spec ¨EquivÆ]);
+a (ufc_tac [get_spec ¨ReflÆ]);
+a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
+	THEN_TRY (all_asm_fc_tac [])
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+a (lemma_tac ¨BEqRel V (BoolRel r) x' x''Æ);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¨BEqRel V (BoolRel r) x' sÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨x'Æ, ¨sÆ, ¨x''Æ])));
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨BoolRel r x' y'Æ);
+(* *** Goal "2.2.1" *** *)
+a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ);
+a (lemma_tac ¨BEqRel V (BoolRel r) y tÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
+a (FC_T (MAP_EVERY(asm_tac o (rewrite_rule[]))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+(* *** Goal "2.2.2" *** *)
+a (fc_tac [pre_tot_ext_lemma]);
+a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
+a (list_spec_nth_asm_tac 1 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "2.2.2.1" *** *)
+a (spec_nth_asm_tac 1 ¨y'Æ);
+(* *** Goal "2.2.2.2" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "2.2.2.3" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨zÆ);
+val totpre_rep_independence_lemma = save_pop_thm "totpre_rep_independence_lemma";
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥	
+	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqRel V r s u ± BoolEqRel V r t v
+	¥ (BoolRel r s t § BoolRel r u v)Æ);
+a (REPEAT_N 8 strip_tac);
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma));
+a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [let_def, get_spec ¨EquivClassÆ]);
+a (STRIP_T asm_tac THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+	THEN1 (asm_tac booleqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]));
+a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+	THEN1 (asm_tac booleqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]));
+a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+val totpre_rep_independence_lemma2 = save_pop_thm "totpre_rep_independence_lemma2";
+
+set_goal([],¨µV r∑ TotalOver V r ¥	
+	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqqRel V r s u ± BoolEqqRel V r t v
+	¥ (BoolRel r s t § BoolRel r u v)Æ);
+a (REPEAT_N 8 strip_tac);
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] rep_independence_lemma));
+a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac [let_def, get_spec ¨EquivClassÆ]);
+a (STRIP_T asm_tac THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
+	THEN1 (asm_tac booleqqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqqRel V r s x') ± y ç V ± BoolEqqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]));
+a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
+	THEN1 (asm_tac booleqqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqqRel V r s x') ± y ç V ± BoolEqqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]));
+a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+val rep_independence_lemma2 = save_pop_thm "rep_independence_lemma2";
+
+set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
+	THEN REPEAT_N 7 strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (asm_rewrite_tac[]);
+a (lemma_tac ¨Equiv (V, BEqRel V (BoolRel r))Æ THEN1 rewrite_tac[beqrel_equiv_lemma]);
+a (FC_T1 (fc_§_canon)
+	(MAP_EVERY (rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨x' ç VÆ]) o (list_µ_elim [¨xÆ, ¨x'Æ])))
+	[equiv_class_eq_thm]);
+a (rewrite_tac [get_spec ¨BEqRelÆ]);
+a (strip_tac THEN strip_tac);
+a (lemma_tac ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ
+	THEN1 (rewrite_tac [get_spec ¨QuotientSetÆ]
+		THEN ∂_tac ¨zÆ
+		THEN asm_rewrite_tac[]));
+a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BEqRel V (BoolRel r)) zÆ 
+	(strip_asm_tac o (rewrite_rule[asm_rule ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ])));
+(* *** Goal "1" *** *)
+a (lemma_tac ¨BoolEqRel V r z x'' ± BoolEqRel V r x yÆ
+	THEN1 strip_tac);
+(* *** Goal "1.1" *** *)
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN rewrite_tac [get_spec ¨EquivClassÆ]
+	THEN strip_tac
+	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
+(* *** Goal "1.2" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN asm_rewrite_tac [get_spec ¨EquivClassÆ]
+	THEN strip_tac
+	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
+(* *** Goal "1.3" *** *)
+a (LEMMA_T ¨BoolRel r z x § BoolRel r x'' yÆ asm_rewrite_thm_tac);
+(* *** Goal "1.3.1" *** *)
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+a (lemma_tac ¨x'' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+a (lemma_tac ¨y ç VÆ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+a (list_spec_nth_asm_tac 3 [¨zÆ, ¨xÆ, ¨x''Æ, ¨yÆ]);
+a (contr_tac);
+(* *** Goal "1.3.2" *** *)
+a (LEMMA_T ¨BoolRel r z x' § BoolRel r x''' y'Æ asm_rewrite_thm_tac);
+a (lemma_tac ¨x''' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+a (lemma_tac ¨y' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+a (lemma_tac ¨BoolEqRel V r x' y'Æ
+	THEN1 (DROP_NTH_ASM_T 7 ante_tac
+		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
+a (lemma_tac ¨BoolEqRel V r z x'''Æ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac
+		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
+a (list_spec_nth_asm_tac 3 [¨zÆ, ¨x'Æ, ¨x'''Æ, ¨y'Æ]);
+a (contr_tac);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "3" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "4" *** *)
+a (lemma_tac ¨z ç EquivClass (V, BEqRel V (BoolRel r)) zÆ
+	THEN1 (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ] THEN strip_tac));
+a (lemma_tac ¨x ç sÆ
+	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
+		THEN fc_tac [get_spec ¨EquivÆ]
+		THEN fc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (lemma_tac ¨x' ç tÆ
+	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
+		THEN fc_tac [get_spec ¨EquivÆ]
+		THEN fc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+a (ALL_ASM_FC_T rewrite_tac []);
+val preext_ext_lemma = save_pop_thm "preext_ext_lemma";
+
+set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥
+	µx y∑ x ç V ± y ç V ¥ (BEqRel V (BoolRel r) x y § BEqqRel V (BoolRel r) x y)Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨BEqRelÆ, get_spec ¨BEqqRelÆ, let_def]
+	THEN REPEAT_N 4 strip_tac
+	THEN_TRY asm_rewrite_tac[ext_thm]
+	THEN REPEAT_N 5 strip_tac);
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨BoolRel r z x § BoolRel r z yÆ asm_tac
+	THEN1 ASM_FC_T1 fc_§_canon rewrite_tac []
+	THEN asm_rewrite_tac[]);
+a (fc_tac [pre_tot_ext_lemma]);
+a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ]
+	(list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
+(* *** Goal "1.1" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "1.3" *** *)
+a (spec_nth_asm_tac 8 ¨z'Æ);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val eq_eq_eqq_lemma = save_pop_thm "eq_eq_eqq_lemma";
+
+set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ MSfromSFF (V,r) = MSfromSFF2 (V,r)Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨MSfromSFFÆ, get_spec ¨MSfromSFF2Æ, let_def, get_spec ¨QuotientSetÆ,
+			get_spec ¨EquivClassÆ, sets_ext_clauses]
+	THEN strip_tac THEN strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] eq_eq_eqq_lemma));
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "1.2" *** *)
+a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "1.2" *** *)
+a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+val msfromsff_eq_lemma = save_pop_thm "msfromsff_eq_lemma";
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
+a (REPEAT strip_tac
+	THEN all_fc_tac [msfromsff_eq_lemma, preext_ext_lemma]
+	THEN POP_ASM_T ante_tac
+	THEN asm_rewrite_tac []);
+val preext_ext_lemma2 = save_pop_thm "preext_ext_lemma2";
+=TEX
+}%ignore
 
 =GFT
 =TEX
@@ -1907,8 +2243,8 @@ get_spec ¨BoolRelÆ;
 stop;
 set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFF2Æ, let_def]
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
 a (strip_tac THEN asm_rewrite_tac[]);
@@ -1930,7 +2266,46 @@ a (asm_rewrite_tac []);
 =TEX
 }%ignore
 
+\subsection{Lemmas about the Semnatics}
 
+These are results about the semantics required for obtaining the key properties of the semantic functor.
+
+=GFT
+
+=TEX
+
+\subsection{Properties of the Semantic Functor}
+
+I hope to prove that least fixed points of the semantic functor are always pre-extensional.
+If they are also total the resulting interpretation will be extensional.
+I'm also interested in the dual of this result, for greatest fixed points.
+
+This is true, I believe, because the semantics is ``hyper-extensional''.
+If two sets have the same extension in the input relation to the semantic functor, then they are members of the same sets in the output relation.
+
+A semantic functor is extensional over some domain if any two sets which have the same extension and the same essence over that domain  in the input relation have the same essence in the result of applying the functor. 
+
+πHOLCONST
+‹ €ExtSem› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ ExtSem V f § µr∑ µx y∑ x ç V ± y ç V
+‹	± SameExt V r x y ± SameEss V r x y
+‹	¥ SameEss V (f V r) x y 
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¨µV∑ V Ä Syntax ¥ ExtSem V SemanticFunctorÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SemanticFunctorÆ]
+	THEN REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨SameEssÆ]
+	THEN REPEAT strip_tac);
+=TEX
+}%ignore
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
