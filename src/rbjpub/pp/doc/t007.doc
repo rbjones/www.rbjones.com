@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.19 2008/07/27 19:56:06 rbj Exp $
+$Id: t007.doc,v 1.20 2008/09/09 20:21:11 rbj Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/07/27 19:56:06 $ $
+Last Change $ $Date: 2008/09/09 20:21:11 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.19 2008/07/27 19:56:06 rbj Exp $ $
+$ $Id: t007.doc,v 1.20 2008/09/09 20:21:11 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -190,6 +190,12 @@ However, this affects the applications rather than the concept:
 €glb_unique_lemma2› =
    Ù µ X r x y
      ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
+
+€isglb_glb_lemma› =
+   Ù µ X r z∑ Antisym (Universe, r) ¥ IsGlb r X z ¥ Glb r X = z
+
+€isglb_lub_lemma› =
+   Ù µ X r z∑ Antisym (Universe, r) ¥ IsLub r X z ¥ Lub r X = z
 =TEX
 
 \ignore{
@@ -225,6 +231,20 @@ a (rewrite_tac[get_spec ¨GlbÆ] THEN REPEAT strip_tac);
 a (≈_tac ¨≈ x∑ IsGlb r X xÆ);
 a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
 val glb_glb_lemma = save_pop_thm "glb_glb_lemma";
+
+set_goal([], ¨µX r z∑ Antisym (Universe, r) ¥ IsGlb r X z ¥ Glb r X = zÆ);
+a (rewrite_tac[get_spec ¨GlbÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsGlb r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+a (all_fc_tac [glb_unique_lemma]);
+val isglb_glb_lemma = save_pop_thm "isglb_glb_lemma";
+
+set_goal([], ¨µX r z∑ Antisym (Universe, r) ¥ IsLub r X z ¥ Lub r X = zÆ);
+a (rewrite_tac[get_spec ¨LubÆ] THEN REPEAT strip_tac);
+a (≈_tac ¨≈ x∑ IsLub r X xÆ);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+a (all_fc_tac [lub_unique_lemma]);
+val islub_lub_lemma = save_pop_thm "islub_lub_lemma";
 =TEX
 }%ignore
 
@@ -2845,6 +2865,12 @@ a (rewrite_tac [ext_thm, let_def, get_spec ¨ClosureâcÆ, get_spec ¨$o:(('a≠'c)≠((
 
 €crpou_increasing_gfp_lemma2› =
    Ù µ r f∑ CRpoU r ± Increasing r r f ¥ IsGfp r f (Gfpâc r f)
+
+€isglb_glb_crpou_lemma› =
+   Ù µ r∑ CRpoU r ¥ (µ X z∑ IsGlb r X z ¥ Glb r X = z)
+
+€islub_lub_crpou_lemma› =
+   Ù µ r∑ CRpoU r ¥ (µ X z∑ IsLub r X z ¥ Lub r X = z)
 =TEX
 
 \ignore{
@@ -2956,6 +2982,24 @@ a (REPEAT strip_tac THEN all_fc_tac [crpou_increasing_gfp_lemma1]);
 a (bc_tac [get_spec ¨GfpâcÆ]);
 a (∂_tac ¨gÆ THEN strip_tac);
 val crpou_increasing_gfp_lemma2 = save_pop_thm "crpou_increasing_gfp_lemma2";
+
+set_goal([], ¨µr∑ CRpoU r ¥ µX z∑ IsGlb r X z ¥ Glb r X = zÆ);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec ¨CRpoUÆ]
+	THEN fc_tac [get_spec ¨CRpoÆ]
+	THEN fc_tac [get_spec ¨RpoÆ]
+	THEN fc_tac [get_spec ¨PartialOrderÆ]
+	THEN all_fc_tac [isglb_glb_lemma]);
+val isglb_glb_crpou_lemma = save_pop_thm "isglb_glb_crpou_lemma";
+
+set_goal([], ¨µr∑ CRpoU r ¥ µX z∑ IsLub r X z ¥ Lub r X = zÆ);
+a (REPEAT strip_tac
+	THEN fc_tac [get_spec ¨CRpoUÆ]
+	THEN fc_tac [get_spec ¨CRpoÆ]
+	THEN fc_tac [get_spec ¨RpoÆ]
+	THEN fc_tac [get_spec ¨PartialOrderÆ]
+	THEN all_fc_tac [islub_lub_lemma]);
+val islub_lub_crpou_lemma = save_pop_thm "islub_lub_crpou_lemma";
 =TEX
 }%ignore
 

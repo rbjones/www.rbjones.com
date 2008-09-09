@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.13 2008/04/15 18:21:36 rbj01 Exp $
+$Id: t006.doc,v 1.14 2008/09/09 20:21:12 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2008/04/15 18:21:36 $ $
+Last Changed $ $Date: 2008/09/09 20:21:12 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.13 2008/04/15 18:21:36 rbj01 Exp $ $
+$ $Id: t006.doc,v 1.14 2008/09/09 20:21:12 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -73,7 +73,9 @@ open PreConsisProof;
 open_theory "cache'rbjhold";
 force_new_theory "rbjmisc";
 new_parent "analysis";
-set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
+force_new_pc "€'rbjmisc›";
+merge_pcs ["'savedthm_cs_∂_proof"] "'rbjmisc";
+set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'rbjmisc"];
 open UnifyForwardChain; open RbjTactics1;
 =TEX
 
@@ -82,7 +84,6 @@ open UnifyForwardChain; open RbjTactics1;
 ‹	aaaa bbbb cccc dddd eeee ffff gggg hhhh: 'a
  ∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
 }%ignore
-
 
 
 \section{Sets}
@@ -111,6 +112,38 @@ val Ä_trans_thm = save_thm ("Ä_trans_thm", pc_rule1 "hol1" prove_rule []
 ˜¸¸¸¸¸¸
 ‹ µf A∑ FunImage f A = {b | ∂a∑ a ç A ± f a = b}
 ∞
+
+\subsection{Set Displays}
+
+The following are introduced to facilitate reasoning about sets of truth values below.
+
+=GFT
+€insert_com_thm› = 
+	Ù µ x y z∑ Insert x (Insert y z) = Insert y (Insert x z)
+
+€insert_twice_thm› =
+	Ù µ x y∑ Insert x (Insert x y) = Insert x y
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx y z∑ Insert x (Insert y z) = Insert y (Insert x z)Æ);
+a (rewrite_tac [sets_ext_clauses, get_spec ¨InsertÆ] THEN REPEAT strip_tac);
+val insert_com_thm = save_pop_thm "insert_com_thm";
+
+set_goal([], ¨µx y∑ Insert x (Insert x y) = (Insert x y)Æ);
+a (rewrite_tac [sets_ext_clauses, get_spec ¨InsertÆ] THEN REPEAT strip_tac);
+val insert_twice_thm = save_pop_thm "insert_twice_thm";
+=TEX
+}%ignore
+
+\ignore{
+=SML
+add_pc_thms "'rbjmisc" (map get_spec [] @ [insert_twice_thm]);
+set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'rbjmisc"];
+=TEX
+}%ignore
+
 
 \section{Lists}
 
@@ -1398,21 +1431,18 @@ Prove that $TopologyFrom$ yields a topology.
 
 }%ignore
 
-\section{For Inductive and Coinductive Definitions}
+\section{Disjoint Unions}
 
-These have been moved from \cite{rbjt007}, pro-tem into this new section, to be merged in later.
-
-\subsection{Some Useful Constant Specifications}
-
-which probably don't belong here and will in due course be moved elsewhere.
+\ignore{
 
 The identity function.
 
-πHOLCONST
+ πHOLCONST
 ‹ €I›: 'a ≠ 'a
 ˜¸¸¸¸¸¸
 ‹ I = Ãx∑x
-∞
+ ∞
+}%ignore
 
 Two ways of constructing functions over disjoint unions.
 
@@ -1441,6 +1471,191 @@ declare_infix (300, "..âL");
 ‹ µ x y∑ x ..âL 0 = []
 ‹ ± x ..âL (y + 1) = if x º y then (x ..âL y) @ [y+1] else []
 ∞
+
+\section{Type OPT}
+
+=SML
+set_merge_pcs ["hol1", "'rbjmisc"];
+
+new_type_defn (["OPT"], "OPT", ["'a"], tac_proof (([], ¨∂x:'a+ONE∑ (Ãy∑T) xÆ), ∂_tac ¨InR OneÆ THEN prove_tac []) );
+=TEX
+
+=GFT
+type_lemmas_thm2 =
+   Ù µ pred
+     ∑ (∂ f∑ TypeDefn pred f)
+         ¥ (∂ abs rep
+         ∑ (µ a∑ abs (rep a) = a)
+             ± (µ r∑ pred r § rep (abs r) = r)
+             ± OneOne rep)
+
+type_defn_lemma1 =
+   Ù µ f g∑ (µ x∑ f (g x) = x) ¥ (µ x y∑ g x = g y ¥ x = y)
+
+type_defn_lemma2 =
+   Ù µ p f g
+     ∑ (µ x∑ p x ¥ f (g x) = x) ¥ (µ x y∑ p x ± p y ¥ g x = g y ¥ x = y)
+
+type_defn_lemma3 =
+   Ù (∂ f∑ TypeDefn (Ã x∑ T) f)
+       ¥ (∂ abs rep∑ (µ a∑ abs (rep a) = a) ± (µ r∑ rep (abs r) = r))
+
+oneone_contrapos_lemma =
+	Ù OneOne f ¥ (µ x y∑ ≥ x = y ¥ ≥ f x = f y)
+=TEX
+
+To make use of the type abbreviation `OPT' more readable the following constants are introduced:
+
+\ignore{
+=SML
+set_goal([], ¨µ pred
+     ∑ (∂ f: 'a ≠ 'b∑ TypeDefn pred f)
+         ¥ (∂ abs (rep: 'a ≠ 'b)
+         ∑ (µ a∑ abs (rep a) = a) ± (µ r∑ pred r § rep (abs r) = r)
+	± OneOne rep)Æ);
+a (REPEAT strip_tac THEN fc_tac [type_lemmas_thm]);
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ
+	THEN asm_rewrite_tac[get_spec ¨OneOneÆ]
+	THEN REPEAT strip_tac);
+a (LEMMA_T ¨abs (rep x1) = abs(rep x2)Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨µ a∑ abs (rep a) = aÆ]))
+	THEN1 rewrite_tac[asm_rule ¨rep x1 = rep x2Æ]);
+val type_lemmas_thm2 = save_pop_thm "type_lemmas_thm2";
+
+set_goal([], ¨µf g∑ (µx∑f(g(x)) = x) ¥ (µx y∑ g x = g y ¥ x = y)Æ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨f(g(x)) = f(g(y))Æ ante_tac THEN1 rewrite_tac[asm_rule ¨g x = g yÆ]
+	THEN asm_rewrite_tac[]);
+val type_defn_lemma1 = save_pop_thm "type_defn_lemma1";
+
+set_goal([], ¨µp f g∑ (µx∑ p x ¥ f(g(x)) = x) ¥ (µx y∑ p x ± p y ¥ g x = g y ¥ x = y)Æ);
+a (REPEAT strip_tac);
+a (LEMMA_T ¨f(g(x)) = f(g(y))Æ ante_tac THEN1 rewrite_tac[asm_rule ¨g x = g yÆ]);
+a (LEMMA_T ¨f (g x) = xÆ rewrite_thm_tac THEN1 asm_fc_tac[]);
+a (LEMMA_T ¨f (g y) = yÆ rewrite_thm_tac THEN1 asm_fc_tac[]);
+val type_defn_lemma2 = save_pop_thm "type_defn_lemma2";
+
+set_goal([], ¨(∂ f: 'a ≠ 'b∑ TypeDefn (Ãx∑T) f)
+         ¥ ∂ abs (rep: 'a ≠ 'b)∑
+	(µ a∑ abs (rep a) = a) ± (µ r∑ rep (abs r) = r)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [type_lemmas_thm2]);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
+val type_defn_lemma3 = save_pop_thm "type_defn_lemma3";
+
+set_goal([], ¨µf∑ OneOne f ¥ µx y∑ ≥ x = y ¥ ≥ f x = f yÆ);
+a (strip_tac THEN rewrite_tac [get_spec ¨OneOneÆ] THEN contr_tac);
+a (asm_fc_tac[]);
+val oneone_contrapos_lemma = save_pop_thm "oneone_contrapos_lemma";
+
+set_goal([], ¨∂(Value:'a ≠ 'a OPT) Undefined∑
+	OneOne Value
+	± (µx∑ ≥ Value x = Undefined)
+	± (µy∑ y = Undefined ≤ (∂z∑ y = Value z))Æ);
+a (strip_asm_tac (get_defn "-" "OPT"));
+a (fc_tac [type_lemmas_thm2]);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
+a (fc_tac [get_spec ¨OneOneÆ] THEN POP_ASM_T (asm_tac o rewrite_rule[]));
+a (∂_tac ¨Ãx∑ abs (InL x)Æ THEN ∂_tac ¨abs (InR One)Æ THEN rewrite_tac [] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac[ get_spec ¨OneOneÆ] THEN REPEAT strip_tac);
+a (lemma_tac ¨rep(abs(InL x1)) = rep(abs(InL x2))Æ THEN1 rewrite_tac[asm_rule ¨abs (InL x1) = abs (InL x2)Æ]);
+a (POP_ASM_T (asm_tac o (rewrite_rule [asm_rule ¨µ r∑ rep (abs r) = rÆ])));
+a strip_tac;
+(* *** Goal "2" *** *)
+a (contr_tac);
+a (LEMMA_T ¨rep(abs(InL x)) = rep(abs(InR One))Æ (strip_asm_tac o (rewrite_rule [asm_rule ¨µ r∑ rep (abs r) = rÆ]))
+	THEN1 rewrite_tac[asm_rule ¨abs (InL x) = abs (InR One)Æ]);
+(* *** Goal "3" *** *)
+a (strip_asm_tac (µ_elim ¨rep yÆ sum_cases_thm));
+(* *** Goal "3.1" *** *)
+a (∂_tac ¨y'Æ THEN rewrite_tac [map_eq_sym_rule (asm_rule ¨rep y = InL y'Æ), asm_rule ¨µ a∑ abs (rep a) = aÆ]);
+(* *** Goal "3.2" *** *)
+a (LEMMA_T ¨z = OneÆ asm_tac THEN1 rewrite_tac[]);
+a (var_elim_asm_tac ¨z = OneÆ);
+a (lemma_tac ¨abs(rep(y)) = abs(InR One)Æ THEN1 rewrite_tac[asm_rule ¨rep y = InR OneÆ]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €Value› : 'a ≠ 'a OPT;
+‹ €Undefined› : 'a OPT
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ OneOne Value
+‹	± (µx∑ ≥ Value x = Undefined)
+‹	± (µy∑ y = Undefined ≤ (∂z∑ y = Value z))
+∞
+
+=GFT
+€opt_cases_thm› =
+   Ù µ x∑ x = Undefined ≤ (∂ y∑ x = Value y)
+
+€value_not_undefined_lemma› =
+   Ù µ x∑ ≥ Value x = Undefined ± ≥ Undefined = Value x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ x = Undefined ≤ (∂y∑ x = Value y)Æ);
+a strip_tac;
+a (strip_asm_tac (get_spec ¨ValueÆ));
+a (spec_nth_asm_tac 1 ¨xÆ THEN_TRY asm_rewrite_tac[]);
+val opt_cases_thm = save_pop_thm "opt_cases_thm";
+
+set_goal([], ¨µx∑ ≥ Value x = Undefined ± ≥ Undefined = Value xÆ);
+a (strip_tac);
+a (strip_asm_tac (get_spec ¨ValueÆ)
+	THEN asm_rewrite_tac[]
+	THEN SYM_ASMS_T rewrite_tac);
+val value_not_undefined_lemma = save_pop_thm "value_not_undefined_lemma";
+
+set_goal([], ¨µx y∑ Value x = Value y § x = yÆ);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (strip_asm_tac (rewrite_rule [get_spec ¨OneOneÆ] (get_spec ¨ValueÆ))
+	THEN asm_fc_tac[]);
+val value_oneone_lemma = save_pop_thm "value_oneone_lemma";
+
+set_goal([], ¨∂ValueOf: 'a OPT ≠ 'a∑ µv∑ ValueOf (Value v) = vÆ);
+a (∂_tac ¨Ãx∑ ≈ y∑ Value y = xÆ THEN rewrite_tac[get_spec ¨ValueÆ]
+	THEN strip_tac);
+a (≈_tac ¨≈ y∑ Value y = Value vÆ);
+a (∂_tac ¨vÆ THEN rewrite_tac[]);
+a (strip_asm_tac (get_spec ¨ValueÆ));
+a (fc_tac [get_spec ¨OneOneÆ]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[] THEN strip_tac);
+a (all_asm_fc_tac []);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ValueOf› : 'a OPT ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µv∑ ValueOf (Value v) = v
+∞
+
+πHOLCONST
+‹ €IsDefined› : 'a OPT ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µv∑ IsDefined v § ≥ v = Undefined
+∞
+
+\subsection{Proof Contexts}
+
+=SML
+add_pc_thms "'rbjmisc" [];
+commit_pc "'rbjmisc";
+
+force_new_pc "€rbjmisc›";
+merge_pcs ["hol", "'rbjmisc"] "rbjmisc";
+commit_pc "rbjmisc";
+
+force_new_pc "€rbjmisc1›";
+merge_pcs ["hol1", "'rbjmisc"] "rbjmisc1";
+commit_pc "rbjmisc1";
+=TEX
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}

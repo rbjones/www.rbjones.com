@@ -1,7 +1,7 @@
 =IGN
-$Id: t026.doc,v 1.5 2008/08/04 18:22:26 rbj Exp $
+$Id: t026.doc,v 1.6 2008/09/09 20:21:11 rbj Exp $
 open_theory "ifos";
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc21", "'ifos"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -28,7 +28,7 @@ set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This is my third approach to set theory conceived as a maximal consistent theory of set comprehension.
+This is my third approach to set theory conceived as a maximal consistent theory of comprehension.
 It differs from the previous attempt (in t024) by simplification of the treatment of infinitary logic, allowing only a single binary relation.
 \end{abstract}
 
@@ -40,12 +40,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/08/04 18:22:26 $ $
+Last Change $ $Date: 2008/09/09 20:21:11 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.5 2008/08/04 18:22:26 rbj Exp $ $
+$ $Id: t026.doc,v 1.6 2008/09/09 20:21:11 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -99,7 +99,7 @@ open_theory "misc2";
 force_new_theory "ÛifosÝ";
 force_new_pc Û"'ifos"Ý;
 merge_pcs ["'savedthm_cs_¶_proof"] "'ifos";
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc21", "'ifos"];
 =TEX
 
 \subsection{Syntax}
@@ -188,7 +188,7 @@ a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 val Is_clauses = pop_thm();
 
 add_pc_thms "'ifos" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc21", "'ifos"];
 
 set_goal ([], ¬
 	(µx· IsAf x ´ ³ IsCf x)
@@ -254,6 +254,7 @@ Informally these should say:
 \item Syntax is closed under the two constructors.
 \item The syntax constructors are injections, have disjoint ranges, and partition the syntax. 
 \item Any syntactic property which is preserved by the constructors (i.e. is true of any construction if it is true of all its syntactic constituents) is true of everything in syntax (this is an induction principle).
+\item A recursion theorem which supports definition of primitive recursive functions over the syntax.
 \end{itemize}
 
 =GFT
@@ -478,7 +479,7 @@ a (rewrite_tac (map get_spec [
 val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
 
 add_pc_thms "'ifos" [syn_proj_clauses];
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc21", "'ifos"];
 
 set_goal([], ¬µx·	x  Syntax
 ´	(IsCf x ´ (µy· y ‰g (CfForms x) ´ y  Syntax))
@@ -498,7 +499,7 @@ a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
 
 add_pc_thms "'ifos" [syn_con_neq_clauses];
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc21", "'ifos"];
 
 set_goal([], ¬
 	(µv f· MkCf (v, f)  Syntax ´ (µy· y ‰g f ´ y  Syntax))®);
@@ -534,7 +535,158 @@ a (REPEAT strip_tac
 	THEN_TRY asm_rewrite_tac []);
 val scprec_fc_clauses2 = save_pop_thm "scprec_fc_clauses2";
 =TEX
+
+The following recursion theorem supports definition by primitive recursion of functions over the syntax.
 }%ignore
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¬µaf cf· ¶ f· (µm s· f (MkAf (m, s)) = af m s)
+	± (µvars forms· f (MkCf (vars, forms)) = cf (FunImage‰g f forms) vars forms)®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬¶g· g = (Ìf x· if IsAf x then af (AfMem x) (AfSet x) else cf (FunImage‰g f (CfForms x)) (CfVars x) (CfForms x))®
+	THEN1 prove_¶_tac);
+a (lemma_tac ¬g respects ScPrec®
+	THEN1 (asm_rewrite_tac [get_spec ¬$respects®] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (cases_tac ¬IsAf x® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬ScPrec (CfVars x) x ± ScPrec (CfForms x) x®
+	THEN1 rewrite_tac[]);
+
+a (lemma_tac ¬µcfe $¼‰t st· EvalForm (cfe, $¼‰t, st) = EvalFormFunct (cfe, $¼‰t, st) (EvalForm (cfe, $¼‰t, st))®);
+a (asm_tac well_founded_ScPrec_thm);
+a (asm_tac evalformfunct_respect_thm);
+a (REPEAT µ_tac);
+a (list_spec_nth_asm_tac 1 [¬cfe®, ¬$¼‰t®, ¬st®]);
+a (all_fc_tac [µ_elim ¬ScPrec® (µ_elim ¬EvalFormFunct (cfe, $¼‰t, st)® (get_spec ¬fix®))]);
+a (rewrite_tac [get_spec ¬EvalForm®]);
+a (asm_rewrite_tac[]);
+val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+
+a (¶‰1_tac ¬fix (Ìf x· if IsAf x then af (AfMem x) (AfSet x) else cf (CfVars x) (CfForms x))®);
+a (REPEAT strip_tac);
+=TEX
+}%ignore
+
+\subsubsection{Auxiliary Concepts}
+
+Its useful to be able to talk about the free variables in a formula so the definition is given here.
+
+The definition is by recursion over the structure of the syntax.
+This is acheived by defining a functor of which the required function is a fixed point.
+
+¹HOLCONST
+Ü ÛFreeVarsFunctÝ : (GS ­ GS SET) ­ (GS ­ GS SET)
+÷üüüüüüüüüüü
+Ü FreeVarsFunct = Ìfv f·
+Ü	if f  Syntax
+Ü	then if IsAf f
+Ü	     then {AfMem f; AfSet f}
+Ü	     else Þ (FunImage‰g fv (CfForms f)) \ (X‰g (CfVars f))
+Ü	else Åx·T
+°
+
+¹HOLCONST
+Ü ÛFreeVarsÝ : (GS ­ GS SET)
+÷üüüüüüüüüüü
+Ü FreeVars = fix FreeVarsFunct
+°
+
+=GFT
+Ûfreevarsfunct_respect_thmÝ =
+	ô FreeVarsFunct respects ScPrec
+
+Ûfreevarsfunct_fixp_lemmaÝ =
+	ô FreeVars = FreeVarsFunct FreeVars
+
+Ûfreevarsfunct_thmÝ =
+   ô FreeVars
+       = (Ì f
+       · if f  Syntax
+         then
+           if IsAf f
+           then {AfMem f; AfSet f}
+           else Þ (FunImage‰g FreeVars (CfForms f)) \ X‰g (CfVars f)
+         else Å x· T)
+
+Ûfreevarsfunct_thm2Ý =
+   ô µ f
+     · FreeVars f
+         = (if f  Syntax
+           then
+             if IsAf f
+             then {AfMem f; AfSet f}
+             else Þ (FunImage‰g FreeVars (CfForms f)) \ X‰g (CfVars f)
+           else Å x· T)
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs ["misc2", "'ifos"];
+
+set_goal([], ¬FreeVarsFunct respects ScPrec®);
+a (rewrite_tac [get_spec ¬FreeVarsFunct®, get_spec ¬$respects®, get_spec ¬ScPrec®]
+	THEN REPEAT strip_tac);
+a (cases_tac ¬x  Syntax® THEN asm_rewrite_tac []);
+a (fc_tac [syntax_cases_thm] THEN asm_rewrite_tac [get_spec ¬FunImage‰g®]);
+a (fc_tac [Is_not_fc_clauses] THEN asm_rewrite_tac[]);
+a (once_rewrite_tac [sets_ext_clauses]);
+a (strip_tac THEN rewrite_tac[_in_clauses]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (¶_tac ¬s® THEN asm_rewrite_tac[]);
+a (¶_tac ¬y® THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (lemma_tac ¬tc ScPrec y x®
+	THEN1 (all_fc_tac [scprec_fc_clauses2]
+		THEN all_fc_tac [tc_incr_thm]));
+a (asm_fc_tac []);
+(* *** Goal "2" *** *)
+a (¶_tac ¬s® THEN asm_rewrite_tac[]);
+a (¶_tac ¬y® THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (lemma_tac ¬tc ScPrec y x®
+	THEN1 (all_fc_tac [scprec_fc_clauses2]
+		THEN all_fc_tac [tc_incr_thm]));
+a (asm_fc_tac []);
+a (asm_rewrite_tac[]);
+val freevarsfunct_respect_thm = save_pop_thm "freevarsfunct_respect_thm";
+
+set_goal([], ¬FreeVars = FreeVarsFunct FreeVars®);
+a (asm_tac well_founded_ScPrec_thm);
+a (asm_tac freevarsfunct_respect_thm);
+a (all_fc_tac [µ_elim ¬ScPrec® (µ_elim ¬FreeVarsFunct® (get_spec ¬fix®))]);
+a (rewrite_tac [get_spec ¬FreeVars®]);
+a (asm_rewrite_tac[]);
+val freevarsfunct_fixp_lemma = save_pop_thm "freevarsfunct_fixp_lemma";
+
+val freevarsfunct_thm = save_thm ("freevarsfunct_thm",
+	rewrite_rule [get_spec ¬FreeVarsFunct®] freevarsfunct_fixp_lemma);
+
+set_goal([], ¬µ f
+     · FreeVars f
+         = if f  Syntax
+Ü	then if IsAf f
+Ü	     then {AfMem f; AfSet f}
+Ü	     else Þ (FunImage‰g FreeVars (CfForms f)) \ X‰g (CfVars f)
+Ü	else Åx·T®);
+a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] freevarsfunct_thm)]);
+val freevarsfunct_thm2 = save_pop_thm "freevarsfunct_thm2";
+
+pop_pc();
+=TEX
+}%ignore
+
+The name {\it SetReps} is defined as the set of formulae with exactly one free variable which is the empty set.
+These are the candidate representatives for sets, and represent the set coextensive with the property expressed by the formula.
+To know what set that is you need to know the domain of discourse (which in the cases of interest here will always be a subset of {\it SetReps}) and the semantics of formulae, which is defined below.
+
+¹HOLCONST
+Ü ÛSetRepsÝ : GS SET
+÷üüüüüüüüüüü
+Ü SetReps = {x | x  Syntax ± FreeVars x = {š‰g}}
+°
 
 \subsection{Semantics}
 
@@ -558,7 +710,7 @@ The parameters are the type of the domain of discourse and the type of truth val
 
 =SML
 declare_type_abbrev (Û"BR"Ý, ["'a", "'b"], ”'a ­ 'a ­ 'b®);
-declare_type_abbrev("ÛRVÝ", ["'a","'b"], ”'a IS ­ 'b®);
+declare_type_abbrev("ÛRVÝ", ["'a","'b"], ”(GS, 'a)IX ­ 'b®);
 declare_type_abbrev("ÛSTÝ", ["'a","'b"], ”'a SET ¸ ('a, 'b)BR®);
 =TEX
 
@@ -680,12 +832,14 @@ Note that this specification is generic in the type of truth values.
 ¹HOLCONST
 Ü ÛEvalAfÝ : 't REL ­ GS ­ ('a, 't) ST ­ ('a, 't) RV
 ÷üüüüüüüüüüü
-Ü µ$¼‰t (at:GS) (st:('a, 't) ST) (va:'a IS)· EvalAf $¼‰t at st va =
-Ü	let set = AfSet at
+Ü µ$¼‰t (at:GS) (st:('a, 't) ST) (va:(GS, 'a)IX)· EvalAf $¼‰t at st va =
+Ü	let d = Fst st
+Ü	and rv = Snd st
+Ü	and set = AfSet at
 Ü	and mem = AfMem at
-Ü	in 
-Ü		let rv = (Snd st)
-Ü		in rv (IsVal va set) (IsVal va mem)
+Ü	in	if mem  IxDom va ± set  IxDom va
+Ü		then rv (IxVal va mem) (IxVal va set)
+Ü		else Lub $¼‰t {}
 °
 
 To evaluate a compound formula you must first evaluate the constituent formulae in every context obtainable by modification of those variables which are bound by the compound formula.
@@ -727,9 +881,9 @@ This definition shows how the set of truth values of instances of the constituen
 Ü	and V = Fst st
 Ü	in etf {pb | ¶rv v·
 Ü		  rv  rvs
-Ü		± IsDom v = X‰g Î
-Ü		± IsRan v € V
-Ü		± pb = rv (IsOverRide v va)}
+Ü		± IxDom v = X‰g Î
+Ü		± IxRan v € V
+Ü		± pb = rv (IxOverRide v va)}
 °
 
 Now we define a parameterised functor of which the semantic function is a fixed point.
@@ -742,10 +896,8 @@ Now we define a parameterised functor of which the semantic function is a fixed 
 Ü	then if IsAf f
 Ü	     then EvalAf $¼‰t f st
 Ü	     else
-Ü		if IsCf f
-Ü		then let rvs = FunImage ef (X‰g(CfForms f))
-Ü		     in  EvalCf cfe f st rvs
-Ü		else Åx·T
+Ü		let rvs = FunImage ef (X‰g(CfForms f))
+Ü	     	in  EvalCf cfe f st rvs
 Ü	else Åx·T
 °
 
@@ -776,11 +928,9 @@ To use this definition we need to show that there exists a fixed point, for whic
            then
              if IsAf f
              then EvalAf ¼‰t f st
-             else if IsCf f
-             then
+             else 
                let rvs = FunImage (EvalForm (cfe, ¼‰t, st)) (X‰g (CfForms f))
                in EvalCf cfe f st rvs
-             else Å x· T
            else Å x· T)
 
 Ûevalformfunct_thm2Ý =
@@ -790,29 +940,28 @@ To use this definition we need to show that there exists a fixed point, for whic
            then
              if IsAf f
              then EvalAf ¼‰t f st
-             else if IsCf f
-             then
-               let rvs = FunImage (EvalForm (cfe, ¼‰t, st)) (X‰g (CfForms f))
-               in EvalCf cfe f st rvs
-             else Å f· T
+             else
+               (let rvs
+                     = FunImage (EvalForm (cfe, ¼‰t, st)) (X‰g (CfForms f))
+               in EvalCf cfe f st rvs)
            else Å f· T)
 =TEX
 
 \ignore{
 =SML
-set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos"];
+set_merge_pcs ["misc2", "'ifos"];
 
 set_goal([], ¬µcfe $¼‰t st· (EvalFormFunct (cfe, $¼‰t, st)) respects ScPrec®);
 a (rewrite_tac [get_spec ¬EvalFormFunct®, get_spec ¬$respects®]
 	THEN REPEAT strip_tac);
 a (cases_tac ¬IsAf x® THEN asm_rewrite_tac[]);
-a (cases_tac ¬IsCf x® THEN asm_rewrite_tac[]);
 a (cases_tac ¬x  Syntax® THEN asm_rewrite_tac[]);
 a (lemma_tac ¬FunImage g (X‰g (CfForms x)) = FunImage h (X‰g (CfForms x))®
 	THEN_TRY asm_rewrite_tac[get_spec ¬X‰g®]);
 a (PC_T1 "hol1" rewrite_tac [get_spec ¬FunImage®]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
+a (fc_tac [syntax_cases_thm]);
 a (all_fc_tac [scprec_fc_clauses2]);
 a (all_asm_fc_tac[tc_incr_thm]);
 a (all_asm_fc_tac[]);
@@ -820,6 +969,7 @@ a (¶_tac ¬a® THEN asm_rewrite_tac[]);
 a (POP_ASM_T (fn x => rewrite_thm_tac (eq_sym_rule x)));
 a (asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
+a (fc_tac [syntax_cases_thm]);
 a (all_fc_tac [scprec_fc_clauses2]);
 a (all_asm_fc_tac[tc_incr_thm]);
 a (all_asm_fc_tac[]);
@@ -845,11 +995,9 @@ set_goal([], ¬µ cfe $¼‰t st f
              then
                if IsAf f
                then EvalAf $¼‰t f st
-               else if IsCf f
-               then
+               else 
                  let rvs = FunImage (EvalForm (cfe, $¼‰t, st)) (X‰g (CfForms f))
                  in EvalCf cfe f st rvs
-               else Å f· T
              else Å f· T®);
 a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] evalformfunct_thm)]);
 val evalformfunct_thm2 = save_pop_thm "evalformfunct_thm2";
@@ -928,6 +1076,57 @@ val ccrpou_¼‰f‰t‰3_thm = save_pop_thm "ccrpou_¼‰f‰t‰3_thm";
 =TEX
 }%ignore
 
+We need an ordering over variable assignments relative to membership relations which corresponds to degrees of well-definedness of the sets assigned to variables under the membership relation.
+
+It might be helpful to do this separately for the extension and the essence of the sets, so that's what I propose to do here.
+
+We begin with the orderings over {\it SetReps} corresponding to extension.
+
+¹HOLCONST
+Ü ÛExtSROÝ : GS SET ¸ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· ExtSRO (V, r) = Ìx y· µz· z  V ´ r z x ¼‰t‰4 r z y
+°
+
+and to essences.
+
+¹HOLCONST
+Ü ÛEssSROÝ : GS SET ¸ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· EssSRO (V, r) = Ìx y· µz· z  V ´ r x z ¼‰t‰4 r y z
+°
+
+Though I suspect I may only need:
+
+¹HOLCONST
+Ü ÛExsSROÝ : GS SET ¸ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µs· ExsSRO s = ConjOrder (ExtSRO s) (EssSRO s)
+°
+
+From these we obtain orderings over variable assignments:
+
+¹HOLCONST
+Ü ÛExtVaOÝ : GS SET ¸ (GS, FTV)BR ­ ('a, GS) IX ­ ('a, GS) IX ­ BOOL
+÷üüüüüüüüüüü
+Ü µs· ExtVaO s = IxO2 (EssSRO s)
+°
+
+¹HOLCONST
+Ü ÛEssVaOÝ : GS SET ¸ (GS, FTV)BR ­ ('a, GS) IX ­ ('a, GS) IX ­ BOOL
+÷üüüüüüüüüüü
+Ü µs· EssVaO s = IxO2 (EssSRO s)
+°
+
+¹HOLCONST
+Ü ÛExsVaOÝ : GS SET ¸ (GS, FTV)BR ­ ('a, GS) IX ­ ('a, GS) IX ­ BOOL
+÷üüüüüüüüüüü
+Ü µs· ExsVaO s = IxO2 (ExsSRO s)
+°
+
+\subsubsection{Monotonicity Results}
+
+First we prove the monotonicity of {\it EvalForm}.
 
 =GFT
 Ûevalcf_tf4_increasing_lemmaÝ =
@@ -1078,8 +1277,6 @@ val evalcf_tf4_increasing_lemma = save_pop_thm "evalcf_tf4_increasing_lemma";
 =TEX
 }%ignore
 
-\subsubsection{Monotonicity}
-
 =GFT
 Ûevalaf_increasing_lemmaÝ =
    ô µ tr g· CRpoU tr ´ Increasing (StO tr) (RvO tr) (EvalAf tr g)
@@ -1091,8 +1288,9 @@ set_goal([], ¬µ tr g· CRpoU tr ´ Increasing (StO tr) (RvO tr) (EvalAf tr g)®);
 a (rewrite_tac (map get_spec [¬Increasing®, ¬EvalAf®, ¬StO®, ¬RvO®,
 	¬Pw®, ¬DerivedOrder®, ¬IsEO®, ¬DpoEO®, ¬dpoUdef®, ¬dpoOdef®])
 	THEN REPEAT strip_tac);
+a (fc_tac [crpou_fc_clauses]);
 a (rewrite_tac [let_def]);
-a (spec_nth_asm_tac 1 ¬AfRel g® THEN_TRY asm_rewrite_tac[]);
+a (CASES_T ¬AfMem g  IxDom x' ± AfSet g  IxDom x'® asm_rewrite_thm_tac);
 val evalaf_increasing_lemma = pop_thm();
 =TEX
 }%ignore
@@ -1141,53 +1339,28 @@ a (LIST_SPEC_NTH_ASM_T 1 [¬(s,x)®, ¬(s,y)®] ante_tac
 	THEN rewrite_tac[]
 	THEN strip_tac);
 (* *** Goal "1.2" *** *)
-a (cases_tac ¬IsCf t® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.1" *** *)
 a (rewrite_tac ((map get_spec [¬Pw®, ¬X‰g®, ¬EvalCf®])@[let_def]));
 a (strip_tac THEN FC_T bc_tac [get_spec ¬Increasing®]);
 a (rewrite_tac [get_spec ¬SetO®] THEN REPEAT strip_tac);
-(* *** Goal "1.2.1.1" *** *)
+(* *** Goal "1.2.1" *** *)
 a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
-a (¶_tac ¬EvalForm (c, r, s, y) a (IsOverRide v x')®
+a (¶_tac ¬EvalForm (c, r, s, y) a (IxOverRide v x')®
 	THEN strip_tac);
-(* *** Goal "1.2.1.1.1" *** *)
+(* *** Goal "1.2.1.1" *** *)
 a (¶_tac ¬EvalForm (c, r, s, y) a®);
 a (¶_tac ¬v® THEN asm_rewrite_tac[get_spec ¬FunImage®]);
 a (¶_tac ¬a® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.1.1.2" *** *)
-a (asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
-a (lemma_tac ¬tc ScPrec a t®);
-(* *** Goal "1.2.1.1.2.1" *** *)
-a (fc_tac [scprec_fc_clauses]);
-a (all_fc_tac [is_fc_clauses2]);
-a (all_fc_tac [scprec_fc_clauses2]);
-a (fc_tac [tc_incr_thm]);
-(* *** Goal "1.2.1.1.2.2" *** *)
-a (all_asm_fc_tac[]);
-a (fc_tac[get_spec ¬Increasing®]);
-a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬RvIsO®, get_spec ¬RvO®]
-	THEN STRIP_T (fn x => fc_tac[x]));
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬MonoEvalForm®, get_spec ¬Pw®]
-	THEN STRIP_T rewrite_thm_tac);
 (* *** Goal "1.2.1.2" *** *)
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
-a (¶_tac ¬EvalForm (c, r, s, x) a (IsOverRide v x')®
-	THEN strip_tac);
-(* *** Goal "1.2.1.2.1" *** *)
-a (¶_tac ¬EvalForm (c, r, s, x) a®);
-a (¶_tac ¬v® THEN asm_rewrite_tac[get_spec ¬FunImage®]);
-a (¶_tac ¬a® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.1.2.2" *** *)
 a (asm_rewrite_tac[]);
 a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
 a (lemma_tac ¬tc ScPrec a t®);
-(* *** Goal "1.2.1.2.2.1" *** *)
+(* *** Goal "1.2.1.2.1" *** *)
 a (fc_tac [scprec_fc_clauses]);
+a (fc_tac [syntax_cases_thm]);
 a (all_fc_tac [is_fc_clauses2]);
 a (all_fc_tac [scprec_fc_clauses2]);
 a (fc_tac [tc_incr_thm]);
-(* *** Goal "1.2.1.2.2.2" *** *)
+(* *** Goal "1.2.1.2.2" *** *)
 a (all_asm_fc_tac[]);
 a (fc_tac[get_spec ¬Increasing®]);
 a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬RvIsO®, get_spec ¬RvO®]
@@ -1195,10 +1368,32 @@ a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬RvIsO®, get_spec ¬RvO®]
 a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬MonoEvalForm®, get_spec ¬Pw®]
 	THEN STRIP_T rewrite_thm_tac);
 (* *** Goal "1.2.2" *** *)
-a (fc_tac [inst_type_rule [(”'a®, ”'b®), (”GS ­ 'b DPO®, ”'a®)] pw_crpou_thm]);
-a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
+a (¶_tac ¬EvalForm (c, r, s, x) a (IxOverRide v x')®
+	THEN strip_tac);
+(* *** Goal "1.2.2.1" *** *)
+a (¶_tac ¬EvalForm (c, r, s, x) a®);
+a (¶_tac ¬v® THEN asm_rewrite_tac[get_spec ¬FunImage®]);
+a (¶_tac ¬a® THEN asm_rewrite_tac[]);
+(* *** Goal "1.2.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+a (lemma_tac ¬tc ScPrec a t®);
+(* *** Goal "1.2.2.2.1" *** *)
+a (fc_tac [syntax_cases_thm]);
+a (fc_tac [scprec_fc_clauses]);
+a (all_fc_tac [is_fc_clauses2]);
+a (all_fc_tac [scprec_fc_clauses2]);
+a (fc_tac [tc_incr_thm]);
+(* *** Goal "1.2.2.2.2" *** *)
+a (all_asm_fc_tac[]);
+a (fc_tac[get_spec ¬Increasing®]);
+a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¬RvIsO®, get_spec ¬RvO®]
+	THEN STRIP_T (fn x => fc_tac[x]));
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬MonoEvalForm®, get_spec ¬Pw®]
+	THEN STRIP_T rewrite_thm_tac);
 (* *** Goal "2" *** *)
-a (fc_tac [inst_type_rule [(”'a®, ”'b®), (”GS ­ 'b DPO®, ”'a®)] pw_crpou_thm]);
+a (fc_tac [inst_type_rule [(”'a®, ”'b®), (”GS ­ 'b OPT®, ”'a®)] pw_crpou_thm]);
 a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
 val monoevalform_increasing_lemma = pop_thm ();
 
@@ -1213,6 +1408,1074 @@ val evalform_increasing_thm = save_pop_thm "evalform_increasing_thm";
 =TEX
 }%ignore
 
+We will also need to prove monotonicity of formula evaluation relative to the extension and essences of the variable assignment providing the context for the evaluation.
+
+\ignore{
+=IGN
+stop;
+set_goal([], ¬µc r (V, $‰v) g· CRpoU r ± Increasing (SetO r) r c ± g  Syntax
+	´ Increasing (ExsVaO (V, $‰v)) r (Ìz· EvalForm (c, r, (V, $‰v)) g z)®);
+a (REPEAT µ_tac THEN rewrite_tac ((map get_spec [¬Increasing®]) @ [evalformfunct_thm2])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]
+	THEN DROP_NTH_ASM_T 2 ante_tac);
+a (sc_induction_tac ¬g® THEN strip_tac);
+a (cases_tac ¬IsAf t® THEN asm_rewrite_tac[let_def]);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¬EvalAf®, let_def]);
+a (cases_tac ¬AfMem t  IxDom x ± AfSet t  IxDom x® THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule (map get_spec [¬ExsVaO®, ¬IxO2®, ¬ExsSRO®, ¬ConjOrder®, ¬IxO®, ¬OptO®]))));
+
+
+=TEX
+}%ignore
+
+
+\subsubsection{Extensionality}
+
+The terminology is a bit uncertain here.
+These lemmas about the semantics are proven in order to obtain extensionality results for fixed points of the semantic functor.
+
+First we define the relevant notion of `same extension'.
+
+Two sets have the same extension over some domain if they have the same members in that domain.
+
+¹HOLCONST
+Ü ÛSameExtÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· SameExt V r = Ìx y· µz· z  V ´ r z x = r z y
+°
+
+Two sets have the same essence over some domain if they are members of the same sets in that domain.
+
+¹HOLCONST
+Ü ÛSameEssÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· SameEss V r = Ìx y·  µz· z  V ´ r x z = r y z
+°
+
+=GFT
+Ûsameext_equiv_thmÝ =
+   ô µ V r· Equiv (V, SameExt V r)
+
+Ûsameess_equiv_thmÝ =
+   ô µ V r· Equiv (V, SameEss V r)
+
+Ûsameext_refl_lemmaÝ =
+   ô µ V r x· x  V ´ SameExt V r x x
+
+Ûsameess_refl_lemmaÝ =
+   ô µ V r x· x  V ´ SameEss V r x x
+
+Ûsameext_sym_lemmaÝ =
+   ô µ V r x y· x  V ± y  V ´ (SameExt V r x y ¤ SameExt V r y x)
+
+Ûsameess_sym_lemmaÝ =
+   ô µ V r x y· x  V ± y  V ´ (SameEss V r x y ¤ SameEss V r y x)
+
+Ûevalform_ext_lemmaÝ =
+   ô µ V r
+     · V € SetReps
+         ´ (µ z
+         · z  Syntax
+             ´ (µ x y
+             · IxDom x = IxDom y
+                   ± FreeVars z € IxDom x
+                   ± IxRan x € V
+                   ± IxRan y € V
+                   ± (µ v
+                   · v  IxDom x
+                       ´ SameExt V r (IxVal x v) (IxVal y v)
+                         ± SameEss V r (IxVal x v) (IxVal y v))
+                 ´ EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z x
+                   = EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z y))
+
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¬µV r· Equiv (V, (SameExt V r))®);
+a (REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¬SameExt®, ¬Equiv®, ¬Refl®, ¬Sym®, ¬Trans®])
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+val sameext_equiv_thm = save_pop_thm "sameext_equiv_thm";
+
+set_goal ([], ¬µV r· Equiv (V, (SameEss V r))®);
+a (REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¬SameEss®, ¬Equiv®, ¬Refl®, ¬Sym®, ¬Trans®])
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]
+	THEN asm_rewrite_tac[]);
+val sameess_equiv_thm = save_pop_thm "sameess_equiv_thm";
+
+set_goal ([], ¬µV r x· x  V ´ SameExt V r x x®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬Refl (V, SameExt V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameext_equiv_thm]);
+a (fc_tac [get_spec ¬Refl®] THEN asm_fc_tac[]);
+val sameext_refl_lemma = save_pop_thm "sameext_refl_lemma";
+
+set_goal ([], ¬µV r x· x  V ´ SameEss V r x x®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬Refl (V, SameEss V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameess_equiv_thm]);
+a (fc_tac [get_spec ¬Refl®] THEN asm_fc_tac[]);
+val sameess_refl_lemma = save_pop_thm "sameess_refl_lemma";
+
+set_goal ([], ¬µV r x y· x  V ± y  V ´ (SameExt V r x y ¤ SameExt V r y x)®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬Sym (V, SameExt V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameext_equiv_thm]);
+a (fc_tac [get_spec ¬Sym®] THEN all_asm_fc_tac[]);
+a (lemma_tac ¬Sym (V, SameExt V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameext_equiv_thm]);
+a (fc_tac [get_spec ¬Sym®]);
+a (list_spec_nth_asm_tac 1 [¬y®, ¬x®]);
+val sameext_sym_lemma = save_pop_thm "sameext_sym_lemma";
+
+set_goal ([], ¬µV r x y· x  V ± y  V ´ (SameEss V r x y ¤ SameEss V r y x)®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬Sym (V, SameEss V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameess_equiv_thm]);
+a (fc_tac [get_spec ¬Sym®] THEN all_asm_fc_tac[]);
+a (lemma_tac ¬Sym (V, SameEss V r)®
+	THEN1 rewrite_tac [rewrite_rule [get_spec ¬Equiv®] sameess_equiv_thm]);
+a (fc_tac [get_spec ¬Sym®]);
+a (list_spec_nth_asm_tac 1 [¬y®, ¬x®]);
+val sameess_sym_lemma = save_pop_thm "samess_sym_lemma";
+
+set_goal([], ¬µV r· V € SetReps ´ µz· z  Syntax ´ µx y·
+		IxDom x = IxDom y ± FreeVars z € IxDom x ± IxRan x € V ± IxRan y € V
+		± (µv· v  IxDom x ´ SameExt V r (IxVal x v) (IxVal y v) ± SameEss V r (IxVal x v) (IxVal y v))
+		´	EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z x
+			= EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z y®);
+a (REPEAT_N 4 strip_tac);
+a (sc_induction_tac ¬z®);
+a (REPEAT_N 3 strip_tac THEN rewrite_tac [get_spec ¬SameExt®, get_spec ¬SameEss®, evalformfunct_thm2]
+	THEN REPEAT strip_tac);
+a (asm_rewrite_tac[let_def]);
+a (fc_tac [syntax_cases_thm]
+	THEN fc_tac[Is_not_fc_clauses]
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac [get_spec ¬EvalAf®, let_def]);
+a (CASES_T ¬AfMem t  IxDom y ± AfSet t  IxDom y® (fn x => rewrite_thm_tac x THEN asm_tac x));
+a (POP_ASM_T strip_asm_tac);
+a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])));
+a (asm_fc_tac[]);
+a (lemma_tac ¬IxVal x (AfMem t)  V ± IxVal x (AfSet t)  V ± IxVal y (AfMem t)  V ± IxVal y (AfSet t)  V®
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.4" *** *)
+a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.5" *** *)
+a (asm_fc_tac[] THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬EvalCf®, let_def]);
+a (LEMMA_T ¬  {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v x)}
+             =
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v y)}
+	´ EvalCf_tf4
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v x)}
+             = EvalCf_tf4
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v y)}® (fn x => bc_tac [x])
+	THEN1 (STRIP_T rewrite_thm_tac));
+a (PC_T "hol1" strip_tac THEN µ_tac THEN rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (¶_tac ¬rv® THEN ¶_tac ¬v® THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¬X‰g®])));
+a (all_fc_tac [scprec_fc_clauses2]);
+a (all_fc_tac [is_fc_clauses2]);
+a (lemma_tac ¬tc ScPrec a t® THEN1 fc_tac [tc_incr_thm]);
+a (lemma_tac ¬µ v· v  IxDom x
+                         ´ SameExt V r (IxVal x v) (IxVal y v)
+                           ± SameEss V r (IxVal x v) (IxVal y v)®
+	THEN1 (strip_tac
+		THEN rewrite_tac [get_spec ¬SameExt®, get_spec ¬SameEss®]
+		THEN strip_tac));
+(* *** Goal "2.1.1" *** *)
+a (spec_nth_asm_tac 12 ¬v'®);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (spec_nth_asm_tac 18 ¬a®);
+a (list_spec_nth_asm_tac 1 [¬IxOverRide v x®, ¬IxOverRide v y®]
+	THEN swap_nth_asm_concl_tac 1);
+(* *** Goal "2.1.2.1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (bc_tac [list_µ_elim [¬FreeVars a®, ¬X‰g (CfVars t) À FreeVars t®, ¬X‰g (CfVars t) À IxDom y®] €_trans_thm]);
+(* *** Goal "2.1.2.2.1" *** *)
+a (asm_rewrite_tac[µ_elim ¬t® freevarsfunct_thm2]);
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A À (B \ A) = A À B®]);
+a (lemma_tac ¬FreeVars a  FunImage‰g FreeVars (CfForms t)®
+	THEN1 (asm_rewrite_tac [get_spec ¬FunImage‰g®]
+		THEN ¶_tac ¬a®
+		THEN asm_rewrite_tac[]));
+a (lemma_tac ¬FreeVars a € Þ (FunImage‰g FreeVars (CfForms t))®
+	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¬µx B· x  B ´ x € Þ B®]));
+a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µx B C· x € B ´ x € C À B®]);
+(* *** Goal "2.1.2.2.2" *** *)
+a (DROP_NTH_ASM_T 17 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.3" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v x)®, ¬IxRan v À IxRan x®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 15 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.4" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v y)®, ¬IxRan v À IxRan y®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 14 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.5" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.1.2.5.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.2.5.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] sameext_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.1.2.6" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.1.2.6.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.2.6.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] sameess_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (¶_tac ¬rv® THEN ¶_tac ¬v® THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¬X‰g®])));
+a (all_fc_tac [scprec_fc_clauses2]);
+a (all_fc_tac [is_fc_clauses2]);
+a (lemma_tac ¬tc ScPrec a t® THEN1 fc_tac [tc_incr_thm]);
+a (lemma_tac ¬µ v· v  IxDom x
+                         ´ SameExt V r (IxVal x v) (IxVal y v)
+                           ± SameEss V r (IxVal x v) (IxVal y v)®
+	THEN1 (strip_tac
+		THEN rewrite_tac [get_spec ¬SameExt®, get_spec ¬SameEss®]
+		THEN strip_tac));
+(* *** Goal "2.2.1" *** *)
+a (spec_nth_asm_tac 12 ¬v'®);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (spec_nth_asm_tac 18 ¬a®);
+a (list_spec_nth_asm_tac 1 [¬IxOverRide v y®, ¬IxOverRide v x®]
+	THEN swap_nth_asm_concl_tac 1);
+(* *** Goal "2.2.2.1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (bc_tac [list_µ_elim [¬FreeVars a®, ¬X‰g (CfVars t) À FreeVars t®, ¬X‰g (CfVars t) À IxDom x®] €_trans_thm]);
+(* *** Goal "2.2.2.2.1" *** *)
+a (asm_rewrite_tac[µ_elim ¬t® freevarsfunct_thm2]);
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A À (B \ A) = A À B®]);
+a (lemma_tac ¬FreeVars a  FunImage‰g FreeVars (CfForms t)®
+	THEN1 (asm_rewrite_tac [get_spec ¬FunImage‰g®]
+		THEN ¶_tac ¬a®
+		THEN asm_rewrite_tac[]));
+a (lemma_tac ¬FreeVars a € Þ (FunImage‰g FreeVars (CfForms t))®
+	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¬µx B· x  B ´ x € Þ B®]));
+a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µx B C· x € B ´ x € C À B®]);
+(* *** Goal "2.2.2.2.2" *** *)
+a (DROP_NTH_ASM_T 17 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.3" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v y)®, ¬IxRan v À IxRan y®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 14 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.4" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v x)®, ¬IxRan v À IxRan x®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 15 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.5" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.2.2.5.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (POP_ASM_T (asm_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)]))
+	THEN all_asm_fc_tac[]);
+a (lemma_tac ¬IxVal y v'  V ± IxVal x v'  V®);
+a (lemma_tac ¬v'  IxDom y® THEN1 rewrite_tac[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®), asm_rule ¬v'  IxDom x®]);
+a (lemma_tac ¬IxVal y v'  IxRan y ± IxVal x v'  IxRan x®
+	THEN1 (fc_tac [ix_domran_lemma] THEN contr_tac));
+a (GET_NTH_ASM_T 21 ante_tac THEN GET_NTH_ASM_T 22 ante_tac
+	THEN rewrite_tac [sets_ext_clauses]
+	THEN STRIP_T (fn x => fc_tac [x])
+	THEN STRIP_T (fn x => fc_tac [x])
+	THEN contr_tac);
+a (strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal y v'®, ¬IxVal x v'®] sameext_sym_lemma));
+(* *** Goal "2.2.2.5.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] sameext_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2.2.6" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.2.2.6.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule(asm_rule ¬IxDom x = IxDom y®)]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (POP_ASM_T (asm_tac o (rewrite_rule [eq_sym_rule(asm_rule ¬IxDom x = IxDom y®)])));
+a (all_asm_fc_tac[]);
+a (LEMMA_T ¬IxVal y v'  V ± IxVal x v'  V® (fn x =>
+	strip_asm_tac (rewrite_rule [x] (list_µ_elim [¬V®, ¬r®, ¬IxVal y v'®, ¬IxVal x v'®] sameess_sym_lemma))));
+a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [asm_rule ¬IxDom x = IxDom y®])));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan x € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+a (GET_ASM_T ¬IxRan y € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+a (contr_tac);
+(* *** Goal "2.2.2.6.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] sameess_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+val evalform_ext_lemma = save_pop_thm "evalform_ext_lemma";
+=TEX
+}%ignore
+
+Unfortunaately that last lemma is too weak for the purposes for which is was intended.
+To obtain a stronger lemma it is necessary to have concepts weaker than {\it SameExt} and {\it SameEss}, as follows:
+
+To obtain this weaker lemma I first define a notion of compatibility between truth values.
+
+¹HOLCONST
+Ü ÛCompFTVÝ : FTV SET SET
+÷üüüüüüüüüüü
+Ü CompFTV = {{fB}; {fFalse}; {fTrue}; {fB; fFalse}; {fB; fTrue}}
+°
+
+and its dual:
+
+¹HOLCONST
+Ü ÛCoCompFTVÝ : FTV SET SET
+÷üüüüüüüüüüü
+Ü CoCompFTV = {{fT}; {fFalse}; {fTrue}; {fT; fFalse}; {fT; fTrue}}
+°
+
+Now we define the notion of `compatible extension'.
+
+Two sets have compatible extensions over some domain if they do not definitely disagree about what their members are, where a disagreement is definite if at some point either is overdefined or if neither is undefined.
+
+¹HOLCONST
+Ü ÛCompExtÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· CompExt V r = Ìx y· µz· z  V ´ {r z x; r z y}  CompFTV
+°
+
+¹HOLCONST
+Ü ÛCoCompExtÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· CoCompExt V r = Ìx y· µz· z  V ´ {r z x; r z y}  CoCompFTV
+°
+
+Two sets have compatible essences over some domain if they do not definitely disagree about which sets they are members of.
+
+¹HOLCONST
+Ü ÛCompEssÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· CompEss V r = Ìx y· µz· z  V ´ {r x z; r y z}  CompFTV
+°
+
+¹HOLCONST
+Ü ÛCoCompEssÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· CoCompEss V r = Ìx y· µz· z  V ´ {r x z; r y z}  CoCompFTV
+°
+
+We also need to be able to talk about relations which are nowhere overdefined, which is the negation of the following:
+
+¹HOLCONST
+Ü ÛOverDefinedÝ : GS SET ­ (GS, FTV)BR ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· OverDefined V r ¤ ¶x y· x  V ± y  V ± r x y = fT
+°
+
+and its dual:
+
+¹HOLCONST
+Ü ÛUnderDefinedÝ : GS SET ­ (GS, FTV)BR ­ BOOL
+÷üüüüüüüüüüü
+Ü µV r· UnderDefined V r ¤ ¶x y· x  V ± y  V ± r x y = fB
+°
+
+=GFT
+Ûcompftv_lemmaÝ =
+   ô µ s
+     · s  CompFTV ¤ (¶ x· x  s) ± ³ fT  s ± (³ fTrue  s ² ³ fFalse  s)
+
+Ûcocompftv_lemmaÝ =
+   ô µ s
+     · s  CoCompFTV ¤ (¶ x· x  s) ± ³ fB  s ± (³ fTrue  s ² ³ fFalse  s)
+
+Ûcompext_refl_lemmaÝ =
+   ô µ V r x· ³ OverDefined V r ´ x  V ´ CompExt V r x x
+
+Ûcocompext_refl_lemmaÝ =
+   ô µ V r x· ³ UnderDefined V r ´ x  V ´ CoCompExt V r x x
+
+Ûcompess_refl_lemmaÝ =
+   ô µ V r x· ³ OverDefined V r ´ x  V ´ CompEss V r x x
+
+Ûcocompess_refl_lemmaÝ =
+   ô µ V r x· ³ UnderDefined V r ´ x  V ´ CoCompEss V r x x
+
+Ûcompext_sym_lemmaÝ =
+   ô µ V r
+     · ³ OverDefined V r
+         ´ (µ x y· x  V ± y  V ´ (CompExt V r x y ¤ CompExt V r y x))
+
+Ûcocompext_sym_lemmaÝ =
+   ô µ V r
+     · ³ UnderDefined V r
+         ´ (µ x y· x  V ± y  V ´ (CoCompExt V r x y ¤ CoCompExt V r y x))
+
+Ûcompess_sym_lemmaÝ =
+   ô µ V r
+     · ³ OverDefined V r
+         ´ (µ x y· x  V ± y  V ´ (CompEss V r x y ¤ CompEss V r y x))
+
+Ûcocompess_sym_lemmaÝ =
+   ô µ V r
+     · ³ UnderDefined V r
+         ´ (µ x y· x  V ± y  V ´ (CoCompEss V r x y ¤ CoCompEss V r y x))
+
+Ûevalform_ext_lemma2Ý =
+   ô µ V r
+     · V € SetReps
+         ´ (µ z
+         · z  Syntax
+             ´ (µ x y
+             · IxDom x = IxDom y
+                   ± FreeVars z € IxDom x
+                   ± IxRan x € V
+                   ± IxRan y € V
+                   ± (µ v
+                   · v  IxDom x
+                       ´ CompExt V r (IxVal x v) (IxVal y v)
+                         ± CompEss V r (IxVal x v) (IxVal y v))
+                 ´ EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z x
+                   = EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z y))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µs· s  CompFTV ¤ (¶x· x  s) ± ³ fT  s ± (³ fTrue  s ² ³ fFalse  s)®);
+a (µ_tac THEN rewrite_tac[get_spec ¬CompFTV®, _in_clauses]
+	THEN REPEAT_N 2 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[_in_clauses] THEN prove_¶_tac);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (µ_elim ¬s® ftvs_cases_thm)
+	THEN asm_rewrite_tac[]);
+val compftv_lemma = save_pop_thm "compftv_lemma";
+
+set_goal([], ¬µs· s  CoCompFTV ¤ (¶x· x  s) ± ³ fB  s ± (³ fTrue  s ² ³ fFalse  s)®);
+a (µ_tac THEN rewrite_tac[get_spec ¬CoCompFTV®, _in_clauses]
+	THEN REPEAT_N 2 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac THEN asm_rewrite_tac[_in_clauses] THEN prove_¶_tac);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (µ_elim ¬s® ftvs_cases_thm)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+a (LEMMA_T ¬{fFalse; fT} = {fT; fFalse}® rewrite_thm_tac);
+a (PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2" *** *)
+a (LEMMA_T ¬{fTrue; fT} = {fT; fTrue}® rewrite_thm_tac);
+a (PC_T1 "hol1" prove_tac[]);
+val cocompftv_lemma = save_pop_thm "cocompftv_lemma";
+
+set_goal ([], ¬µV r x· ³ OverDefined V r ´ x  V ´ CompExt V r x x®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬OverDefined®, get_spec ¬CompExt®, get_spec ¬CompFTV®, let_def]
+	THEN REPEAT_N 4 strip_tac);
+a (spec_nth_asm_tac 3 ¬z®);
+a (spec_nth_asm_tac 1 ¬x®);
+a (strip_asm_tac (µ_elim ¬r z x® ftv_cases_thm)
+	THEN asm_rewrite_tac[sets_ext_clauses, _in_clauses]);
+val compext_refl_lemma = save_pop_thm "compext_refl_lemma";
+
+set_goal ([], ¬µV r x· ³ UnderDefined V r ´ x  V ´ CoCompExt V r x x®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬UnderDefined®, get_spec ¬CoCompExt®, get_spec ¬CoCompFTV®, let_def]
+	THEN REPEAT_N 4 strip_tac);
+a (spec_nth_asm_tac 3 ¬z®);
+a (spec_nth_asm_tac 1 ¬x®);
+a (strip_asm_tac (µ_elim ¬r z x® ftv_cases_thm)
+	THEN asm_rewrite_tac[sets_ext_clauses, _in_clauses]);
+val cocompext_refl_lemma = save_pop_thm "cocompext_refl_lemma";
+
+set_goal ([], ¬µV r x· ³ OverDefined V r ´ x  V ´ CompEss V r x x®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬OverDefined®, get_spec ¬CompEss®, get_spec ¬CompFTV®, let_def]
+	THEN REPEAT_N 4 strip_tac);
+a (spec_nth_asm_tac 3 ¬x®);
+a (spec_nth_asm_tac 1 ¬z®);
+a (strip_asm_tac (µ_elim ¬r x z® ftv_cases_thm)
+	THEN asm_rewrite_tac[sets_ext_clauses, _in_clauses]);
+val compess_refl_lemma = save_pop_thm "compess_refl_lemma";
+
+set_goal ([], ¬µV r x· ³ UnderDefined V r ´ x  V ´ CoCompEss V r x x®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬UnderDefined®, get_spec ¬CoCompEss®, get_spec ¬CoCompFTV®, let_def]
+	THEN REPEAT_N 4 strip_tac);
+a (spec_nth_asm_tac 3 ¬x®);
+a (spec_nth_asm_tac 1 ¬z®);
+a (strip_asm_tac (µ_elim ¬r x z® ftv_cases_thm)
+	THEN asm_rewrite_tac[sets_ext_clauses, _in_clauses]);
+val cocompess_refl_lemma = save_pop_thm "cocompess_refl_lemma";
+
+set_goal ([], ¬µV r· ³ OverDefined V r ´ µx y· x  V ± y  V ´ (CompExt V r x y ¤ CompExt V r y x)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬OverDefined®]
+	THEN REPEAT (´_tac ORELSE µ_tac)
+	THEN rewrite_tac [get_spec ¬CompExt®, compftv_lemma, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (¶_tac ¬r z y® THEN rewrite_tac []);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¬z®
+	THEN rewrite_tac[_in_clauses]
+	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
+(* *** Goal "3" *** *)
+a (¶_tac ¬r z y® THEN rewrite_tac []);
+(* *** Goal "4" *** *)
+a (spec_nth_asm_tac 2 ¬z®
+	THEN rewrite_tac[_in_clauses]
+	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
+val compext_sym_lemma = save_pop_thm "compext_sym_lemma";
+
+set_goal ([], ¬µV r· ³ UnderDefined V r ´ µx y· x  V ± y  V ´ (CoCompExt V r x y ¤ CoCompExt V r y x)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬UnderDefined®]
+	THEN REPEAT (´_tac ORELSE µ_tac)
+	THEN rewrite_tac [get_spec ¬CoCompExt®, cocompftv_lemma, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (¶_tac ¬r z y® THEN rewrite_tac []);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¬z®
+	THEN rewrite_tac[_in_clauses]
+	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
+(* *** Goal "3" *** *)
+a (¶_tac ¬r z y® THEN rewrite_tac []);
+(* *** Goal "4" *** *)
+a (spec_nth_asm_tac 2 ¬z®
+	THEN rewrite_tac[_in_clauses]
+	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
+val cocompext_sym_lemma = save_pop_thm "cocompext_sym_lemma";
+
+set_goal ([], ¬µV r· ³ OverDefined V r ´ µx y· x  V ± y  V ´ (CompEss V r x y ¤ CompEss V r y x)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬OverDefined®]
+	THEN REPEAT (´_tac ORELSE µ_tac)
+	THEN rewrite_tac [get_spec ¬CompEss®, let_def]
+	THEN PC_T1 "hol1" asm_prove_tac []
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¬z®);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (LEMMA_T ¬{r y z; r x z} = {r x z; r y z}® rewrite_thm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 ¬z®);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (LEMMA_T ¬{r y z; r x z} = {r x z; r y z}® rewrite_thm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+val compess_sym_lemma = save_pop_thm "compess_sym_lemma";
+
+set_goal ([], ¬µV r· ³ UnderDefined V r ´ µx y· x  V ± y  V ´ (CoCompEss V r x y ¤ CoCompEss V r y x)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬UnderDefined®]
+	THEN REPEAT (´_tac ORELSE µ_tac)
+	THEN rewrite_tac [get_spec ¬CoCompEss®, let_def]
+	THEN PC_T1 "hol1" asm_prove_tac []
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¬z®);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (LEMMA_T ¬{r y z; r x z} = {r x z; r y z}® rewrite_thm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 ¬z®);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (LEMMA_T ¬{r y z; r x z} = {r x z; r y z}® rewrite_thm_tac
+	THEN1 PC_T1 "hol1" prove_tac[]);
+val cocompess_sym_lemma = save_pop_thm "cocompess_sym_lemma";
+
+=IGN
+stop;
+set_goal([], ¬µV r· V € SetReps ± ³ OverDefined V r ´ µzs· zs € Syntax ´ µx y·
+		IxDom x = IxDom y ± (µz· z  zs ´ FreeVars z € IxDom x) ± IxRan x € V ± IxRan y € V
+		± (µv· v  IxDom x ´ CompExt V r (IxVal x v) (IxVal y v) ± CompEss V r (IxVal x v) (IxVal y v))
+		´	{EvalCf_tf4 {zt | ¶z· z  zs ± zt = EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z x};
+			EvalCf_tf4 {zt | ¶z· z  zs ± zt = EvalForm (EvalCf_tf4, $¼‰t‰4, V, r) z y}}  CompFTV®);
+a (PC_T "hol1" (REPEAT_N 8 strip_tac));
+a (sc_induction_tac ¬z®);
+a (REPEAT_N 3 strip_tac THEN rewrite_tac [get_spec ¬CompExt®, get_spec ¬CompEss®, evalformfunct_thm2]
+	THEN REPEAT strip_tac);
+a (asm_rewrite_tac[let_def]);
+a (fc_tac [syntax_cases_thm]
+	THEN fc_tac[Is_not_fc_clauses]
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac [get_spec ¬EvalAf®, let_def]);
+a (CASES_T ¬AfMem t  IxDom y ± AfSet t  IxDom y® (fn x => rewrite_thm_tac x THEN asm_tac x)
+	THEN_TRY rewrite_tac [get_spec ¬CompFTV®]);
+a (POP_ASM_T strip_asm_tac);
+a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])));
+a (asm_fc_tac[]);
+a (lemma_tac ¬IxVal x (AfMem t)  V ± IxVal x (AfSet t)  V ± IxVal y (AfMem t)  V ± IxVal y (AfSet t)  V®
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.3" *** *)
+a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+(* *** Goal "1.4" *** *)
+a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+
+=IGN
+stop;
+(* *** Goal "1.5" *** *)
+a (ASM_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[let_def]))) [] THEN_TRY asm_rewrite_tac[]);
+a (ASM_FC_T (MAP_EVERY (strip_asm_tac)) [] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¬EvalCf®, let_def]);
+a (LEMMA_T ¬  {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v x)}
+             =
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v y)}
+	´ EvalCf_tf4
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v x)}
+             = EvalCf_tf4
+               {pb
+                 |¶ rv v
+                   · rv  FunImage (EvalForm (EvalCf_tf4, $¼‰t‰4, V, r)) (X‰g (CfForms t))
+                       ± IxDom v = X‰g (CfVars t)
+                       ± IxRan v € V
+                       ± pb = rv (IxOverRide v y)}® (fn x => bc_tac [x])
+	THEN1 (STRIP_T rewrite_thm_tac));
+a (PC_T "hol1" strip_tac THEN µ_tac THEN rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (¶_tac ¬rv® THEN ¶_tac ¬v® THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¬X‰g®])));
+a (all_fc_tac [scprec_fc_clauses2]);
+a (all_fc_tac [is_fc_clauses2]);
+a (lemma_tac ¬tc ScPrec a t® THEN1 fc_tac [tc_incr_thm]);
+a (lemma_tac ¬µ v· v  IxDom x
+                         ´ CompExt V r (IxVal x v) (IxVal y v)
+                           ± CompEss V r (IxVal x v) (IxVal y v)®
+	THEN1 (strip_tac
+		THEN rewrite_tac [get_spec ¬CompExt®, get_spec ¬CompEss®]
+		THEN strip_tac));
+(* *** Goal "2.1.1" *** *)
+a (spec_nth_asm_tac 12 ¬v'®);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (spec_nth_asm_tac 18 ¬a®);
+a (list_spec_nth_asm_tac 1 [¬IxOverRide v x®, ¬IxOverRide v y®]
+	THEN swap_nth_asm_concl_tac 1);
+(* *** Goal "2.1.2.1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (bc_tac [list_µ_elim [¬FreeVars a®, ¬X‰g (CfVars t) À FreeVars t®, ¬X‰g (CfVars t) À IxDom y®] €_trans_thm]);
+(* *** Goal "2.1.2.2.1" *** *)
+a (asm_rewrite_tac[µ_elim ¬t® freevarsfunct_thm2]);
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A À (B \ A) = A À B®]);
+a (lemma_tac ¬FreeVars a  FunImage‰g FreeVars (CfForms t)®
+	THEN1 (asm_rewrite_tac [get_spec ¬FunImage‰g®]
+		THEN ¶_tac ¬a®
+		THEN asm_rewrite_tac[]));
+a (lemma_tac ¬FreeVars a € Þ (FunImage‰g FreeVars (CfForms t))®
+	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¬µx B· x  B ´ x € Þ B®]));
+a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µx B C· x € B ´ x € C À B®]);
+(* *** Goal "2.1.2.2.2" *** *)
+a (DROP_NTH_ASM_T 17 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.3" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v x)®, ¬IxRan v À IxRan x®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 15 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.4" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v y)®, ¬IxRan v À IxRan y®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 14 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.2.5" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.1.2.5.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.2.5.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] compext_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.1.2.6" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.1.2.6.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (all_asm_fc_tac[]);
+(* *** Goal "2.1.2.6.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¬IxDom x = IxDom y®])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] compess_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (¶_tac ¬rv® THEN ¶_tac ¬v® THEN asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¬FunImage®])));
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¬X‰g®])));
+a (all_fc_tac [scprec_fc_clauses2]);
+a (all_fc_tac [is_fc_clauses2]);
+a (lemma_tac ¬tc ScPrec a t® THEN1 fc_tac [tc_incr_thm]);
+a (lemma_tac ¬µ v· v  IxDom x
+                         ´ CompExt V r (IxVal x v) (IxVal y v)
+                           ± CompEss V r (IxVal x v) (IxVal y v)®
+	THEN1 (strip_tac
+		THEN rewrite_tac [get_spec ¬CompExt®, get_spec ¬CompEss®]
+		THEN strip_tac));
+(* *** Goal "2.2.1" *** *)
+a (spec_nth_asm_tac 12 ¬v'®);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2.2" *** *)
+a (spec_nth_asm_tac 18 ¬a®);
+a (list_spec_nth_asm_tac 1 [¬IxOverRide v y®, ¬IxOverRide v x®]
+	THEN swap_nth_asm_concl_tac 1);
+(* *** Goal "2.2.2.1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.2.2" *** *)
+a (asm_rewrite_tac[]);
+a (bc_tac [list_µ_elim [¬FreeVars a®, ¬X‰g (CfVars t) À FreeVars t®, ¬X‰g (CfVars t) À IxDom x®] €_trans_thm]);
+(* *** Goal "2.2.2.2.1" *** *)
+a (asm_rewrite_tac[µ_elim ¬t® freevarsfunct_thm2]);
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A À (B \ A) = A À B®]);
+a (lemma_tac ¬FreeVars a  FunImage‰g FreeVars (CfForms t)®
+	THEN1 (asm_rewrite_tac [get_spec ¬FunImage‰g®]
+		THEN ¶_tac ¬a®
+		THEN asm_rewrite_tac[]));
+a (lemma_tac ¬FreeVars a € Þ (FunImage‰g FreeVars (CfForms t))®
+	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¬µx B· x  B ´ x € Þ B®]));
+a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µx B C· x € B ´ x € C À B®]);
+(* *** Goal "2.2.2.2.2" *** *)
+a (DROP_NTH_ASM_T 17 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.3" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v y)®, ¬IxRan v À IxRan y®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 14 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.4" *** *)
+a (bc_tac [list_µ_elim [¬IxRan (IxOverRide v x)®, ¬IxRan v À IxRan x®, ¬V®] €_trans_thm]);
+a (rewrite_tac[ixoverride_ixran_lemma]);
+a (DROP_NTH_ASM_T 9 ante_tac
+	THEN DROP_NTH_ASM_T 15 ante_tac
+	THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2.2.5" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.2.2.5.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (POP_ASM_T (asm_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)]))
+	THEN all_asm_fc_tac[]);
+a (lemma_tac ¬IxVal y v'  V ± IxVal x v'  V®);
+a (lemma_tac ¬v'  IxDom y® THEN1 rewrite_tac[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®), asm_rule ¬v'  IxDom x®]);
+a (lemma_tac ¬IxVal y v'  IxRan y ± IxVal x v'  IxRan x®
+	THEN1 (fc_tac [ix_domran_lemma] THEN contr_tac));
+a (GET_NTH_ASM_T 21 ante_tac THEN GET_NTH_ASM_T 22 ante_tac
+	THEN rewrite_tac [sets_ext_clauses]
+	THEN STRIP_T (fn x => fc_tac [x])
+	THEN STRIP_T (fn x => fc_tac [x])
+	THEN contr_tac);
+a (strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal y v'®, ¬IxVal x v'®] compext_sym_lemma));
+(* *** Goal "2.2.2.5.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] compext_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2.2.6" *** *)
+a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [_in_clauses])));
+a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¬µA B· A ² B ¤ B ² (A ± ³ B)®]
+	THEN strip_tac);
+(* *** Goal "2.2.2.6.1" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal y v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T ante_tac
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal x v'® rewrite_thm_tac
+	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule(asm_rule ¬IxDom x = IxDom y®)]))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (POP_ASM_T (asm_tac o (rewrite_rule [eq_sym_rule(asm_rule ¬IxDom x = IxDom y®)])));
+a (all_asm_fc_tac[]);
+a (LEMMA_T ¬IxVal y v'  V ± IxVal x v'  V® (fn x =>
+	strip_asm_tac (rewrite_rule [x] (list_µ_elim [¬V®, ¬r®, ¬IxVal y v'®, ¬IxVal x v'®] compess_sym_lemma))));
+a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [asm_rule ¬IxDom x = IxDom y®])));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan x € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+a (GET_ASM_T ¬IxRan y € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+a (contr_tac);
+(* *** Goal "2.2.2.6.2" *** *)
+a (LEMMA_T ¬(IxVal (IxOverRide v y) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬(IxVal (IxOverRide v x) v') = IxVal v v'® rewrite_thm_tac
+	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¬IxDom x = IxDom y®)])))
+		THEN rewrite_tac[get_spec ¬IxOverRide®, get_spec ¬IxVal®, get_spec ¬IxUd®,
+			get_spec ¬IxDom®, get_spec ¬IsDefined®]
+		THEN STRIP_T rewrite_thm_tac));
+a (LEMMA_T ¬IxVal v v'  V® (fn x =>
+	asm_tac x
+	THEN strip_asm_tac (list_µ_elim [¬V®, ¬r®, ¬IxVal v v'®] compess_refl_lemma)));
+a (fc_tac [ix_domran_lemma]);
+a (GET_ASM_T ¬IxRan v € V® ante_tac);
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+val evalform_ext_lemma = save_pop_thm "evalform_ext_lemma";
+=TEX
+}%ignore
+
+
 \subsubsection{Proof Contexts}
 
 =SML
@@ -1220,11 +2483,11 @@ add_pc_thms "'ifos" [];
 commit_pc "'ifos";
 
 force_new_pc "ÛifosÝ";
-merge_pcs ["hol", "'GS1", "'misc2", "'ifos"] "ifos";
+merge_pcs ["misc2", "'ifos"] "ifos";
 commit_pc "ifos";
 
 force_new_pc "Ûifos1Ý";
-merge_pcs ["hol1", "'GS1", "'misc2", "'ifos"] "ifos1";
+merge_pcs ["misc21", "'ifos"] "ifos1";
 commit_pc "ifos1";
 =TEX
 
@@ -1239,7 +2502,7 @@ new_parent "membership";
 force_new_theory "ÛsfpÝ";
 force_new_pc Û"'sfp"Ý;
 merge_pcs ["'savedthm_cs_¶_proof"] "'sfp";
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos", "'sfp"];
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
 =TEX
 
 \subsection{The Semantic Functor}
@@ -1254,10 +2517,47 @@ Thus. under this resulting membership relation, (which will be a four-valued rel
 The following function creates a variable assignment with just a value for the empty set.
 
 ¹HOLCONST
-Ü ÛParam_šÝ : GS ­ GS IS
+Ü ÛParam_šÝ : GS ­ (GS, GS) IX
 ÷üüüüüüüüüüü
-Ü µp· Param_š p = Ìx· if x = š‰g then dpoE p else dpoB
+Ü µp· Param_š p = Ìx· if x = š‰g then Value p else Undefined
 °
+
+=GFT
+Ûixdom_param_š_lemmaÝ =
+   ô µ x· IxDom (Param_š x) = {š‰g}
+
+Ûixran_param_š_lemmaÝ =
+   ô µ x· IxRan (Param_š x) = {x}
+
+Ûixval_param_š_lemmaÝ =
+   ô µ x· IxVal (Param_š x) š‰g = x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µx· IxDom (Param_š x) = {š‰g}®);
+a (rewrite_tac [get_spec ¬IxDom®, get_spec ¬Param_š®, sets_ext_clauses]);
+a (REPEAT µ_tac);
+a (cases_tac ¬x' = š‰g® THEN asm_rewrite_tac[]);
+val ixdom_param_š_lemma = save_pop_thm "ixdom_param_š_lemma";
+
+set_goal([], ¬µx· IxRan (Param_š x) = {x}®);
+a (rewrite_tac [get_spec ¬IxRan®, get_spec ¬Param_š®, sets_ext_clauses]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN cases_tac ¬Á = š‰g® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬š‰g® THEN asm_rewrite_tac[]);
+val ixran_param_š_lemma = save_pop_thm "ixran_param_š_lemma";
+
+set_goal([], ¬µx· IxVal (Param_š x) š‰g = x®);
+a (rewrite_tac [get_spec ¬IxVal®, get_spec ¬Param_š®, sets_ext_clauses]);
+val ixval_param_š_lemma = save_pop_thm "ixval_param_š_lemma";
+
+add_pc_thms "'sfp" (map get_spec [] @ [ixdom_param_š_lemma, ixran_param_š_lemma, ixval_param_š_lemma]);
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
+=TEX
+}%ignore
 
 The ``semantic functor'', a parameterised partial relation transformation, is then defined thus:
 
@@ -1265,7 +2565,7 @@ The ``semantic functor'', a parameterised partial relation transformation, is th
 Ü ÛSemanticFunctorÝ: GS SET ­ (GS, FTV) BR ­ (GS, FTV) BR
 ÷üüüüüüüüü
 Ü µ d $‰v· SemanticFunctor d $‰v =
-	Ìs m· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)) s (Param_š m)
+Ü	Ìm s· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)) s (Param_š m)
 °
 
 It is easily shown to be monotonic.
@@ -1279,7 +2579,7 @@ It is easily shown to be monotonic.
 =SML
 set_goal([], ¬µd· Increasing (Pw (Pw $¼‰t‰4)) (Pw (Pw $¼‰t‰4)) (SemanticFunctor d)®);
 a (strip_tac THEN LEMMA_T
-	¬SemanticFunctor d = (Ìr s m· r s (Param_š m)) o (Ì$‰v· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)))®
+	¬SemanticFunctor d = (Ìr m s· r s (Param_š m)) o (Ì$‰v· EvalForm (EvalCf_tf4, $¼‰t‰4, (d, $‰v)))®
 	rewrite_thm_tac
 	THEN1 rewrite_tac [get_spec ¬SemanticFunctor®]);
 a (bc_tac [increasing_funcomp_thm]);
@@ -1507,24 +2807,6 @@ Two complementary concepts are useful in this, the {\it extension} of a set (whi
 These concepts don't work out very tidily when we are dealing with partial membership relationships.
 It seems easier not to formally define them but to define the relationships between two representatives whose extensions and essences are the same.
 
-First we define the relevant notion of `same extension'.
-
-Two sets have the same extension over some domain if they have the same members in that domain.
-
-¹HOLCONST
-Ü ÛSameExtÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
-÷üüüüüüüüüüü
-Ü µV r· SameExt V r = Ìx y· µz· z  V ´ r z x = r z y
-°
-
-Two sets have the same essence over some domain if they are members of the same sets in that domain.
-
-¹HOLCONST
-Ü ÛSameEssÝ : GS SET ­ (GS, FTV)BR ­ GS ­ GS ­ BOOL
-÷üüüüüüüüüüü
-Ü µV r· SameEss V r = Ìx y·  µz· z  V ´ r x z = r y z
-°
-
 We now provide two ways of defining an equality relation over a boolean membership relationship.
 
 The first is the obvious definition for set theoretic equality, two sets being equal if they have the same extension.
@@ -1657,12 +2939,14 @@ What this says is that whenever two sets are not the members of all the same set
 \ignore{
 =IGN
 stop;
-set_goal([], ¬µV· V € Syntax ´ ExtSem V SemanticFunctor®);
-a (rewrite_tac [get_spec ¬ExtSem®, get_spec ¬SemanticFunctor®, get_spec ¬SameExt®, get_spec ¬SameEss®, evalformfunct_thm2]
+set_goal([], ¬µV· V € SetReps ´ ExtSem V SemanticFunctor®);
+a (rewrite_tac [get_spec ¬ExtSem®, get_spec ¬SetReps®, get_spec ¬SemanticFunctor®,
+	get_spec ¬SameExt®, get_spec ¬SameEss®, evalformfunct_thm2]
 	THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 6 ¬z®
+a (DROP_NTH_ASM_T 6 (asm_tac o (pc_rule1 "hol1" rewrite_rule [])));
+a (spec_nth_asm_tac 1 ¬z®
 	THEN asm_rewrite_tac[]);
-a (cases_tac ¬IsAf z® THEN asm_rewrite_tac[]);
+a (cases_tac ¬IsAf z® THEN asm_rewrite_tac[let_def]);
 
 a (strip_asm_tac (µ_elim ¬z® syntax_cases_thm) THEN asm_rewrite_tac[]);
 
@@ -1729,8 +3013,6 @@ a (list_spec_nth_asm_tac 1 [¬z'®, ¬x®]);
 a (list_spec_nth_asm_tac 2 [¬z'®, ¬y®]);
 (* *** Goal "2.1.1" *** *)
 a (asm_rewrite_tac[]);
-a (LEMMA_T ¬{fTrue; fTrue} = {fTrue}® rewrite_thm_tac
-	THEN1 (prove_tac[]));
 a (rewrite_tac[get_spec ¬IsLub®] THEN strip_tac);
 a (¶_tac ¬fTrue® THEN REPEAT strip_tac THEN rewrite_tac[]);
 (* *** Goal "2.1.2" *** *)
@@ -1741,8 +3023,6 @@ a (list_spec_nth_asm_tac 2 [¬z'®, ¬y®]);
 a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]); 
 (* *** Goal "2.2.2" *** *)
 a (asm_rewrite_tac[]);
-a (LEMMA_T ¬{fFalse; fFalse} = {fFalse}® rewrite_thm_tac
-	THEN1 (prove_tac[]));
 a (rewrite_tac[get_spec ¬IsLub®] THEN strip_tac);
 a (¶_tac ¬fFalse® THEN REPEAT strip_tac THEN rewrite_tac[]);
 val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
@@ -1882,7 +3162,7 @@ Admitting this possibility is a good idea since the kind of type structure I hav
 
 \ignore{
 =SML
-set_merge_pcs ["hol1", "'GS1", "'misc2", "'ifos", "'sfp"];
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
 
 set_goal([],¬µV r x· x  EquivClass (V, BEqRel V (BoolRel r)) z ¤ x  V ± µy· y  V ´ (BoolRel r y x ¤ BoolRel r y z)®);
 a (rewrite_tac [get_spec ¬EquivClass®, get_spec ¬BEqRel®]);
@@ -2098,7 +3378,7 @@ a (LEMMA_T  ¬(¶ x' y
 a (list_spec_nth_asm_tac 1 [¬s®, ¬t®]);
 val rep_independence_lemma2 = save_pop_thm "rep_independence_lemma2";
 
-set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
+set_merge_pcs ["misc2", "'ifos", "'sfp"];
 
 set_goal([],¬µV r· TotalOver V r ± PreExtensional V r ´ extensional (MSfromSFF (V,r))®);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬extensional®, get_spec ¬MSfromSFF®, let_def]
@@ -2241,7 +3521,7 @@ val preext_ext_lemma2 = save_pop_thm "preext_ext_lemma2";
 \ignore{
 =IGN
 stop;
-set_merge_pcs ["hol", "'GS1", "'misc2", "'ifos", "'sfp"];
+set_merge_pcs ["misc2", "'ifos", "'sfp"];
 
 set_goal([],¬µV r· TotalOver V r ± PreExtensional V r ´ extensional (MSfromSFF (V,r))®);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬extensional®, get_spec ¬MSfromSFF®, let_def]
@@ -2266,12 +3546,11 @@ a (asm_rewrite_tac []);
 =TEX
 }%ignore
 
-\subsection{Lemmas about the Semnatics}
+\subsection{Lemmas about the Semantics}
 
 These are results about the semantics required for obtaining the key properties of the semantic functor.
 
 =GFT
-
 =TEX
 
 \subsection{Properties of the Semantic Functor}
@@ -2294,16 +3573,52 @@ A semantic functor is extensional over some domain if any two sets which have th
 °
 
 =GFT
+Ûextsem_semanticfunctor_thmÝ =
+   ô µ V· V € SetReps ´ ExtSem V SemanticFunctor
 =TEX
 
 \ignore{
-=IGN
-set_goal([], ¬µV· V € Syntax ´ ExtSem V SemanticFunctor®);
+=SML
+set_goal([], ¬µV· V € SetReps ´ ExtSem V SemanticFunctor®);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¬ExtSem®, get_spec ¬SemanticFunctor®]
 	THEN REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¬SameEss®]
 	THEN REPEAT strip_tac);
+a (fc_tac [list_µ_elim [¬V®, ¬r®] evalform_ext_lemma]);
+a (list_spec_nth_asm_tac 1 [¬z®, ¬Param_š x®, ¬Param_š y®, ¬r®]
+	THEN swap_nth_asm_concl_tac 1);
+(* *** Goal "1" *** *)
+a (GET_ASM_T ¬V € SetReps® (fn x => fc_tac[rewrite_rule [sets_ext_clauses, get_spec ¬SetReps®] x]));
+(* *** Goal "2" *** *)
+a (rewrite_tac [ixdom_param_š_lemma]);
+(* *** Goal "3" *** *)
+a (GET_ASM_T ¬V € SetReps® (fn x => fc_tac[rewrite_rule [sets_ext_clauses, get_spec ¬SetReps®] x]));
+a (rewrite_tac [sets_ext_clauses, ixdom_param_š_lemma]
+	THEN REPEAT strip_tac 
+	THEN asm_fc_tac[]);
+(* *** Goal "4" *** *)
+a (rewrite_tac [ixran_param_š_lemma, sets_ext_clauses]
+	THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+a (rewrite_tac [ixran_param_š_lemma, sets_ext_clauses]
+	THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [ixdom_param_š_lemma]
+	THEN STRIP_T rewrite_thm_tac);
+a (strip_tac);
+(* *** Goal "7" *** *)
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [ixdom_param_š_lemma]
+	THEN STRIP_T rewrite_thm_tac);
+a (strip_tac);
+val extsem_semanticfunctor_thm = save_pop_thm "extsem_semanticfunctor_thm";
+
+=IGN
+set_goal([], ¬µV r· V € SetReps ± PreExtensional V r ´ PreExtensional V (SemanticFunctor V r)®);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬PreExtensional®] THEN REPEAT strip_tac);
+a (fc_tac [extsem_semanticfunctor_thm]);
+a (fc_tac [get_spec ¬ExtSem®]);
+
 =TEX
 }%ignore
 {\let\Section\section
