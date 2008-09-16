@@ -1,5 +1,5 @@
 =IGN
-$Id: t025.doc,v 1.4 2008/09/09 20:21:11 rbj Exp $
+$Id: t025.doc,v 1.5 2008/09/16 18:39:36 rbj Exp $
 open_theory "ifol";
 set_merge_pcs ["rbjmisc", "'GS1", "'misc2", "'ifol"];
 =TEX
@@ -40,12 +40,12 @@ It consists primarily of things required in the documents on non well-founded se
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/09/09 20:21:11 $ $
+Last Change $ $Date: 2008/09/16 18:39:36 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 
-$ $Id: t025.doc,v 1.4 2008/09/09 20:21:11 rbj Exp $ $
+$ $Id: t025.doc,v 1.5 2008/09/16 18:39:36 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1693,7 +1693,10 @@ declare_type_abbrev(€"IX"›, ["'a", "'b"], î'a ≠ 'b OPTÆ);
 
 =GFT
 €ix_domran_lemma› =
-	Ù µ x y∑ x ç IxDom y ¥ IxVal y x ç IxRan y
+   Ù µ x y∑ x ç IxDom y ¥ IxVal y x ç IxRan y
+
+€ix_valueof_ran_lemma› =
+   Ù µ x y∑ ≥ x y = Undefined ¥ ValueOf (x y) ç IxRan x
 =TEX
 
 \ignore{
@@ -1703,6 +1706,13 @@ a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IxValÆ, get_spec ¨
 a (strip_tac THEN ∂_tac ¨xÆ);
 a (strip_asm_tac (µ_elim ¨y xÆ opt_cases_thm) THEN asm_rewrite_tac[]);
 val ix_domran_lemma = save_pop_thm "ix_domran_lemma";
+
+set_goal ([], ¨µx y∑ ≥ x y = Undefined ¥ ValueOf (x y) ç IxRan xÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IxRanÆ]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (µ_elim ¨x yÆ (±_right_elim (±_right_elim (get_spec ¨ValueÆ)))));
+a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
+val ix_valueof_ran_lemma = save_pop_thm "ix_valueof_ran_lemma";
 =TEX
 }%ignore
 
@@ -2859,12 +2869,15 @@ The following function lifts an ordering on the elements of the codomain to an o
 ‹ µr∑ IxO r = Pw (OptO r)
 ∞
 
-It may be more convenient in some cases to use the following ordering in which indexed sets with distinct domains are incomparable:
+It may be more convenient in some cases to use the following ordering in which the comparison is restricted to some subdomain.
 
 πHOLCONST
-‹ €IxO2› : ('b ≠ 'b ≠ BOOL) ≠ (('a, 'b) IX ≠ ('a, 'b) IX ≠ BOOL)
+‹ €IxO2› : ('a, 'b) IX SET ∏ ('b ≠ 'b ≠ BOOL) ≠ (('a, 'b) IX ≠ ('a, 'b) IX ≠ BOOL)
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µr∑ IxO2 r = Ãx y∑ IxDom x = IxDom y ± IxO r x y
+‹ µd r∑ IxO2 (d, r) = Ãx y∑
+‹		if x ç d ± y ç d
+‹		then IxDom x = IxDom y ± IxO r x y
+‹		else x = y
 ∞
 
 \subsubsection{IS}
