@@ -1,11 +1,12 @@
 =IGN
-$Id: t026.doc,v 1.7 2008/09/16 18:39:36 rbj Exp $
+$Id: t026.doc,v 1.8 2008/09/21 08:31:31 rbj Exp $
 open_theory "ifos";
 set_merge_pcs ["misc21", "'ifos"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
 \usepackage{ProofPower}
+\usepackage{graphics}
 \ftlinepenalty=9999
 \usepackage{A4}
 
@@ -40,12 +41,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/09/16 18:39:36 $ $
+Last Change $ $Date: 2008/09/21 08:31:31 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.7 2008/09/16 18:39:36 rbj Exp $ $
+$ $Id: t026.doc,v 1.8 2008/09/21 08:31:31 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -78,7 +79,8 @@ $ $Id: t026.doc,v 1.7 2008/09/16 18:39:36 rbj Exp $ $
 \newpage
 \section{INTRODUCTION}
 
-The idea is to obtain exotic models of set theory using definability in first order set theory as a source of candidate sets.
+\rotatebox{90}
+{The idea is to obtain exotic models of set theory using definability in first order set theory as a source of candidate sets.}
 
 To ensure that we get all the well-founded sets we start with definability in infinitary first order set theory ({\it ifos}).
 Given any membership structure, i.e. a domain of discourse and a membership relation over that domain, each formula of {\it ifos} with one free variable will define a subset of the domain of discourse (you may prefer to think of these as classes, since in the domains we work with they will mostly have very large size).
@@ -190,15 +192,16 @@ val Is_clauses = pop_thm();
 add_pc_thms "'ifos" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
 set_merge_pcs ["misc21", "'ifos"];
 
-set_goal ([], ¨
+local val _ = set_goal ([], ¨
 	(µx∑ IsAf x ¥ ≥ IsCf x)
 ±	(µx∑ IsCf x ¥ ≥ IsAf x)
 Æ);
-a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ]));
-a (REPEAT strip_tac THEN asm_rewrite_tac[]
+val _ = a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ]));
+val _ = a (REPEAT strip_tac THEN asm_rewrite_tac[]
 	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN PC_T1 "lin_arith" rewrite_tac[]);
-val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses";
+in val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses"
+end;
 =TEX
 }%ignore
 
@@ -258,16 +261,18 @@ The dual probably isn't useful but I've put it in for symmetry.
 
 \ignore{
 =SML
-set_goal([], ¨µs∑ RepClosed s ¥ Syntax Ä sÆ);
-a (rewrite_tac [get_spec ¨SyntaxÆ]
+local val _ = set_goal([], ¨µs∑ RepClosed s ¥ Syntax Ä sÆ);
+val _ = a (rewrite_tac [get_spec ¨SyntaxÆ]
 	THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val syntax_Ä_repclosed_thm = pop_thm ();
+in val syntax_Ä_repclosed_thm = pop_thm();
+end;
 
-set_goal([], ¨µs∑ RepOpen s ¥ s Ä CoSyntaxÆ);
-a (rewrite_tac [get_spec ¨CoSyntaxÆ]
+local val _ = set_goal([], ¨µs∑ RepOpen s ¥ s Ä CoSyntaxÆ);
+val _ = a (rewrite_tac [get_spec ¨CoSyntaxÆ]
 	THEN REPEAT strip_tac);
-a (∂_tac ¨sÆ THEN contr_tac);
-val repopen_Ä_syntax_thm = pop_thm ();
+val _ = a (∂_tac ¨sÆ THEN contr_tac);
+in val repopen_Ä_syntax_thm = pop_thm();
+end;
 =TEX
 }%ignore
 
@@ -300,35 +305,38 @@ Informally these should say:
 
 \ignore{
 =SML
-set_goal([], ¨RepClosed SyntaxÆ);
-a (rewrite_tac (map get_spec [¨RepClosedÆ])
+local val _ = set_goal([], ¨RepClosed SyntaxÆ);
+val _ = a (rewrite_tac (map get_spec [¨RepClosedÆ])
 	THEN strip_tac);
 (* *** Goal "1" *** *)
-a (rewrite_tac (map get_spec [¨RepClosedÆ, ¨SyntaxÆ])
+val _ = a (rewrite_tac (map get_spec [¨RepClosedÆ, ¨SyntaxÆ])
 	THEN REPEAT strip_tac THEN asm_fc_tac [] THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (rewrite_tac (map get_spec [ ¨SyntaxÆ])
+val _ = a (rewrite_tac (map get_spec [ ¨SyntaxÆ])
 	THEN REPEAT strip_tac
 	THEN all_asm_fc_tac[]);
-a (fc_tac [get_spec ¨RepClosedÆ]);
-a (lemma_tac ¨µ x∑ x ç Xâg fs ¥ x ç sÆ
+val _ = a (fc_tac [get_spec ¨RepClosedÆ]);
+val _ = a (lemma_tac ¨µ x∑ x ç Xâg fs ¥ x ç sÆ
 	THEN1 (REPEAT strip_tac THEN all_asm_fc_tac[]));
-a (all_asm_fc_tac[]);
-a (asm_rewrite_tac[]);
-val repclosed_syntax_lemma = pop_thm ();
+val _ = a (all_asm_fc_tac[]);
+val _ = a (asm_rewrite_tac[]);
+in val repclosed_syntax_lemma = pop_thm();
+end;
 
 val repclosed_syntax_thm = save_thm ("repclosed_syntax_thm",
 	rewrite_rule [get_spec ¨RepClosedÆ] repclosed_syntax_lemma);
 
-set_goal([], ¨µs∑ RepClosed s ¥ Syntax Ä sÆ);
-a (rewrite_tac [get_spec ¨SyntaxÆ]
+local val _ = set_goal([], ¨µs∑ RepClosed s ¥ Syntax Ä sÆ);
+val _ = a (rewrite_tac [get_spec ¨SyntaxÆ]
 	THEN prove_tac[]);
-val repclosed_syntax_lemma1 = save_pop_thm "repclosed_syntax_lemma1";
+in val repclosed_syntax_lemma1 = save_pop_thm "repclosed_syntax_lemma1";
+end;
 
-set_goal([], ¨µp∑ RepClosed {x | p x} ¥ µx∑ x ç Syntax ¥ p xÆ);
-a (rewrite_tac [get_spec ¨SyntaxÆ] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-val repclosed_syntax_lemma2 = save_pop_thm "repclosed_syntax_lemma2";
+local val _ = set_goal([], ¨µp∑ RepClosed {x | p x} ¥ µx∑ x ç Syntax ¥ p xÆ);
+val _ = a (rewrite_tac [get_spec ¨SyntaxÆ] THEN REPEAT strip_tac);
+val _ = a (asm_fc_tac[]);
+in val repclosed_syntax_lemma2 = save_pop_thm "repclosed_syntax_lemma2";
+end;
 =TEX
 }%ignore
 
@@ -358,36 +366,39 @@ We must first define the relation of priority over the syntax, i.e. the relation
 
 \ignore{
 =SML
-set_goal([], ¨µx y∑ ScPrec x y ¥ tc $çâg x yÆ);
-a (rewrite_tac (map get_spec [¨ScPrecÆ, ¨MkCfÆ]));
-a (REPEAT strip_tac THEN asm_rewrite_tac [Ì_tc_thm]);
-a (lemma_tac ¨tc $çâg fs (ord Ìâg fs) ± tc $çâg (ord Ìâg fs) (Natâg 1 Ìâg ord Ìâg fs)Æ
+local val _ = set_goal([], ¨µx y∑ ScPrec x y ¥ tc $çâg x yÆ);
+val _ = a (rewrite_tac (map get_spec [¨ScPrecÆ, ¨MkCfÆ]));
+val _ = a (REPEAT strip_tac THEN asm_rewrite_tac [Ì_tc_thm]);
+val _ = a (lemma_tac ¨tc $çâg fs (ord Ìâg fs) ± tc $çâg (ord Ìâg fs) (Natâg 1 Ìâg ord Ìâg fs)Æ
 	THEN1 rewrite_tac [Ì_tc_thm]);
-a (all_fc_tac [tc_incr_thm]);
-a (all_fc_tac [tran_tc_thm2]);
-a (all_fc_tac [tran_tc_thm2]);
-val ScPrec_tc_ç_thm = pop_thm ();
+val _ = a (all_fc_tac [tc_incr_thm]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+in val ScPrec_tc_ç_thm = pop_thm();
+end;
 
-set_goal ([], ¨well_founded ScPrecÆ);
-a (rewrite_tac [get_spec ¨well_foundedÆ]);
-a (REPEAT strip_tac);
-a (asm_tac (µ_elim ¨sÆ gs_cv_ind_thm));
-a (lemma_tac ¨µ x∑ (µ y∑ tc $çâg y x ¥ s y) ¥ s xÆ
+local val _ = set_goal ([], ¨well_founded ScPrecÆ);
+val _ = a (rewrite_tac [get_spec ¨well_foundedÆ]);
+val _ = a (REPEAT strip_tac);
+val _ = a (asm_tac (µ_elim ¨sÆ gs_cv_ind_thm));
+val _ = a (lemma_tac ¨µ x∑ (µ y∑ tc $çâg y x ¥ s y) ¥ s xÆ
 	THEN1 REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (lemma_tac ¨µ y∑ ScPrec y x ¥ s yÆ
+val _ = a (lemma_tac ¨µ y∑ ScPrec y x ¥ s yÆ
 	THEN1 (REPEAT strip_tac THEN all_fc_tac [ScPrec_tc_ç_thm]
 		THEN asm_fc_tac []));
-a (asm_fc_tac[]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (asm_fc_tac[]);
-a (asm_rewrite_tac[]);
-val well_founded_ScPrec_thm =  save_pop_thm "well_founded_ScPrec_thm";
+val _ = a (asm_fc_tac[]);
+val _ = a (asm_rewrite_tac[]);
+in val well_founded_ScPrec_thm =  save_pop_thm "well_founded_ScPrec_thm";
+end;
 
-set_goal([], ¨well_founded (tc ScPrec)Æ);
-a (asm_tac well_founded_ScPrec_thm);
-a (fc_tac [wf_tc_wf_thm]);
-val well_founded_tcScPrec_thm = save_pop_thm ("well_founded_tcScPrec_thm");
+local val _ = set_goal([], ¨well_founded (tc ScPrec)Æ);
+val _ = a (asm_tac well_founded_ScPrec_thm);
+val _ = a (fc_tac [wf_tc_wf_thm]);
+in val well_founded_tcScPrec_thm = save_pop_thm ("well_founded_tcScPrec_thm");
+end;
 =TEX
 }%ignore
 
@@ -444,128 +455,137 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 
 \ignore{
 =SML
-set_goal([], ¨µx∑	x ç Syntax
+local val _ = set_goal([], ¨µx∑	x ç Syntax
 ¥	(∂s m∑ x = MkAf (s, m))
   ≤	(∂vars fs∑ (µy∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs))
 Æ);
-a (contr_tac);
-a (lemma_tac ¨RepClosed (Syntax \ {x})Æ
+val _ = a (contr_tac);
+val _ = a (lemma_tac ¨RepClosed (Syntax \ {x})Æ
 	THEN1 (rewrite_tac [get_spec ¨RepClosedÆ]
 		THEN strip_tac));
 (* *** Goal "1" *** *)
-a (strip_tac THEN strip_tac
+val _ = a (strip_tac THEN strip_tac
 	THEN rewrite_tac [repclosed_syntax_thm]);
-a (spec_nth_asm_tac 2 ¨s2Æ);
-a (spec_nth_asm_tac 1 ¨mÆ);
-a (swap_nth_asm_concl_tac 1 THEN (SYM_ASMS_T rewrite_tac));
+val _ = a (spec_nth_asm_tac 2 ¨s2Æ);
+val _ = a (spec_nth_asm_tac 1 ¨mÆ);
+val _ = a (swap_nth_asm_concl_tac 1 THEN (SYM_ASMS_T rewrite_tac));
 (* *** Goal "2" *** *)
-a (REPEAT_N 3 strip_tac);
-a (spec_nth_asm_tac 2 ¨varsÆ);
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨XâgÆ]
+val _ = a (REPEAT_N 3 strip_tac);
+val _ = a (spec_nth_asm_tac 2 ¨varsÆ);
+val _ = a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨XâgÆ]
 	THEN strip_tac);
-a (lemma_tac ¨µ y∑ y çâg fs ¥ y ç SyntaxÆ
+val _ = a (lemma_tac ¨µ y∑ y çâg fs ¥ y ç SyntaxÆ
 	THEN1 (REPEAT strip_tac THEN all_asm_fc_tac[]));
-a (all_fc_tac [rewrite_rule [get_spec ¨XâgÆ] repclosed_syntax_thm]);
-a (asm_rewrite_tac[]);
-a (spec_nth_asm_tac 4 ¨fsÆ);
+val _ = a (all_fc_tac [rewrite_rule [get_spec ¨XâgÆ] repclosed_syntax_thm]);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (spec_nth_asm_tac 4 ¨fsÆ);
 (* *** Goal "2.1" *** *)
-a (asm_fc_tac[]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2.2" *** *)
-a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+val _ = a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
 (* *** Goal "3" *** *)
-a (asm_tac repclosed_syntax_lemma1);
-a (spec_nth_asm_tac 1 ¨Syntax \ {x}Æ);
-a (spec_nth_asm_tac 1 ¨xÆ);
-val syntax_disj_thm = save_pop_thm "syntax_disj_thm";
+val _ = a (asm_tac repclosed_syntax_lemma1);
+val _ = a (spec_nth_asm_tac 1 ¨Syntax \ {x}Æ);
+val _ = a (spec_nth_asm_tac 1 ¨xÆ);
+in val syntax_disj_thm = save_pop_thm "syntax_disj_thm";
+end;
 
-set_goal([], ¨µx∑ x ç Syntax ¥ IsAf x ≤ IsCf xÆ);
-a (REPEAT_N 2 strip_tac THEN fc_tac [syntax_disj_thm]
+local val _ = set_goal([], ¨µx∑ x ç Syntax ¥ IsAf x ≤ IsCf xÆ);
+val _ = a (REPEAT_N 2 strip_tac THEN fc_tac [syntax_disj_thm]
 	THEN asm_rewrite_tac[]);
-val syntax_cases_thm = save_pop_thm "syntax_cases_thm";
+in val syntax_cases_thm = save_pop_thm "syntax_cases_thm";
+end;
 
-set_goal ([], ¨µx∑ x ç Syntax ¥
+local val _ = set_goal ([], ¨µx∑ x ç Syntax ¥
 	(≥ IsAf x ¥ IsCf x)
 ±	(≥ IsCf x ¥ IsAf x)Æ);
-a (strip_tac THEN strip_tac
+val _ = a (strip_tac THEN strip_tac
 	THEN FC_T (MAP_EVERY ante_tac) [syntax_cases_thm]
 	THEN (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ])));
-a (REPEAT strip_tac
+val _ = a (REPEAT strip_tac
 	THEN_TRY asm_rewrite_tac[]
 	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN_TRY PC_T1 "lin_arith" rewrite_tac[]);
-val syntax_cases_fc_clauses = save_pop_thm "syntax_cases_fc_clauses";
+in val syntax_cases_fc_clauses = save_pop_thm "syntax_cases_fc_clauses";
+end;
 
-set_goal([], ¨µx∑	x ç Syntax
+local val _ = set_goal([], ¨µx∑	x ç Syntax
 ¥	(IsAf x ¥ ∂s m∑ x = MkAf (s, m))
 ±	(IsCf x ¥ ∂vars fs∑ (µy∑ y çâg fs ¥ y ç Syntax) ± x = MkCf (vars, fs))
 Æ);
-a (REPEAT_N 2 strip_tac);
-a (asm_tac (syntax_disj_thm));
-a (asm_fc_tac[] THEN asm_rewrite_tac [Is_clauses]);
+val _ = a (REPEAT_N 2 strip_tac);
+val _ = a (asm_tac (syntax_disj_thm));
+val _ = a (asm_fc_tac[] THEN asm_rewrite_tac [Is_clauses]);
 (* *** Goal "1" *** *)
-a (∂_tac ¨sÆ THEN ∂_tac ¨mÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨sÆ THEN ∂_tac ¨mÆ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (∂_tac ¨varsÆ THEN ∂_tac ¨fsÆ THEN asm_rewrite_tac[]);
-val is_fc_clauses = save_pop_thm "is_fc_clauses";
+val _ = a (∂_tac ¨varsÆ THEN ∂_tac ¨fsÆ THEN asm_rewrite_tac[]);
+in val is_fc_clauses = save_pop_thm "is_fc_clauses";
+end;
 
-set_goal([], ¨(µs m∑ AfSet (MkAf (s, m)) = s)
+local val _ = set_goal([], ¨(µs m∑ AfSet (MkAf (s, m)) = s)
 	±	(µs m∑ AfMem (MkAf (s, m)) = m)
 	±	(µv f∑ CfVars (MkCf (v, f)) = v)
 	±	(µv f∑ CfForms (MkCf (v, f)) = f)
 Æ);
-a (rewrite_tac (map get_spec [
+val _ = a (rewrite_tac (map get_spec [
 	¨MkAfÆ, ¨MkCfÆ,
 	¨AfSetÆ, ¨AfMemÆ, ¨CfVarsÆ, ¨CfFormsÆ]));
-val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
+in val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
+end;
 
 add_pc_thms "'ifos" [syn_proj_clauses];
 set_merge_pcs ["misc21", "'ifos"];
 
-set_goal([], ¨µx∑	x ç Syntax
+local val _ = set_goal([], ¨µx∑	x ç Syntax
 ¥	(IsCf x ¥ (µy∑ y çâg (CfForms x) ¥ y ç Syntax))
 Æ);
-a (REPEAT strip_tac
+val _ = a (REPEAT strip_tac
 	THEN all_fc_tac [is_fc_clauses]
 	THEN GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
 	THEN_TRY asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[]))
+val _ = a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[]))
 	THEN all_asm_fc_tac[]);
-val is_fc_clauses2 = save_pop_thm "is_fc_clauses2";
+in val is_fc_clauses2 = save_pop_thm "is_fc_clauses2";
+end;
 
-set_goal([], ¨µx y∑ ≥ MkAf x = MkCf yÆ);
-a (rewrite_tac (map get_spec [¨MkAfÆ, ¨MkCfÆ]));
-a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+local val _ = set_goal([], ¨µx y∑ ≥ MkAf x = MkCf yÆ);
+val _ = a (rewrite_tac (map get_spec [¨MkAfÆ, ¨MkCfÆ]));
+val _ = a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN (PC_T1 "lin_arith" rewrite_tac[]));
-val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
+in val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
+end;
 
 add_pc_thms "'ifos" [syn_con_neq_clauses];
 set_merge_pcs ["misc21", "'ifos"];
 
-set_goal([], ¨
+local val _ = set_goal([], ¨
 	(µv f∑ MkCf (v, f) ç Syntax ¥ (µy∑ y çâg f ¥ y ç Syntax))Æ);
-a (REPEAT strip_tac
+val _ = a (REPEAT strip_tac
 	THEN FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule []))) [is_fc_clauses2]
 	THEN asm_fc_tac[]);
-val syn_comp_fc_clauses = save_pop_thm "syn_comp_fc_clauses";
+in val syn_comp_fc_clauses = save_pop_thm "syn_comp_fc_clauses";
+end;
 
-set_goal([], ¨µ¡ « vars fs∑ « ç Syntax ¥
+local val _ = set_goal([], ¨µ¡ « vars fs∑ « ç Syntax ¥
 		(« = MkCf (vars, fs) ± ¡ çâg fs) ¥ ScPrec ¡ «
 Æ);
-a (rewrite_tac [get_spec ¨ScPrecÆ]);
-a (REPEAT µ_tac THEN strip_tac THEN strip_tac);
-a (∂_tac ¨varsÆ THEN ∂_tac ¨fsÆ THEN asm_rewrite_tac[]);
-a (REPEAT strip_tac THEN var_elim_nth_asm_tac 1);
+val _ = a (rewrite_tac [get_spec ¨ScPrecÆ]);
+val _ = a (REPEAT µ_tac THEN strip_tac THEN strip_tac);
+val _ = a (∂_tac ¨varsÆ THEN ∂_tac ¨fsÆ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac THEN var_elim_nth_asm_tac 1);
 (* *** Goal "1" *** *)
-a (var_elim_nth_asm_tac 2);
-a (fc_tac [syn_comp_fc_clauses]);
-a (asm_fc_tac[]);
+val _ = a (var_elim_nth_asm_tac 2);
+val _ = a (fc_tac [syn_comp_fc_clauses]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (var_elim_nth_asm_tac 2);
-val scprec_fc_clauses = save_pop_thm "scprec_fc_clauses";
+val _ = a (var_elim_nth_asm_tac 2);
+in val scprec_fc_clauses = save_pop_thm "scprec_fc_clauses";
+end;
 
-set_goal ([], ¨µt∑ t ç Syntax ¥ 
+local val _ = set_goal ([], ¨µt∑ t ç Syntax ¥ 
 	(IsCf t ¥ µf∑ f çâg CfForms t ¥ ScPrec (f) t)Æ);
-a (REPEAT strip_tac
+val _ = a (REPEAT strip_tac
 	THEN all_fc_tac [is_fc_clauses]
 	THEN DROP_NTH_ASM_T 3 ante_tac
 	THEN asm_rewrite_tac[]
@@ -573,7 +593,8 @@ a (REPEAT strip_tac
 	THEN all_fc_tac [scprec_fc_clauses]
 	THEN POP_ASM_T ante_tac
 	THEN_TRY asm_rewrite_tac []);
-val scprec_fc_clauses2 = save_pop_thm "scprec_fc_clauses2";
+in val scprec_fc_clauses2 = save_pop_thm "scprec_fc_clauses2";
+end;
 =TEX
 
 The following recursion theorem supports definition by primitive recursion of functions over the syntax.
@@ -584,30 +605,31 @@ The following recursion theorem supports definition by primitive recursion of fu
 
 \ignore{
 =IGN
-set_goal([], ¨µaf cf∑ ∂ f∑ (µm s∑ f (MkAf (m, s)) = af m s)
+local val _ = set_goal([], ¨µaf cf∑ ∂ f∑ (µm s∑ f (MkAf (m, s)) = af m s)
 	± (µvars forms∑ f (MkCf (vars, forms)) = cf (FunImageâg f forms) vars forms)Æ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨∂g∑ g = (Ãf x∑ if IsAf x then af (AfMem x) (AfSet x) else cf (FunImageâg f (CfForms x)) (CfVars x) (CfForms x))Æ
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨∂g∑ g = (Ãf x∑ if IsAf x then af (AfMem x) (AfSet x) else cf (FunImageâg f (CfForms x)) (CfVars x) (CfForms x))Æ
 	THEN1 prove_∂_tac);
-a (lemma_tac ¨g respects ScPrecÆ
+val _ = a (lemma_tac ¨g respects ScPrecÆ
 	THEN1 (asm_rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac));
 (* *** Goal "1" *** *)
-a (cases_tac ¨IsAf xÆ THEN asm_rewrite_tac[]);
-a (lemma_tac ¨ScPrec (CfVars x) x ± ScPrec (CfForms x) xÆ
+val _ = a (cases_tac ¨IsAf xÆ THEN asm_rewrite_tac[]);
+val _ = a (lemma_tac ¨ScPrec (CfVars x) x ± ScPrec (CfForms x) xÆ
 	THEN1 rewrite_tac[]);
 
-a (lemma_tac ¨µcfe $ºât st∑ EvalForm (cfe, $ºât, st) = EvalFormFunct (cfe, $ºât, st) (EvalForm (cfe, $ºât, st))Æ);
-a (asm_tac well_founded_ScPrec_thm);
-a (asm_tac evalformfunct_respect_thm);
-a (REPEAT µ_tac);
-a (list_spec_nth_asm_tac 1 [¨cfeÆ, ¨$ºâtÆ, ¨stÆ]);
-a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨EvalFormFunct (cfe, $ºât, st)Æ (get_spec ¨fixÆ))]);
-a (rewrite_tac [get_spec ¨EvalFormÆ]);
-a (asm_rewrite_tac[]);
-val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+val _ = a (lemma_tac ¨µcfe $ºât st∑ EvalForm (cfe, $ºât, st) = EvalFormFunct (cfe, $ºât, st) (EvalForm (cfe, $ºât, st))Æ);
+val _ = a (asm_tac well_founded_ScPrec_thm);
+val _ = a (asm_tac evalformfunct_respect_thm);
+val _ = a (REPEAT µ_tac);
+val _ = a (list_spec_nth_asm_tac 1 [¨cfeÆ, ¨$ºâtÆ, ¨stÆ]);
+val _ = a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨EvalFormFunct (cfe, $ºât, st)Æ (get_spec ¨fixÆ))]);
+val _ = a (rewrite_tac [get_spec ¨EvalFormÆ]);
+val _ = a (asm_rewrite_tac[]);
+in val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+end;
 
-a (∂â1_tac ¨fix (Ãf x∑ if IsAf x then af (AfMem x) (AfSet x) else cf (CfVars x) (CfForms x))Æ);
-a (REPEAT strip_tac);
+val _ = a (∂â1_tac ¨fix (Ãf x∑ if IsAf x then af (AfMem x) (AfSet x) else cf (CfVars x) (CfForms x))Æ);
+val _ = a (REPEAT strip_tac);
 =TEX
 }%ignore
 
@@ -667,52 +689,55 @@ This is acheived by defining a functor of which the required function is a fixed
 =SML
 push_merge_pcs ["misc2", "'ifos"];
 
-set_goal([], ¨FreeVarsFunct respects ScPrecÆ);
-a (rewrite_tac [get_spec ¨FreeVarsFunctÆ, get_spec ¨$respectsÆ, get_spec ¨ScPrecÆ]
+local val _ = set_goal([], ¨FreeVarsFunct respects ScPrecÆ);
+val _ = a (rewrite_tac [get_spec ¨FreeVarsFunctÆ, get_spec ¨$respectsÆ, get_spec ¨ScPrecÆ]
 	THEN REPEAT strip_tac);
-a (cases_tac ¨x ç SyntaxÆ THEN asm_rewrite_tac []);
-a (fc_tac [syntax_cases_thm] THEN asm_rewrite_tac [get_spec ¨FunImageâgÆ]);
-a (fc_tac [Is_not_fc_clauses] THEN asm_rewrite_tac[]);
-a (once_rewrite_tac [sets_ext_clauses]);
-a (strip_tac THEN rewrite_tac[ç_in_clauses]
+val _ = a (cases_tac ¨x ç SyntaxÆ THEN asm_rewrite_tac []);
+val _ = a (fc_tac [syntax_cases_thm] THEN asm_rewrite_tac [get_spec ¨FunImageâgÆ]);
+val _ = a (fc_tac [Is_not_fc_clauses] THEN asm_rewrite_tac[]);
+val _ = a (once_rewrite_tac [sets_ext_clauses]);
+val _ = a (strip_tac THEN rewrite_tac[ç_in_clauses]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a (lemma_tac ¨tc ScPrec y xÆ
+val _ = a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+val _ = a (lemma_tac ¨tc ScPrec y xÆ
 	THEN1 (all_fc_tac [scprec_fc_clauses2]
 		THEN all_fc_tac [tc_incr_thm]));
-a (asm_fc_tac []);
+val _ = a (asm_fc_tac []);
 (* *** Goal "2" *** *)
-a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a (lemma_tac ¨tc ScPrec y xÆ
+val _ = a (∂_tac ¨sÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨yÆ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+val _ = a (lemma_tac ¨tc ScPrec y xÆ
 	THEN1 (all_fc_tac [scprec_fc_clauses2]
 		THEN all_fc_tac [tc_incr_thm]));
-a (asm_fc_tac []);
-a (asm_rewrite_tac[]);
-val freevarsfunct_respect_thm = save_pop_thm "freevarsfunct_respect_thm";
+val _ = a (asm_fc_tac []);
+val _ = a (asm_rewrite_tac[]);
+in val freevarsfunct_respect_thm = save_pop_thm "freevarsfunct_respect_thm";
+end;
 
-set_goal([], ¨FreeVars = FreeVarsFunct FreeVarsÆ);
-a (asm_tac well_founded_ScPrec_thm);
-a (asm_tac freevarsfunct_respect_thm);
-a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨FreeVarsFunctÆ (get_spec ¨fixÆ))]);
-a (rewrite_tac [get_spec ¨FreeVarsÆ]);
-a (asm_rewrite_tac[]);
-val freevarsfunct_fixp_lemma = save_pop_thm "freevarsfunct_fixp_lemma";
+local val _ = set_goal([], ¨FreeVars = FreeVarsFunct FreeVarsÆ);
+val _ = a (asm_tac well_founded_ScPrec_thm);
+val _ = a (asm_tac freevarsfunct_respect_thm);
+val _ = a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨FreeVarsFunctÆ (get_spec ¨fixÆ))]);
+val _ = a (rewrite_tac [get_spec ¨FreeVarsÆ]);
+val _ = a (asm_rewrite_tac[]);
+in val freevarsfunct_fixp_lemma = save_pop_thm "freevarsfunct_fixp_lemma";
+end;
 
 val freevarsfunct_thm = save_thm ("freevarsfunct_thm",
 	rewrite_rule [get_spec ¨FreeVarsFunctÆ] freevarsfunct_fixp_lemma);
 
-set_goal([], ¨µ f
+local val _ = set_goal([], ¨µ f
      ∑ FreeVars f
          = if f ç Syntax
 ‹	then if IsAf f
 ‹	     then {AfMem f; AfSet f}
 ‹	     else ﬁ (FunImageâg FreeVars (CfForms f)) \ Xâg (CfVars f)
 ‹	else ≈x∑TÆ);
-a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] freevarsfunct_thm)]);
-val freevarsfunct_thm2 = save_pop_thm "freevarsfunct_thm2";
+val _ = a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] freevarsfunct_thm)]);
+in val freevarsfunct_thm2 = save_pop_thm "freevarsfunct_thm2";
+end;
 
 pop_pc();
 =TEX
@@ -774,19 +799,21 @@ The ordering on relations derives from the ordering on the truth values, using t
 
 \ignore{
 =SML
-set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (RvO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (RvO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvOÆ]
 	THEN REPEAT_N 2 (bc_tac [pw_lubs_exist_thm])
 	THEN strip_tac);
-val rvo_lubs_exist_thm = save_pop_thm "rvo_lubs_exist_thm";
+in val rvo_lubs_exist_thm = save_pop_thm "rvo_lubs_exist_thm";
+end;
 
-set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (RvO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (RvO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvOÆ]
 	THEN REPEAT_N 2 (bc_tac [pw_glbs_exist_thm])
 	THEN strip_tac);
-val rvo_glbs_exist_thm = save_pop_thm "rvo_glbs_exist_thm";
+in val rvo_glbs_exist_thm = save_pop_thm "rvo_glbs_exist_thm";
+end;
 =TEX
 }%ignore
 
@@ -806,21 +833,23 @@ val rvo_glbs_exist_thm = save_pop_thm "rvo_glbs_exist_thm";
 
 \ignore{
 =SML
-set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (RvIsO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (RvIsO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvIsOÆ]
 	THEN bc_tac [is_lubs_exist_thm]
 	THEN bc_tac [rvo_lubs_exist_thm]
 	THEN strip_tac);
-val rviso_lubs_exist_thm = save_pop_thm "rviso_lubs_exist_thm";
+in val rviso_lubs_exist_thm = save_pop_thm "rviso_lubs_exist_thm";
+end;
 
-set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (RvIsO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (RvIsO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨RvIsOÆ]
 	THEN bc_tac [is_glbs_exist_thm]
 	THEN bc_tac [rvo_glbs_exist_thm]
 	THEN strip_tac);
-val rviso_glbs_exist_thm = save_pop_thm "rviso_glbs_exist_thm";
+in val rviso_glbs_exist_thm = save_pop_thm "rviso_glbs_exist_thm";
+end;
 =TEX
 }%ignore
 
@@ -840,23 +869,25 @@ val rviso_glbs_exist_thm = save_pop_thm "rviso_glbs_exist_thm";
 
 \ignore{
 =SML
-set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (StO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ LubsExist r ¥ LubsExist (StO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨StOÆ]
 	THEN bc_tac [lubsexist_dosnd_thm]
 	THEN bc_tac [pw_lubs_exist_thm]
 	THEN bc_tac [pw_lubs_exist_thm]
 	THEN strip_tac);
-val sto_lubs_exist_thm = save_pop_thm "sto_lubs_exist_thm";
+in val sto_lubs_exist_thm = save_pop_thm "sto_lubs_exist_thm";
+end;
 
-set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (StO r)Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([], ¨µr∑ GlbsExist r ¥ GlbsExist (StO r)Æ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨StOÆ]
 	THEN bc_tac [glbsexist_dosnd_thm]
 	THEN bc_tac [pw_glbs_exist_thm]
 	THEN bc_tac [pw_glbs_exist_thm]
 	THEN strip_tac);
-val sto_glbs_exist_thm = save_pop_thm "sto_glbs_exist_thm";
+in val sto_glbs_exist_thm = save_pop_thm "sto_glbs_exist_thm";
+end;
 =TEX
 }%ignore
 
@@ -910,6 +941,55 @@ declare_type_abbrev(€"CFE"›, ["'t"], î't SET ≠ 'tÆ);
 ‹		else if results Ä {fTrue; fB} then fB
 ‹		else if fT ç results then fT else fTrue
 ∞
+
+=GFT
+€evalcf_tf4_ft_lemma› =
+   Ù µ s∑ EvalCf_tf4 s = fT § fT ç s
+
+€evalcf_tf4_fb_lemma› =
+   Ù µ s∑ EvalCf_tf4 s = fB § fB ç s ± ≥ fFalse ç s ± ≥ fT ç s
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs ["misc2", "'ifos"];
+
+set_goal([], ¨µs∑ EvalCf_tf4 s = fT § fT ç sÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨EvalCf_tf4Æ]);
+a (cases_tac ¨fT ç sÆ THEN asm_rewrite_tac []);
+(* *** Goal "1" *** *)
+a (cases_tac ¨s Ä {fTrue}Æ THEN asm_rewrite_tac[]);
+a (PC_T1 "hol1" asm_prove_tac[] THEN asm_fc_tac[]);
+a (cases_tac ¨s Ä {fTrue; fB}Æ THEN asm_rewrite_tac[]);
+a (PC_T1 "hol1" asm_prove_tac[] THEN asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (cases_tac ¨s Ä {fTrue}Æ THEN asm_rewrite_tac[]);
+a (cases_tac ¨s Ä {fTrue; fB}Æ THEN asm_rewrite_tac[]);
+val evalcf_tf4_ft_lemma = save_pop_thm "evalcf_tf4_ft_lemma";
+
+pop_pc();
+
+set_goal([], ¨µs∑ EvalCf_tf4 s = fB § fB ç s ± ≥ fFalse ç s ± ≥ fT ç sÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨EvalCf_tf4Æ]);
+a (cond_cases_tac ¨µ x∑ x ç s ¥ x = fTrueÆ);
+(* *** Goal "1" *** *)
+a (contr_tac THEN asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (cond_cases_tac ¨µ x∑ x ç s ¥ x = fTrue ≤ x = fBÆ);
+(* *** Goal "2.1" *** *)
+a (contr_tac THEN asm_fc_tac[]);
+a (var_elim_nth_asm_tac 1);
+(* *** Goal "2.2" *** *)
+a (cond_cases_tac ¨fT ç sÆ);
+a (contr_tac THEN asm_fc_tac[]);
+a (REPEAT (POP_ASM_T ante_tac)
+	THEN strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN contr_tac);
+val evalcf_tf4_fb_lemma = save_pop_thm "evalcf_tf4_fb_lemma";
+=TEX
+}%ignore
+
 
 This definition shows how the set of truth values of instances of the constituents is obtained from the denotations of the constituent formulae.
 
@@ -991,45 +1071,47 @@ To use this definition we need to show that there exists a fixed point, for whic
 =SML
 set_merge_pcs ["misc2", "'ifos"];
 
-set_goal([], ¨µcfe $ºât st∑ (EvalFormFunct (cfe, $ºât, st)) respects ScPrecÆ);
-a (rewrite_tac [get_spec ¨EvalFormFunctÆ, get_spec ¨$respectsÆ]
+local val _ = set_goal([], ¨µcfe $ºât st∑ (EvalFormFunct (cfe, $ºât, st)) respects ScPrecÆ);
+val _ = a (rewrite_tac [get_spec ¨EvalFormFunctÆ, get_spec ¨$respectsÆ]
 	THEN REPEAT strip_tac);
-a (cases_tac ¨IsAf xÆ THEN asm_rewrite_tac[]);
-a (cases_tac ¨x ç SyntaxÆ THEN asm_rewrite_tac[]);
-a (lemma_tac ¨FunImage g (Xâg (CfForms x)) = FunImage h (Xâg (CfForms x))Æ
+val _ = a (cases_tac ¨IsAf xÆ THEN asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x ç SyntaxÆ THEN asm_rewrite_tac[]);
+val _ = a (lemma_tac ¨FunImage g (Xâg (CfForms x)) = FunImage h (Xâg (CfForms x))Æ
 	THEN_TRY asm_rewrite_tac[get_spec ¨XâgÆ]);
-a (PC_T1 "hol1" rewrite_tac [get_spec ¨FunImageÆ]
+val _ = a (PC_T1 "hol1" rewrite_tac [get_spec ¨FunImageÆ]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (fc_tac [syntax_cases_thm]);
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_asm_fc_tac[tc_incr_thm]);
-a (all_asm_fc_tac[]);
-a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
-a (POP_ASM_T (fn x => rewrite_thm_tac (eq_sym_rule x)));
-a (asm_rewrite_tac[]);
+val _ = a (fc_tac [syntax_cases_thm]);
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (all_asm_fc_tac[tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
+val _ = a (POP_ASM_T (fn x => rewrite_thm_tac (eq_sym_rule x)));
+val _ = a (asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (fc_tac [syntax_cases_thm]);
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_asm_fc_tac[tc_incr_thm]);
-a (all_asm_fc_tac[]);
-a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
-val evalformfunct_respect_thm = save_pop_thm "evalformfunct_respect_thm";
+val _ = a (fc_tac [syntax_cases_thm]);
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (all_asm_fc_tac[tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
+in val evalformfunct_respect_thm = save_pop_thm "evalformfunct_respect_thm";
+end;
 
-set_goal([], ¨µcfe $ºât st∑ EvalForm (cfe, $ºât, st) = EvalFormFunct (cfe, $ºât, st) (EvalForm (cfe, $ºât, st))Æ);
-a (asm_tac well_founded_ScPrec_thm);
-a (asm_tac evalformfunct_respect_thm);
-a (REPEAT µ_tac);
-a (list_spec_nth_asm_tac 1 [¨cfeÆ, ¨$ºâtÆ, ¨stÆ]);
-a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨EvalFormFunct (cfe, $ºât, st)Æ (get_spec ¨fixÆ))]);
-a (rewrite_tac [get_spec ¨EvalFormÆ]);
-a (asm_rewrite_tac[]);
-val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+local val _ = set_goal([], ¨µcfe $ºât st∑ EvalForm (cfe, $ºât, st) = EvalFormFunct (cfe, $ºât, st) (EvalForm (cfe, $ºât, st))Æ);
+val _ = a (asm_tac well_founded_ScPrec_thm);
+val _ = a (asm_tac evalformfunct_respect_thm);
+val _ = a (REPEAT µ_tac);
+val _ = a (list_spec_nth_asm_tac 1 [¨cfeÆ, ¨$ºâtÆ, ¨stÆ]);
+val _ = a (all_fc_tac [µ_elim ¨ScPrecÆ (µ_elim ¨EvalFormFunct (cfe, $ºât, st)Æ (get_spec ¨fixÆ))]);
+val _ = a (rewrite_tac [get_spec ¨EvalFormÆ]);
+val _ = a (asm_rewrite_tac[]);
+in val evalformfunct_fixp_lemma = save_pop_thm "evalformfunct_fixp_lemma";
+end;
 
 val evalformfunct_thm = save_thm ("evalformfunct_thm",
 	rewrite_rule [get_spec ¨EvalFormFunctÆ] evalformfunct_fixp_lemma);
 
-set_goal([], ¨µ cfe $ºât st f
+local val _ = set_goal([], ¨µ cfe $ºât st f
      ∑ EvalForm (cfe, $ºât, st) f
          = if f ç Syntax
              then
@@ -1039,8 +1121,9 @@ set_goal([], ¨µ cfe $ºât st f
                  let rvs = FunImage (EvalForm (cfe, $ºât, st)) (Xâg (CfForms f))
                  in EvalCf cfe f st rvs
              else ≈ f∑ TÆ);
-a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] evalformfunct_thm)]);
-val evalformfunct_thm2 = save_pop_thm "evalformfunct_thm2";
+val _ = a (REPEAT strip_tac THEN rewrite_tac[rewrite_rule [](once_rewrite_rule [ext_thm] evalformfunct_thm)]);
+in val evalformfunct_thm2 = save_pop_thm "evalformfunct_thm2";
+end;
 =TEX
 }%ignore
 
@@ -1061,7 +1144,7 @@ Here is the beginning of the three valued case which I started before.
 It is also necessary to prove that these partial orderings are CCPOs (chain complete partial orders), this being the weakest condition for which we have a suitable fixed point theorem.
 It is convenient to be slightly more definite, to make the orderings all reflexive, and show that they are reflexive CCPOs (for which we use the term CCRPO).
 
-The following ordering is applicable to partial relations.
+The following ordering is applicable to partial predicates.
 
 =SML
 declare_infix(300, "ºâfâtâ3");
@@ -1080,11 +1163,12 @@ declare_infix(300, "ºâfâtâ3");
 
 \ignore{
 =SML
-set_goal([], ¨CcRpoU $ºâfâtâ3Æ);
-a (rewrite_tac [get_spec ¨$ºâfâtâ3Æ]);
-a (asm_tac ccrpou_ºâtâ3_thm);
-a (fc_tac [pw_ccrpou_thm]);
-val ccrpou_ºâfâtâ3_thm = save_pop_thm "ccrpou_ºâfâtâ3_thm";
+local val _ = set_goal([], ¨CcRpoU $ºâfâtâ3Æ);
+val _ = a (rewrite_tac [get_spec ¨$ºâfâtâ3Æ]);
+val _ = a (asm_tac ccrpou_ºâtâ3_thm);
+val _ = a (fc_tac [pw_ccrpou_thm]);
+in val ccrpou_ºâfâtâ3_thm = save_pop_thm "ccrpou_ºâfâtâ3_thm";
+end;
 =TEX
 }%ignore
 
@@ -1102,17 +1186,18 @@ declare_infix(300, "çâv");
 ∞
 
 =GFT
-€ccrpou_ºâfâtâ4_thm› =
-	Ù  $ºâfâtâ4
+€ºâfâtâ4_crpou_thm› =
+	Ù  CRpoU $ºâfâtâ4
 =TEX
 
 \ignore{
-=IGN
-set_goal([], ¨CcRpoU $ºâfâtâ3Æ);
-a (rewrite_tac [get_spec ¨$ºâfâtâ3Æ]);
-a (asm_tac ccrpou_ºâtâ3_thm);
-a (fc_tac [pw_ccrpou_thm]);
-val ccrpou_ºâfâtâ3_thm = save_pop_thm "ccrpou_ºâfâtâ3_thm";
+=SML
+local val _ = set_goal([], ¨CRpoU $ºâfâtâ4Æ);
+val _ = a (rewrite_tac [get_spec ¨$ºâfâtâ4Æ]);
+val _ = a (asm_tac ºâtâ4_crpou_thm);
+val _ = a (fc_tac [pw_crpou_thm]);
+in val ºâfâtâ4_crpou_thm = save_pop_thm "ºâfâtâ4_crpou_thm";
+end;
 =TEX
 }%ignore
 
@@ -1170,63 +1255,64 @@ This is, for any domain V the set of V-valued indexed sets.
 
 \ignore{
 =SML
-set_goal([], ¨µV $çâv x y v∑ ExsVaO (V2IxSet V, V, $çâv) x y ± IxRan v Ä V 
+local val _ = set_goal([], ¨µV $çâv x y v∑ ExsVaO (V2IxSet V, V, $çâv) x y ± IxRan v Ä V 
 	¥ ExsVaO (V2IxSet V, V, $çâv) (IxOverRide x v) (IxOverRide y v)Æ);
-a (REPEAT µ_tac
+val _ = a (REPEAT µ_tac
 	THEN rewrite_tac (map get_spec
 	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ]));
-a (CASES_T ¨IxRan x Ä V ± IxRan y Ä VÆ asm_tac
+val _ = a (CASES_T ¨IxRan x Ä V ± IxRan y Ä VÆ asm_tac
 	THEN asm_rewrite_tac []
 	THEN strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (DROP_NTH_ASM_T 4 strip_asm_tac);
-a (LEMMA_T ¨IxRan (IxOverRide x v) Ä VÆ rewrite_thm_tac);
+val _ = a (DROP_NTH_ASM_T 4 strip_asm_tac);
+val _ = a (LEMMA_T ¨IxRan (IxOverRide x v) Ä VÆ rewrite_thm_tac);
 (* *** Goal "1.1" *** *)
-a (lemma_tac ¨IxRan (IxOverRide x v) Ä IxRan x ¿ IxRan vÆ 
+val _ = a (lemma_tac ¨IxRan (IxOverRide x v) Ä IxRan x ¿ IxRan vÆ 
 	THEN1 rewrite_tac [ixoverride_ixran_lemma]);
-a (lemma_tac ¨IxRan x ¿ IxRan v Ä VÆ
+val _ = a (lemma_tac ¨IxRan x ¿ IxRan v Ä VÆ
 	THEN1 (PC_T1 "hol1" asm_prove_tac []));
-a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
+val _ = a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
 (* *** Goal "1.2" *** *)
-a (LEMMA_T ¨IxRan (IxOverRide y v) Ä VÆ rewrite_thm_tac);
+val _ = a (LEMMA_T ¨IxRan (IxOverRide y v) Ä VÆ rewrite_thm_tac);
 (* *** Goal "1.2.1" *** *)
-a (lemma_tac ¨IxRan (IxOverRide y v) Ä IxRan y ¿ IxRan vÆ 
+val _ = a (lemma_tac ¨IxRan (IxOverRide y v) Ä IxRan y ¿ IxRan vÆ 
 	THEN1 rewrite_tac [ixoverride_ixran_lemma]);
-a (lemma_tac ¨IxRan y ¿ IxRan v Ä VÆ
+val _ = a (lemma_tac ¨IxRan y ¿ IxRan v Ä VÆ
 	THEN1 (PC_T1 "hol1" asm_prove_tac []));
-a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
+val _ = a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ]);
 (* *** Goal "1.2.2" *** *)
-a (strip_tac);
-a (cases_tac ¨IxOverRide x v x' = UndefinedÆ THEN asm_rewrite_tac[]);
+val _ = a (strip_tac);
+val _ = a (cases_tac ¨IxOverRide x v x' = UndefinedÆ THEN asm_rewrite_tac[]);
 (* *** Goal "1.2.2.1" *** *)
-a (lemma_tac ¨IxOverRide y v x' = Undefined ¥ IxOverRide x v x' = UndefinedÆ
+val _ = a (lemma_tac ¨IxOverRide y v x' = Undefined ¥ IxOverRide x v x' = UndefinedÆ
 	THEN1 rewrite_tac [get_spec ¨IxOverRideÆ, get_spec ¨IxUdÆ]);
-a (cases_tac ¨v x' = UndefinedÆ THEN asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 7 ante_tac THEN rewrite_tac [get_spec ¨IxDomÆ, sets_ext_clauses]
+val _ = a (cases_tac ¨v x' = UndefinedÆ THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 7 ante_tac THEN rewrite_tac [get_spec ¨IxDomÆ, sets_ext_clauses]
 	THEN contr_tac THEN asm_fc_tac[]);
 (* *** Goal "1.2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (spec_nth_asm_tac 6 ¨x'Æ);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (spec_nth_asm_tac 6 ¨x'Æ);
 (* *** Goal "1.2.2.2.1" *** *)
-a (LEMMA_T ¨IxOverRide x v x' = v x' ± IxOverRide y v x' = v x'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨IxOverRide x v x' = v x' ± IxOverRide y v x' = v x'Æ rewrite_thm_tac
 	THEN1 (cases_tac ¨v x' = UndefinedÆ
 		THEN asm_rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxUdÆ]));
-a (DROP_NTH_ASM_T 9 ante_tac THEN rewrite_tac [get_spec ¨IxDomÆ, sets_ext_clauses]);
-a (strip_tac THEN spec_nth_asm_tac 1 ¨x'Æ);
+val _ = a (DROP_NTH_ASM_T 9 ante_tac THEN rewrite_tac [get_spec ¨IxDomÆ, sets_ext_clauses]);
+val _ = a (strip_tac THEN spec_nth_asm_tac 1 ¨x'Æ);
 (* *** Goal "1.2.2.2.2" *** *)
-a (cases_tac ¨v x' = UndefinedÆ);
+val _ = a (cases_tac ¨v x' = UndefinedÆ);
 (* *** Goal "1.2.2.2.2.1" *** *)
-a (LEMMA_T ¨IxOverRide x v x' = x x' ± IxOverRide y v x' = y x'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨IxOverRide x v x' = x x' ± IxOverRide y v x' = y x'Æ rewrite_thm_tac
 	THEN1 (asm_rewrite_tac [get_spec ¨IxOverRideÆ, get_spec ¨IxUdÆ]));
-a (spec_nth_asm_tac 11 ¨x'Æ THEN asm_rewrite_tac []);
+val _ = a (spec_nth_asm_tac 11 ¨x'Æ THEN asm_rewrite_tac []);
 (* *** Goal "1.2.2.2.2.2" *** *)
-a (LEMMA_T ¨IxOverRide x v x' = v x' ± IxOverRide y v x' = v x'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨IxOverRide x v x' = v x' ± IxOverRide y v x' = v x'Æ rewrite_thm_tac
 	THEN1 (asm_rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxUdÆ]));
 (* *** Goal "2" *** *)
-a (cases_tac ¨IxRan (IxOverRide y v) Ä VÆ	
+val _ = a (cases_tac ¨IxRan (IxOverRide y v) Ä VÆ	
 	THEN asm_rewrite_tac[]
 	THEN REPEAT strip_tac);
-val exsvao_ixoverride_lemma = save_pop_thm "exsvao_ixoverride_lemma";
+in val exsvao_ixoverride_lemma = save_pop_thm "exsvao_ixoverride_lemma";
+end;
 =TEX
 }%ignore
 
@@ -1242,145 +1328,146 @@ First we prove the monotonicity of {\it EvalForm}.
 
 \ignore{
 =SML
-set_goal([], ¨Increasing (SetO $ºâtâ4) $ºâtâ4 EvalCf_tf4Æ);
-a (rewrite_tac (map get_spec [¨IncreasingÆ, ¨SetOÆ, ¨$ºâtâ4Æ, ¨EvalCf_tf4Æ]));
-a (REPEAT_N 3 strip_tac THEN_TRY asm_rewrite_tac[]);
-a (cases_tac ¨y Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
+local val _ = set_goal([], ¨Increasing (SetO $ºâtâ4) $ºâtâ4 EvalCf_tf4Æ);
+val _ = a (rewrite_tac (map get_spec [¨IncreasingÆ, ¨SetOÆ, ¨$ºâtâ4Æ, ¨EvalCf_tf4Æ]));
+val _ = a (REPEAT_N 3 strip_tac THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨y Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (cases_tac ¨x Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
-a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (cases_tac ¨x Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.1" *** *)
-a (var_elim_asm_tac ¨x' = y'Æ);
-a (DROP_NTH_ASM_T 4 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (var_elim_asm_tac ¨x' = y'Æ);
+val _ = a (DROP_NTH_ASM_T 4 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.2" *** *)
-a (var_elim_asm_tac ¨x' = fBÆ THEN_TRY asm_rewrite_tac[]);
-a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
-a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
+val _ = a (var_elim_asm_tac ¨x' = fBÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
 	THEN	var_elim_nth_asm_tac 1);
 (* *** Goal "1.2.1" *** *)
-a (spec_nth_asm_tac 9 ¨fFalseÆ);
+val _ = a (spec_nth_asm_tac 9 ¨fFalseÆ);
 (* *** Goal "1.2.1.1" *** *)
-a (lemma_tac ¨fFalse ç yÆ
+val _ = a (lemma_tac ¨fFalse ç yÆ
 	THEN1 (asm_rewrite_tac[]));
-a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.2.1.2" *** *)
-a (lemma_tac ¨fT ç yÆ
+val _ = a (lemma_tac ¨fT ç yÆ
 	THEN1 (SYM_ASMS_T rewrite_tac));
-a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.2.2" *** *)
-a (spec_nth_asm_tac 9 ¨fTÆ);
+val _ = a (spec_nth_asm_tac 9 ¨fTÆ);
 (* *** Goal "1.2.2.1" *** *)
-a (lemma_tac ¨fT ç yÆ
+val _ = a (lemma_tac ¨fT ç yÆ
 	THEN1 (asm_rewrite_tac[]));
-a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.2.2.2" *** *)
-a (lemma_tac ¨fT ç yÆ
+val _ = a (lemma_tac ¨fT ç yÆ
 	THEN1 (SYM_ASMS_T rewrite_tac));
-a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.3" *** *)
-a (var_elim_asm_tac ¨y' = fTÆ THEN_TRY asm_rewrite_tac[]);
-a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
-a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (strip_asm_tac (µ_elim ¨x''Æ ftv_cases_thm)
+val _ = a (var_elim_asm_tac ¨y' = fTÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (strip_asm_tac (µ_elim ¨x''Æ ftv_cases_thm)
 	THEN	var_elim_nth_asm_tac 1);
 (* *** Goal "1.3.1" *** *)
-a (spec_nth_asm_tac 9 ¨fFalseÆ);
+val _ = a (spec_nth_asm_tac 9 ¨fFalseÆ);
 (* *** Goal "1.3.1.1" *** *)
-a (lemma_tac ¨fFalse ç yÆ
+val _ = a (lemma_tac ¨fFalse ç yÆ
 	THEN1 (asm_rewrite_tac[]));
-a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 10 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.3.1.2" *** *)
-a (DROP_NTH_ASM_T 9 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 9 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "1.3.2" *** *)
-a (DROP_NTH_ASM_T 7 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (all_asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 7 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (cases_tac ¨x Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x Ä {fTrue}Æ THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2.1" *** *)
-a (cases_tac ¨y Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨y Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2.1.1" *** *)
-a (lemma_tac ¨fB ç yÆ
+val _ = a (lemma_tac ¨fB ç yÆ
 	THEN1 (GET_NTH_ASM_T 1 ante_tac
 		THEN GET_NTH_ASM_T 3 ante_tac
 		THEN PC_T1 "hol1" rewrite_tac[]
 		THEN REPEAT strip_tac
 		THEN asm_fc_tac[]
 		THEN var_elim_nth_asm_tac 1));
-a (spec_nth_asm_tac 5 ¨fBÆ);
+val _ = a (spec_nth_asm_tac 5 ¨fBÆ);
 (* *** Goal "2.1.1.1" *** *)
-a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (var_elim_nth_asm_tac 2 THEN asm_fc_tac []);
+val _ = a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (var_elim_nth_asm_tac 2 THEN asm_fc_tac []);
 (* *** Goal "2.1.2" *** *)
-a (cases_tac ¨fT ç yÆ THEN asm_rewrite_tac[]);
-a (lemma_tac ¨fFalse ç yÆ);
+val _ = a (cases_tac ¨fT ç yÆ THEN asm_rewrite_tac[]);
+val _ = a (lemma_tac ¨fFalse ç yÆ);
 (* *** Goal "2.1.2.1" *** *)
-a (GET_NTH_ASM_T 2 ante_tac THEN (PC_T1 "hol1" rewrite_tac[])
+val _ = a (GET_NTH_ASM_T 2 ante_tac THEN (PC_T1 "hol1" rewrite_tac[])
 	THEN strip_tac);
-a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
+val _ = a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
 	THEN	var_elim_nth_asm_tac 1);
 (* *** Goal "2.1.2.2" *** *)
-a (spec_nth_asm_tac 6 ¨fFalseÆ);
+val _ = a (spec_nth_asm_tac 6 ¨fFalseÆ);
 (* *** Goal "2.1.2.2.1" *** *)
-a (GET_NTH_ASM_T 6 ante_tac THEN (PC_T1 "hol1" rewrite_tac[])
+val _ = a (GET_NTH_ASM_T 6 ante_tac THEN (PC_T1 "hol1" rewrite_tac[])
 	THEN contr_tac);
-a (var_elim_nth_asm_tac 2
+val _ = a (var_elim_nth_asm_tac 2
 	THEN all_asm_fc_tac[]);
 (* *** Goal "2.1.2.2.2" *** *)
-a (var_elim_nth_asm_tac 1);
-a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (asm_fc_tac[]);
+val _ = a (var_elim_nth_asm_tac 1);
+val _ = a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2.2" *** *)
-a (cases_tac ¨y Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨y Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2.2.1" *** *)
-a (lemma_tac ¨fB ç yÆ
+val _ = a (lemma_tac ¨fB ç yÆ
 	THEN1 (GET_NTH_ASM_T 1 ante_tac
 		THEN GET_NTH_ASM_T 3 ante_tac
 		THEN PC_T1 "hol1" rewrite_tac[]
 		THEN REPEAT strip_tac
 		THEN asm_fc_tac[]
 		THEN var_elim_nth_asm_tac 1));
-a (cases_tac ¨x Ä {fTrue; fB}Æ THEN asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x Ä {fTrue; fB}Æ THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.1.1" *** *)
-a (DROP_NTH_ASM_T 1 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
+val _ = a (DROP_NTH_ASM_T 1 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (strip_asm_tac (µ_elim ¨x'Æ ftv_cases_thm)
 	THEN	var_elim_nth_asm_tac 1);
-a (spec_nth_asm_tac 9 ¨fFalseÆ);
+val _ = a (spec_nth_asm_tac 9 ¨fFalseÆ);
 (* *** Goal "2.2.1.1.1" *** *)
-a (lemma_tac ¨fFalse ç yÆ
+val _ = a (lemma_tac ¨fFalse ç yÆ
 	THEN1 asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 8 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (spec_nth_asm_tac 1 ¨fFalseÆ);
+val _ = a (DROP_NTH_ASM_T 8 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (spec_nth_asm_tac 1 ¨fFalseÆ);
 (* *** Goal "2.2.1.1.2" *** *)
-a (var_elim_nth_asm_tac 1);
-a (DROP_NTH_ASM_T 6 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (spec_nth_asm_tac 1 ¨fTÆ);
+val _ = a (var_elim_nth_asm_tac 1);
+val _ = a (DROP_NTH_ASM_T 6 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (spec_nth_asm_tac 1 ¨fTÆ);
 (* *** Goal "2.2.1.2" *** *)
-a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
-a (spec_nth_asm_tac 1 ¨fTÆ);
-a (spec_nth_asm_tac 10 ¨fTÆ);
+val _ = a (DROP_NTH_ASM_T 5 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val _ = a (spec_nth_asm_tac 1 ¨fTÆ);
+val _ = a (spec_nth_asm_tac 10 ¨fTÆ);
 (* *** Goal "2.2.1.2.1" *** *)
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.1.2.2" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.2" *** *)
-a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
-a (cases_tac ¨fT ç yÆ THEN_TRY asm_rewrite_tac[]);
-a (cases_tac ¨fT ç xÆ THEN_TRY asm_rewrite_tac[]);
-a (spec_nth_asm_tac 8 ¨fTÆ);
+val _ = a (cases_tac ¨x Ä {fTrue; fB}Æ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨fT ç yÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (cases_tac ¨fT ç xÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (spec_nth_asm_tac 8 ¨fTÆ);
 (* *** Goal "2.2.2.1" *** *)
-a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.2.2" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val evalcf_tf4_increasing_lemma = save_pop_thm "evalcf_tf4_increasing_lemma";
+val _ = a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
+in val evalcf_tf4_increasing_lemma = save_pop_thm "evalcf_tf4_increasing_lemma";
+end;
 =TEX
 }%ignore
 
@@ -1391,14 +1478,15 @@ val evalcf_tf4_increasing_lemma = save_pop_thm "evalcf_tf4_increasing_lemma";
 
 \ignore{
 =SML
-set_goal([], ¨µ tr g∑ CRpoU tr ¥ Increasing (StO tr) (RvO tr) (EvalAf tr g)Æ);
-a (rewrite_tac (map get_spec [¨IncreasingÆ, ¨EvalAfÆ, ¨StOÆ, ¨RvOÆ,
+local val _ = set_goal([], ¨µ tr g∑ CRpoU tr ¥ Increasing (StO tr) (RvO tr) (EvalAf tr g)Æ);
+val _ = a (rewrite_tac (map get_spec [¨IncreasingÆ, ¨EvalAfÆ, ¨StOÆ, ¨RvOÆ,
 	¨PwÆ, ¨DerivedOrderÆ, ¨IsEOÆ, ¨DpoEOÆ, ¨dpoUdefÆ, ¨dpoOdefÆ])
 	THEN REPEAT strip_tac);
-a (fc_tac [crpou_fc_clauses]);
-a (rewrite_tac [let_def]);
-a (CASES_T ¨AfMem g ç IxDom x' ± AfSet g ç IxDom x'Æ asm_rewrite_thm_tac);
-val evalaf_increasing_lemma = pop_thm();
+val _ = a (fc_tac [crpou_fc_clauses]);
+val _ = a (rewrite_tac [let_def]);
+val _ = a (CASES_T ¨AfMem g ç IxDom x' ± AfSet g ç IxDom x'Æ asm_rewrite_thm_tac);
+in val evalaf_increasing_lemma = pop_thm();
+end;
 =TEX
 }%ignore
 
@@ -1428,90 +1516,92 @@ The following function accepts one compound argument containing the relevent con
 
 \ignore{
 =SML
-set_goal ([], ¨µc r s g∑ CRpoU r ± Increasing (SetO r) r c
+local val _ = set_goal ([], ¨µc r s g∑ CRpoU r ± Increasing (SetO r) r c
 	¥ Increasing (Pw (Pw r)) (RvO r) (MonoEvalForm (c,r,s,g))Æ);
-a (REPEAT strip_tac);
-a (sc_induction_tac ¨gÆ THEN_TRY asm_rewrite_tac[]);
-a (rewrite_tac ((map get_spec [¨IncreasingÆ, ¨MonoEvalFormÆ, ¨RvOÆ, ¨RvIsOÆ])@[evalformfunct_thm2])
+val _ = a (REPEAT strip_tac);
+val _ = a (sc_induction_tac ¨gÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (rewrite_tac ((map get_spec [¨IncreasingÆ, ¨MonoEvalFormÆ, ¨RvOÆ, ¨RvIsOÆ])@[evalformfunct_thm2])
 	THEN REPEAT strip_tac);
-a (cases_tac ¨t ç SyntaxÆ THEN asm_rewrite_tac[]);
+val _ = a (cases_tac ¨t ç SyntaxÆ THEN asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[]);
+val _ = a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[]);
 (* *** Goal "1.1" *** *)
-a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (î'bÆ, î'aÆ)] evalaf_increasing_lemma]);
-a (spec_nth_asm_tac 1 ¨tÆ THEN fc_tac [get_spec ¨IncreasingÆ]);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec¨StOÆ,get_spec¨RvOÆ,
+val _ = a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (î'bÆ, î'aÆ)] evalaf_increasing_lemma]);
+val _ = a (spec_nth_asm_tac 1 ¨tÆ THEN fc_tac [get_spec ¨IncreasingÆ]);
+val _ = a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec¨StOÆ,get_spec¨RvOÆ,
 	get_spec ¨DerivedOrderÆ] THEN strip_tac);
-a (LIST_SPEC_NTH_ASM_T 1 [¨(s,x)Æ, ¨(s,y)Æ] ante_tac
+val _ = a (LIST_SPEC_NTH_ASM_T 1 [¨(s,x)Æ, ¨(s,y)Æ] ante_tac
 	THEN rewrite_tac[]
 	THEN strip_tac);
 (* *** Goal "1.2" *** *)
-a (rewrite_tac ((map get_spec [¨PwÆ, ¨XâgÆ, ¨EvalCfÆ])@[let_def]));
-a (strip_tac THEN FC_T bc_tac [get_spec ¨IncreasingÆ]);
-a (rewrite_tac [get_spec ¨SetOÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac ((map get_spec [¨PwÆ, ¨XâgÆ, ¨EvalCfÆ])@[let_def]));
+val _ = a (strip_tac THEN FC_T bc_tac [get_spec ¨IncreasingÆ]);
+val _ = a (rewrite_tac [get_spec ¨SetOÆ] THEN REPEAT strip_tac);
 (* *** Goal "1.2.1" *** *)
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (∂_tac ¨EvalForm (c, r, s, y) a (IxOverRide x' v)Æ
+val _ = a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (∂_tac ¨EvalForm (c, r, s, y) a (IxOverRide x' v)Æ
 	THEN strip_tac);
 (* *** Goal "1.2.1.1" *** *)
-a (∂_tac ¨EvalForm (c, r, s, y) aÆ);
-a (∂_tac ¨vÆ THEN asm_rewrite_tac[get_spec ¨FunImageÆ]);
-a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨EvalForm (c, r, s, y) aÆ);
+val _ = a (∂_tac ¨vÆ THEN asm_rewrite_tac[get_spec ¨FunImageÆ]);
+val _ = a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
 (* *** Goal "1.2.1.2" *** *)
-a (asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
-a (lemma_tac ¨tc ScPrec a tÆ);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+val _ = a (lemma_tac ¨tc ScPrec a tÆ);
 (* *** Goal "1.2.1.2.1" *** *)
-a (fc_tac [scprec_fc_clauses]);
-a (fc_tac [syntax_cases_thm]);
-a (all_fc_tac [is_fc_clauses2]);
-a (all_fc_tac [scprec_fc_clauses2]);
-a (fc_tac [tc_incr_thm]);
+val _ = a (fc_tac [scprec_fc_clauses]);
+val _ = a (fc_tac [syntax_cases_thm]);
+val _ = a (all_fc_tac [is_fc_clauses2]);
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (fc_tac [tc_incr_thm]);
 (* *** Goal "1.2.1.2.2" *** *)
-a (all_asm_fc_tac[]);
-a (fc_tac[get_spec ¨IncreasingÆ]);
-a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨RvIsOÆ, get_spec ¨RvOÆ]
+val _ = a (all_asm_fc_tac[]);
+val _ = a (fc_tac[get_spec ¨IncreasingÆ]);
+val _ = a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨RvIsOÆ, get_spec ¨RvOÆ]
 	THEN STRIP_T (fn x => fc_tac[x]));
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨MonoEvalFormÆ, get_spec ¨PwÆ]
+val _ = a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨MonoEvalFormÆ, get_spec ¨PwÆ]
 	THEN STRIP_T rewrite_thm_tac);
 (* *** Goal "1.2.2" *** *)
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (∂_tac ¨EvalForm (c, r, s, x) a (IxOverRide x' v)Æ
+val _ = a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (∂_tac ¨EvalForm (c, r, s, x) a (IxOverRide x' v)Æ
 	THEN strip_tac);
 (* *** Goal "1.2.2.1" *** *)
-a (∂_tac ¨EvalForm (c, r, s, x) aÆ);
-a (∂_tac ¨vÆ THEN asm_rewrite_tac[get_spec ¨FunImageÆ]);
-a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨EvalForm (c, r, s, x) aÆ);
+val _ = a (∂_tac ¨vÆ THEN asm_rewrite_tac[get_spec ¨FunImageÆ]);
+val _ = a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
 (* *** Goal "1.2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
-a (lemma_tac ¨tc ScPrec a tÆ);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+val _ = a (lemma_tac ¨tc ScPrec a tÆ);
 (* *** Goal "1.2.2.2.1" *** *)
-a (fc_tac [syntax_cases_thm]);
-a (fc_tac [scprec_fc_clauses]);
-a (all_fc_tac [is_fc_clauses2]);
-a (all_fc_tac [scprec_fc_clauses2]);
-a (fc_tac [tc_incr_thm]);
+val _ = a (fc_tac [syntax_cases_thm]);
+val _ = a (fc_tac [scprec_fc_clauses]);
+val _ = a (all_fc_tac [is_fc_clauses2]);
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (fc_tac [tc_incr_thm]);
 (* *** Goal "1.2.2.2.2" *** *)
-a (all_asm_fc_tac[]);
-a (fc_tac[get_spec ¨IncreasingÆ]);
-a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨RvIsOÆ, get_spec ¨RvOÆ]
+val _ = a (all_asm_fc_tac[]);
+val _ = a (fc_tac[get_spec ¨IncreasingÆ]);
+val _ = a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨RvIsOÆ, get_spec ¨RvOÆ]
 	THEN STRIP_T (fn x => fc_tac[x]));
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨MonoEvalFormÆ, get_spec ¨PwÆ]
+val _ = a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨MonoEvalFormÆ, get_spec ¨PwÆ]
 	THEN STRIP_T rewrite_thm_tac);
 (* *** Goal "2" *** *)
-a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (îGS ≠ 'b OPTÆ, î'aÆ)] pw_crpou_thm]);
-a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
-val monoevalform_increasing_lemma = pop_thm ();
+val _ = a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (îGS ≠ 'b OPTÆ, î'aÆ)] pw_crpou_thm]);
+val _ = a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
+in val monoevalform_increasing_lemma = pop_thm();
+end;
 
-set_goal([], ¨µ c r s g
+local val _ = set_goal([], ¨µ c r s g
      ∑ CRpoU r ± Increasing (SetO r) r c
          ¥ Increasing (Pw (Pw r)) (RvO r) (Ãris∑EvalForm (c, r, s, ris) g)Æ);
-a (REPEAT µ_tac);
-a (lemma_tac ¨(Ãris∑EvalForm (c, r, s, ris) g) = MonoEvalForm (c, r, s, g)Æ
+val _ = a (REPEAT µ_tac);
+val _ = a (lemma_tac ¨(Ãris∑EvalForm (c, r, s, ris) g) = MonoEvalForm (c, r, s, g)Æ
 	THEN1 rewrite_tac [ext_thm, get_spec ¨MonoEvalFormÆ]);
-a (asm_rewrite_tac[monoevalform_increasing_lemma]);
-val evalform_increasing_thm = save_pop_thm "evalform_increasing_thm";
+val _ = a (asm_rewrite_tac[monoevalform_increasing_lemma]);
+in val evalform_increasing_thm = save_pop_thm "evalform_increasing_thm";
+end;
 =TEX
 }%ignore
 
@@ -1529,92 +1619,93 @@ We will also need to prove monotonicity of formula evaluation relative to the ex
 
 \ignore{
 =SML
-set_goal([], ¨µ(V, $çâv) g∑ V Ä Syntax ± g ç Syntax
+local val _ = set_goal([], ¨µ(V, $çâv) g∑ V Ä Syntax ± g ç Syntax
 	¥ Increasing (ExsVaO (V2IxSet V, (V, $çâv))) $ºâtâ4 (EvalForm (EvalCf_tf4, $ºâtâ4, (V, $çâv)) g)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN strip_tac THEN POP_ASM_T ante_tac);
-a (sc_induction_tac ¨gÆ);
-a (strip_tac THEN asm_rewrite_tac ((map get_spec [¨IncreasingÆ, ¨$ÄÆ]) @ [])
+val _ = a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN strip_tac THEN POP_ASM_T ante_tac);
+val _ = a (sc_induction_tac ¨gÆ);
+val _ = a (strip_tac THEN asm_rewrite_tac ((map get_spec [¨IncreasingÆ, ¨$ÄÆ]) @ [])
 	THEN REPEAT strip_tac
 	THEN asm_rewrite_tac [evalformfunct_thm2, let_def]);
-a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[let_def]);
+val _ = a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[let_def]);
 (* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
-a (GET_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule (map get_spec
+val _ = a (rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
+val _ = a (GET_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule (map get_spec
 	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
 	THEN asm_rewrite_tac[]);
-a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN REPEAT strip_tac);
-a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ asm_tac THEN asm_rewrite_tac[]);
-a (POP_ASM_T ante_tac THEN (SYM_ASMS_T rewrite_tac)
+val _ = a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN REPEAT strip_tac);
+val _ = a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ asm_tac THEN asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN (SYM_ASMS_T rewrite_tac)
 	THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 	THEN strip_tac);
-a (spec_nth_asm_tac 5 ¨AfMem tÆ);
-a (spec_nth_asm_tac 8 ¨AfSet tÆ);
-a (rewrite_tac[get_spec ¨IxValÆ]);
-a (DROP_NTH_ASM_T 5 discard_tac THEN DROP_NTH_ASM_T 1 discard_tac);
-a (spec_nth_asm_tac 3 ¨ValueOf (x (AfSet t))Æ
+val _ = a (spec_nth_asm_tac 5 ¨AfMem tÆ);
+val _ = a (spec_nth_asm_tac 8 ¨AfSet tÆ);
+val _ = a (rewrite_tac[get_spec ¨IxValÆ]);
+val _ = a (DROP_NTH_ASM_T 5 discard_tac THEN DROP_NTH_ASM_T 1 discard_tac);
+val _ = a (spec_nth_asm_tac 3 ¨ValueOf (x (AfSet t))Æ
 	THEN1 (fc_tac [ix_valueof_ran_lemma] THEN asm_fc_tac[]));
-a (spec_nth_asm_tac 2 ¨ValueOf (y (AfMem t))Æ
+val _ = a (spec_nth_asm_tac 2 ¨ValueOf (y (AfMem t))Æ
 	THEN1 (fc_tac [ix_valueof_ran_lemma] THEN asm_fc_tac[]));
-a (all_fc_tac [ºâtâ4_trans_thm]);
+val _ = a (all_fc_tac [ºâtâ4_trans_thm]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
-a (bc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalcf_tf4_increasing_lemma]);
-a (rewrite_tac [get_spec ¨SetOÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
+val _ = a (bc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalcf_tf4_increasing_lemma]);
+val _ = a (rewrite_tac [get_spec ¨SetOÆ] THEN REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
-a (∂_tac ¨rv (IxOverRide y v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
+val _ = a (∂_tac ¨rv (IxOverRide y v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2.1.1" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
 (* *** Goal "2.1.2" *** *)
-a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
+val _ = a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
 	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
 	THEN_TRY asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (fc_tac [syntax_cases_fc_clauses]);
-a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
-a (all_fc_tac [is_fc_clauses]);
-a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
-a (ASM_FC_T rewrite_tac []);
-a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
-a (asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (fc_tac [syntax_cases_fc_clauses]);
+val _ = a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
+val _ = a (all_fc_tac [is_fc_clauses]);
+val _ = a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
+val _ = a (ASM_FC_T rewrite_tac []);
+val _ = a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2.1.2.2" *** *)
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (all_asm_fc_tac[]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
-a (LEMMA_T ¨ExsVaO (V2IxSet V, V, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
+val _ = a (LEMMA_T ¨ExsVaO (V2IxSet V, V, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
 	(asm_tac)
 	THEN1 (all_fc_tac [exsvao_ixoverride_lemma]));
-a (list_spec_nth_asm_tac 2 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
-a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_tf4, $ºâtâ4, V, $çâv) a = rvÆ)]);
-a strip_tac;
+val _ = a (list_spec_nth_asm_tac 2 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
+val _ = a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_tf4, $ºâtâ4, V, $çâv) a = rvÆ)]);
+val _ = a strip_tac;
 (* *** Goal "2.2" *** *)
-a (∂_tac ¨rv (IxOverRide x v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
+val _ = a (∂_tac ¨rv (IxOverRide x v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2.2.1" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
 (* *** Goal "2.2.2" *** *)
-a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
+val _ = a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
 	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
 	THEN_TRY asm_rewrite_tac[]);
-a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (fc_tac [syntax_cases_fc_clauses]);
-a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
-a (all_fc_tac [is_fc_clauses]);
-a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
-a (ASM_FC_T rewrite_tac []);
-a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
-a (asm_fc_tac[]);
+val _ = a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (fc_tac [syntax_cases_fc_clauses]);
+val _ = a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
+val _ = a (all_fc_tac [is_fc_clauses]);
+val _ = a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
+val _ = a (ASM_FC_T rewrite_tac []);
+val _ = a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2.2.2.2" *** *)
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (all_asm_fc_tac[]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
-a (LEMMA_T ¨ExsVaO (V2IxSet V, V, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
+val _ = a (LEMMA_T ¨ExsVaO (V2IxSet V, V, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
 	(asm_tac)
 	THEN1 (all_fc_tac [exsvao_ixoverride_lemma]));
-a (list_spec_nth_asm_tac 2 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
-a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_tf4, $ºâtâ4, V, $çâv) a = rvÆ)]);
-a strip_tac;
-val evalform_increasing_thm2 = save_pop_thm "evalform_increasing_thm2";
+val _ = a (list_spec_nth_asm_tac 2 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
+val _ = a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_tf4, $ºâtâ4, V, $çâv) a = rvÆ)]);
+val _ = a strip_tac;
+in val evalform_increasing_thm2 = save_pop_thm "evalform_increasing_thm2";
+end;
 =TEX
 }%ignore
 
@@ -1623,7 +1714,13 @@ val evalform_increasing_thm2 = save_pop_thm "evalform_increasing_thm2";
 The terminology is a bit uncertain here.
 These lemmas about the semantics are proven in order to obtain extensionality results for fixed points of the semantic functor.
 
-First we define the relevant notion of `same extension'.
+πHOLCONST
+‹ €Extension› : (GS, FTV)BR ≠ (GS, FTV)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ Extension = CombC
+∞
+
+We now define a notion of `same extension' over some domain.
 
 Two sets have the same extension over some domain if they have the same members in that domain.
 
@@ -1631,6 +1728,12 @@ Two sets have the same extension over some domain if they have the same members 
 ‹ €SameExt› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µV r∑ SameExt V r = Ãx y∑ µz∑ z ç V ¥ r z x = r z y
+∞
+
+πHOLCONST
+‹ €Essence› : (GS, FTV)BR ≠ (GS, FTV)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ Essence = CombI
 ∞
 
 Two sets have the same essence over some domain if they are members of the same sets in that domain.
@@ -1681,99 +1784,105 @@ Two sets have the same essence over some domain if they are members of the same 
 
 \ignore{
 =SML
-set_goal ([], ¨µV r∑ Equiv (V, (SameExt V r))Æ);
-a (REPEAT µ_tac
+local val _ = set_goal ([], ¨µV r∑ Equiv (V, (SameExt V r))Æ);
+val _ = a (REPEAT µ_tac
 	THEN rewrite_tac (map get_spec [¨SameExtÆ, ¨EquivÆ, ¨ReflÆ, ¨SymÆ, ¨TransÆ])
 	THEN REPEAT strip_tac
 	THEN asm_fc_tac[]
 	THEN asm_rewrite_tac[]);
-val sameext_equiv_thm = save_pop_thm "sameext_equiv_thm";
+in val sameext_equiv_thm = save_pop_thm "sameext_equiv_thm";
+end;
 
-set_goal ([], ¨µV r∑ Equiv (V, (SameEss V r))Æ);
-a (REPEAT µ_tac
+local val _ = set_goal ([], ¨µV r∑ Equiv (V, (SameEss V r))Æ);
+val _ = a (REPEAT µ_tac
 	THEN rewrite_tac (map get_spec [¨SameEssÆ, ¨EquivÆ, ¨ReflÆ, ¨SymÆ, ¨TransÆ])
 	THEN REPEAT strip_tac
 	THEN asm_fc_tac[]
 	THEN asm_rewrite_tac[]);
-val sameess_equiv_thm = save_pop_thm "sameess_equiv_thm";
+in val sameess_equiv_thm = save_pop_thm "sameess_equiv_thm";
+end;
 
-set_goal ([], ¨µV r x∑ x ç V ¥ SameExt V r x xÆ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Refl (V, SameExt V r)Æ
+local val _ = set_goal ([], ¨µV r x∑ x ç V ¥ SameExt V r x xÆ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨Refl (V, SameExt V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameext_equiv_thm]);
-a (fc_tac [get_spec ¨ReflÆ] THEN asm_fc_tac[]);
-val sameext_refl_lemma = save_pop_thm "sameext_refl_lemma";
+val _ = a (fc_tac [get_spec ¨ReflÆ] THEN asm_fc_tac[]);
+in val sameext_refl_lemma = save_pop_thm "sameext_refl_lemma";
+end;
 
-set_goal ([], ¨µV r x∑ x ç V ¥ SameEss V r x xÆ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Refl (V, SameEss V r)Æ
+local val _ = set_goal ([], ¨µV r x∑ x ç V ¥ SameEss V r x xÆ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨Refl (V, SameEss V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameess_equiv_thm]);
-a (fc_tac [get_spec ¨ReflÆ] THEN asm_fc_tac[]);
-val sameess_refl_lemma = save_pop_thm "sameess_refl_lemma";
+val _ = a (fc_tac [get_spec ¨ReflÆ] THEN asm_fc_tac[]);
+in val sameess_refl_lemma = save_pop_thm "sameess_refl_lemma";
+end;
 
-set_goal ([], ¨µV r x y∑ x ç V ± y ç V ¥ (SameExt V r x y § SameExt V r y x)Æ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Sym (V, SameExt V r)Æ
+local val _ = set_goal ([], ¨µV r x y∑ x ç V ± y ç V ¥ (SameExt V r x y § SameExt V r y x)Æ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨Sym (V, SameExt V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameext_equiv_thm]);
-a (fc_tac [get_spec ¨SymÆ] THEN all_asm_fc_tac[]);
-a (lemma_tac ¨Sym (V, SameExt V r)Æ
+val _ = a (fc_tac [get_spec ¨SymÆ] THEN all_asm_fc_tac[]);
+val _ = a (lemma_tac ¨Sym (V, SameExt V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameext_equiv_thm]);
-a (fc_tac [get_spec ¨SymÆ]);
-a (list_spec_nth_asm_tac 1 [¨yÆ, ¨xÆ]);
-val sameext_sym_lemma = save_pop_thm "sameext_sym_lemma";
+val _ = a (fc_tac [get_spec ¨SymÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨yÆ, ¨xÆ]);
+in val sameext_sym_lemma = save_pop_thm "sameext_sym_lemma";
+end;
 
-set_goal ([], ¨µV r x y∑ x ç V ± y ç V ¥ (SameEss V r x y § SameEss V r y x)Æ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨Sym (V, SameEss V r)Æ
+local val _ = set_goal ([], ¨µV r x y∑ x ç V ± y ç V ¥ (SameEss V r x y § SameEss V r y x)Æ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨Sym (V, SameEss V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameess_equiv_thm]);
-a (fc_tac [get_spec ¨SymÆ] THEN all_asm_fc_tac[]);
-a (lemma_tac ¨Sym (V, SameEss V r)Æ
+val _ = a (fc_tac [get_spec ¨SymÆ] THEN all_asm_fc_tac[]);
+val _ = a (lemma_tac ¨Sym (V, SameEss V r)Æ
 	THEN1 rewrite_tac [rewrite_rule [get_spec ¨EquivÆ] sameess_equiv_thm]);
-a (fc_tac [get_spec ¨SymÆ]);
-a (list_spec_nth_asm_tac 1 [¨yÆ, ¨xÆ]);
-val sameess_sym_lemma = save_pop_thm "samess_sym_lemma";
+val _ = a (fc_tac [get_spec ¨SymÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨yÆ, ¨xÆ]);
+in val sameess_sym_lemma = save_pop_thm "samess_sym_lemma";
+end;
 
 =IGN
 (* This one was broken by the correction to EvalCf. *)
 
-set_goal([], ¨µV r∑ V Ä SetReps ¥ µz∑ z ç Syntax ¥ µx y∑
+local val _ = set_goal([], ¨µV r∑ V Ä SetReps ¥ µz∑ z ç Syntax ¥ µx y∑
 		IxDom x = IxDom y ± FreeVars z Ä IxDom x ± IxRan x Ä V ± IxRan y Ä V
 		± (µv∑ v ç IxDom x ¥ SameExt V r (IxVal x v) (IxVal y v) ± SameEss V r (IxVal x v) (IxVal y v))
 		¥	EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z x
 			= EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z yÆ);
-a (REPEAT_N 4 strip_tac);
-a (sc_induction_tac ¨zÆ);
-a (REPEAT_N 3 strip_tac THEN rewrite_tac [get_spec ¨SameExtÆ, get_spec ¨SameEssÆ, evalformfunct_thm2]
+val _ = a (REPEAT_N 4 strip_tac);
+val _ = a (sc_induction_tac ¨zÆ);
+val _ = a (REPEAT_N 3 strip_tac THEN rewrite_tac [get_spec ¨SameExtÆ, get_spec ¨SameEssÆ, evalformfunct_thm2]
 	THEN REPEAT strip_tac);
-a (asm_rewrite_tac[let_def]);
-a (fc_tac [syntax_cases_thm]
+val _ = a (asm_rewrite_tac[let_def]);
+val _ = a (fc_tac [syntax_cases_thm]
 	THEN fc_tac[Is_not_fc_clauses]
 	THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (asm_rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
-a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ (fn x => rewrite_thm_tac x THEN asm_tac x));
-a (POP_ASM_T strip_asm_tac);
-a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])));
-a (asm_fc_tac[]);
-a (lemma_tac ¨IxVal x (AfMem t) ç V ± IxVal x (AfSet t) ç V ± IxVal y (AfMem t) ç V ± IxVal y (AfSet t) ç VÆ
+val _ = a (asm_rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
+val _ = a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ (fn x => rewrite_thm_tac x THEN asm_tac x));
+val _ = a (POP_ASM_T strip_asm_tac);
+val _ = a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])));
+val _ = a (asm_fc_tac[]);
+val _ = a (lemma_tac ¨IxVal x (AfMem t) ç V ± IxVal x (AfSet t) ç V ± IxVal y (AfMem t) ç V ± IxVal y (AfSet t) ç VÆ
 	THEN REPEAT strip_tac);
 (* *** Goal "1.1" *** *)
-a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+val _ = a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
 (* *** Goal "1.2" *** *)
-a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+val _ = a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
 (* *** Goal "1.3" *** *)
-a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+val _ = a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
 (* *** Goal "1.4" *** *)
-a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
+val _ = a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
 (* *** Goal "1.5" *** *)
-a (asm_fc_tac[] THEN asm_rewrite_tac[]);
+val _ = a (asm_fc_tac[] THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
-a (LEMMA_T ¨  {pb
+val _ = a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
+val _ = a (LEMMA_T ¨  {pb
                  |∂ rv v
                    ∑ rv ç FunImage (EvalForm (EvalCf_tf4, $ºâtâ4, V, r)) (Xâg (CfForms t))
                        ± IxDom v = Xâg (CfVars t)
@@ -1801,268 +1910,269 @@ a (LEMMA_T ¨  {pb
                        ± IxRan v Ä V
                        ± pb = rv (IxOverRide y v)}Æ (fn x => bc_tac [x])
 	THEN1 (STRIP_T rewrite_thm_tac));
-a (PC_T "hol1" strip_tac THEN µ_tac THEN rewrite_tac[]);
-a (REPEAT strip_tac);
+val _ = a (PC_T "hol1" strip_tac THEN µ_tac THEN rewrite_tac[]);
+val _ = a (REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 3 discard_tac);
-a (SYM_ASMS_T rewrite_tac);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_fc_tac [is_fc_clauses2]);
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (lemma_tac ¨µ v∑ v ç IxDom x
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 3 discard_tac);
+val _ = a (SYM_ASMS_T rewrite_tac);
+val _ = a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (all_fc_tac [is_fc_clauses2]);
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (lemma_tac ¨µ v∑ v ç IxDom x
                          ¥ SameExt V r (IxVal x v) (IxVal y v)
                            ± SameEss V r (IxVal x v) (IxVal y v)Æ
 	THEN1 (strip_tac
 		THEN rewrite_tac [get_spec ¨SameExtÆ, get_spec ¨SameEssÆ]
 		THEN strip_tac));
 (* *** Goal "2.1.1" *** *)
-a (spec_nth_asm_tac 12 ¨v'Æ);
-a (REPEAT strip_tac THEN asm_fc_tac[]);
+val _ = a (spec_nth_asm_tac 12 ¨v'Æ);
+val _ = a (REPEAT strip_tac THEN asm_fc_tac[]);
 (* *** Goal "2.1.2" *** *)
-a (spec_nth_asm_tac 18 ¨aÆ);
-a (list_spec_nth_asm_tac 1 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]
+val _ = a (spec_nth_asm_tac 18 ¨aÆ);
+val _ = a (list_spec_nth_asm_tac 1 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]
 	THEN swap_nth_asm_concl_tac 1);
 (* *** Goal "2.1.2.1" *** *)
-a (asm_rewrite_tac[]);
+val _ = a (asm_rewrite_tac[]);
 (* *** Goal "2.1.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨IxDom y ¿ Xâg (CfVars t)Æ] Ä_trans_thm]);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨IxDom y ¿ Xâg (CfVars t)Æ] Ä_trans_thm]);
 (* *** Goal "2.1.2.2.1" *** *)
-a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
-a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
-a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
+val _ = a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
+val _ = a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
+val _ = a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
 	THEN1 (asm_rewrite_tac [get_spec ¨FunImageâgÆ]
 		THEN ∂_tac ¨aÆ
 		THEN asm_rewrite_tac[]));
-a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
+val _ = a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
 	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¨µx B∑ x ç B ¥ x Ä ﬁ BÆ]));
-a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
+val _ = a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
 (* *** Goal "2.1.2.2.2" *** *)
-a (DROP_NTH_ASM_T 17 ante_tac
+val _ = a (DROP_NTH_ASM_T 17 ante_tac
 	THEN asm_rewrite_tac[]
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.1.2.3" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan x ¿ IxRan vÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
+val _ = a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan x ¿ IxRan vÆ, ¨VÆ] Ä_trans_thm]);
+val _ = a (rewrite_tac[ixoverride_ixran_lemma]);
+val _ = a (DROP_NTH_ASM_T 9 ante_tac
 	THEN DROP_NTH_ASM_T 15 ante_tac
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.1.2.4" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan y ¿ IxRan vÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
+val _ = a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan y ¿ IxRan vÆ, ¨VÆ] Ä_trans_thm]);
+val _ = a (rewrite_tac[ixoverride_ixran_lemma]);
+val _ = a (DROP_NTH_ASM_T 9 ante_tac
 	THEN DROP_NTH_ASM_T 14 ante_tac
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.1.2.5" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
+val _ = a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
+val _ = a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
 	THEN strip_tac);
 (* *** Goal "2.1.2.5.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T ante_tac
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T (ante_tac)
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (all_asm_fc_tac[]);
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "2.1.2.5.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
+val _ = a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
 	asm_tac x
 	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] sameext_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+val _ = a (fc_tac [ix_domran_lemma]);
+val _ = a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
 (* *** Goal "2.1.2.6" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
+val _ = a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
+val _ = a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
 	THEN strip_tac);
 (* *** Goal "2.1.2.6.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T ante_tac
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ]))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (all_asm_fc_tac[]);
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "2.1.2.6.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
+val _ = a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
 	asm_tac x
 	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] sameess_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+val _ = a (fc_tac [ix_domran_lemma]);
+val _ = a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
 (* *** Goal "2.2" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 3 discard_tac);
-a (SYM_ASMS_T rewrite_tac);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_fc_tac [is_fc_clauses2]);
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (lemma_tac ¨µ v∑ v ç IxDom x
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 3 discard_tac);
+val _ = a (SYM_ASMS_T rewrite_tac);
+val _ = a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (all_fc_tac [scprec_fc_clauses2]);
+val _ = a (all_fc_tac [is_fc_clauses2]);
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (lemma_tac ¨µ v∑ v ç IxDom x
                          ¥ SameExt V r (IxVal x v) (IxVal y v)
                            ± SameEss V r (IxVal x v) (IxVal y v)Æ
 	THEN1 (strip_tac
 		THEN rewrite_tac [get_spec ¨SameExtÆ, get_spec ¨SameEssÆ]
 		THEN strip_tac));
 (* *** Goal "2.2.1" *** *)
-a (spec_nth_asm_tac 12 ¨v'Æ);
-a (REPEAT strip_tac THEN asm_fc_tac[]);
+val _ = a (spec_nth_asm_tac 12 ¨v'Æ);
+val _ = a (REPEAT strip_tac THEN asm_fc_tac[]);
 (* *** Goal "2.2.2" *** *)
-a (spec_nth_asm_tac 18 ¨aÆ);
-a (list_spec_nth_asm_tac 1 [¨IxOverRide y vÆ, ¨IxOverRide x vÆ]
+val _ = a (spec_nth_asm_tac 18 ¨aÆ);
+val _ = a (list_spec_nth_asm_tac 1 [¨IxOverRide y vÆ, ¨IxOverRide x vÆ]
 	THEN swap_nth_asm_concl_tac 1);
 (* *** Goal "2.2.2.1" *** *)
-a (asm_rewrite_tac[]);
+val _ = a (asm_rewrite_tac[]);
 (* *** Goal "2.2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨Xâg (CfVars t) ¿ IxDom xÆ] Ä_trans_thm]);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨Xâg (CfVars t) ¿ IxDom xÆ] Ä_trans_thm]);
 (* *** Goal "2.2.2.2.1" *** *)
-a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
-a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
-a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
+val _ = a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
+val _ = a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
+val _ = a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
 	THEN1 (asm_rewrite_tac [get_spec ¨FunImageâgÆ]
 		THEN ∂_tac ¨aÆ
 		THEN asm_rewrite_tac[]));
-a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
+val _ = a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
 	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¨µx B∑ x ç B ¥ x Ä ﬁ BÆ]));
-a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
+val _ = a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
 (* *** Goal "2.2.2.2.2" *** *)
-a (DROP_NTH_ASM_T 17 ante_tac
+val _ = a (DROP_NTH_ASM_T 17 ante_tac
 	THEN asm_rewrite_tac[]
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.2.2.3" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan v ¿ IxRan yÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
+val _ = a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan v ¿ IxRan yÆ, ¨VÆ] Ä_trans_thm]);
+val _ = a (rewrite_tac[ixoverride_ixran_lemma]);
+val _ = a (DROP_NTH_ASM_T 9 ante_tac
 	THEN DROP_NTH_ASM_T 14 ante_tac
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.2.2.4" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan v ¿ IxRan xÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
+val _ = a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan v ¿ IxRan xÆ, ¨VÆ] Ä_trans_thm]);
+val _ = a (rewrite_tac[ixoverride_ixran_lemma]);
+val _ = a (DROP_NTH_ASM_T 9 ante_tac
 	THEN DROP_NTH_ASM_T 15 ante_tac
 	THEN PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.2.2.5" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
+val _ = a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
+val _ = a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
 	THEN strip_tac);
 (* *** Goal "2.2.2.5.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T ante_tac
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)]))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (POP_ASM_T (asm_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)]))
+val _ = a (POP_ASM_T (asm_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)]))
 	THEN all_asm_fc_tac[]);
-a (lemma_tac ¨IxVal y v' ç V ± IxVal x v' ç VÆ);
-a (lemma_tac ¨v' ç IxDom yÆ THEN1 rewrite_tac[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ), asm_rule ¨v' ç IxDom xÆ]);
-a (lemma_tac ¨IxVal y v' ç IxRan y ± IxVal x v' ç IxRan xÆ
+val _ = a (lemma_tac ¨IxVal y v' ç V ± IxVal x v' ç VÆ);
+val _ = a (lemma_tac ¨v' ç IxDom yÆ THEN1 rewrite_tac[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ), asm_rule ¨v' ç IxDom xÆ]);
+val _ = a (lemma_tac ¨IxVal y v' ç IxRan y ± IxVal x v' ç IxRan xÆ
 	THEN1 (fc_tac [ix_domran_lemma] THEN contr_tac));
-a (GET_NTH_ASM_T 21 ante_tac THEN GET_NTH_ASM_T 22 ante_tac
+val _ = a (GET_NTH_ASM_T 21 ante_tac THEN GET_NTH_ASM_T 22 ante_tac
 	THEN rewrite_tac [sets_ext_clauses]
 	THEN STRIP_T (fn x => fc_tac [x])
 	THEN STRIP_T (fn x => fc_tac [x])
 	THEN contr_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal y v'Æ, ¨IxVal x v'Æ] sameext_sym_lemma));
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal y v'Æ, ¨IxVal x v'Æ] sameext_sym_lemma));
 (* *** Goal "2.2.2.5.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)])))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
+val _ = a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
 	asm_tac x
 	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] sameext_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+val _ = a (fc_tac [ix_domran_lemma]);
+val _ = a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
 (* *** Goal "2.2.2.6" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
+val _ = a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
+val _ = a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
 	THEN strip_tac);
 (* *** Goal "2.2.2.6.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T ante_tac
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
 	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule(asm_rule ¨IxDom x = IxDom yÆ)]))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (POP_ASM_T (asm_tac o (rewrite_rule [eq_sym_rule(asm_rule ¨IxDom x = IxDom yÆ)])));
-a (all_asm_fc_tac[]);
-a (LEMMA_T ¨IxVal y v' ç V ± IxVal x v' ç VÆ (fn x =>
+val _ = a (POP_ASM_T (asm_tac o (rewrite_rule [eq_sym_rule(asm_rule ¨IxDom x = IxDom yÆ)])));
+val _ = a (all_asm_fc_tac[]);
+val _ = a (LEMMA_T ¨IxVal y v' ç V ± IxVal x v' ç VÆ (fn x =>
 	strip_asm_tac (rewrite_rule [x] (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal y v'Æ, ¨IxVal x v'Æ] sameess_sym_lemma))));
-a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [asm_rule ¨IxDom x = IxDom yÆ])));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan x Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
-a (GET_ASM_T ¨IxRan y Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
-a (contr_tac);
+val _ = a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [asm_rule ¨IxDom x = IxDom yÆ])));
+val _ = a (fc_tac [ix_domran_lemma]);
+val _ = a (GET_ASM_T ¨IxRan x Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+val _ = a (GET_ASM_T ¨IxRan y Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
+val _ = a (contr_tac);
 (* *** Goal "2.2.2.6.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
+val _ = a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
 	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)])))
 		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
 			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
 		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
+val _ = a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
 	asm_tac x
 	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] sameess_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
-val evalform_ext_lemma = save_pop_thm "evalform_ext_lemma";
+val _ = a (fc_tac [ix_domran_lemma]);
+val _ = a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
+val _ = a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
+in val evalform_ext_lemma = save_pop_thm "evalform_ext_lemma";
+end;
 =TEX
 }%ignore
 
@@ -2171,504 +2281,169 @@ and its dual:
    Ù µ V r
      ∑ ≥ UnderDefined V r
          ¥ (µ x y∑ x ç V ± y ç V ¥ (CoCompEss V r x y § CoCompEss V r y x))
-
-€evalform_ext_lemma2› =
-   Ù µ V r
-     ∑ V Ä SetReps
-         ¥ (µ z
-         ∑ z ç Syntax
-             ¥ (µ x y
-             ∑ IxDom x = IxDom y
-                   ± FreeVars z Ä IxDom x
-                   ± IxRan x Ä V
-                   ± IxRan y Ä V
-                   ± (µ v
-                   ∑ v ç IxDom x
-                       ¥ CompExt V r (IxVal x v) (IxVal y v)
-                         ± CompEss V r (IxVal x v) (IxVal y v))
-                 ¥ EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z x
-                   = EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z y))
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µs∑ s ç CompFTV § (∂x∑ x ç s) ± ≥ fT ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
-a (µ_tac THEN rewrite_tac[get_spec ¨CompFTVÆ, ç_in_clauses]
+local val _ = set_goal([], ¨µs∑ s ç CompFTV § (∂x∑ x ç s) ± ≥ fT ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
+val _ = a (µ_tac THEN rewrite_tac[get_spec ¨CompFTVÆ, ç_in_clauses]
 	THEN REPEAT_N 2 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
+val _ = a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
 (* *** Goal "2" *** *)
-a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
+val _ = a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
 	THEN asm_rewrite_tac[]);
-val compftv_lemma = save_pop_thm "compftv_lemma";
+in val compftv_lemma = save_pop_thm "compftv_lemma";
+end;
 
-set_goal([], ¨µs∑ s ç CoCompFTV § (∂x∑ x ç s) ± ≥ fB ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
-a (µ_tac THEN rewrite_tac[get_spec ¨CoCompFTVÆ, ç_in_clauses]
+local val _ = set_goal([], ¨µs∑ s ç CoCompFTV § (∂x∑ x ç s) ± ≥ fB ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
+val _ = a (µ_tac THEN rewrite_tac[get_spec ¨CoCompFTVÆ, ç_in_clauses]
 	THEN REPEAT_N 2 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
+val _ = a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
 (* *** Goal "2" *** *)
-a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
+val _ = a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
 	THEN asm_rewrite_tac[]);
 (* *** Goal "2.1" *** *)
-a (LEMMA_T ¨{fFalse; fT} = {fT; fFalse}Æ rewrite_thm_tac);
-a (PC_T1 "hol1" prove_tac[]);
+val _ = a (LEMMA_T ¨{fFalse; fT} = {fT; fFalse}Æ rewrite_thm_tac);
+val _ = a (PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2.2" *** *)
-a (LEMMA_T ¨{fTrue; fT} = {fT; fTrue}Æ rewrite_thm_tac);
-a (PC_T1 "hol1" prove_tac[]);
-val cocompftv_lemma = save_pop_thm "cocompftv_lemma";
+val _ = a (LEMMA_T ¨{fTrue; fT} = {fT; fTrue}Æ rewrite_thm_tac);
+val _ = a (PC_T1 "hol1" prove_tac[]);
+in val cocompftv_lemma = save_pop_thm "cocompftv_lemma";
+end;
 
-set_goal ([], ¨µV r x∑ ≥ OverDefined V r ¥ x ç V ¥ CompExt V r x xÆ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ, get_spec ¨CompExtÆ, get_spec ¨CompFTVÆ, let_def]
+local val _ = set_goal ([], ¨µV r x∑ ≥ OverDefined V r ¥ x ç V ¥ CompExt V r x xÆ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ, get_spec ¨CompExtÆ, get_spec ¨CompFTVÆ, let_def]
 	THEN REPEAT_N 4 strip_tac);
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (spec_nth_asm_tac 1 ¨xÆ);
-a (strip_asm_tac (µ_elim ¨r z xÆ ftv_cases_thm)
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (spec_nth_asm_tac 1 ¨xÆ);
+val _ = a (strip_asm_tac (µ_elim ¨r z xÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[sets_ext_clauses, ç_in_clauses]);
-val compext_refl_lemma = save_pop_thm "compext_refl_lemma";
+in val compext_refl_lemma = save_pop_thm "compext_refl_lemma";
+end;
 
-set_goal ([], ¨µV r x∑ ≥ UnderDefined V r ¥ x ç V ¥ CoCompExt V r x xÆ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ, get_spec ¨CoCompExtÆ, get_spec ¨CoCompFTVÆ, let_def]
+local val _ = set_goal ([], ¨µV r x∑ ≥ UnderDefined V r ¥ x ç V ¥ CoCompExt V r x xÆ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ, get_spec ¨CoCompExtÆ, get_spec ¨CoCompFTVÆ, let_def]
 	THEN REPEAT_N 4 strip_tac);
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (spec_nth_asm_tac 1 ¨xÆ);
-a (strip_asm_tac (µ_elim ¨r z xÆ ftv_cases_thm)
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (spec_nth_asm_tac 1 ¨xÆ);
+val _ = a (strip_asm_tac (µ_elim ¨r z xÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[sets_ext_clauses, ç_in_clauses]);
-val cocompext_refl_lemma = save_pop_thm "cocompext_refl_lemma";
+in val cocompext_refl_lemma = save_pop_thm "cocompext_refl_lemma";
+end;
 
-set_goal ([], ¨µV r x∑ ≥ OverDefined V r ¥ x ç V ¥ CompEss V r x xÆ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ, get_spec ¨CompEssÆ, get_spec ¨CompFTVÆ, let_def]
+local val _ = set_goal ([], ¨µV r x∑ ≥ OverDefined V r ¥ x ç V ¥ CompEss V r x xÆ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ, get_spec ¨CompEssÆ, get_spec ¨CompFTVÆ, let_def]
 	THEN REPEAT_N 4 strip_tac);
-a (spec_nth_asm_tac 3 ¨xÆ);
-a (spec_nth_asm_tac 1 ¨zÆ);
-a (strip_asm_tac (µ_elim ¨r x zÆ ftv_cases_thm)
+val _ = a (spec_nth_asm_tac 3 ¨xÆ);
+val _ = a (spec_nth_asm_tac 1 ¨zÆ);
+val _ = a (strip_asm_tac (µ_elim ¨r x zÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[sets_ext_clauses, ç_in_clauses]);
-val compess_refl_lemma = save_pop_thm "compess_refl_lemma";
+in val compess_refl_lemma = save_pop_thm "compess_refl_lemma";
+end;
 
-set_goal ([], ¨µV r x∑ ≥ UnderDefined V r ¥ x ç V ¥ CoCompEss V r x xÆ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ, get_spec ¨CoCompEssÆ, get_spec ¨CoCompFTVÆ, let_def]
+local val _ = set_goal ([], ¨µV r x∑ ≥ UnderDefined V r ¥ x ç V ¥ CoCompEss V r x xÆ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ, get_spec ¨CoCompEssÆ, get_spec ¨CoCompFTVÆ, let_def]
 	THEN REPEAT_N 4 strip_tac);
-a (spec_nth_asm_tac 3 ¨xÆ);
-a (spec_nth_asm_tac 1 ¨zÆ);
-a (strip_asm_tac (µ_elim ¨r x zÆ ftv_cases_thm)
+val _ = a (spec_nth_asm_tac 3 ¨xÆ);
+val _ = a (spec_nth_asm_tac 1 ¨zÆ);
+val _ = a (strip_asm_tac (µ_elim ¨r x zÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[sets_ext_clauses, ç_in_clauses]);
-val cocompess_refl_lemma = save_pop_thm "cocompess_refl_lemma";
+in val cocompess_refl_lemma = save_pop_thm "cocompess_refl_lemma";
+end;
 
-set_goal ([], ¨µV r∑ ≥ OverDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CompExt V r x y § CompExt V r y x)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ]
+local val _ = set_goal ([], ¨µV r∑ ≥ OverDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CompExt V r x y § CompExt V r y x)Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ]
 	THEN REPEAT (¥_tac ORELSE µ_tac)
 	THEN rewrite_tac [get_spec ¨CompExtÆ, compftv_lemma, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (∂_tac ¨r z yÆ THEN rewrite_tac []);
+val _ = a (∂_tac ¨r z yÆ THEN rewrite_tac []);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 2 ¨zÆ
+val _ = a (spec_nth_asm_tac 2 ¨zÆ
 	THEN rewrite_tac[ç_in_clauses]
 	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
 (* *** Goal "3" *** *)
-a (∂_tac ¨r z yÆ THEN rewrite_tac []);
+val _ = a (∂_tac ¨r z yÆ THEN rewrite_tac []);
 (* *** Goal "4" *** *)
-a (spec_nth_asm_tac 2 ¨zÆ
+val _ = a (spec_nth_asm_tac 2 ¨zÆ
 	THEN rewrite_tac[ç_in_clauses]
 	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
-val compext_sym_lemma = save_pop_thm "compext_sym_lemma";
+in val compext_sym_lemma = save_pop_thm "compext_sym_lemma";
+end;
 
-set_goal ([], ¨µV r∑ ≥ UnderDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CoCompExt V r x y § CoCompExt V r y x)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ]
+local val _ = set_goal ([], ¨µV r∑ ≥ UnderDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CoCompExt V r x y § CoCompExt V r y x)Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ]
 	THEN REPEAT (¥_tac ORELSE µ_tac)
 	THEN rewrite_tac [get_spec ¨CoCompExtÆ, cocompftv_lemma, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (∂_tac ¨r z yÆ THEN rewrite_tac []);
+val _ = a (∂_tac ¨r z yÆ THEN rewrite_tac []);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 2 ¨zÆ
+val _ = a (spec_nth_asm_tac 2 ¨zÆ
 	THEN rewrite_tac[ç_in_clauses]
 	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
 (* *** Goal "3" *** *)
-a (∂_tac ¨r z yÆ THEN rewrite_tac []);
+val _ = a (∂_tac ¨r z yÆ THEN rewrite_tac []);
 (* *** Goal "4" *** *)
-a (spec_nth_asm_tac 2 ¨zÆ
+val _ = a (spec_nth_asm_tac 2 ¨zÆ
 	THEN rewrite_tac[ç_in_clauses]
 	THEN REPEAT_N 4 (POP_ASM_T rewrite_thm_tac));
-val cocompext_sym_lemma = save_pop_thm "cocompext_sym_lemma";
+in val cocompext_sym_lemma = save_pop_thm "cocompext_sym_lemma";
+end;
 
-set_goal ([], ¨µV r∑ ≥ OverDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CompEss V r x y § CompEss V r y x)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ]
+local val _ = set_goal ([], ¨µV r∑ ≥ OverDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CompEss V r x y § CompEss V r y x)Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨OverDefinedÆ]
 	THEN REPEAT (¥_tac ORELSE µ_tac)
 	THEN rewrite_tac [get_spec ¨CompEssÆ, let_def]
-	THEN PC_T1 "hol1" asm_prove_tac []
 	THEN contr_tac);
 (* *** Goal "1" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (REPEAT_N 2 (POP_ASM_T ante_tac));
-a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (REPEAT_N 2 (POP_ASM_T ante_tac));
+val _ = a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
 	THEN1 PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (REPEAT_N 2 (POP_ASM_T ante_tac));
-a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (REPEAT_N 2 (POP_ASM_T ante_tac));
+val _ = a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
 	THEN1 PC_T1 "hol1" prove_tac[]);
-val compess_sym_lemma = save_pop_thm "compess_sym_lemma";
+in val compess_sym_lemma = save_pop_thm "compess_sym_lemma";
+end;
 
-set_goal ([], ¨µV r∑ ≥ UnderDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CoCompEss V r x y § CoCompEss V r y x)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ]
+local val _ = set_goal ([], ¨µV r∑ ≥ UnderDefined V r ¥ µx y∑ x ç V ± y ç V ¥ (CoCompEss V r x y § CoCompEss V r y x)Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨UnderDefinedÆ]
 	THEN REPEAT (¥_tac ORELSE µ_tac)
 	THEN rewrite_tac [get_spec ¨CoCompEssÆ, let_def]
-	THEN PC_T1 "hol1" asm_prove_tac []
 	THEN contr_tac);
 (* *** Goal "1" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (REPEAT_N 2 (POP_ASM_T ante_tac));
-a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (REPEAT_N 2 (POP_ASM_T ante_tac));
+val _ = a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
 	THEN1 PC_T1 "hol1" prove_tac[]);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ);
-a (REPEAT_N 2 (POP_ASM_T ante_tac));
-a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
+val _ = a (spec_nth_asm_tac 3 ¨zÆ);
+val _ = a (REPEAT_N 2 (POP_ASM_T ante_tac));
+val _ = a (LEMMA_T ¨{r y z; r x z} = {r x z; r y z}Æ rewrite_thm_tac
 	THEN1 PC_T1 "hol1" prove_tac[]);
-val cocompess_sym_lemma = save_pop_thm "cocompess_sym_lemma";
-
-=IGN
-
-set_goal([], ¨µV r∑ V Ä SetReps ± ≥ OverDefined V r ¥ µzs∑ zs Ä Syntax ¥ µx y∑
-		IxDom x = IxDom y ± (µz∑ z ç zs ¥ FreeVars z Ä IxDom x) ± IxRan x Ä V ± IxRan y Ä V
-		± (µv∑ v ç IxDom x ¥ CompExt V r (IxVal x v) (IxVal y v) ± CompEss V r (IxVal x v) (IxVal y v))
-		¥	{EvalCf_tf4 {zt | ∂z∑ z ç zs ± zt = EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z x};
-			EvalCf_tf4 {zt | ∂z∑ z ç zs ± zt = EvalForm (EvalCf_tf4, $ºâtâ4, V, r) z y}} ç CompFTVÆ);
-a (PC_T "hol1" (REPEAT_N 8 strip_tac));
-a (sc_induction_tac ¨zÆ);
-a (REPEAT_N 3 strip_tac THEN rewrite_tac [get_spec ¨CompExtÆ, get_spec ¨CompEssÆ, evalformfunct_thm2]
-	THEN REPEAT strip_tac);
-a (asm_rewrite_tac[let_def]);
-a (fc_tac [syntax_cases_thm]
-	THEN fc_tac[Is_not_fc_clauses]
-	THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (asm_rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
-a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ (fn x => rewrite_thm_tac x THEN asm_tac x)
-	THEN_TRY rewrite_tac [get_spec ¨CompFTVÆ]);
-a (POP_ASM_T strip_asm_tac);
-a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])));
-a (asm_fc_tac[]);
-a (lemma_tac ¨IxVal x (AfMem t) ç V ± IxVal x (AfSet t) ç V ± IxVal y (AfMem t) ç V ± IxVal y (AfSet t) ç VÆ
-	THEN REPEAT strip_tac);
-(* *** Goal "1.1" *** *)
-a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
-(* *** Goal "1.2" *** *)
-a (GET_NTH_ASM_T 11 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
-(* *** Goal "1.3" *** *)
-a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
-(* *** Goal "1.4" *** *)
-a (GET_NTH_ASM_T 10 (fn x => bc_tac [rewrite_rule [sets_ext_clauses] x]));
-a (bc_tac [ix_domran_lemma] THEN asm_rewrite_tac[]);
-
-=IGN
-
-(* *** Goal "1.5" *** *)
-a (ASM_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[let_def]))) [] THEN_TRY asm_rewrite_tac[]);
-a (ASM_FC_T (MAP_EVERY (strip_asm_tac)) [] THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
-a (LEMMA_T ¨  {pb
-                 |∂ rv v
-                   ∑ rv ç FunImage (EvalForm (EvalCf_tf4, $ºâtâ4, V, r)) (Xâg (CfForms t))
-                       ± IxDom v = Xâg (CfVars t)
-                       ± IxRan v Ä V
-                       ± pb = rv (IxOverRide x v)}
-             =
-               {pb
-                 |∂ rv v
-                   ∑ rv ç FunImage (EvalForm (EvalCf_tf4, $ºâtâ4, V, r)) (Xâg (CfForms t))
-                       ± IxDom v = Xâg (CfVars t)
-                       ± IxRan v Ä V
-                       ± pb = rv (IxOverRide y v)}
-	¥ EvalCf_tf4
-               {pb
-                 |∂ rv v
-                   ∑ rv ç FunImage (EvalForm (EvalCf_tf4, $ºâtâ4, V, r)) (Xâg (CfForms t))
-                       ± IxDom v = Xâg (CfVars t)
-                       ± IxRan v Ä V
-                       ± pb = rv (IxOverRide x v)}
-             = EvalCf_tf4
-               {pb
-                 |∂ rv v
-                   ∑ rv ç FunImage (EvalForm (EvalCf_tf4, $ºâtâ4, V, r)) (Xâg (CfForms t))
-                       ± IxDom v = Xâg (CfVars t)
-                       ± IxRan v Ä V
-                       ± pb = rv (IxOverRide y v)}Æ (fn x => bc_tac [x])
-	THEN1 (STRIP_T rewrite_thm_tac));
-a (PC_T "hol1" strip_tac THEN µ_tac THEN rewrite_tac[]);
-a (REPEAT strip_tac);
-(* *** Goal "2.1" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 3 discard_tac);
-a (SYM_ASMS_T rewrite_tac);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_fc_tac [is_fc_clauses2]);
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (lemma_tac ¨µ v∑ v ç IxDom x
-                         ¥ CompExt V r (IxVal x v) (IxVal y v)
-                           ± CompEss V r (IxVal x v) (IxVal y v)Æ
-	THEN1 (strip_tac
-		THEN rewrite_tac [get_spec ¨CompExtÆ, get_spec ¨CompEssÆ]
-		THEN strip_tac));
-(* *** Goal "2.1.1" *** *)
-a (spec_nth_asm_tac 12 ¨v'Æ);
-a (REPEAT strip_tac THEN asm_fc_tac[]);
-(* *** Goal "2.1.2" *** *)
-a (spec_nth_asm_tac 18 ¨aÆ);
-a (list_spec_nth_asm_tac 1 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]
-	THEN swap_nth_asm_concl_tac 1);
-(* *** Goal "2.1.2.1" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2.1.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨Xâg (CfVars t) ¿ IxDom yÆ] Ä_trans_thm]);
-(* *** Goal "2.1.2.2.1" *** *)
-a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
-a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
-a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
-	THEN1 (asm_rewrite_tac [get_spec ¨FunImageâgÆ]
-		THEN ∂_tac ¨aÆ
-		THEN asm_rewrite_tac[]));
-a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
-	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¨µx B∑ x ç B ¥ x Ä ﬁ BÆ]));
-a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
-(* *** Goal "2.1.2.2.2" *** *)
-a (DROP_NTH_ASM_T 17 ante_tac
-	THEN asm_rewrite_tac[]
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.1.2.3" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan v ¿ IxRan xÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
-	THEN DROP_NTH_ASM_T 15 ante_tac
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.1.2.4" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan v ¿ IxRan yÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
-	THEN DROP_NTH_ASM_T 14 ante_tac
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.1.2.5" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
-	THEN strip_tac);
-(* *** Goal "2.1.2.5.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T ante_tac
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ]))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (all_asm_fc_tac[]);
-(* *** Goal "2.1.2.5.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
-	asm_tac x
-	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] compext_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
-(* *** Goal "2.1.2.6" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
-	THEN strip_tac);
-(* *** Goal "2.1.2.6.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T ante_tac
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ]))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (all_asm_fc_tac[]);
-(* *** Goal "2.1.2.6.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[asm_rule ¨IxDom x = IxDom yÆ])))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
-	asm_tac x
-	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] compess_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
-(* *** Goal "2.2" *** *)
-a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
-a (DROP_NTH_ASM_T 3 discard_tac);
-a (SYM_ASMS_T rewrite_tac);
-a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
-a (all_fc_tac [scprec_fc_clauses2]);
-a (all_fc_tac [is_fc_clauses2]);
-a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
-a (lemma_tac ¨µ v∑ v ç IxDom x
-                         ¥ CompExt V r (IxVal x v) (IxVal y v)
-                           ± CompEss V r (IxVal x v) (IxVal y v)Æ
-	THEN1 (strip_tac
-		THEN rewrite_tac [get_spec ¨CompExtÆ, get_spec ¨CompEssÆ]
-		THEN strip_tac));
-(* *** Goal "2.2.1" *** *)
-a (spec_nth_asm_tac 12 ¨v'Æ);
-a (REPEAT strip_tac THEN asm_fc_tac[]);
-(* *** Goal "2.2.2" *** *)
-a (spec_nth_asm_tac 18 ¨aÆ);
-a (list_spec_nth_asm_tac 1 [¨IxOverRide y vÆ, ¨IxOverRide x vÆ]
-	THEN swap_nth_asm_concl_tac 1);
-(* *** Goal "2.2.2.1" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2.2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (bc_tac [list_µ_elim [¨FreeVars aÆ, ¨Xâg (CfVars t) ¿ FreeVars tÆ, ¨Xâg (CfVars t) ¿ IxDom xÆ] Ä_trans_thm]);
-(* *** Goal "2.2.2.2.1" *** *)
-a (asm_rewrite_tac[µ_elim ¨tÆ freevarsfunct_thm2]);
-a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ¿ (B \ A) = A ¿ BÆ]);
-a (lemma_tac ¨FreeVars a ç FunImageâg FreeVars (CfForms t)Æ
-	THEN1 (asm_rewrite_tac [get_spec ¨FunImageâgÆ]
-		THEN ∂_tac ¨aÆ
-		THEN asm_rewrite_tac[]));
-a (lemma_tac ¨FreeVars a Ä ﬁ (FunImageâg FreeVars (CfForms t))Æ
-	THEN1 (fc_tac [pc_rule1 "hol1" prove_rule [] ¨µx B∑ x ç B ¥ x Ä ﬁ BÆ]));
-a (ALL_FC_T rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx B C∑ x Ä B ¥ x Ä C ¿ BÆ]);
-(* *** Goal "2.2.2.2.2" *** *)
-a (DROP_NTH_ASM_T 17 ante_tac
-	THEN asm_rewrite_tac[]
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.2.2.3" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide y v)Æ, ¨IxRan v ¿ IxRan yÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
-	THEN DROP_NTH_ASM_T 14 ante_tac
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.2.2.4" *** *)
-a (bc_tac [list_µ_elim [¨IxRan (IxOverRide x v)Æ, ¨IxRan v ¿ IxRan xÆ, ¨VÆ] Ä_trans_thm]);
-a (rewrite_tac[ixoverride_ixran_lemma]);
-a (DROP_NTH_ASM_T 9 ante_tac
-	THEN DROP_NTH_ASM_T 15 ante_tac
-	THEN PC_T1 "hol1" prove_tac[]);
-(* *** Goal "2.2.2.5" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
-	THEN strip_tac);
-(* *** Goal "2.2.2.5.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T ante_tac
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)]))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (POP_ASM_T (asm_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)]))
-	THEN all_asm_fc_tac[]);
-a (lemma_tac ¨IxVal y v' ç V ± IxVal x v' ç VÆ);
-a (lemma_tac ¨v' ç IxDom yÆ THEN1 rewrite_tac[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ), asm_rule ¨v' ç IxDom xÆ]);
-a (lemma_tac ¨IxVal y v' ç IxRan y ± IxVal x v' ç IxRan xÆ
-	THEN1 (fc_tac [ix_domran_lemma] THEN contr_tac));
-a (GET_NTH_ASM_T 21 ante_tac THEN GET_NTH_ASM_T 22 ante_tac
-	THEN rewrite_tac [sets_ext_clauses]
-	THEN STRIP_T (fn x => fc_tac [x])
-	THEN STRIP_T (fn x => fc_tac [x])
-	THEN contr_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal y v'Æ, ¨IxVal x v'Æ] compext_sym_lemma));
-(* *** Goal "2.2.2.5.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)])))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
-	asm_tac x
-	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] compext_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
-(* *** Goal "2.2.2.6" *** *)
-a (DROP_NTH_ASM_T 2 (ante_tac o (rewrite_rule [ç_in_clauses])));
-a (once_rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µA B∑ A ≤ B § B ≤ (A ± ≥ B)Æ]
-	THEN strip_tac);
-(* *** Goal "2.2.2.6.1" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal y v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T ante_tac
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal x v'Æ rewrite_thm_tac
-	THEN1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule(asm_rule ¨IxDom x = IxDom yÆ)]))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (POP_ASM_T (asm_tac o (rewrite_rule [eq_sym_rule(asm_rule ¨IxDom x = IxDom yÆ)])));
-a (all_asm_fc_tac[]);
-a (LEMMA_T ¨IxVal y v' ç V ± IxVal x v' ç VÆ (fn x =>
-	strip_asm_tac (rewrite_rule [x] (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal y v'Æ, ¨IxVal x v'Æ] compess_sym_lemma))));
-a (GET_NTH_ASM_T 3 (asm_tac o (rewrite_rule [asm_rule ¨IxDom x = IxDom yÆ])));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan x Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
-a (GET_ASM_T ¨IxRan y Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN STRIP_T (fn x => fc_tac[x]));
-a (contr_tac);
-(* *** Goal "2.2.2.6.2" *** *)
-a (LEMMA_T ¨(IxVal (IxOverRide y v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T ante_tac)
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨(IxVal (IxOverRide x v) v') = IxVal v v'Æ rewrite_thm_tac
-	THEN1 (REPEAT_N 1 (POP_ASM_T (ante_tac o (rewrite_rule[eq_sym_rule (asm_rule ¨IxDom x = IxDom yÆ)])))
-		THEN rewrite_tac[get_spec ¨IxOverRideÆ, get_spec ¨IxValÆ, get_spec ¨IxUdÆ,
-			get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
-		THEN STRIP_T rewrite_thm_tac));
-a (LEMMA_T ¨IxVal v v' ç VÆ (fn x =>
-	asm_tac x
-	THEN strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ, ¨IxVal v v'Æ] compess_refl_lemma)));
-a (fc_tac [ix_domran_lemma]);
-a (GET_ASM_T ¨IxRan v Ä VÆ ante_tac);
-a (rewrite_tac [sets_ext_clauses] THEN strip_tac THEN asm_fc_tac[]);
-val evalform_ext_lemma = save_pop_thm "evalform_ext_lemma";
+in val cocompess_sym_lemma = save_pop_thm "cocompess_sym_lemma";
+end;
 =TEX
 }%ignore
+
+
+πHOLCONST
+‹ €Compatible› : GS SET ≠ (GS, FTV)BR ≠ GS ≠ GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV r∑ Compatible V r = Ãx y∑ µz∑ z ç V ¥ {r x z; r y z} ç CompFTV
+∞
 
 \subsubsection{Proof Contexts}
 
 =SML
-add_pc_thms "'ifos" [];
+add_pc_thms "'ifos" [evalcf_tf4_ft_lemma, evalcf_tf4_fb_lemma];
+
+add_pc_thms "'ifos" [get_spec ¨ExtensionÆ, get_spec ¨EssenceÆ];
 commit_pc "'ifos";
 
 force_new_pc "€ifos›";
@@ -2727,34 +2502,39 @@ The following function creates a variable assignment with just a value for the e
 
 \ignore{
 =SML
-set_goal([], ¨µx∑ IxDom (Param_ö x) = {öâg}Æ);
-a (rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
-a (REPEAT µ_tac);
-a (cases_tac ¨x' = öâgÆ THEN asm_rewrite_tac[]);
-val ixdom_param_ö_lemma = save_pop_thm "ixdom_param_ö_lemma";
+local val _ = set_goal([], ¨µx∑ IxDom (Param_ö x) = {öâg}Æ);
+val _ = a (rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
+val _ = a (REPEAT µ_tac);
+val _ = a (cases_tac ¨x' = öâgÆ THEN asm_rewrite_tac[]);
+in val ixdom_param_ö_lemma = save_pop_thm "ixdom_param_ö_lemma";
+end;
 
-set_goal([], ¨µx∑ IxRan (Param_ö x) = {x}Æ);
-a (rewrite_tac [get_spec ¨IxRanÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
-a (REPEAT strip_tac);
+local val _ = set_goal([], ¨µx∑ IxRan (Param_ö x) = {x}Æ);
+val _ = a (rewrite_tac [get_spec ¨IxRanÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
+val _ = a (REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN cases_tac ¨¡ = öâgÆ THEN asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN cases_tac ¨¡ = öâgÆ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (∂_tac ¨öâgÆ THEN asm_rewrite_tac[]);
-val ixran_param_ö_lemma = save_pop_thm "ixran_param_ö_lemma";
+val _ = a (∂_tac ¨öâgÆ THEN asm_rewrite_tac[]);
+in val ixran_param_ö_lemma = save_pop_thm "ixran_param_ö_lemma";
+end;
 
-set_goal([], ¨µx∑ IxVal (Param_ö x) öâg = xÆ);
-a (rewrite_tac [get_spec ¨IxValÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
-val ixval_param_ö_lemma = save_pop_thm "ixval_param_ö_lemma";
+local val _ = set_goal([], ¨µx∑ IxVal (Param_ö x) öâg = xÆ);
+val _ = a (rewrite_tac [get_spec ¨IxValÆ, get_spec ¨Param_öÆ, sets_ext_clauses]);
+in val ixval_param_ö_lemma = save_pop_thm "ixval_param_ö_lemma";
+end;
 
-set_goal([], ¨µx∑ ValueOf (Param_ö x öâg) = xÆ);
-a (rewrite_tac [get_spec ¨Param_öÆ]);
-val valueof_param_ö_lemma = save_pop_thm "valueof_param_ö_lemma";
+local val _ = set_goal([], ¨µx∑ ValueOf (Param_ö x öâg) = xÆ);
+val _ = a (rewrite_tac [get_spec ¨Param_öÆ]);
+in val valueof_param_ö_lemma = save_pop_thm "valueof_param_ö_lemma";
+end;
 
-set_goal([], ¨µx y∑ Param_ö x y = Undefined § ≥ y = öâgÆ);
-a (rewrite_tac [get_spec ¨Param_öÆ]);
-a (REPEAT µ_tac);
-a (cases_tac ¨y = öâgÆ THEN asm_rewrite_tac[]);
-val param_ö_undefined_lemma = save_pop_thm "param_ö_undefined_lemma";
+local val _ = set_goal([], ¨µx y∑ Param_ö x y = Undefined § ≥ y = öâgÆ);
+val _ = a (rewrite_tac [get_spec ¨Param_öÆ]);
+val _ = a (REPEAT µ_tac);
+val _ = a (cases_tac ¨y = öâgÆ THEN asm_rewrite_tac[]);
+in val param_ö_undefined_lemma = save_pop_thm "param_ö_undefined_lemma";
+end;
 
 add_pc_thms "'sfp" (map get_spec [] @ [ixdom_param_ö_lemma, ixran_param_ö_lemma, ixval_param_ö_lemma,
 	valueof_param_ö_lemma, param_ö_undefined_lemma]);
@@ -2780,27 +2560,28 @@ It is easily shown to be monotonic.
 
 \ignore{
 =SML
-set_goal([], ¨µd∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)Æ);
-a (strip_tac THEN LEMMA_T
+local val _ = set_goal([], ¨µd∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)Æ);
+val _ = a (strip_tac THEN LEMMA_T
 	¨SemanticFunctor d = (Ãr m s∑ r s (Param_ö m)) o (Ã$çâv∑ EvalForm (EvalCf_tf4, $ºâtâ4, (d, $çâv)))Æ
 	rewrite_thm_tac
 	THEN1 rewrite_tac [get_spec ¨SemanticFunctorÆ]);
-a (bc_tac [increasing_funcomp_thm]);
-a (∂_tac ¨Pw (Pw $ºâtâ4)Æ THEN strip_tac);
+val _ = a (bc_tac [increasing_funcomp_thm]);
+val _ = a (∂_tac ¨Pw (Pw $ºâtâ4)Æ THEN strip_tac);
 (* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨IncreasingÆ]);
-a (REPEAT strip_tac);
-a (asm_tac ºâtâ4_crpou_thm);
-a (asm_tac evalcf_tf4_increasing_lemma);
-a (ALL_FC_T (MAP_EVERY (fn t => fc_tac [(rewrite_rule
+val _ = a (rewrite_tac [get_spec ¨IncreasingÆ]);
+val _ = a (REPEAT strip_tac);
+val _ = a (asm_tac ºâtâ4_crpou_thm);
+val _ = a (asm_tac evalcf_tf4_increasing_lemma);
+val _ = a (ALL_FC_T (MAP_EVERY (fn t => fc_tac [(rewrite_rule
 	[get_spec ¨IncreasingÆ, get_spec ¨RvOÆ] t)])) [evalform_increasing_thm]);
-a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¨PwÆ])));
-a (asm_rewrite_tac [get_spec ¨PwÆ]);
+val _ = a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¨PwÆ])));
+val _ = a (asm_rewrite_tac [get_spec ¨PwÆ]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PwÆ, get_spec ¨Param_öÆ]
+val _ = a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PwÆ, get_spec ¨Param_öÆ]
 	THEN REPEAT strip_tac
 	THEN asm_rewrite_tac[]);
-val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
+in val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
+end;
 =TEX
 }%ignore
 
@@ -2841,17 +2622,19 @@ I am interested in interpretations of classical two-valued set theory and theref
 
 \ignore{
 =SML
-set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥ (fTrue ºâtâ4 r x y § r x y = fTrue)Æ);
-a (rewrite_tac [get_spec ¨TotalOverÆ] THEN REPEAT_N 6 strip_tac);
-a (LIST_SPEC_NTH_ASM_T 3 [¨xÆ,¨yÆ] ante_tac THEN rewrite_tac[asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ]);
-a (strip_tac THEN asm_rewrite_tac[]);
-val totover_true_lemma = save_pop_thm "totover_true_lemma";
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥ (fTrue ºâtâ4 r x y § r x y = fTrue)Æ);
+val _ = a (rewrite_tac [get_spec ¨TotalOverÆ] THEN REPEAT_N 6 strip_tac);
+val _ = a (LIST_SPEC_NTH_ASM_T 3 [¨xÆ,¨yÆ] ante_tac THEN rewrite_tac[asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ]);
+val _ = a (strip_tac THEN asm_rewrite_tac[]);
+in val totover_true_lemma = save_pop_thm "totover_true_lemma";
+end;
 
-set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥ (fFalse ºâtâ4 r x y § r x y = fFalse)Æ);
-a (rewrite_tac [get_spec ¨TotalOverÆ] THEN REPEAT_N 6 strip_tac);
-a (LIST_SPEC_NTH_ASM_T 3 [¨xÆ,¨yÆ] ante_tac THEN rewrite_tac[asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ]);
-a (strip_tac THEN asm_rewrite_tac[]);
-val totover_false_lemma = save_pop_thm "totover_false_lemma";
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥ (fFalse ºâtâ4 r x y § r x y = fFalse)Æ);
+val _ = a (rewrite_tac [get_spec ¨TotalOverÆ] THEN REPEAT_N 6 strip_tac);
+val _ = a (LIST_SPEC_NTH_ASM_T 3 [¨xÆ,¨yÆ] ante_tac THEN rewrite_tac[asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ]);
+val _ = a (strip_tac THEN asm_rewrite_tac[]);
+in val totover_false_lemma = save_pop_thm "totover_false_lemma";
+end;
 =TEX
 }%ignore
 
@@ -2917,84 +2700,88 @@ This one probably isn't going to be useful.
 
 \ignore{
 =IGN
-set_goal ([], ¨µ V r x y∑ fTrue ºâtâ4 EqRel V r x y
+local val _ = set_goal ([], ¨µ V r x y∑ fTrue ºâtâ4 EqRel V r x y
 	§ x ç V ± y ç V
 	± (x = y ≤ (µz∑ z ç V ¥	fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z
 			≤ fFalse ºâtâ4 r x z ± fFalse ºâtâ4 r y z))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨EqRelÆ]);
-a (cases_tac ¨xçVÆ THEN cases_tac ¨yçVÆ THEN asm_rewrite_tac[ºâtâ4_lub_islub_lemma]);
-a (CASES_T ¨x = y ≤ (µ z∑ z ç V ¥ fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z ≤ fFalse ºâtâ4 r x z ± fFalse ºâtâ4 r y z)Æ asm_tac
+val _ = a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨EqRelÆ]);
+val _ = a (cases_tac ¨xçVÆ THEN cases_tac ¨yçVÆ THEN asm_rewrite_tac[ºâtâ4_lub_islub_lemma]);
+val _ = a (CASES_T ¨x = y ≤ (µ z∑ z ç V ¥ fTrue ºâtâ4 r x z ± fTrue ºâtâ4 r y z ≤ fFalse ºâtâ4 r x z ± fFalse ºâtâ4 r y z)Æ asm_tac
 	THEN asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (LEMMA_T ¨fTrue ç {t
+val _ = a (LEMMA_T ¨fTrue ç {t
                  |t = fTrue
                      ≤ (∂ z∑ z ç V ± (fTrue ºâtâ4 r x z ± fFalse ºâtâ4 r y z ≤ fFalse ºâtâ4 r x z ± fTrue ºâtâ4 r y z))
                        ± t = fFalse} Æ asm_tac
 	THEN1 rewrite_tac[]);
-a (asm_tac ºâtâ4_lubs_exist_thm);
-a (fc_tac [less_lub_lemma]);
-a (asm_fc_tac[]);
+val _ = a (asm_tac ºâtâ4_lubs_exist_thm);
+val _ = a (fc_tac [less_lub_lemma]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (LEMMA_T ¨{t
+val _ = a (LEMMA_T ¨{t
                    |(∂ z∑ z ç V ± (fTrue ºâtâ4 r x z ± fFalse ºâtâ4 r y z ≤ fFalse ºâtâ4 r x z ± fTrue ºâtâ4 r y z))
                        ± t = fFalse} Ä {fFalse}Æ asm_tac
 	THEN1 (PC_T1 "hol1" rewrite_tac[] THEN REPEAT strip_tac));
-a (strip_asm_tac (list_µ_elim
+val _ = a (strip_asm_tac (list_µ_elim
 	[¨{t
              |(∂ z∑ z ç V ± (fTrue ºâtâ4 r x z ± fFalse ºâtâ4 r y z ≤ fFalse ºâtâ4 r x z ± fTrue ºâtâ4 r y z)) ± t = fFalse}Æ,
 	¨{fFalse}Æ] (hd(ufc_rule [lub_sub_lemma] [ºâtâ4_lubs_exist_thm]))));
-a (contr_tac);
-a (all_asm_fc_tac [ºâtâ4_trans_thm]);
-a (POP_ASM_T ante_tac);
-a (asm_tac (list_µ_elim [¨{fFalse}Æ] (hd(ufc_rule [lub_lub_lemma2] [ºâtâ4_lubs_exist_thm]))));
-a (fc_tac [get_spec ¨IsLubÆ]);
-a (LEMMA_T ¨IsUb $ºâtâ4 {fFalse} fFalseÆ asm_tac THEN1 rewrite_tac[]);
-a (asm_fc_tac[]);
-a (strip_tac THEN all_asm_fc_tac [ºâtâ4_trans_thm]);
-val eqrel_ftrue_lemma = save_pop_thm "eqrel_ftrue_lemma";
+val _ = a (contr_tac);
+val _ = a (all_asm_fc_tac [ºâtâ4_trans_thm]);
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (asm_tac (list_µ_elim [¨{fFalse}Æ] (hd(ufc_rule [lub_lub_lemma2] [ºâtâ4_lubs_exist_thm]))));
+val _ = a (fc_tac [get_spec ¨IsLubÆ]);
+val _ = a (LEMMA_T ¨IsUb $ºâtâ4 {fFalse} fFalseÆ asm_tac THEN1 rewrite_tac[]);
+val _ = a (asm_fc_tac[]);
+val _ = a (strip_tac THEN all_asm_fc_tac [ºâtâ4_trans_thm]);
+in val eqrel_ftrue_lemma = save_pop_thm "eqrel_ftrue_lemma";
+end;
 
-set_goal ([], ¨µV pr x∑ x ç V ¥ fTrue ºâtâ4 EqRel V pr x xÆ);
-a (rewrite_tac [eqrel_ftrue_lemma]);
-val eqrel_refl_lemma = pop_thm ();
+local val _ = set_goal ([], ¨µV pr x∑ x ç V ¥ fTrue ºâtâ4 EqRel V pr x xÆ);
+val _ = a (rewrite_tac [eqrel_ftrue_lemma]);
+in val eqrel_refl_lemma = pop_thm();
+end;
 
-set_goal ([], ¨µV pr x y∑ x ç V ± y ç V ± fTrue ºâtâ4 EqRel V pr x y ¥ fTrue ºâtâ4 EqRel V pr y xÆ);
-a (rewrite_tac [eqrel_ftrue_lemma]
+local val _ = set_goal ([], ¨µV pr x y∑ x ç V ± y ç V ± fTrue ºâtâ4 EqRel V pr x y ¥ fTrue ºâtâ4 EqRel V pr y xÆ);
+val _ = a (rewrite_tac [eqrel_ftrue_lemma]
 	THEN REPEAT strip_tac 
 	THEN (asm_fc_tac[])
 	THEN_TRY asm_rewrite_tac[]
 	THEN var_elim_asm_tac ¨x = yÆ);
-val eqrel_sym_lemma = pop_thm ();
+in val eqrel_sym_lemma = pop_thm();
+end;
 
-set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ¥ µx y∑ x ç V ± y ç V ¥
 	(BoolRel (EqRel V r) x y § µz∑ z ç V ¥ (BoolRel r x z § BoolRel r y z))Æ);
-a (rewrite_tac [get_spec ¨BoolRelÆ, eqrel_ftrue_lemma]);
-a (REPEAT_N 6 strip_tac THEN asm_rewrite_tac[]);
-a (cases_tac ¨x=yÆ THEN asm_rewrite_tac[]);
-a (fc_tac [get_spec ¨TotalOverÆ]);
-a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+val _ = a (rewrite_tac [get_spec ¨BoolRelÆ, eqrel_ftrue_lemma]);
+val _ = a (REPEAT_N 6 strip_tac THEN asm_rewrite_tac[]);
+val _ = a (cases_tac ¨x=yÆ THEN asm_rewrite_tac[]);
+val _ = a (fc_tac [get_spec ¨TotalOverÆ]);
+val _ = a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
-a (POP_ASM_T discard_tac THEN REPEAT_N 2 (POP_ASM_T ante_tac));
-a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val _ = a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T discard_tac THEN REPEAT_N 2 (POP_ASM_T ante_tac));
+val _ = a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
-a (POP_ASM_T ante_tac THEN POP_ASM_T discard_tac THEN POP_ASM_T ante_tac);
-a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val _ = a (spec_nth_asm_tac 3 ¨zÆ THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN POP_ASM_T discard_tac THEN POP_ASM_T ante_tac);
+val _ = a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "3" *** *)
-a (POP_ASM_T ante_tac);
-a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "4" *** *)
-a (POP_ASM_T ante_tac);
-a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
-a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val _ = a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "5" *** *)
-a (POP_ASM_T ante_tac);
-a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o eq_sym_rule o (rewrite_rule [asm_rule ¨z ç VÆ])));
-a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o eq_sym_rule o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val _ = a (list_spec_nth_asm_tac 3 [¨xÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "6" *** *)
-a (POP_ASM_T ante_tac);
-a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
-val eqrel_boolrel_lemma = save_pop_thm "eqrel_boolrel_lemma";
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (list_spec_nth_asm_tac 3 [¨yÆ, ¨zÆ] THEN_TRY asm_rewrite_tac[]);
+in val eqrel_boolrel_lemma = save_pop_thm "eqrel_boolrel_lemma";
+end;
 =TEX
 }%ignore
 
@@ -3056,69 +2843,73 @@ The second is a stricter definition, two sets are equivalent if they have the sa
 
 \ignore{
 =SML
-set_goal([], ¨µV r∑ Equiv (V, BEqRel V r)Æ);
-a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqRelÆ] THEN REPEAT strip_tac);
+local val _ = set_goal([], ¨µV r∑ Equiv (V, BEqRel V r)Æ);
+val _ = a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqRelÆ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val _ = a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
-a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
 (* *** Goal "2.2" *** *)
-a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+val _ = a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
 (* *** Goal "3" *** *)
-a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
 (* *** Goal "3.1" *** *)
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SYM_ASMS_T rewrite_tac);
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SYM_ASMS_T rewrite_tac);
 (* *** Goal "3.2" *** *)
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (asm_rewrite_tac []);
-val beqrel_equiv_lemma = save_pop_thm "beqrel_equiv_lemma";
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (asm_rewrite_tac []);
+in val beqrel_equiv_lemma = save_pop_thm "beqrel_equiv_lemma";
+end;
 
-set_goal([], ¨µV r∑ Equiv (V, BEqqRel V r)Æ);
-a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqqRelÆ] THEN REPEAT strip_tac);
+local val _ = set_goal([], ¨µV r∑ Equiv (V, BEqqRel V r)Æ);
+val _ = a (rewrite_tac[get_spec ¨EquivÆ, get_spec ¨BEqqRelÆ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val _ = a (rewrite_tac [get_spec ¨ReflÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
-a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 3 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
 (* *** Goal "2.2" *** *)
-a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+val _ = a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
 (* *** Goal "2.3" *** *)
-a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+val _ = a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
 (* *** Goal "2.4" *** *)
-a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
+val _ = a (POP_ASM_T ante_tac THEN (SPEC_NTH_ASM_T 2 ¨zÆ (asm_rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ]))));
 (* *** Goal "3" *** *)
-a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
 (* *** Goal "3.1" *** *)
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SYM_ASMS_T rewrite_tac);
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SYM_ASMS_T rewrite_tac);
 (* *** Goal "3.2" *** *)
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (asm_rewrite_tac []);
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 4 ¨z'Æ (asm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (asm_rewrite_tac []);
 (* *** Goal "3.3" *** *)
-a (POP_ASM_T ante_tac);
-a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
 (* *** Goal "3.3" *** *)
-a (POP_ASM_T ante_tac);
-a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
-val beqqrel_equiv_lemma = save_pop_thm "beqqrel_equiv_lemma";
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (SPEC_NTH_ASM_T 3 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 2 ¨z'Æ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z' ç VÆ])));
+in val beqqrel_equiv_lemma = save_pop_thm "beqqrel_equiv_lemma";
+end;
 
-set_goal([], ¨µV r∑ Equiv (V, BoolEqRel V r)Æ);
-a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqRelÆ, beqrel_equiv_lemma]);
-val booleqrel_equiv_lemma = save_pop_thm "booleqrel_equiv_lemma";
+local val _ = set_goal([], ¨µV r∑ Equiv (V, BoolEqRel V r)Æ);
+val _ = a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqRelÆ, beqrel_equiv_lemma]);
+in val booleqrel_equiv_lemma = save_pop_thm "booleqrel_equiv_lemma";
+end;
 
-set_goal([], ¨µV r∑ Equiv (V, BoolEqqRel V r)Æ);
-a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqqRelÆ, beqqrel_equiv_lemma]);
-val booleqqrel_equiv_lemma = save_pop_thm "booleqqrel_equiv_lemma";
+local val _ = set_goal([], ¨µV r∑ Equiv (V, BoolEqqRel V r)Æ);
+val _ = a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨BoolEqqRelÆ, beqqrel_equiv_lemma]);
+in val booleqqrel_equiv_lemma = save_pop_thm "booleqqrel_equiv_lemma";
+end;
 =TEX
 }%ignore
 
@@ -3131,35 +2922,10 @@ What this says is that whenever two sets are not the members of all the same set
 πHOLCONST
 ‹ €PreExtensional› : GS SET ≠ (GS, FTV)BR ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µd r∑ PreExtensional d r § µx y∑ x ç d ± y ç d
+‹ µd r∑ PreExtensional d r § ≥ OverDefined d r ± µx y∑ x ç d ± y ç d
 ‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r x z; r y z} fT)
 ‹				¥ (∂z∑ z ç d ± IsLub $ºâtâ4 {r z x; r z y} fT)
 ∞
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-stop;
-set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SemanticFunctorÆ);
-a (rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SetRepsÆ, get_spec ¨SemanticFunctorÆ,
-	get_spec ¨SameExtÆ, get_spec ¨SameEssÆ, evalformfunct_thm2]
-	THEN REPEAT strip_tac);
-a (DROP_NTH_ASM_T 6 (asm_tac o (pc_rule1 "hol1" rewrite_rule [])));
-a (spec_nth_asm_tac 1 ¨zÆ
-	THEN asm_rewrite_tac[]);
-a (cases_tac ¨IsAf zÆ THEN asm_rewrite_tac[let_def]);
-
-a (strip_asm_tac (µ_elim ¨zÆ syntax_cases_thm) THEN asm_rewrite_tac[]);
-
-=IGN
-set_goal([], ¨µV r∑ PreExtensional V r ¥ PreExtensional V (SemanticFunctor V r)Æ);
-a (rewrite_tac [get_spec ¨PreExtensionalÆ, get_spec ¨SemanticFunctorÆ, evalformfunct_thm2]);
-a (REPEAT strip_tac);
-
-=TEX
-}%ignore
 
 There is a corresponding property over the boolean version of a total partial relation.
 
@@ -3179,56 +2945,57 @@ There is a corresponding property over the boolean version of a total partial re
 
 \ignore{
 =SML
-set_goal ([], ¨µV pr∑ PreExtensional V pr ± TotalOver V pr ¥ TotExtensional V (BoolRel pr)Æ);
-a (rewrite_tac (map get_spec [¨PreExtensionalÆ, ¨TotExtensionalÆ, ¨BoolRelÆ])
+local val _ = set_goal ([], ¨µV pr∑ PreExtensional V pr ± TotalOver V pr ¥ TotExtensional V (BoolRel pr)Æ);
+val _ = a (rewrite_tac (map get_spec [¨PreExtensionalÆ, ¨TotExtensionalÆ, ¨BoolRelÆ])
 	THEN REPEAT_N 6 strip_tac);
-a (STRIP_T (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)) THEN POP_ASM_T ante_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨prÆ]  totover_true_lemma));
-a (LIST_SPEC_NTH_ASM_T 1 [¨xÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨x ç VÆ])));
-a (LIST_SPEC_NTH_ASM_T 1 [¨yÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨y ç VÆ])));
-a (STRIP_T asm_tac);
-a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
+val _ = a (STRIP_T (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)) THEN POP_ASM_T ante_tac);
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨prÆ]  totover_true_lemma));
+val _ = a (LIST_SPEC_NTH_ASM_T 1 [¨xÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨x ç VÆ])));
+val _ = a (LIST_SPEC_NTH_ASM_T 1 [¨yÆ, ¨zÆ] (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ, asm_rule ¨y ç VÆ])));
+val _ = a (STRIP_T asm_tac);
+val _ = a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
 (* *** Goal "1" *** *)
-a (spec_nth_asm_tac 1 ¨zÆ);
-a (swap_nth_asm_concl_tac 1);
-a (LEMMA_T ¨{pr x z; pr y z} = {fFalse; fTrue}Æ rewrite_thm_tac
+val _ = a (spec_nth_asm_tac 1 ¨zÆ);
+val _ = a (swap_nth_asm_concl_tac 1);
+val _ = a (LEMMA_T ¨{pr x z; pr y z} = {fFalse; fTrue}Æ rewrite_thm_tac
 	THEN1 (asm_rewrite_tac[] THEN strip_tac));
-a (fc_tac [get_spec ¨TotalOverÆ]);
-a (list_spec_nth_asm_tac 1 [¨xÆ, ¨zÆ]);
+val _ = a (fc_tac [get_spec ¨TotalOverÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨xÆ, ¨zÆ]);
 (* *** Goal "1.1" *** *)
-a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
+val _ = a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
 (* *** Goal "1.1.1" *** *)
-a (GET_NTH_ASM_T 6 strip_asm_tac THEN asm_rewrite_tac[]);
+val _ = a (GET_NTH_ASM_T 6 strip_asm_tac THEN asm_rewrite_tac[]);
 (* *** Goal "1.1.2" *** *)
-a (asm_rewrite_tac[] THEN contr_tac);
+val _ = a (asm_rewrite_tac[] THEN contr_tac);
 (* *** Goal "1.2" *** *)
-a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
+val _ = a (list_spec_nth_asm_tac 2 [¨yÆ, ¨zÆ]);
 (* *** Goal "1.2.1" *** *)
-a (asm_rewrite_tac[] THEN contr_tac);
+val _ = a (asm_rewrite_tac[] THEN contr_tac);
 (* *** Goal "1.2.2" *** *)
-a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]);
+val _ = a (swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
-a (SWAP_NTH_ASM_CONCL_T 1 (STRIP_THM_THEN asm_tac));
-a (fc_tac [get_spec ¨TotalOverÆ]);
-a (list_spec_nth_asm_tac 1 [¨z'Æ, ¨xÆ]);
+val _ = a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
+val _ = a (SWAP_NTH_ASM_CONCL_T 1 (STRIP_THM_THEN asm_tac));
+val _ = a (fc_tac [get_spec ¨TotalOverÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨z'Æ, ¨xÆ]);
 (* *** Goal "2.1" *** *)
-a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
+val _ = a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
 (* *** Goal "2.1.1" *** *)
-a (asm_rewrite_tac[]);
-a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
-a (∂_tac ¨fTrueÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
+val _ = a (asm_rewrite_tac[]);
+val _ = a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
+val _ = a (∂_tac ¨fTrueÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
 (* *** Goal "2.1.2" *** *)
-a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]); 
+val _ = a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]); 
 (* *** Goal "2.2" *** *)
-a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
+val _ = a (list_spec_nth_asm_tac 2 [¨z'Æ, ¨yÆ]);
 (* *** Goal "2.2.1" *** *)
-a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]); 
+val _ = a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]); 
 (* *** Goal "2.2.2" *** *)
-a (asm_rewrite_tac[]);
-a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
-a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
-val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
+val _ = a (asm_rewrite_tac[]);
+val _ = a (rewrite_tac[get_spec ¨IsLubÆ] THEN strip_tac);
+val _ = a (∂_tac ¨fFalseÆ THEN REPEAT strip_tac THEN rewrite_tac[]);
+in val pre_tot_ext_lemma = save_pop_thm "pre_tot_ext_lemma";
+end;
 =TEX
 }%ignore
 
@@ -3238,19 +3005,20 @@ I will be looking to establish reasonable conditions under which the fixed point
 
 \ignore{
 =IGN
-set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ Equiv (V, BoolRel r)Æ);
-a (PC_T1 "hol1" rewrite_tac [get_spec ¨TotalOverÆ, get_spec ¨BoolRelÆ, get_spec ¨EquivÆ, get_spec ¨PreExtensionalÆ]
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ Equiv (V, BoolRel r)Æ);
+val _ = a (PC_T1 "hol1" rewrite_tac [get_spec ¨TotalOverÆ, get_spec ¨BoolRelÆ, get_spec ¨EquivÆ, get_spec ¨PreExtensionalÆ]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨ReflÆ, eqrel_refl_lemma] THEN REPEAT strip_tac);
+val _ = a (rewrite_tac [get_spec ¨ReflÆ, eqrel_refl_lemma] THEN REPEAT strip_tac);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
-a (POP_ASM_T ante_tac);
-a (ALL_FC_T rewrite_tac [eqrel_sym_lemma]);
+val _ = a (rewrite_tac [get_spec ¨SymÆ] THEN REPEAT strip_tac);
+val _ = a (POP_ASM_T ante_tac);
+val _ = a (ALL_FC_T rewrite_tac [eqrel_sym_lemma]);
 (* *** Goal "3" *** *)
-a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
-a (all_asm_fc_tac [eqrel_trans_lemma]);
-val eqrel_equiv_lemma = pop_thm ();
+val _ = a (rewrite_tac [get_spec ¨TransÆ] THEN REPEAT strip_tac);
+val _ = a (all_asm_fc_tac [eqrel_trans_lemma]);
+in val eqrel_equiv_lemma = pop_thm();
+end;
 =TEX
 }%ignore
 
@@ -3367,354 +3135,364 @@ Admitting this possibility is a good idea since the kind of type structure I hav
 =SML
 set_merge_pcs ["misc21", "'ifos", "'sfp"];
 
-set_goal([],¨µV r x∑ x ç EquivClass (V, BEqRel V (BoolRel r)) z § x ç V ± µy∑ y ç V ¥ (BoolRel r y x § BoolRel r y z)Æ);
-a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ]);
-a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
+local val _ = set_goal([],¨µV r x∑ x ç EquivClass (V, BEqRel V (BoolRel r)) z § x ç V ± µy∑ y ç V ¥ (BoolRel r y x § BoolRel r y z)Æ);
+val _ = a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ]);
+val _ = a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
 	THEN (ASM_FC_T1 fc_§_canon (rewrite_tac) []));
-val equivclass_mem_lemma = save_pop_thm "equivclass_mem_lemma";
+in val equivclass_mem_lemma = save_pop_thm "equivclass_mem_lemma";
+end;
 
-set_goal([],¨µV r x∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z §
+local val _ = set_goal([],¨µV r x∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z §
 	x ç V ± µy∑ y ç V ¥ (BoolRel r y x § BoolRel r y z) ± (BoolRel r x y § BoolRel r z y)Æ);
-a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqqRelÆ]);
-a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
+val _ = a (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqqRelÆ]);
+val _ = a (REPEAT_N 9 strip_tac THEN_TRY asm_rewrite_tac[]
 	THEN (ASM_FC_T1 fc_§_canon (rewrite_tac) []));
-val equivclass_mem_lemma2 = save_pop_thm "equivclass_mem_lemma2";
+in val equivclass_mem_lemma2 = save_pop_thm "equivclass_mem_lemma2";
+end;
 
-set_goal([],¨µV r∑ TotalOver V r ¥ µs t∑ s ç V ± t ç V ¥
+local val _ = set_goal([],¨µV r∑ TotalOver V r ¥ µs t∑ s ç V ± t ç V ¥
 	let u = EquivClass (V, BoolEqqRel V r) s
 	and v = EquivClass (V, BoolEqqRel V r) t
 	in	((µx y∑ x ç u ± y ç v ¥ BoolRel r x y) § (∂x y∑ x ç u ± y ç v ± BoolRel r x y))Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqqRelÆ, get_spec ¨EquivClassÆ, let_def]
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqqRelÆ, get_spec ¨EquivClassÆ, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac);
-a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
-a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma));
-a (ufc_tac [get_spec ¨EquivÆ]);
-a (ufc_tac [get_spec ¨ReflÆ]);
-a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
+val _ = a (strip_tac);
+val _ = a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+val _ = a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma));
+val _ = a (ufc_tac [get_spec ¨EquivÆ]);
+val _ = a (ufc_tac [get_spec ¨ReflÆ]);
+val _ = a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
 	THEN_TRY (all_asm_fc_tac [])
 	THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (REPEAT strip_tac);
-a (lemma_tac ¨BEqqRel V (BoolRel r) x' x''Æ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) x' x''Æ);
 (* *** Goal "2.1" *** *)
-a (lemma_tac ¨BEqqRel V (BoolRel r) x' sÆ
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) x' sÆ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨SymÆ])
 		THEN (all_asm_fc_tac[])));
-a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
+val _ = a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨TransÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨x'Æ, ¨sÆ, ¨x''Æ])));
 (* *** Goal "2.2" *** *)
-a (lemma_tac ¨BoolRel r x' y'Æ);
+val _ = a (lemma_tac ¨BoolRel r x' y'Æ);
 (* *** Goal "2.2.1" *** *)
-a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ);
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ);
 (* *** Goal "2.2.1.1" *** *)
-a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨SymÆ])
 		THEN (all_asm_fc_tac[])));
-a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨TransÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
-a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
-a (swap_nth_asm_concl_tac 7);
-a (SPEC_NTH_ASM_T 2 ¨x'Æ (asm_rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
+val _ = a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+val _ = a (swap_nth_asm_concl_tac 7);
+val _ = a (SPEC_NTH_ASM_T 2 ¨x'Æ (asm_rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
 (* *** Goal "2.2.2" *** *)
-a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) y tÆ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨SymÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨tÆ, ¨yÆ])));
-a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
+val _ = a (lemma_tac ¨BEqqRel V (BoolRel r) y y'Æ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨TransÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
-a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
-a (swap_nth_asm_concl_tac 9);
-a (SPEC_NTH_ASM_T 2 ¨x'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
-a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
-a (SPEC_NTH_ASM_T 1 ¨y'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨y' ç VÆ])));
-a contr_tac;
-val rep_independence_lemma = save_pop_thm "rep_independence_lemma";
+val _ = a (POP_ASM_T (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+val _ = a (swap_nth_asm_concl_tac 9);
+val _ = a (SPEC_NTH_ASM_T 2 ¨x'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨x' ç VÆ])));
+val _ = a (DROP_NTH_ASM_T 5 (asm_tac o (rewrite_rule[get_spec ¨BEqqRelÆ])));
+val _ = a (SPEC_NTH_ASM_T 1 ¨y'Æ (rewrite_thm_tac o (rewrite_rule[asm_rule ¨y' ç VÆ])));
+val _ = a contr_tac;
+in val rep_independence_lemma = save_pop_thm "rep_independence_lemma";
+end;
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ µs t∑ s ç V ± t ç V ¥
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ µs t∑ s ç V ± t ç V ¥
 	let u = EquivClass (V, BoolEqRel V r) s
 	and v = EquivClass (V, BoolEqRel V r) t
 	in	((µx y∑ x ç u ± y ç v ¥ BoolRel r x y) § (∂x y∑ x ç u ± y ç v ± BoolRel r x y))Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqRelÆ, get_spec ¨EquivClassÆ, let_def]
+val _ = a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqRelÆ, get_spec ¨EquivClassÆ, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac);
-a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
-a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma));
-a (ufc_tac [get_spec ¨EquivÆ]);
-a (ufc_tac [get_spec ¨ReflÆ]);
-a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
+val _ = a (strip_tac);
+val _ = a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+val _ = a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma));
+val _ = a (ufc_tac [get_spec ¨EquivÆ]);
+val _ = a (ufc_tac [get_spec ¨ReflÆ]);
+val _ = a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
 	THEN_TRY (all_asm_fc_tac [])
 	THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (REPEAT strip_tac);
-a (lemma_tac ¨BEqRel V (BoolRel r) x' x''Æ);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¨BEqRel V (BoolRel r) x' x''Æ);
 (* *** Goal "2.1" *** *)
-a (lemma_tac ¨BEqRel V (BoolRel r) x' sÆ
+val _ = a (lemma_tac ¨BEqRel V (BoolRel r) x' sÆ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨SymÆ])
 		THEN (all_asm_fc_tac[])));
-a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+val _ = a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨TransÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨x'Æ, ¨sÆ, ¨x''Æ])));
 (* *** Goal "2.2" *** *)
-a (lemma_tac ¨BoolRel r x' y'Æ);
+val _ = a (lemma_tac ¨BoolRel r x' y'Æ);
 (* *** Goal "2.2.1" *** *)
-a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ);
-a (lemma_tac ¨BEqRel V (BoolRel r) y tÆ
+val _ = a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ);
+val _ = a (lemma_tac ¨BEqRel V (BoolRel r) y tÆ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨SymÆ])
 		THEN (all_asm_fc_tac[])));
-a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ
+val _ = a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ
 	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
 		THEN (fc_tac [get_spec ¨EquivÆ])
 		THEN (fc_tac [get_spec ¨TransÆ])
 		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
-a (FC_T (MAP_EVERY(asm_tac o (rewrite_rule[]))) [get_spec ¨BEqRelÆ]);
-a (spec_nth_asm_tac 1 ¨x'Æ);
+val _ = a (FC_T (MAP_EVERY(asm_tac o (rewrite_rule[]))) [get_spec ¨BEqRelÆ]);
+val _ = a (spec_nth_asm_tac 1 ¨x'Æ);
 (* *** Goal "2.2.2" *** *)
-a (fc_tac [pre_tot_ext_lemma]);
-a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
-a (list_spec_nth_asm_tac 1 [¨x'Æ, ¨x''Æ]);
+val _ = a (fc_tac [pre_tot_ext_lemma]);
+val _ = a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
+val _ = a (list_spec_nth_asm_tac 1 [¨x'Æ, ¨x''Æ]);
 (* *** Goal "2.2.2.1" *** *)
-a (spec_nth_asm_tac 1 ¨y'Æ);
+val _ = a (spec_nth_asm_tac 1 ¨y'Æ);
 (* *** Goal "2.2.2.2" *** *)
-a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
-a (spec_nth_asm_tac 1 ¨zÆ);
+val _ = a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+val _ = a (spec_nth_asm_tac 1 ¨zÆ);
 (* *** Goal "2.2.2.3" *** *)
-a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
-a (spec_nth_asm_tac 1 ¨zÆ);
-val totpre_rep_independence_lemma = save_pop_thm "totpre_rep_independence_lemma";
+val _ = a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+val _ = a (spec_nth_asm_tac 1 ¨zÆ);
+in val totpre_rep_independence_lemma = save_pop_thm "totpre_rep_independence_lemma";
+end;
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥	
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥	
 	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqRel V r s u ± BoolEqRel V r t v
 	¥ (BoolRel r s t § BoolRel r u v)Æ);
-a (REPEAT_N 8 strip_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma));
-a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
-a (POP_ASM_T ante_tac
+val _ = a (REPEAT_N 8 strip_tac);
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma));
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+val _ = a (POP_ASM_T ante_tac
 	THEN rewrite_tac [let_def, get_spec ¨EquivClassÆ]);
-a (STRIP_T asm_tac THEN REPEAT strip_tac);
+val _ = a (STRIP_T asm_tac THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+val _ = a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
 	THEN1 (asm_tac booleqrel_equiv_lemma
 		THEN ufc_tac [get_spec ¨EquivÆ]
 		THEN ufc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (LEMMA_T  ¨(∂ x' y
+val _ = a (LEMMA_T  ¨(∂ x' y
              ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
 	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
 	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
              § (∂ x' y
              ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
 	THEN1 (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]));
-a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
 (* *** Goal "2" *** *)
-a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+val _ = a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
 	THEN1 (asm_tac booleqrel_equiv_lemma
 		THEN ufc_tac [get_spec ¨EquivÆ]
 		THEN ufc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (LEMMA_T  ¨(∂ x' y
+val _ = a (LEMMA_T  ¨(∂ x' y
              ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
 	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
 	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
              § (∂ x' y
              ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
 	THEN1 (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]));
-a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
-val totpre_rep_independence_lemma2 = save_pop_thm "totpre_rep_independence_lemma2";
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+in val totpre_rep_independence_lemma2 = save_pop_thm "totpre_rep_independence_lemma2";
+end;
 
-set_goal([],¨µV r∑ TotalOver V r ¥	
+local val _ = set_goal([],¨µV r∑ TotalOver V r ¥	
 	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqqRel V r s u ± BoolEqqRel V r t v
 	¥ (BoolRel r s t § BoolRel r u v)Æ);
-a (REPEAT_N 8 strip_tac);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] rep_independence_lemma));
-a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
-a (POP_ASM_T ante_tac
+val _ = a (REPEAT_N 8 strip_tac);
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] rep_independence_lemma));
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+val _ = a (POP_ASM_T ante_tac
 	THEN rewrite_tac [let_def, get_spec ¨EquivClassÆ]);
-a (STRIP_T asm_tac THEN REPEAT strip_tac);
+val _ = a (STRIP_T asm_tac THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
+val _ = a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
 	THEN1 (asm_tac booleqqrel_equiv_lemma
 		THEN ufc_tac [get_spec ¨EquivÆ]
 		THEN ufc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (LEMMA_T  ¨(∂ x' y
+val _ = a (LEMMA_T  ¨(∂ x' y
              ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ
 	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
 	¨(µ x' y∑ (x' ç V ± BoolEqqRel V r s x') ± y ç V ± BoolEqqRel V r t y ¥ BoolRel r x' y)
              § (∂ x' y
              ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ)]))
 	THEN1 (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]));
-a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
 (* *** Goal "2" *** *)
-a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
+val _ = a (lemma_tac ¨BoolEqqRel V r s s ± BoolEqqRel V r t tÆ
 	THEN1 (asm_tac booleqqrel_equiv_lemma
 		THEN ufc_tac [get_spec ¨EquivÆ]
 		THEN ufc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (LEMMA_T  ¨(∂ x' y
+val _ = a (LEMMA_T  ¨(∂ x' y
              ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ
 	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
 	¨(µ x' y∑ (x' ç V ± BoolEqqRel V r s x') ± y ç V ± BoolEqqRel V r t y ¥ BoolRel r x' y)
              § (∂ x' y
              ∑ (x' ç V ± BoolEqqRel V r s x') ± (y ç V ± BoolEqqRel V r t y) ± BoolRel r x' y)Æ)]))
 	THEN1 (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]));
-a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
-val rep_independence_lemma2 = save_pop_thm "rep_independence_lemma2";
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+in val rep_independence_lemma2 = save_pop_thm "rep_independence_lemma2";
+end;
 
 set_merge_pcs ["misc2", "'ifos", "'sfp"];
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
 	THEN REPEAT_N 7 strip_tac
 	THEN_TRY asm_rewrite_tac[]);
-a (GET_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (asm_rewrite_tac[]);
-a (lemma_tac ¨Equiv (V, BEqRel V (BoolRel r))Æ THEN1 rewrite_tac[beqrel_equiv_lemma]);
-a (FC_T1 (fc_§_canon)
+val _ = a (GET_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+val _ = a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+val _ = a (asm_rewrite_tac[]);
+val _ = a (lemma_tac ¨Equiv (V, BEqRel V (BoolRel r))Æ THEN1 rewrite_tac[beqrel_equiv_lemma]);
+val _ = a (FC_T1 (fc_§_canon)
 	(MAP_EVERY (rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨x' ç VÆ]) o (list_µ_elim [¨xÆ, ¨x'Æ])))
 	[equiv_class_eq_thm]);
-a (rewrite_tac [get_spec ¨BEqRelÆ]);
-a (strip_tac THEN strip_tac);
-a (lemma_tac ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ
+val _ = a (rewrite_tac [get_spec ¨BEqRelÆ]);
+val _ = a (strip_tac THEN strip_tac);
+val _ = a (lemma_tac ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ
 	THEN1 (rewrite_tac [get_spec ¨QuotientSetÆ]
 		THEN ∂_tac ¨zÆ
 		THEN asm_rewrite_tac[]));
-a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BEqRel V (BoolRel r)) zÆ 
+val _ = a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BEqRel V (BoolRel r)) zÆ 
 	(strip_asm_tac o (rewrite_rule[asm_rule ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ])));
 (* *** Goal "1" *** *)
-a (lemma_tac ¨BoolEqRel V r z x'' ± BoolEqRel V r x yÆ
+val _ = a (lemma_tac ¨BoolEqRel V r z x'' ± BoolEqRel V r x yÆ
 	THEN1 strip_tac);
 (* *** Goal "1.1" *** *)
-a (DROP_NTH_ASM_T 6 ante_tac
+val _ = a (DROP_NTH_ASM_T 6 ante_tac
 	THEN rewrite_tac [get_spec ¨EquivClassÆ]
 	THEN strip_tac
 	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
 (* *** Goal "1.2" *** *)
-a (DROP_NTH_ASM_T 5 ante_tac
+val _ = a (DROP_NTH_ASM_T 5 ante_tac
 	THEN asm_rewrite_tac [get_spec ¨EquivClassÆ]
 	THEN strip_tac
 	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
 (* *** Goal "1.3" *** *)
-a (LEMMA_T ¨BoolRel r z x § BoolRel r x'' yÆ asm_rewrite_thm_tac);
+val _ = a (LEMMA_T ¨BoolRel r z x § BoolRel r x'' yÆ asm_rewrite_thm_tac);
 (* *** Goal "1.3.1" *** *)
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
-a (lemma_tac ¨x'' ç VÆ
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+val _ = a (lemma_tac ¨x'' ç VÆ
 	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
-a (lemma_tac ¨y ç VÆ
+val _ = a (lemma_tac ¨y ç VÆ
 	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
-a (list_spec_nth_asm_tac 3 [¨zÆ, ¨xÆ, ¨x''Æ, ¨yÆ]);
-a (contr_tac);
+val _ = a (list_spec_nth_asm_tac 3 [¨zÆ, ¨xÆ, ¨x''Æ, ¨yÆ]);
+val _ = a (contr_tac);
 (* *** Goal "1.3.2" *** *)
-a (LEMMA_T ¨BoolRel r z x' § BoolRel r x''' y'Æ asm_rewrite_thm_tac);
-a (lemma_tac ¨x''' ç VÆ
+val _ = a (LEMMA_T ¨BoolRel r z x' § BoolRel r x''' y'Æ asm_rewrite_thm_tac);
+val _ = a (lemma_tac ¨x''' ç VÆ
 	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
-a (lemma_tac ¨y' ç VÆ
+val _ = a (lemma_tac ¨y' ç VÆ
 	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
-a (lemma_tac ¨BoolEqRel V r x' y'Æ
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+val _ = a (lemma_tac ¨BoolEqRel V r x' y'Æ
 	THEN1 (DROP_NTH_ASM_T 7 ante_tac
 		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
-a (lemma_tac ¨BoolEqRel V r z x'''Æ
+val _ = a (lemma_tac ¨BoolEqRel V r z x'''Æ
 	THEN1 (DROP_NTH_ASM_T 9 ante_tac
 		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
-a (list_spec_nth_asm_tac 3 [¨zÆ, ¨x'Æ, ¨x'''Æ, ¨y'Æ]);
-a (contr_tac);
+val _ = a (list_spec_nth_asm_tac 3 [¨zÆ, ¨x'Æ, ¨x'''Æ, ¨y'Æ]);
+val _ = a (contr_tac);
 (* *** Goal "2" *** *)
-a (all_asm_fc_tac[]);
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "3" *** *)
-a (all_asm_fc_tac[]);
+val _ = a (all_asm_fc_tac[]);
 (* *** Goal "4" *** *)
-a (lemma_tac ¨z ç EquivClass (V, BEqRel V (BoolRel r)) zÆ
+val _ = a (lemma_tac ¨z ç EquivClass (V, BEqRel V (BoolRel r)) zÆ
 	THEN1 (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ] THEN strip_tac));
-a (lemma_tac ¨x ç sÆ
+val _ = a (lemma_tac ¨x ç sÆ
 	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
 		THEN fc_tac [get_spec ¨EquivÆ]
 		THEN fc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (lemma_tac ¨x' ç tÆ
+val _ = a (lemma_tac ¨x' ç tÆ
 	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
 		THEN fc_tac [get_spec ¨EquivÆ]
 		THEN fc_tac [get_spec ¨ReflÆ]
 		THEN ALL_ASM_FC_T rewrite_tac []));
-a (ALL_ASM_FC_T rewrite_tac []);
-val preext_ext_lemma = save_pop_thm "preext_ext_lemma";
+val _ = a (ALL_ASM_FC_T rewrite_tac []);
+in val preext_ext_lemma = save_pop_thm "preext_ext_lemma";
+end;
 
-set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥
 	µx y∑ x ç V ± y ç V ¥ (BEqRel V (BoolRel r) x y § BEqqRel V (BoolRel r) x y)Æ);
-a (REPEAT µ_tac
+val _ = a (REPEAT µ_tac
 	THEN rewrite_tac [get_spec ¨BEqRelÆ, get_spec ¨BEqqRelÆ, let_def]
 	THEN REPEAT_N 4 strip_tac
 	THEN_TRY asm_rewrite_tac[ext_thm]
 	THEN REPEAT_N 5 strip_tac);
 (* *** Goal "1" *** *)
-a (LEMMA_T ¨BoolRel r z x § BoolRel r z yÆ asm_tac
+val _ = a (LEMMA_T ¨BoolRel r z x § BoolRel r z yÆ asm_tac
 	THEN1 ASM_FC_T1 fc_§_canon rewrite_tac []
 	THEN asm_rewrite_tac[]);
-a (fc_tac [pre_tot_ext_lemma]);
-a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ]
+val _ = a (fc_tac [pre_tot_ext_lemma]);
+val _ = a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional V (BoolRel r)Æ]
 	(list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensionalÆ))));
-a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
+val _ = a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
 (* *** Goal "1.1" *** *)
-a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val _ = a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
 (* *** Goal "1.2" *** *)
-a (asm_fc_tac[]);
+val _ = a (asm_fc_tac[]);
 (* *** Goal "1.3" *** *)
-a (spec_nth_asm_tac 8 ¨z'Æ);
+val _ = a (spec_nth_asm_tac 8 ¨z'Æ);
 (* *** Goal "2" *** *)
-a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
-val eq_eq_eqq_lemma = save_pop_thm "eq_eq_eqq_lemma";
+val _ = a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+in val eq_eq_eqq_lemma = save_pop_thm "eq_eq_eqq_lemma";
+end;
 
-set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ MSfromSFF (V,r) = MSfromSFF2 (V,r)Æ);
-a (REPEAT µ_tac
+local val _ = set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ MSfromSFF (V,r) = MSfromSFF2 (V,r)Æ);
+val _ = a (REPEAT µ_tac
 	THEN rewrite_tac [get_spec ¨MSfromSFFÆ, get_spec ¨MSfromSFF2Æ, let_def, get_spec ¨QuotientSetÆ,
 			get_spec ¨EquivClassÆ, sets_ext_clauses]
 	THEN strip_tac THEN strip_tac
 	THEN_TRY asm_rewrite_tac[]);
-a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] eq_eq_eqq_lemma));
-a (REPEAT strip_tac);
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] eq_eq_eqq_lemma));
+val _ = a (REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
-a (REPEAT strip_tac);
+val _ = a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac);
 (* *** Goal "1.1" *** *)
-a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
 (* *** Goal "1.2" *** *)
-a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
 (* *** Goal "2" *** *)
-a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
-a (REPEAT strip_tac);
+val _ = a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac);
 (* *** Goal "1.1" *** *)
-a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
 (* *** Goal "1.2" *** *)
-a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
-val msfromsff_eq_lemma = save_pop_thm "msfromsff_eq_lemma";
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+in val msfromsff_eq_lemma = save_pop_thm "msfromsff_eq_lemma";
+end;
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
-a (REPEAT strip_tac
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
+val _ = a (REPEAT strip_tac
 	THEN all_fc_tac [msfromsff_eq_lemma, preext_ext_lemma]
 	THEN POP_ASM_T ante_tac
 	THEN asm_rewrite_tac []);
-val preext_ext_lemma2 = save_pop_thm "preext_ext_lemma2";
+in val preext_ext_lemma2 = save_pop_thm "preext_ext_lemma2";
+end;
 =TEX
 }%ignore
 
@@ -3724,37 +3502,32 @@ val preext_ext_lemma2 = save_pop_thm "preext_ext_lemma2";
 \ignore{
 =IGN
 stop;
+set_flag("subgoal_package_quiet", false);
+
 set_merge_pcs ["misc2", "'ifos", "'sfp"];
 
-set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF (V,r))Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
 	THEN REPEAT_N 6 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac THEN asm_rewrite_tac[]);
+val _ = a (strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (REPEAT strip_tac);
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (DROP_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
-a (rewrite_tac [sets_ext_clauses] THEN contr_tac);
+val _ = a (REPEAT strip_tac);
+val _ = a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+val _ = a (DROP_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+val _ = a (rewrite_tac [sets_ext_clauses] THEN contr_tac);
 (* *** Goal "2.1" *** *)
-a (swap_nth_asm_concl_tac 7 THEN REPEAT strip_tac);
-a (∂_tac ¨sÆ THEN strip_tac THEN strip_tac);
+val _ = a (swap_nth_asm_concl_tac 7 THEN REPEAT strip_tac);
+val _ = a (∂_tac ¨sÆ THEN strip_tac THEN strip_tac);
 (* *** Goal "2.1.1" *** *)
-a (asm_rewrite_tac[get_spec ¨QuotientSetÆ]);
-a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+val _ = a (asm_rewrite_tac[get_spec ¨QuotientSetÆ]);
+val _ = a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
 (* *** Goal "2.1.2" *** *)
-a (rename_tac[(¨x'Æ, "z")]);
-a (asm_rewrite_tac []);
+val _ = a (rename_tac[(¨x'Æ, "z")]);
+val _ = a (asm_rewrite_tac []);
 
 =TEX
 }%ignore
-
-\subsection{Lemmas about the Semantics}
-
-These are results about the semantics required for obtaining the key properties of the semantic functor.
-
-=GFT
-=TEX
 
 \subsection{Properties of the Semantic Functor}
 
@@ -3778,49 +3551,98 @@ A semantic functor is extensional over some domain if any two sets which have th
 =TEX
 
 \ignore{
-=IGN
-broken because evalform ext lemma is broken (after a correction to the semantics).
-
-set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SemanticFunctorÆ);
-a (REPEAT strip_tac
+=SML
+local val _ = set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SemanticFunctorÆ);
+val _ = a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SemanticFunctorÆ]
 	THEN REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨SameEssÆ]
 	THEN REPEAT strip_tac);
-a (fc_tac [list_µ_elim [¨VÆ, ¨rÆ] evalform_ext_lemma]);
-a (list_spec_nth_asm_tac 1 [¨zÆ, ¨Param_ö xÆ, ¨Param_ö yÆ, ¨rÆ]
-	THEN swap_nth_asm_concl_tac 1);
-(* *** Goal "1" *** *)
-a (GET_ASM_T ¨V Ä SetRepsÆ (fn x => fc_tac[rewrite_rule [sets_ext_clauses, get_spec ¨SetRepsÆ] x]));
+val _ = a (asm_tac (rewrite_rule [get_spec ¨IncreasingÆ] evalform_increasing_thm2));
+val _ = a (lemma_tac ¨V Ä SyntaxÆ
+	THEN1 (DROP_NTH_ASM_T 7 ante_tac
+		THEN PC_T1 "hol1" prove_tac [get_spec ¨SetRepsÆ]));
+val _ = a (lemma_tac ¨z ç SyntaxÆ
+	THEN1 (DROP_NTH_ASM_T 3 ante_tac THEN POP_ASM_T ante_tac
+		THEN PC_T1 "hol1" prove_tac [get_spec ¨SetRepsÆ]));
+val _ = a (list_spec_nth_asm_tac 3 [¨(V, r)Æ, ¨zÆ]);
+val _ = a (lemma_tac ¨ExsVaO (V2IxSet V, V, r) (Param_ö x) (Param_ö y)Æ
+	THEN1 (rewrite_tac ([] @ (map get_spec [¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨V2IxSetÆ, ¨ConjOrderÆ, ¨IxOÆ,
+		¨ExtSROÆ, ¨EssSROÆ, ¨PwÆ, ¨OptOÆ]))));
+val _ = a (LEMMA_T ¨{x} Ä V ± {y} Ä VÆ rewrite_thm_tac
+	THEN1 (PC_T1 "hol1" asm_prove_tac []));
+val _ = a (µ_tac);
+val _ = a (cases_tac ¨x' = öâgÆ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+val _ = a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
+val _ = a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+val _ = a (spec_nth_asm_tac 2 ¨z'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+val _ = a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
+val _ = a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+val _ = a (spec_nth_asm_tac 1 ¨z'Æ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (rewrite_tac [ixdom_param_ö_lemma]);
-(* *** Goal "3" *** *)
-a (GET_ASM_T ¨V Ä SetRepsÆ (fn x => fc_tac[rewrite_rule [sets_ext_clauses, get_spec ¨SetRepsÆ] x]));
-a (rewrite_tac [sets_ext_clauses, ixdom_param_ö_lemma]
-	THEN REPEAT strip_tac 
-	THEN asm_fc_tac[]);
-(* *** Goal "4" *** *)
-a (rewrite_tac [ixran_param_ö_lemma, sets_ext_clauses]
-	THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-(* *** Goal "5" *** *)
-a (rewrite_tac [ixran_param_ö_lemma, sets_ext_clauses]
-	THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-(* *** Goal "6" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [ixdom_param_ö_lemma]
-	THEN STRIP_T rewrite_thm_tac);
-a (strip_tac);
-(* *** Goal "7" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [ixdom_param_ö_lemma]
-	THEN STRIP_T rewrite_thm_tac);
-a (strip_tac);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (lemma_tac ¨ExsVaO (V2IxSet V, V, r) (Param_ö y) (Param_ö x)Æ
+	THEN1 (rewrite_tac ([] @ (map get_spec [¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨V2IxSetÆ, ¨ConjOrderÆ, ¨IxOÆ,
+		¨ExtSROÆ, ¨EssSROÆ, ¨PwÆ, ¨OptOÆ]))));
+(* *** Goal "2.1" *** *)
+val _ = a (LEMMA_T ¨{y} Ä V ± {x} Ä VÆ rewrite_thm_tac
+	THEN1 (PC_T1 "hol1" asm_prove_tac []));
+val _ = a (µ_tac);
+val _ = a (cases_tac ¨x' = öâgÆ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+val _ = a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
+val _ = a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+val _ = a (spec_nth_asm_tac 2 ¨z'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+val _ = a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
+val _ = a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+val _ = a (spec_nth_asm_tac 1 ¨z'Æ THEN asm_rewrite_tac[]);
+val _ = a (all_asm_fc_tac []);
+val _ = a (all_asm_fc_tac [ºâtâ4_antisym_thm]);
+in
 val extsem_semanticfunctor_thm = save_pop_thm "extsem_semanticfunctor_thm";
+end;
+=TEX
+}%ignore
 
-=SML
-set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SemanticFunctorÆ);
+{\it ExtSem} turns out to be to weak.
+The following works with compatibility of extension and essence rather than identity.
+
+
+πHOLCONST
+‹ €CompExtSem› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ CompExtSem V f § µr∑ µx y∑ x ç V ± y ç V
+‹	± CompExt V r x y ± CompEss V r x y
+‹	¥ CompEss V (f V r) x y 
+∞
+
+=IGN
+€compextsem_semanticfunctor_thm› =
+   Ù µ V∑ V Ä SetReps ¥ CompExtSem V SemanticFunctor
+=TEX
+
+\ignore{
+=IGN
+stop;
+set_flag("subgoal_package_quiet", false);
+
+set_goal([], ¨µ V x y∑ x ç V ± y ç V ± CompExt V r x y
+	¥ ≥ fT ç FunImage (Lub $ºâfâtâ4 {Extension r x; Extension r y}) VÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨CompExtÆ, get_spec ¨ExtensionÆ, get_spec ¨FunImageÆ] THEN contr_tac);
+a (POP_ASM_T ante_tac THEN rewrite_tac[get_spec ¨$ºâfâtâ4Æ, get_spec ¨PwÆ]);
+a (SPEC_NTH_ASM_T 2 ¨aÆ (strip_asm_tac));
+a (rewrite_tac [get_spec ¨LubÆ]);
+
+set_goal([], ¨µ V∑ V Ä SetReps ¥ CompExtSem V SemanticFunctorÆ);
 a (REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SemanticFunctorÆ]
+	THEN rewrite_tac [get_spec ¨CompExtSemÆ, get_spec ¨SemanticFunctorÆ]
 	THEN REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨SameEssÆ]
+	THEN rewrite_tac [get_spec ¨CompEssÆ]
 	THEN REPEAT strip_tac);
 a (asm_tac (rewrite_rule [get_spec ¨IncreasingÆ] evalform_increasing_thm2));
 a (lemma_tac ¨V Ä SyntaxÆ
@@ -3839,12 +3661,12 @@ a (µ_tac);
 a (cases_tac ¨x' = öâgÆ THEN asm_rewrite_tac[]);
 a (REPEAT strip_tac THEN asm_rewrite_tac[]);
 (* *** Goal "1.1" *** *)
-a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
-a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨CompExtÆ])));
+a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨CompEssÆ])));
 a (spec_nth_asm_tac 2 ¨z'Æ THEN asm_rewrite_tac[]);
 (* *** Goal "1.2" *** *)
-a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameExtÆ])));
-a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
+a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨CompExtÆ])));
+a (GET_NTH_ASM_T 9 (strip_asm_tac o (rewrite_rule [get_spec ¨CompEssÆ])));
 a (spec_nth_asm_tac 1 ¨z'Æ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
 a (all_asm_fc_tac[]);
@@ -3867,16 +3689,123 @@ a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])));
 a (spec_nth_asm_tac 1 ¨z'Æ THEN asm_rewrite_tac[]);
 a (all_asm_fc_tac []);
 a (all_asm_fc_tac [ºâtâ4_antisym_thm]);
-val extsem_semanticfunctor_thm = save_pop_thm "extsem_semanticfunctor_thm";
+val compextsem_semanticfunctor_thm = save_pop_thm "compextsem_semanticfunctor_thm";
 
 =IGN
+stop
+set_flag ("subgoal_package_quiet", false);
 set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional V r ¥ PreExtensional V (SemanticFunctor V r)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensionalÆ] THEN REPEAT strip_tac);
-a (fc_tac [extsem_semanticfunctor_thm]);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensionalÆ, get_spec ¨ExtSemÆ, get_spec ¨OverDefinedÆ] THEN REPEAT strip_tac);
+a (asm_tac (rewrite_rule [get_spec ¨ExtSemÆ] (extsem_semanticfunctor_thm)));
+a (spec_nth_asm_tac 1 ¨VÆ);
+a (lemma_tac ¨SameExt V r x yÆ
+	THEN1 (REPEAT µ_tac THEN rewrite_tac [get_spec ¨SameExtÆ]
+		THEN REPEAT strip_tac));
+
+a (spec_nth_asm_tac 1 ¨VÆ);
+
 a (fc_tac [get_spec ¨ExtSemÆ]);
 
 =TEX
 }%ignore
+
+\subsubsection{Strictness-like Properties}
+
+A function is strict if is maps bottom to bottom.
+
+A weaker notion we call ``weak strictness'' and name {\it WkStrict} which is the property of preserving ``UnderDefined''ness.
+This is formulated for semantic functors.
+
+πHOLCONST
+‹ €WkStrict› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ WkStrict V f § µr∑ UnderDefined V r ¥ UnderDefined V (f V r)
+∞
+
+The dual concept is:
+
+πHOLCONST
+‹ €CoWkStrict› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ CoWkStrict V f § µr∑ OverDefined V r ¥ OverDefined V (f V r)
+∞
+
+Their "converses" are:
+
+πHOLCONST
+‹ €ConWkStrict› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ ConWkStrict V f § µr∑ UnderDefined V (f V r) ¥ UnderDefined V r
+∞
+
+
+πHOLCONST
+‹ €ConCoWkStrict› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ ConCoWkStrict V f § µr∑ OverDefined V (f V r) ¥ OverDefined V r
+∞
+
+This latter property is our present concern.
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_flag("subgoal_package_quiet", false);
+
+stop;
+set_goal ([], ¨µV∑ V Ä Syntax ¥ ConCoWkStrict V SemanticFunctorÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨ConCoWkStrictÆ, get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedÆ]);
+a (PC_T "hol1" (REPEAT strip_tac) THEN POP_ASM_T ante_tac);
+a (asm_fc_tac[]);
+a (DROP_NTH_ASM_T 3 discard_tac);
+a (DROP_NTH_ASM_T 2 discard_tac);
+a (lemma_tac ¨IxRan (Param_ö x) Ä VÆ
+	THEN1 (rewrite_tac[sets_ext_clauses] THEN strip_tac THEN strip_tac
+	THEN var_elim_nth_asm_tac 1));
+a (DROP_NTH_ASM_T 3 ante_tac);
+a (lemma_tac ¨µv∑ IxRan v Ä V
+             ¥ EvalForm (EvalCf_tf4, $ºâtâ4, V, r) y v = fT
+             ¥ (∂ x y∑ x ç V ± y ç V ± r x y = fT)Æ);
+set_labelled_goal "2";
+a (ALL_ASM_FC_T (MAP_EVERY asm_tac) []);
+a (SPEC_NTH_ASM_T 1 ¨Param_ö xÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨IxRan (Param_ö x) Ä VÆ])));
+a (POP_ASM_T discard_tac THEN POP_ASM_T ante_tac THEN sc_induction_tac ¨yÆ);
+a (REPEAT_N 3 strip_tac THEN asm_rewrite_tac[evalformfunct_thm2]);
+a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[let_def]);
+(* *** Goal "1" *** *)
+a (rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
+a (cases_tac ¨AfMem t = öâg ± AfSet t = öâgÆ THEN asm_rewrite_tac[]);
+a (strip_tac THEN ∂_tac ¨xÆ THEN ∂_tac ¨xÆ THEN asm_rewrite_tac []);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨EvalCfÆ, let_def] THEN strip_tac);
+a (DROP_NTH_ASM_T 4 ante_tac THEN rewrite_tac [get_spec ¨FunImageÆ] THEN strip_tac);
+a (lemma_tac ¨tc ScPrec a t ± a ç SyntaxÆ
+	THEN1 REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (bc_tac [tc_incr_thm]);
+a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+a (lemma_tac ¨IsCf tÆ THEN1 fc_tac[syntax_cases_thm]);
+a (all_asm_fc_tac [scprec_fc_clauses2]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨IsCf tÆ THEN1 fc_tac[syntax_cases_thm]);
+a (FC_T (MAP_EVERY (strip_asm_tac o (try (rewrite_rule [asm_rule ¨IsCf tÆ, asm_rule ¨≥ IsAf tÆ])))) [µ_elim ¨tÆ is_fc_clauses]);
+a (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[get_spec ¨XâgÆ] THEN strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2.3" *** *)
+a (DROP_NTH_ASM_T 5 (ante_tac o eq_sym_rule));
+a (GET_NTH_ASM_T 3 (rewrite_thm_tac o eq_sym_rule) THEN strip_tac);
+a (list_spec_nth_asm_tac 11 [¨aÆ]);
+a (cases_tac ¨öâg ç IxDom vÆ);
+a (lemma_tac ¨IxOverRide (Param_ö x) v = (Param_ö (IxVal v öâg))Æ
+a (fc_tac [ix_domran_lemma]);
+=TEX
+}%ignore
+
+=SML
+set_flag ("subgoal_package_quiet", false);
+=TEX
+
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
