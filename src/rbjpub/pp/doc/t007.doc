@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.20 2008/09/09 20:21:11 rbj Exp $
+$Id: t007.doc,v 1.21 2008/10/03 18:15:27 rbj Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/09/09 20:21:11 $ $
+Last Change $ $Date: 2008/10/03 18:15:27 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.20 2008/09/09 20:21:11 rbj Exp $ $
+$ $Id: t007.doc,v 1.21 2008/10/03 18:15:27 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -200,6 +200,9 @@ However, this affects the applications rather than the concept:
 
 \ignore{
 =SML
+set_flag ("subgoal_package_quiet", true);
+
+
 set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
 a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
 a (REPEAT (asm_fc_tac[]));
@@ -249,18 +252,35 @@ val islub_lub_lemma = save_pop_thm "islub_lub_lemma";
 }%ignore
 
 =GFT
+€ub_ub_lemma1› =
+	Ù µ r X y∑ IsUb r X y ¥ (µ x∑ x ç X ¥ r x y)
+
 €lub_ub_lemma1› =
 	Ù µ r X y∑ IsLub r X y ¥ (µ x∑ x ç X ¥ r x y)
+
+€lb_lb_lemma1› =
+	Ù µ r X y∑ IsLb r X y ¥ (µ x∑ x ç X ¥ r y x)
+
 €glb_lb_lemma1› =
 	Ù µ r X y∑ IsGlb r X y ¥ (µ x∑ x ç X ¥ r y x)
 =TEX
 
 \ignore{
 =SML
+set_goal([], ¨µr X y∑ IsUb r X y ¥ µx∑ x ç X ¥ r x yÆ);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsUbÆ]);
+a (all_asm_fc_tac[get_spec ¨IsUbÆ]);
+val ub_ub_lemma1 = save_pop_thm "ub_ub_lemma1";
+
 set_goal([], ¨µr X y∑ IsLub r X y ¥ µx∑ x ç X ¥ r x yÆ);
 a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsLubÆ]);
 a (all_asm_fc_tac[get_spec ¨IsUbÆ]);
 val lub_ub_lemma1 = save_pop_thm "lub_ub_lemma1";
+
+set_goal([], ¨µr X y∑ IsLb r X y ¥ µx∑ x ç X ¥ r y xÆ);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsLbÆ]);
+a (all_asm_fc_tac[get_spec ¨IsLbÆ]);
+val lb_lb_lemma1 = save_pop_thm "lb_lb_lemma1";
 
 set_goal([], ¨µr X y∑ IsGlb r X y ¥ µx∑ x ç X ¥ r y xÆ);
 a (REPEAT strip_tac THEN fc_tac [get_spec ¨IsGlbÆ]);
@@ -2819,13 +2839,12 @@ a (rewrite_tac [ext_thm, let_def, get_spec ¨ClosureâcÆ, get_spec ¨$o:(('a≠'c)≠((
 =TEX
 }%ignore
 
-
 \subsection{Complete Partial Orders}
 
 πHOLCONST
 ‹ €CRpoU›: ('a ≠ 'a ≠ BOOL) ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µ r∑ CRpoU r § CRpo r ± LubsExist r ± GlbsExist r
+‹ µ r∑ CRpoU r § RpoU r ± LubsExist r ± GlbsExist r
 ∞
 
 =GFT
@@ -2876,7 +2895,7 @@ a (rewrite_tac [ext_thm, let_def, get_spec ¨ClosureâcÆ, get_spec ¨$o:(('a≠'c)≠((
 \ignore{
 =SML
 set_goal([], ¨µr∑ CRpoU r ¥ CcRpoU rÆ);
-a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CcRpoUÆ, ¨CcRpoÆ, ¨CRpoÆ, ¨ChainCompleteÆ, ¨LubsExistÆ])
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CcRpoUÆ, ¨CcRpoÆ, ¨RpoUÆ, ¨ChainCompleteÆ, ¨LubsExistÆ])
 	THEN REPEAT strip_tac
 	THEN asm_rewrite_tac[]);
 val crpou_ccrpou_lemma = save_pop_thm "crpou_ccrpou_lemma";
@@ -2905,7 +2924,6 @@ set_goal([], ¨µr∑ CRpoU r ¥
 	±	(µx y∑ r x y ± r y x ¥ x = y)Æ);
 a (REPEAT_N 2 strip_tac
 	THEN fc_tac [get_spec ¨CRpoUÆ]
-	THEN fc_tac [get_spec ¨CRpoÆ]
 	THEN fc_tac [get_spec ¨RpoUÆ]
 	THEN fc_tac [rpou_fc_clauses]
 	THEN REPEAT strip_tac
@@ -2914,7 +2932,7 @@ a (REPEAT_N 2 strip_tac
 val crpou_fc_clauses = save_pop_thm "crpou_fc_clauses";
 
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂ e∑ IsGlb r {x|r (f x) x} e ± IsLfp r f eÆ);
-a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨RpoUÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
 	get_spec ¨TransÆ, get_spec ¨AntisymÆ]
 	THEN REPEAT strip_tac);
 a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
@@ -2929,7 +2947,7 @@ a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
 val crpou_glb_lfp_lemma1 = save_pop_thm "crpou_glb_lfp_lemma1";
 
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂l∑ IsLfp r f lÆ);
-a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨RpoUÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
 	THEN REPEAT strip_tac);
 a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
 	THEN1 (contr_tac
@@ -2949,7 +2967,7 @@ a (∂_tac ¨lÆ THEN strip_tac);
 val crpou_increasing_lfp_lemma2 = save_pop_thm "crpou_increasing_lfp_lemma2";
 
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂ e∑ IsLub r {x|r x (f x)} e ± IsGfp r f eÆ);
-a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨CRpoÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
+a (rewrite_tac [get_spec ¨CRpoUÆ, get_spec ¨RpoUÆ, get_spec ¨RpoÆ, get_spec ¨PartialOrderÆ,
 	get_spec ¨TransÆ, get_spec ¨AntisymÆ]
 	THEN REPEAT strip_tac);
 a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
@@ -2964,7 +2982,7 @@ a (∂_tac ¨eÆ THEN asm_rewrite_tac[]);
 val crpou_lub_gfp_lemma1 = save_pop_thm "crpou_lub_gfp_lemma1";
 
 set_goal([], ¨µr f∑ CRpoU r ± Increasing r r f ¥ ∂g∑ IsGfp r f gÆ);
-a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨CRpoÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
+a (rewrite_tac (map get_spec [¨CRpoUÆ, ¨RpoUÆ, ¨RpoÆ, ¨PartialOrderÆ, ¨TransÆ])
 	THEN REPEAT strip_tac);
 a (lemma_tac ¨µx y∑ r x y ± r y x ¥ x = yÆ
 	THEN1 (contr_tac
@@ -2986,7 +3004,7 @@ val crpou_increasing_gfp_lemma2 = save_pop_thm "crpou_increasing_gfp_lemma2";
 set_goal([], ¨µr∑ CRpoU r ¥ µX z∑ IsGlb r X z ¥ Glb r X = zÆ);
 a (REPEAT strip_tac
 	THEN fc_tac [get_spec ¨CRpoUÆ]
-	THEN fc_tac [get_spec ¨CRpoÆ]
+	THEN fc_tac [get_spec ¨RpoUÆ]
 	THEN fc_tac [get_spec ¨RpoÆ]
 	THEN fc_tac [get_spec ¨PartialOrderÆ]
 	THEN all_fc_tac [isglb_glb_lemma]);
@@ -2995,7 +3013,7 @@ val isglb_glb_crpou_lemma = save_pop_thm "isglb_glb_crpou_lemma";
 set_goal([], ¨µr∑ CRpoU r ¥ µX z∑ IsLub r X z ¥ Lub r X = zÆ);
 a (REPEAT strip_tac
 	THEN fc_tac [get_spec ¨CRpoUÆ]
-	THEN fc_tac [get_spec ¨CRpoÆ]
+	THEN fc_tac [get_spec ¨RpoUÆ]
 	THEN fc_tac [get_spec ¨RpoÆ]
 	THEN fc_tac [get_spec ¨PartialOrderÆ]
 	THEN all_fc_tac [islub_lub_lemma]);
@@ -4747,6 +4765,7 @@ fun translate_sig ctk sign =
  in      match_mk_app (#compound_fixp ctk, tll)
  end;
 
+set_flag ("subgoal_package_quiet", false);
 =IGN
 set_flag ("pp_use_alias", true);
 declare_ctk_aliases ntree_ctk ctk_aliases;
