@@ -1,5 +1,5 @@
 =IGN
-$Id: t025.doc,v 1.6 2008/10/03 18:15:27 rbj Exp $
+$Id: t025.doc,v 1.7 2008/10/16 19:30:12 rbj Exp $
 open_theory "ifol";
 set_merge_pcs ["rbjmisc", "'GS1", "'misc2", "'ifol"];
 =TEX
@@ -40,12 +40,12 @@ It consists primarily of things required in the documents on non well-founded se
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/10/03 18:15:27 $ $
+Last Change $ $Date: 2008/10/16 19:30:12 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 
-$ $Id: t025.doc,v 1.6 2008/10/03 18:15:27 rbj Exp $ $
+$ $Id: t025.doc,v 1.7 2008/10/16 19:30:12 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -134,7 +134,7 @@ val funimageâg_fc_lemma = save_pop_thm "funimageâg_fc_lemma";
 
 \section{ORDERS}
 
-\section{Domain Restriction}
+\subsection{Domain Restriction}
 
 The following operator restricts a reflexive partial order to some subdomain of the type over which it is defined.
 
@@ -148,7 +148,7 @@ declare_infix(300, "Úâo");
 ‹   µ V r∑ V Úâo r = Ãx y∑ if x ç V ± y ç V then r x y else x = y
 ∞
 
-\section{Discrete Partial Orders}
+\subsection{Discrete Partial Orders}
 
 =SML
 new_type_defn (["DPO"], "DPO", ["'a"],
@@ -1697,6 +1697,87 @@ add_pc_thms "'misc2" (map get_spec [] @ [ºâtâ4_lub_clauses, ºâtâ4_glb_clauses]);
 set_merge_pcs ["rbjmisc", "'GS1", "'misc2"];
 =TEX
 }%ignore
+
+The following definitions expresses compatibility of truth values.
+This is useful when trying to obtain a boolean valued function as a total least fixed point of a monotonic four valued function.
+
+I first define a notion of compatibility between truth values.
+
+πHOLCONST
+‹ €CompFTV› : FTV SET SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ CompFTV = {{fB}; {fFalse}; {fTrue}; {fB; fFalse}; {fB; fTrue}}
+∞
+
+and its dual:
+
+πHOLCONST
+‹ €CoCompFTV› : FTV SET SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ CoCompFTV = {{fT}; {fFalse}; {fTrue}; {fT; fFalse}; {fT; fTrue}}
+∞
+
+=GFT
+€compftv_lemma› =
+   Ù µ s
+     ∑ s ç CompFTV § (∂ x∑ x ç s) ± ≥ fT ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)
+
+€cocompftv_lemma› =
+   Ù µ s
+     ∑ s ç CoCompFTV § (∂ x∑ x ç s) ± ≥ fB ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)
+
+=TEX
+
+\ignore{
+=SML
+local val _ = set_goal([], ¨µs∑ s ç CompFTV § (∂x∑ x ç s) ± ≥ fT ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
+val _ = a (µ_tac THEN rewrite_tac[get_spec ¨CompFTVÆ, ç_in_clauses]
+	THEN REPEAT_N 2 strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
+(* *** Goal "2" *** *)
+val _ = a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
+	THEN asm_rewrite_tac[]);
+in val compftv_lemma = save_pop_thm "compftv_lemma";
+end;
+
+local val _ = set_goal([], ¨µs∑ s ç CoCompFTV § (∂x∑ x ç s) ± ≥ fB ç s ± (≥ fTrue ç s ≤ ≥ fFalse ç s)Æ);
+val _ = a (µ_tac THEN rewrite_tac[get_spec ¨CoCompFTVÆ, ç_in_clauses]
+	THEN REPEAT_N 2 strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (strip_tac THEN asm_rewrite_tac[ç_in_clauses] THEN prove_∂_tac);
+(* *** Goal "2" *** *)
+val _ = a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2.1" *** *)
+val _ = a (LEMMA_T ¨{fFalse; fT} = {fT; fFalse}Æ rewrite_thm_tac);
+val _ = a (PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.2" *** *)
+val _ = a (LEMMA_T ¨{fTrue; fT} = {fT; fTrue}Æ rewrite_thm_tac);
+val _ = a (PC_T1 "hol1" prove_tac[]);
+in val cocompftv_lemma = save_pop_thm "cocompftv_lemma";
+end;
+
+=IGN
+set_goal([], ¨{fB} ç CompFTV
+	± {fFalse} ç CompFTV
+	± {fTrue} ç CompFTV
+	± {fB; fFalse} ç CompFTV
+	± {fB; fTrue} ç CompFTV
+	± ≥ {} Ì CompFTV
+	
+
+Æ);
+a (rewrite_tac [get_spec ¨CompFTVÆ]);
+
+set_goal([], ¨µs∑ s ç CompFTV § ≥ Lub $ºâtâ4 s = fTÆ);
+a (µ_tac);
+a (strip_asm_tac (µ_elim ¨sÆ ftvs_cases_thm)
+	THEN asm_rewrite_tac [get_spec ¨CompFTVÆ]);
+
+=TEX
+}%ignore
+
 
 \section{Indexed Sets}
 
