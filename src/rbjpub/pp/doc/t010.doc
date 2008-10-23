@@ -1,5 +1,5 @@
 =IGN
-$Id: t010.doc,v 1.9 2008/10/16 19:30:12 rbj Exp $
+$Id: t010.doc,v 1.10 2008/10/23 21:10:46 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -19,7 +19,7 @@ $Id: t010.doc,v 1.9 2008/10/16 19:30:12 rbj Exp $
 
 \title{Miscellaneous Tactics}
 \author{Roger Bishop Jones}
-\date{$ $Date: 2008/10/16 19:30:12 $ $}
+\date{$ $Date: 2008/10/23 21:10:46 $ $}
 
 \makeindex
 \usepackage[pdftex]{hyperref}
@@ -37,7 +37,7 @@ Several structures providing tactics, tacticals, etc. for theories, forward chai
 \href{http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 
-$ $Id: t010.doc,v 1.9 2008/10/16 19:30:12 rbj Exp $ $
+$ $Id: t010.doc,v 1.10 2008/10/23 21:10:46 rbj Exp $ $
 
 \bf Copyright \copyright\ : Roger Bishop Jones \\
 
@@ -177,8 +177,12 @@ val €Ø_top_anf_tac› = conv_tac (TOP_MAP_C Ø_anf_conv);
 =ENDDOC
 
 =DOC
+val €COND_CASES_T› : TERM -> THM_TACTIC -> TACTIC;
 val €cond_cases_tac› : TERM -> TACTIC;
 =DESCRIBE
+A version of {\it CASES\_T} for use in rewriting conditional goals.
+It does a case split assuming the term argument or its denial and then rewrites with that asssumption before applying the thm tactical argument.
+
 A version of {\it cases\_tac} for use in rewriting conditional goals.
 It does a case split assuming the argument or its denial and then rewrites with the un-stripped asssumption before stripping it into the assumptions. 
 =GFT Example
@@ -192,7 +196,8 @@ a (cond_cases_tac ¨x = y ± y = zÆ);
 (* ?Ù *)  ¨z + z + z = z * 3.Æ
 =TEX
 =GFT Definition
-val €fun cond_cases_tac› x = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (strip_asm_tac y));
+fun €COND_CASES_T› x tt = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (tt y));
+fun €cond_cases_tac› x = COND_CASES_T x strip_asm_tac;
 =TEX
 =ENDDOC
 
@@ -265,7 +270,8 @@ val €Ø_top_anf_tac› = conv_tac (TOP_MAP_C Ø_anf_conv);
 =TEX
 A case splitting tactic for conditional goals.
 =SML
-fun €cond_cases_tac› x = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (strip_asm_tac y));
+fun €COND_CASES_T› x tt = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (tt y));
+fun €cond_cases_tac› x = COND_CASES_T x strip_asm_tac;
 =TEX
 }%ignore
 
@@ -1994,6 +2000,8 @@ in fun €front› x = let val (f,l) = front_last x in f end
 end;
 =TEX
 
+\subsection{False Equations Between Set Displays}
+
 The following code defines a conversion for transforming (into $¨FÆ$) false equations between set displays.
 
 =SML
@@ -2018,6 +2026,8 @@ fun €false_enum_eq_conv› t =
 			THEN ≥_in_tac
 			THEN ∂_tac dt THEN prove_tac[])
 	end handle _ => fail_conv t;
+
+val €false_enum_eq_tac› = conv_tac (MAP_C false_enum_eq_conv); 
 =TEX
 
 \twocolumn[\section{INDEX}\label{INDEX}]

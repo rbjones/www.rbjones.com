@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.16 2008/10/16 19:30:12 rbj Exp $
+$Id: t006.doc,v 1.17 2008/10/23 21:10:46 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2008/10/16 19:30:12 $ $
+Last Changed $ $Date: 2008/10/23 21:10:46 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.16 2008/10/16 19:30:12 rbj Exp $ $
+$ $Id: t006.doc,v 1.17 2008/10/23 21:10:46 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -113,8 +113,44 @@ set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'rbjmisc"];
 =TEX
 }%ignore
 
+\section{Predicate Calculus}
+
+There is probably a better way of doing this (or a better thing to be doing).
+
+In some circumstances $µ\_±\_out\_lemma$ can be used to avoid or postpone a case split.
+
+=GFT
+€µ_»_lemma› =
+	Ù µ p∑ $µ p § (µ x∑ p x)
+
+€µ_±_out_lemma› =
+	Ù µ p q∑ $µ p ± $µ q § (µ x∑ p x ± q x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µp:'a ≠ BOOL∑ $µ p § $µ Ãx∑ p xÆ);
+a (REPEAT strip_tac);
+a (POP_ASM_T (rewrite_thm_tac o (rewrite_rule []) o (once_rewrite_rule [map_eq_sym_rule »_axiom])));
+a (once_rewrite_tac [map_eq_sym_rule »_axiom]);
+a (asm_rewrite_tac[]);
+val µ_»_lemma = save_pop_thm "µ_»_lemma";
+
+set_goal([], ¨µp q:'a ≠ BOOL∑ $µ p ± $µ q § $µ Ãx∑ p x ± q xÆ);
+a (REPEAT strip_tac);
+a (GET_ASM_T ¨$µ pÆ (rewrite_thm_tac o (once_rewrite_rule [µ_»_lemma])));
+a (GET_ASM_T ¨$µ qÆ (rewrite_thm_tac o (once_rewrite_rule [µ_»_lemma])));
+a (once_rewrite_tac [µ_»_lemma]);
+a (asm_rewrite_tac[]);
+a (once_rewrite_tac [µ_»_lemma]);
+a (asm_rewrite_tac[]);
+val µ_±_out_lemma = save_pop_thm "µ_±_out_lemma";
+=TEX
+}%ignore
 
 \section{Sets}
+
+\subsection{Pairwise Disjointness}
 
 Here is a definition of ``Pairwise disjoint''.
 
@@ -123,6 +159,8 @@ Here is a definition of ``Pairwise disjoint''.
 ˜¸¸¸¸¸¸
 ‹ µss∑ PDisj ss § ≥ ∂t u∑ {t; u} Ä ss ± ≥ t = u ± ≥ t ° u = {} 
 ∞
+
+\subsection{Transitivity of Inclusion}
 
 =GFT
 €Ä_trans_thm› = Ù µ A B C∑ A Ä B ± B Ä C ¥ A Ä C
@@ -134,6 +172,23 @@ val Ä_trans_thm = save_thm ("Ä_trans_thm", pc_rule1 "hol1" prove_rule []
 	¨µA B C∑ A Ä B ± B Ä C ¥ A Ä CÆ);
 =TEX
 }%ignore
+
+\subsection{Singleton Subsets}
+
+=GFT
+€singleton_subset_lemma› =
+   Ù µ x v∑ {x} Ä V § x ç V
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µx v∑ {x} Ä V § x ç VÆ);
+a (PC_T1 "hol1" prove_tac[]);
+val singleton_subset_lemma = save_pop_thm "singleton_subset_lemma";
+=TEX
+}%ignore
+
+\subsection{Image of a Set under a Function}
 
 πHOLCONST
 ‹ €FunImage›: ('a ≠ 'b) ≠ 'a SET ≠ 'b SET
@@ -167,7 +222,7 @@ val insert_twice_thm = save_pop_thm "insert_twice_thm";
 
 \ignore{
 =SML
-add_pc_thms "'rbjmisc" (map get_spec [] @ [insert_twice_thm]);
+add_pc_thms "'rbjmisc" (map get_spec [] @ [singleton_subset_lemma, insert_twice_thm]);
 set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'rbjmisc"];
 =TEX
 }%ignore
