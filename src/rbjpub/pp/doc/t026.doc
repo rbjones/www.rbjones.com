@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.11 2008/10/23 21:10:45 rbj Exp $
+$Id: t026.doc,v 1.12 2008/10/31 14:32:44 rbj Exp $
 open_theory "ifos";
 
 set_flag ("pp_use_alias", true);
@@ -44,12 +44,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/10/23 21:10:45 $ $
+Last Change $ $Date: 2008/10/31 14:32:44 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.11 2008/10/23 21:10:45 rbj Exp $ $
+$ $Id: t026.doc,v 1.12 2008/10/31 14:32:44 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -866,7 +866,7 @@ fun €ifos_induction_tac› t (a,c) = (
 	THEN LEMMA_T l3 (rewrite_thm_tac o rewrite_rule[])
 	THEN bc_tac [syn_induction_thm]
 	THEN rewrite_tac[]
-	THEN REPEAT strip_tac
+	THEN strip_tac
 	end end) (a,c);
 =TEX
 
@@ -1038,6 +1038,7 @@ The parameters are the type of the domain of discourse and the type of truth val
 \end{description}
 
 =SML
+declare_infix(300, "çâv");
 declare_type_abbrev (€"BR"›, ["'a", "'b"], î'a ≠ 'a ≠ 'bÆ);
 declare_type_abbrev("€RV›", ["'a","'b"], î(GS, 'a)IX ≠ 'bÆ);
 declare_type_abbrev("€ST›", ["'a","'b"], î'a SET ∏ ('a, 'b)BRÆ);
@@ -1187,8 +1188,14 @@ Deriving the result by that means looked like it would be a bit complicated so h
 €evalcf_ftv_ft_lemma› =
    Ù µ s∑ EvalCf_ftv s = fT § ≥ fFalse ç s ± fT ç s ± ≥ fB ç s
 
+€evalcf_ftv_ft_lemma1› =
+   Ù µ s∑ EvalCf_ftv s = fT ¥ ≥ fFalse ç s ± fT ç s ± ≥ fB ç s
+
 €evalcf_ftv_fb_lemma› =
    Ù µ s∑ EvalCf_ftv s = fB § ≥ fFalse ç s ± ≥ fT ç s ± fB ç s
+
+€evalcf_ftv_fb_lemma1› =
+   Ù µ s∑ EvalCf_ftv s = fB ¥ ≥ fFalse ç s ± ≥ fT ç s ± fB ç s
 =TEX
 
 \ignore{
@@ -1209,6 +1216,10 @@ a (cases_tac ¨fFalse ç sÆ THEN_TRY asm_rewrite_tac[]);
 a (cases_tac ¨fT ç sÆ THEN cases_tac ¨fB ç sÆ THEN_TRY asm_rewrite_tac[]);
 val evalcf_ftv_ft_lemma = save_pop_thm "evalcf_ftv_ft_lemma";
 
+set_goal([], ¨µs∑ EvalCf_ftv s = fT ¥ ≥ fFalse ç s ± fT ç s ± ≥ fB ç sÆ);
+a (µ_tac THEN rewrite_tac [evalcf_ftv_ft_lemma]);
+val evalcf_ftv_ft_lemma1 = save_pop_thm "evalcf_ftv_ft_lemma1";
+
 pop_pc();
 
 set_goal([], ¨µs∑ EvalCf_ftv s = fB § ≥ fFalse ç s ± ≥ fT ç s ± fB ç sÆ);
@@ -1216,6 +1227,10 @@ a (µ_tac THEN rewrite_tac [get_spec ¨EvalCf_ftvÆ, ºâtâ4_lub_thm]);
 a (cases_tac ¨fFalse ç sÆ THEN cases_tac ¨fT ç sÆ THEN cases_tac ¨fB ç sÆ
 	THEN asm_rewrite_tac[]);
 val evalcf_ftv_fb_lemma = save_pop_thm "evalcf_ftv_fb_lemma";
+
+set_goal([], ¨µs∑ EvalCf_ftv s = fB ¥ ≥ fFalse ç s ± ≥ fT ç s ± fB ç sÆ);
+a (µ_tac THEN rewrite_tac [evalcf_ftv_fb_lemma]);
+val evalcf_ftv_fb_lemma1 = save_pop_thm "evalcf_ftv_fb_lemma1";
 
 (*
 set_goal([], ¨µs∑ EvalCf_ftv s = fB § fB ç s ± ≥ fFalse ç s ± ≥ fT ç sÆ);
@@ -1434,9 +1449,141 @@ val EvalForm_MkAf_lemma = pop_thm ();
 set_goal([], ¨µ cfe $ºât st vars forms∑ EvalForm (cfe, $ºât, st) (MkCf (vars, forms)) = EvalCf cfe (MkCf (set, mem)) st Æ);
 a (REPEAT µ_tac THEN rewrite_tac [evalformfunct_thm2]);
 val EvalForm_MkCf_lemma = pop_thm ();
+=TEX
+}%ignore
 
 
+=GFT
+€EvalForm_fT_lemma› =
+   Ù µ y
+     ∑ y ç Syntax
+         ¥ (µ va
+         ∑ FreeVars y Ä IxDom va
+               ± IxRan va Ä V ¿ {öâg}
+               ± EvalForm (EvalCf_ftv, $ºâtâ4, V ¿ {öâg}, $çâv) y va = fT
+             ¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT))
+=TEX
+=GFT
+€EvalForm_fT_lemma2› =
+   Ù µ y
+     ∑ y ç Syntax
+         ¥ (µ va
+         ∑ FreeVars y Ä IxDom va
+               ± IxRan va Ä V ¿ {öâg}
+               ± EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) y va = fT
+             ¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT))
+=TEX
 
+\ignore{
+=SML
+add_pc_thms "'ifos" [EvalAf_MkAf_lemma, EvalCf_MkCf_lemma, EvalForm_MkAf_lemma];
+
+push_merge_pcs ["misc2", "'ifos"];
+
+set_goal([], ¨µy∑ y ç Syntax ¥ µva∑ FreeVars y Ä IxDom va ± IxRan va Ä V ¿ {öâg}
+	± EvalForm (EvalCf_ftv, $ºâtâ4, V ¿ {öâg}, $çâv) y va = fT
+	¥ (∂ x y:GS∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT)Æ);
+a (strip_tac THEN strip_tac);
+a (ifos_induction_tac ¨yÆ THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN DROP_NTH_ASM_T 2 ante_tac
+	THEN asm_rewrite_tac[freevarsfunct_thm2, get_spec ¨$ÄÆ, ç_in_clauses]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (spec_nth_asm_tac 2 ¨yÆ);
+a (asm_rewrite_tac[]);
+a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
+	THEN asm_rewrite_tac[]);
+a (all_fc_tac[ix_domran_lemma]);
+a (PC_T1 "hol1" asm_prove_tac []);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [evalformfunct_thm2, let_def]);
+a (ALL_FC_T (fn x => rewrite_tac (x @ [evalcf_ftv_ft_lemma])) [repclosed_syntax_thm2] THEN strip_tac);
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN rewrite_tac [get_spec ¨FunImageÆ, get_spec ¨XâgÆ]
+	THEN strip_tac
+	THEN all_asm_fc_tac []);
+a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T rewrite_tac);
+a (STRIP_T (asm_tac o eq_sym_rule));
+a (spec_nth_asm_tac 11 ¨aÆ);
+a (lemma_tac ¨MkCf(vars, fs) ç SyntaxÆ
+	THEN1 ALL_FC_T rewrite_tac [rewrite_rule [get_spec ¨XâgÆ] repclosed_syntax_thm]);
+a (lemma_tac ¨FreeVars a Ä IxDom (IxOverRide va v)
+                 ± IxRan (IxOverRide va v) Ä V ¿ {öâg}Æ
+	THEN1 (asm_rewrite_tac []));
+a (REPEAT strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (DROP_NTH_ASM_T 12 (ante_tac o (rewrite_rule [freevarsfunct_thm2])));
+a (asm_rewrite_tac[get_spec ¨FunImageâgÆ]);
+a (PC_T "hol1" contr_tac);
+a (spec_nth_asm_tac 4 ¨xÆ);
+a (spec_nth_asm_tac 1 ¨FreeVars aÆ);
+a (spec_nth_asm_tac 1 ¨aÆ);
+(* *** Goal "2.1.2" *** *)
+a (asm_tac (list_µ_elim [¨vaÆ, ¨vÆ] ixoverride_ixran_lemma));
+push_goal([], ¨µA B C D:GS SET∑ A Ä B ¿ C ± B Ä D ± C Ä D ¥ A Ä DÆ);
+a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac THEN REPEAT (asm_fc_tac []));
+a (all_fc_tac [pop_thm()]);
+(* *** Goal "2.2" *** *)
+a (ALL_ASM_FC_T (MAP_EVERY asm_tac) []);
+a ((POP_ASM_T discard_tac) THEN POP_ASM_T ante_tac);
+a (PC_T1 "hol1" prove_tac[]);
+val EvalForm_fT_lemma = save_pop_thm "EvalForm_fT_lemma";
+
+set_goal([], ¨µy∑ y ç Syntax ¥ µva∑ FreeVars y Ä IxDom va ± IxRan va Ä V ¿ {öâg}
+	± EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) y va = fT
+	¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT)Æ);
+a (strip_tac THEN strip_tac);
+a (ifos_induction_tac ¨yÆ THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN DROP_NTH_ASM_T 2 ante_tac
+	THEN asm_rewrite_tac[freevarsfunct_thm2, get_spec ¨$ÄÆ, ç_in_clauses]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (spec_nth_asm_tac 2 ¨yÆ);
+a (asm_rewrite_tac[]);
+a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
+	THEN asm_rewrite_tac[]);
+a (all_fc_tac[ix_domran_lemma]);
+a (PC_T1 "hol1" asm_prove_tac []);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac [evalformfunct_thm2, let_def]);
+a (ALL_FC_T (fn x => rewrite_tac (x @ [evalcf_ftv_ft_lemma])) [repclosed_syntax_thm2] THEN strip_tac);
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN rewrite_tac [get_spec ¨FunImageÆ, get_spec ¨XâgÆ]
+	THEN strip_tac
+	THEN all_asm_fc_tac []);
+a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T rewrite_tac);
+a (STRIP_T (asm_tac o eq_sym_rule));
+a (spec_nth_asm_tac 11 ¨aÆ);
+a (lemma_tac ¨MkCf(vars, fs) ç SyntaxÆ
+	THEN1 ALL_FC_T rewrite_tac [rewrite_rule [get_spec ¨XâgÆ] repclosed_syntax_thm]);
+a (lemma_tac ¨FreeVars a Ä IxDom (IxOverRide va v)
+                 ± IxRan (IxOverRide va v) Ä V ¿ {öâg}Æ
+	THEN1 (asm_rewrite_tac []));
+(* *** Goal "2.1" *** *)
+a (REPEAT strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (DROP_NTH_ASM_T 12 (ante_tac o (rewrite_rule [freevarsfunct_thm2])));
+a (asm_rewrite_tac[get_spec ¨FunImageâgÆ]);
+a (PC_T "hol1" contr_tac);
+a (spec_nth_asm_tac 4 ¨xÆ);
+a (spec_nth_asm_tac 1 ¨FreeVars aÆ);
+a (spec_nth_asm_tac 1 ¨aÆ);
+(* *** Goal "2.1.2" *** *)
+a (asm_tac (list_µ_elim [¨vaÆ, ¨vÆ] ixoverride_ixran_lemma));
+a (lemma_tac ¨IxRan v Ä V ¿ {öâg}Æ
+	THEN1 PC_T "hol1" (GET_ASM_T ¨IxRan v Ä VÆ ante_tac THEN prove_tac []));
+push_goal([], ¨µA B C D:GS SET∑ A Ä B ¿ C ± B Ä D ± C Ä D ¥ A Ä DÆ);
+a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac THEN REPEAT (asm_fc_tac []));
+a (all_fc_tac [pop_thm()]);
+(* *** Goal "2.2" *** *)
+a (ALL_ASM_FC_T (MAP_EVERY asm_tac) []);
+a ((POP_ASM_T discard_tac) THEN POP_ASM_T ante_tac);
+a (PC_T1 "hol1" prove_tac[]);
+val EvalForm_fT_lemma2 = save_pop_thm "EvalForm_fT_lemma2";
+
+pop_pc();
 =TEX
 }%ignore
 
@@ -1467,7 +1614,7 @@ It proves useful in later proofs to have a notion of equivalence over partial me
 set_goal([], ¨µ cfe ºât V W f r1 r2∑ V Ä W ± PmrEq W r1 r2
 	¥ f ç Syntax ¥ µz∑ IxRan z Ä W ¥ EvalForm (cfe, ºât, (V, r1)) f z = EvalForm (cfe, ºât, (V, r2)) f zÆ);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PmrEqÆ] THEN strip_tac THEN strip_tac);
-a (ifos_induction_tac ¨fÆ);
+a (ifos_induction_tac ¨fÆ THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (rewrite_tac [evalformfunct_thm2, repclosed_syntax_thm, get_spec ¨EvalAfÆ, let_def]);
 a (cond_cases_tac ¨y ç IxDom z ± x ç IxDom zÆ);
@@ -1776,7 +1923,6 @@ Lets now get on with the four valued case.
 
 =SML
 declare_infix(300, "ºâfâtâ4");
-declare_infix(300, "çâv");
 =TEX
 
 πHOLCONST
@@ -2186,6 +2332,15 @@ We will also need to prove monotonicity of formula evaluation relative to the ex
            $ºâtâ4
            (EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) g)
 =TEX
+=GFT
+€evalform_increasing_thm4› =
+   Ù µ V W $çâv g
+     ∑ V Ä W ± V Ä Syntax ± g ç Syntax
+         ¥ Increasing
+           (ExsVaO (V2IxSet W, W, $çâv))
+           $ºâtâ4
+           (EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) g)
+=TEX
 
 \ignore{
 =SML
@@ -2367,6 +2522,101 @@ val _ = a (list_spec_nth_asm_tac 3 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
 val _ = a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) a = rvÆ)]);
 val _ = a strip_tac;
 val evalform_increasing_thm3 = save_pop_thm "evalform_increasing_thm3";
+
+set_goal([], ¨µV W $çâv g∑ V Ä W ± V Ä Syntax ± g ç Syntax
+	¥ Increasing (ExsVaO (V2IxSet W, (W, $çâv))) $ºâtâ4 (EvalForm (EvalCf_ftv, $ºâtâ4, (V, $çâv)) g)Æ);
+val _ = a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN strip_tac THEN POP_ASM_T ante_tac);
+val _ = a (sc_induction_tac ¨gÆ);
+val _ = a (strip_tac THEN asm_rewrite_tac ((map get_spec [¨IncreasingÆ, ¨$ÄÆ]) @ [])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac [evalformfunct_thm2, let_def]);
+val _ = a (cases_tac ¨IsAf tÆ THEN asm_rewrite_tac[let_def]);
+(* *** Goal "1" *** *)
+val _ = a (rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
+val _ = a (GET_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule (map get_spec
+	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
+	THEN asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨$ÄÆ] THEN REPEAT strip_tac);
+val _ = a (CASES_T ¨AfMem t ç IxDom y ± AfSet t ç IxDom yÆ asm_tac THEN asm_rewrite_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN (SYM_ASMS_T rewrite_tac)
+	THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IsDefinedÆ]
+	THEN strip_tac);
+val _ = a (spec_nth_asm_tac 5 ¨AfMem tÆ);
+val _ = a (spec_nth_asm_tac 8 ¨AfSet tÆ);
+val _ = a (rewrite_tac[get_spec ¨IxValÆ]);
+val _ = a (DROP_NTH_ASM_T 5 discard_tac THEN DROP_NTH_ASM_T 1 discard_tac);
+val _ = a (spec_nth_asm_tac 3 ¨ValueOf (x (AfSet t))Æ
+	THEN1 (fc_tac [ix_valueof_ran_lemma] THEN asm_fc_tac[] THEN asm_fc_tac[]));
+val _ = a (spec_nth_asm_tac 2 ¨ValueOf (y (AfMem t))Æ
+	THEN1 (fc_tac [ix_valueof_ran_lemma] THEN asm_fc_tac[] THEN asm_fc_tac[]));
+val _ = a (all_fc_tac [ºâtâ4_trans_thm]);
+(* *** Goal "2" *** *)
+val _ = a (rewrite_tac [get_spec ¨EvalCfÆ, let_def]);
+val _ = a (bc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalcf_ftv_increasing_lemma]);
+val _ = a (rewrite_tac [get_spec ¨SetOÆ] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+val _ = a (∂_tac ¨rv (IxOverRide y v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+val _ = a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
+	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
+	THEN_TRY asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (fc_tac [syntax_cases_fc_clauses]);
+val _ = a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
+(* *** Goal "2.1.2.1" *** *)
+val _ = a (all_fc_tac [is_fc_clauses]);
+val _ = a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
+val _ = a (ASM_FC_T rewrite_tac []);
+val _ = a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
+val _ = a (asm_fc_tac[]);
+(* *** Goal "2.1.2.2" *** *)
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
+a (lemma_tac ¨IxRan v Ä WÆ THEN1
+	(GET_ASM_T ¨IxRan v Ä VÆ ante_tac
+	THEN GET_ASM_T ¨µ x:GS∑ x ç V ¥ x ç WÆ ante_tac
+	THEN PC_T1 "hol1" prove_tac[]));
+a (LEMMA_T ¨ExsVaO (V2IxSet W, W, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
+	(asm_tac) THEN1 (all_fc_tac [exsvao_ixoverride_lemma2]));
+val _ = a (list_spec_nth_asm_tac 3 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
+val _ = a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) a = rvÆ)]);
+val _ = a strip_tac;
+(* *** Goal "2.2" *** *)
+val _ = a (∂_tac ¨rv (IxOverRide x v)Æ THEN strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.2.1" *** *)
+val _ = a (∂_tac ¨rvÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2.2" *** *)
+val _ = a (GET_NTH_ASM_T 6 (strip_asm_tac o (rewrite_rule (map get_spec
+	[¨ExsVaOÆ, ¨IxO2Æ, ¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨IxOÆ, ¨OptOÆ, ¨PwÆ, ¨V2IxSetÆ])))
+	THEN_TRY asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 8 (strip_asm_tac o (rewrite_rule [get_spec ¨FunImageÆ])));
+val _ = a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨XâgÆ])));
+val _ = a (fc_tac [syntax_cases_fc_clauses]);
+val _ = a (lemma_tac ¨ScPrec a t ± a ç SyntaxÆ);
+val _ = a (all_fc_tac [is_fc_clauses]);
+val _ = a (GET_NTH_ASM_T 4 (asm_tac o (rewrite_rule [asm_rule ¨t = MkCf (vars, fs)Æ])));
+val _ = a (ASM_FC_T rewrite_tac []);
+val _ = a (ufc_tac [scprec_fc_clauses] THEN asm_ufc_tac[]);
+val _ = a (asm_fc_tac[]);
+(* *** Goal "2.2.2.2" *** *)
+val _ = a (lemma_tac ¨tc ScPrec a tÆ THEN1 fc_tac [tc_incr_thm]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (POP_ASM_T ante_tac THEN asm_rewrite_tac[get_spec ¨IncreasingÆ] THEN strip_tac);
+a (lemma_tac ¨IxRan v Ä WÆ THEN1
+	(GET_ASM_T ¨IxRan v Ä VÆ ante_tac
+	THEN GET_ASM_T ¨µ x:GS∑ x ç V ¥ x ç WÆ ante_tac
+	THEN PC_T1 "hol1" prove_tac[]));
+val _ = a (LEMMA_T ¨ExsVaO (V2IxSet W, W, $çâv) (IxOverRide x v) (IxOverRide y v)Æ
+	(asm_tac)
+	THEN1 (all_fc_tac [exsvao_ixoverride_lemma2]));
+val _ = a (list_spec_nth_asm_tac 3 [¨IxOverRide x vÆ, ¨IxOverRide y vÆ]);
+val _ = a (rewrite_tac [eq_sym_rule (asm_rule ¨EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) a = rvÆ)]);
+val _ = a strip_tac;
+val evalform_increasing_thm4 = save_pop_thm "evalform_increasing_thm4";
 =TEX
 }%ignore
 
@@ -2842,7 +3092,7 @@ end;
 Unfortunaately that last lemma is too weak for the purposes for which is was intended.
 To obtain a stronger lemma it is necessary to have concepts weaker than {\it SameExt} and {\it SameEss}, as follows:
 
-To obtain this weaker lemma we define the notion of `compatible extension'.
+To obtain a stronger lemma we define the notion of `compatible extension'.
 
 Two sets have compatible extensions over some domain if they do not definitely disagree about what their members are, where a disagreement is definite if at some point either is overdefined or if neither is undefined.
 This is defined in terms of compatibility of truth value sets, which is defined in \cite{rbjt025}.
@@ -2884,6 +3134,25 @@ The property is parameterised by the domain of discourse.
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µV xe∑ OverDefinedL V xe § ∂y∑ y ç V ± xe y = fT
 ∞
+
+=GFT
+€OverDefinedL_ºâtâ4_lemma› =
+   Ù µ V xe1 xe2
+     ∑ ≥ OverDefinedL V xe1 ± PwS V $ºâtâ4 xe2 xe1 ¥ ≥ OverDefinedL V xe2
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µV xe1 xe2∑ ≥ OverDefinedL V xe1 ± PwS V $ºâtâ4 xe2 xe1 ¥ ≥ OverDefinedL V xe2Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨OverDefinedLÆ, get_spec ¨PwSÆ]
+	THEN contr_tac
+	THEN asm_fc_tac[]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[ft_fb_thm]
+	THEN contr_tac
+	THEN asm_fc_tac[]);
+val OverDefinedL_ºâtâ4_lemma = save_pop_thm "OverDefinedL_ºâtâ4_lemma";
+=TEX
+}%ignore
 
 The following property of relations could have been defined in terms of the above, but actually it was defined first and is simpler left as it is.
 
@@ -3102,11 +3371,12 @@ val Compatible_lemma1 = save_pop_thm "Compatible_lemma1";
 =TEX
 }%ignore
 
+
+
 \subsubsection{Proof Contexts}
 
 =SML
-add_pc_thms "'ifos" [EvalAf_MkAf_lemma, EvalCf_MkCf_lemma, EvalForm_MkAf_lemma];
-add_pc_thms "'ifos" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma];
+(* add_pc_thms "'ifos" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma]; *)
 
 (* add_pc_thms "'ifos" [get_spec ¨ExtensionÆ, get_spec ¨EssenceÆ]; *)
 commit_pc "'ifos";
@@ -3163,10 +3433,15 @@ The following function creates a variable assignment with just a value for the e
 
 €param_ö_undefined_lemma› =
    Ù µ x y∑ Param_ö x y = Undefined § ≥ y = öâg
-
+=TEX
+=GFT
 €Param_ö_Increasing_lemma› =
    Ù µ V r
      ∑ Increasing (V Úâo ExsSRO (V, r)) (ExsVaO (V2IxSet V, V, r)) Param_ö
+
+€Param_ö_Increasing_lemma2› =
+   Ù µ V W r
+     ∑ Increasing (W Úâo ExsSRO (V, r)) (ExsVaO (V2IxSet W, V, r)) Param_ö
 =TEX
 
 \ignore{
@@ -3218,7 +3493,13 @@ a (REPEAT µ_tac
 a (var_elim_nth_asm_tac 4);
 val Param_ö_Increasing_lemma = save_pop_thm "Param_ö_Increasing_lemma";
 
-set_merge_pcs ["misc21", "'ifos", "'sfp"];
+set_goal([], ¨µV W r∑ Increasing (W Úâo ExsSRO (V, r)) (ExsVaO (V2IxSet W, (V, r))) Param_öÆ);
+a (REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¨IncreasingÆ, ¨$ÚâoÆ, ¨ExsVaOÆ, ¨IxO2Æ, ¨IxOÆ, ¨PwÆ, ¨OptOÆ, ¨V2IxSetÆ])
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]
+	THEN_TRY PC_T1 "hol1" asm_prove_tac[]);
+val Param_ö_Increasing_lemma2 = save_pop_thm "Param_ö_Increasing_lemma2";
 =TEX
 }%ignore
 
@@ -3240,6 +3521,8 @@ It is easily shown to be monotonic.
 
 \ignore{
 =SML
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
+
 local val _ = set_goal([], ¨µd∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)Æ);
 val _ = a (strip_tac THEN LEMMA_T
 	¨SemanticFunctor d = (Ãr m s∑ r s (Param_ö m)) o (Ã$çâv∑ EvalForm (EvalCf_ftv, $ºâtâ4, (d, $çâv)))Æ
@@ -3264,6 +3547,81 @@ in val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing
 end;
 =TEX
 }%ignore
+
+We need to show that the essences of objects after application of the semantic functor depend only on their extension and essence before application of the functor.
+One way of expressing this is by stating that the identity function is an order morphism of between two distinct orderings of our syntax.
+The orderings are respectively:
+
+\begin{itemize}
+\item the ordering of syntactic objects according to their extension and essence relative to some membership relation $\$çâv$
+\item the ordering of the objects according to their essence in the relation obtained when the semantic functor is applied to $\$çâv$.
+\end{itemize}
+
+When the details are worked out we get:
+
+=GFT
+€essence_exstentional_lemma› =
+   Ù µ V W $çâv
+     ∑ V Ä W ± V Ä Syntax
+         ¥ Increasing
+           (V Úâo ExsSRO (W, $çâv))
+           (EssSRO (V, SemanticFunctor V $çâv))
+           CombI
+
+€essence_exstentional_lemma2› =
+   Ù µ V W $çâv
+     ∑ V Ä W ± V Ä Syntax
+         ¥ Increasing
+           (W Úâo ExsSRO (W, $çâv))
+           (EssSRO (V, SemanticFunctor V $çâv))
+           CombI
+=TEX
+
+\ignore{
+=SML
+set_merge_pcs ["misc2", "'ifos", "'sfp"];
+
+set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (V Úâo ExsSRO (W, $çâv)) (EssSRO (V, SemanticFunctor V $çâv)) CombIÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsSROÆ, get_spec ¨EssSROÆ, get_spec ¨ExtSROÆ,
+			get_spec ¨ConjOrderÆ, get_spec ¨SemanticFunctorÆ, get_spec ¨$ÚâoÆ]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (lemma_tac ¨ExsVaO (V2IxSet W, W, $çâv) (Param_ö x) (Param_ö y)Æ);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsVaOÆ, get_spec ¨IxO2Æ, get_spec ¨ConjOrderÆ,
+		get_spec ¨IxOÆ, get_spec ¨IxO2Æ, get_spec ¨V2IxSetÆ, get_spec ¨PwÆ, get_spec ¨OptOÆ,
+		get_spec ¨ExsSROÆ, get_spec ¨ExtSROÆ, get_spec ¨EssSROÆ]);
+a (LEMMA_T ¨x ç W ± y ç WÆ rewrite_thm_tac
+	THEN1 PC_T1 "hol1" asm_prove_tac[]);
+a (strip_tac THEN cond_cases_tac ¨x' = öâgÆ);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨z ç SyntaxÆ THEN1 PC_T1 "hol1" asm_prove_tac[]);
+a (all_fc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalform_increasing_thm4]);
+val essence_exstentional_lemma = save_pop_thm "essence_exstentional_lemma";
+
+set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (W Úâo ExsSRO (W, $çâv)) (EssSRO (V, SemanticFunctor V $çâv)) CombIÆ);
+a (REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsSROÆ, get_spec ¨EssSROÆ, get_spec ¨ExtSROÆ,
+			get_spec ¨ConjOrderÆ, get_spec ¨SemanticFunctorÆ, get_spec ¨$ÚâoÆ]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (lemma_tac ¨ExsVaO (V2IxSet W, W, $çâv) (Param_ö x) (Param_ö y)Æ);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsVaOÆ, get_spec ¨IxO2Æ, get_spec ¨ConjOrderÆ,
+		get_spec ¨IxOÆ, get_spec ¨IxO2Æ, get_spec ¨V2IxSetÆ, get_spec ¨PwÆ, get_spec ¨OptOÆ,
+		get_spec ¨ExsSROÆ, get_spec ¨ExtSROÆ, get_spec ¨EssSROÆ]);
+a (strip_tac THEN cond_cases_tac ¨x' = öâgÆ);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨z ç SyntaxÆ THEN1 PC_T1 "hol1" asm_prove_tac[]);
+a (all_fc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalform_increasing_thm4]);
+val essence_exstentional_lemma2 = save_pop_thm "essence_exstentional_lemma2";
+
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
+=TEX
+}%ignore
+
+Note that the orders between the identity function is here proven to be a morphism are not restricted to the syntax of infinitary set theory, but cover the whole type GS, and this fact will be essential to some of the subsequent proofs, since we will make special use of $¨öâgÆ$ as an extra pseudo-set.
 
 \subsection{Properties of Fixed Points}
 
@@ -4289,9 +4647,7 @@ It looks like there will be {\it least} upper bounds, but I don't think that I n
 €compext_lemma1› =
    Ù µ V
      ∑ V Ä SetReps
-         ¥ (µ r
-         ∑ ≥ OverDefined V r
-             ¥ (µ x y
+         ¥ (µ r x y
              ∑ x ç V ± y ç V
                  ¥ (CompExt V r x y
                    § (∂ xt
@@ -4299,34 +4655,31 @@ It looks like there will be {\it least} upper bounds, but I don't think that I n
                        ± IsUb
                          (PwS V $ºâtâ4)
                          {Extension r x; Extension r y}
-                         xt))))
+                         xt)))
 =TEX
+
 =GFT
-€compess_lemma1› =
+compext_lemma1b =
    Ù µ V
-     ∑ V Ä SetReps
-         ¥ (µ r
-         ∑ ≥ OverDefined V r
-             ¥ (µ x y
-             ∑ x ç V ± y ç V
-                 ¥ (CompEss V r x y
-                   § (∂ es
-                   ∑ ≥ OverDefinedL V es
-                       ± IsUb
-                         (PwS V $ºâtâ4)
-                         {Essence r x; Essence r y}
-                         es))))
-=TEX   
+     ∑ V Ä Syntax
+         ¥ (µ r x y
+         ∑ x ç V ± y ç V
+             ¥ (CompExt V r x y
+               § (∂ xt
+               ∑ ≥ OverDefinedL V xt
+                   ± IsUb (PwS V $ºâtâ4) {Extension r x; Extension r y} xt)))
+=TEX
+
 
 \ignore{
 =SML
-set_goal([], ¨µV∑ V Ä SetReps ¥ µr∑ ≥ OverDefined V r ¥
-	µx y∑ x ç V ± y ç V ¥ (CompExt V r x y
+set_goal([], ¨µV∑ V Ä SetReps ¥ µr x y∑ x ç V ± y ç V ¥
+	(CompExt V r x y
 	§ ∂ xt∑ ≥ OverDefinedL V xt
 	   ± IsUb (PwS V $ºâtâ4)
 		{Extension r x; Extension r y}
 		xt)Æ);
-a (REPEAT_N 7 strip_tac
+a (REPEAT_N 6 strip_tac
 	THEN rewrite_tac ([ç_in_clauses]@(map get_spec [¨CompExtÆ, ¨OverDefinedLÆ, ¨ExtensionÆ, ¨IsUbÆ, ¨PwSÆ]))
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
@@ -4373,13 +4726,164 @@ a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fTrue; fB} = {fB; fTrue}Æ]);
 (* *** Goal "2.2.2.2" *** *)
 a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fFalse; fB} = {fB; fFalse}Æ]);
 val compext_lemma1 = save_pop_thm "compext_lemma1";
-=IGN
-set_goal([], ¨µV∑ V Ä SetReps ¥ µr∑ ≥ OverDefined V r ¥
-	µx y∑ x ç V ± y ç V ¥ (CompEss V r x y
-	§ ∂ es∑ ≥ OverDefinedL V es
+
+set_goal([], ¨µV∑ V Ä Syntax ¥ µr x y∑ x ç V ± y ç V ¥
+	(CompExt V r x y
+	§ ∂ xt∑ ≥ OverDefinedL V xt
 	   ± IsUb (PwS V $ºâtâ4)
-		{Essence r x; Essence r y}
-		es)Æ);
+		{Extension r x; Extension r y}
+		xt)Æ);
+a (REPEAT_N 6 strip_tac
+	THEN rewrite_tac ([ç_in_clauses]@(map get_spec [¨CompExtÆ, ¨OverDefinedLÆ, ¨ExtensionÆ, ¨IsUbÆ, ¨PwSÆ]))
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨Ãv∑ Lub $ºâtâ4 {r v x; r v y}Æ THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (spec_nth_asm_tac 2 ¨y'Æ);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 3 ¨x''Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨CompFTVÆ, sets_ext_clauses, ç_in_clauses]
+	THEN strip_tac THEN asm_rewrite_tac[]
+	THEN (accept_tac (rewrite_rule [ç_in_clauses] (list_µ_elim [¨r x'' xÆ, ¨{r x'' x; r x'' y}Æ]
+	(rewrite_rule [] (µ_elim ¨$ºâtâ4Æ less_lub_lemma))))));
+(* *** Goal "1.3" *** *)
+a (spec_nth_asm_tac 3 ¨x''Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨CompFTVÆ, sets_ext_clauses, ç_in_clauses]
+	THEN strip_tac THEN asm_rewrite_tac[]
+	THEN (accept_tac (rewrite_rule [ç_in_clauses] (list_µ_elim [¨r x'' yÆ, ¨{r x'' x; r x'' y}Æ]
+	(rewrite_rule [] (µ_elim ¨$ºâtâ4Æ less_lub_lemma))))));
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨Ãv∑ r v xÆ);
+(* *** Goal "2.1" *** *)
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule[get_spec ¨CombCÆ])));
+(* *** Goal "2.2" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
+a (spec_nth_asm_tac 4 ¨Ãv∑ r v yÆ);
+(* *** Goal "2.2.1" *** *)
+a (DROP_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule[get_spec ¨CombCÆ])));
+(* *** Goal "2.2.2" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
+a (spec_nth_asm_tac 7 ¨zÆ);
+a (rewrite_tac[get_spec ¨CompFTVÆ]);
+a (POP_ASM_T ante_tac);
+a (DROP_NTH_ASM_T 1 ante_tac THEN DROP_NTH_ASM_T 2 ante_tac);
+a (strip_asm_tac (µ_elim ¨xt zÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]
+	THEN strip_asm_tac (µ_elim ¨r z xÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]
+	THEN strip_asm_tac (µ_elim ¨r z yÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]);
+(* *** Goal "2.2.2.1" *** *)
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fTrue; fB} = {fB; fTrue}Æ]);
+(* *** Goal "2.2.2.2" *** *)
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fFalse; fB} = {fB; fFalse}Æ]);
+val compext_lemma1b = save_pop_thm "compext_lemma1b";
+=TEX
+}%ignore
+
+=GFT
+compext_lemma2 =
+   Ù µ V
+     ∑ V Ä SetReps
+         ¥ (µ $çâv x y
+         ∑ x ç V ± y ç V
+             ¥ CompExt V $çâv x y
+               = (∂ xt
+               ∑ ≥ OverDefinedL V xt
+                   ± IsLub
+                     (PwS V $ºâtâ4)
+                     {Extension $çâv x; Extension $çâv y}
+                     xt))
+
+€compext_lemma2b› =
+   Ù µ V
+     ∑ V Ä Syntax
+         ¥ (µ $çâv x y
+         ∑ x ç V ± y ç V
+             ¥ (CompExt V $çâv x y
+               § (∂ xt
+               ∑ ≥ OverDefinedL V xt
+                   ± IsLub
+                     (PwS V $ºâtâ4)
+                     {Extension $çâv x; Extension $çâv y}
+                     xt)))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µV∑ V Ä SetReps ¥ µ$çâv x y∑ x ç V ± y ç V ¥ (CompExt V $çâv x y
+	§ ∂ xt∑ ≥ OverDefinedL V xt
+	   ± IsLub (PwS V $ºâtâ4)
+		{Extension $çâv x; Extension $çâv y}
+		xt)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [compext_lemma1]);
+(* *** Goal "1" *** *)
+a (asm_tac (rewrite_rule [get_spec ¨LubsExistÆ] (list_µ_elim [¨VÆ, ¨$ºâtâ4Æ] pws_lubs_exist_thm)));
+a (spec_nth_asm_tac 1 ¨{Extension $çâv x; Extension $çâv y}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac []);
+a (fc_tac [get_spec ¨IsLubÆ, OverDefinedL_ºâtâ4_lemma]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨VÆ] compext_lemma1));
+a (LIST_SPEC_NTH_ASM_T 1 [¨$çâvÆ, ¨xÆ, ¨yÆ]
+	(rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ])));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (∂_tac ¨xtÆ THEN asm_rewrite_tac[]);
+val compext_lemma2 = save_pop_thm "compext_lemma2";
+
+set_goal([], ¨µV∑ V Ä Syntax ¥ µ$çâv x y∑ x ç V ± y ç V ¥ (CompExt V $çâv x y
+	§ ∂ xt∑ ≥ OverDefinedL V xt
+	   ± IsLub (PwS V $ºâtâ4)
+		{Extension $çâv x; Extension $çâv y}
+		xt)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [compext_lemma1b]);
+(* *** Goal "1" *** *)
+a (asm_tac (rewrite_rule [get_spec ¨LubsExistÆ] (list_µ_elim [¨VÆ, ¨$ºâtâ4Æ] pws_lubs_exist_thm)));
+a (spec_nth_asm_tac 1 ¨{Extension $çâv x; Extension $çâv y}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac []);
+a (fc_tac [get_spec ¨IsLubÆ, OverDefinedL_ºâtâ4_lemma]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨VÆ] compext_lemma1b));
+a (LIST_SPEC_NTH_ASM_T 1 [¨$çâvÆ, ¨xÆ, ¨yÆ]
+	(rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ])));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (∂_tac ¨xtÆ THEN asm_rewrite_tac[]);
+val compext_lemma2b = save_pop_thm "compext_lemma2b";
+=TEX
+}%ignore
+
+=GFT
+€compess_lemma1› =
+   Ù µ V
+     ∑ V Ä SetReps
+         ¥ (µ r x y
+             ∑ x ç V ± y ç V
+                 ¥ (CompEss V r x y
+                   § (∂ es
+                   ∑ ≥ OverDefinedL V es
+                       ± IsUb
+                         (PwS V $ºâtâ4)
+                         {Essence r x; Essence r y}
+                         es)))
+=TEX   
+=GFT
+€compess_lemma1b› =
+   Ù µ V
+     ∑ V Ä Syntax
+         ¥ (µ r x y
+         ∑ x ç V ± y ç V
+             ¥ (CompEss V r x y
+               § (∂ es
+               ∑ ≥ OverDefinedL V es
+                   ± IsUb (PwS V $ºâtâ4) {Essence r x; Essence r y} es)))
+=TEX
+
+\ignore{
 =SML
 set_goal([], ¨µV∑ V Ä SetReps ¥ µr x y∑ x ç V ± y ç V ¥ (CompEss V r x y
 	§ ∂ es∑ ≥ OverDefinedL V es
@@ -4434,6 +4938,139 @@ a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fTrue; fB} = {fB; fTrue}Æ]);
 a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fFalse; fB} = {fB; fFalse}Æ]);
 val compess_lemma1 = save_pop_thm "compess_lemma1";
 =TEX
+=SML
+set_goal([], ¨µV∑ V Ä Syntax ¥ µr x y∑ x ç V ± y ç V ¥ (CompEss V r x y
+	§ ∂ es∑ ≥ OverDefinedL V es
+	   ± IsUb (PwS V $ºâtâ4)
+		{Essence r x; Essence r y}
+		es)Æ);
+a (REPEAT_N 6 strip_tac
+	THEN rewrite_tac ([ç_in_clauses]@(map get_spec [¨CompEssÆ, ¨OverDefinedLÆ, ¨EssenceÆ, ¨IsUbÆ, ¨PwSÆ]))
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨Ãv∑ Lub $ºâtâ4 {r x v; r y v}Æ THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (spec_nth_asm_tac 2 ¨y'Æ);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 3 ¨x''Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨CompFTVÆ, sets_ext_clauses, ç_in_clauses]
+	THEN strip_tac THEN asm_rewrite_tac[]
+	THEN (accept_tac (rewrite_rule [ç_in_clauses] (list_µ_elim [¨r x x''Æ, ¨{r x x''; r y x''}Æ]
+	(rewrite_rule [] (µ_elim ¨$ºâtâ4Æ less_lub_lemma))))));
+(* *** Goal "1.3" *** *)
+a (spec_nth_asm_tac 3 ¨x''Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨CompFTVÆ, sets_ext_clauses, ç_in_clauses]
+	THEN strip_tac THEN asm_rewrite_tac[]
+	THEN (accept_tac (rewrite_rule [ç_in_clauses] (list_µ_elim [¨r y x''Æ, ¨{r x x''; r y x''}Æ]
+	(rewrite_rule [] (µ_elim ¨$ºâtâ4Æ less_lub_lemma))))));
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨Ãv∑ r x vÆ);
+(* *** Goal "2.1" *** *)
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule[ext_thm])));
+(* *** Goal "2.2" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
+a (spec_nth_asm_tac 4 ¨Ãv∑ r y vÆ);
+(* *** Goal "2.2.1" *** *)
+a (DROP_NTH_ASM_T 1 (strip_asm_tac o (rewrite_rule[ext_thm])));
+(* *** Goal "2.2.2" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
+a (spec_nth_asm_tac 7 ¨zÆ);
+a (rewrite_tac[get_spec ¨CompFTVÆ]);
+a (POP_ASM_T ante_tac);
+a (DROP_NTH_ASM_T 1 ante_tac THEN DROP_NTH_ASM_T 2 ante_tac);
+a (strip_asm_tac (µ_elim ¨es zÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]
+	THEN strip_asm_tac (µ_elim ¨r x zÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]
+	THEN strip_asm_tac (µ_elim ¨r y zÆ ftv_cases_thm)
+	THEN_TRY asm_rewrite_tac[ç_in_clauses]);
+(* *** Goal "2.2.2.1" *** *)
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fTrue; fB} = {fB; fTrue}Æ]);
+(* *** Goal "2.2.2.2" *** *)
+a (rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨{fFalse; fB} = {fB; fFalse}Æ]);
+val compess_lemma1b = save_pop_thm "compess_lemma1b";
+=TEX
+}%ignore
+
+=GFT
+€compess_lemma2› =
+   Ù µ V
+     ∑ V Ä SetReps
+         ¥ (µ $çâv x y
+         ∑ x ç V ± y ç V
+             ¥ CompEss V $çâv x y
+               = (∂ es
+               ∑ ≥ OverDefinedL V es
+                   ± IsLub
+                     (PwS V $ºâtâ4)
+                     {Essence $çâv x; Essence $çâv y}
+                     es))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µV∑ V Ä SetReps ¥ µ$çâv x y∑ x ç V ± y ç V ¥ (CompEss V $çâv x y
+	§ ∂ es∑ ≥ OverDefinedL V es
+	   ± IsLub (PwS V $ºâtâ4)
+		{Essence $çâv x; Essence $çâv y}
+		es)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [compess_lemma1]);
+(* *** Goal "1" *** *)
+a (asm_tac (rewrite_rule [get_spec ¨LubsExistÆ] (list_µ_elim [¨VÆ, ¨$ºâtâ4Æ] pws_lubs_exist_thm)));
+a (spec_nth_asm_tac 1 ¨{Essence $çâv x; Essence $çâv y}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac []);
+a (fc_tac [get_spec ¨IsLubÆ, OverDefinedL_ºâtâ4_lemma]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨VÆ] compess_lemma1));
+a (LIST_SPEC_NTH_ASM_T 1 [¨$çâvÆ, ¨xÆ, ¨yÆ]
+	(rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ])));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (∂_tac ¨esÆ THEN asm_rewrite_tac[]);
+val compess_lemma2 = save_pop_thm "compess_lemma2";
+=TEX
+}%ignore
+
+=GFT
+€compess_lemma2b› =
+   Ù µ V
+     ∑ V Ä Syntax
+         ¥ (µ $çâv x y
+         ∑ x ç V ± y ç V
+             ¥ (CompEss V $çâv x y
+               § (∂ es
+               ∑ ≥ OverDefinedL V es
+                   ± IsLub
+                     (PwS V $ºâtâ4)
+                     {Essence $çâv x; Essence $çâv y}
+                     es)))
+=TEX
+\ignore{
+=SML
+set_goal([], ¨µV∑ V Ä Syntax ¥ µ$çâv x y∑ x ç V ± y ç V ¥ (CompEss V $çâv x y
+	§ ∂ es∑ ≥ OverDefinedL V es
+	   ± IsLub (PwS V $ºâtâ4)
+		{Essence $çâv x; Essence $çâv y}
+		es)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [compess_lemma1b]);
+(* *** Goal "1" *** *)
+a (asm_tac (rewrite_rule [get_spec ¨LubsExistÆ] (list_µ_elim [¨VÆ, ¨$ºâtâ4Æ] pws_lubs_exist_thm)));
+a (spec_nth_asm_tac 1 ¨{Essence $çâv x; Essence $çâv y}Æ);
+a (∂_tac ¨eÆ THEN asm_rewrite_tac []);
+a (fc_tac [get_spec ¨IsLubÆ, OverDefinedL_ºâtâ4_lemma]);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (strip_asm_tac (list_µ_elim [¨VÆ] compess_lemma1b));
+a (LIST_SPEC_NTH_ASM_T 1 [¨$çâvÆ, ¨xÆ, ¨yÆ]
+	(rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ])));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (∂_tac ¨esÆ THEN asm_rewrite_tac[]);
+val compess_lemma2b = save_pop_thm "compess_lemma2b";
+=TEX
 }%ignore
 
 If there were a setrep {\it z} whose extension and essence were upper bounds for two setsreps {\it x} and {\it y} which have compatible and not overdefined extension and essences, then we could use the image of {\it z} under the semantics to show that the imagss of {\it x} and {\it y} have compatible essences.
@@ -4447,7 +5084,7 @@ In order to define the required extension I first use the above two lemmas to de
 \ignore{
 =SML
 set_goal([], ¨∂ExtUb∑
-	µ(V, $çâv) x y∑ V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± CompExt V $çâv x y ¥
 	let xt = ExtUb (V, $çâv) x y
 	in ≥ OverDefinedL V xt
                        ± IsUb
@@ -4471,10 +5108,118 @@ val _ = save_cs_∂_thm (pop_thm());
 ‹ €ExtUb› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ(V, $çâv) x y∑
-	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	V Ä SetReps ± x ç V ± y ç V ± CompExt V $çâv x y ¥
 	let xt = ExtUb (V, $çâv) x y
 	in ≥ OverDefinedL V xt
                        ± IsUb
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xt
+∞
+
+\ignore{
+=SML
+set_goal([], ¨∂ExtUb2∑
+	µ(V, $çâv) x y∑ V Ä Syntax ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtUb2 (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsUb
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xtÆ);
+a (prove_∂_tac THEN REPEAT strip_tac THEN rewrite_tac [let_def]);
+a (strip_asm_tac compext_lemma1b);
+a (spec_nth_asm_tac 1 ¨Fst x'Æ THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨Snd x'Æ THEN_TRY asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac  1 [¨x''Æ, ¨y'Æ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨xtÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨xtÆ THEN asm_rewrite_tac[]); 
+val _ = save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ExtUb2› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑
+	V Ä Syntax ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtUb2 (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsUb
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xt
+∞
+
+\ignore{
+=SML
+set_goal([], ¨∂ExtLub∑
+	µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtLub (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xtÆ);
+a (prove_∂_tac THEN REPEAT strip_tac THEN rewrite_tac [let_def]);
+a (strip_asm_tac compext_lemma2);
+a (spec_nth_asm_tac 1 ¨Fst x'Æ THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨Snd x'Æ THEN_TRY asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac  1 [¨x''Æ, ¨y'Æ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨xtÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨xtÆ THEN asm_rewrite_tac[]); 
+val _ = save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ExtLub› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑
+	V Ä SetReps ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtLub (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xt
+∞
+
+\ignore{
+=SML
+set_goal([], ¨∂ExtLub2∑
+	µ(V, $çâv) x y∑ V Ä Syntax ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtLub2 (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Extension $çâv x; Extension $çâv y}
+                         xtÆ);
+a (prove_∂_tac THEN REPEAT strip_tac THEN rewrite_tac [let_def]);
+a (strip_asm_tac compext_lemma2b);
+a (spec_nth_asm_tac 1 ¨Fst x'Æ THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨Snd x'Æ THEN_TRY asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac  1 [¨x''Æ, ¨y'Æ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨xtÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨xtÆ THEN asm_rewrite_tac[]); 
+val _ = save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €ExtLub2› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑
+	V Ä Syntax ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	let xt = ExtLub2 (V, $çâv) x y
+	in ≥ OverDefinedL V xt
+                       ± IsLub
                          (PwS V $ºâtâ4)
                          {Extension $çâv x; Extension $çâv y}
                          xt
@@ -4484,7 +5229,6 @@ val _ = save_cs_∂_thm (pop_thm());
 €ExtUb_lemma1› =
    Ù µ (V, $çâv) x y
      ∑ V Ä SetReps
-           ± ≥ OverDefined V $çâv
            ± x ç V
            ± y ç V
            ± CompExt V $çâv x y
@@ -4508,9 +5252,71 @@ a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
 a (spec_nth_asm_tac 2 ¨CombC $çâv yÆ);
 a (SPEC_NTH_ASM_T 1 ¨zÆ (strip_asm_tac o (rewrite_rule [])));
 val ExtUb_lemma1 = save_pop_thm "ExtUb_lemma1";
+=TEX
+}%ignore
 
+=GFT
+€ExtLub_lemma1› =
+   Ù µ(V, $çâv) x y∑
+	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	≥ OverDefinedL V (ExtLub (V, $çâv) x y)
+	± µz∑ z ç V ¥ (z çâv x) ºâtâ4 ExtLub (V, $çâv) x y z
+		± (z çâv y) ºâtâ4 ExtLub (V, $çâv) x y z
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv) x y∑
+	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	≥ OverDefinedL V (ExtLub (V, $çâv) x y)
+	± µz∑ z ç V ¥ (z çâv x) ºâtâ4 ExtLub (V, $çâv) x y z
+		± (z çâv y) ºâtâ4 ExtLub (V, $çâv) x y zÆ);
+a (REPEAT_N 6 strip_tac THEN all_asm_fc_tac [rewrite_rule [let_def] (get_spec ¨ExtLubÆ)]);
+a (asm_rewrite_tac[] THEN strip_tac THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLubÆ, get_spec ¨PwSÆ, ç_in_clauses, get_spec ¨ExtensionÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 2 ¨CombC $çâv xÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (spec_nth_asm_tac 3 ¨CombC $çâv yÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val ExtLub_lemma1 = save_pop_thm "ExtLub_lemma1";
+=TEX
+}%ignore
+
+=GFT
+€ExtLub2_lemma1› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä Syntax ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y
+         ¥ ≥ OverDefinedL V (ExtLub2 (V, $çâv) x y)
+           ± (µ z
+           ∑ z ç V
+               ¥ (z çâv x) ºâtâ4 ExtLub2 (V, $çâv) x y z
+                 ± (z çâv y) ºâtâ4 ExtLub2 (V, $çâv) x y z)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv) x y∑
+	V Ä Syntax ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompExt V $çâv x y ¥
+	≥ OverDefinedL V (ExtLub2 (V, $çâv) x y)
+	± µz∑ z ç V ¥ (z çâv x) ºâtâ4 ExtLub2 (V, $çâv) x y z
+		± (z çâv y) ºâtâ4 ExtLub2 (V, $çâv) x y zÆ);
+a (REPEAT_N 6 strip_tac THEN all_asm_fc_tac [rewrite_rule [let_def] (get_spec ¨ExtLub2Æ)]);
+a (asm_rewrite_tac[] THEN strip_tac THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLubÆ, get_spec ¨PwSÆ, ç_in_clauses, get_spec ¨ExtensionÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 2 ¨CombC $çâv xÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (spec_nth_asm_tac 3 ¨CombC $çâv yÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val ExtLub2_lemma1 = save_pop_thm "ExtLub2_lemma1";
+=TEX
+}%ignore
+
+\ignore{
+=SML
 set_goal([], ¨∂EssUb∑
-	µ(V, $çâv) x y∑ V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± CompEss V $çâv x y ¥
 	let es = EssUb (V, $çâv) x y
 	in ≥ OverDefinedL V es
                        ± IsUb
@@ -4534,7 +5340,7 @@ val _ = save_cs_∂_thm (pop_thm());
 ‹ €EssUb› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µ(V, $çâv) x y∑
-	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	V Ä SetReps ± x ç V ± y ç V ± CompEss V $çâv x y ¥
 	let es = EssUb (V, $çâv) x y
 	in ≥ OverDefinedL V es
                        ± IsUb
@@ -4547,7 +5353,6 @@ val _ = save_cs_∂_thm (pop_thm());
 €EssUb_lemma1› =
    Ù µ (V, $çâv) x y
      ∑ V Ä SetReps
-           ± ≥ OverDefined V $çâv
            ± x ç V
            ± y ç V
            ± CompEss V $çâv x y
@@ -4576,6 +5381,136 @@ val EssUb_lemma1 = save_pop_thm "EssUb_lemma1";
 =TEX
 }%ignore
 
+\ignore{
+=SML
+set_goal([], ¨∂EssLub∑
+	µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	let es = EssLub (V, $çâv) x y
+	in ≥ OverDefinedL V es
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Essence $çâv x; Essence $çâv y}
+                         esÆ);
+a (prove_∂_tac THEN REPEAT strip_tac THEN rewrite_tac [let_def]);
+a (strip_asm_tac compess_lemma2);
+a (spec_nth_asm_tac 1 ¨Fst x'Æ THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨Snd x'Æ THEN_TRY asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac  1 [¨x''Æ, ¨y'Æ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨esÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨esÆ THEN asm_rewrite_tac[]); 
+val _ = save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €EssLub› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑
+	V Ä SetReps ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	let es = EssLub (V, $çâv) x y
+	in ≥ OverDefinedL V es
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Essence $çâv x; Essence $çâv y}
+                         es
+∞
+
+\ignore{
+=SML
+set_goal([], ¨∂EssLub2∑
+	µ(V, $çâv) x y∑ V Ä Syntax ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	let es = EssLub2 (V, $çâv) x y
+	in ≥ OverDefinedL V es
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Essence $çâv x; Essence $çâv y}
+                         esÆ);
+a (prove_∂_tac THEN REPEAT strip_tac THEN rewrite_tac [let_def]);
+a (strip_asm_tac compess_lemma2b);
+a (spec_nth_asm_tac 1 ¨Fst x'Æ THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 1 ¨Snd x'Æ THEN_TRY asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac  1 [¨x''Æ, ¨y'Æ] THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨esÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨esÆ THEN asm_rewrite_tac[]); 
+val _ = save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €EssLub2› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS ≠ BOOL DPO)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑
+	V Ä Syntax ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	let es = EssLub2 (V, $çâv) x y
+	in ≥ OverDefinedL V es
+                       ± IsLub
+                         (PwS V $ºâtâ4)
+                         {Essence $çâv x; Essence $çâv y}
+                         es
+∞
+
+=GFT
+€EssLub_lemma1› =
+   Ù µ(V, $çâv) x y∑
+	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	≥ OverDefinedL V (EssLub (V, $çâv) x y)
+	± µz∑ z ç V ¥ (x çâv z) ºâtâ4 EssLub (V, $çâv) x y z
+		± (y çâv z) ºâtâ4 EssLub (V, $çâv) x y z
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv) x y∑
+	V Ä SetReps ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	≥ OverDefinedL V (EssLub (V, $çâv) x y)
+	± µz∑ z ç V ¥ (x çâv z) ºâtâ4 EssLub (V, $çâv) x y z
+		± (y çâv z) ºâtâ4 EssLub (V, $çâv) x y zÆ);
+a (REPEAT_N 6 strip_tac THEN all_asm_fc_tac [rewrite_rule [let_def] (get_spec ¨EssLubÆ)]);
+a (asm_rewrite_tac[] THEN strip_tac THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLubÆ, get_spec ¨PwSÆ, ç_in_clauses, get_spec ¨EssenceÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 2 ¨$çâv xÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (spec_nth_asm_tac 3 ¨$çâv yÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val EssLub_lemma1 = save_pop_thm "EssLub_lemma1";
+=TEX
+}%ignore
+
+=GFT
+€EssLub_lemma1› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä Syntax ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y
+         ¥ ≥ OverDefinedL V (EssLub2 (V, $çâv) x y)
+           ± (µ z
+           ∑ z ç V
+               ¥ (x çâv z) ºâtâ4 EssLub2 (V, $çâv) x y z
+                 ± (y çâv z) ºâtâ4 EssLub2 (V, $çâv) x y z)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv) x y∑
+	V Ä Syntax ± ≥ OverDefined V $çâv ± x ç V ± y ç V ± CompEss V $çâv x y ¥
+	≥ OverDefinedL V (EssLub2 (V, $çâv) x y)
+	± µz∑ z ç V ¥ (x çâv z) ºâtâ4 EssLub2 (V, $çâv) x y z
+		± (y çâv z) ºâtâ4 EssLub2 (V, $çâv) x y zÆ);
+a (REPEAT_N 6 strip_tac THEN all_asm_fc_tac [rewrite_rule [let_def] (get_spec ¨EssLub2Æ)]);
+a (asm_rewrite_tac[] THEN strip_tac THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨IsLubÆ, get_spec ¨PwSÆ, ç_in_clauses, get_spec ¨EssenceÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 2 ¨$çâv xÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+a (spec_nth_asm_tac 3 ¨$çâv yÆ);
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+val EssLub_lemma1b = save_pop_thm "EssLub_lemma1b";
+=TEX
+}%ignore
+
 The required extension to the membership relation is defined as follows:
 
 πHOLCONST
@@ -4584,6 +5519,18 @@ The required extension to the membership relation is defined as follows:
 ‹ µ(V, $çâv) x y∑ MsExtend (V, $çâv) x y =
 ‹	let xt = ExtUb (V, $çâv) x y
 ‹	and es = EssUb (V, $çâv) x y
+‹	in (Ãx' y'∑
+‹		if x' = öâg
+‹		then if y' = öâg then Lub $ºâtâ4 {x çâv x; y çâv x; x çâv y; y çâv y} else es y'
+‹		else if y' = öâg then xt x' else x' çâv y')
+∞
+
+πHOLCONST
+‹ €MsExtend2› : GS SET ∏ (GS, FTV)BR ≠ GS ≠ GS ≠ (GS, FTV)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ(V, $çâv) x y∑ MsExtend2 (V, $çâv) x y =
+‹	let xt = ExtLub (V, $çâv) x y
+‹	and es = EssLub (V, $çâv) x y
 ‹	in (Ãx' y'∑
 ‹		if x' = öâg
 ‹		then if y' = öâg then Lub $ºâtâ4 {x çâv x; y çâv x; x çâv y; y çâv y} else es y'
@@ -4600,14 +5547,39 @@ First that these extensions are the same over the original domain as the unexten
 
 €PmrEq_MsExtend_lemma2› =
    Ù µ (V, $çâv) x y∑ V Ä Syntax ¥ PmrEq V (MsExtend (V, r) x y) r
+
+€PmrEq_MsExtend2_lemma2› =
+   Ù µ (V, $çâv) x y∑ V Ä Syntax ¥ PmrEq V (MsExtend2 (V, r) x y) r
 =TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, r) x y∑ V Ä Syntax ¥ PmrEq V r (MsExtend (V, r) x y)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨PmrEqÆ, get_spec ¨MsExtendÆ, let_def]
+	THEN REPEAT strip_tac);
+a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
+val PmrEq_MsExtend_lemma1 = save_pop_thm "PmrEq_MsExtend_lemma1";
+
+set_goal([], ¨µ(V, r) x y∑ V Ä Syntax ¥ PmrEq V (MsExtend (V, r) x y) rÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨PmrEqÆ, get_spec ¨MsExtendÆ, let_def]
+	THEN REPEAT strip_tac);
+a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
+val PmrEq_MsExtend_lemma2 = save_pop_thm "PmrEq_MsExtend_lemma2";
+
+set_goal([], ¨µ(V, r) x y∑ V Ä Syntax ¥ PmrEq V (MsExtend2 (V, r) x y) rÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨PmrEqÆ, get_spec ¨MsExtend2Æ, let_def]
+	THEN REPEAT strip_tac);
+a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
+val PmrEq_MsExtend2_lemma2 = save_pop_thm "PmrEq_MsExtend2_lemma2";
+=TEX
+}%ignore
 
 The evaluation of formulae using the extended relation gives the same results if the stiplulated domain of quantification remains the same.
 (I don't know why I did not obtain more general results than these, though these particular ones suffice to show that the resulting essences of the two elements determining an extension, after application of the semantic functor, are unaffected by the extension to the structure.)
 
 =GFT
 €EvalForm_MsExtend_lemma1› =
-   Ù µ (V, $çâv) x y z
+   Ù µ (V, r) x y z
      ∑ V Ä Syntax ± y ç V ± z ç V
          ¥ EvalForm
              (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y)
@@ -4617,8 +5589,19 @@ The evaluation of formulae using the extended relation gives the same results if
 =TEX
 
 =GFT
+€EvalForm_MsExtend2_lemma1› =
+   Ù µ (V, r) x y z
+     ∑ V Ä Syntax ± y ç V ± z ç V
+         ¥ EvalForm
+             (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y)
+             z
+             (Param_ö y)
+           = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö y)
+=TEX
+
+=GFT
 €EvalForm_MsExtend_lemma2› =
-   Ù µ (V, $çâv) x y z
+   Ù µ (V, r) x y z
      ∑ V Ä Syntax ± x ç V ± z ç V
          ¥ EvalForm
              (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y)
@@ -4626,6 +5609,85 @@ The evaluation of formulae using the extended relation gives the same results if
              (Param_ö x)
            = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö x)
 =TEX
+
+=GFT
+€EvalForm_MsExtend2_lemma2› =
+   Ù µ (V, r) x y z
+     ∑ V Ä Syntax ± x ç V ± z ç V
+         ¥ EvalForm
+             (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y)
+             z
+             (Param_ö x)
+           = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± y ç V ± z ç V
+	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö y)
+	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö y)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [PmrEq_MsExtend_lemma2]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
+a (lemma_tac ¨IxRan (Param_ö y) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
+a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
+	¨zÆ, ¨MsExtend (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
+a (asm_rewrite_tac[]);
+val EvalForm_MsExtend_lemma1 = save_pop_thm "EvalForm_MsExtend_lemma1";
+
+set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± y ç V ± z ç V
+	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y) z (Param_ö y)
+	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö y)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [PmrEq_MsExtend2_lemma2]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
+a (lemma_tac ¨IxRan (Param_ö y) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
+a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
+	¨zÆ, ¨MsExtend2 (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
+a (asm_rewrite_tac[]);
+val EvalForm_MsExtend2_lemma1 = save_pop_thm "EvalForm_MsExtend2_lemma1";
+
+set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± x ç V ± z ç V
+	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö x)
+	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö x)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [PmrEq_MsExtend_lemma2]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
+a (lemma_tac ¨IxRan (Param_ö x) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
+a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
+	¨zÆ, ¨MsExtend (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
+a (asm_rewrite_tac[]);
+val EvalForm_MsExtend_lemma2 = save_pop_thm "EvalForm_MsExtend_lemma2";
+
+set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± x ç V ± z ç V
+	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y) z (Param_ö x)
+	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö x)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [PmrEq_MsExtend2_lemma2]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
+a (lemma_tac ¨IxRan (Param_ö x) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
+a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
+	¨zÆ, ¨MsExtend2 (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
+a (asm_rewrite_tac[]);
+val EvalForm_MsExtend2_lemma2 = save_pop_thm "EvalForm_MsExtend2_lemma2";
+=TEX
+}%ignore
+
+The following lemmas tell us the obvious facts about the value assigned to the empty set.
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¨µ (V, r) x y z∑ V Ä Syntax ± x ç V ± y ç V ± z ç V
+	¥ MsExtend2 (V, r) x y z öâg = Lub $ºâtâ4 {MsExtend2 (V, r) x y z x; MsExtend2 (V, r) x y z y}Æ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨MsExtend2Æ, let_def, ext_thm]);
+a (all_fc_tac [≥öâg_ç_syntax_lemma3] THEN asm_rewrite_tac[]);
+a (all_fc_tac [get_spec ¨ExtLubÆ]);
+=TEX
+}%ignore
+
 
 The extended structure is not anywhere overdefined.
 Lemma4 subsumes all the others but was not true for my first definition of the extension, which is why I proved the earlier more restricted results.
@@ -4641,6 +5703,16 @@ Lemma4 subsumes all the others but was not true for my first definition of the e
 =TEX
 
 =GFT
+€MsExtend2_≥OverDefined_lemma› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä Syntax
+           ± ≥ OverDefined V $çâv
+           ± CompEss V $çâv x y
+           ± CompExt V $çâv x y
+         ¥ ≥ OverDefined V (MsExtend2 (V, $çâv) x y)
+=TEX
+
+=GFT
 €MsExtend_≥OverDefined_lemma2› =
    Ù µ (V, $çâv) x y
      ∑ V Ä SetReps
@@ -4650,6 +5722,30 @@ Lemma4 subsumes all the others but was not true for my first definition of the e
            ± CompEss V $çâv x y
            ± CompExt V $çâv x y
          ¥ (µ v∑ v ç V ¥ ≥ MsExtend (V, $çâv) x y v öâg = fT)
+=TEX
+
+=GFT
+€MsExtend2_≥OverDefined_lemma2› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± ≥ OverDefined V $çâv
+           ± CompEss V $çâv x y
+           ± CompExt V $çâv x y
+         ¥ (µ v∑ v ç V ¥ ≥ MsExtend2 (V, $çâv) x y v öâg = fT)
+=TEX
+
+=GFT
+€MsExtend2_≥OverDefined_lemma2› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± ≥ OverDefined V $çâv
+           ± CompEss V $çâv x y
+           ± CompExt V $çâv x y
+         ¥ (µ v∑ v ç V ¥ ≥ MsExtend2 (V, $çâv) x y v öâg = fT)
 =TEX
 
 =GFT
@@ -4663,6 +5759,19 @@ Lemma4 subsumes all the others but was not true for my first definition of the e
            ± CompExt V $çâv x y
          ¥ (µ v∑ v ç V ¥ ≥ MsExtend (V, $çâv) x y öâg v = fT)
 =TEX
+
+=GFT
+€MsExtend2_≥OverDefined_lemma3› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± ≥ OverDefined V $çâv
+           ± CompEss V $çâv x y
+           ± CompExt V $çâv x y
+         ¥ (µ v∑ v ç V ¥ ≥ MsExtend2 (V, $çâv) x y öâg v = fT)
+=TEX
+
 =GFT
 €MsExtend_≥OverDefined_lemma4› =
    Ù µ (V, $çâv) x y
@@ -4674,44 +5783,19 @@ Lemma4 subsumes all the others but was not true for my first definition of the e
          ¥ ≥ OverDefined (V ¿ {öâg}) (MsExtend (V, $çâv) x y)
 =TEX
 
+=GFT
+€MsExtend2_≥OverDefined_lemma4› =
+   Ù µ (V, $çâv) x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± ≥ OverDefined V $çâv
+           ± Compatible V $çâv x y
+         ¥ ≥ OverDefined (V ¿ {öâg}) (MsExtend2 (V, $çâv) x y)
+=TEX
+
 \ignore{
 =SML
-set_goal([], ¨µ(V, $çâv) x y∑ V Ä Syntax ¥ PmrEq V r (MsExtend (V, r) x y)Æ);
-a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨PmrEqÆ, get_spec ¨MsExtendÆ, let_def]
-	THEN REPEAT strip_tac);
-a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
-val PmrEq_MsExtend_lemma1 = save_pop_thm "PmrEq_MsExtend_lemma1";
-
-set_goal([], ¨µ(V, $çâv) x y∑ V Ä Syntax ¥ PmrEq V (MsExtend (V, r) x y) rÆ);
-a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨PmrEqÆ, get_spec ¨MsExtendÆ, let_def]
-	THEN REPEAT strip_tac);
-a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
-val PmrEq_MsExtend_lemma2 = save_pop_thm "PmrEq_MsExtend_lemma2";
-
-set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± y ç V ± z ç V
-	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö y)
-	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö y)Æ);
-a (REPEAT strip_tac);
-a (fc_tac [PmrEq_MsExtend_lemma2]);
-a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
-a (lemma_tac ¨IxRan (Param_ö y) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
-a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
-	¨zÆ, ¨MsExtend (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
-a (asm_rewrite_tac[]);
-val EvalForm_MsExtend_lemma1 = save_pop_thm "EvalForm_MsExtend_lemma1";
-
-set_goal([], ¨µ(V, $çâv) x y z∑ V Ä Syntax ± x ç V ± z ç V
-	   ¥ EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö x)
-	     = EvalForm (EvalCf_ftv, $ºâtâ4, V, r) z (Param_ö x)Æ);
-a (REPEAT strip_tac);
-a (fc_tac [PmrEq_MsExtend_lemma2]);
-a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨V Ä Syntax ± z ç V ¥ z ç SyntaxÆ]);
-a (lemma_tac ¨IxRan (Param_ö x) Ä VÆ THEN1 (asm_prove_tac[sets_ext_clauses]));
-a (ALL_UFC_T (MAP_EVERY asm_tac) [rewrite_rule [] (list_µ_elim [¨EvalCf_ftvÆ, ¨$ºâtâ4Æ, ¨VÆ, ¨VÆ,
-	¨zÆ, ¨MsExtend (V, r) x yÆ, ¨rÆ] PmrEq_EvalForm_lemma)]);
-a (asm_rewrite_tac[]);
-val EvalForm_MsExtend_lemma2 = save_pop_thm "EvalForm_MsExtend_lemma2";
-
 set_goal([], ¨µ(V, $çâv) x y∑ V Ä Syntax ± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
 	¥ ≥ OverDefined V (MsExtend (V, $çâv) x y)Æ);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨MsExtendÆ, get_spec ¨OverDefinedÆ, let_def]
@@ -4721,6 +5805,16 @@ a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
 a (spec_nth_asm_tac 5 ¨x'Æ);
 a (spec_nth_asm_tac 1 ¨y'Æ);
 val MsExtend_≥OverDefined_lemma = save_pop_thm "MsExtend_≥OverDefined_lemma";
+
+set_goal([], ¨µ(V, $çâv) x y∑ V Ä Syntax ± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
+	¥ ≥ OverDefined V (MsExtend2 (V, $çâv) x y)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨MsExtend2Æ, get_spec ¨OverDefinedÆ, let_def]
+	THEN REPEAT strip_tac
+	THEN swap_nth_asm_concl_tac 1);
+a (ALL_FC_T rewrite_tac [≥öâg_ç_syntax_lemma3]);
+a (spec_nth_asm_tac 5 ¨x'Æ);
+a (spec_nth_asm_tac 1 ¨y'Æ);
+val MsExtend2_≥OverDefined_lemma = save_pop_thm "MsExtend2_≥OverDefined_lemma";
 
 set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
 	¥ µv∑ v ç V ¥ ≥ (MsExtend (V, $çâv) x y) v öâg = fTÆ);
@@ -4735,6 +5829,19 @@ a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac [get_spec ¨OverDefinedLÆ ]);
 a (∂_tac ¨vÆ THEN asm_rewrite_tac[]);
 val MsExtend_≥OverDefined_lemma2 = save_pop_thm "MsExtend_≥OverDefined_lemma2";
 
+set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V ± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
+	¥ µv∑ v ç V ¥ ≥ (MsExtend2 (V, $çâv) x y) v öâg = fTÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨MsExtend2Æ, let_def]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨V Ä SyntaxÆ
+	THEN1 (asm_tac setreps_Ä_syntax_lemma THEN all_fc_tac [Ä_trans_thm]));
+a (lemma_tac ¨≥ v = öâgÆ THEN1 fc_tac [≥öâg_ç_syntax_lemma3]
+	THEN asm_rewrite_tac[]);
+a (ALL_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨ExtLubÆ]);
+a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac [get_spec ¨OverDefinedLÆ ]); 
+a (∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val MsExtend2_≥OverDefined_lemma2 = save_pop_thm "MsExtend2_≥OverDefined_lemma2";
+
 set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V
 	± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
 	¥ µv∑ v ç V ¥ ≥ (MsExtend (V, $çâv) x y) öâg v = fTÆ);
@@ -4748,6 +5855,20 @@ a (ALL_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨Es
 a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac [get_spec ¨OverDefinedLÆ ]); 
 a (∂_tac ¨vÆ THEN asm_rewrite_tac[]);
 val MsExtend_≥OverDefined_lemma3 = save_pop_thm "MsExtend_≥OverDefined_lemma3";
+
+set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V
+	± ≥ OverDefined V $çâv ± CompEss V $çâv x y ± CompExt V $çâv x y
+	¥ µv∑ v ç V ¥ ≥ (MsExtend2 (V, $çâv) x y) öâg v = fTÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨MsExtend2Æ, let_def]
+	THEN REPEAT strip_tac);
+a (lemma_tac ¨V Ä SyntaxÆ
+	THEN1 (asm_tac setreps_Ä_syntax_lemma THEN all_fc_tac [Ä_trans_thm]));
+a (lemma_tac ¨≥ v = öâgÆ THEN1 fc_tac [≥öâg_ç_syntax_lemma3]
+	THEN asm_rewrite_tac[]);
+a (ALL_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨EssLubÆ]);
+a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac [get_spec ¨OverDefinedLÆ ]); 
+a (∂_tac ¨vÆ THEN asm_rewrite_tac[]);
+val MsExtend2_≥OverDefined_lemma3 = save_pop_thm "MsExtend2_≥OverDefined_lemma3";
 
 set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V
 	± ≥ OverDefined V $çâv ± Compatible V $çâv x y
@@ -4776,6 +5897,34 @@ a (GET_NTH_ASM_T 6 ante_tac THEN rewrite_tac [get_spec ¨OverDefinedÆ]
 a (spec_nth_asm_tac 1 ¨x'Æ);
 a (spec_nth_asm_tac 1 ¨y'Æ THEN_TRY asm_rewrite_tac [ç_in_clauses]);
 val MsExtend_≥OverDefined_lemma4 = save_pop_thm "MsExtend_≥OverDefined_lemma4";
+
+set_goal([], ¨µ(V, $çâv) x y∑ V Ä SetReps ± x ç V ± y ç V
+	± ≥ OverDefined V $çâv ± Compatible V $çâv x y
+	¥ ≥ OverDefined (V ¿ {öâg}) (MsExtend2 (V, $çâv) x y)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨CompatibleÆ, get_spec ¨MsExtend2Æ, let_def]
+	THEN REPEAT strip_tac
+	THEN rewrite_tac [get_spec ¨OverDefinedÆ]
+	THEN REPEAT_N 4 strip_tac);
+a (cond_cases_tac ¨x' = öâgÆ THEN cond_cases_tac ¨y' = öâgÆ);
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨{x çâv x; y çâv x; x çâv y; y çâv y} = {x çâv y; y çâv x; x çâv x; y çâv y}Æ asm_rewrite_thm_tac
+	THEN1 PC_T1 "hol1" prove_tac []);
+(* *** Goal "2" *** *)
+a (ALL_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨EssLubÆ]);
+a (GET_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨OverDefinedLÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 1 ¨y'Æ THEN asm_rewrite_tac [ç_in_clauses]);
+(* *** Goal "3" *** *)
+a (ALL_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨ExtLubÆ]);
+a (GET_NTH_ASM_T 2 ante_tac THEN rewrite_tac [get_spec ¨OverDefinedLÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 1 ¨x'Æ THEN asm_rewrite_tac [ç_in_clauses]);
+(* *** Goal "4" *** *)
+a (GET_NTH_ASM_T 6 ante_tac THEN rewrite_tac [get_spec ¨OverDefinedÆ]
+	THEN strip_tac);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+a (spec_nth_asm_tac 1 ¨y'Æ THEN_TRY asm_rewrite_tac [ç_in_clauses]);
+val MsExtend2_≥OverDefined_lemma4 = save_pop_thm "MsExtend2_≥OverDefined_lemma4";
 =IGN
 set_flag ("subgoal_package_quiet", false);
 
@@ -4793,9 +5942,6 @@ set_flag ("subgoal_package_quiet", false);
 =IGN
 set_flag ("subgoal_package_quiet", false);
 
-current proof;
-
-
 set_goal([], ¨µ V x y z∑ V Ä SetReps ± x ç V ± y ç V ± z ç V ± Compatible V r x y
               ¥ ExsSRO (V ¿ {öâg}, MsExtend (V, r) x y) x öâgÆ);
 a (REPEAT µ_tac
@@ -4808,6 +5954,7 @@ a (COND_CASES_T ¨x' ç V ¿ {öâg}Æ asm_tac);
 a (fc_tac [rewrite_rule [ext_thm] (get_spec ¨CompatibleÆ)]);
 a (cond_cases_tac ¨x' = öâgÆ THEN cond_cases_tac ¨x = öâgÆ THEN strip_tac);
 (* *** Goal "1" *** *)
+a (fc_tac [get_spec ¨EssUbÆ]); 
 a (rewrite_tac[get_spec ¨EssUbÆ]); 
 a (step_strip_tac);
 
@@ -4912,7 +6059,7 @@ a (GET_ASM_T ¨FreeVars t Ä IxDom vÆ (strip_asm_tac o (rewrite_rule
 	[freevarsfunct_thm2, asm_rule ¨t ç SyntaxÆ, asm_rule ¨IsAf tÆ, get_spec ¨$ÄÆ, ç_in_clauses])));
 a (spec_nth_asm_tac 1 ¨AfSet tÆ);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨EvalCfÆ, let_def] THEN strip_tac);
+a (rewrite_tac [get_spec ¨EvalCfÆ, let_def, evalcf_ftv_fb_lemma] THEN strip_tac);
 a (DROP_NTH_ASM_T 4 ante_tac THEN rewrite_tac [get_spec ¨FunImageÆ] THEN strip_tac);
 a (lemma_tac ¨tc ScPrec a t ± a ç SyntaxÆ THEN1 REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
@@ -5001,7 +6148,7 @@ a (all_fc_tac [ix_domran_lemma]);
 a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µx y z∑ x ç y ± y Ä z ¥ x ç zÆ]);
 a (strip_tac THEN ∂_tac ¨IxVal v (AfMem t)Æ THEN ∂_tac ¨IxVal v (AfSet t)Æ THEN asm_rewrite_tac []);
 (* *** Goal "2" *** *)
-a (rewrite_tac [get_spec ¨EvalCfÆ, let_def] THEN strip_tac);
+a (rewrite_tac [get_spec ¨EvalCfÆ, let_def, evalcf_ftv_ft_lemma] THEN strip_tac);
 a (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac [get_spec ¨FunImageÆ] THEN strip_tac);
 a (lemma_tac ¨tc ScPrec a t ± a ç SyntaxÆ
 	THEN1 REPEAT strip_tac);
@@ -5034,74 +6181,20 @@ val ConCoWkStrictSemanticFunctor_lemma = save_pop_thm "ConCoWkStrictSemanticFunc
 }%ignore
 
 =GFT
-€EvalForm_fT_lemma› =
-   Ù µ y
-     ∑ y ç Syntax
-         ¥ (µ va
-         ∑ FreeVars y Ä IxDom va
-               ± IxRan va Ä V ¿ {öâg}
-               ± EvalForm (EvalCf_ftv, $ºâtâ4, V ¿ {öâg}, $çâv) y va = fT
-             ¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT))
-
 €OverDefinedEss_SemanticFunctor_lemma› =
    Ù µ V $çâv
      ∑ V Ä SetReps
            ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) $çâv)
          ¥ OverDefined (V ¿ {öâg}) $çâv
+
+€OverDefinedEss_SemanticFunctor_lemma2› =
+   Ù µ V $çâv
+     ∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V $çâv)
+         ¥ OverDefined (V ¿ {öâg}) $çâv
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µy∑ y ç Syntax ¥ µva∑ FreeVars y Ä IxDom va ± IxRan va Ä V ¿ {öâg}
-	± EvalForm (EvalCf_ftv, $ºâtâ4, V ¿ {öâg}, $çâv) y va = fT
-	¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT)Æ);
-a (strip_tac THEN strip_tac);
-a (ifos_induction_tac ¨yÆ);
-(* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN DROP_NTH_ASM_T 2 ante_tac
-	THEN asm_rewrite_tac[freevarsfunct_thm2, get_spec ¨$ÄÆ, ç_in_clauses]);
-a (strip_tac);
-a (spec_nth_asm_tac 1 ¨xÆ);
-a (spec_nth_asm_tac 2 ¨yÆ);
-a (asm_rewrite_tac[]);
-a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
-	THEN asm_rewrite_tac[]);
-a (all_fc_tac[ix_domran_lemma]);
-a (PC_T1 "hol1" asm_prove_tac []);
-(* *** Goal "2" *** *)
-a (POP_ASM_T ante_tac THEN rewrite_tac [evalformfunct_thm2, let_def]);
-a (ALL_FC_T rewrite_tac [repclosed_syntax_thm2] THEN strip_tac);
-a (DROP_NTH_ASM_T 5 ante_tac
-	THEN rewrite_tac [get_spec ¨FunImageÆ, get_spec ¨XâgÆ]
-	THEN strip_tac
-	THEN all_asm_fc_tac []);
-a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T rewrite_tac);
-a (STRIP_T (asm_tac o eq_sym_rule));
-a (spec_nth_asm_tac 11 ¨aÆ);
-a (lemma_tac ¨MkCf(vars, fs) ç SyntaxÆ
-	THEN1 ALL_FC_T rewrite_tac [rewrite_rule [get_spec ¨XâgÆ] repclosed_syntax_thm]);
-a (lemma_tac ¨FreeVars a Ä IxDom (IxOverRide va v)
-                 ± IxRan (IxOverRide va v) Ä V ¿ {öâg}Æ
-	THEN1 (asm_rewrite_tac []));
-a (REPEAT strip_tac);
-(* *** Goal "2.1.1" *** *)
-a (DROP_NTH_ASM_T 12 (ante_tac o (rewrite_rule [freevarsfunct_thm2])));
-a (asm_rewrite_tac[get_spec ¨FunImageâgÆ]);
-a (PC_T "hol1" contr_tac);
-a (spec_nth_asm_tac 4 ¨xÆ);
-a (spec_nth_asm_tac 1 ¨FreeVars aÆ);
-a (spec_nth_asm_tac 1 ¨aÆ);
-(* *** Goal "2.1.2" *** *)
-a (asm_tac (list_µ_elim [¨vaÆ, ¨vÆ] ixoverride_ixran_lemma));
-push_goal([], ¨µA B C D:GS SET∑ A Ä B ¿ C ± B Ä D ± C Ä D ¥ A Ä DÆ);
-a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac THEN REPEAT (asm_fc_tac []));
-a (all_fc_tac [pop_thm()]);
-(* *** Goal "2.2" *** *)
-a (ALL_ASM_FC_T (MAP_EVERY asm_tac) []);
-a ((POP_ASM_T discard_tac) THEN POP_ASM_T ante_tac);
-a (PC_T1 "hol1" prove_tac[]);
-val EvalForm_fT_lemma = save_pop_thm "EvalForm_fT_lemma";
-
 set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) $çâv) 
 	¥ OverDefined (V ¿ {öâg}) $çâvÆ);
 a (µ_tac THEN rewrite_tac [get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
@@ -5118,6 +6211,23 @@ a (lemma_tac ¨IxRan (Param_ö x) Ä V ¿ {öâg}Æ
 a (ALL_FC_T (MAP_EVERY ante_tac) [EvalForm_fT_lemma]);
 a (PC_T1 "hol1" prove_tac[]);
 val OverDefinedEss_SemanticFunctor_lemma = save_pop_thm "OverDefinedEss_SemanticFunctor_lemma";
+
+set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V $çâv) 
+	¥ OverDefined (V ¿ {öâg}) $çâvÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
+	get_spec ¨OverDefinedLÆ, get_spec ¨OverDefinedÆ, let_def]
+	THEN PC_T "predicates" (REPEAT strip_tac));
+a (lemma_tac ¨y ç SetRepsÆ
+	THEN1 (PC_T1 "hol1" asm_prove_tac[]));
+a (lemma_tac ¨y ç SyntaxÆ THEN1 (asm_tac setreps_Ä_syntax_lemma THEN PC_T1 "hol1" asm_prove_tac []));
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨SetRepsÆ])));
+a (lemma_tac ¨FreeVars y Ä IxDom (Param_ö x)Æ
+	THEN1 asm_rewrite_tac [ixdom_param_ö_lemma]);
+a (lemma_tac ¨IxRan (Param_ö x) Ä V ¿ {öâg}Æ
+	THEN1 (PC_T1 "hol1" asm_prove_tac [ixran_param_ö_lemma]));
+a (ALL_FC_T (MAP_EVERY ante_tac) [EvalForm_fT_lemma2]);
+a (PC_T1 "hol1" prove_tac[]);
+val OverDefinedEss_SemanticFunctor_lemma2 = save_pop_thm "OverDefinedEss_SemanticFunctor_lemma2";
 =TEX
 }%ignore
 
@@ -5125,44 +6235,60 @@ val OverDefinedEss_SemanticFunctor_lemma = save_pop_thm "OverDefinedEss_Semantic
  πHOLCONST
 ‹ €ConCoWkStrictEss› : GS SET ≠ GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV W f∑ ConCoWkStrictEss V W f § µr x y∑ x ç V ± y ç V ± OverDefinedEss V W (f V (MsExt V r x y)) ¥ OverDefinedEss V W (MsExt V r x y)
+‹ µV W f∑ ConCoWkStrictEss V W f §
+	µr x y∑ x ç V ± y ç V ± OverDefinedEss V W (f V (MsExt V r x y))
+		¥ OverDefinedEss V W (MsExt V r x y)
  ∞
 
 =GFT
+€OverDefinedEss_SemanticFunctor_MsExtend2_lemma› =
+   Ù µ V r x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± Compatible V r x y
+           ± OverDefinedEss
+             (V ¿ {öâg})
+             V
+             (SemanticFunctor (V ¿ {öâg}) (MsExtend2 (V, r) x y))
+         ¥ OverDefined V r
+
+€OverDefinedEss_SemanticFunctor_MsExtend2_lemma2› =
+   Ù µ V r x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± Compatible V r x y
+           ± OverDefinedEss
+             (V ¿ {öâg})
+             V
+             (SemanticFunctor V (MsExtend2 (V, r) x y))
+         ¥ OverDefined V r
 =TEX
 
 \ignore{
-=IGN
-set_flag("subgoal_package_quiet", false);
-
-stop;
+=SML
+set_goal([], ¨µ V r x y∑
+		V Ä SetReps ± x ç V ± y ç V ± Compatible V r x y
+		± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) (MsExtend2 (V, r) x y))
+                 ¥ OverDefined V rÆ);
+a (REPEAT strip_tac);
+a (all_fc_tac [OverDefinedEss_SemanticFunctor_lemma]);
+a (swap_nth_asm_concl_tac 1);
+a (all_fc_tac [MsExtend2_≥OverDefined_lemma4]);
+val OverDefinedEss_SemanticFunctor_MsExtend2_lemma = save_pop_thm "OverDefinedEss_SemanticFunctor_MsExtend2_lemma";
 
 set_goal([], ¨µ V r x y∑
-		V Ä Syntax ± x ç V ± y ç V ± Compatible V r x y
-		± OverDefinedL V (Essence (SemanticFunctor V (MsExtend (V, r) x y)) öâg)
+		V Ä SetReps ± x ç V ± y ç V ± Compatible V r x y
+		± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V (MsExtend2 (V, r) x y))
                  ¥ OverDefined V rÆ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨CompatibleÆ, get_spec ¨OverDefinedÆ, get_spec ¨OverDefinedLÆ,
-	get_spec ¨SemanticFunctorÆ, get_spec ¨EssenceÆ]
-	THEN REPEAT strip_tac);
-a (POP_ASM_T ante_tac
-	THEN rewrite_tac [evalformfunct_thm2]);
-a (lemma_tac ¨y' ç SyntaxÆ THEN1 PC_T1 "hol1" asm_prove_tac[]);
-a (asm_rewrite_tac[get_spec ¨MsExtendÆ, let_def]);
-a (cond_cases_tac ¨IsAf y'Æ);
-(* *** Goal "1" *** *)
-a (rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
-a (cond_cases_tac ¨AfMem y' = öâg ± AfSet y' = öâgÆ);
-a (strip_asm_tac (µ_elim ¨{r x x; r y x; r x y; r y y}Æ ftvs_cases_thm)
-	THEN_TRY asm_rewrite_tac []);
-
-
-a (fc_tac [syntax_cases_thm] THEN_TRY asm_rewrite_tac[]);
-
-val OverDefinedEss_lemma = save_pop_thm "OverDefinedEss_lemma";
+a (REPEAT strip_tac);
+a (all_fc_tac [OverDefinedEss_SemanticFunctor_lemma2]);
+a (swap_nth_asm_concl_tac 1);
+a (all_fc_tac [MsExtend2_≥OverDefined_lemma4]);
+val OverDefinedEss_SemanticFunctor_MsExtend2_lemma2 = save_pop_thm "OverDefinedEss_SemanticFunctor_MsExtend2_lemma2";
 =TEX
 }%ignore
-
-
 
 
 =IGN
@@ -5176,10 +6302,28 @@ set_flag("subgoal_package_quiet", false);
 
 stop;
 
+set_goal([], ¨µ V r x y∑ V Ä SetReps ± x ç V ± y ç V ± Compatible V r x y
+	¥ ExsSRO (V ¿ {öâg}, MsExtend2 (V, r) x y) x öâg
+	± ExsSRO (V ¿ {öâg}, MsExtend2 (V, r) x y) y öâg Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac(map get_spec
+		[¨ExsSROÆ, ¨ExtSROÆ, ¨EssSROÆ, ¨ConjOrderÆ, ¨CompatibleÆ])
+	THEN REPEAT_N 1 strip_tac);
+a (all_fc_tac (map (rewrite_rule [let_def]) [get_spec ¨EssLubÆ, get_spec ¨ExtLubÆ]));
+
+
+	THEN STRIP_T asm_tac
+	THEN asm_rewrite_tac [let_def]
+	THEN cond_cases_tac ¨z = öâgÆ
+	THEN cond_cases_tac ¨x = öâgÆ
+	THEN cond_cases_tac ¨y = öâgÆ
+);
+get_spec ¨EssLubÆ;
+
 set_goal([], ¨µ V x y z∑ V Ä SetReps ± x ç V ± y ç V ± z ç V ± Compatible V r x y ¥
-	EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö x)
-                 ºâtâ4 EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend (V, r) x y) z (Param_ö öâg)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨CompatibleÆ] THEN REPEAT strip_tac);
+	EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y) z (Param_ö x)
+                 ºâtâ4 EvalForm (EvalCf_ftv, $ºâtâ4, V, MsExtend2 (V, r) x y) z (Param_ö öâg)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [(*get_spec ¨CompatibleÆ*)] THEN REPEAT strip_tac);
 a (lemma_tac ¨V Ä SyntaxÆ
 	THEN1 (GET_ASM_T ¨V Ä SetRepsÆ ante_tac THEN PC_T1 "hol1" prove_tac [get_spec ¨SetRepsÆ]));
 a (lemma_tac ¨V Ä V ¿ {öâg}Æ THEN1 (PC_T1 "hol1" prove_tac[]));
