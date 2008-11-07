@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.21 2008/10/03 18:15:27 rbj Exp $
+$Id: t007.doc,v 1.22 2008/11/07 13:14:31 rbj Exp $
 open_theory "fixp";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/10/03 18:15:27 $ $
+Last Change $ $Date: 2008/11/07 13:14:31 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.21 2008/10/03 18:15:27 rbj Exp $ $
+$ $Id: t007.doc,v 1.22 2008/11/07 13:14:31 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -190,18 +190,11 @@ However, this affects the applications rather than the concept:
 €glb_unique_lemma2› =
    Ù µ X r x y
      ∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X y ¥ x = y
-
-€isglb_glb_lemma› =
-   Ù µ X r z∑ Antisym (Universe, r) ¥ IsGlb r X z ¥ Glb r X = z
-
-€isglb_lub_lemma› =
-   Ù µ X r z∑ Antisym (Universe, r) ¥ IsLub r X z ¥ Lub r X = z
 =TEX
 
 \ignore{
 =SML
 set_flag ("subgoal_package_quiet", true);
-
 
 set_goal([], ¨µX r x y∑ Antisym (Universe, r) ¥ IsLub r X x ± IsLub r X y ¥ x = yÆ);
 a (rewrite_tac [get_spec ¨IsLubÆ, get_spec ¨AntisymÆ] THEN contr_tac);
@@ -222,7 +215,84 @@ set_goal([], ¨µX r x y∑ Antisym (X, r) ± x ç X ± y ç X ¥ IsGlb r X x ± IsGlb r X
 a (rewrite_tac [get_spec ¨IsGlbÆ, get_spec ¨AntisymÆ] THEN contr_tac);
 a (REPEAT (asm_fc_tac[]));
 val glb_unique_lemma2 = save_pop_thm "glb_unique_lemma2";
+=TEX
+}%ignore
 
+=GFT
+€isub_sub_lemma› =
+	Ù µ X Y r y∑ X Ä Y ± IsUb r Y y ¥ IsUb r X y
+
+€islb_sub_lemma› =
+	Ù µ X Y r y∑ X Ä Y ± IsLb r Y y ¥ IsLb r X y
+
+€isub_trans_lemma› =
+   Ù µ X r x y∑ Trans (Universe, r) ± IsUb r X x ± r x y ¥ IsUb r X y
+
+€islb_trans_lemma› =
+   Ù µ X r x y∑ Trans (Universe, r) ± IsLb r X y ± r x y ¥ IsLb r X x
+
+€islub_sub_lemma› =
+   Ù µ X Y r x y∑ X Ä Y ± IsLub r X x ± IsLub r Y y ¥ r x y
+
+€isglb_sub_lemma› =
+   Ù µ X Y r x y∑ X Ä Y ± IsGlb r X x ± IsGlb r Y y ¥ r y x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µX Y r y∑ X Ä Y ± IsUb r Y y ¥ IsUb r X yÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsUbÆ] THEN REPEAT strip_tac);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val isub_sub_lemma = save_pop_thm "isub_sub_lemma";
+
+set_goal([], ¨µX Y r y∑ X Ä Y ± IsLb r Y y ¥ IsLb r X yÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsLbÆ] THEN REPEAT strip_tac);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val islb_sub_lemma = save_pop_thm "islb_sub_lemma";
+
+set_goal([], ¨µX r x y∑ Trans (Universe, r) ± IsUb r X x ± r x y ¥ IsUb r X yÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsUbÆ, get_spec ¨TransÆ] THEN REPEAT strip_tac);
+a (REPEAT (all_asm_fc_tac[]));
+val isub_trans_lemma = save_pop_thm "isub_trans_lemma";
+
+set_goal([], ¨µX r x y∑ Trans (Universe, r) ± IsLb r X y ± r x y ¥ IsLb r X xÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsLbÆ, get_spec ¨TransÆ] THEN REPEAT strip_tac);
+a (REPEAT (all_asm_fc_tac[]));
+val islb_trans_lemma = save_pop_thm "islb_trans_lemma";
+
+set_goal([], ¨µX Y r x y∑ X Ä Y ± IsLub r X x ± IsLub r Y y ¥ r x yÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsLubÆ] THEN REPEAT strip_tac);
+a (all_fc_tac [isub_sub_lemma]);
+a (all_asm_fc_tac[]);
+val islub_sub_lemma = save_pop_thm "islub_sub_lemma";
+
+set_goal([], ¨µX Y r x y∑ X Ä Y ± IsGlb r X x ± IsGlb r Y y ¥ r y xÆ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IsGlbÆ] THEN REPEAT strip_tac);
+a (all_fc_tac [islb_sub_lemma]);
+a (all_asm_fc_tac[]);
+val isglb_sub_lemma = save_pop_thm "isglb_sub_lemma";
+=TEX
+}%ignore
+
+
+=GFT
+€lub_lub_lemma› =
+   Ù µX r∑ (∂z∑ IsLub r X z) ¥ IsLub r X (Lub r X)
+
+€glb_glb_lemma› =
+   Ù µX r∑ (∂z∑ IsGlb r X z) ¥ IsGlb r X (Glb r X)
+=TEX
+
+=GFT
+€isglb_glb_lemma› =
+   Ù µ X r z∑ Antisym (Universe, r) ¥ IsGlb r X z ¥ Glb r X = z
+
+€isglb_lub_lemma› =
+   Ù µ X r z∑ Antisym (Universe, r) ¥ IsLub r X z ¥ Lub r X = z
+=TEX
+
+\ignore{
+=SML
 set_goal([], ¨µX r∑ (∂z∑ IsLub r X z) ¥ IsLub r X (Lub r X)Æ);
 a (rewrite_tac[get_spec ¨LubÆ] THEN REPEAT strip_tac);
 a (≈_tac ¨≈ x∑ IsLub r X xÆ);
@@ -362,6 +432,9 @@ val gt_glb_lemma = save_pop_thm "gt_glb_lemma";
 =GFT
 €lub_sub_lemma› =
    Ù µ r∑ LubsExist r ¥ (µ X Y∑ X Ä Y ¥ r (Lub r X) (Lub r Y))
+
+€glb_sub_lemma› =
+   Ù µ r∑ GlbsExist r ¥ (µ X Y∑ X Ä Y ¥ r (Glb r Y) (Glb r X))
 =TEX
 
 \ignore{
@@ -380,6 +453,21 @@ a (list_spec_nth_asm_tac 1 [¨xÆ, ¨YÆ]);
 (* *** Goal "2" *** *)
 a (asm_fc_tac[]);
 val lub_sub_lemma = save_pop_thm "lub_sub_lemma";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ µX Y∑ X Ä Y ¥ r (Glb r Y) (Glb r X)Æ);
+a (REPEAT strip_tac THEN fc_tac [glb_glb_lemma2]);
+a (ufc_tac [get_spec ¨IsGlbÆ]);
+a (lemma_tac ¨IsLb r X (Glb r Y)Æ
+	THEN1 (rewrite_tac [get_spec ¨IsLbÆ]
+		THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 5 (PC_T1 "hol1" strip_asm_tac));
+a (asm_fc_tac[]);
+a (fc_tac [gt_glb_lemma]);
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨YÆ]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val glb_sub_lemma = save_pop_thm "glb_sub_lemma";
 =TEX
 }%ignore
 
