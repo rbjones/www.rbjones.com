@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.14 2008/11/19 16:12:15 rbj Exp $
+$Id: t026.doc,v 1.15 2008/11/25 09:34:12 rbj Exp $
 open_theory "ifos";
 
 set_flag ("pp_use_alias", true);
@@ -44,12 +44,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/11/19 16:12:15 $ $
+Last Change $ $Date: 2008/11/25 09:34:12 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.14 2008/11/19 16:12:15 rbj Exp $ $
+$ $Id: t026.doc,v 1.15 2008/11/25 09:34:12 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -3521,6 +3521,31 @@ The ``semantic functor'', a parameterised partial relation transformation, is th
 
 It is easily shown to be monotonic.
 
+=SML
+declare_infix (300, "ºâç");
+=TEX
+
+πHOLCONST
+‹ €$ºâç› : (GS, FTV)BR ≠ (GS, FTV)BR ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ $ºâç = Pw (Pw $ºâtâ4)
+∞
+
+=GFT
+€crpou_ºâç_thm› = Ù CRpoU $ºâç
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨CRpoU $ºâçÆ);
+a (rewrite_tac [get_spec ¨$ºâçÆ]);
+a (bc_tac [pw_crpou_thm]);
+a (bc_tac [pw_crpou_thm]);
+a (rewrite_tac[ºâtâ4_crpou_thm]);
+val crpou_ºâç_thm = save_pop_thm "crpou_ºâç_thm";
+=TEX
+}%ignore
+
 =GFT
 €semanticfunctor_increasing_thm› =
    Ù µ d∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)
@@ -3530,28 +3555,27 @@ It is easily shown to be monotonic.
 =SML
 set_merge_pcs ["misc21", "'ifos", "'sfp"];
 
-local val _ = set_goal([], ¨µd∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)Æ);
-val _ = a (strip_tac THEN LEMMA_T
+set_goal([], ¨µd∑ Increasing $ºâç $ºâç (SemanticFunctor d)Æ);
+a (strip_tac THEN LEMMA_T
 	¨SemanticFunctor d = (Ãr m s∑ r s (Param_ö m)) o (Ã$çâv∑ EvalForm (EvalCf_ftv, $ºâtâ4, (d, $çâv)))Æ
 	rewrite_thm_tac
 	THEN1 rewrite_tac [get_spec ¨SemanticFunctorÆ]);
-val _ = a (bc_tac [increasing_funcomp_thm]);
-val _ = a (∂_tac ¨Pw (Pw $ºâtâ4)Æ THEN strip_tac);
+a (bc_tac [increasing_funcomp_thm]);
+a (∂_tac ¨Pw (Pw $ºâtâ4)Æ THEN strip_tac);
 (* *** Goal "1" *** *)
-val _ = a (rewrite_tac [get_spec ¨IncreasingÆ]);
-val _ = a (REPEAT strip_tac);
-val _ = a (asm_tac ºâtâ4_crpou_thm);
-val _ = a (asm_tac evalcf_ftv_increasing_lemma);
-val _ = a (ALL_FC_T (MAP_EVERY (fn t => fc_tac [(rewrite_rule
+a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨$ºâçÆ]);
+a (REPEAT strip_tac);
+a (asm_tac ºâtâ4_crpou_thm);
+a (asm_tac evalcf_ftv_increasing_lemma);
+a (ALL_FC_T (MAP_EVERY (fn t => fc_tac [(rewrite_rule
 	[get_spec ¨IncreasingÆ, get_spec ¨RvOÆ] t)])) [evalform_increasing_thm]);
-val _ = a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¨PwÆ])));
-val _ = a (asm_rewrite_tac [get_spec ¨PwÆ]);
+a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¨PwÆ])));
+a (asm_rewrite_tac [get_spec ¨PwÆ]);
 (* *** Goal "2" *** *)
-val _ = a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨PwÆ, get_spec ¨Param_öÆ]
+a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨$ºâçÆ, get_spec ¨PwÆ, get_spec ¨Param_öÆ]
 	THEN REPEAT strip_tac
 	THEN asm_rewrite_tac[]);
-in val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
-end;
+val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
 =TEX
 }%ignore
 
@@ -6975,6 +6999,111 @@ a (list_spec_nth_asm_tac 1 [¨rÆ]);
 a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
 (* *** Goal "2.1" *** *)
 a (swap_nth_asm_concl_tac 1);
+
+=TEX
+}%ignore
+
+\subsection{Properties of FChains}
+
+Properties of least fixed points of the semantic functor are in part obtained by induction over the relevant FChain.
+Since inductive proofs yeild properties shared by all the members of the FChain, and its best to prove them of the FChain so that their full force can be used in subsequent inductive proofs.
+
+Preparatory to such proofs I first specialise a general induction theorem for fchains to the chains generator by the semantic functor.
+
+First abbreviated notation for the semantic functor and the FChains it generates.
+
+πHOLCONST
+‹ €Sf› : GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV∑ Sf V = SemanticFunctor V
+∞
+
+πHOLCONST
+‹ €SfChain› : GS SET ≠ (GS, FTV)BR SET
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV∑ SfChain V = FChainU (Sf V) $ºâç
+∞
+
+=GFT
+€sfchain_induction_thm› =
+   Ù µ V p
+     ∑ V Ä SetReps
+           ± (µ x
+           ∑ x ç SfChain V
+                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ Sf V x ºâç y ¥ p y)
+               ¥ p (Sf V x))
+           ± (µ x
+           ∑ x ç SfChain V
+                 ± x = Lub $ºâç {y|y ç SfChain V ± y ºâç x ± ≥ x ºâç y}
+                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ x ºâç y ¥ p y)
+               ¥ p x)
+         ¥ (µ x∑ x ç SfChain V ¥ p x)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µV p∑ V Ä SetReps 
+           ± (µ x
+           ∑ x ç SfChain V
+                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ (Sf V x) ºâç y ¥ p y)
+               ¥ p (Sf V x))
+           ± (µ x
+           ∑ x ç SfChain V
+                 ± x = Lub $ºâç {y|y ç SfChain V ± y ºâç x ± ≥ x ºâç y}
+                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ x ºâç y ¥ p y)
+               ¥ p x)
+         ¥ (µ x∑ x ç SfChain V ¥ p x)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨SfChainÆ, get_spec ¨SfÆ]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨$ºâçÆ,¨SemanticFunctor VÆ,¨pÆ] fchainu_induction_thm3));
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (bc_tac [crpou_ccrpou_lemma]);
+a (rewrite_tac[crpou_ºâç_thm]);
+(* *** Goal "2" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [get_spec ¨SfÆ, semanticfunctor_increasing_thm]);
+(* *** Goal "3" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "4" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "5" *** *)
+a (all_asm_fc_tac[]);
+val sfchain_induction_thm = save_pop_thm "sfchain_induction_thm";
+=TEX
+}%ignore
+
+It will be convenient to have a tactic to facilitate this kind of induction:
+
+=SML
+
+=TEX
+
+
+The first property we consider is that of non-overdefinedness.
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+set_flag ("subgoal_package_quiet", false);
+stop;
+
+set_goal ([], ¨µV r∑ V Ä SetReps ¥ µx∑ x ç FChainU (SemanticFunctor V) r ¥ PreExtensional2 V xÆ);
+a (REPEAT strip_tac);
+a (POP_ASM_T ante_tac);
+
+val (a,c) = top_goal();
+val (l1, l2) = dest_¥ c;
+val (_, [v, fct]) = strip_app l1;
+val (_, [ft, rt]) = strip_app fct;
+
+a (LEMMA_T ¨µx∑ x ç FChainU (SemanticFunctor V) r ¥ PreExtensional2 V xÆ rewrite_thm_tac);
+
+a (bc_tac [fchainu_induction_thm3]);
+
+type_of ¨FChainUÆ;
 
 =TEX
 }%ignore
