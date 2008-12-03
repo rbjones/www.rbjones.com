@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.14 2007/02/20 22:14:05 rbj01 Exp $
+# $Id: rules.mk,v 1.15 2008/12/03 22:03:35 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -150,6 +150,8 @@ $(PPTHDOC) $(PPTHTODOC): %.th.doc: %.thd
 
 $(DOCTEX): %.tex: %.doc
 	doctex $*
+# the following line looks like it should be specific to theory listings,
+# perhaps should be applied more selectively..
 	sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 
 $(BASHBIN): % : %.sh
