@@ -5,7 +5,7 @@ imports Main
 begin
 
 text{*
-The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.3 2006/12/11 12:14:52 rbj01 Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
+The theory \emph{Sets}\footnote{$ $Id: Sets.thy,v 1.4 2008/12/03 20:57:12 rbj Exp $ $} is a bare-boned set theory in Isabelle-HOL intended only to permit a transparent presentation of the Poly-Sets.
 I did at first attempt the construction without axiomatising a particular set theory, so that the poly-sets could be built from an arbitrary membership structure with suitable properties, but the advantages of this are overwhelmed by the extra complexity it causes, and I have concluded that maximising the intelligibility of the poly-sets (and of further constructions based on them) is incompatible with the innovation of treating set theory as a theory \emph{about} membership structures, rather than a theory about the sets in \emph{in} one such structure,
 
 The reader should beware that what follows is an axiomatic set theory presented in the context of a Higher Order Logic which has its own set theoretic vocabulary.
@@ -177,13 +177,10 @@ The ordinals are now defined inductively.
 This probably isn't the simplest definition of ordinal, but it might be the one most directly related to our intuition about what a Von Neumann ordinal is.
 *}
 
-consts
-   ordinals:: "Set set"
-inductive ordinals
-intros
-   zoI[intro!]: "zero \<in> ordinals"
-   soI[intro!]: "x \<in> ordinals \<Longrightarrow> succ x \<in> ordinals"
-   loI[intro!]: "\<forall>t. t \<in>\<^isub>g s \<longrightarrow> t \<in> ordinals \<Longrightarrow> limit s \<in> ordinals" 
+inductive_set ordinals:: "Set set" where
+    zoI[intro!]: "zero \<in> ordinals"
+|   soI[intro!]: "x \<in> ordinals \<Longrightarrow> succ x \<in> ordinals"
+|   loI[intro!]: "\<forall>t. t \<in>\<^isub>g s \<longrightarrow> t \<in> ordinals \<Longrightarrow> limit s \<in> ordinals" 
 
 constdefs
    Ordinal:: "Set \<Rightarrow> bool"
@@ -200,14 +197,14 @@ lemma subset_mono:
    "A \<subseteq> B \<Longrightarrow>  x \<subseteq> A \<longrightarrow> x \<subseteq> B"
 by auto
 
-consts
-   oplusx :: "Set \<Rightarrow> (Set * Set) set"
-inductive
-   "oplusx x"
-intros
-   azI: "y = zero \<Longrightarrow> (y,x) \<in> (oplusx x)"
-   asI: "y = succ v \<Longrightarrow> (v,z) \<in> oplusx x \<Longrightarrow> (y, succ z) \<in> oplusx x"
-   alI: "y = limit s
+text{*
+
+inductive_set oplusx :: "Set \<Rightarrow> (Set * Set) set"
+  for x :: "Set"
+where
+    azI: "y = zero \<Longrightarrow> (y,x) \<in> oplusx x"
+|   asI: "y = succ v \<Longrightarrow> (v,z) \<in> oplusx x \<Longrightarrow> (y, succ z) \<in> oplusx x"
+|   alI: "y = limit s
              \<Longrightarrow> (\<exists>r. r \<subseteq> oplusx x
                    \<and> single_valued r
                    \<and> Domain r = X\<^isub>g s
@@ -221,5 +218,7 @@ constdefs
 
    olminus :: "Set \<Rightarrow> Set \<Rightarrow> Set" (infixr "{|-}" 60)
       "olminus x y == THE z. y = x {+} z"
+
+*}
 
 end

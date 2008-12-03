@@ -6,7 +6,7 @@ begin
 
 text{*
 The theory \emph{PsMisc}
-\footnote{$ $Id: PsMisc.thy,v 1.1 2006/11/28 16:50:49 rbj01 Exp $ $}
+\footnote{$ $Id: PsMisc.thy,v 1.2 2008/12/03 20:57:12 rbj Exp $ $}
 is the home for material required for the development of the theory of PolySets and its applications which perhaps should be elsewhere but as yet is not.
 
 When a better home is found this material will be moved out.
@@ -61,13 +61,13 @@ constdefs
 lemma f_chain_mono : "A \<subseteq> B \<Longrightarrow> S \<subseteq> A \<longrightarrow> S \<subseteq> B"
 by blast
 
-consts   f_chain :: "('a set \<Rightarrow> 'a set) \<Rightarrow> 'a set set"
-inductive
-   "f_chain f"
-intros
-   fczI: "{}:f_chain f"
-   fcsI: "S:f_chain f \<Longrightarrow> f S : f_chain f"
-   fclI: "S \<subseteq> (f_chain f) \<Longrightarrow> \<Union>S : f_chain f"
+inductive_set
+    f_chain :: "('a set \<Rightarrow> 'a set) \<Rightarrow> 'a set set"
+for f       :: "('a set \<Rightarrow> 'a set)"
+where
+    fczI: "{} \<in> f_chain f"
+|   fcsI: "S \<in> f_chain f \<Longrightarrow> f S \<in> f_chain f"
+|   fclI: "S \<subseteq> (f_chain f) \<Longrightarrow> \<Union>S \<in> f_chain f"
 monos f_chain_mono
 
 lemma chain_f_chain : "chain (f_chain f)"

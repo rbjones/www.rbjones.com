@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.24 2008/11/25 09:34:12 rbj Exp $
+$Id: t007.doc,v 1.25 2008/12/03 20:57:12 rbj Exp $
 open_theory "fixp";
 set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/11/25 09:34:12 $ $
+Last Change $ $Date: 2008/12/03 20:57:12 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.24 2008/11/25 09:34:12 rbj Exp $ $
+$ $Id: t007.doc,v 1.25 2008/12/03 20:57:12 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -494,6 +494,68 @@ a (list_spec_nth_asm_tac 1 [¨xÆ, ¨YÆ]);
 (* *** Goal "2" *** *)
 a (asm_fc_tac[]);
 val glb_sub_lemma = save_pop_thm "glb_sub_lemma";
+=TEX
+}%ignore
+
+=GFT
+€le_islub_lub_lemma› =
+   Ù µ r∑ LubsExist r ¥ (µ X∑ IsLub r X (Lub r X))
+
+€ge_isglb_glb_lemma› =
+   Ù µ r∑ GlbsExist r ¥ (µ X∑ IsGlb r X (Glb r X))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ LubsExist r ¥ µX∑ IsLub r X (Lub r X)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¨LubsExistÆ]);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (fc_tac [lub_lub_lemma]);
+val le_islub_lub_lemma = save_pop_thm "le_islub_lub_lemma";
+
+set_goal([], ¨µr∑ GlbsExist r ¥ µX∑ IsGlb r X (Glb r X)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [get_spec ¨GlbsExistÆ]);
+a (spec_nth_asm_tac 1 ¨XÆ);
+a (fc_tac [glb_glb_lemma]);
+val ge_isglb_glb_lemma = save_pop_thm "ge_isglb_glb_lemma";
+=TEX
+}%ignore
+
+=GFT
+€lea_islub_lub_lemma› =
+   Ù µ r
+     ∑ LubsExist r ± Antisym (Universe, r)
+         ¥ (µ X x∑ IsLub r X x = Lub r X = x)
+
+€gea_isglb_glb_lemma› =
+   Ù µ r
+     ∑ GlbsExist r ± Antisym (Universe, r)
+         ¥ (µ X x∑ IsGlb r X x = Glb r X = x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ LubsExist r ± Antisym (Universe, r) ¥ µX x∑ IsLub r X x § Lub r X = xÆ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [le_islub_lub_lemma]);
+a (all_ufc_tac [lub_unique_lemma]);
+(* *** Goal "2" *** *)
+a (SYM_ASMS_T rewrite_tac THEN fc_tac [le_islub_lub_lemma]);
+a (asm_rewrite_tac[]);
+val lea_islub_lub_lemma = save_pop_thm "lea_islub_lub_lemma";
+
+set_goal([], ¨µr∑ GlbsExist r ± Antisym (Universe, r) ¥ µX x∑ IsGlb r X x § Glb r X = xÆ);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [ge_isglb_glb_lemma]);
+a (all_ufc_tac [glb_unique_lemma]);
+(* *** Goal "2" *** *)
+a (SYM_ASMS_T rewrite_tac THEN fc_tac [ge_isglb_glb_lemma]);
+a (asm_rewrite_tac[]);
+val gea_isglb_glb_lemma = save_pop_thm "gea_isglb_glb_lemma";
 =TEX
 }%ignore
 
@@ -1982,13 +2044,13 @@ This result is needed to establish course of values induction over $FChain$s, fo
 
 =GFT
 €ccrpou_fchainu_lemma1› =
-   Ù µ X r f
+   Ù µ r f
      ∑ CcRpoU r ± Increasing r r f ¥ (µ z∑ z ç FChainU f r ¥ r z (f z))
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µX r f∑ CcRpoU r ± Increasing r r f
+set_goal([], ¨µr f∑ CcRpoU r ± Increasing r r f
 	¥ µz∑ z ç FChainU f r ¥ r z (f z)Æ);
 a (REPEAT µ_tac
 	THEN rewrite_tac [get_spec ¨FChainUÆ, get_spec ¨CcRpoÆ]
@@ -2514,7 +2576,7 @@ val ccrpo_fixp_lemma16 = pop_thm ();
 
 =GFT
 €ccrpou_fchainu_linear_lemma› =
-   Ù µ X $ºâv f
+   Ù µ $ºâv f
      ∑ CcRpoU $ºâv ± Increasing $ºâv $ºâv f
          ¥ LinearOrder (FChainU f $ºâv, $ºâv)
 
@@ -2532,7 +2594,7 @@ val ccrpo_fixp_lemma16 = pop_thm ();
 
 \ignore{
 =SML
-set_goal([], ¨µX $ºâv f∑ CcRpoU $ºâv ± Increasing $ºâv $ºâv f
+set_goal([], ¨µ$ºâv f∑ CcRpoU $ºâv ± Increasing $ºâv $ºâv f
 	¥ LinearOrder (FChainU f $ºâv, $ºâv)Æ);
 a (REPEAT strip_tac);
 a (fc_tac [get_spec ¨CcRpoUÆ]);
@@ -2908,6 +2970,14 @@ At the least we also need a suitable cases theorem:
          ∑ x ç FChainU f r
              ¥ (∂ y∑ y ç FChainU f r ± x = f y)
                ≤ x = Lub r {z|z ç FChainU f r ± r z x ± ≥ r x z})
+
+€fchainu_cases_lemma2› =
+   Ù µ r f
+     ∑ CcRpoU r ± Increasing r r f
+         ¥ (µ x
+         ∑ x ç FChainU f r
+             ¥ (∂ y∑ y ç FChainU f r ± ≥ y = x ± x = f y)
+               ≤ x = Lub r {z|z ç FChainU f r ± r z x ± ≥ r x z})
 =TEX
 
 \ignore{
@@ -2961,6 +3031,60 @@ a (lemma_tac ¨r x l'Æ
 		THEN1 spec_nth_asm_tac 1 ¨xÆ));
 a (all_fc_tac [ccrpou_fc_clauses]);
 val fchainu_cases_lemma = save_pop_thm "fchainu_cases_lemma";
+
+set_goal([], ¨µr f∑ CcRpoU r ± Increasing r r f ¥ µx∑ x ç FChainU f r
+	¥ (∂y∑ y ç FChainU f r ± ≥ y = x ± x = f y)
+	≤ x = Lub r {z | z ç FChainU f r ± r z x ± ≥ r x z}Æ);
+a (contr_tac);
+a (lemma_tac ¨IsUb r {z|z ç FChainU f r ± r z x ± ≥ r x z} xÆ
+	THEN1 (rewrite_tac [get_spec ¨IsUbÆ] THEN PC_T1 "hol1" prove_tac []));
+a (lemma_tac ¨{z|z ç FChainU f r ± r z x ± ≥ r x z} Ä FChainU f rÆ
+	THEN1 PC_T1 "hol1" prove_tac[]);
+a (lemma_tac ¨LinearOrder ({z|z ç FChainU f r ± r z x ± ≥ r x z}, r)Æ
+	THEN1 all_fc_tac[ccrpou_fchainu_linear_lemma2]);
+a (lemma_tac ¨∂l∑ l = Lub r {z|z ç FChainU f r ± r z x ± ≥ r x z}Æ
+	THEN1 prove_∂_tac);
+a (lemma_tac ¨l ç FChainU f rÆ
+	THEN1 (asm_rewrite_tac [] THEN all_fc_tac [ccrpou_fcclosed_fc_lemma2]));
+a (all_fc_tac [ccrpou_lub_lemma]);
+a (POP_ASM_T ante_tac THEN (GET_NTH_ASM_T 2 (rewrite_thm_tac o eq_sym_rule))
+	THEN contr_tac);
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (lemma_tac ¨≥ r x lÆ
+	THEN1 (contr_tac
+		THEN all_fc_tac [ccrpou_fc_clauses]
+		THEN var_elim_asm_tac ¨x = lÆ));
+a (all_fc_tac [ccrpou_fchainu_lemma2b]);
+a (cases_tac ¨l = xÆ);
+(* *** Goal "1" *** *)
+a (var_elim_asm_tac ¨l = xÆ);
+(* *** Goal "2" *** *)
+a (lemma_tac ¨≥ r x (f l)Æ
+	THEN1 (spec_nth_asm_tac 13 ¨lÆ
+		THEN contr_tac
+		THEN all_fc_tac [ccrpou_fc_clauses]));
+a (lemma_tac ¨f l ç FChainU f rÆ
+	THEN1 (fc_tac [fchainu_lemma1]));
+a (LEMMA_T ¨f l ç {z|z ç FChainU f r ± r z x ± ≥ r x z}Æ asm_tac
+	THEN1 PC_T1 "hol1" asm_prove_tac[]);
+a (GET_NTH_ASM_T 7 ante_tac
+	THEN rewrite_tac [get_spec ¨IsUbÆ]);
+a (contr_tac);
+a (spec_nth_asm_tac 1 ¨f lÆ);
+a (lemma_tac ¨r l (f l)Æ THEN1 all_fc_tac [ccrpou_fchainu_lemma1]);
+a (lemma_tac ¨l = f lÆ THEN1 all_asm_fc_tac [ccrpou_fc_clauses]);
+a (all_fc_tac [ccrpou_fchainu_lfp_lemma]);
+a (FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule [let_def]))) [get_spec ¨IsLfpÆ]);
+a (fc_tac [get_spec ¨IsGlbÆ]);
+a (fc_tac [get_spec ¨IsLbÆ]);
+a (spec_nth_asm_tac 1 ¨lÆ THEN1 (POP_ASM_T ante_tac THEN (rewrite_tac [eq_sym_rule (asm_rule ¨l = f lÆ)])));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (lemma_tac ¨r x l'Æ
+	THEN1 (fc_tac [get_spec ¨IsUbÆ]
+		THEN all_asm_fc_tac [ccrpou_fc_clauses]
+		THEN1 spec_nth_asm_tac 1 ¨xÆ));
+a (all_fc_tac [ccrpou_fc_clauses]);
+val fchainu_cases_lemma2 = save_pop_thm "fchainu_cases_lemma2";
 =TEX
 }%ignore
 
@@ -2974,6 +3098,20 @@ If this is indeed the normal way of doing such proofs then the following inducti
            ± (µ x
            ∑ x ç FChainU f r
                  ± (µ y∑ y ç FChainU f r ± r y x ± ≥ r (f x) y ¥ p y)
+               ¥ p (f x))
+           ± (µ x
+           ∑ x ç FChainU f r
+                 ± x = Lub r {y|y ç FChainU f r ± r y x ± ≥ r x y}
+                 ± (µ y∑ y ç FChainU f r ± r y x ± ≥ r x y ¥ p y)
+               ¥ p x)
+         ¥ (µ x∑ x ç FChainU f r ¥ p x)
+
+€fchainu_induction_thm4› =
+   Ù µ r f p
+     ∑ CcRpoU r
+           ± Increasing r r f
+           ± (µ x
+           ∑ x ç FChainU f r ± (µ y∑ y ç FChainU f r ± r y x ¥ p y)
                ¥ p (f x))
            ± (µ x
            ∑ x ç FChainU f r
@@ -3007,6 +3145,37 @@ a (all_asm_fc_tac[]);
 a (list_spec_nth_asm_tac 7 [¨x'Æ]);
 a (all_asm_fc_tac[]);
 val fchainu_induction_thm3 = save_pop_thm "fchainu_induction_thm3";
+
+set_goal ([], ¨µr f p∑ CcRpoU r ± Increasing r r f
+	± (µ x∑ x ç FChainU f r ± (µ y∑ y ç FChainU f r ± r y x ¥ p y) ¥ p (f x))
+	± (µx∑ x ç FChainU f r
+		± (x = Lub r {y | y ç FChainU f r ± r y x ± ≥ r x y})
+		± (µy∑ y ç FChainU f r ± r y x ± ≥ r x y ¥ p y)
+		¥ p x)
+	¥ µx∑ x ç FChainU f r ¥ p xÆ);
+a (REPEAT strip_tac THEN fc_tac [fchainu_induction_thm2]);
+a (lemma_tac ¨µ x∑ x ç FChainU f r ± (µ y∑ y ç FChainU f r ± r y x ± ≥ r x y ¥ p y) ¥ p xÆ
+	THEN_LIST [REPEAT strip_tac, all_asm_fc_tac []]);
+a (fc_tac [fchainu_cases_lemma2]);
+a (list_spec_nth_asm_tac 1 [¨fÆ, ¨x'Æ]);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 10 [¨yÆ] THEN_TRY asm_rewrite_tac []);
+a (lemma_tac ¨r y (f y)Æ THEN1 all_fc_tac [ccrpou_fchainu_lemma1]);
+a (lemma_tac ¨≥ r (f y) yÆ THEN1
+	(contr_tac
+		THEN DROP_ASM_T ¨≥ y = x'Æ (asm_tac o rewrite_rule[asm_rule ¨x' = f yÆ])
+		THEN all_fc_tac [ccrpou_fc_clauses]));
+a (var_elim_asm_tac ¨x' = f yÆ);
+a (all_asm_fc_tac[]);
+a (lemma_tac ¨r y' (f y)Æ THEN1 all_fc_tac [ccrpou_fc_clauses]);
+a (lemma_tac ¨≥ r (f y) y'Æ THEN1
+	(contr_tac
+		THEN all_fc_tac [ccrpou_fc_clauses]));
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (list_spec_nth_asm_tac 7 [¨x'Æ]);
+a (all_asm_fc_tac[]);
+val fchainu_induction_thm4 = save_pop_thm "fchainu_induction_thm4";
 =TEX
 }%ignore
 

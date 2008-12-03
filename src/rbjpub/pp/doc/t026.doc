@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.15 2008/11/25 09:34:12 rbj Exp $
+$Id: t026.doc,v 1.16 2008/12/03 20:57:12 rbj Exp $
 open_theory "ifos";
 
 set_flag ("pp_use_alias", true);
@@ -44,12 +44,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/11/25 09:34:12 $ $
+Last Change $ $Date: 2008/12/03 20:57:12 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.15 2008/11/25 09:34:12 rbj Exp $ $
+$ $Id: t026.doc,v 1.16 2008/12/03 20:57:12 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1046,7 +1046,6 @@ The parameters are the type of the domain of discourse and the type of truth val
 
 =SML
 declare_infix(300, "çâv");
-declare_type_abbrev (€"BR"›, ["'a", "'b"], î'a ≠ 'a ≠ 'bÆ);
 declare_type_abbrev("€RV›", ["'a","'b"], î(GS, 'a)IX ≠ 'bÆ);
 declare_type_abbrev("€ST›", ["'a","'b"], î'a SET ∏ ('a, 'b)BRÆ);
 =TEX
@@ -3358,11 +3357,10 @@ It is also necessary to state that there is no disagreement about whether the el
 
 =GFT
 €Compatible_lemma1› =
-   Ù µ V r x y
-     ∑ Compatible V r x y
-         = ({r x y; r y x; r x x; r y y} ç CompFTV
-           ± (µ z
-           ∑ z ç V ¥ {r z x; r z y} ç CompFTV ± {r x z; r y z} ç CompFTV))
+   Ù µ V r x y∑ Compatible V r x y § {r x y; r y x; r x x; r y y} ç CompFTV
+		± (µ z∑ z ç V ¥
+			  {r z x; r z y} ç CompFTV
+			± {r x z; r y z} ç CompFTV)
 =TEX
 
 \ignore{
@@ -3375,6 +3373,14 @@ a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¨CompatibleÆ, ¨CompEssÆ, ¨CompEx
 	THEN asm_fc_tac []
 	THEN_TRY asm_rewrite_tac []);
 val Compatible_lemma1 = save_pop_thm "Compatible_lemma1";
+
+=IGN
+set_flag("subgoal_package_quiet", false);
+
+set_goal([], ¨µV r x y∑ Increasing $ºâ (Ãs∑ ≥ s ç CompFTV)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [Compatible_lemma1]
+	THEN REPEAT strip_tac);
+
 =TEX
 }%ignore
 
@@ -3513,53 +3519,27 @@ val Param_ö_Increasing_lemma2 = save_pop_thm "Param_ö_Increasing_lemma2";
 The ``semantic functor'', a parameterised partial relation transformation, is then defined thus:
 
 πHOLCONST
-‹ €SemanticFunctor›: GS SET ≠ (GS, FTV) BR ≠ (GS, FTV) BR
+‹ €Sf›: GS SET ≠ (GS, FTV) BR ≠ (GS, FTV) BR
 ˜¸¸¸¸¸¸¸¸¸
-‹ µ d $çâv∑ SemanticFunctor d $çâv =
+‹ µ d $çâv∑ Sf d $çâv =
 ‹	Ãm s∑ EvalForm (EvalCf_ftv, $ºâtâ4, (d, $çâv)) s (Param_ö m)
 ∞
 
 It is easily shown to be monotonic.
 
-=SML
-declare_infix (300, "ºâç");
-=TEX
-
-πHOLCONST
-‹ €$ºâç› : (GS, FTV)BR ≠ (GS, FTV)BR ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ $ºâç = Pw (Pw $ºâtâ4)
-∞
-
 =GFT
-€crpou_ºâç_thm› = Ù CRpoU $ºâç
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨CRpoU $ºâçÆ);
-a (rewrite_tac [get_spec ¨$ºâçÆ]);
-a (bc_tac [pw_crpou_thm]);
-a (bc_tac [pw_crpou_thm]);
-a (rewrite_tac[ºâtâ4_crpou_thm]);
-val crpou_ºâç_thm = save_pop_thm "crpou_ºâç_thm";
-=TEX
-}%ignore
-
-=GFT
-€semanticfunctor_increasing_thm› =
-   Ù µ d∑ Increasing (Pw (Pw $ºâtâ4)) (Pw (Pw $ºâtâ4)) (SemanticFunctor d)
+€sf_increasing_thm› =
+   Ù µ d∑ Increasing $ºâç $ºâç (Sf d)
 =TEX
 
 \ignore{
 =SML
 set_merge_pcs ["misc21", "'ifos", "'sfp"];
-
-set_goal([], ¨µd∑ Increasing $ºâç $ºâç (SemanticFunctor d)Æ);
+set_goal([], ¨µd∑ Increasing $ºâç $ºâç (Sf d)Æ);
 a (strip_tac THEN LEMMA_T
-	¨SemanticFunctor d = (Ãr m s∑ r s (Param_ö m)) o (Ã$çâv∑ EvalForm (EvalCf_ftv, $ºâtâ4, (d, $çâv)))Æ
+	¨Sf d = (Ãr m s∑ r s (Param_ö m)) o (Ã$çâv∑ EvalForm (EvalCf_ftv, $ºâtâ4, (d, $çâv)))Æ
 	rewrite_thm_tac
-	THEN1 rewrite_tac [get_spec ¨SemanticFunctorÆ]);
+	THEN1 rewrite_tac [get_spec ¨SfÆ]);
 a (bc_tac [increasing_funcomp_thm]);
 a (∂_tac ¨Pw (Pw $ºâtâ4)Æ THEN strip_tac);
 (* *** Goal "1" *** *)
@@ -3575,7 +3555,10 @@ a (asm_rewrite_tac [get_spec ¨PwÆ]);
 a (rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨$ºâçÆ, get_spec ¨PwÆ, get_spec ¨Param_öÆ]
 	THEN REPEAT strip_tac
 	THEN asm_rewrite_tac[]);
-val semanticfunctor_increasing_thm = save_pop_thm "semanticfunctor_increasing_thm";
+val sf_increasing_thm = save_pop_thm "sf_increasing_thm";
+
+add_pc_thms "'sfp" (map get_spec [] @ [sf_increasing_thm]);
+set_merge_pcs ["misc21", "'ifos", "'sfp"];
 =TEX
 }%ignore
 
@@ -3596,7 +3579,7 @@ When the details are worked out we get:
      ∑ V Ä W ± V Ä Syntax
          ¥ Increasing
            (V Úâo ExsSRO (W, $çâv))
-           (EssSRO (V, SemanticFunctor V $çâv))
+           (EssSRO (V, Sf V $çâv))
            CombI
 
 €essence_exstentional_lemma2› =
@@ -3604,7 +3587,7 @@ When the details are worked out we get:
      ∑ V Ä W ± V Ä Syntax
          ¥ Increasing
            (W Úâo ExsSRO (W, $çâv))
-           (EssSRO (V, SemanticFunctor V $çâv))
+           (EssSRO (V, Sf V $çâv))
            CombI
 =TEX
 
@@ -3612,10 +3595,10 @@ When the details are worked out we get:
 =SML
 set_merge_pcs ["misc2", "'ifos", "'sfp"];
 
-set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (V Úâo ExsSRO (W, $çâv)) (EssSRO (V, SemanticFunctor V $çâv)) CombIÆ);
+set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (V Úâo ExsSRO (W, $çâv)) (EssSRO (V, Sf V $çâv)) CombIÆ);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsSROÆ, get_spec ¨EssSROÆ, get_spec ¨ExtSROÆ,
-			get_spec ¨ConjOrderÆ, get_spec ¨SemanticFunctorÆ, get_spec ¨$ÚâoÆ]
+			get_spec ¨ConjOrderÆ, get_spec ¨SfÆ, get_spec ¨$ÚâoÆ]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (lemma_tac ¨ExsVaO (V2IxSet W, W, $çâv) (Param_ö x) (Param_ö y)Æ);
 (* *** Goal "1" *** *)
@@ -3631,10 +3614,10 @@ a (lemma_tac ¨z ç SyntaxÆ THEN1 PC_T1 "hol1" asm_prove_tac[]);
 a (all_fc_tac [rewrite_rule [get_spec ¨IncreasingÆ] evalform_increasing_thm4]);
 val essence_exstentional_lemma = save_pop_thm "essence_exstentional_lemma";
 
-set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (W Úâo ExsSRO (W, $çâv)) (EssSRO (V, SemanticFunctor V $çâv)) CombIÆ);
+set_goal([], ¨µV W $çâv∑ V Ä W ± V Ä Syntax ¥ Increasing (W Úâo ExsSRO (W, $çâv)) (EssSRO (V, Sf V $çâv)) CombIÆ);
 a (REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨IncreasingÆ, get_spec ¨ExsSROÆ, get_spec ¨EssSROÆ, get_spec ¨ExtSROÆ,
-			get_spec ¨ConjOrderÆ, get_spec ¨SemanticFunctorÆ, get_spec ¨$ÚâoÆ]
+			get_spec ¨ConjOrderÆ, get_spec ¨SfÆ, get_spec ¨$ÚâoÆ]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (lemma_tac ¨ExsVaO (V2IxSet W, W, $çâv) (Param_ö x) (Param_ö y)Æ);
 (* *** Goal "1" *** *)
@@ -3663,7 +3646,7 @@ I suppose we might start by saying what a fixed point is:
 πHOLCONST
 ‹ €SFFixp› : GS SET ≠ (GS, FTV)BR ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µd r∑ SFFixp d r § SemanticFunctor d r = r
+‹ µd r∑ SFFixp d r § Sf d r = r
 ∞
 
 I am interested in interpretations of classical two-valued set theory and therefore will consider mainly fixed points which are total over the domain.
@@ -3895,6 +3878,22 @@ The second is a stricter definition, two sets are equivalent if they have the sa
 ‹ µV r∑ BEqqRel V r = Ãx y∑ µz∑ z ç V ¥ (r z x § r z y) ± (r x z § r y z)
 ∞
 
+=GFT
+€BEqqRel_exs_lemma› =
+   Ù µ V r x y∑ x ç V ± y ç V ± BEqqRel V r x y ¥ r x x = r y y ± r x y = r y x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µV r x y∑ x ç V ± y ç V ± BEqqRel V r x y ¥ (r x x § r y y) ± (r x y § r y x)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨BEqqRelÆ] THEN strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨xÆ (STRIP_THM_THEN asm_tac o (rewrite_rule [asm_rule ¨x ç VÆ])));
+a (SPEC_NTH_ASM_T 3 ¨yÆ (STRIP_THM_THEN asm_tac o (rewrite_rule [asm_rule ¨y ç VÆ])));
+a (asm_rewrite_tac[]);
+val BEqqRel_exs_lemma = save_pop_thm "BEqqRel_exs_lemma";
+=TEX
+}%ignore
+
 πHOLCONST
 ‹ €BoolEqRel› : GS SET ≠ (GS, FTV)BR ≠ (GS, BOOL)BR
 ˜¸¸¸¸¸¸¸¸¸¸¸
@@ -4009,7 +4008,6 @@ What this says is that whenever two sets are not the members of all the same set
 
 However, that turns out a tad too strong (we need this to be a sufficient property to ensure that a total least fixed point is extensional, but it must be preserved by the semantic functor, and that one probably isn't).
 
-
 πHOLCONST
 ‹ €PreExtensional2› : GS SET ≠ (GS, FTV)BR ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
@@ -4019,6 +4017,57 @@ However, that turns out a tad too strong (we need this to be a sufficient proper
 ‹				≤ Lub $ºâtâ4 {r x x; r y y} = fT
 ‹				≤ Lub $ºâtâ4 {r x y; r y x} = fT
 ∞
+
+πHOLCONST
+‹ €PreExtensional3› : GS SET ≠ (GS, FTV)BR ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µd r∑ PreExtensional3 d r § ≥ OverDefined d r ± µx y∑ x ç d ± y ç d
+‹				¥ (∂z∑ z ç d ± ≥ {r x z; r y z} ç CompFTV)
+‹				¥ (∂z∑ z ç d ± ≥ {r z x; r z y} ç CompFTV)
+‹				≤ ≥ {r x x; r y y} ç CompFTV
+‹				≤ ≥ {r x y; r y x} ç CompFTV
+∞
+
+It is useful in the present context to have the following result:
+
+
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_flag ("subgoal_package_quiet", false);
+
+set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional3 V r ¥ PreExtensional V rÆ);
+a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¨PreExtensionalÆ, ¨PreExtensional3Æ])
+	THEN REPEAT strip_tac
+	THEN fc_tac [totover_lemma]);
+a (fc_tac [rewrite_rule [] (list_µ_elim [¨{r x z; r y z}Æ, ¨$ºâtâ4Æ] islub_lub_lemma)]);
+a (list_spec_nth_asm_tac 7 [¨xÆ, ¨yÆ]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨z'Æ
+	THEN asm_rewrite_tac [rewrite_rule [] (list_µ_elim [¨$ºâtâ4Æ] lea_islub_lub_lemma)]);
+(* *** Goal "3" *** *)
+
+a (LIST_SPEC_NTH_ASM_T 7 [¨xÆ, ¨yÆ]
+	(ante_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨y ç VÆ, asm_rule ¨≥ {r x z; r y z} ç CompFTVÆ])));
+a (rewrite_tac [prove_rule [] ¨µA B C∑ A ¥ B ≤ ≥ C § A ¥ B ≤ ( ≥B ± ≥C)Æ]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨z'Æ
+	THEN asm_rewrite_tac [rewrite_rule [] (list_µ_elim [¨$ºâtâ4Æ] lea_islub_lub_lemma)]);
+(* *** Goal "3" *** *)
+
+a (asm_rewrite_tac [rewrite_rule [] (list_µ_elim [¨{r z' x; r z' y}Æ, ¨$ºâtâ4Æ] islub_lub_lemma)]);
+
+
+=TEX
+}%ignore
 
 There is a corresponding property over the boolean version of a total partial relation.
 
@@ -4038,8 +4087,8 @@ and a weakened version:
 ‹ µd r∑ TotExtensional2 d r § µx y∑ x ç d ± y ç d
 ‹				¥ (∂z∑ z ç d ± ≥(r x z § r y z))
 ‹				¥ (∂z∑ z ç d ± ≥(r z x § r z y))
-				≤ ≥(r x x § r y y)
-				≤ ≥(r x y § r y x)
+‹				≤ ≥(r x x § r y y)
+‹				≤ ≥(r x y § r y x)
 ∞
 
 =GFT
@@ -4245,31 +4294,23 @@ Admitting this possibility is a good idea since the kind of type structure I hav
          § x ç V ± (µ y∑ y ç V ¥ (BoolRel r y x § BoolRel r y z))
 
 €equivclass_mem_lemma2› =
-   Ù µ V r x
-     ∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z
-         § x ç V
-           ± (µ y
-           ∑ y ç V
+   Ù µ V r x∑ x ç EquivClass (V, BEqqRel V (BoolRel r)) z
+         § x ç V ± (µ y∑ y ç V
                ¥ (BoolRel r y x § BoolRel r y z)
                  ± (BoolRel r x y § BoolRel r z y))
 =TEX
 =GFT
 €rep_independence_lemma› =
-   Ù µ V r
-     ∑ TotalOver V r
-         ¥ (µ s t
-         ∑ s ç V ± t ç V
-             ¥ (let u = EquivClass (V, BoolEqqRel V r) s
-               and v = EquivClass (V, BoolEqqRel V r) t
-             in (µ x y∑ x ç u ± y ç v ¥ BoolRel r x y)
-               § (∂ x y∑ x ç u ± y ç v ± BoolRel r x y)))
+   Ù µ V r∑ TotalOver V r ¥ (µ s t∑ s ç V ± t ç V ¥
+		(let u = EquivClass (V, BoolEqqRel V r) s
+		and v = EquivClass (V, BoolEqqRel V r) t
+		in (µ x y∑ x ç u ± y ç v ¥ BoolRel r x y)
+		    § (∂ x y∑ x ç u ± y ç v ± BoolRel r x y)))
 =TEX
 =GFT
 €totpre_rep_independence_lemma› =
-   Ù µ V r
-     ∑ TotalOver V r ± PreExtensional V r
-         ¥ (µ s t
-         ∑ s ç V ± t ç V
+   Ù µ V r∑ TotalOver V r ± PreExtensional V r
+         ¥ (µ s t∑ s ç V ± t ç V
              ¥ (let u = EquivClass (V, BoolEqRel V r) s
                and v = EquivClass (V, BoolEqRel V r) t
              in (µ x y∑ x ç u ± y ç v ¥ BoolRel r x y)
@@ -4277,8 +4318,7 @@ Admitting this possibility is a good idea since the kind of type structure I hav
 =TEX
 =GFT
 €totpre_rep_independence_lemma2› =
-   Ù µ V r
-     ∑ TotalOver V r ± PreExtensional V r
+   Ù µ V r∑ TotalOver V r ± PreExtensional V r
          ¥ (µ s t u v
          ∑ s ç V
                ± t ç V
@@ -4507,6 +4547,117 @@ val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
 in val totpre_rep_independence_lemma2 = save_pop_thm "totpre_rep_independence_lemma2";
 end;
 
+=IGN
+set_flag("subgoal_package_quiet", false);
+stop;
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional2 V r ¥ µs t∑ s ç V ± t ç V ¥
+	let u = EquivClass (V, BoolEqRel V r) s
+	and v = EquivClass (V, BoolEqRel V r) t
+	in	((µx y∑ x ç u ± y ç v ¥ BoolRel r x y) § (∂x y∑ x ç u ± y ç v ± BoolRel r x y))Æ);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨BoolEqRelÆ, get_spec ¨EquivClassÆ, let_def]
+	THEN REPEAT_N 6 strip_tac);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+a (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma));
+a (ufc_tac [get_spec ¨EquivÆ]);
+a (ufc_tac [get_spec ¨ReflÆ]);
+a (list_spec_nth_asm_tac 6 [¨sÆ, ¨tÆ]
+	THEN_TRY (all_asm_fc_tac [])
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+a (lemma_tac ¨BEqRel V (BoolRel r) x' x''Æ);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¨BEqRel V (BoolRel r) x' sÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a ((asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨x'Æ, ¨sÆ, ¨x''Æ])));
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¨BoolRel r x' y'Æ);
+(* *** Goal "2.2.1" *** *)
+a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ);
+a (lemma_tac ¨BEqRel V (BoolRel r) y tÆ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨SymÆ])
+		THEN (all_asm_fc_tac[])));
+a (lemma_tac ¨BEqRel V (BoolRel r) y y'Æ
+	THEN1 (asm_tac (list_µ_elim [¨VÆ, ¨BoolRel rÆ] beqrel_equiv_lemma)
+		THEN (fc_tac [get_spec ¨EquivÆ])
+		THEN (fc_tac [get_spec ¨TransÆ])
+		THEN (list_spec_nth_asm_tac 1 [¨yÆ, ¨tÆ, ¨y'Æ])));
+a (FC_T (MAP_EVERY(asm_tac o (rewrite_rule[]))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+(* *** Goal "2.2.2" *** *)
+a (fc_tac [pre2_tot_ext_lemma]);
+a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional2 V (BoolRel r)Æ] (list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensional2Æ))));
+a (list_spec_nth_asm_tac 1 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "2.2.2.1" *** *)
+a (spec_nth_asm_tac 1 ¨y'Æ);
+(* *** Goal "2.2.2.2" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "2.2.2.3" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "2.2.2.4" *** *)
+a (FC_T (MAP_EVERY (asm_tac o (rewrite_rule []))) [get_spec ¨BEqRelÆ]);
+a (spec_nth_asm_tac 1 ¨x'Æ);
+a (spec_nth_asm_tac 2 ¨x''Æ);
+
+(* *** Goal "2.2.2.5" *** *)
+
+val totpre2_rep_independence_lemma = save_pop_thm "totpre2_rep_independence_lemma";
+
+local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional2 V r ¥	
+	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqRel V r s u ± BoolEqRel V r t v
+	¥ (BoolRel r s t § BoolRel r u v)Æ);
+val _ = a (REPEAT_N 8 strip_tac);
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma));
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+val _ = a (POP_ASM_T ante_tac
+	THEN rewrite_tac [let_def, get_spec ¨EquivClassÆ]);
+val _ = a (STRIP_T asm_tac THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+	THEN1 (asm_tac booleqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+val _ = a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨sÆ THEN ∂_tac ¨tÆ THEN asm_rewrite_tac[]));
+val _ = a (list_spec_nth_asm_tac 1 [¨uÆ, ¨vÆ]);
+(* *** Goal "2" *** *)
+val _ = a (lemma_tac ¨BoolEqRel V r s s ± BoolEqRel V r t tÆ
+	THEN1 (asm_tac booleqrel_equiv_lemma
+		THEN ufc_tac [get_spec ¨EquivÆ]
+		THEN ufc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+val _ = a (LEMMA_T  ¨(∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ
+	(asm_tac o (rewrite_rule [eq_sym_rule (asm_rule
+	¨(µ x' y∑ (x' ç V ± BoolEqRel V r s x') ± y ç V ± BoolEqRel V r t y ¥ BoolRel r x' y)
+             § (∂ x' y
+             ∑ (x' ç V ± BoolEqRel V r s x') ± (y ç V ± BoolEqRel V r t y) ± BoolRel r x' y)Æ)]))
+	THEN1 (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN asm_rewrite_tac[]));
+val _ = a (list_spec_nth_asm_tac 1 [¨sÆ, ¨tÆ]);
+in val totpre2_rep_independence_lemma2 = save_pop_thm "totpre2_rep_independence_lemma2";
+end;
+
+=SML
+
 local val _ = set_goal([],¨µV r∑ TotalOver V r ¥	
 	µs t u v∑ s ç V ± t ç V ± u ç V ± v ç V ± BoolEqqRel V r s u ± BoolEqqRel V r t v
 	¥ (BoolRel r s t § BoolRel r u v)Æ);
@@ -4627,6 +4778,91 @@ val _ = a (ALL_ASM_FC_T rewrite_tac []);
 in val preext_ext_lemma = save_pop_thm "preext_ext_lemma";
 end;
 
+=IGN
+set_flag("subgoal_package_quiet", false);
+stop;
+
+set_goal([],¨µV r∑ TotalOver V r ± PreExtensional2 V r ¥ extensional (MSfromSFF (V,r))Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨extensionalÆ, get_spec ¨MSfromSFFÆ, let_def]
+	THEN REPEAT_N 7 strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (GET_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (GET_NTH_ASM_T 4 (strip_asm_tac o (rewrite_rule [get_spec ¨QuotientSetÆ])));
+a (asm_rewrite_tac[]);
+a (lemma_tac ¨Equiv (V, BEqRel V (BoolRel r))Æ THEN1 rewrite_tac[beqrel_equiv_lemma]);
+a (FC_T1 (fc_§_canon)
+	(MAP_EVERY (rewrite_thm_tac o (rewrite_rule [asm_rule ¨x ç VÆ, asm_rule ¨x' ç VÆ]) o (list_µ_elim [¨xÆ, ¨x'Æ])))
+	[equiv_class_eq_thm]);
+a (rewrite_tac [get_spec ¨BEqRelÆ]);
+a (strip_tac THEN strip_tac);
+a (lemma_tac ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ
+	THEN1 (rewrite_tac [get_spec ¨QuotientSetÆ]
+		THEN ∂_tac ¨zÆ
+		THEN asm_rewrite_tac[]));
+a (SPEC_NTH_ASM_T 8 ¨EquivClass (V, BEqRel V (BoolRel r)) zÆ 
+	(strip_asm_tac o (rewrite_rule[asm_rule ¨EquivClass (V, BEqRel V (BoolRel r)) z ç V / BEqRel V (BoolRel r)Æ])));
+(* *** Goal "1" *** *)
+a (lemma_tac ¨BoolEqRel V r z x'' ± BoolEqRel V r x yÆ
+	THEN1 strip_tac);
+(* *** Goal "1.1" *** *)
+a (DROP_NTH_ASM_T 6 ante_tac
+	THEN rewrite_tac [get_spec ¨EquivClassÆ]
+	THEN strip_tac
+	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
+(* *** Goal "1.2" *** *)
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN asm_rewrite_tac [get_spec ¨EquivClassÆ]
+	THEN strip_tac
+	THEN asm_rewrite_tac [get_spec ¨BoolEqRelÆ]);
+(* *** Goal "1.3" *** *)
+a (LEMMA_T ¨BoolRel r z x § BoolRel r x'' yÆ asm_rewrite_thm_tac);
+(* *** Goal "1.3.1" *** *)
+
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+a (lemma_tac ¨x'' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+a (lemma_tac ¨y ç VÆ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+val _ = a (list_spec_nth_asm_tac 3 [¨zÆ, ¨xÆ, ¨x''Æ, ¨yÆ]);
+val _ = a (contr_tac);
+(* *** Goal "1.3.2" *** *)
+val _ = a (LEMMA_T ¨BoolRel r z x' § BoolRel r x''' y'Æ asm_rewrite_thm_tac);
+val _ = a (lemma_tac ¨x''' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+val _ = a (lemma_tac ¨y' ç VÆ
+	THEN1 (DROP_NTH_ASM_T 5 ante_tac THEN asm_rewrite_tac[get_spec ¨EquivClassÆ] THEN contr_tac));
+val _ = a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] totpre_rep_independence_lemma2));
+val _ = a (lemma_tac ¨BoolEqRel V r x' y'Æ
+	THEN1 (DROP_NTH_ASM_T 7 ante_tac
+		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
+val _ = a (lemma_tac ¨BoolEqRel V r z x'''Æ
+	THEN1 (DROP_NTH_ASM_T 9 ante_tac
+		THEN asm_rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BoolEqRelÆ]));
+val _ = a (list_spec_nth_asm_tac 3 [¨zÆ, ¨x'Æ, ¨x'''Æ, ¨y'Æ]);
+val _ = a (contr_tac);
+(* *** Goal "2" *** *)
+val _ = a (all_asm_fc_tac[]);
+(* *** Goal "3" *** *)
+val _ = a (all_asm_fc_tac[]);
+(* *** Goal "4" *** *)
+val _ = a (lemma_tac ¨z ç EquivClass (V, BEqRel V (BoolRel r)) zÆ
+	THEN1 (rewrite_tac [get_spec ¨EquivClassÆ, get_spec ¨BEqRelÆ] THEN strip_tac));
+val _ = a (lemma_tac ¨x ç sÆ
+	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
+		THEN fc_tac [get_spec ¨EquivÆ]
+		THEN fc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+val _ = a (lemma_tac ¨x' ç tÆ
+	THEN1 (asm_rewrite_tac[get_spec ¨EquivClassÆ]
+		THEN fc_tac [get_spec ¨EquivÆ]
+		THEN fc_tac [get_spec ¨ReflÆ]
+		THEN ALL_ASM_FC_T rewrite_tac []));
+val _ = a (ALL_ASM_FC_T rewrite_tac []);
+in val preext2_ext_lemma = save_pop_thm "preext2_ext_lemma";
+end;
+
+=SML
+
 local val _ = set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥
 	µx y∑ x ç V ± y ç V ¥ (BEqRel V (BoolRel r) x y § BEqqRel V (BoolRel r) x y)Æ);
 val _ = a (REPEAT µ_tac
@@ -4653,6 +4889,36 @@ val _ = a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç 
 in val eq_eq_eqq_lemma = save_pop_thm "eq_eq_eqq_lemma";
 end;
 
+=IGN
+set_flag ("subgoal_package_quiet", false);
+stop;
+
+set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional2 V r ¥
+	µx y∑ x ç V ± y ç V ¥ (BEqRel V (BoolRel r) x y § BEqqRel V (BoolRel r) x y)Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨BEqRelÆ, get_spec ¨BEqqRelÆ, let_def]
+	THEN REPEAT_N 4 strip_tac
+	THEN_TRY asm_rewrite_tac[ext_thm]
+	THEN REPEAT_N 5 strip_tac);
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨BoolRel r z x § BoolRel r z yÆ asm_tac
+	THEN1 ASM_FC_T1 fc_§_canon rewrite_tac []
+	THEN asm_rewrite_tac[]);
+a (fc_tac [pre2_tot_ext_lemma]);
+a (asm_tac (rewrite_rule [asm_rule ¨TotExtensional2 V (BoolRel r)Æ]
+	(list_µ_elim [¨VÆ, ¨BoolRel rÆ] (get_spec ¨TotExtensional2Æ))));
+a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
+(* *** Goal "1.1" *** *)
+a (SPEC_NTH_ASM_T 1 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "1.3" *** *)
+a (spec_nth_asm_tac 8 ¨z'Æ);
+(* *** Goal "2" *** *)
+val _ = a (SPEC_NTH_ASM_T 2 ¨zÆ (rewrite_thm_tac o (rewrite_rule [asm_rule ¨z ç VÆ])));
+in val eq_eq_eqq_lemma2 = save_pop_thm "eq_eq_eqq_lemma2";
+
+=SML
 local val _ = set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional V r ¥ MSfromSFF (V,r) = MSfromSFF2 (V,r)Æ);
 val _ = a (REPEAT µ_tac
 	THEN rewrite_tac [get_spec ¨MSfromSFFÆ, get_spec ¨MSfromSFF2Æ, let_def, get_spec ¨QuotientSetÆ,
@@ -4678,6 +4944,37 @@ val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
 in val msfromsff_eq_lemma = save_pop_thm "msfromsff_eq_lemma";
 end;
 
+=IGN
+set_flag("subgoal_package_quiet", false);
+stop;
+
+set_goal([], ¨µV r∑ TotalOver V r ± PreExtensional2 V r ¥ MSfromSFF (V,r) = MSfromSFF2 (V,r)Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨MSfromSFFÆ, get_spec ¨MSfromSFF2Æ, let_def, get_spec ¨QuotientSetÆ,
+			get_spec ¨EquivClassÆ, sets_ext_clauses]
+	THEN strip_tac THEN strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+
+a (strip_asm_tac (list_µ_elim [¨VÆ, ¨rÆ] eq_eq_eqq_lemma));
+val _ = a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "1.2" *** *)
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "2" *** *)
+val _ = a (∂_tac ¨x'Æ THEN asm_rewrite_tac[]);
+val _ = a (REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+(* *** Goal "1.2" *** *)
+val _ = a (list_spec_nth_asm_tac 5 [¨x'Æ, ¨x''Æ]);
+in val msfromsff_eq_lemma = save_pop_thm "msfromsff_eq_lemma";
+end;
+
+=SML
 local val _ = set_goal([],¨µV r∑ TotalOver V r ± PreExtensional V r ¥ extensional (MSfromSFF2 (V,r))Æ);
 val _ = a (REPEAT strip_tac
 	THEN all_fc_tac [msfromsff_eq_lemma, preext_ext_lemma]
@@ -4705,15 +5002,15 @@ A semantic functor is extensional over some domain if any two sets which have th
 ∞
 
 =GFT
-€extsem_semanticfunctor_thm› =
-   Ù µ V∑ V Ä SetReps ¥ ExtSem V SemanticFunctor
+€extsem_sf_thm› =
+   Ù µ V∑ V Ä SetReps ¥ ExtSem V Sf
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SemanticFunctorÆ);
+set_goal([], ¨µV∑ V Ä SetReps ¥ ExtSem V SfÆ);
 val _ = a (REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SemanticFunctorÆ]
+	THEN rewrite_tac [get_spec ¨ExtSemÆ, get_spec ¨SfÆ]
 	THEN REPEAT strip_tac
 	THEN rewrite_tac [get_spec ¨SameEssÆ]
 	THEN REPEAT strip_tac);
@@ -4760,7 +5057,7 @@ val _ = a (GET_NTH_ASM_T 11 (strip_asm_tac o (rewrite_rule [get_spec ¨SameEssÆ])
 val _ = a (spec_nth_asm_tac 1 ¨z'Æ THEN asm_rewrite_tac[]);
 val _ = a (all_asm_fc_tac []);
 val _ = a (all_asm_fc_tac [ºâtâ4_antisym_thm]);
-val extsem_semanticfunctor_thm = save_pop_thm "extsem_semanticfunctor_thm";
+val extsem_sf_thm = save_pop_thm "extsem_sf_thm";
 =TEX
 }%ignore
 
@@ -4807,7 +5104,7 @@ It looks like there will be {\it least} upper bounds, but I don't think that I n
 =TEX
 
 =GFT
-compext_lemma1b =
+€compext_lemma1b› =
    Ù µ V
      ∑ V Ä Syntax
          ¥ (µ r x y
@@ -4932,7 +5229,7 @@ val compext_lemma1b = save_pop_thm "compext_lemma1b";
 }%ignore
 
 =GFT
-compext_lemma2 =
+€compext_lemma2› =
    Ù µ V
      ∑ V Ä SetReps
          ¥ (µ $çâv x y
@@ -4944,7 +5241,8 @@ compext_lemma2 =
                      (PwS V $ºâtâ4)
                      {Extension $çâv x; Extension $çâv y}
                      xt))
-
+=TEX
+=GFT
 €compext_lemma2b› =
    Ù µ V
      ∑ V Ä Syntax
@@ -5845,23 +6143,23 @@ val EvalForm_MsExtend2_lemma3 = save_pop_thm "EvalForm_MsExtend2_lemma3";
 }%ignore
 
 =GFT
-€SemanticFunctor_MsExtend2_lemma1› =
+€Sf_MsExtend2_lemma1› =
    Ù µ (V, $çâv) x y z
      ∑ V Ä Syntax ± x ç V ± y ç V ± v ç V ± w ç V
-         ¥ SemanticFunctor V (MsExtend2 (V, $çâv) x y) v w
-           = SemanticFunctor V $çâv v w
+         ¥ Sf V (MsExtend2 (V, $çâv) x y) v w
+           = Sf V $çâv v w
 =TEX
 
 \ignore{
 =SML
 set_goal ([], ¨µ(V, $çâv) x y v w∑ V Ä Syntax ± x ç V ± y ç V ± v ç V ± w ç V
-	   ¥ SemanticFunctor V (MsExtend2 (V, $çâv) x y) v w
-	     = SemanticFunctor V $çâv v wÆ);
+	   ¥ Sf V (MsExtend2 (V, $çâv) x y) v w
+	     = Sf V $çâv v wÆ);
 a (REPEAT strip_tac
-	THEN rewrite_tac [get_spec ¨SemanticFunctorÆ]);
+	THEN rewrite_tac [get_spec ¨SfÆ]);
 a (fc_tac [EvalForm_MsExtend2_lemma3]);
 a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ, ¨wÆ, ¨vÆ, ¨$çâvÆ]);
-val SemanticFunctor_MsExtend2_lemma1 = save_pop_thm "SemanticFunctor_MsExtend2_lemma1";
+val Sf_MsExtend2_lemma1 = save_pop_thm "Sf_MsExtend2_lemma1";
 =TEX
 }%ignore
 
@@ -6550,14 +6848,14 @@ Their "converses" are:
 ∞
 
 =GFT
-€ConWkStrictSemanticFunctor_lemma› =
-   Ù µ V∑ V Ä SetReps ¥ ConWkStrict V SemanticFunctor
+€ConWkStrictSf_lemma› =
+   Ù µ V∑ V Ä SetReps ¥ ConWkStrict V Sf
 =TEX
 
 \ignore{
 =SML
-set_goal ([], ¨µV∑ V Ä SetReps ¥ ConWkStrict V SemanticFunctorÆ);
-a (µ_tac THEN rewrite_tac [get_spec ¨ConWkStrictÆ, get_spec ¨SemanticFunctorÆ,  get_spec ¨UnderDefinedÆ]);
+set_goal ([], ¨µV∑ V Ä SetReps ¥ ConWkStrict V SfÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨ConWkStrictÆ, get_spec ¨SfÆ,  get_spec ¨UnderDefinedÆ]);
 a (PC_T "hol1" (REPEAT strip_tac) THEN POP_ASM_T ante_tac);
 a (asm_fc_tac[]);
 a (DROP_NTH_ASM_T 3 discard_tac);
@@ -6643,7 +6941,7 @@ a (contr_tac);
 (* *** Goal "2.3.2.2" *** *)
 a (all_asm_fc_tac[]);
 a (∂_tac ¨xÆ THEN ∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-val ConWkStrictSemanticFunctor_lemma = save_pop_thm "ConWkStrictSemanticFunctor_lemma";
+val ConWkStrictSf_lemma = save_pop_thm "ConWkStrictSf_lemma";
 =TEX
 }%ignore
 
@@ -6654,14 +6952,14 @@ val ConWkStrictSemanticFunctor_lemma = save_pop_thm "ConWkStrictSemanticFunctor_
 ∞
 
 =GFT
-€ConCoWkStrictSemanticFunctor_lemma› =
-   Ù µ V∑ V Ä Syntax ¥ ConCoWkStrict V SemanticFunctor
+€ConCoWkStrictSf_lemma› =
+   Ù µ V∑ V Ä Syntax ¥ ConCoWkStrict V Sf
 =TEX
 
 \ignore{
 =SML
-set_goal ([], ¨µV∑ V Ä Syntax ¥ ConCoWkStrict V SemanticFunctorÆ);
-a (µ_tac THEN rewrite_tac [get_spec ¨ConCoWkStrictÆ, get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedÆ]);
+set_goal ([], ¨µV∑ V Ä Syntax ¥ ConCoWkStrict V SfÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨ConCoWkStrictÆ, get_spec ¨SfÆ,  get_spec ¨OverDefinedÆ]);
 a (PC_T "hol1" (REPEAT strip_tac) THEN POP_ASM_T ante_tac);
 a (asm_fc_tac[]);
 a (DROP_NTH_ASM_T 3 discard_tac);
@@ -6714,7 +7012,7 @@ a (all_asm_fc_tac [Ä_trans_thm]);
 (* *** Goal "2.3.2" *** *)
 a (all_asm_fc_tac[]);
 a (∂_tac ¨xÆ THEN ∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-val ConCoWkStrictSemanticFunctor_lemma = save_pop_thm "ConCoWkStrictSemanticFunctor_lemma";
+val ConCoWkStrictSf_lemma = save_pop_thm "ConCoWkStrictSf_lemma";
 =TEX
 }%ignore
 
@@ -6722,20 +7020,20 @@ val ConCoWkStrictSemanticFunctor_lemma = save_pop_thm "ConCoWkStrictSemanticFunc
 €ODE_SF_lemma› =
    Ù µ V $çâv
      ∑ V Ä SetReps
-           ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) $çâv)
+           ± OverDefinedEss (V ¿ {öâg}) V (Sf (V ¿ {öâg}) $çâv)
          ¥ OverDefined (V ¿ {öâg}) $çâv
 
 €ODE_SF_lemma2› =
    Ù µ V $çâv
-     ∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V $çâv)
+     ∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (Sf V $çâv)
          ¥ OverDefined (V ¿ {öâg}) $çâv
 =TEX
 
 \ignore{
 =SML
-set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) $çâv) 
+set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (Sf (V ¿ {öâg}) $çâv) 
 	¥ OverDefined (V ¿ {öâg}) $çâvÆ);
-a (µ_tac THEN rewrite_tac [get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
+a (µ_tac THEN rewrite_tac [get_spec ¨SfÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
 	get_spec ¨OverDefinedLÆ, get_spec ¨OverDefinedÆ, let_def]
 	THEN PC_T "predicates" (REPEAT strip_tac));
 a (lemma_tac ¨y ç SetRepsÆ
@@ -6750,9 +7048,9 @@ a (ALL_FC_T (MAP_EVERY ante_tac) [EvalForm_fT_lemma]);
 a (PC_T1 "hol1" prove_tac[]);
 val ODE_SF_lemma = save_pop_thm "ODE_SF_lemma";
 
-set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V $çâv) 
+set_goal ([], ¨µV $çâv∑ V Ä SetReps ± OverDefinedEss (V ¿ {öâg}) V (Sf V $çâv) 
 	¥ OverDefined (V ¿ {öâg}) $çâvÆ);
-a (µ_tac THEN rewrite_tac [get_spec ¨SemanticFunctorÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
+a (µ_tac THEN rewrite_tac [get_spec ¨SfÆ,  get_spec ¨OverDefinedEssÆ, get_spec ¨EssenceÆ,
 	get_spec ¨OverDefinedLÆ, get_spec ¨OverDefinedÆ, let_def]
 	THEN PC_T "predicates" (REPEAT strip_tac));
 a (lemma_tac ¨y ç SetRepsÆ
@@ -6788,7 +7086,7 @@ val ODE_SF_lemma2 = save_pop_thm "ODE_SF_lemma2";
            ± OverDefinedEss
              (V ¿ {öâg})
              V
-             (SemanticFunctor (V ¿ {öâg}) (MsExtend2 (V, r) x y))
+             (Sf (V ¿ {öâg}) (MsExtend2 (V, r) x y))
          ¥ OverDefined V r
 
 €ODE_SF_MsExtend2_lemma2› =
@@ -6800,7 +7098,7 @@ val ODE_SF_lemma2 = save_pop_thm "ODE_SF_lemma2";
            ± OverDefinedEss
              (V ¿ {öâg})
              V
-             (SemanticFunctor V (MsExtend2 (V, r) x y))
+             (Sf V (MsExtend2 (V, r) x y))
          ¥ OverDefined V r
 =TEX
 
@@ -6808,7 +7106,7 @@ val ODE_SF_lemma2 = save_pop_thm "ODE_SF_lemma2";
 =SML
 set_goal([], ¨µ V r x y∑
 		V Ä SetReps ± x ç V ± y ç V ± Compatible V r x y
-		± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor (V ¿ {öâg}) (MsExtend2 (V, r) x y))
+		± OverDefinedEss (V ¿ {öâg}) V (Sf (V ¿ {öâg}) (MsExtend2 (V, r) x y))
                  ¥ OverDefined V rÆ);
 a (REPEAT strip_tac);
 a (all_fc_tac [ODE_SF_lemma]);
@@ -6819,7 +7117,7 @@ val ODE_SF_MsExtend2_lemma = save_pop_thm "ODE_SF_MsExtend2_lemma";
 
 set_goal([], ¨µ V r x y∑
 		V Ä SetReps ± x ç V ± y ç V ± Compatible V r x y
-		± OverDefinedEss (V ¿ {öâg}) V (SemanticFunctor V (MsExtend2 (V, r) x y))
+		± OverDefinedEss (V ¿ {öâg}) V (Sf V (MsExtend2 (V, r) x y))
                  ¥ OverDefined V rÆ);
 a (REPEAT strip_tac);
 a (all_fc_tac [ODE_SF_lemma2]);
@@ -6895,15 +7193,15 @@ val ExsSRO_MsExtend2_lemma2 = save_pop_thm "ExsSRO_MsExtend2_lemma2";
 €Compatibility_lemma1› =
    Ù µ V $çâv x y
      ∑ V Ä Syntax ± x ç V ± y ç V ± Compatible V $çâv x y
-         ¥ EssSRO (V, SemanticFunctor V (MsExtend2 (V, $çâv) x y)) x öâg
-           ± EssSRO (V, SemanticFunctor V (MsExtend2 (V, $çâv) x y)) y öâg
+         ¥ EssSRO (V, Sf V (MsExtend2 (V, $çâv) x y)) x öâg
+           ± EssSRO (V, Sf V (MsExtend2 (V, $çâv) x y)) y öâg
 =TEX
 
 \ignore{
 =SML
 set_goal ([], ¨µ V $çâv x y∑ V Ä Syntax ± x ç V ± y ç V ± Compatible V $çâv x y
-	¥ EssSRO (V, SemanticFunctor V (MsExtend2 (V, $çâv) x y)) x öâg
-	± EssSRO (V, SemanticFunctor V (MsExtend2 (V, $çâv) x y)) y öâgÆ);
+	¥ EssSRO (V, Sf V (MsExtend2 (V, $çâv) x y)) x öâg
+	± EssSRO (V, Sf V (MsExtend2 (V, $çâv) x y)) y öâgÆ);
 a (REPEAT_N 5 strip_tac THEN all_fc_tac [ExsSRO_MsExtend2_lemma2]);
 a (lemma_tac ¨V Ä V ¿ {öâg}Æ THEN1 (PC_T1 "hol1" prove_tac []));
 a (lemma_tac ¨((V ¿ {öâg}) Úâo ExsSRO (V ¿ {öâg}, MsExtend2 (V, $çâv) x y)) x öâgÆ
@@ -6924,13 +7222,13 @@ val Compatibility_lemma1 = save_pop_thm "Compatibility_lemma1";
            ± y ç V
            ± Compatible V $çâv x y
            ± ≥ OverDefined V $çâv
-         ¥ CompEss V (SemanticFunctor V $çâv) x y
+         ¥ CompEss V (Sf V $çâv) x y
 =TEX
 
 \ignore{
 =SML
 set_goal ([], ¨µ V $çâv x y∑ V Ä SetReps ± x ç V ± y ç V ± Compatible V $çâv x y ± ≥ OverDefined V $çâv
-	¥ CompEss V (SemanticFunctor V $çâv) x yÆ);
+	¥ CompEss V (Sf V $çâv) x yÆ);
 a (REPEAT_N 5 strip_tac);
 a (fc_tac [setreps_Ä_syntax_lemma2]);
 a (rewrite_tac [get_spec ¨CompEssÆ, get_spec ¨$ÚâoÆ, get_spec ¨ExsSROÆ, ç_in_clauses, get_spec ¨ConjOrderÆ]
@@ -6938,8 +7236,8 @@ a (rewrite_tac [get_spec ¨CompEssÆ, get_spec ¨$ÚâoÆ, get_spec ¨ExsSROÆ, ç_in_cla
 	THEN REPEAT strip_tac);
 a (REPEAT_N 2 (DROP_NTH_ASM_T 2 ante_tac) THEN rewrite_tac [get_spec ¨EssSROÆ]
 	THEN REPEAT strip_tac);
-a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨xÆ, ¨zÆ] SemanticFunctor_MsExtend2_lemma1));
-a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨yÆ, ¨zÆ] SemanticFunctor_MsExtend2_lemma1));
+a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨xÆ, ¨zÆ] Sf_MsExtend2_lemma1));
+a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨yÆ, ¨zÆ] Sf_MsExtend2_lemma1));
 a (REPEAT_N 2 (spec_nth_asm_tac 4 ¨zÆ));
 a (REPEAT_N 2 (POP_ASM_T ante_tac));
 a (asm_rewrite_tac[] THEN REPEAT strip_tac);
@@ -6950,11 +7248,11 @@ a (spec_nth_asm_tac 1 ¨zÆ);
 a (DROP_NTH_ASM_T 1 ante_tac
 	THEN DROP_NTH_ASM_T 3 ante_tac
 	THEN DROP_NTH_ASM_T 3 ante_tac
-	THEN strip_asm_tac (µ_elim ¨SemanticFunctor V (MsExtend2 (V, $çâv) x y) öâg zÆ ftv_cases_thm)
+	THEN strip_asm_tac (µ_elim ¨Sf V (MsExtend2 (V, $çâv) x y) öâg zÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[]
-	THEN strip_asm_tac (µ_elim ¨SemanticFunctor V $çâv x zÆ ftv_cases_thm)
+	THEN strip_asm_tac (µ_elim ¨Sf V $çâv x zÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[]
-	THEN strip_asm_tac (µ_elim ¨SemanticFunctor V $çâv y zÆ ftv_cases_thm)
+	THEN strip_asm_tac (µ_elim ¨Sf V $çâv y zÆ ftv_cases_thm)
 	THEN asm_rewrite_tac[]
 	THEN rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx∑ {x; fB} = {fB; x}Æ]);
 val Compatibility_lemma2 = save_pop_thm "Compatibility_lemma2";
@@ -6962,17 +7260,17 @@ val Compatibility_lemma2 = save_pop_thm "Compatibility_lemma2";
 }%ignore
 
 =GFT
-€CompExtSem_SemanticFunctor_thm› =
-	Ù µ V∑ V Ä SetReps ¥ CompExtSem V SemanticFunctor
+€CompExtSem_Sf_thm› =
+	Ù µ V∑ V Ä SetReps ¥ CompExtSem V Sf
 =TEX
 
 \ignore{
 =SML
-set_goal ([], ¨µ V∑ V Ä SetReps ¥ CompExtSem V SemanticFunctorÆ);
+set_goal ([], ¨µ V∑ V Ä SetReps ¥ CompExtSem V SfÆ);
 a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨CompExtSemÆ] THEN REPEAT strip_tac);
 a (lemma_tac ¨V Ä V ¿ {öâg}Æ THEN1 PC_T1 "hol1" prove_tac[]);
 a (all_fc_tac [Compatibility_lemma2]);
-val CompExtSem_SemanticFunctor_thm = save_pop_thm "CompExtSem_SemanticFunctor_thm";
+val CompExtSem_Sf_thm = save_pop_thm "CompExtSem_Sf_thm";
 =TEX
 }%ignore
 
@@ -6986,16 +7284,76 @@ set_flag("subgoal_package_quiet", false);
 
 stop;
 
-set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional2 V r ¥ PreExtensional2 V (SemanticFunctor V r)Æ);
+set_goal([], ¨µV r x y∑ x ç V ± y ç V ± {r x x; r y y} ç CompFTV ± {r x y; r y x} ç CompFTV
+	± (µ z∑ ≥ (z ç V ± IsLub $ºâtâ4 {r z x; r z y} fT))
+	¥ {r x y; r y x; r x x; r y y} ç CompFTVÆ);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨xÆ);
+a (spec_nth_asm_tac 2 ¨yÆ);
+a (REPEAT_N 2 (DROP_NTH_ASM_T 1 ante_tac));
+a (REPEAT_N 2 (DROP_NTH_ASM_T 2 ante_tac));
+a (rewrite_tac []);
+
+get_spec ¨PreExtensional2Æ;
+
+set_goal([], ¨µV r∑ ≥ OverDefined V r
+	± (µx y∑ x ç V ± y ç V
+		± {r x y; r y x; r x x; r y y} ç CompFTV
+		± CompExt V r x y
+		¥ CompEss V r x y)
+	¥ PreExtensional2 V rÆ);
+a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¨PreExtensional2Æ, ¨CompExtÆ, ¨CompEssÆ]) THEN contr_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [get_spec ¨PreExtensional2Æ]);
+a (list_spec_nth_asm_tac 5 [¨xÆ, ¨yÆ]);
+a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[compftv_lemma]);
+(* *** Goal "2" *** *)
+
+get_spec ¨CompatibleÆ;
+
+a (once_rewrite_tac[compftv_lemma]);
+a (once_rewrite_tac[]);
+
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¨zÆ);
+(* *** Goal "1.2" *** *)
+set_labelled_goal "1.2";
+a (spec_nth_asm_tac 5 ¨z'Æ);
+(* *** Goal "1.3" *** *)
+set_labelled_goal "1.3";
+a (spec_nth_asm_tac 5 ¨z'Æ);
+(* *** Goal "1.4" *** *)
+set_labelled_goal "1.4";
+
+set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional V r ¥ PreExtensional V (Sf V r)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensionalÆ] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨V Ä SyntaxÆ THEN1 (PC_T1 "hol1" asm_prove_tac [get_spec ¨SetRepsÆ]));
+a (swap_nth_asm_concl_tac 3
+	THEN all_fc_tac [rewrite_rule [get_spec ¨ConCoWkStrictÆ] ConCoWkStrictSf_lemma]);
+(* *** Goal "2" *** *)
+a (asm_tac (rewrite_rule [get_spec ¨CompExtSemÆ, get_spec ¨CompatibleÆ, get_spec ¨CompEssÆ, get_spec ¨CompExtÆ] (CompExtSem_Sf_thm)));
+a (list_spec_nth_asm_tac 1 [¨VÆ]);
+a (list_spec_nth_asm_tac 1 [¨rÆ]);
+a (REPEAT_N 2 (DROP_NTH_ASM_T 2 discard_tac));
+
+
+
+set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional2 V r ¥ PreExtensional2 V (Sf V r)Æ);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensional2Æ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (lemma_tac ¨V Ä SyntaxÆ THEN1 (PC_T1 "hol1" asm_prove_tac [get_spec ¨SetRepsÆ]));
 a (swap_nth_asm_concl_tac 3
-	THEN all_fc_tac [rewrite_rule [get_spec ¨ConCoWkStrictÆ] ConCoWkStrictSemanticFunctor_lemma]);
+	THEN all_fc_tac [rewrite_rule [get_spec ¨ConCoWkStrictÆ] ConCoWkStrictSf_lemma]);
 (* *** Goal "2" *** *)
-a (asm_tac (rewrite_rule [get_spec ¨CompExtSemÆ, get_spec ¨CompatibleÆ] (CompExtSem_SemanticFunctor_thm)));
+a (contr_tac);
+a (asm_tac (rewrite_rule [get_spec ¨CompExtSemÆ, get_spec ¨CompatibleÆ] (CompExtSem_Sf_thm)));
 a (list_spec_nth_asm_tac 1 [¨VÆ]);
 a (list_spec_nth_asm_tac 1 [¨rÆ]);
+a (REPEAT_N 2 (DROP_NTH_ASM_T 2 discard_tac));
+a (lemma_tac ¨{r x y; r y x; r x x; r y y} ç CompFTVÆ
+
+
 a (list_spec_nth_asm_tac 1 [¨xÆ, ¨yÆ]);
 (* *** Goal "2.1" *** *)
 a (swap_nth_asm_concl_tac 1);
@@ -7003,20 +7361,12 @@ a (swap_nth_asm_concl_tac 1);
 =TEX
 }%ignore
 
-\subsection{Properties of FChains}
+\subsection{Properties of SfChains}
 
-Properties of least fixed points of the semantic functor are in part obtained by induction over the relevant FChain.
+Properties of least fixed points of the semantic functor are in part obtained by induction over the relevant FChain (see \cite{rbjt007} for the theory of $FChains$).
 Since inductive proofs yeild properties shared by all the members of the FChain, and its best to prove them of the FChain so that their full force can be used in subsequent inductive proofs.
 
-Preparatory to such proofs I first specialise a general induction theorem for fchains to the chains generator by the semantic functor.
-
-First abbreviated notation for the semantic functor and the FChains it generates.
-
-πHOLCONST
-‹ €Sf› : GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µV∑ Sf V = SemanticFunctor V
-∞
+First abbreviated notation for the FChains generated by the semantic functor.
 
 πHOLCONST
 ‹ €SfChain› : GS SET ≠ (GS, FTV)BR SET
@@ -7024,16 +7374,15 @@ First abbreviated notation for the semantic functor and the FChains it generates
 ‹ µV∑ SfChain V = FChainU (Sf V) $ºâç
 ∞
 
+For inductive reasoning about $SfChain$s the general induction theorem for fchains is specialised to the chains generated by the semantic functor.
+
 =GFT
 €sfchain_induction_thm› =
    Ù µ V p
      ∑ V Ä SetReps
-           ± (µ x
-           ∑ x ç SfChain V
-                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ Sf V x ºâç y ¥ p y)
+           ± (µ x∑ x ç SfChain V ± (µ y∑ y ç SfChain V ± y ºâç x ¥ p y)
                ¥ p (Sf V x))
-           ± (µ x
-           ∑ x ç SfChain V
+           ± (µ x∑ x ç SfChain V
                  ± x = Lub $ºâç {y|y ç SfChain V ± y ºâç x ± ≥ x ºâç y}
                  ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ x ºâç y ¥ p y)
                ¥ p x)
@@ -7045,7 +7394,7 @@ First abbreviated notation for the semantic functor and the FChains it generates
 set_goal ([], ¨µV p∑ V Ä SetReps 
            ± (µ x
            ∑ x ç SfChain V
-                 ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ (Sf V x) ºâç y ¥ p y)
+                 ± (µ y∑ y ç SfChain V ± y ºâç x ¥ p y)
                ¥ p (Sf V x))
            ± (µ x
            ∑ x ç SfChain V
@@ -7053,16 +7402,16 @@ set_goal ([], ¨µV p∑ V Ä SetReps
                  ± (µ y∑ y ç SfChain V ± y ºâç x ± ≥ x ºâç y ¥ p y)
                ¥ p x)
          ¥ (µ x∑ x ç SfChain V ¥ p x)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨SfChainÆ, get_spec ¨SfÆ]
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨SfChainÆ]
 	THEN REPEAT strip_tac);
-a (strip_asm_tac (list_µ_elim [¨$ºâçÆ,¨SemanticFunctor VÆ,¨pÆ] fchainu_induction_thm3));
+a (strip_asm_tac (list_µ_elim [¨$ºâçÆ,¨Sf VÆ,¨pÆ] fchainu_induction_thm4));
 (* *** Goal "1" *** *)
 a (swap_nth_asm_concl_tac 1);
 a (bc_tac [crpou_ccrpou_lemma]);
 a (rewrite_tac[crpou_ºâç_thm]);
 (* *** Goal "2" *** *)
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac [get_spec ¨SfÆ, semanticfunctor_increasing_thm]);
+a (rewrite_tac [get_spec ¨SfÆ, sf_increasing_thm]);
 (* *** Goal "3" *** *)
 a (all_asm_fc_tac[]);
 (* *** Goal "4" *** *)
@@ -7073,37 +7422,169 @@ val sfchain_induction_thm = save_pop_thm "sfchain_induction_thm";
 =TEX
 }%ignore
 
-It will be convenient to have a tactic to facilitate this kind of induction:
+It will be convenient to have a tactic to facilitate this kind of induction.
+
+The following tactic does not expect an argument, but expects the conclusion of the goal to be an implication of which the antecedent asserts that the induction variable is a member of the relevant $SfChain$.
 
 =SML
-
+fun €sfchain_induction_tac› (a,c) =
+	let val (l1, l2) = dest_¥ c
+	in let val (_, [v, _]) = strip_app l1
+	in let val l3 = mk_µ (v, mk_¥ (l1, mk_app (mk_Ã (v, l2), v)))
+	in
+		LEMMA_T l3 (rewrite_thm_tac o (rewrite_rule []))
+		THEN bc_tac [sfchain_induction_thm]
+		THEN REPEAT strip_tac THEN_TRY rewrite_tac[]
+	end end end (a,c);
 =TEX
 
-
-The first property we consider is that of non-overdefinedness.
+This kind of inductive proof requires reasoning about the least upper bounds of subsets of $SfChain$s for which the following lemmas will be helpful.
 
 =GFT
 =TEX
 
 \ignore{
+=IGN
+set_goal([], ¨µV X∑ X Ä SfChain V ± x = Lub $ºâç X
+	¥ µv w z∑ v ç V ± w ç V ± z ºâtâ4 x v w ¥ ∂y∑ y ç X ± z ºâtâ4 y v wÆ);
+a (contr_tac);
+a (lemma_tac ¨IsLub $ºâç X (Lub $ºâç X)Æ
+	THEN1 (bc_tac [lub_lub_lemma2] THEN rewrite_tac[]));
+a (fc_tac [get_spec ¨IsLubÆ]);
+a (
+a 
+
+type_of ¨SfChain VÆ;
+type_of ¨Lub $ºâçÆ;
+
+=TEX
+}%ignore
+
+Some general properties of $FChains$ are specialised to $SfChain$s for convenience of application.
+
+=GFT
+€sfchain_mono_thm› =
+   Ù µ V x∑ x ç SfChain V ¥ x ºâç Sf V x)
+
+€sfchain_linear_lemma› =
+   Ù µ V∑ LinearOrder (SfChain V, $ºâç)
+
+€sfsubchain_linear_lemma› =
+   Ù µ V X∑ X Ä SfChain V ¥ LinearOrder (X, $ºâç)
+=TEX
+
+\ignore{
 =SML
+set_goal([], ¨µV x∑ x ç SfChain V ¥ x ºâç (Sf V x)Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [get_spec ¨SfChainÆ]
+	THEN REPEAT strip_tac);
+a (fc_tac [rewrite_rule [ccrpou_ºâç_thm, sf_increasing_thm] (list_µ_elim [¨$ºâçÆ, ¨Sf VÆ] ccrpou_fchainu_lemma1)]);
+val sfchain_mono_thm = save_pop_thm "sfchain_mono_thm";
+
+set_goal([], ¨µV∑ LinearOrder (SfChain V, $ºâç)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨SfChainÆ]);
+a (accept_tac (rewrite_rule [] (list_µ_elim [¨$ºâçÆ, ¨Sf VÆ] ccrpou_fchainu_linear_lemma)));
+val sfchain_linear_lemma = save_pop_thm "sfchain_linear_lemma";
+
+set_goal([], ¨µV X∑ X Ä SfChain V ¥ LinearOrder (X, $ºâç)Æ);
+a (REPEAT strip_tac
+	THEN bc_tac [subrel_linear_order_thm]);
+a (∂_tac ¨SfChain VÆ THEN asm_rewrite_tac [sfchain_linear_lemma]);
+val sfsubchain_linear_lemma = save_pop_thm "sfsubchain_linear_lemma";
+
+add_pc_thms "'sfp" (map get_spec [] @ [sfchain_linear_lemma]);
+set_merge_pcs ["misc2", "'ifos", "'sfp"];
+=TEX
+}%ignore
+
+The following properties of $SfChain$s are needed to prove that least fixed points are ``pre-extensional''.
+
+
+The first property we consider is that of non-overdefinedness.
+
+=GFT
+€sfchain_≥overdefined_lemma› =
+   Ù µ V∑ V Ä SetReps ¥ (µ x∑ x ç SfChain V ¥ ≥ OverDefined V x)
+=TEX
+
+\ignore{
+=SML
+set_goal ([], ¨µV∑ V Ä SetReps ¥ µx∑ x ç SfChain V ¥ ≥ OverDefined V xÆ);
+a (REPEAT strip_tac);
+a (POP_ASM_T ante_tac);
+a (sfchain_induction_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [setreps_Ä_syntax_lemma2]);
+a (fc_tac [ConCoWkStrictSf_lemma]);
+a (fc_tac [get_spec ¨ConCoWkStrictÆ]);
+a (contr_tac THEN all_asm_fc_tac []);
+a (spec_nth_asm_tac 6 ¨xÆ);
+(* *** Goal "1.1" *** *)
+a (asm_tac crpou_ºâç_thm);
+a (all_asm_fc_tac [crpou_fc_clauses]);
+a (DROP_NTH_ASM_T 3 ante_tac THEN rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac [get_spec ¨OverDefinedÆ] THEN contr_tac);
+a (DROP_NTH_ASM_T 5 (ante_tac o (rewrite_rule [ºâç_lub_thm])));
+a (asm_rewrite_tac [ext_thm] THEN strip_tac);
+a (∂_tac ¨x'Æ THEN strip_tac);
+a (∂_tac ¨yÆ THEN asm_rewrite_tac [] THEN contr_tac);
+a (lemma_tac ¨LinearOrder ({w|∂ g∑ (g ç SfChain V ± g ºâç x ± ≥ x ºâç g) ± w = g x' y}, $ºâtâ4)Æ);
+(* *** Goal "2.1" *** *)
+a (LEMMA_T ¨{w|∂ g∑ (g ç SfChain V ± g ºâç x ± ≥ x ºâç g) ± w = g x' y}
+		= FunImage (Ãf∑ f x' y) {g | g ç SfChain V ± g ºâç x ± ≥ x ºâç g}Æ rewrite_thm_tac
+	THEN1 rewrite_tac [get_spec ¨FunImageÆ] THEN PC_T1 "hol1" prove_tac[]);
+(* *** Goal "2.1.1" *** *)
+a (∂_tac ¨gÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (∂_tac ¨aÆ THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.3" *** *)
+a (bc_tac [linear_funimage_thm]);
+a (∂_tac ¨$ºâçÆ THEN asm_rewrite_tac [ºâç_increasing_pointwise_thm]);
+a (bc_tac [sfsubchain_linear_lemma]);
+a (∂_tac ¨VÆ THEN rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a (fc_tac [ºâtâ4_lin_lub_lemma2]);
+a (spec_nth_asm_tac 10 ¨gÆ);
+a (POP_ASM_T (ante_tac o (rewrite_rule[])));
+a (asm_rewrite_tac [get_spec ¨OverDefinedÆ]);
+a (∂_tac ¨x'Æ THEN ∂_tac ¨yÆ THEN asm_rewrite_tac[]);
+val sfchain_≥overdefined_lemma = save_pop_thm "sfchain_≥overdefined_lemma";
+=TEX
+}%ignore
+
+Now we derive the properties of $SfChain$s which follow from the $CompExtSem$ property of the semantic functor.
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
 set_flag ("subgoal_package_quiet", false);
 stop;
 
-set_goal ([], ¨µV r∑ V Ä SetReps ¥ µx∑ x ç FChainU (SemanticFunctor V) r ¥ PreExtensional2 V xÆ);
+set_goal([], ¨µV∑ V Ä SetReps
+	¥ µr1 r2∑ r1 ºâç r2
+	¥ µx y∑ x ç SfChain ± y ç SfChain
+	¥ ≥ CompExt V r1 x y
+	¥ ≥ CompExt V r2 x y
+
+Æ);
+
+set_goal([], ¨µV∑ Ä SetReps
+	¥ µx y∑ x ç SfChain ± y ç SfChain
+	¥ CompExt V r x y ± {r x x, r x y, r y y, r y x} ç CompFTV
+	¥ CompEss V r x yÆ);
+
+set_goal ([], ¨µV∑ V Ä SetReps ¥ µx∑ x ç SfChain V ¥ PreExtensional2 V xÆ);
 a (REPEAT strip_tac);
 a (POP_ASM_T ante_tac);
-
-val (a,c) = top_goal();
-val (l1, l2) = dest_¥ c;
-val (_, [v, fct]) = strip_app l1;
-val (_, [ft, rt]) = strip_app fct;
-
-a (LEMMA_T ¨µx∑ x ç FChainU (SemanticFunctor V) r ¥ PreExtensional2 V xÆ rewrite_thm_tac);
-
-a (bc_tac [fchainu_induction_thm3]);
-
-type_of ¨FChainUÆ;
+a (sfchain_induction_tac);
+(* *** Goal "1" *** *)
 
 =TEX
 }%ignore
