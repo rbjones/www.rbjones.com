@@ -1,5 +1,5 @@
 =IGN
-$Id: t026.doc,v 1.16 2008/12/03 20:57:12 rbj Exp $
+$Id: t026.doc,v 1.17 2008/12/19 19:32:54 rbj Exp $
 open_theory "ifos";
 
 set_flag ("pp_use_alias", true);
@@ -44,12 +44,12 @@ It differs from the previous attempt (in t024) by simplification of the treatmen
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2008/12/03 20:57:12 $ $
+Last Change $ $Date: 2008/12/19 19:32:54 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t026.pdf}
 
-$ $Id: t026.doc,v 1.16 2008/12/03 20:57:12 rbj Exp $ $
+$ $Id: t026.doc,v 1.17 2008/12/19 19:32:54 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -189,23 +189,20 @@ a (rewrite_tac [get_spec ¨IsAfÆ,
 	get_spec ¨MkAfÆ,
 	get_spec ¨IsCfÆ,
 	get_spec ¨MkCfÆ]);
-a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm] 
-	THEN PC_T1 "lin_arith" prove_tac[]);
 val Is_clauses = pop_thm();
 
 add_pc_thms "'ifos" (map get_spec [] @ [ord_nat_thm, Is_clauses]);
 set_merge_pcs ["misc21", "'ifos"];
 
-local val _ = set_goal ([], ¨
+set_goal ([], ¨
 	(µx∑ IsAf x ¥ ≥ IsCf x)
 ±	(µx∑ IsCf x ¥ ≥ IsAf x)
 Æ);
-val _ = a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ]));
-val _ = a (REPEAT strip_tac THEN asm_rewrite_tac[]
+a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
 	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN PC_T1 "lin_arith" rewrite_tac[]);
-in val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses"
-end;
+val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses";
 =TEX
 }%ignore
 
@@ -689,8 +686,6 @@ end;
 
 local val _ = set_goal([], ¨µx y∑ ≥ MkAf x = MkCf yÆ);
 val _ = a (rewrite_tac (map get_spec [¨MkAfÆ, ¨MkCfÆ]));
-val _ = a (contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
-	THEN (PC_T1 "lin_arith" rewrite_tac[]));
 in val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
 end;
 
@@ -5072,6 +5067,17 @@ The following works with compatibility of extension and essence rather than iden
 ‹	¥ CompEss V (f V r) x y 
 ∞
 
+That too is not enough.
+This one might do the trick.
+
+πHOLCONST
+‹ €CompExtSem2› : GS SET ≠ (GS SET ≠ (GS, FTV)BR ≠ (GS, FTV)BR) ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µV f∑ CompExtSem2 V f § µr∑ ≥ OverDefined V r ¥
+‹	µx y∑ x ç V ± y ç V ± Compatible V r x y
+‹	¥ CompEss V (f V r) x y ± {r x x; r x y; r y x; r y y} ç CompFTV
+∞
+
 To prove that the semantic functor has this property is a bit harder than the proof for {\it ExtSem}.
 
 \subsubsection{Extending Partial Membership Structures}
@@ -7260,6 +7266,55 @@ val Compatibility_lemma2 = save_pop_thm "Compatibility_lemma2";
 }%ignore
 
 =GFT
+€Compatibility_lemma3› =
+   Ù µ V $çâv x y
+     ∑ V Ä SetReps
+           ± x ç V
+           ± y ç V
+           ± Compatible V $çâv x y
+           ± ≥ OverDefined V $çâv
+         ¥ let r = (Sf V $çâv) in {r x y; r y x; r x x; r y y} ç CompFTV
+=TEX
+
+\ignore{
+=IGN
+set_flag("subgoal_package_quiet", false);
+
+stop;
+
+set_goal ([], ¨µ V $çâv x y∑ V Ä SetReps ± x ç V ± y ç V ± Compatible V $çâv x y ± ≥ OverDefined V $çâv
+	¥ let r = (Sf V $çâv) in {r x y; r y x; r x x; r y y} ç CompFTVÆ);
+a (REPEAT_N 5 strip_tac);
+a (fc_tac [setreps_Ä_syntax_lemma2]);
+a (rewrite_tac [get_spec ¨CompEssÆ, get_spec ¨$ÚâoÆ, get_spec ¨ExsSROÆ, ç_in_clauses, get_spec ¨ConjOrderÆ]
+	THEN all_fc_tac [Compatibility_lemma1]
+	THEN REPEAT strip_tac);
+a (REPEAT_N 2 (DROP_NTH_ASM_T 2 ante_tac) THEN rewrite_tac [get_spec ¨EssSROÆ]
+	THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨xÆ, ¨zÆ] Sf_MsExtend2_lemma1));
+a (strip_asm_tac (list_µ_elim [¨(V, $çâv)Æ, ¨xÆ, ¨yÆ, ¨yÆ, ¨zÆ] Sf_MsExtend2_lemma1));
+a (REPEAT_N 2 (spec_nth_asm_tac 4 ¨zÆ));
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (strip_asm_tac (list_µ_elim  [¨VÆ, ¨$çâvÆ, ¨xÆ, ¨yÆ] ODE_SF_MsExtend2_lemma2));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨OverDefinedEssÆ, get_spec ¨OverDefinedLÆ, get_spec ¨EssenceÆ])));
+a (spec_nth_asm_tac 1 ¨öâgÆ);
+a (spec_nth_asm_tac 1 ¨zÆ);
+a (DROP_NTH_ASM_T 1 ante_tac
+	THEN DROP_NTH_ASM_T 3 ante_tac
+	THEN DROP_NTH_ASM_T 3 ante_tac
+	THEN strip_asm_tac (µ_elim ¨Sf V (MsExtend2 (V, $çâv) x y) öâg zÆ ftv_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN strip_asm_tac (µ_elim ¨Sf V $çâv x zÆ ftv_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN strip_asm_tac (µ_elim ¨Sf V $çâv y zÆ ftv_cases_thm)
+	THEN asm_rewrite_tac[]
+	THEN rewrite_tac [pc_rule1 "hol1" prove_rule [] ¨µx∑ {x; fB} = {fB; x}Æ]);
+val Compatibility_lemma3 = save_pop_thm "Compatibility_lemma3";
+=TEX
+}%ignore
+
+=GFT
 €CompExtSem_Sf_thm› =
 	Ù µ V∑ V Ä SetReps ¥ CompExtSem V Sf
 =TEX
@@ -7279,66 +7334,21 @@ val CompExtSem_Sf_thm = save_pop_thm "CompExtSem_Sf_thm";
 
 \ignore{
 =IGN
-
 set_flag("subgoal_package_quiet", false);
 
 stop;
 
-set_goal([], ¨µV r x y∑ x ç V ± y ç V ± {r x x; r y y} ç CompFTV ± {r x y; r y x} ç CompFTV
-	± (µ z∑ ≥ (z ç V ± IsLub $ºâtâ4 {r z x; r z y} fT))
-	¥ {r x y; r y x; r x x; r y y} ç CompFTVÆ);
-a (REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¨xÆ);
-a (spec_nth_asm_tac 2 ¨yÆ);
-a (REPEAT_N 2 (DROP_NTH_ASM_T 1 ante_tac));
-a (REPEAT_N 2 (DROP_NTH_ASM_T 2 ante_tac));
-a (rewrite_tac []);
-
-get_spec ¨PreExtensional2Æ;
-
-set_goal([], ¨µV r∑ ≥ OverDefined V r
-	± (µx y∑ x ç V ± y ç V
-		± {r x y; r y x; r x x; r y y} ç CompFTV
-		± CompExt V r x y
-		¥ CompEss V r x y)
-	¥ PreExtensional2 V rÆ);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¨PreExtensional2Æ, ¨CompExtÆ, ¨CompEssÆ]) THEN contr_tac);
+set_goal ([], ¨µ V∑ V Ä SetReps ¥ CompExtSem2 V SfÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨CompExtSem2Æ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
-a (fc_tac [get_spec ¨PreExtensional2Æ]);
-a (list_spec_nth_asm_tac 5 [¨xÆ, ¨yÆ]);
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[compftv_lemma]);
+a (lemma_tac ¨V Ä V ¿ {öâg}Æ THEN1 PC_T1 "hol1" prove_tac[]);
+a (all_fc_tac [Compatibility_lemma2]);
 (* *** Goal "2" *** *)
 
-get_spec ¨CompatibleÆ;
-
-a (once_rewrite_tac[compftv_lemma]);
-a (once_rewrite_tac[]);
-
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ¨zÆ);
-(* *** Goal "1.2" *** *)
-set_labelled_goal "1.2";
-a (spec_nth_asm_tac 5 ¨z'Æ);
-(* *** Goal "1.3" *** *)
-set_labelled_goal "1.3";
-a (spec_nth_asm_tac 5 ¨z'Æ);
-(* *** Goal "1.4" *** *)
-set_labelled_goal "1.4";
-
-set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional V r ¥ PreExtensional V (Sf V r)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensionalÆ] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (lemma_tac ¨V Ä SyntaxÆ THEN1 (PC_T1 "hol1" asm_prove_tac [get_spec ¨SetRepsÆ]));
-a (swap_nth_asm_concl_tac 3
-	THEN all_fc_tac [rewrite_rule [get_spec ¨ConCoWkStrictÆ] ConCoWkStrictSf_lemma]);
-(* *** Goal "2" *** *)
-a (asm_tac (rewrite_rule [get_spec ¨CompExtSemÆ, get_spec ¨CompatibleÆ, get_spec ¨CompEssÆ, get_spec ¨CompExtÆ] (CompExtSem_Sf_thm)));
-a (list_spec_nth_asm_tac 1 [¨VÆ]);
-a (list_spec_nth_asm_tac 1 [¨rÆ]);
-a (REPEAT_N 2 (DROP_NTH_ASM_T 2 discard_tac));
+val CompExtSem2_Sf_thm = save_pop_thm "CompExtSem2_Sf_thm";
 
 
-
+=IGN
 set_goal([], ¨µV r∑ V Ä SetReps ± PreExtensional2 V r ¥ PreExtensional2 V (Sf V r)Æ);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PreExtensional2Æ] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)

@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.25 2008/12/03 20:57:12 rbj Exp $
+$Id: t007.doc,v 1.26 2008/12/19 19:32:54 rbj Exp $
 open_theory "fixp";
 set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2008/12/03 20:57:12 $ $
+Last Change $ $Date: 2008/12/19 19:32:54 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.25 2008/12/03 20:57:12 rbj Exp $ $
+$ $Id: t007.doc,v 1.26 2008/12/19 19:32:54 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -5250,6 +5250,67 @@ val Q_closed_def = get_spec ¨Q_closedÆ;
 val P_closure_def = get_spec ¨P_closureÆ;
 val Q_closure_def = get_spec ¨Q_closureÆ;
 val PseudoHereditarilyPQ_def = get_spec ¨PseudoHereditarilyPQÆ;
+=TEX
+}%ignore
+
+\section{A RECURSION PRINCIPLE}
+
+An induction principle is often associated with a notion of well-foundedness such that some collection will be well-founded iff the induction principle holds over the collection.
+There will then be a recursion theorem which tells us about the existence of functions satisfying recursive equations, to the effect that if the functor which captures the content of the recursion equations respects the well-founded relation then it will have a fixed point which is a solution to the equations.
+
+In this pattern there is usually a clean separation between the well-founded relation and the functor which respects that relation, and to prove the existence of the fixed point using the recursion theorem one must show that the relation is well-founded (which may be done without reference to the functor) and then show that the functor respects the relation (which will not usually depend on its being well-founded).
+
+The idea of a functor respecting some relation captures the idea that in evaluating the recursive function each time a recursion takes place the argument of the function is lower in some well-founded relation than the previous invocation, which guarantees that the recursion must eventually terminate.
+The well founded relation therefore must capture the relationship ``in evaluating $f$ at $y$ reference may be made to its value at $x$''.
+
+This relationship being simply a relationship over the domain of the proposed function, it cannot take into account the values of $f$, but a recursive definition of a function clearly can do so.
+A function whose evaluation terminates only because its dependencies are sensitive to values of the function may not be provably terminating by these means.
+
+Elsewhere I address the problem of constructing non-well-founded interpretations of set theory by seeking fixed points of recursive definitions of membership over suitable domains.
+In some cases these constructions may be connected with problems which have proven very hard to solve, for example the consistency of Quine's NF, so it is reasonable to expect that proving the existence of a fixed point in such a case may depend upon a recursion principle stronger than the usual kind.
+This is what I am attempting to fcrmulate.
+
+To formulate the principle some auxiliary notions are helpful.
+I need to ba able to talk about a region over which the values of a function are fixed under the operation of a functor.
+
+πHOLCONST
+‹ €FunEquiv›: ('a ≠ 'b) ≠ ('a≠ 'b) ≠ 'a SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µf g X∑ FunEquiv f g X § µx∑ x ç X ¥ g x = f x
+∞
+
+πHOLCONST
+‹ €FixedRegion›: (('a ≠ 'b) ≠ ('a≠ 'b)) ≠ ('a ≠ 'b) ≠ 'a SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µG f X∑ FixedRegion G f X § µg∑ (µx∑ x ç X ¥ g x = f x) ¥ (µx∑ x ç X ¥ G g x = f x)
+∞
+
+What I aim to say here is that if a functor satisfies something a bit like and induction principle then it has a fixed point.
+
+=GFT
+€special_recursion_thm› = 
+   Ù? µ G∑
+	(µP x∑ (∂v X f∑ µg∑ (µy∑ y ç X ¥ g y = f y) ¥ G g x = v ± (µy∑ y ç X ¥ P y)) ¥ P x)
+	¥ ∂g∑ G g = g
+=TEX
+
+
+
+\ignore{
+=IGN
+stop;
+
+set_goal ([], ¨µ G∑
+	(µP (x:'a)∑ (∂v X f∑ µg∑ (µy∑ y ç X ¥ g y = f y) ¥ G g x = v ± (µy∑ y ç X ¥ P y)) ¥ P x)
+	¥ ∂g∑ G g = gÆ);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨Ãx:'a∑ ∂h Y∑ FixedRegion G h (Y ¿ {x})Æ);
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule[])));
+a (lemma_tac ¨∂g:'a ≠ 'b∑ µx:'a∑ ∂h Y∑ FixedRegion G h (Y ¿ {x}) ± g x = h xÆ);
+a (prove_∂_tac THEN strip_tac);
+a (SPEC_NTH_ASM_T 1 ¨x'Æ (STRIP_THM_THEN (STRIP_THM_THEN check_asm_tac)));
+a (swap_nth_asm_concl_tac 1 THEN prove_∂_tac);
+
 =TEX
 }%ignore
 
