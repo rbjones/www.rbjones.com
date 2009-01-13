@@ -1,5 +1,10 @@
 =IGN
-$Id: t027.doc,v 1.2 2009/01/01 21:44:23 rbj Exp $
+$Id: t027.doc,v 1.3 2009/01/13 14:00:34 rbj Exp $
+open_theory "infos";
+
+set_flag ("pp_use_alias", true);
+
+set_merge_pcs ["misc21", "'infos"];
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -38,12 +43,12 @@ The abstract syntax and semantics of an infinitary first order set theory.
 
 Created: 2008/12/05
 
-Last Change $ $Date: 2009/01/01 21:44:23 $ $
+Last Change $ $Date: 2009/01/13 14:00:34 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 
-$ $Id: t027.doc,v 1.2 2009/01/01 21:44:23 rbj Exp $ $
+$ $Id: t027.doc,v 1.3 2009/01/13 14:00:34 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -86,27 +91,15 @@ For example, a collection of formulae denoting all the well-founded sets, or tho
 It is the purpose of this work to see whether models for rich non-well-founded set theories can be obtained in this way.
 The purpose is ultimately to provide a semantic basis for a kind of type theory suitable for ``formalised mathematics in the large'', in which ordinary mathematics is done primarily using well-founded sets and abstract mathematics often involves non-well-founded sets (theories generic over many types).
 
-Three theories are created here, so that the representation of the syntax of infinitary first order set theory is concealed, insofar as that is possible.
-The first is the theory {\it FMrep} in which theorems about the representatives of formulae are obtained and the type {\it FM} is created.
-Theorems about the syntax which can be stated independently of the details of the representation then appear in theory {\it FM}.
-When we come to the semantics a third theory {\it infos} is created. 
-
-These three theories are created in the following three sections.
-
-\section{SYNTAX REPRESENTATION}
-
-Three theories are created here, so that the representation of the syntax of infinitary first order set theory is concealed, insofar as that is possible.
-The first is the theory {\it FMrep} in which theorems about the representatives of formulae are obtained and the type {\it FM} is created.
-Theorems about the syntax which can be stated independently of the details of the representation then appear in theory {\it FM}.
-When we come to the semantics a third theory {\it infos} is created. 
-
 =SML
 open_theory "misc2";
-force_new_theory "€FMrep›";
-force_new_pc €"'FMrep"›;
-merge_pcs ["'savedthm_cs_∂_proof"] "'FMrep";
-set_merge_pcs ["misc21", "'FMrep"];
+force_new_theory "€infos›";
+force_new_pc €"'infos"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'infos";
+set_merge_pcs ["misc21", "'infos"];
 =TEX
+
+\section{SYNTAX}
 
 The syntax of infinitary first order set theory is to be encoded as sets in a higher order set theory.
 The encoding is used to define a new HOL type providing an abstract syntax.
@@ -116,9 +109,9 @@ For this purpose we define the underlying set concisely, use this to create a ne
 The defining property for the representations is:
 
 πHOLCONST
-‹ €IsRepFM›: GS ≠ BOOL
+‹ €FMrep›: GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µx∑ IsRepFM x = µ p∑ (µ m s∑ p (Natâg 0 Ìâg m Ìâg s))
+‹ µx∑ FMrep x = µ p∑ (µ m s∑ p (Natâg 0 Ìâg m Ìâg s))
                    ± (µ vars forms
                    ∑ (µ form∑ form çâg forms ¥ p form)
                        ¥ p (Natâg 1 Ìâg vars Ìâg forms))
@@ -127,21 +120,23 @@ The defining property for the representations is:
 
 
 =GFT
-FM_type_defn = Ù ∂ f∑ TypeDefn IsRepFM f : THM
+FM_type_defn = Ù ∂ f∑ TypeDefn FMrep f : THM
 =TEX
 
 \ignore{
 =SML
 val FM_type_defn = new_type_defn (["FM"], "FM", [],  tac_proof (([],
-	¨∂x:GS∑ IsRepFM xÆ),
-	∂_tac ¨Natâg 0 Ìâg (öâg Ìâg öâg)Æ THEN rewrite_tac [get_spec ¨IsRepFMÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]));
+	¨∂x:GS∑ FMrep xÆ),
+	∂_tac ¨Natâg 0 Ìâg (öâg Ìâg öâg)Æ THEN rewrite_tac [get_spec ¨FMrepÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]));
 =TEX
 }%ignore
 
 \ignore{
 =SML
-set_goal([], ¨∂ AbsFM (RepFM: FM ≠ GS)
-         ∑ (µ a∑ AbsFM (RepFM a) = a) ± (µ r∑ IsRepFM r § RepFM (AbsFM r) = r)Æ);
+stop;
+
+set_goal([], ¨∂ absFM (repFM: FM ≠ GS)
+         ∑ (µ a∑ absFM (repFM a) = a) ± (µ r∑ FMrep r § repFM (absFM r) = r)Æ);
 a (strip_asm_tac (get_defn "-" "FM"));
 a (fc_tac [type_lemmas_thm2]);
 a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
@@ -150,84 +145,28 @@ save_cs_∂_thm (pop_thm());
 }%
 
 πHOLCONST
-‹ €AbsFM›: GS ≠ FM;
-‹ €RepFM›: FM ≠ GS
+‹ €absFM›: GS ≠ FM;
+‹ €repFM›: FM ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹   (µ a∑ AbsFM (RepFM a) = a)
-‹ ± (µ r∑ IsRepFM r § RepFM (AbsFM r) = r)
+‹   (µ a∑ absFM (repFM a) = a)
+‹ ± (µ r∑ FMrep r § repFM (absFM r) = r)
 ∞
 
 =GFT
-€OneOne_RepFM_lemma› =
-	Ù OneOne RepFM 
-
-€OneOne_RepFM_lemma2› =
-	Ù µ x1 x2∑ RepFM x1 = RepFM x2 ¥ x1 = x2
-
-€Onto_AbsFM_lemma› =
-	Ù Onto AbsFM
-
-€Onto_AbsFM_lemma2› =
-	Ù µ y∑ ∂ x∑ y = AbsFM x
-
-€IsRepFM_RepFM_lemma› =
-	Ù µ x∑ IsRepFM (RepFM x)
+one_one_FM_lemma =
+	Ù OneOne repFM ± Onto absFM 
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨OneOne RepFMÆ);
-a (strip_asm_tac (get_spec ¨RepFMÆ));
+set_goal([], ¨OneOne repFM ± OneOne absFMÆ);
+a (strip_asm_tac (get_spec ¨repFMÆ));
 a (rewrite_tac[get_spec ¨OneOneÆ]);
 a (fc_tac [type_defn_lemma1] THEN asm_rewrite_tac[]);
-val OneOne_RepFM_lemma = save_pop_thm "OneOne_RepFM_lemma";
-
-val OneOne_RepFM_lemma2 = save_thm ("OneOne_RepFM_lemma2", rewrite_rule [get_spec ¨OneOneÆ] OneOne_RepFM_lemma);
-
-add_pc_thms "'FMrep" [OneOne_RepFM_lemma2];
-set_merge_pcs ["misc21", "'FMrep"];
-
-set_goal([], ¨Onto AbsFMÆ);
-a (strip_asm_tac (get_spec ¨AbsFMÆ));
-a (rewrite_tac[get_spec ¨OntoÆ]);
-a (REPEAT strip_tac);
-a (∂_tac ¨RepFM yÆ THEN asm_rewrite_tac[]);
-val Onto_AbsFM_lemma = save_pop_thm "Onto_AbsFM_lemma";
-
-val Onto_AbsFM_lemma2 = save_thm ("Onto_AbsFM_lemma2", rewrite_rule [get_spec ¨OntoÆ] Onto_AbsFM_lemma);
-
-set_goal([], ¨µx∑ IsRepFM (RepFM x)Æ);
-a (strip_tac THEN once_rewrite_tac [map_eq_sym_rule (get_spec ¨RepFMÆ)]);
-a (rewrite_tac[get_spec ¨RepFMÆ]);
-val IsRepFM_RepFM_lemma = save_pop_thm "IsRepFM_RepFM_lemma";
-
-set_goal([], ¨µx∑ AbsFM (RepFM x) = xÆ);
-a (rewrite_tac [get_spec ¨AbsFMÆ]);
-val AbsFM_RepFM_lemma = pop_thm ();
-
-add_pc_thms "'FMrep" [IsRepFM_RepFM_lemma, AbsFM_RepFM_lemma];
-set_merge_pcs ["misc21", "'FMrep"];
+val one_one_FM_lemma = save_pop_thm "one_one_FM_lemma";
 =TEX
 }%ignore
 
-\ignore{
-=IGN
-set_goal([], ¨∂MkAf MkCf AfMem AfSet CfVars CfForms∑
-		(µm s∑ AfMem (MkAf (m,s)) = m
-		± AfSet (MkAf (m,s)) = s)	
-	±
-		(µaf∑ MkAf (AfMem a, MkSet a) = a)
-	±
-		(µv f∑ CfVars (MkCf (v, f)) = v
-		± CfForms (MkCf (v, f)) = f)
-	±
-		(µcf∑ MkCf (CfVars cf, CfForms cf) = cf)
-	±	(µp∑ (µm s∑ p (MkAf (m, s))) ± (µv fs∑ (µf∑ f çâg fs ¥ p f) ¥ p (MkCf (vars, fs))) ¥ µx∑ p x)Æ);
-
-a (∂_tac ¨Æ);
-
-=TEX
-}%ignore
 
 This is (in effect if not in appearance) an ``inductive datatype'' (albeit transfinite) so we should expect the usual kinds of theorems.
 
@@ -253,56 +192,28 @@ A constructor puts together some syntactic entity from its constituents, discrim
 So its just an ordered pair of `terms' (and in our case that just means variable names)  tagged with a zero.
 
 πHOLCONST
-‹ €MkAf› : GS ∏ GS ≠ FM
+‹ €MkAf› : GS ∏ GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µlr∑ MkAf lr = AbsFM ((Natâg 0) Ìâg ((Fst lr) Ìâg (Snd lr)))
+‹ µlr∑ MkAf lr = (Natâg 0) Ìâg ((Fst lr) Ìâg (Snd lr))
 ∞
 
-=GFT
-€IsRepFM_mkaf_lemma› =
-	Ù µ lr∑ IsRepFM (Natâg 0 Ìâg Fst lr Ìâg Snd lr)
+πHOLCONST
+‹ €IsAf› : GS ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹    µt∑ IsAf t § ∂lr∑ t = MkAf lr
+∞
 
-€RepFM_AbsFM_mkaf_lemma› =
-	Ù µ lr∑ RepFM (AbsFM (Natâg 0 Ìâg Fst lr Ìâg Snd lr))
-         = Natâg 0 Ìâg Fst lr Ìâg Snd lr
+πHOLCONST
+‹ €AfSet› : GS ≠ GS
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹  AfSet = Ãx∑ snd(snd x)
+∞
 
-€IsRepFM_mkaf_lemma2› =
-	Ù µ l r∑ IsRepFM (Natâg 0 Ìâg l Ìâg r)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µlr∑ IsRepFM ((Natâg 0) Ìâg ((Fst lr) Ìâg (Snd lr)))Æ);
-a (µ_tac THEN rewrite_tac [get_spec ¨IsRepFMÆ] THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[]);
-val IsRepFM_mkaf_lemma = save_pop_thm "IsRepFM_mkaf_lemma";
-
-add_pc_thms "'FMrep" [IsRepFM_mkaf_lemma];
-set_merge_pcs ["misc21", "'FMrep"];
-
-set_goal([], ¨µl r∑ IsRepFM (Natâg 0 Ìâg l Ìâg r)Æ);
-a (µ_tac THEN rewrite_tac [get_spec ¨IsRepFMÆ] THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[]);
-val IsRepFM_mkaf_lemma2 = save_pop_thm "IsRepFM_mkaf_lemma2";
-
-add_pc_thms "'FMrep" [IsRepFM_mkaf_lemma2];
-set_merge_pcs ["misc21", "'FMrep"];
-
-set_goal([], ¨µlr∑ RepFM (AbsFM (Natâg 0 Ìâg (Fst lr) Ìâg (Snd lr))) = Natâg 0 Ìâg (Fst lr) Ìâg (Snd lr)Æ);
-a (asm_tac IsRepFM_mkaf_lemma THEN ufc_tac [get_spec ¨RepFMÆ]);
-val RepFM_AbsFM_mkaf_lemma = save_pop_thm "RepFM_AbsFM_mkaf_lemma";
-
-add_pc_thms "'FMrep" [RepFM_AbsFM_mkaf_lemma];
-set_merge_pcs ["misc21", "'FMrep"];
-
-set_goal([], ¨µl r∑ RepFM (AbsFM (Natâg 0 Ìâg l Ìâg r)) = Natâg 0 Ìâg l Ìâg rÆ);
-a (asm_tac IsRepFM_mkaf_lemma2 THEN ufc_tac [get_spec ¨RepFMÆ] THEN asm_rewrite_tac []);
-val RepFM_AbsFM_mkaf_lemma2 = save_pop_thm "RepFM_AbsFM_mkaf_lemma2";
-
-add_pc_thms "'FMrep" [RepFM_AbsFM_mkaf_lemma2];
-set_merge_pcs ["misc21", "'FMrep"];
-=TEX
-}%ignore
+πHOLCONST
+‹ €AfMem› : GS ≠ GS
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹  AfMem = Ãx∑ fst(snd x)
+∞
 
 πHOLCONST
 ‹ €MkCf› : GS ∏ GS ≠ GS
@@ -310,101 +221,23 @@ set_merge_pcs ["misc21", "'FMrep"];
 ‹ µvc∑ MkCf vc = (Natâg 1) Ìâg ((Fst vc) Ìâg (Snd vc))
 ∞
 
-=GFT
-€IsRepFM_mkcf_lemma› =
-	Ù µ v fs∑ (µ f∑ f çâg fs ¥ IsRepFM f) ¥ IsRepFM (Natâg 1 Ìâg v Ìâg fs)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µv fs∑ (µf∑ f çâg fs ¥ IsRepFM f) ¥ IsRepFM ((Natâg 1) Ìâg (v Ìâg fs))Æ);
-a (µ_tac THEN rewrite_tac [get_spec ¨IsRepFMÆ] THEN REPEAT strip_tac);
-a (list_spec_nth_asm_tac 1 [¨vÆ, ¨fsÆ]);
-a (all_asm_fc_tac []);
-val IsRepFM_mkcf_lemma = save_pop_thm "IsRepFM_mkcf_lemma";
-=TEX
-}%ignore
-
-\section{ABSTRACT SYNTAX}
-
-=SML
-force_new_theory "€FM›";
-force_new_pc €"'FM"›;
-merge_pcs ["'savedthm_cs_∂_proof"] "'FM";
-set_merge_pcs ["misc21", "'FMrep", "'FM"];
-=TEX
-
 πHOLCONST
-‹ €IsAf› : FM ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹    µt∑ IsAf t § ∂lr∑ t = MkAf lr
-∞
-
-=GFT
-€IsAf_MkAf_lemma› =
-	Ù µ lr∑ IsAf (MkAf lr)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µlr∑ IsAf(MkAf lr)Æ);
-a (strip_tac THEN rewrite_tac [get_spec ¨IsAfÆ]);
-a (∂_tac ¨lrÆ THEN rewrite_tac[]);
-val IsAf_MkAf_lemma = save_pop_thm "IsAf_MkAf_lemma";
-
-set_goal([], ¨∂AfSet AfMem∑ (µm s∑ AfMem (MkAf (m,s)) = m ± AfSet (MkAf (m,s)) = s)Æ);
-a (∂_tac ¨Ãaf∑ snd(snd (RepFM af))Æ THEN ∂_tac ¨Ãaf∑ fst(snd (RepFM af))Æ
-	THEN REPEAT µ_tac THEN rewrite_tac[get_spec ¨MkAfÆ, get_spec ¨IsAfÆ]
-	THEN REPEAT strip_tac
-	THEN once_asm_rewrite_tac []
-	THEN rewrite_tac[]);
-save_cs_∂_thm (pop_thm());
-=TEX
-}%ignore
-
-πHOLCONST
-‹ €AfSet› €AfMem› : FM ≠ GS
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹	(µm s∑ AfMem (MkAf (m, s)) = m
-‹	± AfSet (MkAf (m, s)) = s)	
-∞
-
-πHOLCONST
-‹ €IsCf› : FM ≠ BOOL
+‹ €IsCf› : GS ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹    µt∑ IsCf t § ∂vc∑ t = MkCf vc
 ∞
 
-=GFT
-€IsCf_MkCf_lemma› =
-	Ù µ lr∑ IsCf (MkCf lr)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µlr∑ IsCf(MkCf lr)Æ);
-a (strip_tac THEN rewrite_tac [get_spec ¨IsCfÆ]);
-a (∂_tac ¨lrÆ THEN rewrite_tac[]);
-val IsCf_MkCf_lemma = save_pop_thm "IsCf_MkCf_lemma";
-
-set_goal([], ¨∂CfVars CfForms∑ (µv f∑ CfVars (MkCf (v, f)) = v ± CfForms (MkCf (v, f)) = f)Æ);
-a (∂_tac ¨Ãcf∑ fst(snd (RepFM cf))Æ THEN ∂_tac ¨Ãcf∑ snd(snd (RepFM cf))Æ
-	THEN REPEAT µ_tac THEN rewrite_tac[get_spec ¨MkCfÆ, get_spec ¨IsCfÆ]
-	THEN REPEAT strip_tac
-	THEN once_asm_rewrite_tac []
-	THEN rewrite_tac[]);
-save_cs_∂_thm (pop_thm());
-=TEX
-}%ignore
-
-
 πHOLCONST
-‹ €CfVars› €CfForms› : FM ≠ GS
+‹ €CfVars› : GS ≠ GS
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹	(µv f∑ CfVars (MkCf (v, f)) = v
-‹	± CfForms (MkCf (v, f)) = f)	
+‹  CfVars = Ãx∑ fst(snd x)
 ∞
 
+πHOLCONST
+‹ €CfForms› : GS ≠ GS
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹  CfForms = Ãx∑ snd(snd x)
+∞
 
 =GFT
 €Is_clauses› =
@@ -497,8 +330,8 @@ set_goal([], ¨µx y∑ ≥ MkAf x = MkCf yÆ);
 a (rewrite_tac (map get_spec [¨MkAfÆ, ¨MkCfÆ]));
 val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
 
-add_pc_thms "'FMrep" [(* ord_nat_thm, *) Is_clauses, syn_proj_clauses, syn_con_eq_clauses, syn_con_neq_clauses];
-set_merge_pcs ["misc21", "'FMrep"];
+add_pc_thms "'infos" [ord_nat_thm, Is_clauses, syn_proj_clauses, syn_con_eq_clauses, syn_con_neq_clauses];
+set_merge_pcs ["misc21", "'infos"];
 
 set_goal([], ¨µx∑
 	(IsAf x ¥ ∂s m∑ x = MkAf (s, m))
@@ -513,7 +346,7 @@ val is_fc_clauses1 = save_pop_thm "is_fc_clauses1";
 set_goal([], ¨µx∑ ≥ IsAf x ≤ ≥ IsCf xÆ);
 a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ, ¨MkAfÆ, ¨MkCfÆ]));
 a (REPEAT strip_tac THEN asm_rewrite_tac[]
-	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_OneOne_thm]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN PC_T1 "lin_arith" rewrite_tac[]);
 val Is_not_cases = save_pop_thm "Is_not_cases";
 
@@ -523,7 +356,7 @@ set_goal ([], ¨
 Æ);
 a (rewrite_tac (map get_spec [¨IsAfÆ, ¨IsCfÆ, ¨MkAfÆ, ¨MkCfÆ]));
 a (REPEAT strip_tac THEN asm_rewrite_tac[]
-	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_OneOne_thm]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
 	THEN PC_T1 "lin_arith" rewrite_tac[]);
 val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses";
 =TEX
@@ -959,8 +792,8 @@ a (REPEAT strip_tac
 	THEN fc_tac [≥öâg_ç_syntax_lemma2]);
 val ≥öâg_ç_syntax_lemma3 = save_pop_thm "≥öâg_ç_syntax_lemma3";
 
-add_pc_thms "'FMrep" [syn_proj_clauses, ≥öâg_ç_syntax_lemma, MkAf_ç_Syntax_lemma];
-set_merge_pcs ["misc21", "'FMrep"];
+add_pc_thms "'infos" [syn_proj_clauses, ≥öâg_ç_syntax_lemma, MkAf_ç_Syntax_lemma];
+set_merge_pcs ["misc21", "'infos"];
 
 local val _ = set_goal([], ¨µx∑ x ç Syntax
 	¥ (IsCf x ¥ (µy∑ y çâg (CfForms x) ¥ y ç Syntax))
@@ -1132,11 +965,11 @@ val sc_recursion_lemma = save_pop_thm "sc_recursion_lemma";
 =TEX
 }%ignore
 
-This gets plugged into proof context {\it 'FM} for use in consistency proofs.
+This gets plugged into proof context {\it 'infos} for use in consistency proofs.
 
 =SML
-add_∂_cd_thms [sc_recursion_lemma] "'FM";
-set_merge_pcs ["misc21", "'FM"];
+add_∂_cd_thms [sc_recursion_lemma] "'infos";
+set_merge_pcs ["misc21", "'infos"];
 =TEX
 
 Definitions of the form supported by the above recursion lemma do not allow sufficient control over the value of a function when applied outside the range of the syntactic constructors.
@@ -1153,7 +986,7 @@ The following version (if it works) is suitable for cases where this level of co
 =TEX
 
 \ignore{
-=IGN
+=SML
 set_goal([], ¨µaf cf ov∑ ∂f∑ (µm s∑ f (MkAf (m, s)) = af m s)
 	± (µvars forms∑ f (MkCf (vars, forms)) = cf (FunImageâg f forms) vars forms)
 	± (µx∑ (≥ IsAf x ± ≥ IsCf x) ¥ f x = ov x)
@@ -1214,11 +1047,11 @@ val sc_recursion_lemma2 = save_pop_thm "sc_recursion_lemma2";
 =TEX
 }%ignore
 
-This also gets plugged into proof context {\it 'FM} for use in consistency proofs.
+This also gets plugged into proof context {\it 'infos} for use in consistency proofs.
 
 =GFT
-add_∂_cd_thms [sc_recursion_lemma2] "'FM";
-set_merge_pcs ["misc21", "'FM"];
+add_∂_cd_thms [sc_recursion_lemma2] "'infos";
+set_merge_pcs ["misc21", "'infos"];
 =TEX
 
 That doesn't work.
@@ -1231,7 +1064,7 @@ Lets try a fake constructor.
 ∞
 
 \ignore{
-=IGN
+=SML
 set_goal([], ¨µaf cf ov∑ ∂f∑ (µm s∑ f (MkAf (m, s)) = af m s)
 	± (µvars forms∑ f (MkCf (vars, forms)) = cf (FunImageâg f forms) vars forms)
 	± (µx∑ f (MkTrash x) = ov x)
@@ -1342,21 +1175,13 @@ a (rewrite_tac [sets_ext_clauses]
 	THEN contr_tac THEN asm_fc_tac[]);
 val ≥öâg_ç_setreps_lemma = save_pop_thm "≥öâg_ç_setreps_lemma";
 
-add_pc_thms "'FM" [≥öâg_ç_setreps_lemma];
-set_merge_pcs ["misc21", "FM"];
+add_pc_thms "'infos" [≥öâg_ç_setreps_lemma];
+set_merge_pcs ["misc21", "'infos"];
 =TEX
 }%ignore
 
 
 \section{SEMANTICS}
-
-=SML
-open_theory "FM";
-force_new_theory "€infos›";
-force_new_pc €"'infos"›;
-merge_pcs ["'savedthm_cs_∂_proof"] "'infos";
-set_merge_pcs ["FM", "'infos"];
-=TEX
 
 The semantics of infinitary first order logic is given by defining ``truth in an interpretation''.
 
@@ -1407,7 +1232,7 @@ Note that this specification is generic in the type of truth values.
 =GFT
 €EvalAf_MkAf_lemma› =
    Ù µ ºât mem set st va
-     ∑ EvalAf ºât (MkAf (mem, set)) st va
+     ∑ EvalAf ºât (MkAf (set, mem)) st va
          = (if mem ç IxDom va ± set ç IxDom va
            then Snd st (IxVal va mem) (IxVal va set)
            else Lub ºât {})
@@ -1415,7 +1240,7 @@ Note that this specification is generic in the type of truth values.
 
 \ignore{
 =SML
-set_goal([], ¨µ$ºât mem set st va∑ EvalAf $ºât (MkAf (mem, set)) st va =
+set_goal([], ¨µ$ºât mem set st va∑ EvalAf $ºât (MkAf (set, mem)) st va =
 	if mem ç IxDom va ± set ç IxDom va
 		then Snd st (IxVal va mem) (IxVal va set)
 		else Lub $ºât {}Æ);
@@ -1873,7 +1698,7 @@ a (strip_tac);
 a (spec_nth_asm_tac 1 ¨xÆ);
 a (spec_nth_asm_tac 2 ¨yÆ);
 a (asm_rewrite_tac[]);
-a (strip_tac THEN ∂_tac ¨IxVal va xÆ THEN ∂_tac ¨IxVal va yÆ
+a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
 	THEN asm_rewrite_tac[]);
 a (all_fc_tac[ix_domran_lemma]);
 a (PC_T1 "hol1" asm_prove_tac []);
@@ -1924,7 +1749,7 @@ a (strip_tac);
 a (spec_nth_asm_tac 1 ¨xÆ);
 a (spec_nth_asm_tac 2 ¨yÆ);
 a (asm_rewrite_tac[]);
-a (strip_tac THEN ∂_tac ¨IxVal va xÆ THEN ∂_tac ¨IxVal va yÆ
+a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
 	THEN asm_rewrite_tac[]);
 a (all_fc_tac[ix_domran_lemma]);
 a (PC_T1 "hol1" asm_prove_tac []);
@@ -2116,12 +1941,12 @@ a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PmrEqÆ] THEN strip_tac THEN strip_ta
 a (infos_induction_tac ¨fÆ THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (rewrite_tac [evalformfunct_thm2, repclosed_syntax_thm, get_spec ¨EvalAfÆ, let_def]);
-a (cond_cases_tac ¨x ç IxDom z ± y ç IxDom zÆ);
+a (cond_cases_tac ¨y ç IxDom z ± x ç IxDom zÆ);
 a (DROP_ASM_T ¨IxRan z Ä WÆ (asm_tac o (rewrite_rule[sets_ext_clauses])));
-a (list_spec_nth_asm_tac 4 [¨IxVal z xÆ, ¨IxVal z yÆ]);
-a (lemma_tac ¨IxVal z x ç WÆ
-	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
+a (list_spec_nth_asm_tac 4 [¨IxVal z yÆ, ¨IxVal z xÆ]);
 a (lemma_tac ¨IxVal z y ç WÆ
+	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
+a (lemma_tac ¨IxVal z x ç WÆ
 	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
 (* *** Goal "2" *** *)
 a (rewrite_tac [evalformfunct_thm2, let_def]);
@@ -2189,9 +2014,9 @@ a (infos_induction_tac ¨fÆ);
 a (strip_tac);
 a (cond_cases_tac ¨x ç IxDom z ± y ç IxDom zÆ);
 a (DROP_ASM_T ¨IxRan z Ä WÆ (asm_tac o (rewrite_rule[sets_ext_clauses])));
-a (lemma_tac ¨IxVal z x ç WÆ
-	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
 a (lemma_tac ¨IxVal z y ç WÆ
+	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
+a (lemma_tac ¨IxVal z x ç WÆ
 	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
 a (list_spec_nth_asm_tac 6 [¨IxVal z xÆ, ¨IxVal z yÆ]);
 (* *** Goal "2" *** *)
@@ -2787,7 +2612,6 @@ val _ = a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (îGS ≠ 'b OPTÆ, î'aÆ)] pw_crpou
 val _ = a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
 val monoevalform_increasing_lemma = pop_thm();
 
-=IGN
 stop;
 
 set_goal ([], ¨µc r s g∑ CRpoU r ± Increasing (SetO r) r c
