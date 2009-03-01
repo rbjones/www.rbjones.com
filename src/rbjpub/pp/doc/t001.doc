@@ -1,5 +1,5 @@
 =IGN
-$Id: t001.doc,v 1.6 2007/08/22 09:21:05 rbj01 Exp $
+$Id: t001.doc,v 1.7 2009/03/01 15:32:40 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -37,12 +37,12 @@ Some generic formal models of abstract semantics.
 
 Created 2004/07/15
 
-Last Change $ $Date: 2007/08/22 09:21:05 $ $
+Last Change $ $Date: 2009/03/01 15:32:40 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 
-$ $Id: t001.doc,v 1.6 2007/08/22 09:21:05 rbj01 Exp $ $
+$ $Id: t001.doc,v 1.7 2009/03/01 15:32:40 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -91,27 +91,72 @@ Definitions of logical truth are then specific to classes of languages which hav
 First of all, we must give the the ML commands to  introduce the new theory ``analytic'' as a child of the theory ``hol''.
 
 =SML
-open_theory "hol";
+open_theory "misc2";
 force_new_theory "t001a";
-new_parent "analysis";
-set_merge_pcs["hol"];
+set_merge_pcs["misc21"];
 =TEX
 }%ignore
 
-\subsection{}
 
-In this first formalisation of the concept of analyticity we construe a truth conditional semantics as a function which for any sentence delivers the property of conditions which is true of those conditions under which the sentence is true.
+\subsection{Types}
 
-A sentence is analytic if its value under the semantics is that property of conditions which is always true. 
-The `conditions' here should be thought of as factual {\it states of affairs} each condition encapsulating one possible complete account of what the (empirical) facts are.
-An analytic sentence is then a sentence which is true whatever the conditions.
+The following ``primitive'' types are introduced:
+
+=SML
+new_type("S",0);  (* sentences *) 
+new_type("C",0);  (* contexts *)
+new_type("W",0);  (* possible worlds *)
+new_type("P",0);  (* propositions *)
+=TEX
+
+\subsection{The Semantics}
+
+The semantics of our language comes in two parts.
+A semantic map which delivers propositions, the meanings of sentences in context,
+and a propositional evaluation map, which extracts truth conditions from a proposition.
 
 ¹HOLCONST
-Ü ÛAnalyticÝ : ('s ­ 'c ­ BOOL) ­ 's ­ BOOL
+Ü ÛsmÝ : S ¸ C ­ P
 ÷üüüüüü
-Ü µsem sen· Analytic sem sen ¤ µc· sem sen c
+Ü T
 °
 
+¹HOLCONST
+Ü ÛpemÝ : P ¸ W ­ TTV
+÷üüüüüü
+Ü T
+°
+
+Note that $TTV$ is a type consisting of three `truth' values, whose names are: $pTrue$, $pFalse$ and $pU$.
+
+\subsection{Necessity}
+
+A proposition is `necessarily t' if it takes truth value `t' in every possible world.
+
+¹HOLCONST
+Ü ÛnecessarilyÝ : TTV ­ P ­ BOOL
+÷üüüüüü
+Ü µt:TTV; p:P· necessarily t p ¤ µw:W· pem(p, w) = t
+°
+
+A proposition is {\it necessary} (simpliciter) if it is {\it necessarily t} for some truth value {\it t}.
+
+¹HOLCONST
+Ü ÛnecessaryÝ : P ­ BOOL
+÷üüüüüü
+Ü µp:P· necessary p ¤ ¶t· necessarily t p
+°
+
+¹HOLCONST
+Ü ÛcontingentÝ : P ­ BOOL
+÷üüüüüü
+Ü µp:P· contingent p ¤ ¶w1 w2· ³ pem(p, w1) = pem(p, w2)
+°
+
+\subsection{Analyticity}
+
+A sentence is analytic if its truth value can be ascertained from its meaning only, without taking into account any `extra-linguistic fact' (in Quine's words), i.e. without knowing anything about what possible world is actual.
+This can only be known if it takes the same truth value in every possible world.
 
 {\let\Section\section
 \newcounter{ThyNum}

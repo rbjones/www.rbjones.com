@@ -1,5 +1,5 @@
 =IGN
-$Id: t027.doc,v 1.3 2009/01/13 14:00:34 rbj Exp $
+$Id: t027.doc,v 1.4 2009/03/01 15:32:39 rbj Exp $
 open_theory "infos";
 
 set_flag ("pp_use_alias", true);
@@ -43,12 +43,12 @@ The abstract syntax and semantics of an infinitary first order set theory.
 
 Created: 2008/12/05
 
-Last Change $ $Date: 2009/01/13 14:00:34 $ $
+Last Change $ $Date: 2009/03/01 15:32:39 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 
-$ $Id: t027.doc,v 1.3 2009/01/13 14:00:34 rbj Exp $ $
+$ $Id: t027.doc,v 1.4 2009/03/01 15:32:39 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -102,71 +102,6 @@ set_merge_pcs ["misc21", "'infos"];
 \section{SYNTAX}
 
 The syntax of infinitary first order set theory is to be encoded as sets in a higher order set theory.
-The encoding is used to define a new HOL type providing an abstract syntax.
-
-For this purpose we define the underlying set concisely, use this to create a new type, and then more verbosely provide constructors destructors and discriminators for elements of the new type.
-
-The defining property for the representations is:
-
-πHOLCONST
-‹ €FMrep›: GS ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µx∑ FMrep x = µ p∑ (µ m s∑ p (Natâg 0 Ìâg m Ìâg s))
-                   ± (µ vars forms
-                   ∑ (µ form∑ form çâg forms ¥ p form)
-                       ¥ p (Natâg 1 Ìâg vars Ìâg forms))
-                 ¥ p x
-∞
-
-
-=GFT
-FM_type_defn = Ù ∂ f∑ TypeDefn FMrep f : THM
-=TEX
-
-\ignore{
-=SML
-val FM_type_defn = new_type_defn (["FM"], "FM", [],  tac_proof (([],
-	¨∂x:GS∑ FMrep xÆ),
-	∂_tac ¨Natâg 0 Ìâg (öâg Ìâg öâg)Æ THEN rewrite_tac [get_spec ¨FMrepÆ] THEN REPEAT strip_tac THEN asm_rewrite_tac[]));
-=TEX
-}%ignore
-
-\ignore{
-=SML
-stop;
-
-set_goal([], ¨∂ absFM (repFM: FM ≠ GS)
-         ∑ (µ a∑ absFM (repFM a) = a) ± (µ r∑ FMrep r § repFM (absFM r) = r)Æ);
-a (strip_asm_tac (get_defn "-" "FM"));
-a (fc_tac [type_lemmas_thm2]);
-a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
-save_cs_∂_thm (pop_thm());
-=TEX
-}%
-
-πHOLCONST
-‹ €absFM›: GS ≠ FM;
-‹ €repFM›: FM ≠ GS
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹   (µ a∑ absFM (repFM a) = a)
-‹ ± (µ r∑ FMrep r § repFM (absFM r) = r)
-∞
-
-=GFT
-one_one_FM_lemma =
-	Ù OneOne repFM ± Onto absFM 
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨OneOne repFM ± OneOne absFMÆ);
-a (strip_asm_tac (get_spec ¨repFMÆ));
-a (rewrite_tac[get_spec ¨OneOneÆ]);
-a (fc_tac [type_defn_lemma1] THEN asm_rewrite_tac[]);
-val one_one_FM_lemma = save_pop_thm "one_one_FM_lemma";
-=TEX
-}%ignore
-
 
 This is (in effect if not in appearance) an ``inductive datatype'' (albeit transfinite) so we should expect the usual kinds of theorems.
 
@@ -667,6 +602,9 @@ It will be useful to have some predicates which incorporate well-formedness, whi
 €≥öâg_ç_syntax_lemma3› =
    Ù µ V x∑ x ç V ± V Ä Syntax ¥ ≥ x = öâg
 
+€MkAf_MkCf_≥_öâg_lemma› =
+   Ù µ x y∑ ≥ MkAf (x, y) = öâg ± ≥ MkCf (x, y) = öâg
+
 €syn_comp_fc_clauses› =
    Ù µ v f∑ MkCf (v, f) ç Syntax ¥ (µ y∑ y çâg f ¥ y ç Syntax)
 
@@ -792,7 +730,11 @@ a (REPEAT strip_tac
 	THEN fc_tac [≥öâg_ç_syntax_lemma2]);
 val ≥öâg_ç_syntax_lemma3 = save_pop_thm "≥öâg_ç_syntax_lemma3";
 
-add_pc_thms "'infos" [syn_proj_clauses, ≥öâg_ç_syntax_lemma, MkAf_ç_Syntax_lemma];
+set_goal([], ¨µx y∑ ≥ MkAf (x, y) = öâg ± ≥ MkCf (x, y) = öâgÆ);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¨MkAfÆ, get_spec ¨MkCfÆ]);
+val MkAf_MkCf_≥_öâg_lemma = pop_thm();
+
+add_pc_thms "'infos" [syn_proj_clauses, ≥öâg_ç_syntax_lemma, MkAf_ç_Syntax_lemma, MkAf_MkCf_≥_öâg_lemma];
 set_merge_pcs ["misc21", "'infos"];
 
 local val _ = set_goal([], ¨µx∑ x ç Syntax
@@ -909,6 +851,8 @@ This tactic expects an argument $t$ of type $TERM$ which is a free variable of t
 \subsection{Recursion Theorem}\label{Recursion}
 
 The following recursion theorem supports definition by primitive recursion of functions over the syntax.
+This version does require (or allow) stipulation of a value for elements which are not part of the syntax (which is sometimes necessary).
+The function defined is total over the type GS, but its value is only known for members of {\it Syntax}.
 
 =GFT
 €sc_recursion_lemma› =
@@ -992,7 +936,7 @@ set_goal([], ¨µaf cf ov∑ ∂f∑ (µm s∑ f (MkAf (m, s)) = af m s)
 	± (µx∑ (≥ IsAf x ± ≥ IsCf x) ¥ f x = ov x)
 Æ);
 a (REPEAT strip_tac);
-val _ = a (lemma_tac ¨∂g∑ g = Ãf x∑
+a (lemma_tac ¨∂g∑ g = Ãf x∑
 		if (∂vars forms∑ x = MkCf(vars,forms)) then cf (FunImageâg f (CfForms x)) (CfVars x) (CfForms x)
 		else if ∂m s∑ x = MkAf (m, s) then af (AfMem x) (AfSet x) else ov xÆ
 	THEN1 prove_∂_tac);
@@ -1028,7 +972,6 @@ a (all_fc_tac [get_spec ¨fixÆ]);
 a (POP_ASM_T ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
 a (SYM_ASMS_T rewrite_tac THEN REPEAT ±_tac THEN REPEAT µ_tac);
 (* *** Goal "2.1" *** *)
-a (SYM_ASMS_T rewrite_tac);
 a (LEMMA_T ¨∂m' s'∑ m = m' ± s = s'Æ rewrite_thm_tac
 	THEN1 prove_∂_tac);
 (* *** Goal "2.2" *** *)
@@ -1043,19 +986,10 @@ a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
 (* *** Goal "2.3.2" *** *)
 a (LEMMA_T ¨≥ ∂ m s∑ x = MkAf (m, s)Æ rewrite_thm_tac);
 a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
-val sc_recursion_lemma2 = save_pop_thm "sc_recursion_lemma2";
+val sc_recursion_lemma2 = pop_thm ();
 =TEX
 }%ignore
 
-This also gets plugged into proof context {\it 'infos} for use in consistency proofs.
-
-=GFT
-add_∂_cd_thms [sc_recursion_lemma2] "'infos";
-set_merge_pcs ["misc21", "'infos"];
-=TEX
-
-That doesn't work.
-Lets try a fake constructor.
 
 πHOLCONST
 ‹ €MkTrash› : GS ≠ GS
@@ -1063,68 +997,48 @@ Lets try a fake constructor.
 ‹ µx∑ MkTrash x = if IsAf x ≤ IsCf x then öâg else x
 ∞
 
+=GFT
+€sc_recursion_lemma3› =
+   Ù µ af cf ov
+     ∑ ∂ f
+       ∑ (µ m s∑ f (MkAf (m, s)) = af m s)
+           ± (µ vars forms
+           ∑ f (MkCf (vars, forms)) = cf (FunImageâg f forms) vars forms)
+           ± (µ x∑ f (MkTrash x) = ov (MkTrash x))
+=TEX
+
 \ignore{
 =SML
 set_goal([], ¨µaf cf ov∑ ∂f∑ (µm s∑ f (MkAf (m, s)) = af m s)
 	± (µvars forms∑ f (MkCf (vars, forms)) = cf (FunImageâg f forms) vars forms)
-	± (µx∑ f (MkTrash x) = ov x)
+	± (µx∑ f (MkTrash x) = ov (MkTrash x))
 Æ);
 a (REPEAT strip_tac);
-a (lemma_tac ¨∂g∑ g = Ãf x∑
-		if (∂vars forms∑ x = MkCf(vars,forms)) then cf (FunImageâg f (CfForms x)) (CfVars x) (CfForms x)
-		else if ∂m s∑ x = MkAf (m, s) then af (AfMem x) (AfSet x)
-		else if ∂y∑ x = MkTrash xÆ
-	THEN1 prove_∂_tac);
-a (lemma_tac ¨g respects ScPrec2Æ
-	THEN1 (asm_rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac));
-(* *** Goal "1" *** *)
-a (cond_cases_tac ¨∂ vars forms∑ x = MkCf (vars, forms)Æ);
-a (asm_rewrite_tac[get_spec ¨FunImageâgÆ]);
-a (LEMMA_T ¨{x'|∂ y∑ y çâg forms ± x' = g' y}
-             = {x'|∂ y∑ y çâg forms ± x' = h y}Æ rewrite_thm_tac
-	THEN1 (rewrite_tac [sets_ext_clauses, ç_in_clauses]
-		THEN REPEAT strip_tac));
-(* *** Goal "1.1" *** *)
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-a (lemma_tac ¨ScPrec2 y xÆ
-	THEN1 rewrite_tac [get_spec ¨ScPrec2Æ]);
-(* *** Goal "1.1.1" *** *)
-a (∂_tac ¨varsÆ THEN ∂_tac ¨formsÆ THEN asm_rewrite_tac[]);
-(* *** Goal "1.1.2" *** *)
-a (fc_tac[tc_incr_thm] THEN asm_fc_tac[]);
-(* *** Goal "1.2" *** *)
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-a (lemma_tac ¨ScPrec2 y xÆ
-	THEN1 rewrite_tac [get_spec ¨ScPrec2Æ]);
-(* *** Goal "1.2.1" *** *)
-a (∂_tac ¨varsÆ THEN ∂_tac ¨formsÆ THEN asm_rewrite_tac[]);
-(* *** Goal "1.2.2" *** *)
-a (fc_tac[tc_incr_thm] THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (∂_tac ¨fix gÆ);
-a (asm_tac well_founded_ScPrec2_thm);
-a (all_fc_tac [get_spec ¨fixÆ]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
-a (SYM_ASMS_T rewrite_tac THEN REPEAT ±_tac THEN REPEAT µ_tac);
-(* *** Goal "2.1" *** *)
-a (SYM_ASMS_T rewrite_tac);
-a (LEMMA_T ¨∂m' s'∑ m = m' ± s = s'Æ rewrite_thm_tac
-	THEN1 prove_∂_tac);
-(* *** Goal "2.2" *** *)
-a (LEMMA_T ¨∂ vars' forms'∑ vars = vars' ± forms = forms'Æ rewrite_thm_tac
-	THEN1 prove_∂_tac);
-(* *** Goal "2.3" *** *)
+a (rewrite_tac [get_spec ¨MkTrashÆ]);
+a ((strip_asm_tac o (rewrite_rule [])) (list_µ_elim [¨afÆ, ¨cfÆ, ¨Ãz∑ if IsAf z ≤ IsCf z then ov öâg else ov zÆ] sc_recursion_lemma2));
+a (∂_tac ¨fÆ THEN asm_rewrite_tac []);
 a (strip_tac);
-a (LEMMA_T ¨≥ ∂ vars forms∑ x = MkCf (vars, forms)Æ rewrite_thm_tac);
-(* *** Goal "2.3.1" *** *)
-a (contr_tac);
-a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
-(* *** Goal "2.3.2" *** *)
-a (LEMMA_T ¨≥ ∂ m s∑ x = MkAf (m, s)Æ rewrite_thm_tac);
-a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
+a (cond_cases_tac ¨≥ IsAf x ± ≥ IsCf xÆ THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (ALL_ASM_FC_T asm_rewrite_tac []);
+(* *** Goal "2" *** *);
+a (spec_nth_asm_tac 2 ¨öâgÆ THEN fc_tac [syn_con_inv_fc_clauses]);
+a (asm_rewrite_tac []);
+a (cond_cases_tac ¨IsAf öâg ≤ IsCf öâgÆ);
+(* *** Goal "3" *** *)
+a (spec_nth_asm_tac 2 ¨öâgÆ THEN fc_tac [syn_con_inv_fc_clauses]);
+a (asm_rewrite_tac []);
+a (cond_cases_tac ¨IsAf öâg ≤ IsCf öâgÆ);
 val sc_recursion_lemma3 = save_pop_thm "sc_recursion_lemma3";
 =TEX
 }%ignore
+
+This also gets plugged into proof context {\it 'infos} for use in consistency proofs.
+
+=SML
+add_∂_cd_thms [sc_recursion_lemma3] "'infos";
+set_merge_pcs ["misc21", "'infos"];
+=TEX
 
 \subsection{Auxiliary Concepts}
 
@@ -1241,8 +1155,8 @@ Note that this specification is generic in the type of truth values.
 \ignore{
 =SML
 set_goal([], ¨µ$ºât mem set st va∑ EvalAf $ºât (MkAf (set, mem)) st va =
-	if mem ç IxDom va ± set ç IxDom va
-		then Snd st (IxVal va mem) (IxVal va set)
+	if set ç IxDom va ± mem ç IxDom va
+		then Snd st (IxVal va set) (IxVal va mem)
 		else Lub $ºât {}Æ);
 a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨EvalAfÆ, let_def]);
 val EvalAf_MkAf_lemma = pop_thm ();
@@ -1259,17 +1173,6 @@ The relevant definitions for three and four valued truth types are given here.
 =SML
 declare_type_abbrev(€"CFE"›, ["'t"], î't SET ≠ 'tÆ);
 =TEX
-
-This one is probably now history, but I'm not ready to delete it yet!
-
-πHOLCONST
-‹ €EvalCf_tf3› : TTV CFE
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µresults∑ EvalCf_tf3 results = 
-‹	if results Ä {pTrue} then pFalse
-‹		else if (pFalse) ç results then pTrue
-‹		else pU
-∞
 
 This function is the core of the semantics of the logic, and captures the truth functional character of first order logic, including the quantifiers even in the infinitary case.
 It should be remembered that though I am working here with four truth values, the logic we are formalising is a classical two valued first order logic.
@@ -1598,6 +1501,8 @@ A similar effect can be obtained more concisely as follows:
 ‹		± IxDom v = Xâg Œ
 ‹		± IxRan v Ä V
 ‹		± pb = rv2 (IxOverRide va v)})
+‹  ±
+‹ (µcfe $ºât V rv x va∑ EvalForm2 (cfe, $ºât, (V, rv)) (MkTrash x) va = Lub $ºât {})
 ∞
 
 However the effect is not identical, and this does not stipulate what happens to elements in the domain type of the function (taking this as GS and treating previous arguments as parameters) but not in the set {\it Syntax}.
@@ -1688,7 +1593,7 @@ push_merge_pcs ["misc2", "'infos"];
 
 set_goal([], ¨µV y∑ y ç Syntax ¥ µva∑ FreeVars y Ä IxDom va ± IxRan va Ä V ¿ {öâg}
 	± EvalForm (EvalCf_ftv, $ºâtâ4, V ¿ {öâg}, $çâv) y va = fT
-	¥ (∂ x y:GS∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT)Æ);
+	¥ (∂ x y:GS∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± y çâv x = fT)Æ);
 a (strip_tac THEN strip_tac THEN strip_tac);
 a (infos_induction_tac ¨yÆ THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
@@ -1698,8 +1603,7 @@ a (strip_tac);
 a (spec_nth_asm_tac 1 ¨xÆ);
 a (spec_nth_asm_tac 2 ¨yÆ);
 a (asm_rewrite_tac[]);
-a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ
-	THEN asm_rewrite_tac[]);
+a (strip_tac THEN ∂_tac ¨IxVal va yÆ THEN ∂_tac ¨IxVal va xÆ);
 a (all_fc_tac[ix_domran_lemma]);
 a (PC_T1 "hol1" asm_prove_tac []);
 (* *** Goal "2" *** *)
@@ -1739,7 +1643,7 @@ val EvalForm_fT_lemma = save_pop_thm "EvalForm_fT_lemma";
 
 set_goal([], ¨µy∑ y ç Syntax ¥ µva∑ FreeVars y Ä IxDom va ± IxRan va Ä V ¿ {öâg}
 	± EvalForm (EvalCf_ftv, $ºâtâ4, V, $çâv) y va = fT
-	¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± x çâv y = fT)Æ);
+	¥ (∂ x y∑ x ç V ¿ {öâg} ± y ç V ¿ {öâg} ± y çâv x = fT)Æ);
 a (strip_tac THEN strip_tac);
 a (infos_induction_tac ¨yÆ THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
@@ -1941,12 +1845,12 @@ a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨PmrEqÆ] THEN strip_tac THEN strip_ta
 a (infos_induction_tac ¨fÆ THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (rewrite_tac [evalformfunct_thm2, repclosed_syntax_thm, get_spec ¨EvalAfÆ, let_def]);
-a (cond_cases_tac ¨y ç IxDom z ± x ç IxDom zÆ);
+a (cond_cases_tac ¨x ç IxDom z ± y ç IxDom zÆ);
 a (DROP_ASM_T ¨IxRan z Ä WÆ (asm_tac o (rewrite_rule[sets_ext_clauses])));
-a (list_spec_nth_asm_tac 4 [¨IxVal z yÆ, ¨IxVal z xÆ]);
-a (lemma_tac ¨IxVal z y ç WÆ
-	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
+a (list_spec_nth_asm_tac 4 [¨IxVal z xÆ, ¨IxVal z yÆ]);
 a (lemma_tac ¨IxVal z x ç WÆ
+	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
+a (lemma_tac ¨IxVal z y ç WÆ
 	THEN1 (fc_tac [ix_domran_lemma] THEN asm_fc_tac[]));
 (* *** Goal "2" *** *)
 a (rewrite_tac [evalformfunct_thm2, let_def]);
@@ -2611,7 +2515,7 @@ val _ = a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨MonoEvalFormÆ, get_spe
 val _ = a (fc_tac [inst_type_rule [(î'aÆ, î'bÆ), (îGS ≠ 'b OPTÆ, î'aÆ)] pw_crpou_thm]);
 val _ = a (fc_tac [crpou_fc_clauses] THEN asm_rewrite_tac[]);
 val monoevalform_increasing_lemma = pop_thm();
-
+=IGN
 stop;
 
 set_goal ([], ¨µc r s g∑ CRpoU r ± Increasing (SetO r) r c
