@@ -1,5 +1,5 @@
 =IGN
-$Id: t001.doc,v 1.7 2009/03/01 15:32:40 rbj Exp $
+$Id: t001.doc,v 1.8 2009/03/31 17:52:57 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -37,12 +37,12 @@ Some generic formal models of abstract semantics.
 
 Created 2004/07/15
 
-Last Change $ $Date: 2009/03/01 15:32:40 $ $
+Last Change $ $Date: 2009/03/31 17:52:57 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 
-$ $Id: t001.doc,v 1.7 2009/03/01 15:32:40 rbj Exp $ $
+$ $Id: t001.doc,v 1.8 2009/03/31 17:52:57 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -153,10 +153,105 @@ A proposition is {\it necessary} (simpliciter) if it is {\it necessarily t} for 
 Ü µp:P· contingent p ¤ ¶w1 w2· ³ pem(p, w1) = pem(p, w2)
 °
 
-\subsection{Analyticity}
+\subsection{True in Virtue of Meaning}
 
-A sentence is analytic if its truth value can be ascertained from its meaning only, without taking into account any `extra-linguistic fact' (in Quine's words), i.e. without knowing anything about what possible world is actual.
+A common definition of ``analytic'' is as `true in virtue of meaning', so we will now try to formalise that idea. 
+If the truth value of a sentence can be ascertained from its meaning only, i.e. without taking into account any `extra-linguistic fact' (in Quine's words), i.e. without knowing anything about what possible world is actual.
 This can only be known if it takes the same truth value in every possible world.
+
+This can be generalised to an arbitrary truth value.
+
+Therefore we define:
+
+=SML
+declare_infix (300, "by_meaning");
+=TEX
+
+¹HOLCONST
+Ü $Ûby_meaningÝ : TTV ­ (S ¸ C) ­ BOOL
+÷üüüüüü
+Ü µt:TTV; s:S; c:C· t by_meaning (s, c) ¤ µp· pem (sm(s, c), p) = t
+°
+
+\subsection{Expresses a True Proposition}
+
+My preferred definition of analyticity is that a sentence is analytic if it expresses a true proposition.
+Again we generalise to an arbitrary truth value.
+I'll make this infix as well.
+
+=SML
+declare_infix (300, "analytic");
+=TEX
+
+¹HOLCONST
+Ü $ÛanalyticÝ : TTV ­ (S ¸ C) ­ BOOL
+÷üüüüüü
+Ü µt:TTV; s:S; c:C· t analytic (s, c) ¤ necessarily t (sm(s, c))
+°
+
+Now we prove that these two conception of analyticity are the same.
+
+The proof is trivial, exanding the relevant definitions yields a universally quantified identity equation (apart from the names of the bound variables).
+In the following proof script, the necessary rewriting is broken into two stages to show the identity.
+
+=SML
+set_goal([], ¬µt s c· t analytic (s,c) ¤ t by_meaning (s, c)®);
+a (pure_rewrite_tac (map get_spec [¬$analytic®, ¬$by_meaning®, ¬necessarily®]));
+=GFT
+(* *** Goal "" *** *)
+
+(* ?ô *)  ¬µ t s c· (µ w· pem (sm (s, c), w) = t) = (µ p· pem (sm (s, c), p) = t)®
+=SML
+a (rewrite_tac[]);
+val analyticity_lemma1 = save_pop_thm "analyticity_lemma1";
+=TEX
+
+\subsection{Kant's Definition}
+
+Kant defined analyticty only for "subject predicate" sentences, and some have therefore supposed this to be less general than more recent formulations.
+However, asssuming only that the notion of analyticity is to be preserved by logical equivalence we can show that Kant's definition is equivalent to the preceding ones.
+
+There is an awkwardness in generalising this notion to three truth values, so I will do it only for the one.
+
+We will first define predicate inclusion.
+
+=SML
+declare_infix (300, "contains");
+=TEX
+
+¹HOLCONST
+Ü $ÛcontainsÝ : ('a ­ BOOL) ­ ('a ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µP Q· P contains Q ¤ µx· Q x ´ P x
+°
+
+$P contains Q$ is a way of writing a subject predicate assertion in which the subject is $Q$ and the predicate is $P$.
+
+Now we show that every judgement is equivalent to one in "subject predicate" form:
+
+=GFT
+kantian_lemma =
+	ô µ SS· ¶ P Q· SS ¤ P contains Q
+=TEX
+
+=SML
+set_goal([], ¬µSS· ¶P Q· SS ¤ P contains Q®);
+a (strip_tac THEN ¶_tac ¬Ìx· SS® THEN ¶_tac ¬Ìx· T®);
+a (rewrite_tac [get_spec ¬$contains®]);
+val kantian_lemma =  save_pop_thm "kantian_lemma";
+=TEX
+
+This lemma may be applied generally, thus:
+
+=SML
+val î_gt_trans = µ_elim ¬µx y z:î· x > y ± y > z ´ x > z® kantian_lemma;
+=TEX
+yields:
+=GFT
+val î_gt_trans =
+   ô ¶ P Q· (µ x y z· x > y ± y > z ´ x > z) ¤ P contains Q
+=TEX
+
 
 {\let\Section\section
 \newcounter{ThyNum}
@@ -169,6 +264,3 @@ This can only be known if it takes the same truth value in every possible world.
 {\small\printindex}
 
 \end{document}
-=SML
-output_theory{out_file="t001a.th.doc", theory="t001a"};
-=IGN
