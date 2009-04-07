@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.15 2008/12/03 22:03:35 rbj Exp $
+# $Id: rules.mk,v 1.16 2009/04/07 14:53:40 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -178,10 +178,10 @@ $(PERLBIN): % : %.pl
 #%.pdf: %.dvi
 #	dvipdf -sPAPERSIZE=a4  $*
 
-%.pdf: %.tex
-	texpdf -b $*
-	texpdf $*
-	texpdf $*
+#%.pdf: %.tex
+#	texpdf -b $*
+#	texpdf $*
+#	texpdf $*
 
 %.gz: %
 	gzip --best --stdout $< > $<.gz
