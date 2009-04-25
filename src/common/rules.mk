@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.16 2009/04/07 14:53:40 rbj Exp $
+# $Id: rules.mk,v 1.17 2009/04/25 10:01:44 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -14,6 +14,7 @@ Makefile: $(MKDEPS)
 
 # variable definitions
 # the following variables should be defined in the makefile if required
+# TEXPDF = PDF documents to be produce from non-ProofPower.sty tex documents..
 # PPTHTO = (.th) names of proofpower theories for listing in TEX only
 # PPTH	= (.th) names of proofpower application theories for listing in HTML
 # PPPPTH	= (.th) names of proofpower built-in theories for listing in HTML
@@ -123,9 +124,6 @@ $(PPDOCSML): %.sml: %.doc
 $(PPDOCXDOC): %.xdoc:
 	ppdoc2xml <$*.doc >$(SRCDIR)/$*.xml
 
-%.xmldoc: %.doc
-	sieve -f $(DOCPREPDATA)/sieveview xmldoc <$*.doc >$*.xmldoc
-
 $(PPTHDXLD) $(PPPPTHDXLD): %.xml: %.thd
 	ppthd2xml $* $(WEBROOTDIR)
 
@@ -162,7 +160,25 @@ $(PERLBIN): % : %.pl
 	cp $< $*
 	chmod +x $*
 
+$(TEXPDF): %.pdf : %.tex
+	@echo "TEXPDF"
+	@pdflatex $*
+	@touch $*.ind
+	-cat $*.idx \
+	    | sed -e 's/\([^@]\)\(@[^@]\)/\1"\2/;' \
+		  -e 's/@@/@/g;' \
+		  -e 's/\([^"]\)|/\1"|/g' \
+	          -e 's/"|hyperpage/|hyperpage/g' \
+	    | makeindex -i -o $*.ind
+	-sed -i -e 's/delimiter 026E30F/Backslash/' $*.ind
+	-bibtex $*
+	@pdflatex $*
+	@pdflatex $*
+
 # Unqualified rules
+
+%.xmldoc: %.doc
+	sieve -f $(DOCPREPDATA)/sieveview xmldoc <$*.doc >$*.xmldoc
 
 %.tex: %.doc
 	doctex $*
@@ -177,11 +193,6 @@ $(PERLBIN): % : %.pl
 
 #%.pdf: %.dvi
 #	dvipdf -sPAPERSIZE=a4  $*
-
-#%.pdf: %.tex
-#	texpdf -b $*
-#	texpdf $*
-#	texpdf $*
 
 %.gz: %
 	gzip --best --stdout $< > $<.gz
@@ -215,8 +226,8 @@ installweb: $(WEBFILES) $(WEBDIRS)
 	if test "" != "$(WEBFILES)"; then $(INSTALL) -m 644 $(WEBFILES) $(RWEBDIR); fi
 # note that this only works if WEBDIRS is just one directory
 # to be included, not copied.  This is intended for html prepared by latex2html
-	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.htm $(RWEBDIR); \
-		cp $(WEBDIRS)/*.png $(RWEBDIR); cp $(WEBDIRS)/*.css $(RWEBDIR); fi
+# subsequently generalised, hopefully to allow multiple directories to be copied
+	if test "" != "$(WEBDIRS)"; then cp -r $(WEBDIRS) $(RWEBDIR); fi
 
 THISINSTALL=installweb installdata installbins installlibs installperllibs installsmllibs
 

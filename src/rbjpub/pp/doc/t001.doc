@@ -1,5 +1,5 @@
 =IGN
-$Id: t001.doc,v 1.9 2009/04/07 14:53:39 rbj Exp $
+$Id: t001.doc,v 1.10 2009/04/25 10:01:44 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -37,12 +37,12 @@ Some generic formal models of abstract semantics.
 
 Created 2004/07/15
 
-Last Change $ $Date: 2009/04/07 14:53:39 $ $
+Last Change $ $Date: 2009/04/25 10:01:44 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 
-$ $Id: t001.doc,v 1.9 2009/04/07 14:53:39 rbj Exp $ $
+$ $Id: t001.doc,v 1.10 2009/04/25 10:01:44 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -80,10 +80,7 @@ There are many ways of doing this.
 The choice of how to render the semantics may be part of the process of defining a language or class of languages.
 Definitions of logical truth are then specific to classes of languages which have the same kind of formal semantics.
 
-
-
-
-\section{Bare-Boned Truth-Conditions}\label{Bare-Boned Truth-Conditions}
+\section{BARE BONED TRUTH CONDITIONS}\label{Bare-Boned Truth-Conditions}
 
 \ignore{
 \subsection{Technical Prelude}
@@ -210,7 +207,9 @@ a (rewrite_tac[]);
 val analyticity_lemma1 = save_pop_thm "analyticity_lemma1";
 =TEX
 
-\subsection{Kant's Definition}
+\section{KANT'S DEFINITION OF ANALYTICITY}
+
+\subsection{First Shot}
 
 Kant defined analyticity only for "subject predicate" sentences, and some have therefore supposed this to be less general than more recent formulations.
 However, asssuming only that the notion of analyticity is to be preserved by logical equivalence we can show that Kant's definition is equivalent to the preceding ones.
@@ -256,6 +255,94 @@ val î_gt_trans =
    ô ¶ P Q· (µ x y z· x > y ± y > z ´ x > z) ¤ P contains Q
 =TEX
 
+However, this is smoke and mirrors, because though it appears to be saying something about propositions, it is really about truth values.
+i.e. we have proven that every sentence has the same truth value as some sentence in subject predicate form, i.e. that there is a false sentence and a true sentence in subject predicate form.
+
+To have a relevance to the scope of Kant's definition of analyticity we need some real metatheoretic reasoning in which we talk about meanings of judgements.
+
+\subsection{Fuller Treatment}
+
+The treatment in the previous section is not wholly convincing.
+
+A sufficient reason for this is that the central thesis is not itself formalised.
+Insofar as there is any doubt about the thesis it therefore fails to improve the situation, and the question arises whether the theorems proven really establish the intended result.
+
+The thesis is that, under certain provisos, Kant's definition of analyticity is equivalent to a definition along the lines of "true in virtue of meaning".
+However, it seems probable that the conditions under which Kant's definition holds good differ significantly from those in which the other definition is applicable.
+To formulate the thesis it is therefore necessary to establish some sufficient (and preferably necessary) conditions for both definitions to be applicable.
+
+The required result is a general result covering a class of descriptive languages, and I think this will be better expressed if we abandon the previous methods of formalising in relation to some loosely specified but fixed (constant) language, and talk about languages using variables.
+
+I will therefore start from scratch but replicate the same basic idea of what a descriptive language is.
+
+Kant talks about "judgements", I will treat these as sentences in context.
+
+
+\ignore{
+\subsection{Technical Prelude}
+
+First of all, we must give the the ML commands to  introduce the new theory ``t001b'' as a child of the theory ``hol''.
+
+=SML
+open_theory "misc2";
+force_new_theory "t001b";
+set_merge_pcs["misc21"];
+=TEX
+}%ignore
+
+\subsection{Types}
+
+In this version type variables will be used where constants were previously used, as follows:
+
+\begin{itemize}
+\item['S] Sentences
+\item['C] Contexts
+\item['P] Propositions
+\item['W] Possible Worlds
+\end{itemize}
+
+\subsection{The Semantics}
+
+The semantics of a `descriptive' language comes in two parts.
+A semantic map which delivers propositions, the meanings of sentences in context,
+and a propositional evaluation map, which extracts truth conditions from a proposition.
+
+The purpose of this document is not to consider the semantics of any particular language but to reason about semantics and concepts defined in terms of semantics.
+
+The following type abbreviations give the type of the semantics of a descriptive language.
+
+=SML
+(* Semantic Map *)
+declare_type_abbrev ("SM", ["'C", "'P", "'S"], ”'S ¸ 'C ­ 'P®);
+
+(* Propositional Evaluation Map *)
+declare_type_abbrev ("PEM", ["'P", "'W"], ”'P ¸ 'W ­ BOOL®);
+
+(* Language *)
+declare_type_abbrev ("LAN", ["'C", "'P", "'S", "'W"], ”('C, 'P, 'W)SM ¸ ('P, 'W)PEM®);
+=TEX
+
+\subsection{Necessity}
+
+A proposition is `necessary' if it takes truth value `T' in every possible world, the definition is parameterised by a propositional evaluation map.
+
+¹HOLCONST
+Ü ÛnecessaryÝ : ('P, 'W)PEM ­ 'P ­ BOOL
+÷üüüüüü
+Ü µpem (p:'P)· necessary pem p ¤ µw:'W· pem(p, w) = T
+°
+
+¹HOLCONST
+Ü ÛcontradictoryÝ : ('P, 'W)PEM ­ 'P ­ BOOL
+÷üüüüüü
+Ü µpem (p:'P)· contradictory pem p ¤ µw:'W· pem(p, w) = F
+°
+
+¹HOLCONST
+Ü ÛcontingentÝ : ('P, 'W)PEM ­ 'P ­ BOOL
+÷üüüüüü
+Ü µpem (p:'P)· contingent pem p ¤ ¶w1 w2:'W· ³ pem(p, w1) = pem(p, w2)
+°
 
 {\let\Section\section
 \newcounter{ThyNum}
