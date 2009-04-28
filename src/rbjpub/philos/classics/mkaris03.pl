@@ -1,5 +1,5 @@
-$modified="96/11/30";
-$created="96/11/25";
+$modified="2009/04/26";
+$created="1996/11/25";
 
 #sub readparams
 #{	$parafile=$_[0];
@@ -47,13 +47,15 @@ sub readcontroldata
 			$book=$1;
 			next loop
 		};
-	if (/Part:(\d+):(.*)$/)
+	if (/Part:(\d+):([^\r].*)(\r|)$/)
 		{	$control{$file}{$book}{$1}={"title"=>$2};
 			$part=$1;
+			if ($trace>4) {print "Data: $file $book $part : $2\n";
+			};
 			next loop
 		};
 	if (/Para:(\d+):(.*)$/)
-		{	$control{$file}{$book}{$para}{$1}={"title"=>$2};
+		{	$control{$file}{$book}{$part}{$1}={"title"=>$2};
 			$para=$1;
 			next loop
 		};
@@ -94,7 +96,9 @@ sub openFile
 	$sourceAuthor=&strip($_);
 	$_=<INPUT>;
 	$sourceTranslator=&strip($_);
-	$_=<INPUT>
+	$_=<INPUT>;
+	if ($trace>2) {print "sourceDate:$sourceDate; sourceTitle=$sourceTitle; sourceAuthor=$sourceAuthor; sourceTranslator=$sourceTranslator\n"};
+	while (/^\s*$/) {&readLine};
 };
 
 sub closeFile
@@ -106,26 +110,27 @@ sub readLine
 };
 
 sub testBookStart
-{	if (/^\s*Book\s*(\w+)\s*$/)
+{	if (/^\s*(Book|BOOK)\s*(\w+)\s*$/)
 	{	if ($trace>2) {print "book $book\n"};
 		1
 	} else {0}
 };
 
 sub testSBPartStart
-{#	print "testSBPartStart";
+{	if($trace>4) {print "testSBPartStart:$_"};
 	if (/^\s*Part\s*(\w+)\s*$/)
-	{	if ($trace>2) {print "Part $part\n"};
+	{	if ($trace>2) {print "SB Part $part\n"};
 		$partHead="Part $1";
 		1
 	} else {0}
 };
 
 sub testMBPartStart
-{#	print "testMBPartStart";
-	if (/^\s*(\d+)\s*$/)
-	{	if ($trace>2) {print "part $part\n"};
-		$partHead=$1;
+{	if($trace>4) {print "testMBPartStart:$_"};
+        if (/^\s*$/) {&readLine};
+	if (/^\s*(Part|)\s*(\d+)\s*(\"|)\s*$/)
+	{	if ($trace>2) {print "MB Part $part\n"};
+		$partHead="Part $1";
 		1
 	} else {0}
 };

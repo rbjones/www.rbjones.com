@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.17 2009/04/25 10:01:44 rbj Exp $
+# $Id: rules.mk,v 1.18 2009/04/28 13:12:16 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -221,13 +221,17 @@ installsmllibs:
 	if test "" != "$(SMLLIBFILES)"; \
 	then $(INSTALL) -m 644 $(SMLLIBFILES) $(SMLLIBDIR); cp -r CM $(SMLLIBDIR); fi
 
-installweb: $(WEBFILES) $(WEBDIRS)
+installweb: $(WEBFILES) $(WEBDIRS) $(WEBSUBDIRS)
 	@if ! test -d $(RWEBDIR) &&  test "" != "$(WEBFILES)"; then $(INSTALL) -d -m 755 $(RWEBDIR); fi
 	if test "" != "$(WEBFILES)"; then $(INSTALL) -m 644 $(WEBFILES) $(RWEBDIR); fi
 # note that this only works if WEBDIRS is just one directory
-# to be included, not copied.  This is intended for html prepared by latex2html
-# subsequently generalised, hopefully to allow multiple directories to be copied
-	if test "" != "$(WEBDIRS)"; then cp -r $(WEBDIRS) $(RWEBDIR); fi
+# to be included, not copied (i.e. the content goes up a level).
+# This is intended for html prepared by latex2html
+	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.htm $(RWEBDIR); fi
+	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.css $(RWEBDIR); fi
+	-if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.png $(RWEBDIR); fi
+# WEBSUBDIRS allows multiple directories to be copied rather than included
+	if test "" != "$(WEBSUBDIRS)"; then cp -r $(WEBSUBDIRS) $(RWEBDIR); fi
 
 THISINSTALL=installweb installdata installbins installlibs installperllibs installsmllibs
 
@@ -304,7 +308,10 @@ $(ISAIMG): %.img : isablddummy
 
 isablddummy:
 
-$(LATEX2HTML): %.htm: %.tex %.dvi
+$(LATEX2HTML): %.htm: %.tex
+	texdvi -b $*
+	texdvi $*
+	texdvi $*
 	latex2html -short_extn -split 3 -link 2 -toc_depth 5 -show_section_numbers \
 		-info "" -up_url "../index.htm" -up_title "up" $<
 	touch $@

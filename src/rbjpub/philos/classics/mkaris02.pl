@@ -1,5 +1,5 @@
-$modified="96/11/24";
-$created="96/11/24";
+$modified="2009/04/26";
+$created="1996/11/24";
 
 # The following kinds of files are created by the subroutines below:
 # (1) Overall index with one entry per file or book (some files are
@@ -39,15 +39,16 @@ sub startOIndex
 	open (OINDEX, "> $direc/$volIndexRef");
 	print OINDEX <<EOF;
 <HTML><HEAD><TITLE>
-The Organon - Artistotle's Works on Logic</TITLE></HEAD>
+$mainTitle
+</TITLE></HEAD>
 $body
 $up
-<CENTER><H1>The Organon - Artistotle on Logic</H1></CENTER>
+<CENTER><H1>$mainTitle</H1></CENTER>
 <P>
 <A NAME="start"></A>
 <CENTER>
 <TABLE>
-<TR><TD WIDTH=45%><I>Volume</I></TD><TD WIDTH=10%><I>Book</I></TD><TD WIDTH=45%><I>Description</I></TD></TR>
+<TR><TD WIDTH=40%><I>Volume</I></TD><TD WIDTH=15%><I>Book</I></TD><TD WIDTH=45%><I>Description</I></TD></TR>
 EOF
 };
 
@@ -98,11 +99,11 @@ sub nextBookIndex
 	open (BOOKINDEX, "> $direc/$bookIndexFile");
 	print BOOKINDEX <<EOF;
 <HTML><HEAD><TITLE>
-The Organon - index for $sourceTitle Book $book
+$mainTitle - index for $sourceTitle Book $book
 </TITLE></HEAD>
 $body
 <A HREF="$volIndexRef">$upimg</A>
-<CENTER><H3>Index for $sourceTitle Book $book</H2></CENTER>
+<CENTER><H3>$mainTitle - index for $sourceTitle Book $book</H2></CENTER>
 <P>
 <A NAME="start"></A>
 <CENTER>
@@ -142,14 +143,15 @@ sub nextPartIndex
 {	open (PARTINDEX, "> $direc/$partIFile");
 	print PARTINDEX <<EOF;
 <HTML><HEAD><TITLE>
-Aristotle - the Organon - index for $sourceTitle Book $book Part $part - $partTitle
+$mainTitle - index for $sourceTitle Book $book Part $part - $partTitle
 </TITLE></HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
-<CENTER><H3>Index for $sourceTitle Book $book Part $part</H3><H2>$partTitle</H2>
+<CENTER><H3>$mainTitle - index for $sourceTitle Book $book Part $part</H3><H2>$partTitle</H2>
 <P>
 <TABLE>
+<TR><TD WIDTH="100">&nbsp;</TD><TD>&nbsp;</TD></TR>
 EOF
 };
 
@@ -183,12 +185,12 @@ sub startPart
 {	open (OUTFILE, "> $direc/$partCFile");
 	print OUTFILE <<EOF;
 <HTML><HEAD><TITLE>
-Aristotle - The Organon $sourceTitle $book $part $partTitle
+$mainTitle $sourceTitle Book $book Part $part $partTitle
 </TITLE></HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
-<CENTER><H3>$sourceTitle Book $book Part $part</H3>
+<CENTER><H3>$mainTitle $sourceTitle Book $book Part $part</H3>
 <H2>$partTitle</H2></CENTER>
 <P>
 EOF
@@ -204,7 +206,7 @@ EOF
 };
 
 sub startParagraph      
-{#	print "startParagraph $para\n";
+{	if ($trace>4) {print "startParagraph $para\n"};
 	if (! (defined $paraTitle)) {$paraTitle =""};
 	print OUTFILE <<EOF;
 <P>
