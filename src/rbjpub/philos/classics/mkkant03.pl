@@ -22,7 +22,7 @@ $modified="1999/8/29";
 $kanttext=$ARGV[0];
 $kantstru=$ARGV[1];
 $destdir=$ARGV[2];
-$body="<BODY CLASS=co2>";
+$body="<BODY CLASS=co3>";
 
 print "destdir $destdir\n";
 
@@ -77,7 +77,6 @@ sub work
 <META name="keywords" contents="RbJ FactasiA PhilosophY KanT">
 </HEAD>
 $body
-<A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=RIGHT WIDTH=99 HEIGHT=20></A>
 <A HREF="../index.htm"><IMG SRC="../../../../rbjgifs/up.gif" ALT="Up" BORDER=0 ALIGN=LEFT WIDTH=22 HEIGHT=12></A>
 <BR CLEAR=ALL>
 <CENTER>
@@ -99,7 +98,7 @@ print INDEX <<EOF;
 <P>
 <CENTER>
 <HR WIDTH="70%">
-converted to HTML for <A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=ABSMIDDLE WIDTH=99 HEIGHT=20></A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
+converted to HTML for <A HREF="http://www.rbjones.com/">RBJones.com</A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
 first edition $initial last modified $modified
 </CENTER>
 </BODY>
@@ -144,8 +143,7 @@ sub samelevel
 <META name="description" contents="Emmanual Kant's Critique of Pure Reason - $title">
 <META name="keywords" contents="RbJ FactasiA PhilosophY KanT">
 </HEAD>
-<BODY CLASS=co2>
-<A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=RIGHT WIDTH=99 HEIGHT=20></A>
+$body
 <A HREF="index.htm"><IMG SRC="../../../../rbjgifs/up.gif" ALT="Up" BORDER=0 ALIGN=LEFT WIDTH=22 HEIGHT=12></A>
 <BR CLEAR=ALL>
 <CENTER><H1>$title</H1></CENTER>
@@ -162,7 +160,7 @@ EOF
 		print OUTPUT <<EOF;
 <CENTER>
 <HR WIDTH="70%">
-converted to HTML for <A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=ABSMIDDLE WIDTH=99 HEIGHT=20></A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
+converted to HTML for <A HREF="http://www.rbjones.com/">RBJones.com</A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
 first edition $initial last modified $modified
 </CENTER>
 </BODY>

@@ -1,4 +1,4 @@
-# This scripts generates a second multi-level index structure.
+# This script generates a second multi-level index structure.
 #
 # Kant's Critique of Pure Reason has a more complex section structure 
 # than works I have previously converted.
@@ -19,7 +19,7 @@
 
 $initial="1994/12/23";
 #$created="1997/4/26";
-$modified="1999/8/29";
+$modified="2009/4/30";
 #$author="kant";
 $kanttext=$ARGV[0];
 $kantstru=$ARGV[1];
@@ -78,8 +78,7 @@ sub work
 <META name="description" contents="Emmanual Kant's Critique of Pure Reason - content listing">
 <META name="keywords" contents="RbJ FactasiA PhilosophY KanT">
 </HEAD>
-<BODY CLASS=co2>
-<A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=RIGHT WIDTH=99 HEIGHT=20></A>
+<BODY CLASS=co3>
 <A HREF="../index.htm"><IMG SRC="../../../../rbjgifs/up.gif" ALT="Up" BORDER=0 ALIGN=LEFT WIDTH=22 HEIGHT=12></A>
 <BR CLEAR=ALL>
 <CENTER>
@@ -102,7 +101,7 @@ print INDEX <<EOF;
 <P>
 <CENTER>
 <HR WIDTH="70%">
-converted to HTML for <A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=ABSMIDDLE WIDTH=99 HEIGHT=20></A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
+converted to HTML for <A HREF="http://www.rbjones.com/">RBJones.com</A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
 first edition $initial last modified $modified
 </CENTER>
 </BODY>
@@ -150,8 +149,7 @@ sub samelevel
 <META name="description" contents="Emmanual Kant's Critique of Pure Reason - contents level 2 ($itail)">
 <META name="keywords" contents="RbJ FactasiA PhilosophY KanT">
 </HEAD>
-<BODY CLASS=co2>
-<A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=RIGHT WIDTH=99 HEIGHT=20></A>
+<BODY CLASS=co3>
 <A HREF="index.htm"><IMG SRC="../../../../rbjgifs/up.gif" ALT="Up" BORDER=0 ALIGN=LEFT WIDTH=22 HEIGHT=12></A>
 <BR CLEAR=ALL>
 <CENTER>
@@ -196,7 +194,7 @@ sub uplevels
 </DL>
 <CENTER>
 <HR WIDTH="70%">
-converted to HTML for <A HREF="http://www.rbjones.com/"><IMG SRC="../../../../rbjgifs/factasia.gif" ALT="Factasia" BORDER=0 ALIGN=ABSMIDDLE WIDTH=99 HEIGHT=20></A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
+converted to HTML for <A HREF="http://www.rbjones.com/">RBJones.com</A> by <A HREF="../../../rbj.htm"><IMG SRC="../../../../rbjgifs/rbjin1.gif" ALT="RBJ" BORDER=0 ALIGN=ABSMIDDLE WIDTH=44 HEIGHT=19></A><BR>
 first edition $initial last modified $modified
 </CENTER>
 </BODY>
