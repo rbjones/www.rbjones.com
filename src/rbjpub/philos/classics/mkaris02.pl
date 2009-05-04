@@ -99,11 +99,13 @@ sub nextBookIndex
 	open (BOOKINDEX, "> $direc/$bookIndexFile");
 	print BOOKINDEX <<EOF;
 <HTML><HEAD><TITLE>
-$mainTitle - index for $sourceTitle Book $book
+$mainTitle - index for $sourceTitle Book $book - $bookTitle
 </TITLE></HEAD>
 $body
 <A HREF="$volIndexRef">$upimg</A>
-<CENTER><H3>$mainTitle - index for $sourceTitle Book $book</H2></CENTER>
+<CENTER><H3>$mainTitle - index for $sourceTitle Book $book</H3>
+<H3>$bookTitle</H3>
+</CENTER>
 <P>
 <A NAME="start"></A>
 <CENTER>
@@ -148,7 +150,8 @@ $mainTitle - index for $sourceTitle Book $book Part $part - $partTitle
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
-<CENTER><H3>$mainTitle - index for $sourceTitle Book $book Part $part</H3><H2>$partTitle</H2>
+<CENTER><H3>$mainTitle - index for $sourceTitle Book $book Part $part</H3>
+<H3>$partTitle</H3>
 <P>
 <TABLE>
 <TR><TD WIDTH="100">&nbsp;</TD><TD>&nbsp;</TD></TR>

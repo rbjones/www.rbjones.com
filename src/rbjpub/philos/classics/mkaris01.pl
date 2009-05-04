@@ -14,7 +14,7 @@ $stub=$ARGV[0];
 $controlfile=$ARGV[1];
 $mainTitle=$ARGV[2];
 
-$trace=1;
+$trace=2;
 
 if ($trace>0) {print "stub $stub, controlfile $controlfile; mainTitle $mainTitle\n"};
 
@@ -97,6 +97,7 @@ sub book
 	if ($trace>1){$temp=<STDIN>};
 	$bookTitle=$controlData{$file}{$book}{"title"};
 	if (! defined($bookTitle)) {$bookTitle="Book $book"};
+	if ($trace>1){print "\$bookTitle: $bookTitle\n"};
 	&oIndexEntry;	&nextBookIndex;
 	$part=0;
 	while (&$testPartStart)
