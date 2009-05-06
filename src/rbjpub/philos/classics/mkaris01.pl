@@ -14,7 +14,7 @@ $stub=$ARGV[0];
 $controlfile=$ARGV[1];
 $mainTitle=$ARGV[2];
 
-$trace=2;
+$trace=0;
 
 if ($trace>0) {print "stub $stub, controlfile $controlfile; mainTitle $mainTitle\n"};
 
