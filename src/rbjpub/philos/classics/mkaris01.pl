@@ -59,18 +59,39 @@ $controlDataRef=&readcontroldata($controlfile);
 $filecount=$controlData{"filecount"};
 if ($trace>0){print "Number of files is $filecount\n"};
 
-&startOIndex;
-while($file++ < $controlData{"filecount"})
-{	$fileName=$controlData{$file}{"name"};
+if ($trace > 9) {&testParaTitle}
+else {
+    &startOIndex;
+    while($file++ < $controlData{"filecount"}) {
+	$fileName=$controlData{$file}{"name"};
 	$fileTitle=$controlData{$file}{"title"};
 	$fileType=$controlData{$file}{"type"};
 	$numBooks=$controlData{$file}{"numBooks"};
 	if ($fileType eq "SB") {&doSBFile($file)};
 	if ($fileType eq "MB") {&doMBFile($file)};
+    };
+    &closeOIndex;
 };
-&closeOIndex;
 
 print "Translation completed.\n";
+
+sub testParaTitle
+{
+    $fileName=$controlData{5}{"name"};
+    &openFile($fileName);
+    $_=<INPUT>;
+    while (!eof(INPUT)){
+	$paraTitle="";
+#	while (!eof(INPUT)) {&readLine; s/\r/<CR>/g; s/\l/<LF>\n/g; s/\n/<CR>\n/g; print};
+	while (!$_ && !eof(INPUT)) {&readLine};
+	while (/^((i\.e\.|e\.g\.|viz\.|[^.\?:;])+)$/) {
+	    $temp=$1; chomp($temp); if($paraTitle) {$paraTitle.=" $temp"} else {$paraTitle=$temp}; &readLine;};
+	print "£:$paraTitle:£\n";
+	if (s/^((i\.e\.|e\.g\.|viz\.|[^.\?:;])*[.\?:;])\s*(.*)$/$3/) {
+	    print "\$:$1+$2+$3\n"; $paraTitle.=" $1";};
+	print "\%:$paraTitle\n";
+    };
+};
 
 sub doSBFile
 {	if ($trace>0) {print "doSBFile $file $fileName $fileType $fileTitle\n"};
@@ -93,15 +114,16 @@ sub doMBFile
 };
 
 sub book
-{    	if ($trace>0){print "Starting file $file book $book.\n"};
-	if ($trace>1){$temp=<STDIN>};
+{    	if ($trace>1){$temp=<STDIN>};
 	$bookTitle=$controlData{$file}{$book}{"title"};
-	if (! defined($bookTitle)) {$bookTitle="Book $book"};
+	$bookSection=$controlData{$file}{$book}{"booksection"};
+	if ($trace>0){print "Starting file $file $bookSection $book\n"};
+	if (! defined($bookTitle)) {$bookTitle="$bookSection $book"};
 	if ($trace>1){print "\$bookTitle: $bookTitle\n"};
 	&oIndexEntry;	&nextBookIndex;
-	$part=0;
+	$part=1;
 	while (&$testPartStart)
-		{&readLine; ++$part; &part};
+		{&readLine; &part; ++$part};
 	&closeBookIndex;
 };
 	
@@ -130,9 +152,12 @@ sub paragraph
 		if (/^\<\/PRE\>/) {&writeLine($_); &readLine};
 		--$para}
 	else 	{&paraTitle;
+		 my($rest)=$_;
+#		 print "Rest: $rest";
+#		 $in=<STDIN>;
 		&startParagraph;
 		&partIndexEntry;
-		&writeLine($_); &readLine;
+		&writeLine($rest); &readLine;
 		if ($trace>4) {print "Line:$_";};
 		until (/^\s/ || &$testPartStart || &testBookStart || eof(INPUT))
 			{

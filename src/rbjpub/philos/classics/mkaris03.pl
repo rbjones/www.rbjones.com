@@ -42,9 +42,9 @@ sub readcontroldata
 			$file=$1;
 			next loop
 		};
-	if (/Book:(\d+):(.*)$/)
-		{	$control{$file}{$1}={"title"=>$2};
-			$book=$1;
+	if (/(Book|Section):(\d+):(.*)$/)
+		{	$control{$file}{$2}={"title"=>$3, "booksection"=>$1};
+			$book=$2;
 			next loop
 		};
 	if (/Part:(\d+):([^\r].*)(\r|)$/)
@@ -75,9 +75,11 @@ sub parano
 
 sub paraTitle
 {	$paraTitle="";
-	while (/^([^.\?:;]+)$/) {$temp=$1; chop $temp; $paraTitle.=" $temp"; &readLine;};
-	if (s/^([^.\?:;]*[.\?:;]\s*)(.*)$/$2/) {$temp=$1; chop($temp); $paraTitle.=" $temp";};
-	if ($trace>4) { print "paraTitle: $paraTitle\n";
+	while (/^\s*((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
+	    $temp=$1; $paraTitle.="$temp"; &readLine;};
+	if (s/^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])*[\.\?\:;])\s*(.*)$/$3/){
+	    $temp=$1; $paraTitle.="$temp";};
+	if ($trace == 9) { print "paraTitle: $paraTitle\n";
 			print "rest: $_\n"
 			};
 #	chop;
@@ -105,13 +107,19 @@ sub closeFile
 {	close INPUT
 };
 
-sub readLine
-{	if (!eof(INPUT)) {$_=<INPUT>} else {$_=""};
+sub readLine {
+    if (!eof(INPUT)) {
+	$_=<INPUT>;
+#	print;
+	s/\l\r//g;
+#	print
+    }
+    else {$_=""};
 };
 
 sub testBookStart
-{	if (/^\s*(Book|BOOK)\s*(\w+)\s*$/)
-	{	if ($trace>2) {print "book $book\n"};
+{	if (/^\s*(Book|BOOK|SECTION)\s*(\w+)\s*$/)
+	{	if ($trace>2) {print "$1 $book\n"};
 		1
 	} else {0}
 };
@@ -129,8 +137,9 @@ sub testMBPartStart
 {	if($trace>4) {print "testMBPartStart:$_"};
         if (/^\s*$/) {&readLine};
 	if (/^\s*(Part|)\s*(\d+)\s*(\"|)\s*$/)
-	{	if ($trace>2) {print "MB Part $part\n"};
-		$partHead="Part $1";
+	{	$part=$2;
+		if ($trace>2) {print "MB Part $part\n"};
+		$partHead="Part $2";
 		1
 	} else {0}
 };

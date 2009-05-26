@@ -1,0 +1,979 @@
+£=IGN
+$Id: t028.doc,v 1.1 2009/05/26 18:46:36 rbj Exp $
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\usepackage{amsfonts}
+\ftlinepenalty=9999
+\usepackage{A4}
+
+% the following two modal operators come from the amsfonts package
+\def\PrKI{\Diamond}	%Modify printing for ¨
+\def\PrKJ{\Box}		%Modify printing for ©
+
+\def\ExpName{\mbox{{\sf exp}}}
+\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\title{Aristotle's Logic and Metaphysics}
+\makeindex
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}, pdffitwindow=false}
+\hypersetup{colorlinks=true, urlcolor=red, citecolor=blue, filecolor=blue, linkcolor=blue}
+\author{Roger Bishop Jones}
+\date{\ }
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+Formalisation in higher order logic of parts of Aristotle's logic and metaphysics.
+\end{abstract}
+\vfill
+
+\begin{centering}
+{\footnotesize
+
+Created 2009/05/21
+
+Last Change $ $Date: 2009/05/26 18:46:36 $ $
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
+
+$ $Id: t028.doc,v 1.1 2009/05/26 18:46:36 rbj Exp $ $
+
+\copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnotesize
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+{\parskip=0pt\tableofcontents}
+%\newpage
+%\subsection{Document cross references}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{INTRODUCTION}
+
+My purpose in preparing this document has been in the first place to analyse certain semi-formal statements, relating to the philosophy of Aristotle, which were posted to the \href{http://hist-analytic.org}{\it hist-analytic} mailing list (\href{http://rbjones.com/pipermail/hist-analytic_rbjones.com/2009q2/000258.html}{see message in archive}).
+
+I would not however have conducted the analysis in this manner if I were not interested in exploring these methods of analysis in this domain; if I were not interested in making sense of and in making advances in metaphysics, in forming more definite and detailed ideas about what metaphysics might be and how it might profitably be engaged in.
+
+I am also using this methodological exercise as a way of acquiring some understanding of Aristotle's metaphysics, of which I remain at present largely ignorant.
+So the reader is warned that at this time the relationship between the content of this document and the philosophy of Aristotle is extremely tenuous.
+
+For my ideas on what might become of this document in the future, see my postscript (Section \ref{POSTSCRIPT}).
+
+In this document, phrases in coloured text are hyperlinks, like on a web page, which will usually get you to another part of this document (e.g. the blue parts of the contents list and the page numbers in the Index) but sometimes take you (the red ones) somewhere altogether different (if you happen to be online) like \href{http://rbjones.com/pipermail/hist-analytic_rbjones.com}{the hist-analytic archives}.
+
+\section{LANGUAGES, METHODS AND TOOLS} 
+
+This document is probably only of interest to philosophers, of whom approximately none are likely to be familiar with the methods languages and tools which I have used in it.
+In this section I hope to supply enough on these topics to make it possibly for a philosopher with a reasonable level of logical competence to get something out of the formal models which follow.
+
+For the moment this is very brief and I hope will be filled out as work progresses.
+It will get better if I get feedback on what aspects are hard to understand.
+
+\subsection{Languages}
+
+The principle language used here (apart from English) is a language (and logic) called HOL.
+HOL is an acronym for Higher Order Logic, of which there are many different varieties, and is also widely used for a specific variant of higher order logic which has been implemented in several computer programs providing support for formal specification and proof.
+
+For full details of this language you would need to refer to the documentation which comes with these tools \cite{ds/fmu/ied/spc001} or some of the papers published about them.
+See below for information relating to the tool used for producing this document, \ProductHOL.
+
+The language HOL is a direct descendent of Russell's {\it Theory of Types}\cite{russell1908}, the logic which he and Whitehead used in {\it Principia Mathematica}\cite{russell1913}.
+To get from Russell's {\it Theory of Types} to HOL you do the following (names in brackets give credit to the person who thought of the step):
+
+\begin{itemize}
+\item discard the ramifications (Ramsey)
+\item simplify by basing on typed lambda-calculus (Church \cite{church40})
+\item add polymorphism (Gordon/Milner \cite{gordon87,milner78})
+\end{itemize}
+
+To do serious work you need a proof tool, see below.
+
+The following are the most important features of this language/logic which distinguish it from those typically considered by philosophers.
+
+\begin{itemize}
+\item It is a foundation system, i.e. it suffices for the development of mathematics by conservative extension (definitions) alone.
+\item It has a type system, and allows new types to be defined.
+\item It is supported by computer software which checks specifications, assists in constructing proofs and rigorously checks proofs.
+\end{itemize}
+
+\subsection{Methods}
+
+The principle technique used here is a method which has some of the theoretical merits of a metatheoretic treatment, but is less arduous and provides better support for reasoning in the object language.
+
+We imagine ourself devising a formal language in which to talk about Aristotle's metaphysics, and in which to formalise the kind of metaphysical arguments which are found in Aristotle.
+To do this rigorously, we need to deal first with the semantics of the language, and establish a deductive system which is sound with respect to that semantics.
+
+A standard formal treatment of this material would involve a specification of the syntax of an appropriate language, the development of semantics, probably as some kind of model theory, the specification of a deductive system for the language and a proof of soundness of that system (this would be a version of Aristotle's Syllogistic logic).
+This is feasible with the languages and tools we are using, but arduous.
+The results would be good for metatheory, but not necessarly convenient for conducting proofs in the language thus defined, i.e. for reasoning in the new object language.
+
+There is another manner of proceeding which better suits our present purposes.
+This consists in extending our already available language, using the definitional facilities and the flexibility in its syntax (e.g. fixity declarations) to create a language extension which looks something like and behaves exactly like the intended object language.
+
+We begin with something like model theory, defining new data types which model the kinds of thingd that the new language is to be about.
+The constructs in the language are then given definitions in terms of these new data tupes.
+By deduction within HOL we are then able to prove results which correspond to results in the intended object language.
+
+There ia a technical term for this kind of treatment of languages in HOL, they are called {\it shallow semantic embeddings}, and this term indicates that the expressions of the target language are represented by expressions in HOL which are syntactically similar (though perhaps not identical) to those of the intended object language, and which do have the same meaning as the target language expressions.
+For a fuller description of this kind of method (used in theoretical computer science) see \cite{gordon88}.
+
+If you have not come across this kind of thing before this probably does not make much sense at this point, but I hope that eventually the material which follows will provide an intelligible exemplar of this method.
+
+\subsubsection{Schemas and Higher Order Quantification}
+
+Much of the semi-formal material which we are trying to fully formalise involves general talk about the kinds of things which are found in categories.
+Possibly the formulae are intended as schemas in a first order predicate calculus.
+This is not the way we will treat them, so a few words explaining why not are in order here.
+
+We are working here in a higher-order logic.
+In a first-order logic, it is not possible for quantify over anything but individuals.
+In first order set theory we get around that restriction by having ``individuals'' which are surrogates for all kinds of higher order objects.
+In set theory we can, by quantifying over the individuals encompass objects which represent properties of functions of every conceivable type.
+Some pragmatic issues remain which we need not go into here.
+
+When a first-order formalisation is attempted without benefit of the machinery of set theory, it often proves necessary to use schemata, which are a syntactic surrogate for quantification over higher types.
+A well known example is the theory PA, a first order version of Peano's axioms for arithmetic.
+Peano himself formulated his axioms for arithmetic before first order logic was invented, before indeed the foundational problems which provoked the development of type theories.
+His axiom of induction involved quantification over properties along the following lines:
+
+=GFT
+	ô µp· p(0) ± (µx· p(x) ´ p(x + 1)) ´ µx· p(x)
+=TEX
+
+Which we may paraphrase:
+\begin{quote}
+for all properties {\it p}, if {\it p} hold for 0 and whenever {\it p} is true of some natural number it is true also of its successor, then {\it p} will be true of all natural numbers
+\end{quote}
+
+In the first order formalisation of Peano Arithmetic, known as PA, we cannot quantify over properties, so we use instead an axiom schemata, which lifts the quantification into the metalanguage and changes from quantifying over numbers to quantifying over formulae.
+Thus we have intsead something like:
+
+=GFT
+	ô P(0) ± (µx· P(x) ´ P(x + 1)) ´ µx· P(x)
+=TEX
+
+Where $P$ is not a predicate in the object language, but a syntactic function in the metalanguage which yields formula.
+The first order axiom schemata describes an infinite set of properly first order axioms obtained by substituting arbitrary formulae inc which $0$ occurs for $P(0)$, and corresponding formulae for $P(x)$ and $P(x+1)$ in which $x$ and $x+1$ respectively replace occurences of $0$ in the first formula.
+
+The following features of the language are methodologically significant,
+
+\subsection{Tools}
+
+The tool used for preparation of this document, for checking the syntax and type correctness of the formal specifications, for assisting in the construction of formal proofs, and for checking the resulting proofs in detail is \Product.
+
+\section{ARISTOTLE'S METAPHYSICS}
+
+This section is for some experiments in formalising in HOL of material modelling Aristotle's metaphysics which originated in work of Grice and Code and came to me from a \href{http://rbjones.com/pipermail/hist-analytic_rbjones.com/2009q2/000258.html}{posting of J.L. Speranza} on the hist-analytic mailing list.
+
+What Speranza posted was the list of formulae which are named below as c01 through c31 (though not exactly as given, I have massaged them to be acceptable to HOL and also have quantified over all free variables).
+
+My aim at present is to come up with a model which satisfies these propositions.
+
+\subsection{Preliminaries}
+
+A new theory is needed which I will call ``ariscat'' which is set here:
+
+=SML
+open_theory "misc2";
+force_new_theory "ariscat";
+=TEX
+
+\ignore{
+=SML
+force_new_pc Û"'ariscat"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'ariscat";
+set_merge_pcs ["misc2", "'ariscat"];
+=TEX
+}%ignore
+
+I will use various names as infix relations, so they are here so declared.
+
+=SML
+declare_infix (300, "½");
+declare_infix (300, "izz");
+declare_infix (300, "hazz");
+declare_infix (300, "predicable_of");
+declare_infix (300, "essentially_predicable_of");
+declare_infix (300, "accidentally_predicable_of");
+=TEX
+
+and we might as well define inequality without further ado:
+
+¹HOLCONST
+Ü $Û½Ý : 'a ­ 'a ­ BOOL
+÷üüüüüü
+Ü µx y· x ½ y ¤ ³ x = y
+°
+
+\subsection{Categories}
+
+Aristotle has a system of categories, and these seem central to the topic.
+Much hang on what these are, and to get a nice structure to our theory it seems advisable to do a bit of ``category theory'' first.
+Of course this is not at all the same thing as the branch of mathematics which now goes by that name, but the choice of name for the mathematics was not entirely quixotic and at some point it might be interesting to think about the relationship between the two kinds of category theory.
+
+Among these categories that of substances plays a special role.
+Substances can be particular in which case they correspond to some individual, or not, in which case they are sets of individuals.
+The particulars of the other categories are attributes, and the non-individuals are sets of attributes.
+I don't think you can have sigleton sets, so we can model all these categories as sets of sets in which the singleton sets are the individuals.
+Attributes can also be considered as sets of individual substances and so there is a type difference between the category of substances and the other categories.
+
+The following introduce new types and type abbreviations for modelling Aristotle's categories.
+
+\begin{description}
+\item ACAT is a type of attribute categories
+\item ISUB is a type of individual substances
+\item CATM is the type of the things which are in categories.
+
+This is a `disjoint union', which means that there are two kinds of thing which one finds in categories, either a set of individual substances (using singleton sets to represent individual substances), or a set of properties of individual substances tagged with an attribute category.
+
+\item CAT is a type abbreviation for a notion of category which is either an attribute category or some other category (which will stand for the category of substances).
+
+\end{description}
+
+=SML
+new_type(Û"ACAT"Ý, 0);
+new_type(Û"ISUB"Ý, 0);
+declare_type_abbrev (Û"CATM"Ý, [], ”ISUB ð + (ACAT ¸ (ISUB ­ BOOL)ð)®);
+declare_type_abbrev (Û"CAT"Ý, [], ”ONE + ACAT®);
+=TEX
+
+We name the category of substances.
+
+¹HOLCONST
+Ü ÛCatSubsÝ : CAT
+÷üüüüüü
+Ü CatSubs = InL One
+°
+
+Now we define various operators over categories and their constituents which suffice for the development of an appropriate theory, in the context of which rest of the Aristotelian terminology will we hope prove definable.
+
+First ``projection'' functions which yield the constituents of $MCAT$s.
+
+¹HOLCONST
+Ü ÛCatÝ : CATM ­ CAT
+÷üüüüüü
+Ü µx· Cat x = if IsL x then CatSubs else InR(Fst (OutR x))
+°
+
+¹HOLCONST
+Ü ÛIndvSetÝ : CATM ­ ISUB ð
+÷üüüüüü
+Ü µx· IndvSet x = OutL x
+°
+
+¹HOLCONST
+Ü ÛAttrSetÝ : CATM ­ (ISUB ­ BOOL)ð
+÷üüüüüü
+Ü µx· AttrSet x = Snd(OutR x)
+°
+
+This one turns out handy.
+
+¹HOLCONST
+Ü ÛCatSetÝ : CATM ­ (ISUB + (ISUB ­ BOOL))ð
+÷üüüüüü
+Ü µx· CatSet x =
+Ü	if Cat x = CatSubs
+Ü	then {y | ¶z· z  IndvSet x ± y = InL z}
+Ü	else {y | ¶z· z  AttrSet x ± y = InR z}
+°
+
+With these definitions in place we get a useful characterisation of identity for elements of $CATM$.
+
+=GFT
+catm_eq_lemma =
+	ô µ A B· A = B ¤ Cat A = Cat B ± CatSet A = CatSet B
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µA B· A = B ¤ Cat A =  Cat B ± CatSet A = CatSet B®);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬Cat®, get_spec ¬CatSet®]);
+a (strip_asm_tac (µ_elim ¬A® sum_cases_thm) THEN asm_rewrite_tac[]
+	THEN REPEAT_N 3 (TRY strip_tac)
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T (asm_tac o eq_sym_rule)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (lemma_tac ¬IsL B®);
+(* *** Goal "2.1" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN asm_rewrite_tac[get_spec ¬CatSubs®]);
+(* *** Goal "2.2" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN rewrite_tac[asm_rule ¬IsL B®, sets_ext_clauses, get_spec ¬IndvSet®]);
+a (strip_tac);
+a (lemma_tac ¬³ y = OutL B®);
+(* *** Goal "2.2.1" *** *)
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[get_spec ¬InL®]);
+a (GET_ASM_T ¬IsL B® (rewrite_thm_tac o (rewrite_rule [sum_clauses])));
+(* *** Goal "2.2.2" *** *)
+a (swap_nth_asm_concl_tac 1 THEN rewrite_tac[sets_ext_clauses]);
+a (swap_nth_asm_concl_tac 1);
+(* *** Goal "2.2.2.1" *** *)
+a (strip_tac THEN ¶_tac ¬InL x® THEN asm_rewrite_tac[]);
+a (contr_tac THEN asm_fc_tac[] THEN_TRY all_var_elim_asm_tac);
+a (spec_nth_asm_tac 2 ¬x®);
+(* *** Goal "2.2.2.2" *** *)
+a (strip_tac THEN ¶_tac ¬InL x® THEN asm_rewrite_tac[]);
+a (contr_tac THEN asm_fc_tac[] THEN_TRY all_var_elim_asm_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+(* *** Goal "3" *** *)
+a (POP_ASM_T (asm_tac o eq_sym_rule) THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+a (lemma_tac ¬³ IsL B®);
+(* *** Goal "4.1" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN asm_rewrite_tac[get_spec ¬CatSubs®]);
+(* *** Goal "4.2" *** *)
+a (swap_nth_asm_concl_tac 2
+	THEN rewrite_tac[asm_rule ¬³ IsL B®, sets_ext_clauses, get_spec ¬IndvSet®]);
+a (strip_tac);
+a (lemma_tac ¬³ z = OutR B®);
+(* *** Goal "4.2.1" *** *)
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[get_spec ¬InR®]);
+a (LEMMA_T ¬IsR B® (rewrite_thm_tac o (rewrite_rule [sum_clauses])));
+a (DROP_ASM_T ¬³ IsL B® ante_tac
+	THEN strip_asm_tac (µ_elim ¬B® sum_cases_thm)
+	THEN asm_rewrite_tac[]);
+(* *** Goal "4.2.2" *** *)
+a (asm_rewrite_tac[get_spec ¬CatSubs®, get_spec ¬AttrSet®]);
+a (lemma_tac ¬³ Snd z = Snd(OutR B)®
+	THEN1 swap_asm_concl_tac ¬³ z = OutR B®);
+(* *** Goal "4.2.2.1" *** *)
+a (LEMMA_T ¬z = (Fst z, Snd z)® pure_once_rewrite_thm_tac THEN1 prove_tac[]);
+a (pure_asm_rewrite_tac[]);
+a (LEMMA_T ¬Fst z = Fst (OutR B)® rewrite_thm_tac);
+a (swap_asm_concl_tac ¬InR (Fst z) = (if IsL B then CatSubs else InR (Fst (OutR B)))®);
+a (asm_rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac [sets_ext_clauses]);
+a (swap_nth_asm_concl_tac 1);
+a (strip_tac THEN ¶_tac ¬InR x® THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
+a (spec_nth_asm_tac 1 ¬x®);
+a (spec_nth_asm_tac 1 ¬z'®);
+(* *** Goal "4.2.2.2.2" *** *)
+a (strip_tac THEN ¶_tac ¬InR x® THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
+(* *** Goal "4.2.2.2.2.1" *** *)
+a (¶_tac ¬x®);
+a (asm_rewrite_tac []);
+(* *** Goal "4.2.2.2.2.2" *** *)
+a (¶_tac ¬z'®);
+a (asm_rewrite_tac []);
+val catm_eq_lemma = save_pop_thm "catm_eq_lemma";
+=TEX
+}%ignore
+
+\subsection{Predication}
+
+Now we can define predication.
+We do this in terms of Grice's $izz$ and $hass$.
+
+¹HOLCONST
+Ü $ÛizzÝ : CATM ­ CATM ­ BOOL
+÷üüüüüü
+Ü µA B· A izz B ¤ Cat A = Cat B ± CatSet A € CatSet B
+°
+
+¹HOLCONST
+Ü $ÛhazzÝ : CATM ­ CATM ­ BOOL
+÷üüüüüü
+Ü µA B· A hazz B ¤ Cat A = CatSubs ± ³ Cat B = CatSubs
+Ü	± ¶a· a  AttrSet B ± µs· s  IndvSet A ´ a s
+°
+
+That was reasonably neat, but the definition of $izz$ isn't terribly convenient for proving things.
+Lets have some $izz$ lemmas:
+
+=GFT
+izz_lemma1 =
+    ô µ A B· Cat A = CatSubs ´ (A izz B ¤ Cat B = CatSubs ± IndvSet A € IndvSet B)
+
+izz_lemma2 =
+    ô µ A B· Cat B = CatSubs ´ (A izz B ¤ Cat A = CatSubs ± IndvSet A € IndvSet B)
+
+izz_lemma3 =
+    ô µ A B· ³ Cat A = CatSubs ´ (A izz B ¤ Cat B = Cat A ± AttrSet A € AttrSet B)
+
+izz_lemma4 =
+    ô µ A B· ³ Cat B = CatSubs ´ (A izz B ¤ Cat B = Cat A ± AttrSet A € AttrSet B)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µA B· Cat A = CatSubs ´ (A izz B ¤ Cat B = CatSubs ± IndvSet A € IndvSet B)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬$izz®, get_spec ¬CatSet®]); 
+a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬(InL x):ISUB + (ISUB ­ BOOL)®);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¬x®);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (¶_tac ¬z® THEN asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+val izz_lemma1 = save_pop_thm "izz_lemma1";
+
+set_goal([], ¬µA B· Cat B = CatSubs ´ (A izz B ¤ Cat A = CatSubs ± IndvSet A € IndvSet B)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬$izz®, get_spec ¬CatSet®]); 
+a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬(InL x):ISUB + (ISUB ­ BOOL)®);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¬x®);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (¶_tac ¬z® THEN asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+val izz_lemma2 = save_pop_thm "izz_lemma2";
+
+set_goal([], ¬µA B· ³ Cat A = CatSubs ´ (A izz B ¤ Cat B = Cat A ± AttrSet A € AttrSet B)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬$izz®, get_spec ¬CatSet®]); 
+a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses]);
+a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[] THEN strip_tac THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬(InR x):ISUB + (ISUB ­ BOOL)®);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¬x®);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (¶_tac ¬z® THEN asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+val izz_lemma3 = save_pop_thm "izz_lemma3";
+
+set_goal([], ¬µA B· ³ Cat B = CatSubs ´ (A izz B ¤ Cat B = Cat A ± AttrSet A € AttrSet B)®);
+a (REPEAT µ_tac THEN rewrite_tac[get_spec ¬$izz®, get_spec ¬CatSet®]); 
+a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¬(InR x):ISUB + (ISUB ­ BOOL)®);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¬x®);
+(* *** Goal "1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac 
+	THEN SYM_ASMS_T rewrite_tac
+	THEN asm_rewrite_tac[sets_ext_clauses]
+	THEN REPEAT strip_tac);
+a (¶_tac ¬z® THEN asm_rewrite_tac[]);
+a (all_asm_fc_tac[]);
+val izz_lemma4 = save_pop_thm "izz_lemma4";
+=TEX
+}%ignore
+
+There is a certain amount of duplication of terminology here, since essential and accidental predication seem to be just $izz$ and $hazz$ backwards.
+I'm not so happy with the ``ables'' here, for what is clearly meant is ``truly predicable'', which is not quite the same thing.
+Better names would be simply ``is\_essentially'' and ``is\_accidentally'', lacking the ambiguity of ``able'' (but then they would have to be the other way round, exactly the same as $izz$ and $hazz$).
+
+Anyway here are the definitions (keeping the names (more or less) as they were for the present):
+¹HOLCONST
+Ü $Ûessentially_predicable_ofÝ : CATM ­ CATM ­ BOOL
+÷üüüüüü
+Ü µA B· A essentially_predicable_of B ¤ B izz A
+°
+
+¹HOLCONST
+Ü $Ûaccidentally_predicable_ofÝ : CATM ­ CATM ­ BOOL
+÷üüüüüü
+Ü µA B· A accidentally_predicable_of B ¤ B hazz A
+°
+
+Aristotelian predication is then:
+
+¹HOLCONST
+Ü $Ûpredicable_ofÝ : CATM ­ CATM ­ BOOL
+÷üüüüüü
+Ü µA B· A predicable_of B ¤ A essentially_predicable_of B ² A accidentally_predicable_of B
+°
+
+\subsection{Other Definitions}
+
+¹HOLCONST
+Ü ÛparticularÝ : CATM ­ BOOL
+÷üüüüüü
+Ü µA· particular A ¤ ¶a· CatSet A = {a}
+°
+
+¹HOLCONST
+Ü ÛuniversalÝ : CATM ­ BOOL
+÷üüüüüü
+Ü µA· universal A ¤ ³ particular A
+°
+
+¹HOLCONST
+Ü ÛindividualÝ : CATM ­ BOOL
+÷üüüüüü
+Ü µA· individual A ¤ particular A ± Cat A = CatSubs
+°
+
+¹HOLCONST
+Ü ÛformÝ : CATM ­ BOOL
+÷üüüüüü
+Ü µA· form A ¤ universal A ± Cat A = CatSubs
+°
+
+\subsection{The Grice/Code/Speranza Formulae}
+
+Now here's the list of things which Speranza posted (more or less) which I am calling ``conjectures'' and will attempt to prove.
+Not sure where they really arose or how much they have been mutilated in the transition from Aristotle via Grice, Code and Speranza or by myself.
+
+\pagebreak
+First I quote exactly what Speranza posted (apart from line breaks, spacing and obvious typos):
+
+=GFT
+I offer some symbolisation alla Grice/Code:
+
+1. A izz A.
+2. (A izz B & B izz C) --> A izz C.
+3. A hazz B -> -(A izz B).
+4. A hazz B iff A hazz Some-Thing that izz B.
+5. Each universal is a form.
+6. (A hazz B & A is a particular) -> there is a C such that (C =/= A) &(A izz B).
+7. A is predicable of B iff ((B  izz A) v (B hazz Something that izz A).
+8. A is essentially predicable of B iff B izz A.
+9. A is accidentally predicable of B iff B hazz something that izz A.
+10. A = B iff A izz B & B izz A.
+11. A is an individual iff (Nec)(For all B) B izz A -> A izz B
+12. A is a particular iff (Nec)(For all B) A is predicable of B -> (A izz B & B izz A)
+13. A is a universal iff (Poss) (There is a B) A is predicable of A & -(A izz B & B izz A)
+14. If A is Some Thing, A is an  individual.
+15. If A is a Form, A is Some Thing and Universal.
+16. A is predicable of B iff (B izz A) v (B hazz Some Thing that Izz A).
+17. A is essentially predicable of A.
+18. A is accidentally predicable of B ->  A =/= B
+19. - (A is accidentally predicable of B) -> A =/= B.
+20. A is a particular -> A is an individual.
+21. A is a particular -> No Thing that is Not Identical with A izz A.
+22. No Thing is both particular & a Form.
+23. A is a Form -> nothing that is not identical with A izz A.
+24. X is a particular -> there is no form B such that A izz B.
+25. A is a form -> ((A is predicable of B & A =/= B) -> B hazz A)
+26. (A is a form & B is a particular) -> (A is predicable of B iff B hazz A).
+27. (A is particular & B is a universal & predicable of A)
+	-> there is a C such that (A =/= C  & C is essentially predicable of A)
+28. If there are particulars, of which universals are predicable,
+	not every universal is Some Thing.
+29. Each universal is Some Thing.
+30. If A is a particular, there is no B such that
+	(A =/= B &  B is essentially predicable of A).
+31. (A is predicable of B & A =/= B) -> A is accidentally predicable of B.
+=TEX
+
+Then my transcription into ProofPower HOL.
+The following is a bit of program in a programming language called SML, which stands for "Standard Meta Language"!
+It is basically naming various terms in HOL, the name on the left `c01' (short for `conjecture 1'), the term on the right quoted in ``Quine corners''.
+\footnote{``Quine corners'' are a notation originally used by Quine for Godel numbers, i.e., in Quine's use `¬43®' is a friendly way of writing doen the Godel number of the numeral `43'.
+In ProofPower HOL these corners are used to refer to HOL terms in the metalanguage SML.
+In HOL, a formula is a term of type ”BOOL® (the opening ” is used when quoting a type rather than a term).}
+
+
+=SML
+val c01 = ¬µA· A izz A®;
+val c01b = ¬µA· ³ A hazz A®;
+val c02 = ¬µA B C· A izz B ± B izz C ´ A izz C®;
+val c03 = ¬µA B· A hazz B ´ ³ A izz B®;
+val c03b = ¬µA B· A hazz B ´ ³ A = B®;
+val c04a = ¬µA B C· A hazz B ± B izz C ´ A hazz C®;
+val c04 = ¬µA B· A hazz B ¤ ¶C· A hazz C ± C izz B®;
+val c04b = ¬µA B C· A izz B ± B hazz C ´ A hazz C®;
+val c05 = ¬µx· universal x ´ form x®;
+val c05b = ¬µx· form x ´ universal x®;
+val c06 = ¬µA B· A hazz B ± particular A ´ ¶C· C ½ A ± A izz B®; 
+val c06n = ¬³ µA B· A hazz B ± particular A ´ ¶C· C ½ A ± A izz B®; 
+val c07 = ¬µA B· A predicable_of B ¤ (B izz A) ² ¶C· B hazz C ± C izz A®;
+val c08 = ¬µA· A essentially_predicable_of B ¤ B izz A®;
+val c09 = ¬µA· A accidentally_predicable_of B ¤ ¶C· B hazz C ± C izz A®;
+val c10 = ¬µA B· A = B ¤ A izz B ± B izz A®;
+val c11 = ¬µA B· individual A ¤ ©(µB· B izz A ´ A izz B)®;
+val c12 = ¬µA· particular A ¤ ©(µB· A predicable_of B ´ A izz B ± B izz A)®;
+val c13 = ¬µA· universal A ¤ ¨(¶B· (A predicable_of A ± ³(A izz B ± B izz A)))®;
+val c14 = ¬µA· thing A ´ individual A®;
+val c15 = ¬µA· form A ´ thing A ± universal A®;
+val c16 = ¬µA B· A predicable_of B ¤ (B izz A) ² ¶C· (thing C ± B hazz C ± C izz A)®;
+val c17 = ¬µA· A essentially_predicable_of A®;
+val c18 = ¬µA· A accidentally_predicable_of B ´ A ½ B®;
+val c19 = ¬µA B· ³ (A accidentally_predicable_of B) ´ A ½ B®;
+val c19n = ¬³ µA B· ³ (A accidentally_predicable_of B) ´ A ½ B®;
+val c20 = ¬µA· particular A ´ individual A®;
+val c20b = ¬µA· individual A ´ particular A®;
+val c21 = ¬µA· particular A ´ ³ ¶C· C ½ A ± C izz A®;
+val c22 = ¬³ ¶A· particular A ± form A®;
+val c23 = ¬µA· form A ´ ³ ¶C· C ½ A ± C izz A®;
+val c24 = ¬µX A· particular X ´ ¶B· form B ± A izz B®;
+val c25 = ¬µA· form A ´ A predicable_of B ± A ½ B ´ B hazz A®;
+val c26 = ¬µA B· form A ± particular B ´ (A predicable_of B ¤ B hazz A)®;
+val c27 = ¬µA B· particular A ± universal B ± B predicable_of A
+		´ ¶C· (A ½ C ± C essentially_predicable_of A)®;
+val c28 = ¬(¶P· particular P ± ¶U· universal U ± U predicable_of P)
+		´ ³ (µU· universal U ´ thing U)®;
+val c29 = ¬µU· universal U ´ thing U®;
+val c30 = ¬µA· particular A ´ ³ ¶B· (A ½ B ± B essentially_predicable_of A)®;
+val c31 = ¬µA B· A predicable_of B ± A ½ B ´ A accidentally_predicable_of B®;
+=TEX
+
+I'm not going to show the proofs because they are unintelligible, but I will make a selection presentable.
+
+\ignore{
+=SML
+set_goal([], c01);
+a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¬$izz®]);
+val l01 = save_pop_thm "l01";
+
+set_goal([], c01b);
+a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¬$hazz®] THEN contr_tac);
+val l01b = save_pop_thm "l01b";
+
+set_goal([], c02);
+a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¬$izz®]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]
+	THEN all_asm_fc_tac[€_trans_thm]);
+val l02 = save_pop_thm "l02";
+
+set_goal([], c03);
+a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¬$izz®, get_spec ¬$hazz®] THEN contr_tac);
+a (DROP_NTH_ASM_T 5 ante_tac
+	THEN DROP_NTH_ASM_T 5 ante_tac
+	THEN asm_rewrite_tac[]);
+val l03 = save_pop_thm "l03";
+
+set_goal([], c03b);
+a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¬$izz®, get_spec ¬$hazz®] THEN contr_tac);
+a (all_var_elim_asm_tac);
+val l03b = save_pop_thm "l03b";
+
+set_goal([], c04a);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$hazz®, get_spec ¬CatSet®]
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [izz_lemma2]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+a (all_fc_tac [list_µ_elim [¬B®] izz_lemma3]);
+a (POP_ASM_T ante_tac THEN rewrite_tac [sets_ext_clauses]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+a (¶_tac ¬a® THEN contr_tac);
+val l04a = save_pop_thm "l04a";
+
+set_goal([], c04);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (¶_tac ¬B® THEN asm_rewrite_tac[l01]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [list_µ_elim [¬A®, ¬C®] l04a]);
+val l04 = save_pop_thm "l04";
+
+set_goal([], c04b);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$hazz®, get_spec ¬CatSet®]
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [izz_lemma2]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¬a®);
+a (FC_T (MAP_EVERY ante_tac) [get_spec ¬$izz®]);
+a (strip_tac THEN asm_rewrite_tac [get_spec ¬CatSet®, sets_ext_clauses]
+	THEN strip_tac);
+a (¶_tac ¬InL s® THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (¶_tac ¬s® THEN REPEAT strip_tac);
+(* *** Goal "2.2" *** *)
+a (contr_tac THEN asm_fc_tac[]);
+a (all_var_elim_asm_tac);
+val l04b = save_pop_thm "l04b";
+
+set_goal([], c05b);
+a (rewrite_tac [get_spec ¬form®] THEN REPEAT strip_tac);
+val l05b = save_pop_thm "l05b";
+
+=IGN
+set_goal([], c06n);
+a (strip_tac);
+a (¶_tac ¬InL{Åx:ISUB·T}:CATM® THEN strip_tac);
+a (¶_tac ¬InR((Åx:ACAT·T), {Ìx:ISUB·T}):CATM® THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac (map get_spec [¬$hazz®, ¬Cat®, ¬CatSubs®]));
+a (¶_tac ¬Ìx:ISUB·T®);
+a (rewrite_tac (map get_spec [¬AttrSet®]));
+(* *** Goal "2" *** *)
+a (rewrite_tac (map get_spec [¬particular®, ¬individual®]) THEN strip_tac);
+(* *** Goal "2.1" *** *)
+a (¶_tac ¬InL(Å x:ISUB· T):ISUB + (ISUB ­ BOOL)®);
+a (rewrite_tac [get_spec ¬CatSet®, get_spec ¬Cat®, get_spec ¬IndvSet®, sets_ext_clauses]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬Å x:ISUB· T®);
+a (rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (rewrite_tac [get_spec ¬Cat®]);
+(* *** Goal "3" *** *)
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[get_spec ¬$izz®, get_spec ¬Cat®, get_spec ¬CatSubs®]);
+val l06n = save_pop_thm "l06n";
+=SML
+
+set_goal([], c07);
+a (REPEAT µ_tac);
+a (rewrite_tac [get_spec ¬$predicable_of®, get_spec ¬$essentially_predicable_of®,
+		get_spec ¬$accidentally_predicable_of®]);
+a (rewrite_tac [list_µ_elim [¬B®, ¬A®] l04]);
+val l07 = save_pop_thm "l07";
+
+set_goal([], c08);
+a (rewrite_tac [get_spec ¬$essentially_predicable_of®]);
+val l08 = save_pop_thm "l08";
+
+set_goal([], c09);
+a (REPEAT µ_tac);
+a (rewrite_tac [get_spec ¬$accidentally_predicable_of®, list_µ_elim [¬B®, ¬A®] l04]);
+val l09 = save_pop_thm "l09";
+
+set_goal([], c10);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$izz®, catm_eq_lemma]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¬µa b· a € b ± b € a ´ a = b®]);
+val l10 = save_pop_thm "l10";
+
+set_goal([], c17);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$essentially_predicable_of®, l01]);
+val l17 = save_pop_thm "l17";
+
+set_goal([], c18);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$accidentally_predicable_of®, get_spec ¬$½®]);
+a (strip_tac THEN fc_tac [l03b]);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+val l18 = save_pop_thm "l18";
+
+set_goal([], c19n);
+a (rewrite_tac [get_spec ¬$accidentally_predicable_of®, get_spec ¬$½®]);
+a (strip_tac THEN ¶_tac ¬A®);
+a (strip_tac THEN ¶_tac ¬A®);
+a (contr_tac);
+a (fc_tac [l03]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[l01]);
+val l19n = save_pop_thm "l19n";
+
+=IGN
+set_goal([], c20);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$particular®]
+	THEN contr_tac);
+val l20 = save_pop_thm "l20";
+=SML
+
+set_goal([], c20b);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬individual®]
+	THEN contr_tac);
+val l20 = save_pop_thm "l20b";
+
+=TEX
+
+These are the ones I have proved (trust me, or download the script and re-run it).
+
+=TEX
+}%ignore
+
+=GFT
+l01	= ô µ A· A izz A
+l01b 	= ô µ A· ³ A hazz A
+l02	= ô µ A B C· A izz B ± B izz C ´ A izz C
+l03	= ô µ A B· A hazz B ´ ³ A izz B
+l03b 	= ô µ A B· A hazz B ´ ³ A = B
+l04a	= ô µ A B C· A hazz B ± B izz C ´ A hazz C
+l04	= ô µ A B· A hazz B ¤ (¶ C· A hazz C ± C izz B) 
+l04b 	= ô µ A B C· A izz B ± B hazz C ´ A hazz C
+l06n	= ô ³ (µ A B· A hazz B ± particular A ´ (¶ C· C ½ A ± A izz B))
+l07 	= ô µ A B· A predicable_of B ¤ B izz A ² (¶ C· B hazz C ± C izz A)
+l08 	= ô µ A· A essentially_predicable_of B ¤ B izz A
+l09 	= ô µ A· A accidentally_predicable_of B ¤ (¶ C· B hazz C ± C izz A)
+l10	= ô µ A B· A = B ¤ A izz B ± B izz A
+l17 	= ô µ A· A essentially_predicable_of A
+l19n 	= ô ³ (µ A B· ³ A accidentally_predicable_of B ´ A ½ B)
+l20b 	= ô µ A· individual A ´ particular A
+=TEX
+
+\subsection{Some Comments on The Conjectures}
+
+The main problem with the conjectures is that as a group they are inconsistent.
+Consequently, one cannot find definitions which are consistent with all the conjectures.
+
+So first I will expose some of the most obvious contradications which flow from the conjectures.
+
+\begin{enumerate}
+\item From 5 and 15 we conclude that form and universal are coextensive.
+
+\end{enumerate}
+
+Here are some observations on specific conjectures.
+
+\begin{description}
+
+\item[c01]
+Note here that this is quantified over everything, and hence over individuals, whereas Aristotle describes individuals as thing of which one may predicate, but which are not themselves predicable.
+Perhaps this inderdiction applies to $hazz$ but not to $izz$, to accidental but not essential predication.
+(We should add the rule ¬³ A hazz A® which is easy to prove.)
+I don't know any more detail about Aristotle's attitude towards predication by individuals.
+If one cannot, where do we stand when we do, as in ``Socrates is Socrates'' and ``Socrates is Aristotle''.
+Anyway, if these were to have a truth value (which surely they do) then the truth value will be as in this rule.
+
+\item[c02]
+Behind the scenes this is transitivity of set inclusion.
+
+\item[c03]
+This is because $izz$ is intracategorial and $hazz$ is intercategorial.
+An obvious but useful corrolary is that they are not equal (c03b).
+
+\item[c04]
+This, and most of the other theorems involving existential quantification, is rather odd.
+Its proof depends on the conjecture $c04a$, which we have proven, and involves no existential quantification, but its content is not significantly greater than that rule.
+From right to left $l04$ is $l04b$ (you just pull out the existential and it turns into a universal).
+Frin left to right $l04$ is trivial, since $B$ serves as a witness for the existential.
+
+Ideally we would be working with claims which are expressible syllogistically, i.e. without benefit of quantifiers.
+We can make an exception for universals on the left, since these are interconvertible with the conjecture with free variables instead which we can think of as schemata.
+Where an existential quatifier appears in a negative context it will turn universal if pulled out to the top level and can therefore be dispensed with.
+Elsewhere its worth asking whether its content is significant (including, as here, one half of the content implicit in putting an existential under an equivalence).
+
+$co4b$ is an obvious similar result to $c04a$.
+
+\item[c05]
+According to my definition this is the wrong way round.
+
+\item[c06]
+As it stands this is provably false since we have $¬A hazz B®$ on the left, which entails that $A$ and $B$ are not of the same category, and $¬A izz B®$ in the right, which entails that they are of the same category.
+
+\item[c07]
+This, at the expense of using an existential, nevertheless tells us nothing that is not immediate from the definitions.
+
+\item[c08]
+Is just our definition.
+
+\item[c09]
+This turns into $c04$ (apart from the variable names) once you expand the definition of {\it accidentally\_predicable\_of}.
+
+\item[c10]
+Behind the scenes, {\it izz} is set inclusion, so this is obvious.
+
+\item[c11-13]
+These contain modal operators which cannot be defined using this model.
+
+\item[c14-c15]
+I've not worked out what a ``thing'' is.
+Not even sure that I should have rendered Speranza's version using that term.
+However, I do think I know that {\it particular} and {\it universal} are opposites (contradictories), and hence I could conclude from these two conjectures that there can be no {\it forms} since they entail that a form is both individual and universal.
+Sounds like I have the wrong end of some stick or other.
+
+\item[c16]
+I don't know enough about ``thing''s to prove this one.
+
+\item[c17]
+This is $c01$ in other words.
+
+\item[c018]
+This is $c03b$ in other words.
+
+\item[c19]
+
+This is the contrapositive of the claim that {\it accidentally\_predicable\_of} is reflexive, which is false.
+Would be true for {\it essentially\_predicable\_of}, but we already have that stated directly as c17.
+
+\item[c20]
+Immediate from my definitions.
+
+\item[c21]
+This turns out to be false under my definitions, because I have not excluded the possibility of an empty predicate.
+However, one wonders why this should be excluded.
+
+If I go over to a model adquate for modal operators then it will be easy to exclude this possibility.
+
+\item[c21]
+Fails for same reason as c20, though I could fix this by making the definition of {\it universal} insist on more than one member.
+
+\item[c23]
+I don't know why this should be true.
+Any particular which partakes of a form contradicts it.
+
+\item[c24]
+This is not true in the present model, because we might have only one particular, and hence no non-trivial forms.
+
+\item[c25-c26]
+These two tell me that forms are not substance, but attributes, which contradicts c24 which tells us that there are subtantial forms (if particulars are substances). 
+
+\item[c27]
+I don't see why this should be true.
+
+\item[c28-c29]
+These two together entail that no universal is predicable of any particular.
+
+\item[c30]
+This says that nothing is essentially predicable of a particular except itself.
+
+\item[c31]
+This is a stronger version of c30 which says that, even if something isn't particular, nothing but itself is essentially predicable of it.
+
+\end{description}
+
+
+
+
+\section{POSTSCRIPT}\label{POSTSCRIPT}
+
+These are the kinds of thing which {\it might} happen in future issues of this document:
+
+\begin{itemize}
+\item If I get constructive feedback (pointing out errors counts, telling me its a waste of time doesn't, explaining bits of Aristotle I'm getting wrong would be great) then I will probably do something about it.
+
+\item There is a good chance I will get to know something about what Aristotle really said and make improvements arising from this.
+In that case I would like to put some hyperlinks into my online hypertext of Aristotle's relevant works, connecting the specific features of the model with the passages in Aristotle which they reflect.
+
+\item I think it would not be much harder to do a model in which modal operators are definable, and I would like to know whether I am right, so there is a good chance I will produce a modal version (with most of the same defects in other respects).
+I may or may not then discard the non-modal version.
+
+\item If I were to continue then I am inclined to think that some formalisation of Aristotle's syllogistic logic should intervene between the categories and the metaphysics.
+
+\item I am interested in the methods, and I may spend more time trying to describe them in a way which might be intelligible to philosophers.
+
+\item If this ever becomes a good approximation to Aristotle's position there would then be some philosophical analysis of the metaphysics (by contrast with a purely logical analysis), and somewhere there are points to be made about the kind of analysis which I am aiming for.
+\end{itemize}
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{ariscat.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}

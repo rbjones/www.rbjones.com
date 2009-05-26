@@ -74,7 +74,7 @@ sub oMBIndexEntry
 	print OINDEX <<EOF;
 <TR VALIGN=TOP>
 $bookDisplay
-<TD><A HREF="$ifile">Book $book</A></TD>
+<TD><A HREF="$ifile">$bookSection $book</A></TD>
 <TD><FONT SIZE=2>$bookTitle</FONT></TD>
 </TR>
 EOF
@@ -99,11 +99,11 @@ sub nextBookIndex
 	open (BOOKINDEX, "> $direc/$bookIndexFile");
 	print BOOKINDEX <<EOF;
 <HTML><HEAD><TITLE>
-$mainTitle - index for $sourceTitle Book $book - $bookTitle
+$mainTitle - index for $sourceTitle $bookSection $book - $bookTitle
 </TITLE></HEAD>
 $body
 <A HREF="$volIndexRef">$upimg</A>
-<CENTER><H3>$mainTitle - index for $sourceTitle Book $book</H3>
+<CENTER><H3>$mainTitle - index for $sourceTitle $bookSection $book</H3>
 <H3>$bookTitle</H3>
 </CENTER>
 <P>
@@ -145,12 +145,12 @@ sub nextPartIndex
 {	open (PARTINDEX, "> $direc/$partIFile");
 	print PARTINDEX <<EOF;
 <HTML><HEAD><TITLE>
-$mainTitle - index for $sourceTitle Book $book Part $part - $partTitle
+$mainTitle - index for $sourceTitle $bookSection $book Part $part - $partTitle
 </TITLE></HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
-<CENTER><H3>$mainTitle - index for $sourceTitle Book $book Part $part</H3>
+<CENTER><H3>$mainTitle - index for $sourceTitle $bookSection $book Part $part</H3>
 <H3>$partTitle</H3>
 <P>
 <TABLE>
@@ -172,7 +172,7 @@ sub closePartIndex
 </TABLE>
 <P>
 <HR WIDTH=70%>
-$bookIndexRef$upimgm</A>$home HTML by $rbjsig created 94/10/29 modified $modified
+$bookIndexRef$upimgm</A>$home HTML by $rbjsig created $created modified $modified
 </CENTER></BODY></HTML>
 EOF
 	close PARTINDEX;
@@ -188,12 +188,12 @@ sub startPart
 {	open (OUTFILE, "> $direc/$partCFile");
 	print OUTFILE <<EOF;
 <HTML><HEAD><TITLE>
-$mainTitle $sourceTitle Book $book Part $part $partTitle
+$mainTitle $sourceTitle $bookSection $book Part $part $partTitle
 </TITLE></HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
-<CENTER><H3>$mainTitle $sourceTitle Book $book Part $part</H3>
+<CENTER><H3>$mainTitle $sourceTitle $bookSection $book Part $part</H3>
 <H2>$partTitle</H2></CENTER>
 <P>
 EOF

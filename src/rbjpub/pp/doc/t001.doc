@@ -1,5 +1,5 @@
 =IGN
-$Id: t001.doc,v 1.11 2009/05/21 08:59:45 rbj Exp $
+$Id: t001.doc,v 1.12 2009/05/26 18:46:37 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -14,7 +14,7 @@ $Id: t001.doc,v 1.11 2009/05/21 08:59:45 rbj Exp $
 \newcommand{\ignore}[1]{}
 
 \makeindex
-\title{Abstract Semantics and Metaphysics}
+\title{Abstract Semantics}
 \author{Roger Bishop Jones}
 \makeindex
 \author{R.B.Jones\\ rbj01@rbjones.com}
@@ -37,12 +37,12 @@ Some generic formal models of abstract semantics.
 
 Created 2004/07/15
 
-Last Change $ $Date: 2009/05/21 08:59:45 $ $
+Last Change $ $Date: 2009/05/26 18:46:37 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t001.pdf}
 
-$ $Id: t001.doc,v 1.11 2009/05/21 08:59:45 rbj Exp $ $
+$ $Id: t001.doc,v 1.12 2009/05/26 18:46:37 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -339,547 +339,87 @@ A proposition is `necessary' if it takes truth value `T' in every possible world
 ‹ µpem (p:'P)∑ contingent pem p § ∂w1 w2:'W∑ ≥ pem(p, w1) = pem(p, w2)
 ∞
 
-\section{ARISTOTLE'S METAPHYSICS}
 
-This section is for some experiments in formalising in HOL of material modelling Aristotle's metaphysics which originated in work of Grice and Code and came to me from a \href{http://rbjones.com/pipermail/hist-analytic_rbjones.com/2009q2/000258.html}{posting of J.L. Speranza} on the hist-analytic mailing list.
 
-What Speranza posted was the list of formulae which are named below as c01 through c31 (though not exactly as given, I have massaged them to be acceptable to HOL and also have quantified over all free variables).
+[to be completed!]
 
-My aim at present is to come up with a model which satisfies these propositions.
+\section{LEIBNIZ ON IDENTITY}
 
-A new theory is needed which I will call ``ariscat'' and some goobledy-gook to set that up:
+In higher order logic Leibniz's identity of indiscernables is a trivial principle.
 
-=SML
-open_theory "misc2";
-force_new_theory "ariscat";
-=TEX
-
-\ignore{
-=SML
-force_new_pc €"'ariscat"›;
-merge_pcs ["'savedthm_cs_∂_proof"] "'ariscat";
-set_merge_pcs ["misc2", "'ariscat"];
-=TEX
-}%ignore
-
-I will use the following names as infix relations, so they are here so declared.
-
-=SML
-declare_infix (300, "Ω");
-declare_infix (300, "izz");
-declare_infix (300, "hazz");
-declare_infix (300, "predicable_of");
-declare_infix (300, "essentially_predicable_of");
-declare_infix (300, "accidentally_predicable_of");
-=TEX
-
-and we might as well define equality without further ado:
-
-πHOLCONST
-‹ $€Ω› : 'a ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µx y∑ x Ω y § ≥ x = y
-∞
-
-\subsection{Aristotelian Category Theory}
-
-Aristotle has a system of categories, and these seem central to the topic.
-Much hang on what these are, and to get a nice structure to our theory it seems advisable to do a bit of ``category theory'' first.
-Of course this is not at all the same thing as the branch of mathematics which now goes by that name, but the choice of name for the mathematics was not entirely quixotic and at some point it might be interesting to think about the relationship between the two kinds of category theory.
-
-Much of the semi-formal material which we are trying to fully formalise involves general talk about the kinds of things which are found in categories.
-On the face of it the formulae are probably intended as schemas in a first order predicate calculus, which is certainly not they way we will treat them, so a few words explaining why not are in order here.
-
-We are working here in a higher-order logic.
-In a first-order logic, it is not possible for quantify over anything but individuals.
-In first order set theory we get around that restriction by having ``individuals'' which are surrogates for all kinds of higher order objects.
-In set theory we can, by quantifying over the individuals encompass objects which represent properties of functions of every conceivable type.
-Some pragmatic issues remain which we need not go into here.
-
-When a first-order formalisation is attempted without benefit of the machinery of set theory, it often proves necessary to use schemata, which are a syntactic surrogate for quantification over higher types.
-A well known example is the theory PA, a first order version of Peano's axioms for arithmetic.
-Peano himself formulated his axioms for arithmetic before first order logic was invented, before indeed the foundational problems which provoked the development of type theories.
-His axiom of induction involved quantification over properties along the following lines:
+Its formulation is:
 
 =GFT
-	Ù µp∑ p(0) ± (µx∑ p(x) ¥ p(x + 1)) ¥ µx∑ p(x)
+	µx y∑ (µP∑ P(x) § P(y)) ¥ x = y
 =TEX
 
-Which we may paraphrase:
-\begin{quote}
-for all properties {it p}, if {\it p} hold for 0 and whenever {\it p} is true of some natural number it is true also of its successor, then {\it p} will be true of all natural numbers
-\end{quote}
-
-In the first order formalisation of Peano Arithmetic, known as PA, we cannot quantify over properties, so we use instead an axiom schemata, which lifts the quantification into the metalanguage and changes from quantifying over numbers to quantifying over formulae.
-Thus we have intsead something like:
-
-=GFT
-	Ù P(0) ± (µx∑ P(x) ¥ P(x + 1)) ¥ µx∑ P(x)
-=TEX
-
-Where $P$ is not a predicate in the object language, but a syntactic function in the metalanguage which yields formula.
-The first order axiom schemata describes an infinite set of properly first order axioms obtained by substituting arbitrary formulae inc which $0$ occurs for $P(0)$, and corresponding formulae for $P(x)$ and $P(x+1)$ in which $x$ and $x+1$ respectively replace occurences of $0$ in the first formula.
-
-
-
-
-
-Among these categories that of substances plays a special role.
-Substances can be particular in which case they correspond to some individual, or not, in which case they are sets of individuals.
-The particulars of the other categories are attributes, and the non-individuals are sets of attributes.
-I don't think you can have sigleton sets, so we can model all these categories as sets of sets in which the singleton sets are the individuals.
-Attributes can also be considered as sets of individual substances and so there is a type difference between the category of substances and the other categories.
-
-The following introduce new types and type abbreviations for modelling Aristotle's categories.
-
-\begin{description}
-\item ACAT is a type of attribute categories
-\item ISUB is a type of individual substances
-\item CATM is the type of the things which are in categories.
-
-This is a `disjoint union', which means that there are two kinds of thing which one finds in categories, either a set of individual substances (using singleton sets to represent individual substances), or a set of properties of individual substances tagged with an attribute category.
-
-\item CAT is a type abbreviation for a notion of category which is either an attribute category or some other category (which will stand for the category of substances).
-
-\end{description}
-
+Here is a long-winded transcript of a ProofPower proof session:
 
 =SML
-new_type(€"ACAT"›, 0);
-new_type(€"ISUB"›, 0);
-declare_type_abbrev (€"CATM"›, [], îISUB  + (ACAT ∏ (ISUB ≠ BOOL))Æ);
-declare_type_abbrev (€"CAT"›, [], îONE + ACATÆ);
+set_goal([], ¨µx y∑ (µP∑ P(x) § P(y)) ¥ x = yÆ);
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(* ?Ù *)  ¨µ x y∑ (µ P∑ P x § P y) ¥ x = yÆ
 =TEX
 
-We name the category of substances.
-
-πHOLCONST
-‹ €CatSubs› : CAT
-˜¸¸¸¸¸¸
-‹ CatSubs = InL One
-∞
-
-
-Now we define various operators over categories and their constituents which suffice for the development of an appropriate theory, in the context of which rest of the Aristotelian terminology will we hope prove definable.
-
-First ``projection'' functions which yield the constituents of $MCAT$s.
-
-πHOLCONST
-‹ €Cat› : CATM ≠ CAT
-˜¸¸¸¸¸¸
-‹ µx∑ Cat x = if IsL x then CatSubs else InR(Fst (OutR x))
-∞
-
-=GFT
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µA∑ Cat A = CatSubs § IsL AÆ);
-=TEX
-}%ignore
-
-
-πHOLCONST
-‹ €IndvSet› : CATM ≠ ISUB 
-˜¸¸¸¸¸¸
-‹ µx∑ IndvSet x = OutL x
-∞
-
-πHOLCONST
-‹ €AttrSet› : CATM ≠ (ISUB ≠ BOOL)
-˜¸¸¸¸¸¸
-‹ µx∑ AttrSet x = Snd(OutR x)
-∞
-
-This one turns out handy.
-
-πHOLCONST
-‹ €CatSet› : CATM ≠ (ISUB + (ISUB ≠ BOOL))
-˜¸¸¸¸¸¸
-‹ µx∑ CatSet x =
-‹	if Cat x = CatSubs
-‹	then {y | ∂z∑ z ç IndvSet x ± y = InL z}
-‹	else {y | ∂z∑ z ç AttrSet x ± y = InR z}
-∞
-
-With these definitions in place we get a useful characterisation of identity for elements of $CATM$.
-
-=GFT
-catm_eq_lemma =
-	Ù µ A B∑ A = B § Cat A = Cat B ± CatSet A = CatSet B
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µA B∑ A = B § Cat A =  Cat B ± CatSet A = CatSet BÆ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨CatÆ, get_spec ¨CatSetÆ]);
-a (strip_asm_tac (µ_elim ¨AÆ sum_cases_thm) THEN asm_rewrite_tac[]
-	THEN REPEAT_N 3 (TRY strip_tac)
-	THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (POP_ASM_T (asm_tac o eq_sym_rule)
-	THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (lemma_tac ¨IsL BÆ);
-(* *** Goal "2.1" *** *)
-a (swap_nth_asm_concl_tac 2
-	THEN asm_rewrite_tac[get_spec ¨CatSubsÆ]);
-(* *** Goal "2.2" *** *)
-a (swap_nth_asm_concl_tac 2
-	THEN rewrite_tac[asm_rule ¨IsL BÆ, sets_ext_clauses, get_spec ¨IndvSetÆ]);
-a (strip_tac);
-a (lemma_tac ¨≥ y = OutL BÆ);
-(* *** Goal "2.2.1" *** *)
-a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[get_spec ¨InLÆ]);
-a (GET_ASM_T ¨IsL BÆ (rewrite_thm_tac o (rewrite_rule [sum_clauses])));
-(* *** Goal "2.2.2" *** *)
-a (swap_nth_asm_concl_tac 1 THEN rewrite_tac[sets_ext_clauses]);
-a (swap_nth_asm_concl_tac 1);
-(* *** Goal "2.2.2.1" *** *)
-a (strip_tac THEN ∂_tac ¨InL xÆ THEN asm_rewrite_tac[]);
-a (contr_tac THEN asm_fc_tac[] THEN_TRY all_var_elim_asm_tac);
-a (spec_nth_asm_tac 2 ¨xÆ);
-(* *** Goal "2.2.2.2" *** *)
-a (strip_tac THEN ∂_tac ¨InL xÆ THEN asm_rewrite_tac[]);
-a (contr_tac THEN asm_fc_tac[] THEN_TRY all_var_elim_asm_tac);
-a (spec_nth_asm_tac 1 ¨xÆ);
-(* *** Goal "3" *** *)
-a (POP_ASM_T (asm_tac o eq_sym_rule) THEN asm_rewrite_tac[]);
-(* *** Goal "4" *** *)
-a (lemma_tac ¨≥ IsL BÆ);
-(* *** Goal "4.1" *** *)
-a (swap_nth_asm_concl_tac 2
-	THEN asm_rewrite_tac[get_spec ¨CatSubsÆ]);
-(* *** Goal "4.2" *** *)
-a (swap_nth_asm_concl_tac 2
-	THEN rewrite_tac[asm_rule ¨≥ IsL BÆ, sets_ext_clauses, get_spec ¨IndvSetÆ]);
-a (strip_tac);
-a (lemma_tac ¨≥ z = OutR BÆ);
-(* *** Goal "4.2.1" *** *)
-a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[get_spec ¨InRÆ]);
-a (LEMMA_T ¨IsR BÆ (rewrite_thm_tac o (rewrite_rule [sum_clauses])));
-a (DROP_ASM_T ¨≥ IsL BÆ ante_tac
-	THEN strip_asm_tac (µ_elim ¨BÆ sum_cases_thm)
-	THEN asm_rewrite_tac[]);
-(* *** Goal "4.2.2" *** *)
-a (asm_rewrite_tac[get_spec ¨CatSubsÆ, get_spec ¨AttrSetÆ]);
-a (lemma_tac ¨≥ Snd z = Snd(OutR B)Æ
-	THEN1 swap_asm_concl_tac ¨≥ z = OutR BÆ);
-(* *** Goal "4.2.2.1" *** *)
-a (LEMMA_T ¨z = (Fst z, Snd z)Æ pure_once_rewrite_thm_tac THEN1 prove_tac[]);
-a (pure_asm_rewrite_tac[]);
-a (LEMMA_T ¨Fst z = Fst (OutR B)Æ rewrite_thm_tac);
-a (swap_asm_concl_tac ¨InR (Fst z) = (if IsL B then CatSubs else InR (Fst (OutR B)))Æ);
-a (asm_rewrite_tac[]);
-a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac [sets_ext_clauses]);
-a (swap_nth_asm_concl_tac 1);
-a (strip_tac THEN ∂_tac ¨InR xÆ THEN asm_rewrite_tac[]);
-a (REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
-a (spec_nth_asm_tac 1 ¨xÆ);
-a (spec_nth_asm_tac 1 ¨z'Æ);
-(* *** Goal "4.2.2.2.2" *** *)
-a (strip_tac THEN ∂_tac ¨InR xÆ THEN asm_rewrite_tac[]);
-a (REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
-(* *** Goal "4.2.2.2.2.1" *** *)
-a (∂_tac ¨xÆ);
-a (asm_rewrite_tac []);
-(* *** Goal "4.2.2.2.2.2" *** *)
-a (∂_tac ¨z'Æ);
-a (asm_rewrite_tac []);
-val catm_eq_lemma = save_pop_thm "catm_eq_lemma";
-=TEX
-}%ignore
-
-Now we can define predication.
-We do this in terms of Grice's $izz$ and $hass$.
-
-πHOLCONST
-‹ $€izz› : CATM ≠ CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA B∑ A izz B § Cat A = Cat B ± CatSet A Ä CatSet B
-∞
-
-πHOLCONST
-‹ $€hazz› : CATM ≠ CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA B∑ A hazz B § Cat A = CatSubs ± ≥ Cat B = CatSubs
-‹	± ∂a∑ a ç AttrSet B ± µs∑ s ç IndvSet A ¥ a s
-∞
-
-That was reasonably neat, but the definition of $izz$ isn't terribly convenient for proving things.
-Lets have some $izz$ lemmas:
-
-=GFT
-izz_lemma1 =
-    Ù µ A B∑ Cat A = CatSubs ¥ (A izz B § Cat B = CatSubs ± IndvSet A Ä IndvSet B)
-
-izz_lemma2 =
-    Ù µ A B∑ Cat B = CatSubs ¥ (A izz B § Cat A = CatSubs ± IndvSet A Ä IndvSet B)
-
-izz_lemma3 =
-    Ù µ A B∑ ≥ Cat A = CatSubs ¥ (A izz B § Cat B = Cat A ± AttrSet A Ä AttrSet B)
-
-izz_lemma4 =
-    Ù µ A B∑ ≥ Cat B = CatSubs ¥ (A izz B § Cat B = Cat A ± AttrSet A Ä AttrSet B)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µA B∑ Cat A = CatSubs ¥ (A izz B § Cat B = CatSubs ± IndvSet A Ä IndvSet B)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨$izzÆ, get_spec ¨CatSetÆ]); 
-a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 2 ¨(InL x):ISUB + (ISUB ≠ BOOL)Æ);
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ¨xÆ);
-(* *** Goal "1.2" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-a (all_asm_fc_tac[]);
-val izz_lemma1 = save_pop_thm "izz_lemma1";
-
-set_goal([], ¨µA B∑ Cat B = CatSubs ¥ (A izz B § Cat A = CatSubs ± IndvSet A Ä IndvSet B)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨$izzÆ, get_spec ¨CatSetÆ]); 
-a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 2 ¨(InL x):ISUB + (ISUB ≠ BOOL)Æ);
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ¨xÆ);
-(* *** Goal "1.2" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-a (all_asm_fc_tac[]);
-val izz_lemma2 = save_pop_thm "izz_lemma2";
-
-set_goal([], ¨µA B∑ ≥ Cat A = CatSubs ¥ (A izz B § Cat B = Cat A ± AttrSet A Ä AttrSet B)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨$izzÆ, get_spec ¨CatSetÆ]); 
-a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses]);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[] THEN strip_tac THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 2 ¨(InR x):ISUB + (ISUB ≠ BOOL)Æ);
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ¨xÆ);
-(* *** Goal "1.2" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-a (all_asm_fc_tac[]);
-val izz_lemma3 = save_pop_thm "izz_lemma3";
-
-set_goal([], ¨µA B∑ ≥ Cat B = CatSubs ¥ (A izz B § Cat B = Cat A ± AttrSet A Ä AttrSet B)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[get_spec ¨$izzÆ, get_spec ¨CatSetÆ]); 
-a (strip_tac THEN_TRY asm_rewrite_tac[] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1" *** *)
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[sets_ext_clauses] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 2 ¨(InR x):ISUB + (ISUB ≠ BOOL)Æ);
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ¨xÆ);
-(* *** Goal "1.2" *** *)
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (POP_ASM_T ante_tac 
-	THEN SYM_ASMS_T rewrite_tac
-	THEN asm_rewrite_tac[sets_ext_clauses]
-	THEN REPEAT strip_tac);
-a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
-a (all_asm_fc_tac[]);
-val izz_lemma4 = save_pop_thm "izz_lemma4";
-=TEX
-}%ignore
-
-There is a certain amount of duplication of terminology here, since essential and accidental predication seem to be just $izz$ and $hazz$ backwards.
-I'm not so happy with the ``ables'' here, for what is clearly meant is ``truly predicable'', which is not quite the same thing.
-Better names would be simply ``is\_essentially'' and ``is\_accidentally'', lacking the ambiguity of ``able'' (but then they would have to be the other way round, exactly the same as $izz$ and $hazz$).
-
-Anyway here are the definitions (keeping the names (more or less) as they were for the present):
-πHOLCONST
-‹ $€essentially_predicable_of› : CATM ≠ CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA B∑ A essentially_predicable_of B § B izz A
-∞
-
-πHOLCONST
-‹ $€accidentally_predicable_of› : CATM ≠ CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA B∑ A accidentally_predicable_of B § B hazz A
-∞
-
-Aristotelian predication is then:
-
-πHOLCONST
-‹ $€predicable_of› : CATM ≠ CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA B∑ A predicable_of B § A essentially_predicable_of B ≤ A accidentally_predicable_of B
-∞
-
-I shall omit $universal$ and $form$ for the present, since I don't know what they mean.
-
-πHOLCONST
-‹ €particular› : CATM ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µA∑ particular A § ∂a∑ CatSet A = {a}
-∞
-
-Now here's the list of things which Speranza posted (more or less) which I am calling ``conjectures'' and will attempt to prove.
+Strip the goal.
 
 =SML
-val c01 = ¨µA∑ A izz AÆ;
-val c02 = ¨µA B C∑ A izz B ± B izz C ¥ A izz CÆ;
-val c03 = ¨µA B∑ A hazz B ¥ ≥ A izz BÆ;
-
-(* this is needed for c04 *)
-val c04a = ¨µA B C∑ A hazz B ± B izz C ¥ A hazz CÆ;
-
-(* and this then is trivial since B serves as witness in the left-right direction *)
-val c04 = ¨µA B∑ A hazz B § ∂C∑ A hazz C ± C izz BÆ;
-
-val c05 = ¨µx∑ universal x ¥ form xÆ;
-
-(* this one is false *)
-val c06 = ¨µA B∑ A hazz B ± particular A ¥ ∂C∑ C Ω A ± A izz BÆ; 
-val c06n = ¨≥ µA B∑ A hazz B ± particular A ¥ ∂C∑ C Ω A ± A izz BÆ; 
-
-val c07 = ¨µA B∑ A predicable_of B § (B izz A) ≤ ∂C∑ B hazz C ± C izz AÆ;
-val c08 = ¨µA∑ A essentially_predicable_of B § B izz AÆ;
-val c09 = ¨µA∑ A accidentally_predicable_of B § ∂C∑ B hazz C ± C izz AÆ;
-val c10 = ¨µA B∑ A = B § A izz B ± B izz AÆ;
-
-(* these are modal and require a different underlying model *)
-val c11 = ¨µA B∑ individual A § (Nec)(µ B∑ B izz A ¥ A izz B)Æ;
-val c12 = ¨µA∑ particular A § (Nec)(µB∑ A predicable_of B ¥ A izz B ± B izz A)Æ;
-val c13 = ¨µA∑ universal A § (Poss) ∂ B∑ (A predicable_of A ± ≥(A izz B ± B izz A))Æ;
-
-val c14 = ¨µA∑ thing A ¥ individual AÆ;
-val c15 = ¨µA∑ form A ¥ thing A ± universal AÆ;
-val c16 = ¨µA B∑ A predicable_of B § (B izz A) ≤ ∂C∑ (thing C ± B hazz C ± C izz A)Æ;
-val c17 = ¨µA∑ A essentially_predicable_of AÆ;
-val c18 = ¨µA∑ A accidentally_predicable_of B ¥ A Ω BÆ;
-val c19 = ¨µA B∑ ≥ (A accidentally_predicable_of B) ¥ A Ω BÆ;
-val c20 = ¨µA∑ particular A ¥ individual AÆ;
-val c21 = ¨µA∑ particular A ¥ ≥ ∂C∑ ≥ C = A ± C izz AÆ;
-val c22 = ¨≥ ∂A∑ particular A ± form AÆ;
-val c23 = ¨µA∑ form A ¥ ≥ ∂C∑ C Ω A ± C izz AÆ;
-val c24 = ¨µX A∑ particular X ¥ ∂B∑ form B ± A izz BÆ;
-val c25 = ¨µA∑ form A ¥ A predicable_of B ± A Ω B ¥ B hazz AÆ;
-val c26 = ¨µA B∑ form A ± particular B ¥ (A predicable_of B § B hazz A)Æ;
-val c27 = ¨µA B∑ particular A ± universal B ± B predicable_of A
-		¥ ∂C∑ (A Ω C ± C essentially_predicable_of A)Æ;
-val c28 = ¨(∂P∑ particular P ± ∂U∑ U predicable_of P) ¥ ≥ (µU∑ thing U)Æ;
-val c29 = ¨µU∑ thing UÆ;
-val c30 = ¨µA∑ particular A ¥ ≥ ∂B∑ (A Ω B ± B essentially_predicable_of A)Æ;
-val c31 = ¨µA B∑ A predicable_of B ± A Ω B ¥ A accidentally_predicable_of BÆ;
-=TEX
-
-I'm not going to show the proofs because they are unintelligible, but I will make a selection presentable.
-
-\ignore{
-=SML
-set_goal([], c01);
-a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¨$izzÆ]);
-val l01 = save_pop_thm "l01";
-
-set_goal([], c02);
-a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¨$izzÆ]
-	THEN REPEAT strip_tac
-	THEN_TRY asm_rewrite_tac[]
-	THEN all_asm_fc_tac[Ä_trans_thm]);
-val l02 = save_pop_thm "l02";
-
-set_goal([], c03);
-a (REPEAT µ_tac THEN_TRY rewrite_tac [get_spec ¨$izzÆ, get_spec ¨$hazzÆ] THEN contr_tac);
-a (DROP_NTH_ASM_T 5 ante_tac
-	THEN DROP_NTH_ASM_T 5 ante_tac
-	THEN asm_rewrite_tac[]);
-val l03 = save_pop_thm "l03";
-
-set_goal([], c04a);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨$hazzÆ, get_spec ¨CatSetÆ]
-	THEN contr_tac);
-(* *** Goal "1" *** *)
-a (all_fc_tac [izz_lemma2]);
-(* *** Goal "2" *** *)
-a (all_asm_fc_tac[]);
-a (all_fc_tac [list_µ_elim [¨BÆ] izz_lemma3]);
-a (POP_ASM_T ante_tac THEN rewrite_tac [sets_ext_clauses]
-	THEN REPEAT strip_tac
-	THEN asm_fc_tac[]);
-a (∂_tac ¨aÆ THEN contr_tac);
-val l04a = save_pop_thm "l04a";
-
-set_goal([], c04);
 a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (∂_tac ¨BÆ THEN asm_rewrite_tac[l01]);
-(* *** Goal "2" *** *)
-a (all_fc_tac [list_µ_elim [¨AÆ, ¨CÆ] l04a]);
-val l04 = save_pop_thm "l04";
+=GFT ProofPower output
+(* *** Goal "" *** *)
 
-set_goal([], c06n);
-a (strip_tac);
-a (∂_tac ¨InL{≈x:ISUB∑T}:CATMÆ THEN strip_tac);
-a (∂_tac ¨InR((≈x:ACAT∑T), {Ãx:ISUB∑T}):CATMÆ THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (rewrite_tac (map get_spec [¨$hazzÆ, ¨CatÆ, ¨CatSubsÆ]));
-a (∂_tac ¨Ãx:ISUB∑TÆ);
-a (rewrite_tac (map get_spec [¨AttrSetÆ]));
-(* *** Goal "2" *** *)
-a (rewrite_tac (map get_spec [¨particularÆ]));
-a (∂_tac ¨InL(≈ x:ISUB∑ T):ISUB + (ISUB ≠ BOOL)Æ);
-a (rewrite_tac [get_spec ¨CatSetÆ, get_spec ¨CatÆ, get_spec ¨IndvSetÆ, sets_ext_clauses]);
-a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-a (∂_tac ¨≈ x:ISUB∑ TÆ);
-a (rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac[get_spec ¨$izzÆ, get_spec ¨CatÆ, get_spec ¨CatSubsÆ]);
-val l06n = save_pop_thm "l06n";
+(*  1 *)  ¨µ P∑ P x § P yÆ
 
-set_goal([], c07);
-a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¨$predicable_ofÆ, get_spec ¨$essentially_predicable_ofÆ,
-		get_spec ¨$accidentally_predicable_ofÆ]);
-a (rewrite_tac [list_µ_elim [¨BÆ, ¨AÆ] l04]);
-val l07 = save_pop_thm "l07";
-
-set_goal([], c08);
-a (rewrite_tac [get_spec ¨$essentially_predicable_ofÆ]);
-val l08 = save_pop_thm "l08";
-
-set_goal([], c09);
-a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¨$accidentally_predicable_ofÆ, list_µ_elim [¨BÆ, ¨AÆ] l04]);
-val l09 = save_pop_thm "l09";
-
-set_goal([], c10);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨$izzÆ, catm_eq_lemma]);
-a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-a (all_fc_tac [pc_rule1 "hol1" prove_rule [] ¨µa b∑ a Ä b ± b Ä a ¥ a = bÆ]);
-val l10 = save_pop_thm "l10";
+(* ?Ù *)  ¨x = yÆ
 =TEX
-}%ignore
 
+Instantiate the assumption using the predicate
+=INLINEFT
+¨$= yÆ
+=TEX
+.
+\footnote{This is the predicate ``equal to y'', or $¨Ãx. y = xÆ$}:
+=SML
+a (spec_asm_tac ¨µ P∑ P x § P yÆ ¨$= yÆ);
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(*  2 *)  ¨µ P∑ P x § P yÆ
+(*  1 *)  ¨y = xÆ
+
+(* ?Ù *)  ¨x = yÆ
+=TEX
+
+The instantiation yields:
 =GFT
-l01	= Ù µ A∑ A izz A
-l02	= Ù µ A B C∑ A izz B ± B izz C ¥ A izz C
-l03	= Ù µ A B∑ A hazz B ¥ ≥ A izz B
-l04a	= Ù µ A B C∑ A hazz B ± B izz C ¥ A hazz C
-l04	= Ù µ A B∑ A hazz B § (∂ C∑ A hazz C ± C izz B) 
-l06n	= Ù ≥ (µ A B∑ A hazz B ± particular A ¥ (∂ C∑ C Ω A ± A izz B))
-l07 	= Ù µ A B∑ A predicable_of B § B izz A ≤ (∂ C∑ B hazz C ± C izz A)
-l08 	= Ù µ A∑ A essentially_predicable_of B § B izz A
-l09 	= Ù µ A∑ A accidentally_predicable_of B § (∂ C∑ B hazz C ± C izz A)
-l10	= Ù µ A B∑ A = B § A izz B ± B izz A
+	¨y = x § y = yÆ
+	§ ¨(y = x ¥ y = y) ± (y = y ¥ y = x)Æ
+	§ ¨(≥y = x ≤ y = y) ± (y = x ≤ ≥y = y)Æ
+	§ ¨(≥y = x ≤ T) ± (y = x ≤ F)Æ
+	§ ¨(y = x)Æ
 =TEX
+of which the last is the new assumption shown above.
+
+Rewrite the conclusion with the assumptions (giving $¨x = xÆ$ which is automatically discharged).
+
+=SML
+a (asm_rewrite_tac[]);
+=GFT ProofPower output
+Tactic produced 0 subgoals:
+Current and main goal achieved
+=TEX
+
+Save the theorem.
+=SML
+val €leibniz_identity› = save_pop_thm "leibniz_identity";
+=GFT ProofPower output
+Now 0 goals on the main goal stack
+val leibniz_identity = Ù µ x y∑ (µ P∑ P x § P y) ¥ x = y : THM
+=TEX
+
+So, in this context, that indiscernibles are identical is an elementary consequence of the fact that for every entity `e' there is a predicate `equal to e' which is satisfied only by e.
 
 {\let\Section\section
 \newcounter{ThyNum}
@@ -887,7 +427,6 @@ l10	= Ù µ A B∑ A = B § A izz B ± B izz A
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{t001a.th}
 \include{t001b.th}
-\include{ariscat.th}
 }  %\let
 
 \twocolumn[\section{INDEX}\label{index}]
