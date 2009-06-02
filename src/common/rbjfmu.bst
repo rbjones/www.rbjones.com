@@ -39,6 +39,7 @@ ENTRY
     number
     organization
     pages
+    part			    % RBJ
     publisher
     school
     series
@@ -1135,7 +1136,7 @@ EXECUTE {initialize.longest.label}
 ITERATE {longest.label.pass}
 
 FUNCTION {begin.bib}
-{ "% $Id: rbjfmu.bst,v 1.1 2006/11/09 12:05:24 rbj01 Exp $"  write$ newline$
+{ "% $Id: rbjfmu.bst,v 1.2 2009/06/02 19:13:57 rbj Exp $"  write$ newline$
   preamble$ empty$
     'skip$
     { preamble$ write$ newline$ }
