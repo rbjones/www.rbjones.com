@@ -599,6 +599,7 @@ FUNCTION {book}
   if$
   format.edition output
   format.date "year" output.check
+  url "URL" output.check
   new.block
   note output
   fin.entry
@@ -1136,7 +1137,7 @@ EXECUTE {initialize.longest.label}
 ITERATE {longest.label.pass}
 
 FUNCTION {begin.bib}
-{ "% $Id: rbjfmu.bst,v 1.3 2009/06/02 19:13:56 rbj Exp $"  write$ newline$
+{ "% $Id: rbjfmu.bst,v 1.4 2009/06/09 13:09:57 rbj Exp $"  write$ newline$
   preamble$ empty$
     'skip$
     { preamble$ write$ newline$ }

@@ -1,5 +1,5 @@
 =IGN
-$Id: t028.doc,v 1.4 2009/06/03 17:14:25 rbj Exp $
+$Id: t028.doc,v 1.5 2009/06/09 13:09:57 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -15,10 +15,17 @@ $Id: t028.doc,v 1.4 2009/06/03 17:14:25 rbj Exp $
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
 
+=IGN
+val _ =
+	let open ReaderWriterSupport.PrettyNames;
+	in add_new_symbols [ (["identeq"], Value "\233", Simple) ]
+end;
+=TEX
+
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\title{Aristotle's Logic and Metaphysics - some formal analysis}
+\title{Aristotle's Logic and Metaphysics - some formal models}
 \makeindex
 \usepackage[unicode,pdftex]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}, pdffitwindow=false}
@@ -39,12 +46,12 @@ Formalisation in higher order logic of parts of Aristotle's logic and metaphysic
 
 Created 2009/05/21
 
-Last Change $ $Date: 2009/06/03 17:14:25 $ $
+Last Change $ $Date: 2009/06/09 13:09:57 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
 
-$ $Id: t028.doc,v 1.4 2009/06/03 17:14:25 rbj Exp $ $
+$ $Id: t028.doc,v 1.5 2009/06/09 13:09:57 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -85,6 +92,38 @@ Then the emphasis will shift to pulling out the philosophical implications.
 Further discussion of what might become of this document in the future may be found in my postscript (Section \ref{POSTSCRIPT}).
 
 In this document, phrases in coloured text are hyperlinks, like on a web page, which will usually get you to another part of this document (the blue parts, the contents list, page numbers in the Index) but sometimes take you (the red bits) somewhere altogether different (if you happen to be online) like \href{http://rbjones.com/pipermail/hist-analytic_rbjones.com}{the hist-analytic archives}.
+
+\subsection{Preliminary Formalities}
+
+In the document several different formal models are presented.
+By and large they are independent, but a some features are common and are therefore presented here for use in all the models.
+
+=SML
+open_theory "misc2";
+force_new_theory "aristotle";
+=TEX
+
+\ignore{
+=IGN
+force_new_pc €"'ariscat"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'ariscat";
+set_merge_pcs ["misc2", "'ariscat"];
+=SML
+set_pc "misc2";
+=TEX
+}%ignore
+
+We define inequality:
+
+=SML
+declare_infix (300, "Ω");
+=TEX
+
+πHOLCONST
+‹ $€Ω› : 'a ≠ 'a ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µx y∑ x Ω y § ≥ x = y
+∞
 
 \section{LANGUAGES, METHODS AND TOOLS} \label{LMT}
 
@@ -249,6 +288,11 @@ It may be helpful to give a full treatment in the following stages:
 \item modal syllogisms  (Section \ref{MODSYLL})
 \end{itemize}
 
+The present treatment was based firstly on the wikipedia account of \href{http://en.wikipedia.org/wiki/Syllogism}{Aristotle's Logic}, secondly on Strawson \cite{strawson52} from whom I first obtained the syllogisms not in Aristotle and began incorporation of direct inference, and then from Spade\cite{spade2002} I obtained the names for the extra syllogisms and a fuller account of how the syllogisms can be derived which is not yet reflected in the following.
+
+The main interest at present is the sequence of models which contributes to the formulation of an integrated model for the syllogicsm and the metaphysics in Section \ref{METAPHYSICSII}.
+It suffices perhaps in this context to know in which models the various syllogisms are provable, without delving into the details of proof, which are at present, sheer hackery.
+
 \subsection{The Syllogism without The Existential Fallacy}\label{SWEF}
 
 The theory here is very simple, the presentation is complicated by the fact that the proofs have been completely automated by scripts in the metalanguage.
@@ -257,7 +301,7 @@ In any case, the theorems proven are just the statements of the 15 valid forms o
 For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in Appendix \ref{syllog1} below.
 
 =SML
-open_theory "misc2";
+open_theory "aristotle";
 force_new_theory "syllog1";
 =TEX
 
@@ -352,6 +396,106 @@ declare_alias("o", ¨$uÆ);
 Note that as defined above these come in complementary pairs, $a$ being the negation of $o$ and $e$ of $i$.
 If we had negation we could manage with just two predication operators.
 
+\subsubsection{The Laws of Immediate Inference}
+
+Before addressing the laws of immediate inference
+\footnote{in which I follow Strawson \cite{strawson52}.}
+I devise a tactic for automating simple proofs in this domain.
+
+The following elementary tactic expands the goal by applying the definitions of the operators and then invokes a general tactic for the predicate calculus.
+A rule is also defined using that tactic for direct rather than interactive proof.
+
+=SML
+val €syll_tac› =	asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]);
+fun €syll_rule› g = tac_proof (g, syll_tac);	
+=TEX
+
+\paragraph{Simple Conversion}
+
+=SML
+val e_conv_thm = save_thm ("e_conv_thm", syll_rule([¨A e BÆ], ¨B e AÆ));
+val i_conv_thm = save_thm ("i_conv_thm", syll_rule([¨A i BÆ], ¨B i AÆ));
+=TEX
+
+=GFT
+val e_conv_thm = A e B Ù B e A : THM
+val i_conv_thm = A i B Ù B i A : THM
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨∂A B∑ A a B ± ≥ B a AÆ);
+a (∂_tac ¨Ãx∑FÆ THEN ∂_tac ¨Ãx∑TÆ THEN syll_tac);
+val a_not_conv_thm = save_pop_thm "a_not_conv_thm";
+
+set_goal([], ¨∂A B:PROP∑ A o B ± ≥ B o AÆ);
+a (∂_tac ¨Ãx∑TÆ THEN ∂_tac ¨Ãx∑FÆ THEN syll_tac);
+val o_not_conv_thm = save_pop_thm "o_not_conv_thm";
+=TEX
+}%ignore
+
+=GFT
+a_not_conv_thm = Ù ∂ A B∑ A a B ± ≥ B a A
+o_not_conv_thm = Ù ∂ A B∑ A o B ± ≥ B o A
+=TEX
+
+\paragraph{Conversion Per Accidens}
+
+These don't work here because they rely upon the existential fallacy.
+
+\paragraph{Obversion}
+
+For these we need to define an operation of complementation on predicates.
+
+πHOLCONST
+‹ €Complement› : PROP ≠ PROP
+˜¸¸¸¸¸¸
+‹ µA ¡∑ (Complement A) ¡ § ≥ (A ¡) 
+∞
+
+We will use ``$~$'' as a shorthand for ``complement''.
+
+=SML
+declare_alias ("~", ¨ComplementÆ);
+=TEX
+
+\ignore{
+=SML
+add_pc_thms "'syllog1" [get_spec ¨ComplementÆ];
+set_merge_pcs ["misc2", "'syllog1"];
+=TEX
+}%ignore
+
+\ignore{
+=SML
+val ae_obv_thm = save_thm ("ae_obv_thm", syll_rule([¨A a BÆ], ¨A e ~BÆ));
+val ea_obv_thm = save_thm ("ea_obv_thm", syll_rule([¨A e BÆ], ¨A a ~BÆ));
+
+set_goal([¨A i BÆ], ¨A u ~BÆ);
+a (syll_tac);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+val io_obv_thm = save_pop_thm "io_obv_thm";
+
+set_goal([¨A u BÆ], ¨A i ~BÆ);
+a (syll_tac);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+val oi_obv_thm = save_pop_thm "oi_obv_thm";
+=TEX
+}%ignore
+
+=GFT
+ae_obv_thm = 	A a B Ù A e ~ B
+ea_obv_thm = 	A e B Ù A a ~ B
+io_obv_thm = 	A i B Ù A o ~ B
+oi_obv_thm = 	A o B Ù A i ~ B
+=TEX
+
+\paragraph{Contraposition and Inversion}
+
+
+\paragraph{The Square of Opposition}
+
+
 \subsubsection{The Valid Syllogisms}\label{ValidSyllogisms}
 
 The fifteen valid syllogisms which do not exhibit the existential fallacy are true under this semantics and can be proven formally with ease.
@@ -378,7 +522,9 @@ This gives $4 ∏ 4 ∏ 4 ∏ 4 = 256$ possibilities, of which 19 were held to be vali
 The use of vowels for the predicators allows the valid cases to be named using names in which the vowels tell you the form of the syllogism (if you also know the figure).
 The first vowel tells you the kind of syllogism in the first premise, the second vowel that in the second premise, and the third vowel that in the conclusion.
 
-In the following table the bracketted names are for syllogisms which exhibit the existential fallacy.
+In the following table the names in square brackets are for syllogisms which exhibit the existential fallacy.
+Then names followed by exclamation marks are ``subalternate mood'', they do not appear in aristotle but are valid in the models here for which the existential fallacy holds
+\footnote{This I got from Spade \cite{spade2002}.}.
 
 \begin{center}
 \begin{tabular}[]{| l | l | l | l |}
@@ -389,8 +535,8 @@ Barbara &	Cesare 	&	[Darapti] &	[Bramantip]\\
 Celarent &	Camestres &	Disamis 	&	Camenes\\
 Darii 	&	Festino 	&	Datisi 	&	Dimaris\\
 Ferio 	&	Baroco 	&	[Felapton] &	[Fesapo]\\
-  	&	  	&	Bocardo 	&	Fresison\\
-  	&	  	&	Ferison 	&	 \\
+Barbari!	&	Cesaro!  	&	Bocardo 	&	Fresison\\
+Celaront!	&	Camestrop! 	&	Ferison 	&	Camenop! \\
 \hline
 \end{tabular}
 \end{center}
@@ -419,7 +565,7 @@ fun €op_from_char› ot c = mk_const (if c = "o" then "u" else c, ot);
 
 fun €vowels_from_string› s = filter (fn x => x mem (explode "aeiou")) (explode s);
 
-fun €vartrip_from_text› ot s =
+fun €optrip_from_text› ot s =
 	let val [a,b,c] = (map (op_from_char ot) o vowels_from_string) s;
 	in (a,b,c)
 	end;
@@ -434,16 +580,14 @@ fun €mk_syll› vt (a,b,c,d) (q1, q2, q3) =
 	([mk_pred q1 a b, mk_pred q2 c d],
 		mk_pred q3 (mk_var("ø", vt)) (mk_var("P", vt)));
 
-fun mk_relt t = mk_ctype ("≠", [t, mk_ctype ("≠", [t, îBOOLÆ])]);
+fun €mk_relt› t = mk_ctype ("≠", [t, mk_ctype ("≠", [t, îBOOLÆ])]);
 
 fun €mk_syllp› vt (s, n) =
-	mk_syll vt (nth (n-1) (figures vt)) (vartrip_from_text (mk_relt vt) s);
+	mk_syll vt (nth (n-1) (figures vt)) (optrip_from_text (mk_relt vt) s);
 =TEX
 
-
-
 =SML
-val mk_syllp1 = mk_syllp îPROPÆ;
+val €mk_syllp1› = mk_syllp îPROPÆ;
 =TEX
 
 We now define a data structure from which the valid syllogisms can be generated.
@@ -474,24 +618,21 @@ map mk_syllp1 syllogism_data1;
 The following code generates the goals for proving the above syllogisms from the data structure, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
 
 =SML
-fun €syll_prove_and_store› msp tac (a,n) =
-	let val thm = save_thm (a, tac_proof (msp (a,n), tac)) handle _ => t_thm
-	in (a, thm)
+fun €syll_prove› msp suff tac (a,n) =
+	let val thm = tac_proof (msp (a,n), tac) handle _ => t_thm
+	in (concat [a, suff], thm)
 	end;
 
-val sps1 = syll_prove_and_store mk_syllp1;
+fun €syll_prove_and_store› msp suff tac (a,n) =
+	let val res = syll_prove msp suff tac (a,n);
+	    val _ = save_thm res
+	in res 
+	end;
+
+val €sps1› = syll_prove_and_store mk_syllp1 "";
 =TEX
 
 \subsubsection{Proving the Syllogisms}
-
-We have now only to devise a tactic for proof and apply this tactic to the goals corresponding to allegedly valid syllogisms.
-
-The following tactic is very elementary.
-Basically it says: expand the goal by applying the definitions of the operators and then prove automatically the resulting conjecture in the predicate calculus.
-
-=SML
-val €syll_tac› =	asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]);
-=TEX
 
 We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
 saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
@@ -525,14 +666,18 @@ The theorems are also displayed in the theory listing in Appendix \ref{syllog1}
 
 \subsection{The Syllogism with The Existential Fallacy}\label{SYLL}
 
-We now make the model more faithful to Aristotle by excluding predicates with empty extension.
+There is more than one way in which the semantics of the syllogism can be modified to make the inference from "All As are Bs" to "Some As are Bs" sound.
+One way would be to change the meaning of "All".
+This would interfere with the square of opposition by making opposites no longer contradictories.
+From this I tentatively infer that the exclusion of empty predicates is a better approach.
+\footnote{This seems to be endorsed by Robin Smith in the \href{http://plato.stanford.edu/entries/aristotle-logic/}{Stanford Encyclopaedia of Philosophy}.}
 
-We can then prove all 19 valid forms of syllogism.
+We can then prove valid 24 forms of syllogism.
 
 For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in Appendix \ref{syllog2} below.
 
 =SML
-open_theory "misc2";
+open_theory "aristotle";
 force_new_theory "syllog2";
 =TEX
 
@@ -575,7 +720,7 @@ The following principle can be proven (proof omitted):
 
 \ignore{
 =SML
-set_goal([], ¨µA∑ ∂¡∑ (p A) ¡Æ);
+set_goal([], ¨µA∑ ∂v∑ (p A) vÆ);
 a (strip_tac);
 a (∂_tac ¨Fst AÆ THEN rewrite_tac [get_spec ¨pÆ, let_def]);
 val p_∂_lemma = save_pop_thm "p_∂_lemma";
@@ -584,10 +729,10 @@ val p_∂_lemma = save_pop_thm "p_∂_lemma";
 
 =GFT
 p_∂_lemma =
-	Ù µ A∑ ∂ ¡∑ p A ¡
+	Ù µ A∑ ∂v∑ p A v
 =TEX
 
-This principle is what we need to prove the four syllogisms which exhibit the existential fallacy.
+This principle is what we need to prove the four Aristotelian syllogisms which exhibit the existential fallacy, and the other five not known to Aristotle.
 
 We then proceed in a similar manner to the first model, using the function $p$ to convert the new kind of predicate into the old.
 
@@ -632,6 +777,50 @@ The type $îPROPÆ$ is changed to $îPROP2Æ$ and the function $p$ is invoked before
 declare_alias("o", ¨$uÆ);
 =TEX
 
+\subsubsection{Laws of Immediate Inference}
+
+The same tactic used for proof of the syllogisms in the previous model still works with this model (with the new definitions), but does not prove the syllogisms which exhibit the existential fallacy.
+
+To obtain proofs of these other syllogisms we need to make use of the lemma we proved about $p$, {\it p\_∂\_lemma}.
+This we do by instantiating it for each of the variables which appear in the syllogisms and supplying these for use in the proof.
+
+=SML
+val €syll_tac2› =
+	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x p_∂_lemma))
+		[¨M:PROP2Æ, ¨P:PROP2Æ, ¨ø:PROP2Æ, ¨A:PROP2Æ, ¨B:PROP2Æ])
+	THEN asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]);
+
+fun €syll_rule2› g = tac_proof(g, syll_tac2);
+=TEX
+
+\paragraph{Simple Conversion}
+
+=SML
+val e_conv_thm = save_thm ("e_conv_thm", syll_rule2([¨A e BÆ], ¨B e AÆ));
+val i_conv_thm = save_thm ("i_conv_thm", syll_rule2([¨A i BÆ], ¨B i AÆ));
+=TEX
+
+=GFT
+val e_conv_thm = A e B Ù B e A : THM
+val i_conv_thm = A i B Ù B i A : THM
+=TEX
+
+In this version of the semantics, ``a'' and ``o'' conversion is neither provable nor refutable.
+In the previous version, since the universe is a HOL type there is at least one individual, and contradictory predicates are allowed, we can use these two to disprove the two conversions.
+With this semantics there is no empty predicate, and we cannot know that there are two distinct predicates.
+
+\paragraph{Conversion Per Accidens}
+
+=SML
+val ai_conv_thm = save_thm ("ai_conv_thm", syll_rule2([¨A a BÆ], ¨B i AÆ));
+val eo_conv_thm = save_thm ("eo_conv_thm", syll_rule2([¨A e BÆ], ¨B u AÆ));
+=TEX
+
+=GFT
+val ai_conv_thm = A a B Ù B i A : THM
+val eo_conv_thm = A e B Ù B o A : THM
+=TEX
+
 \subsubsection{The Valid Syllogisms}
 
 The valid syllogisms have been described in Section \ref{ValidSyllogisms}.
@@ -639,15 +828,21 @@ The valid syllogisms have been described in Section \ref{ValidSyllogisms}.
 The following valid syllogisms exhibit the existential fallacy and were not provable in the previous model.
 
 =SML
-val syllogism_data2 = 
+val €syllogism_data2› = 
 	[("Darapti", 3),	
 	("Felapton", 3),
 	("Bramantip", 4),
 	("Fesapo", 4)];
+
+val €syllogism_data3› = 
+	[("Barbari", 1),
+	("Celaront", 1),
+	("Cesaro", 2),
+	("Camestrop", 2),
+	("Camenop", 4)];
 =TEX
 
-All nineteen syllogisms supposed valid by Aristotle are true under this semantics and have been proven.
-The actual theorems are shown in the theory listing in Appendix \ref{syllog2}.
+All nineteen syllogisms supposed valid by Aristotle are true under this semantics and have been provenThe actual theorems are shown in the theory listing in Appendix \ref{syllog2}.
 
 The metalanguage scripts prepared for the first model are mostly reusable for this model, with some different parameters which reflect the differences between the models.
 
@@ -679,36 +874,31 @@ val it = ([¨M a PÆ, ¨ø a MÆ], ¨ø a PÆ) : TERM list * TERM
 
 \subsubsection{Proving the Syllogisms}
 
-The same tactic used for proof of the syllogisms in the previous model still works with this model, but does not prove the four syllogisms which exhibit the existential fallacy.
-
-To obtain proofs of these other four syllogisms we need to make use of the lemma we proved about $p$, {\it p\_∂\_lemma}.
-This we do by instantiating it for each of the variables which appear in the syllogisms and supplying these for use in the proof.
-
-=SML
-val €syll_tac2› =
-	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x p_∂_lemma))
-		[¨M:PROP2Æ, ¨P:PROP2Æ, ¨ø:PROP2Æ])
-	THEN syll_tac;
-=TEX
-
 We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
 saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
 
 =SML
-val €sps2› = syll_prove_and_store mk_syllp2;
-val €valid_sylls2› = map (sps2 syll_tac2) (syllogism_data1 @ syllogism_data2);
+val €sps2› = syll_prove_and_store mk_syllp2 "";
+val €valid_sylls2› = map (sps2 syll_tac2)
+	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
 =TEX
 
 This is the resulting value.
 =GFT
-val valid_sylls = [("Barbara", M a P, ø a M Ù ø a P), ("Celarent", M e P, ø a M Ù ø e P),
-      ("Darii", M a P, ø i M Ù ø i P), ("Ferio", M e P, ø i M Ù ø u P),
+val valid_sylls2 =
+   [("Barbara", M a P, ø a M Ù ø a P), ("Celarent", M e P, ø a M Ù ø e P),
+      ("Darii", M a P, ø i M Ù ø i P), ("Ferio", M e P, ø i M Ù ø o P),
       ("Cesare", P e M, ø a M Ù ø e P), ("Camestres", P a M, ø e M Ù ø e P),
-      ("Festino", P e M, ø i M Ù ø u P), ("Baroco", P a M, ø u M Ù ø u P),
+      ("Festino", P e M, ø i M Ù ø o P), ("Baroco", P a M, ø o M Ù ø o P),
       ("Disamis", M i P, M a ø Ù ø i P), ("Datisi", M a P, M i ø Ù ø i P),
-      ("Bocardo", M u P, M a ø Ù ø u P), ("Ferison", M e P, M i ø Ù ø u P),
+      ("Bocardo", M o P, M a ø Ù ø o P), ("Ferison", M e P, M i ø Ù ø o P),
       ("Camenes", P a M, M e ø Ù ø e P), ("Dimaris", P i M, M a ø Ù ø i P),
-      ("Fresison", P e M, M i ø Ù ø u P)] : (string * THM) list
+      ("Fresison", P e M, M i ø Ù ø o P), ("Darapti", M a P, M a ø Ù ø i P),
+      ("Felapton", M e P, M a ø Ù ø o P),
+      ("Bramantip", P a M, M a ø Ù ø i P), ("Fesapo", P e M, M a ø Ù ø o P),
+      ("Barbari", M a P, ø a M Ù ø i P), ("Celaront", M e P, ø a M Ù ø o P),
+      ("Cesaro", M e P, ø a M Ù ø o P), ("Camestrop", P a M, ø e M Ù ø o P),
+      ("Camenop", P a M, M e ø Ù ø o P)] : (string * THM) list
 =TEX
 
 The theorems have aso been stored in the theory and are also displayed in the theory listing in Appendix \ref{syllog2}
@@ -724,6 +914,7 @@ This would give us three kinds of judgement, which assert a predication continge
 It is natural to consider the modal aspects in terms of possible worlds, and I will model it first in those terms (not knowing whether this will provide a good model of Aristotle's conception of modality).
 The propositional functions could then be modelled as functions from possible worlds to non-empty propositional functions.
 
+\ignore{
 One respect in which the treatment of the syllogism so far looks odd to the modern eye is the lack of consideration of constants.
 
 We have a language which only has variables, even though Aristotle does use syllogistic reasoning with concrete predicates and subjects.
@@ -731,10 +922,490 @@ This lack bevomes more significant when modalities are introduced, for we expect
 
 So I proposed in modelling modal syllogisms to bring the semantics closer to a modern model theory by allowing for constants.
 This will be reflected in the definition of ``possible world'' which will include an assignment of values to constants.
+}%ignore
 
-\subsection{Discussion}
+I adapt the treatment of syllogisms with the existential fallacy by treating predicates as parameterised by a possible world.
 
-\section{METAPHYSICS (I)}
+Rather than using a type variable (which is what I did for the two preceding treatments) I will use two new type constants for individual aubstances and possible worlds.
+
+It may suffice for the reader to refer directly to the theory listing in Appendix \ref{modsyllog} below.
+
+=SML
+open_theory "aristotle";
+force_new_theory "modsyllog";
+=TEX
+
+\ignore{
+=SML
+force_new_pc €"'modsyllog"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'modsyllog";
+set_merge_pcs ["misc2", "'modsyllog"];
+=TEX
+}%ignore
+
+\subsubsection{The Subject Matter}
+
+The complexity required in the semantics of modal operators depends upon other features of the language in which they occur.
+Because the language of the syllogism is very simple, having neither propositional operators nor variables for individuals a very simple semantics may suffice.
+When we come to consider the metaphyics there will be some increase in the complexity of the other features of the language, and also a greater premium on getting the semantics to correspond intuitively with the content of the metaphysics, but at this stage we will adopt the simplest semantic model which seems likely to secure the results expressible in our restrictied language.
+
+So are now talking about predicates parameterised by possible worlds.
+Furthermore, we will model this with a fixed set to individuals, independent of the possible world.
+Possible worlds differ only in the extension of predicates.
+
+First some new types, ``I'' for individual substances, ``W'' for possible worlds:
+
+=SML
+new_type (€"I"›,0);
+new_type (€"W"›,0);
+=TEX
+
+Then a type abbreviation for the predicates:
+
+=SML
+declare_type_abbrev("MPROP", [], îW ≠ I ∏ (I ≠ BOOL)Æ);
+=TEX
+
+\subsubsection{Predication}
+
+To work with this new type for the predicates we define a function which will convert this kind of predicate into the old kind, as follows:
+
+πHOLCONST
+‹ €p› : MPROP ≠ (W ≠ I ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µA∑ p A = Ãw x∑ let (v,f) = A w in x = v ≤ f x
+∞
+
+The following principle can be proven (proof omitted):
+
+\ignore{
+=SML
+set_goal([], ¨µA w∑ ∂v∑ (p A) w vÆ);
+a (REPEAT µ_tac);
+a (∂_tac ¨Fst (A w)Æ THEN rewrite_tac [get_spec ¨pÆ, let_def]);
+val p_∂_lemma = save_pop_thm "p_∂_lemma";
+=TEX
+}%ignore
+
+=GFT
+p_∂_lemma =
+	Ù µ A w∑ ∂ v∑ p A w v
+=TEX
+
+This principle is what we need to prove the syllogisms which exhibit the existential fallacy.
+
+We then proceed in a similar manner to the other models, using the function $p$ to convert the new kind of predicate into the old.
+
+We have a new theory which is not a child of the first theory, so we must redeclare the fixity of the predication operators:
+
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
+
+They predication operators are then defined.
+Note that the differences are small and uniform.
+The type $îPROP2Æ$ is changed to $îMPROPÆ$ and the function $p$ is invoked before applying a predicate.
+
+Now we think of a predication as being a set of possible worlds, or BOOLean valued function over possible worlds.
+
+πHOLCONST
+‹ $€a› : MPROP ≠ MPROP ≠ W ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B w∑ (A a B) w § µx∑ p A w x ¥ p B w x
+∞
+
+πHOLCONST
+‹ $€e› : MPROP ≠ MPROP ≠ W ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B w∑ (A e B) w § µx∑ p A w x ¥ ≥ p B w x
+∞
+
+πHOLCONST
+‹ $€i› : MPROP ≠ MPROP ≠ W ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B w∑ (A i B) w § ∂x∑ p A w x ± p B w x
+∞
+
+πHOLCONST
+‹ $€u› : MPROP ≠ MPROP ≠ W ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B w∑ (A u B) w § ∂x∑ p A w x ± ≥ p B w x
+∞
+
+=SML
+declare_alias("o", ¨$uÆ);
+=TEX
+
+We now have to define some additional constants for the forms of judgement, which will assert the predications either of the actual world or of some or all possible worlds.
+
+First I define a constant (rather loosely) to be the actual world:
+
+πHOLCONST
+‹ €actual_world› : W
+˜¸¸¸¸¸¸
+‹ T
+∞
+
+Then the two modal judgement forms:
+
+πHOLCONST
+‹ €®› : (W ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µs∑ ® s § ∂w∑ s w
+∞
+
+πHOLCONST
+‹ €©› : (W ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µs∑ © s § µw∑ s w
+∞
+
+Finally the non-modal judgements also need a judgement forming constant.
+
+πHOLCONST
+‹ €ò› : (W ≠ BOOL) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µs∑ ò s § s actual_world
+∞
+
+\subsubsection{Laws of Immediate Inference}
+
+Before looking at the conversions there are some general rules which may be helpful for us though these probably are not in Aristotle.
+
+\ignore{
+=SML
+set_goal([¨©XÆ], ¨®XÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨©Æ, get_spec ¨®Æ, get_spec ¨òÆ]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+val ©®_thm = save_pop_thm "©®_thm";
+
+set_goal([¨©XÆ], ¨òXÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨©Æ, get_spec ¨®Æ, get_spec ¨òÆ]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+val ©ò_thm = save_pop_thm "©ò_thm";
+
+set_goal([¨òXÆ], ¨®XÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¨©Æ, get_spec ¨®Æ, get_spec ¨òÆ]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (∂_tac ¨actual_worldÆ THEN strip_tac);
+val ò®_thm_thm = save_pop_thm "ò®_thm_thm";
+=TEX
+}%ignore
+
+=GFT
+©®_thm = 		© X Ù ® X
+©ò_thm = 	© X Ù ò X
+ò®_thm = 	ò X Ù ® X
+=TEX
+
+\paragraph{Simple Conversion}
+
+\ignore{
+=SML
+set_goal([¨ò (A e B)Æ], ¨ò(B e A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨òÆ, ¨$eÆ])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+val e_conv_thm = save_pop_thm "e_conv_thm";
+
+set_goal([¨ò (A i B)Æ], ¨ò(B i A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨òÆ, ¨$iÆ])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+val i_conv_thm = save_pop_thm "i_conv_thm";
+
+set_goal([¨© (A e B)Æ], ¨©(B e A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨©Æ, ¨$eÆ])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+val ©e_conv_thm = save_pop_thm "©e_conv_thm";
+
+set_goal([¨© (A i B)Æ], ¨©(B i A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨©Æ, ¨$iÆ])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 2 ¨wÆ);
+a (asm_fc_tac[]);
+val ©i_conv_thm = save_pop_thm "©i_conv_thm";
+
+set_goal([¨® (A e B)Æ], ¨®(B e A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨®Æ, ¨$eÆ])
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨wÆ);
+a (asm_fc_tac[]);
+val ®e_conv_thm = save_pop_thm "®e_conv_thm";
+
+set_goal([¨® (A i B)Æ], ¨®(B i A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨®Æ, ¨$iÆ])
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨wÆ);
+a (asm_fc_tac[]);
+val ®i_conv_thm = save_pop_thm "®i_conv_thm";
+
+set_goal([¨© (A e B)Æ], ¨®(B e A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨$eÆ])
+	THEN contr_tac);
+a (spec_nth_asm_tac 1 ¨w:WÆ);
+a (asm_fc_tac[]);
+val ©®e_conv_thm = save_pop_thm "©®e_conv_thm";
+
+set_goal([¨© (A e B)Æ], ¨ò(B e A)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨òÆ, ¨©Æ, ¨$eÆ])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+val ©òe_conv_thm = save_pop_thm "©òe_conv_thm";
+=TEX
+}%ignore
+
+=GFT
+e_conv_thm = ò (A e B) Ù ò (B e A)
+i_conv_thm = ò (A i B) Ù ò (B i A)
+©e_conv_thm = © (A e B) Ù © (B e A)
+©i_conv_thm = © (A i B) Ù © (B i A)
+®e_conv_thm = ® (A e B) Ù ® (B e A)
+®i_conv_thm = ® (A i B) Ù ® (B i A)
+©®e_conv_thm = © (A e B) Ù ® (B e A)
+©òe_conv_thm = © (A e B) Ù ò (B e A)
+=TEX
+
+In this version of the semantics, ``a'' and ``o'' conversion is neither provable nor refutable.
+In the previous version (the one not admitting the existential fallacy), since the universe is a HOL type there is at least one individual, and contradictory predicates are allowed, we can use these two to disprove the two conversions.
+With this semantics there is no empty predicate, and we cannot know that there are two distinct predicates.
+
+\paragraph{Conversion Per Accidens}
+
+\ignore{
+=SML
+set_goal([¨ò (A a B)Æ], ¨ò (B i A)Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ, ¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ])
+	THEN contr_tac THEN asm_fc_tac[]);
+a (strip_asm_tac (list_µ_elim [¨AÆ, ¨actual_worldÆ] p_∂_lemma));
+a (asm_fc_tac[]);
+val òai_conv_thm = save_pop_thm "òai_conv_thm";
+
+set_goal([¨ò (A e B)Æ], ¨ò (B u A)Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ, ¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ])
+	THEN contr_tac THEN asm_fc_tac[]);
+a (strip_asm_tac (list_µ_elim [¨BÆ, ¨actual_worldÆ] p_∂_lemma));
+a (spec_nth_asm_tac 2 ¨vÆ);
+a (asm_fc_tac[]);
+val òeo_conv_thm = save_pop_thm "òeo_conv_thm";
+
+set_goal([¨© (A a B)Æ], ¨® (B i A)Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ, ¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ])
+	THEN contr_tac THEN asm_fc_tac[]);
+a (strip_asm_tac (list_µ_elim [¨AÆ, ¨actual_worldÆ] p_∂_lemma));
+a (asm_fc_tac[]);
+val ©®ai_conv_thm = save_pop_thm "©®ai_conv_thm";
+
+set_goal([¨© (A e B)Æ], ¨® (B u A)Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ, ¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ])
+	THEN contr_tac THEN asm_fc_tac[]);
+a (strip_asm_tac (list_µ_elim [¨BÆ, ¨actual_worldÆ] p_∂_lemma));
+a (spec_nth_asm_tac 2 ¨actual_worldÆ);
+a (spec_nth_asm_tac 1 ¨vÆ);
+a (asm_fc_tac[]);
+val ©®eo_conv_thm = save_pop_thm "©®eo_conv_thm";
+=TEX
+}%ignore
+
+=GFT
+òai_conv_thm = 	ò (A a B) Ù ò (B i A)
+òeo_conv_thm = 	ò (A e B) Ù ò (B o A)
+©®ai_conv_thm = 	© (A a B) Ù ® (B i A)
+©®eo_conv_thm = 	© (A e B) Ù ® (B o A)
+=TEX
+
+\subsubsection{The Valid Modal Syllogisms}
+
+The valid syllogisms have been described in Section \ref{ValidSyllogisms}.
+
+All nineteen syllogisms supposed valid by Aristotle are true under this semantics and have been proven.
+A further five\footnote{Which I got from Strawson \cite{strawson52}.} have also been proven, giving a total of 24.
+When combinations of modal operators are added to this the number gets quite large, so, rather than proving all the valid cases I will prove sufficient to enable the rest to be automatically proven.
+
+This will involve some theorems which are not strictly syllogistic.
+
+The actual theorems proved are shown in the theory listing in Appendix \ref{modsyllog}.
+
+Because of the modal operators the generation of the syllogisms is more complicated.
+The generation functions are adapted to allow a single modal operator to be applied to each of the premises and the conclusion.
+
+=SML
+fun €map_goal› f (st, t) = (map f st, f t);
+
+fun €mk_modt› vt = mk_ctype ("≠", [vt,
+	mk_ctype ("≠", [vt, (mk_ctype ("≠", [îWÆ, îBOOLÆ]))])]);
+
+fun €mk_modsyll› vt (s, n) =
+	mk_syll vt (nth (n-1) (figures vt)) (optrip_from_text (mk_modt vt) s);
+
+fun €modgoal› (mo1, mo2, mo3) ([p1,p2], c) =
+	([mk_app (mo1, p1), mk_app (mo2, p2)], mk_app (mo3, c));
+
+fun €mk_modsyllp› mot p = modgoal mot (mk_modsyll îMPROPÆ p);
+=TEX
+
+This defines the function {\it mk\_modsyllp} whose type is shown:
+
+=GFT
+val mk_modsyllp = fn: TERM * TERM * TERM -> string * int -> TERM list * TERM
+=TEX
+
+in which the {\it TERM} parameters are modal operators the next argument is a pair consisting of a string which is the name of a syllogism and a number which is the number of the figure.
+The result is a goal for proof.
+
+An example of its use is:
+
+=SML
+mk_modsyllp (¨©Æ,¨òÆ,¨®Æ) ("Barbara", 1);
+=TEX
+
+which yields:
+
+=GFT
+val it = ([¨© (M a P)Æ, ¨© (ø a M)Æ], ¨© (ø a P)Æ) : TERM list * TERM
+=TEX
+
+\subsubsection{General Results}
+
+The logic of the modal operators is completely independent of the logic of the syllogism.
+The relevant results can be stated and proven in HOL concisely, but these statements are not in the language of the syllogism.
+
+To get the required general results we define a new kind of pseudo-judgement `G' (for general).
+
+=SML
+val G = ¨(Ãx:W ≠ BOOL∑ x w)Æ;
+val GS = ¨µw:W∑ ëGÆ FP ± ëGÆ SP ¥ ëGÆ CSÆ;
+fun modal_generalisation (a,b,c) = ¨µFP SP CS∑ ëGSÆ ¥ (ëaÆ FP) ± (ëbÆ SP) ¥ (ëcÆ CS)Æ;
+=TEX
+
+=SML
+mk_modsyllp (G,G,G) ("Barbara", 1);
+val general_syllogs = map ((map_goal (snd o dest_eq o concl o rewrite_conv[])) o (mk_modsyllp (G,G,G)))
+	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
+=TEX
+
+
+=SML
+fun AW_COND_T tac (asms, conc) =
+	if snd (dest_app conc) = ¨actual_worldÆ
+	then tac ¨actual_worldÆ (asms, conc)
+	else tac ¨w:WÆ (asms, conc);
+
+val mod_gen_tac = REPEAT µ_tac
+	THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ])
+	THEN REPEAT strip_tac
+	THEN (AW_COND_T (fn x => REPEAT
+		(((SPEC_NTH_ASM_T 1 x ante_tac) ORELSE_T (GET_NTH_ASM_T 1 ante_tac)) THEN POP_ASM_T discard_tac)))
+	THEN REPEAT strip_tac
+	THEN_TRY ∂_tac ¨w:WÆ
+	THEN REPEAT strip_tac;
+
+fun mod_gen_rule t = tac_proof(([],t), mod_gen_tac);
+
+val mod_gen_params =
+	[(¨©Æ, ¨©Æ, ¨©Æ),
+	(¨©Æ, ¨©Æ, ¨®Æ),
+	(¨©Æ, ¨©Æ, ¨òÆ),
+	(¨®Æ, ¨©Æ, ¨®Æ),
+	(¨©Æ, ¨®Æ, ¨®Æ),
+	(¨©Æ, ¨òÆ, ¨òÆ),
+	(¨òÆ, ¨©Æ, ¨òÆ),
+	(¨òÆ, ¨òÆ, ¨òÆ)];
+
+val mod_gen_terms = map modal_generalisation mod_gen_params;
+
+val mod_gens = map mod_gen_rule mod_gen_terms;
+
+fun mod_gen_name (x,y,z) = concat (["mod_gen_"] @ [fst (dest_const x), fst (dest_const y), fst (dest_const z)]);
+
+val mod_gen_thms = map
+	(save_thm o (fn x => (mod_gen_name x, mod_gen_rule (modal_generalisation x))))
+	mod_gen_params;
+=TEX
+
+\subsubsection{Proving the Syllogisms}
+
+We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
+saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+
+=SML
+fun €modsps› mods = syll_prove_and_store (mk_modsyllp mods);
+fun €valid_modsylls› mods suff tac = map (modsps mods suff tac)
+	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
+=TEX
+
+The same tactic used for proof of the syllogisms in the previous model still works with this model (with the new definitions), but does not prove the syllogisms which exhibit the existential fallacy.
+
+To obtain proofs of these other syllogisms we need to make use of the lemma we proved about $p$, {\it p\_∂\_lemma}.
+This we do by instantiating it for each of the variables which appear in the syllogisms and supplying these for use in the proof.
+
+=SML
+val €modsyll_ò_tac› =
+	(MAP_EVERY strip_asm_tac
+		(map (fn x => (list_µ_elim [x, ¨actual_worldÆ] p_∂_lemma))
+		[¨M:MPROPÆ, ¨P:MPROPÆ, ¨ø:MPROPÆ])
+	THEN (asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ, ¨òÆ, ¨®Æ, ¨©Æ])));
+
+fun €modsyll_ò_rule› g = tac_proof(g, modsyll_ò_tac);
+=TEX
+
+I just run this over a few combinations of modal operators to see which it will prove.
+
+=SML
+val _ = valid_modsylls (¨òÆ,¨òÆ,¨òÆ) "_ò" modsyll_ò_tac;
+=TEX
+
+=SML
+val modsyll_©_tac = 
+((REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac [get_spec ¨$©Æ])
+ THEN (REPEAT strip_tac)
+ THEN (REPEAT (SPEC_NTH_ASM_T 1 ¨w:WÆ ante_tac THEN (POP_ASM_T discard_tac)))
+ THEN modsyll_ò_tac);
+=TEX
+
+=SML
+val _ = valid_modsylls (¨©Æ,¨©Æ,¨©Æ) "_©" modsyll_©_tac;
+val _ = valid_modsylls (¨©Æ,¨©Æ,¨òÆ) "_©©ò" modsyll_ò_tac;
+val _ = valid_modsylls (¨©Æ,¨©Æ,¨®Æ) "_©©®" modsyll_ò_tac;
+=TEX
+
+The theorems proved have been stored in the theory and are shown in the theory listing in Appendix \ref{modsyllog}
+
+\subsection{Demonstrative Truth}
+
+An important part of Aristotle's philosophy is his concept of demonstrative science.
+
+A proof is demonstrative if it proceeds from first principles and is deductively sound.
+Truths established in this way is necessary because the first principles must be essential and hence necessary and sound deduction preserves necessity.
+
+If we understand Hume's ``intuitively certain'' as a reference to the criteria for Aristotle's first principles, and understand Hume as using the term `demonstrative' in the same sense as Aristotle, then it is plausible that Hume's ``truths of reason'' are the same as Aristotle's truths of demonstrative science.
+
+It is tempting to use the word demonstrative for these though in Aristotle and Hume the first principles do not count as demonstrable.
+It is tempting also to identify these concepts with the concept of analyticity.
+This last point is aided by the connection in Aristotle between essential truth (which must be posessed by the first principles) and definition, which seems close, and which distinguishes his accidental predications from essential predications.
+
+However, we now expect deductive systems to be incomplete, and hence that not all analytic propositions are provable.
+However, the incompleteness may arise from adopting a fixed set of first principles, rather from incompleteness of deduction.
+In this case, the availability of an open set of first principles makes completeness in principle possible.
+To sustain this principle in relation to set theory, for example, we would have to regard ourselves as having some definition of the concept of set relative to which the present axioms (say those of ZFC) are essential, and relative to which extensions as necessary to prove progressively more difficult results can also be seen to be essential.
+This is not entirely implausible.
+This is close to the rationale for large cardinaly axioms.
+The informal description of the cumulative hierarchy as the domain of set theory involves the idea that the construction of well-founded sets from other well-founded sets of lesser rank proceeds indefinitely, and hence any axiom which states that a set of a certain rank exists must be true.
+
+Does formal modelling contribute anything to this discussion?
+
+The above discussion involves ideas which belong to Aristotle's metaphysics rather than his logic.
+So a fuller formal analysis of these ideas will have to wait until we get to the Metaphysics.
+
+However some aspects may be considered here.
+For example, we need to know that from necessary premises only necessary premises are derivable by syllogisms.
+
+\section{METAPHYSICS (I)}\label{METAPHYSICSI}
 
 In this section we consider some material on Aristotle's Metaphysics \cite{aristotleMetap} which originated in work of Grice and Code \cite{code88} and came to me from a \href{http://rbjones.com/pipermail/hist-analytic_rbjones.com/2009q2/000258.html}{posting of J.L. Speranza} on the hist-analytic mailing list.
 Code's paper is also partially available at \href{http://books.google.co.uk/books?id=sHWK4Lz37sAC&printsec=frontcover#PPA411,M1}{Google Books}.
@@ -747,7 +1418,7 @@ In the next section I will produce another model in which essence and accident a
 A new theory is needed which I will call ``ariscat'' which is created here:
 
 =SML
-open_theory "misc2";
+open_theory "aristotle";
 force_new_theory "ariscat";
 =TEX
 
@@ -758,18 +1429,6 @@ merge_pcs ["'savedthm_cs_∂_proof"] "'ariscat";
 set_merge_pcs ["misc2", "'ariscat"];
 =TEX
 }%ignore
-
-We need to define inequality:
-
-=SML
-declare_infix (300, "Ω");
-=TEX
-
-πHOLCONST
-‹ $€Ω› : 'a ≠ 'a ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µx y∑ x Ω y § ≥ x = y
-∞
 
 \subsection{The Grice/Code/Speranza Formulae}
 
@@ -1805,6 +2464,325 @@ This is a stronger version of c30 which says that, even if something isn't parti
 
 \end{description}
 
+\section{METAPHYSICS (II)}\label{METAPHYSICSII}
+
+In this section I offer a single model integrating Modal Syllogisms with the distinction between essential and accidental predication.
+
+My interest is primarily in the extent to which may be found in Aristotle's philosophy a precursor of Hume's fork or the modern distinctions between analytic and synthetic or necessary and contingent propositions.
+I see three Aristotelian ideas which have some relevance.
+
+\begin{itemize}
+\item the distinction between necessary and contingent propositions
+\item the distinction between essential and accidental predication
+\item the notion of demonstrability
+\end{itemize}
+
+It is only when we combine the syllogism with the metaphyics that we can explore the relationship between these various concepts.
+
+I will give higher priority in this model to good structure while remaining faithful to Aristotle.
+It is not the purpose of this model to further investigate the position in relation to Aristotle of Grice, Codd or Speranza.
+
+I have constructed this model to give a good correspondence between necessary truth and essential predication.
+If the model is successful in that respect it remains to consider whether it is consistent with the philosophy of Aristotle.
+I do not know whether Aristotle talked about the relationship between essence and necessity.
+
+I also hope that the model may help to explore the question of whether demonstrable truth, or rather the truths which are either ``intuitively or demonstrably certain'' to use Hume's words, coincides with necessary truth.
+
+=SML
+open_theory "aristotle";
+force_new_theory "syll_metap";
+=TEX
+
+\ignore{
+=SML
+force_new_pc €"'syll_metap"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'syll_metap";
+set_merge_pcs ["misc2", "'syll_metap"];
+=TEX
+}%ignore
+
+\subsection{The Subject Matter}
+
+In my first metaphysical model the main question in relations to subject matter was ``what are subjects and predicates'', to which a model of Aristotelian categories gives an answer.
+The introduction of modality makes it necessary to consider something like possible worlds.
+These were left uninterpreted in the modal treatment of the syllogism, but now that we expose the distinction between essential and accidental predication is it desirable to identify possible worlds with that which is accidental.
+
+What is accidental is the extension of individual attributes, and this gives our concept of possible world.
+
+It is convenient at this point to consider the question of extensionality.
+According to Grice/Codd/Speranza, essential predicates are extensional (%
+=INLINEFT
+A izz B ± B izz A ¥ A = B
+=TEX
+), but I know no reason to suppose that accidental predication is, and it seems counter-intuitive that it should be.
+Consequently the modelling of an accidental predicate using a BOOLean valued function in HOL (in which functions are extensional) is inappropriate.
+So I will separate out the extension from the individual attribute.
+
+Nevertheless the only thing we need to know about an attribute is its extension.
+I introduce a new unintepreted type for attributes:
+
+=SML
+new_type ("ATTR", 0);
+=TEX
+
+I retain the simplification from our model of modal syllogisms that the set of substantial individuals (particulars) is fixed across possible worlds.
+
+=SML
+new_type ("PART", 0);
+=TEX
+
+A possible world is then an assignment of extensions to individual attributes, where an extension is a set of particulars.
+I will use a set rather than a propositional function.
+
+=SML
+declare_type_abbrev ("W", [], îATTR ≠ PART SETÆ);
+=TEX
+
+I need to distinguish one possible world which is the actual world:
+
+πHOLCONST
+‹ €actual_world› : W
+˜¸¸¸¸¸¸
+‹ T
+∞
+
+I also need a fixed (not accidental) allocation of the attributes to non-substantial categories.
+
+=SML
+new_type ("ACAT", 0);
+=TEX
+
+πHOLCONST
+‹ €attribute_category› : ATTR ≠ ACAT
+˜¸¸¸¸¸¸
+‹ T
+∞
+
+Finally the question of what subjects and predicates are can be determined.
+I will call them {\it TERM}s and they are either a set of particulars or a set of attributes.
+To allow for complementation I add a boolean component, which if true indicates a complement.
+
+The sets in this case must be non-empty if we are to retain the existential fallacy.
+The method used in my model of the modal syllogism in Section \ref{MODSYLL} will not do here, because (at least according to Code) we need an extensionality result, so I have instead introduced
+\footnote{The definition has been placed in a separte document, \cite{rbjt006}.}
+ for this purpose a new type ({\it NESET}) of non-empty sets which will give us both the existential fallacy and extensionality (for essential predication, not for accidental predication).
+
+A term is therefore modelled as either a non-empty set of individual substances or a non-empty set of individual attributes.
+
+=SML
+declare_type_abbrev (€"TERM"›, [], î(PART NESET + ATTR NESET)Æ);
+=TEX
+
+πHOLCONST
+‹ €mk_SubsTerm› : PART  ≠ TERM
+˜¸¸¸¸¸¸
+‹ µs∑ mk_SubsTerm s = InL (NeSet s)
+∞
+
+πHOLCONST
+‹ €mk_AttrTerm› : ATTR  ≠ TERM
+˜¸¸¸¸¸¸
+‹ µs∑ mk_AttrTerm s = InR (NeSet s)
+∞
+
+The type {\it ACAT} is the type of attribute categories.
+To get a type of all categories we add one more which will be the category of substances.
+
+=SML
+declare_type_abbrev (€"CAT"›, [], îONE + ACATÆ);
+=TEX
+
+It may be useful to have a name for the predicate encompassing all substance.
+
+πHOLCONST
+‹ €Substance› : TERM
+˜¸¸¸¸¸¸
+‹ Substance = mk_SubsTerm Universe
+∞
+
+\subsection{Predication}
+
+The syllogism comes with four kinds of predication (a, e, i, o), and the metaphysics with three (izz, hazz and izz or hazz).
+Combining these would give twelve combinations.
+
+To simplify a bit I will separate out the quantifier but defining {\it All} and {\it Some} appropriately, and provide a postfix negator for izz an hazz.
+
+I will then treat the modal operators as operators over propositions, and introduce the syllogism as a kind of judgement.
+
+The type of the primitive copulas is:
+
+=SML
+declare_type_abbrev("COPULA", [], îPART + ATTR ≠ TERM ≠ (W ≠ BOOL)Æ);
+=TEX
+
+The first parameter is an individual substance or attribute rather than a TERM, the quantifying operator will arrange for each of the relevant individuals or attributes to be supplied.
+
+\paragraph{Propositions}
+
+=SML
+declare_type_abbrev ("MPROP", [], îW ≠ BOOLÆ);
+=TEX
+
+\paragraph{Complementation}
+
+The distinction between affirmative and negative is achieved by a postfix negation so we can say ``izz not'', ``hazz not'' or ``are not''.
+
+=SML
+declare_postfix (100, "not");
+=TEX
+
+πHOLCONST
+‹ $€not› : COPULA ≠ COPULA
+˜¸¸¸¸¸¸
+‹ µpred∑ pred not = Ãpa t w∑ ≥ pred pa t w 
+∞
+
+\paragraph{Quantifiers}
+
+The following function is used by both quantifiers to check if something is in the range of quantification.
+
+Think of a TERM as denoting a set of individuals, this is test for membership of that set.
+The complications are because substances and attributes have different types in this model.
+
+=SML
+declare_infix(300, "InTERM");
+=TEX
+
+πHOLCONST
+‹ $€InTERM› : (PART + ATTR) ≠ TERM ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ pa t∑ pa InTERM t § 
+‹	if IsL pa
+‹	then OutL pa ç PeSet (OutL t)
+‹	else OutR pa ç PeSet (OutR t)
+∞
+
+We then use that membership test in defining the quantifiers.
+The quantifiers expect to be supplied with a copula and a term.
+The quantifier then predicates using the copula the term of everything or something in the domain of quantification (which is the subject term).
+The copulas are defined below.
+
+=IGN
+declare_prefix(400, "All");
+declare_prefix(400, "Some");
+=TEX
+
+πHOLCONST
+‹ $€All› : TERM ≠ ((PART+ATTR) ≠ TERM ≠ MPROP) ≠ TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ s r p∑ All s r p = Ãw∑ µz∑ z InTERM s ¥ r z p w
+∞
+
+πHOLCONST
+‹ €Some› : TERM ≠ ((PART+ATTR) ≠ TERM ≠ MPROP) ≠ TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ s r p∑ Some s r p = Ãw∑ ∂z∑ z InTERM s ± r z p w
+∞
+
+\paragraph{Predicators}
+
+
+πHOLCONST
+‹ €izz› : (PART+ATTR) ≠ TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ pa t∑ izz pa t = Ãw∑
+‹	if IsL pa
+‹	then if IsL t then OutL pa ç PeSet (OutL t) else F
+‹	else OutR pa ç PeSet (OutR t)
+∞
+
+πHOLCONST
+‹ €hazz› : (PART+ATTR) ≠ TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ pa t∑ hazz pa t = Ãw∑
+‹	if IsL pa
+‹	then if IsL t then F else (∂a∑ a ç PeSet(OutR t) ± OutL pa ç w a)
+‹	else F
+∞
+
+πHOLCONST
+‹ €are› : (PART+ATTR) ≠ TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ pa t∑ are pa t = Ãw∑ izz pa t w ≤ hazz pa t w
+‹	
+∞
+
+\paragraph{Judgements}
+
+=SML
+declare_infix(300, "Â");
+=TEX
+
+πHOLCONST
+‹ $€Â› : MPROP LIST ≠ MPROP ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µlp c∑ lp Â c § Fold (Ãp t∑ p actual_world ± t) lp T ¥ c actual_world
+∞
+
+\paragraph{Modal Operators}
+
+In this model the model operators are operators over propositions.
+
+πHOLCONST
+‹ €®› : MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp∑ ® p = Ãw∑ ∂w'∑ p w' 
+∞
+
+πHOLCONST
+‹ €©› : MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp∑ © p = Ãw∑ µw'∑ p w' 
+∞
+
+\subsection{Immediate Inference}
+
+This model is significantly more complex than any of the preceding models, and proofs are therefore more difficult and automation of proof will be more of a challenge.
+
+So far I have just put a toe in the water by proving the following elementary illustrations of the relationship between necessity and essential predication.
+
+=GFT
+€©_izz_thm› = Ù [© (All A izz B)] Â All A izz B
+€©_hazz_thm› = Ù [© (All A hazz B)] Â All A izz B
+€izz_©_thm› = Ù [All A izz B] Â © (All A izz B)
+=TEX
+
+$©_hazz_thm$ is a bit odd.
+Really what I wanted to prove was that no accidental predication is necessary, but I have no negation in the syllogism, so I just proved that if an accidental predication were necessary then it would be essential.
+
+There are many theorems which one would naturally prove at this point, to facilitate further proofs and proof automation, which are not expressible syllogistically.
+Proof automation depends heavily on the demonstration of equations, so that proof may proceed by rewriting.
+But syllogisms are not suitable for this.
+
+The natural way to proceed in such a case is to continue in this theory doing things which support proofs of syllogisms without being restrained to syllogisms, and then to have a separate theory in which the syllogistic claims are presented.
+Some reflection is desirable on what the philosophical objectives are and what course will best contribute to those purposes.
+
+\ignore{
+=SML
+set_goal([], ¨[© (All A izz B)] Â All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val ©_izz_thm = save_pop_thm "©_izz_thm";
+
+set_goal([], ¨[© (All A hazz B)] Â All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ])
+	THEN REPEAT strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
+	THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (lemma_tac ¨∂d∑ d ç PeSet (OutL A)Æ THEN1 rewrite_tac[]);
+a (∂_tac ¨InL dÆ THEN asm_rewrite_tac[]);
+a (cond_cases_tac ¨IsL BÆ);
+val ©_hazz_thm = save_pop_thm "©_hazz_thm";
+
+set_goal([], ¨[All A izz B] Â © (All  A izz B)Æ);
+a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val izz_©_thm = save_pop_thm "izz_©_thm";
+=TEX
+}%ignore
+
 \section{POSTSCRIPT}\label{POSTSCRIPT}
 
 These are the kinds of thing which {\it might} happen in future issues of this document:
@@ -1816,9 +2794,6 @@ These are the kinds of thing which {\it might} happen in future issues of this d
 In that case I would like to put some hyperlinks into my online hypertext of Aristotle's relevant works, connecting the specific features of the model with the passages in Aristotle which they reflect.
 
 \item I think it would not be much harder to do a model in which modal operators are definable, and I would like to know whether I am right, so there is a good chance I will produce a modal version (with most of the same defects in other respects).
-I may or may not then discard the non-modal version.
-
-\item If I were to continue then I am inclined to think that some formalisation of Aristotle's syllogistic logic should intervene between the categories and the metaphysics (first cut is now there).
 
 \item I think I need to incorporate the ``existential fallacy''.
 
@@ -1837,8 +2812,12 @@ I'm inclined now to try a further model which combines the two above, adds modal
 \include{syllog1.th}
 \def\section#1{\Section{#1}\label{syllog2}}
 \include{syllog2.th}
+\def\section#1{\Section{#1}\label{modsyllog}}
+\include{modsyllog.th}
 \def\section#1{\Section{#1}\label{ariscat}}
 \include{ariscat.th}
+\def\section#1{\Section{#1}\label{syll_metap}}
+\include{syll_metap.th}
 }  %\let
 
 \pagebreak
