@@ -1,5 +1,5 @@
 =IGN
-$Id: t028.doc,v 1.5 2009/06/09 13:09:57 rbj Exp $
+$Id: t028.doc,v 1.6 2009/06/09 17:44:47 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -10,6 +10,7 @@ $Id: t028.doc,v 1.5 2009/06/09 13:09:57 rbj Exp $
 
 % the following two modal operators come from the amsfonts package
 \def\PrKI{\Diamond}	%Modify printing for ®
+\def\PrJI{\models}	%Modify printing for ò
 \def\PrKJ{\Box}		%Modify printing for ©
 
 \def\ExpName{\mbox{{\sf exp}}}
@@ -46,12 +47,12 @@ Formalisation in higher order logic of parts of Aristotle's logic and metaphysic
 
 Created 2009/05/21
 
-Last Change $ $Date: 2009/06/09 13:09:57 $ $
+Last Change $ $Date: 2009/06/09 17:44:47 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t028.pdf}
 
-$ $Id: t028.doc,v 1.5 2009/06/09 13:09:57 rbj Exp $ $
+$ $Id: t028.doc,v 1.6 2009/06/09 17:44:47 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1275,17 +1276,27 @@ val it = ([¨© (M a P)Æ, ¨© (ø a M)Æ], ¨© (ø a P)Æ) : TERM list * TERM
 The logic of the modal operators is completely independent of the logic of the syllogism.
 The relevant results can be stated and proven in HOL concisely, but these statements are not in the language of the syllogism.
 
+There are in effect just seven modal truths, each of which appears in 24 forms, one for each of the valid non-modal syllogisms.
+
+Rather than proving all 192 theorems (counting the non-modal truths in this modal model), I prove the eight proformas expressed in HOL.
+From these eight all 192 theorems can be obtained by proving (a special form of) one of the valid syllogisms and instantiating one of the general modal rules using it.
+
+I omit the details of the metalanguage scripts which automate all this.
+
+\ignore{
 To get the required general results we define a new kind of pseudo-judgement `G' (for general).
 
 =SML
 val G = ¨(Ãx:W ≠ BOOL∑ x w)Æ;
 val GS = ¨µw:W∑ ëGÆ FP ± ëGÆ SP ¥ ëGÆ CSÆ;
-fun modal_generalisation (a,b,c) = ¨µFP SP CS∑ ëGSÆ ¥ (ëaÆ FP) ± (ëbÆ SP) ¥ (ëcÆ CS)Æ;
+fun modal_generalisation (a,b,c) =
+	¨µFP SP CS∑ ëGSÆ ¥ (ëaÆ FP) ± (ëbÆ SP) ¥ (ëcÆ CS)Æ;
 =TEX
 
 =SML
 mk_modsyllp (G,G,G) ("Barbara", 1);
-val general_syllogs = map ((map_goal (snd o dest_eq o concl o rewrite_conv[])) o (mk_modsyllp (G,G,G)))
+val general_syllogs = map ((map_goal (snd o dest_eq o concl o rewrite_conv[]))
+			o (mk_modsyllp (G,G,G)))
 	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
 =TEX
 
@@ -1300,13 +1311,21 @@ val mod_gen_tac = REPEAT µ_tac
 	THEN rewrite_tac (map get_spec [¨®Æ, ¨©Æ, ¨òÆ])
 	THEN REPEAT strip_tac
 	THEN (AW_COND_T (fn x => REPEAT
-		(((SPEC_NTH_ASM_T 1 x ante_tac) ORELSE_T (GET_NTH_ASM_T 1 ante_tac)) THEN POP_ASM_T discard_tac)))
+		(((SPEC_NTH_ASM_T 1 x ante_tac) ORELSE_T (GET_NTH_ASM_T 1 ante_tac))
+			THEN POP_ASM_T discard_tac)))
 	THEN REPEAT strip_tac
 	THEN_TRY ∂_tac ¨w:WÆ
 	THEN REPEAT strip_tac;
 
 fun mod_gen_rule t = tac_proof(([],t), mod_gen_tac);
+=TEX
+}%ignore
 
+The following lists the valid modal forms.
+In each tuple the three entries give the modalities of the first and second premise and the conclusion respectively.
+Taking any valid syllogism and applying modal operators using one of the patterns in this table will give a valid modal syllogism.
+
+=SML
 val mod_gen_params =
 	[(¨©Æ, ¨©Æ, ¨©Æ),
 	(¨©Æ, ¨©Æ, ¨®Æ),
@@ -1316,25 +1335,49 @@ val mod_gen_params =
 	(¨©Æ, ¨òÆ, ¨òÆ),
 	(¨òÆ, ¨©Æ, ¨òÆ),
 	(¨òÆ, ¨òÆ, ¨òÆ)];
+=TEX
 
+\ignore{
+=SML
 val mod_gen_terms = map modal_generalisation mod_gen_params;
 
 val mod_gens = map mod_gen_rule mod_gen_terms;
 
-fun mod_gen_name (x,y,z) = concat (["mod_gen_"] @ [fst (dest_const x), fst (dest_const y), fst (dest_const z)]);
+fun mod_gen_name (x,y,z) = concat
+	(["mod_gen_"] @ [fst (dest_const x), fst (dest_const y), fst (dest_const z)]);
 
 val mod_gen_thms = map
-	(save_thm o (fn x => (mod_gen_name x, mod_gen_rule (modal_generalisation x))))
+	(save_thm o (fn x => (mod_gen_name x, rewrite_rule [] (mod_gen_rule (modal_generalisation x)))))
 	mod_gen_params;
 =TEX
+}%ignore
+
+The set of general HOL theorems which facilitate the proofs of these modal syllogisms is as follows:
+
+=GFT ProofPower Theorems
+val mod_gen_thms =
+   [Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ © FP ± © SP ¥ © CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ © FP ± © SP ¥ ® CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ © FP ± © SP ¥ ò CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ ® FP ± © SP ¥ ® CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ © FP ± ® SP ¥ ® CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ © FP ± ò SP ¥ ò CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ ò FP ± © SP ¥ ò CS,
+      Ù µ FP SP CS∑ (µ w∑ FP w ± SP w ¥ CS w) ¥ ò FP ± ò SP ¥ ò CS]
+: THM list
+=TEX
+
+In the above theorems the variables {\it FP}, {\it SP}, {\it CS}, stand respectively for {\it first premise}, {\it second premise}, {\it conclusion of syllogism} and range over modal propositions (which have type îW ≠ BOOLÆ).
 
 \subsubsection{Proving the Syllogisms}
 
-We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
-saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+I then prove the 24 non-modal syllogisms in the required form and infer forward using the above 8 theorems to obtain a total of 192 theorems true in this model of the modal syllogism.
 
+Details of scripts omitted.
+
+\ignore{
 =SML
-fun €modsps› mods = syll_prove_and_store (mk_modsyllp mods);
+fun €modsps› mods = syll_prove (mk_modsyllp mods);
 fun €valid_modsylls› mods suff tac = map (modsps mods suff tac)
 	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
 =TEX
@@ -1344,37 +1387,62 @@ The same tactic used for proof of the syllogisms in the previous model still wor
 To obtain proofs of these other syllogisms we need to make use of the lemma we proved about $p$, {\it p\_∂\_lemma}.
 This we do by instantiating it for each of the variables which appear in the syllogisms and supplying these for use in the proof.
 
-=SML
-val €modsyll_ò_tac› =
-	(MAP_EVERY strip_asm_tac
-		(map (fn x => (list_µ_elim [x, ¨actual_worldÆ] p_∂_lemma))
-		[¨M:MPROPÆ, ¨P:MPROPÆ, ¨ø:MPROPÆ])
-	THEN (asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ, ¨òÆ, ¨®Æ, ¨©Æ])));
 
-fun €modsyll_ò_rule› g = tac_proof(g, modsyll_ò_tac);
+=SML
+val €modsyll_G_tac› =
+	(MAP_EVERY strip_asm_tac
+		(map (fn x => (list_µ_elim [x, ¨w:WÆ] p_∂_lemma))
+		[¨M:MPROPÆ, ¨P:MPROPÆ, ¨ø:MPROPÆ])
+	THEN (asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ])));
+
+fun €modsyll_G_rule› g = tac_proof(g, modsyll_G_tac);
 =TEX
 
 I just run this over a few combinations of modal operators to see which it will prove.
 
+
 =SML
-val _ = valid_modsylls (¨òÆ,¨òÆ,¨òÆ) "_ò" modsyll_ò_tac;
+val valid_G_modsylls1 = valid_modsylls (G,G,G) "" modsyll_G_tac;
+val valid_G_modsylls2 = map
+	((µ_intro ¨w:WÆ)
+		o (rewrite_rule [prove_rule [] ¨µA B C∑ (A ¥ B ¥ C) § (A ± B ¥ C)Æ])
+		o (rewrite_rule [])
+		o all_¥_intro
+		o snd)
+	valid_G_modsylls1;
+undisch_rule;
+
+val valid_G_modsylls = map (undisch_rule
+		o undisch_rule
+		o (rewrite_rule [prove_rule [] ¨µA B C∑ (A ± B ¥ C) § (A ¥ B ¥ C)Æ])
+		o all_µ_elim)
+	(fc_rule mod_gen_thms valid_G_modsylls2);
+=TEX
+}%ignore
+
+The automated proof the yields the expected 192 modal syllogisms, of which we display only the first few (and do not save them in the theory):
+
+=GFT
+val valid_G_modsylls =
+   [ò (P a M), ò (M e ø) Ù ò (ø o P), ò (P a M), © (M e ø) Ù ò (ø o P),
+      © (P a M), ò (M e ø) Ù ò (ø o P), © (P a M), ® (M e ø) Ù ® (ø o P),
+      ® (P a M), © (M e ø) Ù ® (ø o P), © (P a M), © (M e ø) Ù ò (ø o P),
+      © (P a M), © (M e ø) Ù ® (ø o P), © (P a M), © (M e ø) Ù © (ø o P),
+      ò (P a M), ò (ø e M) Ù ò (ø o P), ò (P a M), © (ø e M) Ù ò (ø o P),
+      © (P a M), ò (ø e M) Ù ò (ø o P), © (P a M), ® (ø e M) Ù ® (ø o P),
+      ® (P a M), © (ø e M) Ù ® (ø o P), © (P a M), © (ø e M) Ù ò (ø o P),
+      © (P a M), © (ø e M) Ù ® (ø o P), © (P a M), © (ø e M) Ù © (ø o P),
+      ò (P e M), ò (ø a M) Ù ò (ø o P), ò (P e M), © (ø a M) Ù ò (ø o P),
+      © (P e M), ò (ø a M) Ù ò (ø o P), © (P e M), ® (ø a M) Ù ® (ø o P),
+...
 =TEX
 
 =SML
-val modsyll_©_tac = 
-((REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac [get_spec ¨$©Æ])
- THEN (REPEAT strip_tac)
- THEN (REPEAT (SPEC_NTH_ASM_T 1 ¨w:WÆ ante_tac THEN (POP_ASM_T discard_tac)))
- THEN modsyll_ò_tac);
+length valid_G_modsylls;
+=GFT
+val it = 192 : int
 =TEX
-
-=SML
-val _ = valid_modsylls (¨©Æ,¨©Æ,¨©Æ) "_©" modsyll_©_tac;
-val _ = valid_modsylls (¨©Æ,¨©Æ,¨òÆ) "_©©ò" modsyll_ò_tac;
-val _ = valid_modsylls (¨©Æ,¨©Æ,¨®Æ) "_©©®" modsyll_ò_tac;
 =TEX
-
-The theorems proved have been stored in the theory and are shown in the theory listing in Appendix \ref{modsyllog}
 
 \subsection{Demonstrative Truth}
 
@@ -2653,8 +2721,8 @@ declare_infix(300, "InTERM");
 ˜¸¸¸¸¸¸
 ‹ µ pa t∑ pa InTERM t § 
 ‹	if IsL pa
-‹	then OutL pa ç PeSet (OutL t)
-‹	else OutR pa ç PeSet (OutR t)
+‹	then OutL pa ç Set (OutL t)
+‹	else OutR pa ç Set (OutR t)
 ∞
 
 We then use that membership test in defining the quantifiers.
@@ -2687,8 +2755,8 @@ declare_prefix(400, "Some");
 ˜¸¸¸¸¸¸
 ‹ µ pa t∑ izz pa t = Ãw∑
 ‹	if IsL pa
-‹	then if IsL t then OutL pa ç PeSet (OutL t) else F
-‹	else OutR pa ç PeSet (OutR t)
+‹	then if IsL t then OutL pa ç Set (OutL t) else F
+‹	else OutR pa ç Set (OutR t)
 ∞
 
 πHOLCONST
@@ -2696,7 +2764,7 @@ declare_prefix(400, "Some");
 ˜¸¸¸¸¸¸
 ‹ µ pa t∑ hazz pa t = Ãw∑
 ‹	if IsL pa
-‹	then if IsL t then F else (∂a∑ a ç PeSet(OutR t) ± OutL pa ç w a)
+‹	then if IsL t then F else (∂a∑ a ç Set(OutR t) ± OutL pa ç w a)
 ‹	else F
 ∞
 
@@ -2710,13 +2778,13 @@ declare_prefix(400, "Some");
 \paragraph{Judgements}
 
 =SML
-declare_infix(300, "Â");
+declare_infix(300, "ò");
 =TEX
 
 πHOLCONST
-‹ $€Â› : MPROP LIST ≠ MPROP ≠ BOOL
+‹ $€ò› : MPROP LIST ≠ MPROP ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µlp c∑ lp Â c § Fold (Ãp t∑ p actual_world ± t) lp T ¥ c actual_world
+‹ µlp c∑ lp ò c § Fold (Ãp t∑ p actual_world ± t) lp T ¥ c actual_world
 ∞
 
 \paragraph{Modal Operators}
@@ -2742,9 +2810,9 @@ This model is significantly more complex than any of the preceding models, and p
 So far I have just put a toe in the water by proving the following elementary illustrations of the relationship between necessity and essential predication.
 
 =GFT
-€©_izz_thm› = Ù [© (All A izz B)] Â All A izz B
-€©_hazz_thm› = Ù [© (All A hazz B)] Â All A izz B
-€izz_©_thm› = Ù [All A izz B] Â © (All A izz B)
+€©_izz_thm› = Ù [© (All A izz B)] ò All A izz B
+€©_hazz_thm› = Ù [© (All A hazz B)] ò All A izz B
+€izz_©_thm› = Ù [All A izz B] ò © (All A izz B)
 =TEX
 
 $©_hazz_thm$ is a bit odd.
@@ -2759,25 +2827,25 @@ Some reflection is desirable on what the philosophical objectives are and what c
 
 \ignore{
 =SML
-set_goal([], ¨[© (All A izz B)] Â All A izz BÆ);
-a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+set_goal([], ¨[© (All A izz B)] ò All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
 	THEN REPEAT strip_tac);
 val ©_izz_thm = save_pop_thm "©_izz_thm";
 
-set_goal([], ¨[© (All A hazz B)] Â All A izz BÆ);
-a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ])
+set_goal([], ¨[© (All A hazz B)] ò All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ])
 	THEN REPEAT strip_tac);
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
 	THEN strip_tac);
 a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
-a (lemma_tac ¨∂d∑ d ç PeSet (OutL A)Æ THEN1 rewrite_tac[]);
+a (lemma_tac ¨∂d∑ d ç Set (OutL A)Æ THEN1 rewrite_tac[]);
 a (∂_tac ¨InL dÆ THEN asm_rewrite_tac[]);
 a (cond_cases_tac ¨IsL BÆ);
 val ©_hazz_thm = save_pop_thm "©_hazz_thm";
 
-set_goal([], ¨[All A izz B] Â © (All  A izz B)Æ);
-a (rewrite_tac  (map get_spec [¨$ÂÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+set_goal([], ¨[All A izz B] ò © (All  A izz B)Æ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
 	THEN REPEAT strip_tac);
 val izz_©_thm = save_pop_thm "izz_©_thm";
 =TEX
@@ -2793,16 +2861,28 @@ These are the kinds of thing which {\it might} happen in future issues of this d
 \item There is a good chance I will get to know something about what Aristotle really said and make improvements arising from this.
 In that case I would like to put some hyperlinks into my online hypertext of Aristotle's relevant works, connecting the specific features of the model with the passages in Aristotle which they reflect.
 
-\item I think it would not be much harder to do a model in which modal operators are definable, and I would like to know whether I am right, so there is a good chance I will produce a modal version (with most of the same defects in other respects).
-
-\item I think I need to incorporate the ``existential fallacy''.
-
 \item I am interested in the methods, and I may spend more time trying to describe them in a way which might be intelligible to philosophers.
 
 \item If this ever becomes a good approximation to Aristotle's position there would then be some philosophical analysis of the metaphysics (by contrast with a purely logical analysis), and somewhere there are points to be made about the kind of analysis which I am aiming for.
 \end{itemize}
 
-I'm inclined now to try a further model which combines the two above, adds modality and the existential fallacy, and is expressed as syllogistically as possible.
+There are three stages I envisage in the process of getting philosophical insights from this kind of work:
+
+\begin{description}
+\item[formal modelling]
+I now have a series of models, the last one looks as if it might be useful.
+
+\item[model verification]
+The models need checking against Aristotle's writings.
+
+\item[formal analysis]
+Further formal work is needed to come to an understanding of these models.
+
+\item[philosophical analysis]
+After the models are formulated and verified, and formal analysis has deepened our undertanding of these models, we may then be in a position to obtain some interesting philosophical insights.
+
+\end{description}
+
 
 \appendix
 
@@ -2824,17 +2904,14 @@ I'm inclined now to try a further model which combines the two above, adds modal
 \section*{BIBLIOGRAPHY}\label{BIBLIOGRAPHY}
 \addcontentsline{toc}{section}{BIBLIOGRAPHY}
 
-{
-\def\section*#1{\ignore{#1}}
+{\def\section*#1{\ignore{#1}}
 \raggedright
-\bibliographystyle{fmu}
+\bibliographystyle{rbjfmu}
 \bibliography{rbj,fmu}
 } %\raggedright
 
-
 {\twocolumn[\section*{INDEX}\label{index}]
 \addcontentsline{toc}{section}{INDEX}
-
 {\small\printindex}}
 
 \end{document}
