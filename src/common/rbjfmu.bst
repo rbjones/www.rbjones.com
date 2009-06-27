@@ -32,6 +32,7 @@ ENTRY
     howpublished
     identity                        % RDA
     institution
+    isbn			    % RBJ
     journal
     key
     month
@@ -46,6 +47,7 @@ ENTRY
     title
     type
     url				    % RBJ
+    version			    % RBJ
     volume
     year
   }
@@ -359,6 +361,39 @@ FUNCTION {format.edition}
   if$
 }
 
+FUNCTION {format.isbn}
+{ isbn empty$
+    { "" }
+    { output.state mid.sentence =
+	{ "ISBN " isbn "l" change.case$ * }
+	{ "ISBN " isbn "t" change.case$ * }
+      if$
+    }
+  if$
+}
+
+FUNCTION {format.url}
+{ url empty$
+    { "" }
+    { output.state mid.sentence =
+	{ "URL " url "l" change.case$ tie.or.space.connect }
+	{ "URL " url "t" change.case$ tie.or.space.connect }
+      if$
+    }
+  if$
+}
+
+FUNCTION {format.version}
+{ version empty$
+    { "" }
+    { output.state mid.sentence =
+	{ "version" version "l" change.case$ tie.or.space.connect }
+	{ "version" version "t" change.case$ tie.or.space.connect }
+      if$
+    }
+  if$
+}
+
 INTEGERS { multiresult }
 
 FUNCTION {multi.page.check}
@@ -598,7 +633,11 @@ FUNCTION {book}
     }
   if$
   format.edition output
+  format.version output
+  new.block
+  format.url output
   format.date "year" output.check
+  format.isbn output
   new.block
   note output
   fin.entry
@@ -877,8 +916,11 @@ FUNCTION {webpublished}
   format.authors "author" output.check
 % author format.key output
   format.title "title" output.check
+  format.date "year" output.check
+  format.edition output
+  format.version output
   new.block
-  url "URL" output.check
+  format.url output
   format.date output
   fin.entry
 }
@@ -1136,7 +1178,7 @@ EXECUTE {initialize.longest.label}
 ITERATE {longest.label.pass}
 
 FUNCTION {begin.bib}
-{ "% $Id: rbjfmu.bst,v 1.2 2009/06/02 19:13:57 rbj Exp $"  write$ newline$
+{ "% $Id: rbjfmu.bst,v 1.3 2009/06/27 19:48:40 rbj Exp $"  write$ newline$
   preamble$ empty$
     'skip$
     { preamble$ write$ newline$ }

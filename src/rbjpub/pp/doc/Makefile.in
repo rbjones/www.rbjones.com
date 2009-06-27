@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.38 2009/06/09 13:09:57 rbj Exp $
+# $Id: Makefile.in,v 1.39 2009/06/27 19:48:40 rbj Exp $
 
 include @top_srcdir@/top_srcdir.mk
 
@@ -26,25 +26,43 @@ XML008=index.xml
 HTMLTHLSi=$(HTMLTHLS:.html=-i.html)
 HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
 
+FBOOKTEX=b001.tex b002.tex
+FBOOKPDF=$(FBOOKTEX:.tex=.pdf)
+
 TDOC=t000.doc \
         t001.doc t002.doc t003.doc t004.doc t005.doc t006.doc t007.doc \
 	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc \
 	t015.doc t016.doc t017.doc t018.doc t019.doc t020.doc t021.doc \
-	t022.doc t023.doc t024.doc t025.doc t026.doc t027.doc t028.doc
+	t022.doc t023.doc t024.doc t025.doc t026.doc t027.doc t028.doc \
+	t029.doc t030.doc
 
-RTDOC=t000.doc \
-	t028.doc t027.doc t026.doc t025.doc t024.doc t023.doc t022.doc \
-	t021.doc t020.doc t019.doc t018.doc t017.doc t016.doc \
-	t015.doc t014.doc t013.doc t012.doc t011.doc t010.doc t009.doc \
-	t008.doc t007.doc t006.doc t005.doc t004.doc t003.doc t002.doc \
-	t001.doc
+TTEX=t000.tex \
+        t001.tex t002.tex t003.tex t004.tex t005.tex t006.tex t007.tex \
+	t008.tex t009.tex t010.tex t011.tex t012.tex t013.tex t014.tex \
+	t015.tex t016.tex t017.tex t018.tex t019.tex t020.tex t021.tex \
+	t022.tex t023.tex t024.tex t025.tex t026.tex t027.tex t028a.tex \
+	t029a.tex t030a.tex
+
+RTTEX=t000.tex \
+	t030.tex \
+	t029.tex t028.tex t027.tex t026.tex t025.tex t024.tex t023.tex \
+	t022.tex t021.tex t020.tex t019.tex t018.tex t017.tex t016.tex \
+	t015.tex t014.tex t013.tex t012.tex t011.tex t010.tex t009.tex \
+	t008.tex t007.tex t006.tex t005.tex t004.tex t003.tex t002.tex \
+	t001.tex
+
+T2DOC=t028.doc t029.doc t030.doc
+ATEX=$(T2DOC:.doc=a.tex)
+ZTEX=$(T2DOC:.doc=z.tex)
 
 #GRAPHPDF= tp001d1.pdf
-
 #SEMDOC=tp001.doc
+
 SEMTEX=$(SEMDOC:.doc=.tex)
 SEMDVI=$(SEMDOC:.doc=.dvi)
 SEMPDF=$(SEMDOC:.doc=.pdf)
+
+RBJMK=$(RTTEX)
 
 #TPDOC=tp002.doc tp003.doc
 TPDOCA=$(TPDOC:.doc=a.doc)
@@ -59,13 +77,11 @@ TPPDFALL=$(TPPDFA) $(TPPDFB)
 TPPNG=tp003i1.png tp003i2.png
 TPTXT=tp002abs.txt tp003abs.txt
 
-TTEX=$(TDOC:.doc=.tex)
-RTTEX=$(RTDOC:.doc=.tex)
 TPDF=$(TDOC:.doc=.pdf)
 
-COMDIRCPY= rbj.bib rbjfmu.bst rbjpp.ist texpdf docpdf LICENSE
+COMDIRCPY= rbj.bib rbj.sty rbjfmu.bst rbjpp.ist texpdf docpdf LICENSE amazon2.sty
 SRCDIRCPY=$(XML007) $(SEMDOC) $(TDOC) $(TPDOC) $(TPPNG) $(TPDOCALL) \
-	$(TPTXT) $(GRAPHPDF) \
+	$(TPTXT) $(GRAPHPDF) $(ATEX) $(ZTEX) $(FBOOKTEX) \
 	rbj.mkf README.txt indexhead.xml indextail.xml
 
 ENTFILES=pp-symbol.ent
@@ -90,6 +106,14 @@ vpath %.in $(SRCDIR)
 vpath %.xsl $(XLCOMDIR)
 #vpath %.ent $(XLDPDIR)
 
+# Dependecies
+
+$(FBOOKPDF): %.pdf : rbj.bib rbjfmu.bst
+
+b001.pdf: t028.tex t029.tex t030.tex
+
+b002.pdf: syllog1.th.tex syllog2.th.tex modsyllog.th.tex ariscat.th.tex syll_metap.th.tex 
+
 # Rules
 
 build: pdf doc_theories.tex
@@ -104,7 +128,10 @@ rbj.src.tgz: rbjmkf
 	make -f rbj.mkf src
 
 $(TPDF): %.pdf: %.doc rbj.mkf rbjmkf
-	make -f rbj.mkf $*.pdf
+	make -f rbj.mkf $@
+
+$(RTTEX): %.tex: %.doc
+	make -f rbj.mkf $@
 
 #$(SEMPDF): %.pdf: %.dvi
 #	dvips -o '' -t landscape $*
@@ -119,7 +146,7 @@ t000abs.tex: $(TTEX)
 	texindex2tex $(TTEX) > t000abs.tex
 
 indexmiddle.xml: $(RTTEX)
-	texindex2xml 13 "" $(RTTEX) > indexmiddle.xml
+	texindex2xml 16 "" $(RTTEX) > indexmiddle.xml
 
 index.xml: indexhead.xml indexmiddle.xml indextail.xml
 	cat $^ > index.xml
@@ -142,5 +169,10 @@ $(SEMTEX): %.tex: %.doc
 $(SEMDVI): %.dvi: %.tex
 	texdvi $*
 
-$(SEMPDF): %.pdf: %.dvi
-	dvipdf $* 
+$(SEMPDF): %.pdf: %.tex
+	texpdf $* 
+
+$(FBOOKPDF): %.pdf: %.tex
+	texpdf $*
+	texpdf $*	
+	texpdf $*

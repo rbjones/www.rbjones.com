@@ -38,9 +38,9 @@ sub startOIndex
 {	$volIndexRef=$stub."i.htm";
 	open (OINDEX, "> $direc/$volIndexRef");
 	print OINDEX <<EOF;
-<HTML><HEAD><TITLE>
-$mainTitle
-</TITLE></HEAD>
+<HTML><HEAD>
+<TITLE>$mainTitle</TITLE>
+</HEAD>
 $body
 $up
 <CENTER><H1>$mainTitle</H1></CENTER>
@@ -98,9 +98,9 @@ sub nextBookIndex
 	if ($trace>1) {print "open next book index file: $bookIndexFile\n"};
 	open (BOOKINDEX, "> $direc/$bookIndexFile");
 	print BOOKINDEX <<EOF;
-<HTML><HEAD><TITLE>
-$mainTitle - index for $sourceTitle $bookSection $book - $bookTitle
-</TITLE></HEAD>
+<HTML><HEAD>
+<TITLE>$mainTitle - index for $sourceTitle $bookSection $book - $bookTitle</TITLE>
+</HEAD>
 $body
 <A HREF="$volIndexRef">$upimg</A>
 <CENTER><H3>$mainTitle - index for $sourceTitle $bookSection $book</H3>
@@ -144,9 +144,9 @@ EOF
 sub nextPartIndex
 {	open (PARTINDEX, "> $direc/$partIFile");
 	print PARTINDEX <<EOF;
-<HTML><HEAD><TITLE>
-$mainTitle - index for $sourceTitle $bookSection $book Part $part - $partTitle
-</TITLE></HEAD>
+<HTML><HEAD>
+<TITLE>$mainTitle - index for $sourceTitle $bookSection $book Part $part - $partTitle</TITLE>
+</HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>
@@ -187,9 +187,9 @@ EOF
 sub startPart        
 {	open (OUTFILE, "> $direc/$partCFile");
 	print OUTFILE <<EOF;
-<HTML><HEAD><TITLE>
-$mainTitle $sourceTitle $bookSection $book Part $part $partTitle
-</TITLE></HEAD>
+<HTML><HEAD>
+<TITLE>$mainTitle $sourceTitle $bookSection $book Part $part $partTitle</TITLE>
+</HEAD>
 $body
 $bookIndexRef$upimg</A>
 <A NAME="start"></A>

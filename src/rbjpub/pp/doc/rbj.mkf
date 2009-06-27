@@ -1,6 +1,6 @@
-######################################################################
+#####################################################################
 #
-#	$Id: rbj.mkf,v 1.50 2009/06/09 13:09:57 rbj Exp $
+#	$Id: rbj.mkf,v 1.51 2009/06/27 19:48:40 rbj Exp $
 #
 #	makefile for Roger's things
 #
@@ -57,10 +57,20 @@ STARTZEDDBNAME=zed
 RELDIR=release
 
 # The documents
-HOLDOCS= t001.doc t002.doc t003.doc t004.doc t005.doc t006.doc t007.doc \
+HOLDOCS1= t001.doc t002.doc t003.doc t004.doc t005.doc t006.doc t007.doc \
 	t008.doc t009.doc t010.doc t011.doc t012.doc t013.doc t014.doc \
-	t015.doc t016.doc t017.doc t018.doc t019.doc t020.doc t021.doc\
-	t022.doc t023.doc t024.doc t025.doc t026.doc t027.doc t028.doc
+	t015.doc t016.doc t017.doc t018.doc t019.doc t020.doc t021.doc \
+	t022.doc t023.doc t024.doc t025.doc t026.doc t027.doc
+
+HOLDOCS2= t028.doc t029.doc t030.doc
+
+HOLDOCS=$(HOLDOCS1) $(HOLDOCS2)
+
+HOLTEXS1=$(HOLDOCS1:.doc=.tex)
+HOLTEXS2=$(HOLDOCS2:.doc=.tex)
+
+ATEXS=$(HOLDOCS2:.doc=a.tex)
+ZTEXS=$(HOLDOCS2:.doc=z.tex)
 
 ZEDDOCS=
 
@@ -74,11 +84,13 @@ ZEDLDD=$(ZEDDOCS:.doc=.ldd)
 # Variations on the documents
 SMLFILES= $(SMLDOCS:.doc=.sml)
 LDDFILES= $(SMLDOCS:.doc=.ldd)
-PDFFILES= $(SMLDOCS:.doc=.pdf) $(OTHERDOCS:.doc=.pdf)
+PDFFILES1= $(HOLDOCS1:.doc=.pdf) $(OTHERDOCS:.doc=.pdf)
+PDFFILES2= $(HOLDOCS2:.doc=.pdf)
+PDFFILES=$(PDFFILES1) $(PDFFILES2)
 
 # packing list for a source release (target src)
-PACKINGLIST= $(SMLDOCS) $(OTHERDOCS) rbj.bib rbj.mkf rbjfmu.bst rbjpp.ist docpdf \
-	     texpdf t000abs.tex LICENSE 
+PACKINGLIST= $(SMLDOCS) $(ATEXS) $(ZTEXS) $(OTHERDOCS) rbj.bib rbj.mkf rbj.sty \
+	     rbjfmu.bst rbjpp.ist docpdf texpdf t000abs.tex LICENSE 
 
 DISTPACKINGLIST=$(PACKINGLIST) README.txt
 
@@ -114,19 +126,22 @@ t024.ldd: t004.ldd t025.ldd
 t026.ldd: t004.ldd t005.ldd t025.ldd
 t027.ldd: t004.ldd t005.ldd t025.ldd
 t028.ldd: t025.ldd
+t029.ldd: t006.ldd
+t030.ldd:
 
 # some variables and rules concerning document preparation
 
-$(PDFFILES): rbj.bib rbjfmu.bst rbjpp.ist
+$(PDFFILES): rbj.bib rbjfmu.bst rbjpp.ist rbj.sty
 
 README.txt:
 
-HTHS= ariscat.th ba.th bvi.th catfun.th cfpi.th diffgeom.th fixp.th fixp_egs.th GS.th GST.th \
-	gst-ax.th gst-fun.th gst-nat.th ICsyn.th ICsem.th ifol.th ifos.th infos.th \
+HTHS= ariscat.th ba.th bvi.th catfun.th cfpi.th diffgeom.th fixp.th fixp_egs.th fmphil.th \
+        GS.th GST.th gst-ax.th gst-fun.th gst-nat.th gst-ord.th \
+	ICsyn.th ICsem.th ifol.th ifos.th infos.th \
 	membership.th memfunct.th metaci.th metapi.th misc2.th modsyllog.th \
-	nf_h.th nfu_s.th nfu_f.th gst-ord.th \
-	ordered_sets.th poly-sets.th pre_func.th rbjmisc.th sfp.th sr.th sra.th src.th \
-	t001a.th t001b.th syllog1.th syllog2.th syll_metap.th t002a.th tc.th U_orders.th \
+	nf_h.th nfu_s.th nfu_f.th ordered_sets.th poly-sets.th pre_func.th \
+	rbjmisc.th sfp.th sr.th sra.th src.th syllog1.th syllog2.th syll_metap.th \
+	t001a.th t001b.th t002a.th tc.th tract01.th U_orders.th \
 	wfrel.th wf_relp.th wf_recp.th \
 	X-Logic-1.th X-Logic-2.th
 
@@ -250,6 +265,12 @@ ariscat.th.doc modsyllog.th.doc syllog1.th.doc syllog2.th.doc syll_metap.th.doc:
 
 t028.pdf: ariscat.th.tex modsyllog.th.tex syllog1.th.tex syllog2.th.tex syll_metap.th.tex
 
+t029.pdf:
+
+tract01.th.doc: t030.ldd
+
+t030.pdf: tract01.th.tex
+
 ######################################################################
 #
 #	Building the database
@@ -258,7 +279,7 @@ t028.pdf: ariscat.th.tex modsyllog.th.tex syllog1.th.tex syllog2.th.tex syll_met
 
 bld: t002.ldd t003.ldd t004.ldd t005.ldd t006.ldd t007.ldd t008.ldd t009.ldd \
 	t010.ldd t016.ldd t018.ldd t019.doc t020.ldd t021.ldd t022.ldd t023.ldd \
-	t025.ldd t026.ldd t027.ldd t028.ldd
+	t025.ldd t026.ldd t027.ldd t028.ldd t029.ldd
 
 rbjholdb.ldd:
 	pp_make_database -f -p $(STARTHOLDBNAME) $(HOLDBNAME)
@@ -394,18 +415,34 @@ $(ZTHDOCS): %.th.doc:
 %.sml: %.doc
 	docsml $*
 
-%.tex: %.doc
+$(HOLTEXS1): %.tex: %.doc
 	doctex $*
+
+$(HOLTEXS2): %.tex: %a.tex %.doc %z.tex
+	doctex $*
+	mv $*.tex $*m.tex
+	cat $*a.tex $*m.tex $*z.tex > $*.tex
 
 %.dvi: %.tex
 	TEXINPUTS=.:$(PPHOME)/tex: \
 	BSTINPUTS=.:$(PPHOME)/tex: \
 	BIBINPUTS=.:$(PPHOME)/tex: docdvi $*
 
-%.pdf: %.tex
+$(PDFFILES1): %.pdf: %.tex
 	TEXINPUTS=.:$(PPHOME)/tex: \
 	BSTINPUTS=.:$(PPHOME)/tex: \
 	BIBINPUTS=.:$(PPHOME)/tex: docpdf $*
+
+$(PDFFILES2): %.pdf: %.tex
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: texpdf $*
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: bibtex $*
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: texpdf $*
 
 #%.pdf: %.dvi
 #	dvipdf -sPAPERSIZE=a4 $*

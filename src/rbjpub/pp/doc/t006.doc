@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.20 2009/06/11 20:00:53 rbj Exp $
+$Id: t006.doc,v 1.21 2009/06/27 19:48:39 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2009/06/11 20:00:53 $ $
+Last Changed $ $Date: 2009/06/27 19:48:39 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.20 2009/06/11 20:00:53 rbj Exp $ $
+$ $Id: t006.doc,v 1.21 2009/06/27 19:48:39 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -367,6 +367,30 @@ val [NeSet_ne_thm, NeSet_fc_thm, NeSet_ext_thm, NeSet_PeSet_thm] = strip_±_rule 
 =TEX
 }%ignore
 
+
+πHOLCONST
+‹ €MemOf› : 'a NESET ≠ 'a
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹	µx∑ MemOf x = ≈y∑ y ç PeSet x 
+∞
+
+=GFT
+€MemOf_memof_thm› =
+	Ù µ x∑ MemOf x ç PeSet x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx∑ MemOf x ç PeSet xÆ);
+a (µ_tac THEN rewrite_tac [get_spec ¨MemOfÆ]);
+a (≈_tac ¨≈ y∑ y ç PeSet xÆ);
+a (rewrite_tac [NeSet_ne_thm]);
+val MemOf_memof_thm = save_pop_thm "MemOf_memof_thm";
+=TEX
+}%ignore
+
+
+
 \section{Lists}
 
 \subsection{List Membership}
@@ -413,6 +437,21 @@ We will need a different one for each arity of constructor, so I will use a nume
 ‹ µ cf al bl cl∑  MapCfâ3 cf al bl cl =
 	Map (Uncurry (Uncurry cf)) (Combine (Combine al bl) cl)
 ∞
+
+\subsection{Lists of Natural Numbers}
+
+A function for making a list of ascending natural numbers.
+
+=SML
+declare_infix (300, "..âL");
+=TEX
+πHOLCONST
+‹ $€..âL›: Ó ≠ Ó ≠ Ó LIST
+˜¸¸¸¸¸¸
+‹ µ x y∑ x ..âL 0 = []
+‹ ± x ..âL (y + 1) = if x º y then (x ..âL y) @ [y+1] else []
+∞
+
 
 \section{Real Numbers and Analysis}
 
@@ -1651,18 +1690,7 @@ Prove that $TopologyFrom$ yields a topology.
 
 }%ignore
 
-\section{Disjoint Unions}
-
-\ignore{
-
-The identity function.
-
- πHOLCONST
-‹ €I›: 'a ≠ 'a
-˜¸¸¸¸¸¸
-‹ I = Ãx∑x
- ∞
-}%ignore
+\section{Disjoint Unions (Sum)}
 
 Two ways of constructing functions over disjoint unions.
 
@@ -1680,17 +1708,22 @@ Two ways of constructing functions over disjoint unions.
 ‹	FunSum f g ab = if IsL ab then f (OutL ab) else g (OutR ab)
 ∞
 
-A function for making a list of ascending integers.
-
-=SML
-declare_infix (300, "..âL");
+=GFT
+€IsL_IsR_lemma› =
+	Ù µ x∑ ≥ (IsL x § IsR x) ± ≥ (IsR x § IsL x)
 =TEX
-πHOLCONST
-‹ $€..âL›: Ó ≠ Ó ≠ Ó LIST
-˜¸¸¸¸¸¸
-‹ µ x y∑ x ..âL 0 = []
-‹ ± x ..âL (y + 1) = if x º y then (x ..âL y) @ [y+1] else []
-∞
+
+\ignore{
+=SML
+set_merge_pcs ["hol1", "'rbjmisc"];
+
+set_goal([], ¨µx∑ IsR x § ≥ IsL xÆ);
+a (µ_tac);
+a (strip_asm_tac (µ_elim ¨xÆ sum_cases_thm) THEN asm_rewrite_tac[]);
+val IsL_IsR_lemma = save_pop_thm "IsL_IsR_lemma";
+=TEX
+}%ignore
+
 
 \section{Type OPT}
 
@@ -1803,7 +1836,7 @@ save_cs_∂_thm (pop_thm());
 
 =SML
 add_pc_thms1 "'rbjmisc" [NeSet_ne_thm];
-add_pc_thms "'rbjmisc" [NeSet_PeSet_thm];
+add_pc_thms "'rbjmisc" [NeSet_PeSet_thm, IsL_IsR_lemma, MemOf_memof_thm];
 commit_pc "'rbjmisc";
 
 force_new_pc "€rbjmisc›";
