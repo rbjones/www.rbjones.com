@@ -5,7 +5,7 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtDEdoc{$$Id: t028.doc,v 1.9 2009/06/27 19:48:39 rbj Exp $$}
+\def\rbjidtDEdoc{$$Id: t028.doc,v 1.10 2009/07/01 14:19:07 rbj Exp $$}
 
 \subsection{Outline}
 
@@ -1286,8 +1286,17 @@ If we had negation we could manage with just two predication operators.
 
 \subsubsection{The Laws of Immediate Inference}
 
+Though in the source of this kind of ``literate script'' are to be found the scripts for generating and checking the proofs of all the theorems presente, it will not be my practice to expose these scripts in the printed version of the document.
+These scripts are not usually intelligible other than in that intimate man-machine dialogue which they mediate, and sufficient knowledge for most purposes of the structure of the proof will be found in the detailed lemmas proven (since the level of proof automation is modest).
+
+However, I will begin by exposing some of the scripts used for obtaining proofs of syllogisms in this model, to give the reader an impession of the level of complexity and kind of obscurity involved in this kind of formal work,
+I will not attempt sufficient explanation to make these scripts intelligible, they are best understood in the interactive environment, all the scripts are available for readers who want to run them.
+
+Most readers are expected to skip over the gory details, the philosophical points at stake do no depend on the details of the proofs.
+
 Before addressing the laws of immediate inference
-\footnote{in which I follow Strawson \cite{strawson52}.}
+\footnote{in which I followed Strawson \cite{strawson52}, though I can now cite \href{file:///home/rbj/rbj/share/rbjones/www/rbjpub/philos/classics/aristotl/o3102c.htm}{Aristotle, Prior Analytic, Book 1, Part 2.}
+\cite{aristotleL325}}
 I devise a tactic for automating simple proofs in this domain.
 
 The following elementary tactic expands the goal by applying the definitions of the operators and then invokes a general tactic for the predicate calculus.
@@ -1300,15 +1309,20 @@ fun Ûsyll_ruleİ g = tac_proof (g, syll_tac);
 
 \paragraph{Simple Conversion}
 
+Using the above tactic thus:
 =SML
 val e_conv_thm = save_thm ("e_conv_thm", syll_rule([¬A e B®], ¬B e A®));
 val i_conv_thm = save_thm ("i_conv_thm", syll_rule([¬A i B®], ¬B i A®));
 =TEX
 
+
+The following two theorems are obtained.
 =GFT
 val e_conv_thm = A e B ô B e A : THM
 val i_conv_thm = A i B ô B i A : THM
 =TEX
+
+The following two theorems show that the other obvious conversions are false.
 
 \ignore{
 =SML
@@ -1448,18 +1462,19 @@ fun Ûfiguresİ pt =
 =TEX
 
 The following functions take a string which is the name of a syllogism extract the vowels which occur in it and convert them into the corresponding predication operator to give a triple of operators.
+
 =SML
 fun Ûop_from_charİ ot c = mk_const (if c = "o" then "u" else c, ot);
 
 fun Ûvowels_from_stringİ s = filter (fn x => x mem (explode "aeiou")) (explode s);
 
 fun Ûoptrip_from_textİ ot s =
-	let val [a,b,c] = (map (op_from_char ot) o vowels_from_string) s;
-	in (a,b,c)
+	let val [a, b, c] = (map (op_from_char ot) o vowels_from_string) s;
+	in (a, b, c)
 	end;
 =TEX
 
-The following functions contruct a syllogism.
+The following functions construct a syllogism.
 
 =SML
 fun Ûmk_predİ q s p = mk_app(mk_app (q, s), p);
@@ -2287,7 +2302,6 @@ fun Ûmodsyll_G_ruleİ g = tac_proof(g, modsyll_G_tac);
 
 I just run this over a few combinations of modal operators to see which it will prove.
 
-
 =SML
 val valid_G_modsylls1 = valid_modsylls (G,G,G) "" modsyll_G_tac;
 val valid_G_modsylls2 = map
@@ -2297,7 +2311,6 @@ val valid_G_modsylls2 = map
 		o all_´_intro
 		o snd)
 	valid_G_modsylls1;
-undisch_rule;
 
 val valid_G_modsylls = map (undisch_rule
 		o undisch_rule
@@ -2349,7 +2362,7 @@ However, the incompleteness may arise from adopting a fixed set of first princip
 In this case, the availability of an open set of first principles makes completeness in principle possible.
 To sustain this principle in relation to set theory, for example, we would have to regard ourselves as having some definition of the concept of set relative to which the present axioms (say those of ZFC) are essential, and relative to which extensions as necessary to prove progressively more difficult results can also be seen to be essential.
 This is not entirely implausible.
-This is close to the rationale for large cardinaly axioms.
+This is close to the rationale for large cardinal axioms.
 The informal description of the cumulative hierarchy as the domain of set theory involves the idea that the construction of well-founded sets from other well-founded sets of lesser rank proceeds indefinitely, and hence any axiom which states that a set of a certain rank exists must be true.
 
 Does formal modelling contribute anything to this discussion?
@@ -2386,14 +2399,14 @@ I also hope that the model may help to explore the question of whether demonstra
 
 =SML
 open_theory "aristotle";
-force_new_theory "syll_metap";
+force_new_theory "syllmetap";
 =TEX
 
 \ignore{
 =SML
-force_new_pc Û"'syll_metap"İ;
-merge_pcs ["'savedthm_cs_¶_proof"] "'syll_metap";
-set_merge_pcs ["misc2", "'syll_metap"];
+force_new_pc Û"'syllmetap"İ;
+merge_pcs ["'savedthm_cs_¶_proof"] "'syllmetap";
+set_merge_pcs ["misc2", "'syllmetap"];
 =TEX
 }%ignore
 
@@ -2563,6 +2576,20 @@ declare_infix(300, "InTERM");
 Ü µ c1t c2ts · c1t InTERM c2ts ¤ Fst c1t = Fst c2ts ± Snd c1t  PeSet (Snd c2ts)
 °
 
+=GFT
+interm_¶_lemma =
+	ô µ t· ¶ i· i InTERM t
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µt· ¶i· i InTERM t®);
+a (strip_tac);
+a (¶_tac ¬(Fst t, MemOf (Snd t))® THEN rewrite_tac[get_spec ¬$InTERM®]);
+val interm_¶_lemma = save_pop_thm "interm_¶_lemma";
+=TEX
+}%ignore
+
 We then use that membership test in defining the quantifiers.
 The quantifiers expect to be supplied with a copula and a term.
 The quantifier then predicates using the copula the term of everything or something in the domain of quantification (which is the subject term).
@@ -2574,7 +2601,7 @@ declare_prefix(400, "Some");
 =TEX
 
 ¹HOLCONST
-Ü $ÛAllİ : TERM ­ (I ­ TERM ­ MPROP) ­ TERM ­ MPROP
+Ü ÛAllİ : TERM ­ (I ­ TERM ­ MPROP) ­ TERM ­ MPROP
 ÷üüüüüü
 Ü µ s r p· All s r p = Ìw· µz· z InTERM s ´ r z p w
 °
@@ -2958,10 +2985,12 @@ val ©_conv = save_pop_thm "©_conv";
 Û©_izz_thmİ = ô [© (All A izz B)] ˜ All A izz B
 Û©_hazz_thmİ = ô [© (All A hazz B)] ˜ All A izz B
 Ûizz_©_thmİ = ô [All A izz B] ˜ © (All A izz B)
+not_©_hazz_thm = ô [] ˜ (³ © (All A hazz B))
 =TEX
 
 $©_hazz_thm$ is a bit odd.
 Really what I wanted to prove was that no accidental predication is necessary, but I have no negation in the syllogism, so I just proved that if an accidental predication were necessary then it would be essential.
+Then I went back and defined negation so permitting a direct denial that any accidental predication is necessary.
 
 There are many theorems which one would naturally prove at this point, to facilitate further proofs and proof automation, which are not expressible syllogistically.
 Proof automation depends heavily on the demonstration of equations, so that proof may proceed by rewriting.
@@ -2976,7 +3005,7 @@ set_goal([], ¬[© (All A izz B)] ˜ All A izz B®);
 a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®, ¬©®, ¬All®, ¬izz®])
 	THEN REPEAT strip_tac);
 val ©_izz_thm = save_pop_thm "©_izz_thm";
-=IGN
+
 set_goal([], ¬[© (All A hazz B)] ˜ All A izz B®);
 a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®])
 	THEN REPEAT strip_tac);
@@ -2984,13 +3013,77 @@ a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¬©®, ¬All®, ¬hazz®])
 	THEN strip_tac);
 a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTERM®] THEN strip_tac);
-a (lemma_tac ¬¶d· d  PeSet (OutL A)® THEN1 rewrite_tac[]);
-a (¶_tac ¬InL d® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬¶d· d  PeSet (Snd A)® THEN1 rewrite_tac[]);
+a (¶_tac ¬(Fst A, d)® THEN asm_rewrite_tac[]);
 val ©_hazz_thm = save_pop_thm "©_hazz_thm";
 
 set_goal([], ¬[All A izz B] ˜ © (All  A izz B)®);
 a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®, ¬©®, ¬All®, ¬izz®])
 	THEN REPEAT strip_tac);
 val izz_©_thm = save_pop_thm "izz_©_thm";
+
+set_goal([], ¬[] ˜ ³ © (All A hazz B)®);
+a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®, ¬©®, ¬All®, ¬izz®, ¬$³‰a®, ¬hazz®]));
+a (REPEAT strip_tac);
+a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTERM®] THEN strip_tac);
+a (¶_tac ¬(Fst A, MemOf(Snd A))® THEN rewrite_tac[]);
+val not_©_hazz_thm = save_pop_thm "not_©_hazz_thm";
 =TEX
 }%ignore
+
+\subsection{Syllogisms for Essential Predication}
+
+Though the usual syllogisms are not valid for predication in general, the problems are confined to accidental predication.
+We can, by methods similar to those used above obtain automatic proofs of the 24 valid syllogisms restricted to essential predication.
+
+The details are omitted, but the 24 izz syllogisms have been proven and stored in the theory, see: \thyref{syllmetap}.
+
+\ignore{
+=SML
+fun 	Ûopfun_from_charİ "a" s p = ¬All ‘s® izz ‘p®®
+|	opfun_from_char "e" s p = ¬All ‘s® (izz not) ‘p®®
+|	opfun_from_char "i" s p = ¬Some ‘s® izz ‘p®®
+|	opfun_from_char "o" s p = ¬Some ‘s® (izz not) ‘p®®;
+
+fun Ûopfuntrip_from_textİ s =
+	let val [a, b, c] = (map opfun_from_char o vowels_from_string) s;
+	in (a, b, c)
+	end;
+=TEX
+
+The following functions construct a syllogism.
+
+=SML
+fun Ûmk_izz_syllİ vt (a, b, c, d) (f1, f2, f3) =
+	¬[‘f1 a b®; ‘f2 c d®] 
+		‘f3 (mk_var("¿", vt)) (mk_var("P", vt))®®;
+
+fun Ûmk_izz_syllpİ (s, n) =
+	([], mk_izz_syll ”TERM® (nth (n-1) (figures ”TERM®)) (opfuntrip_from_text s));
+
+val Ûsyll_izz_tac2İ =
+	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_¶_lemma))
+		[¬M:TERM®, ¬P:TERM®, ¬¿:TERM®, ¬A:TERM®, ¬B:TERM®])
+	THEN asm_prove_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬$not®, ¬Fold®]);
+
+fun Ûsyll_izz_rule2İ g = tac_proof(g, syll_tac2);
+
+val Ûsps_izz1İ = syll_prove_and_store mk_izz_syllp "_izz";
+
+val Ûvalid_izz_syllsİ = map (sps_izz1 syll_izz_tac2)
+	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
+=IGN
+set_goal(mk_izz_syllp ("Celarent", 1));
+a (syll_izz_tac2);
+a contr_tac;
+a (asm_fc_tac[]);
+
+
+a (rewrite_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬$not®, ¬Fold®]));
+a (REPEAT strip_tac THEN asm_prove_tac[]);
+a (asm_prove_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬$not®, ¬Fold®]));
+=TEX
+
+}%ignore
+
+
