@@ -1,17 +1,36 @@
 =TEX
-\def\rbjidtDGdoc{$$Id: t030.doc,v 1.1 2009/06/27 19:48:39 rbj Exp $$}
+\def\rbjidtDGdoc{$$Id: t030.doc,v 1.2 2009/07/14 14:26:10 rbj Exp $$}
+
+In the period immediately after the completion by Whitehead and Russell of Principia Mathematica there were attempts to draw out from this achievement some philosophical lessons.
+The most conspicuous figure in this is Wittgenstein and his contribution was the Tractacus Logico-Philosophicus \cite{wittgenstein1921}.
+Russell, appearing to follow in his wake (though prior to the publication of the Tractatus) gave lectures on Logical Atomism \cite{russellPLA}.
+
+Two other documents (there are doubtless more, but these two strike me most forcibly as relevant) of a more strictly technical nature are worth mentioning here, to get a sense of how the technical content of these philosophical works relates to that appearing in the emergent discipline of mathematical logic.
+These are \cite{schonfinkelCL,wiener1914}.
+
+\section{Preliminary Observations}
+
+At the core of both Russell's atomism and Wittgenstein is the metaphysical idea that the world consists of a collection of facts.
+
+This idea probably is Wittgenstein's and his exploitation of this idea is more thorough and systematic than Russell's.
+In Wittgenstein the fundamental insight is that propositions express truth functions of atomic propositions, and that logical truths (which Wittgenstein seems to identify with analytic propositions) are those which are tautologous (i.e. true whatever the truth values of the atomic propositions, i.e. whatever are the atomic facts).
+Together with the insistence that the atomic facts are logically independent, we have a faulty account of analyticity, but a good account of the semantics of first order logic.
+Without this general insistence on logical independence of atomics, we have a conception of semantics which is important and influential.
+
+Russell builds his logical atomism around the same core, atomic facts.
+But its clear firstly that the simple idea that propositions are truth functional does not inspire him, and that he has important objectives which are absent in Wittgenstein.
+The pure logical semantics we find commuted in simplistic way into metaphysics by Wittgenstein tells us little or nothing about what the things are which are related by atomic propositions.       
+
+
 
 \section{The Tractatus}
 
-I will begin by attempting to present a formal model of (aspects of) Wittgenstein's Tractatus\cite{wittgenstein1921} in a structure similar to his own.
-Since I am working in a formal context in which constants must be defined (or otherwise introduced) before use, this is likely to prove awkward.
-My politicy is to fix that by moving the introduction of constants forward as necessary and retaining
-a section structure similar to Witgenstein's, albeit with some things appearing in it earlier than they do in Wittgenstein.
-I will use forward references to indicate which section they appear in Wittgenstein.
+I will begin by attempting to present a formal model of (aspects of) Wittgenstein's Tractatus\cite{wittgenstein1921}.
 
 =SML
 open_theory "rbjmisc";
 force_new_theory "tract01";
+set_pc "rbjmisc1";
 =TEX
 
 \subsection{The World}
@@ -22,13 +41,13 @@ I take this to be analogous to atomic propositions, the requirement that we know
 We do not know here what a fact is so the information we have here is best caputured by a type constructor or a function (depending on whether we think the facts will be a type or a set).
 
 I will assume that it will be a type (this can probably be arranged).
-WIttgenstein, has implicitly alluded to possible worlds in 1.21 (though is not necessarily `ontologically committed'), and we might think of the type {\it (F)WORLD} being the type of all possibile worlds whose facts have type {\it F}.
+WIttgenstein, has implicitly alluded to possible worlds in 1.21 (though is not necessarily `ontologically committed'), and we might think of the type î('a)WORLDÆ being the type of all possibile worlds whose facts have type î'aÆ.
 
 =SML
 declare_type_abbrev("WORLD", ["'a"], î'a Æ);
 =TEX
 
-The world is then, something of type î(F)WORLDÆ, which I will refrain from introducing until we know more about what a fact is.
+The world is then, something of type î('a)WORLDÆ, which I will refrain from introducing until we know more about what a fact is.
 
 \subsection{States of Affairs}
 
@@ -64,9 +83,97 @@ new_type("NAME", 0);
 
 \subsection{Propositions as Truth Functions}
 
-\subsection{The General Form of a Proposition}
+Wittgenstein introduces a single truth functional connective, which is a generalised distributed denial (generalised Scheffer stroke).
+\footnote{The non-generalised version was discovered by Scheffer, the generalised version was presented by Schonfinkel in his paper on combinatory logic (presented in 1920, published in 1924 \cite{schonfinkelCL}).}
 
-\section{Russell's Logical Atomism}
+This is readily defined in HOL.
+We define it as an operator on sets of functions, since that allow us to use set displays as the arguments.
 
-\section{Emil Post on Propositional Logic}
+πHOLCONST
+‹ N: (BOOL) ≠ BOOL
+˜
+‹ µs∑ N s § µp∑ p ç s ¥ ≥ p
+∞
+
+We can then prove that all the usual logical connectives are definable in terms of ¨NÆ.
+The following theorems show that the logical constants in HOL are equivalent to expressions in N.
+
+=GFT
+N_≥_thm = Ù µ p∑ (≥ p) = N {p}
+N_±_thm = Ù µ p q∑ (p ± q) = N {N {p}; N {q}}
+=TEX
+
+\ignore{
+=SML
+set_pc "rbjmisc1";
+set_goal([],¨µp∑ ≥ p § N{p}Æ);
+a (prove_tac [get_spec ¨NÆ]);
+val N_≥_thm = save_pop_thm "N_≥_thm";
+
+set_goal([],¨µp q∑ p ± q § N{N{p}; N{q}}Æ);
+a (rewrite_tac [map_eq_sym_rule N_≥_thm]);;
+a (prove_tac[get_spec ¨NÆ]);
+val N_±_thm = save_pop_thm "N_±_thm";
+
+set_goal([],¨µpf∑ $µ pf § N{p | ∂x∑ p = N{pf x}}Æ);
+a (strip_tac);
+a (once_rewrite_tac [map_eq_sym_rule (µ_elim ¨pfÆ »_axiom)]);
+a (rewrite_tac [map_eq_sym_rule N_≥_thm]);;
+a (rewrite_tac[get_spec ¨NÆ]);
+a (REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 1 ¨≥ pf xÆ);
+a (spec_nth_asm_tac 1 ¨xÆ);
+val N_µ_thm = save_pop_thm "N_µ_thm";
+
+=IGN
+set_goal([],¨µpf∑ $∂ pf § N{N{p | ∂x∑ p = N{pf x}}Æ);
+=TEX
+}%ignore
+
+πHOLCONST
+‹ M: ('a ≠ BOOL) ≠ BOOL
+˜
+‹ µf∑ M f § µx∑ ≥ f x
+∞
+
+=GFT
+M_≥_thm = Ù µ p∑ (≥ p) = M (Ã x∑ p)
+M_±_thm =
+   Ù µ p q∑ (p ± q) = M (Ã x∑ if x then M (Ã x∑ p) else M (Ã x∑ q))
+M_µ_thm = Ù µ pf∑ $µ pf = M (Ã x∑ ≥ pf x)
+M_∂_thm = Ù µ pf∑ $∂ pf = M (Ã x∑ M (Ã x∑ pf x))
+=TEX
+
+\ignore{
+=SML
+set_pc "rbjmisc1";
+set_goal([], ¨µp∑ ≥ p § M(Ãx∑p)Æ);
+a (prove_tac [get_spec ¨MÆ]);
+val M_≥_thm = save_pop_thm "M_≥_thm";
+
+set_goal([],¨µp q∑ p ± q § M(Ãx∑ if x then M(Ãx∑p) else M(Ãx∑q))Æ);
+a (rewrite_tac [get_spec ¨MÆ]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨TÆ);
+a (spec_nth_asm_tac 1 ¨FÆ);
+val M_±_thm = save_pop_thm "M_±_thm";
+
+set_goal([],¨µpf∑ $µ pf § M(Ãx∑ ≥ pf x)Æ);
+a (strip_tac);
+a (once_rewrite_tac [map_eq_sym_rule (µ_elim ¨pfÆ »_axiom)]);
+a (rewrite_tac[get_spec ¨MÆ]);
+val M_µ_thm = save_pop_thm "M_µ_thm";
+
+set_goal([],¨µpf∑ $∂ pf § M (Ãx∑ M (Ãx∑ pf x))Æ);
+a (strip_tac);
+a (once_rewrite_tac [map_eq_sym_rule (µ_elim ¨pfÆ »_axiom)]);
+a (prove_tac[get_spec ¨MÆ]);
+val M_∂_thm = save_pop_thm "M_∂_thm";
+=TEX
+}%ignore
+
+%\section{Russell's Logical Atomism}
+
+%\section{Emil Post on Propositional Logic}
 

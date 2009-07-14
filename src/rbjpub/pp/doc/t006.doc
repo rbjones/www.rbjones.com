@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.21 2009/06/27 19:48:39 rbj Exp $
+$Id: t006.doc,v 1.22 2009/07/14 14:26:10 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2009/06/27 19:48:39 $ $
+Last Changed $ $Date: 2009/07/14 14:26:10 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.21 2009/06/27 19:48:39 rbj Exp $ $
+$ $Id: t006.doc,v 1.22 2009/07/14 14:26:10 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -353,20 +353,34 @@ save_cs_∂_thm (pop_thm());
 =GFT
 €NeSet_ne_thm› =
 	Ù µ x∑ ∂ y∑ y ç PeSet x
-€NeSet_fc_lemma› =
-	Ù µ x y∑ x ç y ¥ PeSet (NeSet y) = y
 €NeSet_ext_thm› =
 	Ù µ x y∑ x = y § (µ z∑ z ç PeSet x § z ç PeSet y)
+€NeSet_fc_thm› =
+	Ù µ x y∑ x ç y ¥ PeSet (NeSet y) = y
 €NeSet_PeSet_thm› =
 	Ù µ y∑ NeSet (PeSet y) = y
 =TEX
 
 \ignore{
 =SML
-val [NeSet_ne_thm, NeSet_fc_thm, NeSet_ext_thm, NeSet_PeSet_thm] = strip_±_rule (get_spec ¨NeSetÆ);
+val [NeSet_ne_thm, NeSet_ext_thm, NeSet_fc_thm, NeSet_PeSet_thm] = strip_±_rule (get_spec ¨NeSetÆ);
 =TEX
 }%ignore
 
+=GFT
+€PeSet_Insert_thm› =
+	Ù µ x y∑ PeSet (NeSet (Insert x y)) = Insert x y
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx y∑ PeSet(NeSet(Insert x y)) = (Insert x y)Æ);
+a (REPEAT strip_tac);
+a (bc_tac [list_µ_elim [¨xÆ, ¨Insert x yÆ] NeSet_fc_thm]);
+a (rewrite_tac [get_spec ¨InsertÆ]);
+val PeSet_Insert_thm = save_pop_thm "PeSet_Insert_thm";
+=TEX
+}%ignore
 
 πHOLCONST
 ‹ €MemOf› : 'a NESET ≠ 'a
@@ -377,6 +391,8 @@ val [NeSet_ne_thm, NeSet_fc_thm, NeSet_ext_thm, NeSet_PeSet_thm] = strip_±_rule 
 =GFT
 €MemOf_memof_thm› =
 	Ù µ x∑ MemOf x ç PeSet x
+€MemOf_NeSet_unit_thm› =
+	Ù µ x∑ MemOf (NeSet {x}) = x
 =TEX
 
 \ignore{
@@ -386,10 +402,11 @@ a (µ_tac THEN rewrite_tac [get_spec ¨MemOfÆ]);
 a (≈_tac ¨≈ y∑ y ç PeSet xÆ);
 a (rewrite_tac [NeSet_ne_thm]);
 val MemOf_memof_thm = save_pop_thm "MemOf_memof_thm";
+
+val MemOf_NeSet_unit_thm = save_thm ("MemOf_NeSet_unit_thm",
+	all_µ_intro (rewrite_rule [PeSet_Insert_thm] (µ_elim ¨NeSet {x}Æ MemOf_memof_thm)));
 =TEX
 }%ignore
-
-
 
 \section{Lists}
 
@@ -1836,7 +1853,7 @@ save_cs_∂_thm (pop_thm());
 
 =SML
 add_pc_thms1 "'rbjmisc" [NeSet_ne_thm];
-add_pc_thms "'rbjmisc" [NeSet_PeSet_thm, IsL_IsR_lemma, MemOf_memof_thm];
+add_pc_thms "'rbjmisc" [NeSet_PeSet_thm, IsL_IsR_lemma, MemOf_memof_thm, PeSet_Insert_thm, MemOf_NeSet_unit_thm];
 commit_pc "'rbjmisc";
 
 force_new_pc "€rbjmisc›";
