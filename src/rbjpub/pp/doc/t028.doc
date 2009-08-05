@@ -5,7 +5,7 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtDEdoc{$$Id: t028.doc,v 1.11 2009/07/14 14:26:10 rbj Exp $$}
+\def\rbjidtDEdoc{$$Id: t028.doc,v 1.12 2009/08/05 06:47:11 rbj Exp $$}
 
 \section{Introduction}
 
@@ -2821,9 +2821,9 @@ declare_binder "∂âa";
 declare_alias ("∂", ¨$∂âaÆ);
 =TEX
 
-\subsubsection{Judgements}
+\subsection{Judgements}
 
-I'm not yet clear what to offer here, so for the present I will define two kinds of sequent, which will be displayed with the symbols $ò$ asnd $ê$. the former being a kind of contingent material implication and the latter a necessary implication (both as sequents).
+I'm not yet clear what to offer here, so for the present I will define two kinds of sequent, which will be displayed with the symbols $ò$ asnd $ê$. the former being a kind of contingent material implication and the latter a necessary implication.
 
 Both form of judgement seem suitable for expressing the rules of the syllogism at first glance but which can also be used for conversions.
 
@@ -3043,9 +3043,14 @@ val ©_conv = save_pop_thm "©_conv";
 €©_hazz_thm› = Ù [© (All A hazz B)] ò All A izz B
 €izz_©_thm› = Ù [All A izz B] ò © (All A izz B)
 not_©_hazz_thm = Ù [] ò (≥ © (All A hazz B))
+
+©_izz_thm2 = Ù [© (All A izz B)] ê All A izz B
+©_hazz_thm2 = Ù [© (All A hazz B)] ê All A izz B
+izz_©_thm2 = Ù [All A izz B] ê © (All A izz B)
+not_©_hazz_thm2 = Ù [] ê (≥ © (All A hazz B))
 =TEX
 
-$©_hazz_thm$ is a bit odd.
+$©\_hazz\_thm$ is a bit odd.
 Really what I wanted to prove was that no accidental predication is necessary, but I have no negation in the syllogism, so I just proved that if an accidental predication were necessary then it would be essential.
 Then I went back and defined negation so permitting a direct denial that any accidental predication is necessary.
 
@@ -3085,6 +3090,34 @@ a (REPEAT strip_tac);
 a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
 a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
 val not_©_hazz_thm = save_pop_thm "not_©_hazz_thm";
+
+set_goal([], ¨[© (All A izz B)] ê All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val ©_izz_thm2 = save_pop_thm "©_izz_thm2";
+
+set_goal([], ¨[© (All A hazz B)] ê All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ])
+	THEN REPEAT strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
+	THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (lemma_tac ¨∂d∑ d ç PeSet (Snd A)Æ THEN1 rewrite_tac[]);
+a (∂_tac ¨(Fst A, d)Æ THEN asm_rewrite_tac[]);
+val ©_hazz_thm2 = save_pop_thm "©_hazz_thm2";
+
+set_goal([], ¨[All A izz B] ê © (All  A izz B)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val izz_©_thm2 = save_pop_thm "izz_©_thm2";
+
+set_goal([], ¨[] ê ≥ © (All A hazz B)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ, ¨$≥âaÆ, ¨hazzÆ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
+val not_©_hazz_thm2 = save_pop_thm "not_©_hazz_thm2";
 =TEX
 }%ignore
 
@@ -3463,19 +3496,79 @@ val FP4c = save_pop_thm "FP4c";
 ‹ µA∑ Individual A = © µâa B∑ All B izz A ¥âa All A izz B
 ∞
 
+Now on the face of it, in the context of our present model, the modal operator in this definition is irrelevant.
+This because all essential predication is necessary.
+
+The following theorem confirms that intuition.
+
 =GFT
+individual_lemma1 =
+	Ù µ A∑ Individual A = (µ B∑ All B izz A ¥ All A izz B)
 =TEX
+
+We can also show that the Code definition is equivalent to our own:
+
+=GFT
+individual_lemma2 =
+	Ù Individual A = Mp (individual A) 
+=TEX
+
+In addition to the apparently spurious invocation of necessity, the Code definition depends upon the existential fallacy.
+
+Our own primitive definition is couched in terms of the underlying model, and so in terms of that model we would have to regard as a primitive rather than a defined concept (this may be the best way to think of it).
+
 
 \ignore{
-=IGN
-set_goal ([], ¨Individual A = Mp (individual A)Æ);
-a (rewrite_tac (map get_spec [¨IndividualÆ, ¨Mp Æ, ¨individualÆ, ¨$©Æ, ¨AllÆ, ¨izzÆ, ¨$InTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
-a (rewrite_tac [ext_thm] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (∂_tac ¨MemOf(Snd A)Æ);
+=SML
+set_goal ([], ¨µA∑ Individual A = µâa B∑ All B izz A ¥âa All A izz BÆ);
+a (rewrite_tac [get_spec ¨IndividualÆ, get_spec ¨©Æ, ext_thm]);
+a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[] THEN POP_ASM_T ante_tac);
+a (rewrite_tac (map get_spec [¨$¥âaÆ, ¨$µâaÆ, ¨AllÆ, ¨izzÆ]));
+val individual_lemma1 = save_pop_thm "individual_lemma1";
 
+set_goal ([], ¨Individual A = Mp (individual A)Æ);
+a (rewrite_tac [individual_lemma1]);
+a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨izzÆ, ¨$InTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
+a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨AllÆ, ¨izzÆ, ¨$InTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
+a (rewrite_tac [ext_thm] THEN contr_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨∂b c∑ ≥ b = c ± b ç PeSet(Snd A) ± c ç PeSet(Snd A)Æ
+	THEN1 (∂_tac ¨MemOf (Snd A)Æ THEN rewrite_tac[]));
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¨MemOf (Snd A)Æ);
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [NeSet_ext_thm])));
+(* *** Goal "1.1.1" *** *)
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "1.1.2" *** *)
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 5 ¨(Fst A, NeSet{b})Æ);
+(* *** Goal "1.2.1" *** *)
+a (DROP_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "1.2.2" *** *)
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "1.2.3" *** *)
+a (lemma_tac ¨Fst (Fst A, c) = Fst AÆ THEN1 rewrite_tac[]);
+a (lemma_tac ¨Snd (Fst A, c) ç PeSet (Snd A)Æ THEN1 asm_rewrite_tac[]);
+a (spec_nth_asm_tac 3 ¨(Fst A, c)Æ);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+a (swap_nth_asm_concl_tac 7 THEN asm_rewrite_tac []);
+ (* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 4 ¨(Fst t, MemOf(Snd t))Æ (strip_asm_tac o (rewrite_rule[])));
+a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (DROP_ASM_T  ¨Snd z ç PeSet (Snd A)Æ ante_tac THEN asm_rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac []);
+a (SPEC_NTH_ASM_T 3 ¨(Fst t, MemOf(Snd t))Æ (strip_asm_tac o (rewrite_rule[])));
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+a (STRIP_T (rewrite_thm_tac o eq_sym_rule));
+val individual_lemma2 = save_pop_thm "individual_lemma2";
 =TEX
 }%ignore
+
+Now we come to the Code definition of particular:
 
 πHOLCONST
 ‹ €particular› : TERM ≠ MPROP
@@ -3483,9 +3576,36 @@ a (∂_tac ¨MemOf(Snd A)Æ);
 ‹ µA∑ particular A = © µâa B∑ All B are A ¥âa All A izz B ±âa All B izz A
 ∞
 
+A particular is an individual substance and one would have thought that a definition closer to saying that directly might have been a good idea.
+In this case in our model the modal operator is not redundant, because without it the definiens would be true if A were an individual attribute which contingently has an empty exension (i.e. is true of no substance), which is possible in this model.
+However, this cannot be true of necessity unless A is substantial.
+
+Code might have used a similar device to define substantial:
+
+πHOLCONST
+‹ €substantial› : TERM ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µA∑ substantial A = © µâa B∑ All B are A ¥âa All B izz A
+∞
+
+and then defined a particular as a substantial individual.
+Alternatively substantial might be taken as primitive to avoid the use of a modal operator.
+Again, Code's definition relies on the existential fallacy.
+
+Code's definition of universal is:
+
 πHOLCONST
 ‹ €universal› : TERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µA∑ universal A = ® ∂âa B∑ All B are A ±âa ≥âa (All A izz B ±âa All B izz A)
 ∞
 
+I think the intension is that a universal is anything except a particular, in which case that would be a better way to define it.
+However, in this model, this definition will be true of any non-individual, unless the $¨®Æ$ is changed to $¨©Æ$.
+
+\paragraph{Ontological Theorems}
+
+T1-T3 are essentially redundant definitions so I will omit them and not use the additional vocabulary on this pass.
+
+
+\section{Conclusions}
