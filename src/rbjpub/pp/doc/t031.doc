@@ -1,0 +1,494 @@
+=IGN
+$Id: t031.doc,v 1.1 2009/09/03 15:04:02 rbj Exp $
+open_theory "infos";
+
+set_flag ("pp_use_alias", true);
+
+set_merge_pcs ["misc21", "'holw"];
+=TEX
+\documentclass[11pt,a4paper]{article}
+\usepackage{latexsym}
+\usepackage{ProofPower}
+\usepackage{graphics}
+%\ftlinepenalty=9999
+\usepackage{A4}
+
+%\def\ExpName{\mbox{{\sf exp}
+%\def\Exp#1{\ExpName(#1)}
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\title{The Semantics of HOL-Omega in ProofPower}
+\makeindex
+\usepackage[unicode,pdftex]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}, bookmarks=false, pdffitwindow=false}
+\hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
+
+\author{Roger Bishop Jones}
+\date{\ }
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+The abstract syntax and semantics of HOL-Omega in a formal higher-order set theory.
+\end{abstract}
+
+\vfill
+
+\begin{centering}
+
+{\footnotesize
+
+Created: 2009/8/31
+
+Last Change $ $Date: 2009/09/03 15:04:02 $ $
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/t031.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t031.pdf}
+
+$ $Id: t031.doc,v 1.1 2009/09/03 15:04:02 rbj Exp $ $
+
+\copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnotesize
+
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+
+\newpage
+\addtocounter{page}{1}
+%\section{DOCUMENT CONTROL}
+%\subsection{Contents list}
+{\parskip=0pt\tableofcontents}
+%\newpage
+%\subsection{Document cross references}
+
+{\raggedright
+\bibliographystyle{fmu}
+\bibliography{rbj,fmu}
+} %\raggedright
+
+\newpage
+\section{Introduction}
+
+This is just an exercise to check out the informally stated set theoretic semantics of HOL-Omega which is presented by Peter Homeier in \cite{homeier2009}.
+It is not ever likely to be complete!
+
+=SML
+open_theory "misc2";
+force_new_theory "Ûholwİ";
+force_new_pc Û"'holw"İ;
+merge_pcs ["'savedthm_cs_¶_proof"] "'holw";
+set_merge_pcs ["misc21", "'holw"];
+=TEX
+
+\section{Syntax}
+
+The formalisation of the syntax has no particular interest.
+It is essentially the definition of a recursive datatype.
+If our proof tool supported datatype definitions then I would have used them, since it does not the easiest way to get the required dayatype is by using set theory.
+Note however, that I do not necessarily need to make a new type, and will only prove those theorems which I actually need.
+
+The manual construction of the three mutually recursive datatypes in our higher order set theory is done by defining the constructors and taking the intersection of all sets closed under the constructors.
+
+\subsection{Constructors and Discriminators}
+
+\subsubsection{Kinds}
+
+¹HOLCONST
+Ü ÛMkKindTyİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µt· MkKindTy t = (Nat‰g 0) í‰g t
+°
+
+¹HOLCONST
+Ü ÛIsKindTyİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µk· IsKindTy k ¤ ¶t· k = MkKindTy t
+°
+
+¹HOLCONST
+Ü ÛMkKindVarİ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µn· MkKindVar n = (Nat‰g 1) í‰g n
+°
+
+¹HOLCONST
+Ü ÛIsKindVarİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µk· IsKindVar k ¤ ¶n· k = MkKindVar n
+°
+
+¹HOLCONST
+Ü ÛMkKindArrİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µlr· MkKindArr lr = (Nat‰g 2) í‰g (MkPair‰g lr)
+°
+
+¹HOLCONST
+Ü ÛIsKindArrİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µk· IsKindArr k ¤ ¶t· k = MkKindArr t
+°
+
+¹HOLCONST
+Ü ÛIsKindİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µk· IsKind k ¤ IsKindTy k ² IsKindVar k ² IsKindArr k
+°
+
+\subsubsection{Types}
+
+¹HOLCONST
+Ü ÛMkTypeVarİ : GS ¸ GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µnkr· MkTypeVar nkr = (Nat‰g 3) í‰g (MkTriple‰g nkr)
+°
+
+¹HOLCONST
+Ü ÛIsTypeVarİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTypeVar t ¤ ¶p· t = MkTypeVar p
+°
+
+¹HOLCONST
+Ü ÛMkTypeConİ : GS ¸ GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µnkr· MkTypeCon nkr = (Nat‰g 4) í‰g (MkTriple‰g nkr)
+°
+
+¹HOLCONST
+Ü ÛIsTypeConİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTypeCon t ¤ ¶p· t = MkTypeCon p
+°
+
+¹HOLCONST
+Ü ÛMkTypeAppİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µfa· MkTypeApp fa = (Nat‰g 5) í‰g (MkPair‰g fa)
+°
+
+¹HOLCONST
+Ü ÛIsTypeAppİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTypeApp a ¤ ¶p· a = MkTypeApp p
+°
+
+¹HOLCONST
+Ü ÛMkTypeAbsİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvb· MkTypeAbs vb = (Nat‰g 6) í‰g (MkPair‰g vb)
+°
+
+¹HOLCONST
+Ü ÛIsTypeAbsİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTypeAbs a ¤ ¶p· a = MkTypeAbs p
+°
+
+¹HOLCONST
+Ü ÛMkTypeUnivİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvb· MkTypeUniv vb = (Nat‰g 7) í‰g (MkPair‰g vb)
+°
+
+¹HOLCONST
+Ü ÛIsTypeUnivİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTypeUniv t ¤ ¶p· t = MkTypeUniv p
+°
+
+¹HOLCONST
+Ü ÛIsTypeİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsType t ¤ IsTypeVar t ² IsTypeCon t ² IsTypeApp t ² IsTypeAbs t ² IsTypeUniv t
+°
+
+\subsubsection{Terms}
+
+¹HOLCONST
+Ü ÛMkTermVarİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µnt· MkTermVar nt = (Nat‰g 8) í‰g (MkPair‰g nt)
+°
+
+¹HOLCONST
+Ü ÛIsTermVarİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTermVar t ¤ ¶p· t = MkTermVar p
+°
+
+¹HOLCONST
+Ü ÛMkTermConİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µnt· MkTermCon nt = (Nat‰g 9) í‰g (MkPair‰g nt)
+°
+
+¹HOLCONST
+Ü ÛIsTermConİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTermCon t ¤ ¶p· t = MkTermCon p
+°
+
+¹HOLCONST
+Ü ÛMkTermAppİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µfa· MkTermApp fa = (Nat‰g 10) í‰g (MkPair‰g fa)
+°
+
+¹HOLCONST
+Ü ÛIsTermAppİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTermApp a ¤ ¶p· a = MkTermApp p
+°
+
+¹HOLCONST
+Ü ÛMkTermAbsİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvb· MkTermAbs vb = (Nat‰g 11) í‰g (MkPair‰g vb)
+°
+
+¹HOLCONST
+Ü ÛIsTermAbsİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTermAbs a ¤ ¶p· a = MkTermAbs p
+°
+
+¹HOLCONST
+Ü ÛMkTermAppTypeİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µfa· MkTermAppType fa = (Nat‰g 12) í‰g (MkPair‰g fa)
+°
+
+¹HOLCONST
+Ü ÛIsTermAppTypeİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTermAppType a ¤ ¶p· a = MkTermAppType p
+°
+
+¹HOLCONST
+Ü ÛMkTermAbsTypeİ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvb· MkTermAbsType vb = (Nat‰g 13) í‰g (MkPair‰g vb)
+°
+
+¹HOLCONST
+Ü ÛIsTermAbsTypeİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µa· IsTermAbsType a ¤ ¶p· a = MkTermAbsType p
+°
+
+¹HOLCONST
+Ü ÛIsTermİ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsTerm t ¤ IsTermVar t ² IsTermCon t ² IsTermApp t ² IsTermAbs t ² IsTermAppType t ² IsTermAbsType t
+°
+
+\ignore{
+=GFT
+ÛIs_clausesİ =
+   ô (µ x· IsAf (MkAf x))
+       ± (µ x· ³ IsAf (MkCf x))
+       ± (µ x· ³ IsCf (MkAf x))
+       ± (µ x· IsCf (MkCf x))
+=TEX
+=GFT
+Ûsyn_proj_clausesİ =
+    ô (µ s m· AfSet (MkAf (s, m)) = s)
+       ± (µ s m· AfMem (MkAf (s, m)) = m)
+       ± (µ v f· CfVars (MkCf (v, f)) = v)
+       ± (µ v f· CfForms (MkCf (v, f)) = f)
+=TEX
+=GFT
+Ûsyn_con_inv_fc_clausesİ =
+   ô µ p
+     · (IsAf p ´ MkAf (AfMem p, AfSet p) = p)
+         ± (IsCf p ´ MkCf (CfVars p, CfForms p) = p)
+=TEX
+=GFT
+Ûsyn_con_eq_clausesİ =
+   ô µp1 p2· (MkAf p1 = MkAf p2 ¤ p1 = p2) ± (MkCf p1 =  MkCf p2 ¤ p1 = p2)
+=TEX
+=GFT
+Ûsyn_con_neq_clausesİ =
+   ô µ x y· ³ MkAf x = MkCf y
+=TEX
+=GFT
+Ûis_fc_clauses1İ =
+   ô µ x
+     · (IsAf x ´ (¶ s m· x = MkAf (s, m)))
+         ± (IsCf x ´ (¶ vars fs· x = MkCf (vars, fs)))
+=TEX
+=GFT
+ÛIs_not_casesİ =
+   ô µ x· ³ IsAf x ² ³ IsCf x
+
+ÛIs_not_fc_clausesİ =
+   ô (µ x· IsAf x ´ ³ IsCf x) ± (µ x· IsCf x ´ ³ IsAf x)
+=TEX
+
+=IGN
+set_flag("subgoal_package_quiet", true);
+=IGN
+
+set_goal([], ¬(µx· IsAf (MkAf x))
+	± (µx· ³ IsAf (MkCf x))
+	± (µx· ³ IsCf (MkAf x))
+	± (µx· IsCf (MkCf x))
+	®);
+a (rewrite_tac [get_spec ¬IsAf®,
+	get_spec ¬MkAf®,
+	get_spec ¬IsCf®,
+	get_spec ¬MkCf®]);
+a (strip_tac);
+a (¶_tac ¬x® THEN rewrite_tac[]);
+val Is_clauses = save_pop_thm "Is_clauses";
+
+set_goal([], ¬(µs m· AfMem (MkAf (m, s)) = m)
+	±	(µs m· AfSet (MkAf (m, s)) = s)
+	±	(µv f· CfVars (MkCf (v, f)) = v)
+	±	(µv f· CfForms (MkCf (v, f)) = f)
+®);
+a (rewrite_tac (map get_spec [
+	¬MkAf®, ¬MkCf®,
+	¬AfSet®, ¬AfMem®, ¬CfVars®, ¬CfForms®]));
+val syn_proj_clauses = save_pop_thm "syn_proj_clauses";
+
+set_goal([], ¬µp· (IsAf p ´ MkAf (AfMem p, AfSet p) = p)
+	±	(IsCf p ´ MkCf (CfVars p, CfForms p) = p)
+®);
+a (rewrite_tac (map get_spec [
+	¬MkAf®, ¬MkCf®,
+	¬AfSet®, ¬AfMem®, ¬CfVars®, ¬CfForms®, ¬IsAf®, ¬IsCf®])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val syn_con_inv_fc_clauses = save_pop_thm "syn_con_inv_fc_clauses";
+
+set_goal([], ¬µp1 p2· (MkAf p1 = MkAf p2 ¤ p1 = p2) ± (MkCf p1 =  MkCf p2 ¤ p1 = p2)®);
+a (REPEAT µ_tac THEN once_rewrite_tac [prove_rule [] ¬µp· p = (Fst p, Snd p)®]
+	THEN rewrite_tac (map get_spec [¬MkAf®, ¬MkCf®, ¬AfSet®, ¬AfMem®, ¬CfVars®, ¬CfForms®, ¬IsAf®, ¬IsCf®])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val syn_con_eq_clauses = save_pop_thm "syn_con_eq_clauses";
+
+set_goal([], ¬µx y· ³ MkAf x = MkCf y®);
+a (rewrite_tac (map get_spec [¬MkAf®, ¬MkCf®]));
+val syn_con_neq_clauses = save_pop_thm "syn_con_neq_clauses";
+
+add_pc_thms "'infos" [ord_nat_thm, Is_clauses, syn_proj_clauses, syn_con_eq_clauses, syn_con_neq_clauses];
+set_merge_pcs ["misc21", "'infos"];
+
+set_goal([], ¬µx·
+	(IsAf x ´ ¶s m· x = MkAf (s, m))
+±	(IsCf x ´ ¶vars fs· x = MkCf (vars, fs))
+®);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬IsAf®, get_spec ¬MkAf®, get_spec ¬IsCf®, get_spec ¬MkCf®]);
+a (REPEAT strip_tac);
+a (¶_tac ¬Fst lr® THEN ¶_tac ¬Snd lr® THEN asm_rewrite_tac[]);
+a (¶_tac ¬Fst vc® THEN ¶_tac ¬Snd vc® THEN asm_rewrite_tac[]);
+val is_fc_clauses1 = save_pop_thm "is_fc_clauses1";
+
+set_goal([], ¬µx· ³ IsAf x ² ³ IsCf x®);
+a (rewrite_tac (map get_spec [¬IsAf®, ¬IsCf®, ¬MkAf®, ¬MkCf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN PC_T1 "lin_arith" rewrite_tac[]);
+val Is_not_cases = save_pop_thm "Is_not_cases";
+
+set_goal ([], ¬
+	(µx· IsAf x ´ ³ IsCf x)
+±	(µx· IsCf x ´ ³ IsAf x)
+®);
+a (rewrite_tac (map get_spec [¬IsAf®, ¬IsCf®, ¬MkAf®, ¬MkCf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN PC_T1 "lin_arith" rewrite_tac[]);
+val Is_not_fc_clauses = save_pop_thm "Is_not_fc_clauses";
+=TEX
+}%ignore
+
+\subsection{The Inductive Definition of Syntax}
+
+This is accomplished by defining the required closure condition (closure under the above constructors for arguments of the right kind) and then taking the intersection of all sets which satisfy the closure condition.
+
+The closure condition is:
+
+¹HOLCONST
+Ü ÛHolwSynClosedİ: GS SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ s· HolwSynClosed s ¤
+Ü	(µt· t  s ± IsType t ´
+Ü		MkKindTy t  s)
+Ü±	(µp· 	MkKindVar p  s)
+Ü±	(µk1 k2· k1  s ± k2  s ± IsKind k1 ± IsKind k2 ´
+Ü		MkKindArr (k1, k2)  s)
+Ü±	(µn k r· k  s ± IsKind k ´
+Ü 		MkTypeVar (Nat‰g n, k, Nat‰g r)  s)
+Ü±	(µn k r· k  s ± IsKind k ´
+Ü		MkTypeCon (Nat‰g n, k, Nat‰g r)  s)
+Ü±	(µf a· f  s ± a  s ± IsType f ± IsType a ´
+Ü		MkTypeApp (f, a)  s)
+Ü±	(µv b· v  s ± b  s ± IsTypeVar v ± IsType b ´
+Ü		MkTypeAbs (v, b)  s)
+Ü±	(µv b· v  s ± b  s ± IsTypeVar v ± IsType b ´
+Ü		MkTypeUniv (v, b)  s)
+Ü±	(µn t· t  s ± IsType t ´
+Ü 		MkTermVar (Nat‰g n, t)  s)
+Ü±	(µn t· t  s ± IsType t ´
+Ü		MkTermCon (Nat‰g n, t)  s)
+Ü±	(µf a· f  s ± a  s ± IsTerm f ± IsTerm a ´
+Ü		MkTermApp (f, a)  s)
+Ü±	(µv b· v  s ± b  s ± IsTermVar v ± IsTerm b ´
+Ü		MkTermAbs (v, b)  s)
+Ü±	(µf a· f  s ± a  s ± IsTerm f ± IsType a ´
+Ü		MkTermAppType (f, a)  s)
+Ü±	(µv b· v  s ± b  s ± IsTypeVar v ± IsTerm b ´
+Ü		MkTermAbsType (v, b)  s)
+°
+
+The well-formed syntax is then the smallest set closed under these constructions (which might be a ``class'').
+
+¹HOLCONST
+Ü ÛHolwSyntaxİ : GS SET
+÷üüüüüüüüüüü
+Ü HolwSyntax = ¥{x | HolwSynClosed x}
+°
+
+\section{Proof Contexts}
+
+=SML
+(* add_pc_thms "'holw" []; *)
+
+(* add_pc_thms "'holw" []; *)
+commit_pc "'holw";
+
+force_new_pc "Ûholwİ";
+merge_pcs ["misc2", "'holw"] "holw";
+commit_pc "holw";
+
+force_new_pc "Ûholw1İ";
+merge_pcs ["misc21", "'holw"] "holw1";
+commit_pc "holw1";
+=TEX
+
+=SML
+set_flag ("subgoal_package_quiet", false);
+=TEX
+
+{\let\Section\section
+\newcounter{ThyNum}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{holw.th}
+%\include{sfp.th}
+}  %\let
+
+\twocolumn[\section{INDEX}\label{index}]
+{\small\printindex}
+
+\end{document}

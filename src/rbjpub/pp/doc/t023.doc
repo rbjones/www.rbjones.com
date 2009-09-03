@@ -1,5 +1,5 @@
 =IGN
-$Id: t023.doc,v 1.8 2009/03/31 21:32:26 rbj Exp $
+$Id: t023.doc,v 1.9 2009/09/03 15:04:02 rbj Exp $
 open_theory "GS";
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-ord", "'savedthm_cs_∂_proof"];
 
@@ -42,12 +42,12 @@ An axiomatic development in ProofPower-HOL of a higher order set theory.
 
 Created 2007/09/25
 
-Last Change $ $Date: 2009/03/31 21:32:26 $ $
+Last Change $ $Date: 2009/09/03 15:04:02 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t023.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t023.pdf}
 
-$ $Id: t023.doc,v 1.8 2009/03/31 21:32:26 rbj Exp $ $
+$ $Id: t023.doc,v 1.9 2009/09/03 15:04:02 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -446,6 +446,13 @@ The following proof shows how the above induction tactic can be used.
 The theorem can be paraphrased loosely along the lines that there are no bottomless descending chains in a well-founded relation.
 We think of a bottomless descending chain as a non-empty set (represented by a property called "p") every element of which is preceded by an element under the transitive closure of r.
 
+=GFT
+wf_nochain_thm =
+	Ù µr∑ well_founded r ¥
+		µx∑ ≥∂p v∑ p v ± µy∑ p y ¥ tc r y x ± ∂z∑ p z ± r z y
+=TEX
+
+\ignore{
 =SML
 set_goal([], ¨µr∑ well_founded r ¥
 	µx∑ ≥∂p v∑ p v ± µy∑ p y ¥ tc r y x ± ∂z∑ p z ± r z yÆ);
@@ -468,9 +475,16 @@ a (lemma_tac ¨tc r z' yÆ THEN1 fc_tac [tc_incr_thm]);
 a (all_fc_tac [tran_tc_thm2]);
 val wf_nochain_thm = save_pop_thm "wf_nochain_thm";
 =TEX
+}%ignore
 
 Now a shorter formulation of bottomless pits.
 
+=GFT
+wf_wf_thm = 
+	Ù µr∑ well_founded r ¥ ≥∂p v∑ p v ± µy∑ p y ¥ ∂z∑ p z ± r z y
+=TEX
+
+\ignore{
 =SML
 set_goal([], ¨µr∑ well_founded r ¥ ≥∂p v∑ p v ± µy∑ p y ¥ ∂z∑ p z ± r z yÆ);
 a (contr_tac);
@@ -483,7 +497,7 @@ a (contr_tac
 a (REPEAT (all_asm_fc_tac[]));
 val wf_wf_thm = save_pop_thm "wf_wf_thm";
 =TEX
-
+}%ignore
 
 =GFT
 nochain_wf_thm =
@@ -698,7 +712,6 @@ val wf_not_refl_thm = save_pop_thm "wf_not_refl_thm";
 =TEX
 }%ignore
 
-
 \subsection{Ways of Constructing Well Founded Relations}
 
 In this section we show that a restriction of a well-founded relation is well-founded.
@@ -781,23 +794,28 @@ The main part of this is the proof that functionals which are well-founded with 
 This done, the operator "fix" is defined, which yields such a fixed point.
 
 \subsubsection{Definitions}
+
 =SML
 declare_infix (240, "respects");
+
 πHOLCONST
 $respects: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ ('a ≠ 'a ≠ BOOL) ≠ BOOL
 ˜
 µ f r ∑ f respects r § µg h x∑ (µy∑ (tc r) y x ¥ g y = h y) ¥ f g x = f h x
 ∞
+
 πHOLCONST
 fixed_below: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'b) ≠ 'a ≠ BOOL
 ˜
 µf r g x∑ fixed_below f r g x § µy∑ tc r y x ¥ f g y = g y
 ∞
+
 πHOLCONST
 fixed_at: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'b) ≠ 'a ≠ BOOL
 ˜
 µf r g x∑ fixed_at f r g x § fixed_below f r g x ± f g x = g x
 ∞
+
 =SML
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx g y∑ fixed_below f r g x ± tc r y x ¥ fixed_below f r g yÆ);
@@ -806,7 +824,7 @@ a (REPEAT strip_tac);
 a (all_asm_fc_tac [tran_tc_thm2]);
 a (all_asm_fc_tac []);
 val fixed_below_lemma1 = save_pop_thm "fixed_below_lemma1";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx g∑ fixed_below f r g x ¥ fixed_at f r (f g) xÆ);
 a (rewrite_tac [get_spec ¨fixed_belowÆ, get_spec ¨fixed_atÆ, get_spec ¨$respectsÆ]);
@@ -820,7 +838,7 @@ a (all_asm_fc_tac []);
 a (list_spec_nth_asm_tac 2 [¨f gÆ, ¨gÆ]);
 a (all_asm_fc_tac []);
 val fixed_at_lemma1 = save_pop_thm "fixed_at_lemma1";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx g∑ fixed_below f r g x ¥ µy∑ tc r y x ¥ fixed_at f r g yÆ);
 a (rewrite_tac [get_spec ¨fixed_belowÆ, get_spec ¨fixed_atÆ, get_spec ¨$respectsÆ]);
@@ -831,7 +849,7 @@ a (all_asm_fc_tac []);
 (* *** Goal "2" *** *)
 a (all_asm_fc_tac []);
 val fixed_at_lemma2 = save_pop_thm "fixed_at_lemma2";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx g∑ (µy∑ tc r y x ¥ fixed_at f r g y) ¥ fixed_below f r g xÆ);
 a (REPEAT_N 4 strip_tac);
@@ -839,7 +857,7 @@ a (rewrite_tac [get_spec ¨fixed_atÆ, get_spec ¨fixed_belowÆ]);
 a (REPEAT strip_tac);
 a (all_asm_fc_tac []);
 val fixed_at_lemma3 = save_pop_thm "fixed_at_lemma3";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx g h∑ fixed_below f r g x ± fixed_below f r h x ¥ µz∑ tc r z x ¥ h z = g zÆ);
 a (REPEAT_N 4 strip_tac);
@@ -856,14 +874,14 @@ a (GET_ASM_T ¨f h z = h zÆ (rewrite_thm_tac o eq_sym_rule));
 a (GET_ASM_T ¨f h z = f g zÆ rewrite_thm_tac);
 a strip_tac;
 val fixed_below_lemma2 =  save_pop_thm "fixed_below_lemma2";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µg x∑ fixed_at f r g x ¥ µy∑ tc r y x ¥ fixed_at f r g yÆ);
 a (REPEAT strip_tac);
 a (all_fc_tac [get_spec ¨fixed_atÆ]);
 a (all_fc_tac[fixed_at_lemma2]);
 val fixed_at_lemma4 = save_pop_thm "fixed_at_lemma4";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µg h x∑ fixed_at f r g x ± fixed_at f r h x ¥ g x = h xÆ);
 a (REPEAT strip_tac);
@@ -880,7 +898,7 @@ a (eq_sym_nth_asm_tac 14);
 a (eq_sym_nth_asm_tac 13);
 a (asm_rewrite_tac[]);
 val fixed_at_lemma5 = save_pop_thm "fixed_at_lemma5";
-=SML
+
 set_goal ([],¨µf r∑ well_founded r ± f respects r
 	¥ µx∑ (µy∑ tc r y x ¥ ∂g∑ fixed_at f r g y) ¥ ∂g∑ fixed_below f r g xÆ);
 a (REPEAT strip_tac);
@@ -999,16 +1017,14 @@ a (REPEAT strip_tac THEN rewrite_tac[]);
 a (all_≈_tac);
 a (all_fc_tac [fixp_thm1]);
 a (∂_tac ¨gÆ THEN strip_tac);
-val _ = 
-
-save_cs_∂_thm (pop_thm ());
+val _ = save_cs_∂_thm (pop_thm ());
+=TEX
 
 πHOLCONST
-fix: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ 'a ≠ 'b
+‹ fix: (('a ≠ 'b) ≠ ('a ≠ 'b)) ≠ 'a ≠ 'b
 ˜
-µf r∑ well_founded r ± f respects r ¥ f (fix f) = fix f
+‹ µf r∑ well_founded r ± f respects r ¥ f (fix f) = fix f
 ∞
-=TEX
 
 \subsection{Respect Theorems}
 
@@ -1024,9 +1040,9 @@ i.e. it maps the function over the predecessors of the element and returns the r
 It may therefore be used to rephrase primitive recursive definitions, and so the result which follows may be used to establish the existence of functions defined by primitive recursion.
 
 πHOLCONST
- relmap : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'b) ≠ ('a ≠ ('a ≠ 'b ≠ BOOL))
+‹  relmap : ('a ≠ 'a ≠ BOOL) ≠ ('a ≠ 'b) ≠ ('a ≠ ('a ≠ 'b ≠ BOOL))
 ˜
-  µr f∑ relmap r f = Ãx y z∑ r y x ± z = f y
+‹  µr f∑ relmap r f = Ãx y z∑ r y x ± z = f y
 ∞
 
 =SML
@@ -1390,6 +1406,12 @@ val not_psub_thm = save_pop_thm "not_psub_thm";
 =TEX
 }%ignore
 
+πHOLCONST
+‹ Äâg_closed : GS ≠ BOOL
+˜
+‹ µs∑ Äâg_closed s § µe f∑ e çâg s ± f Äâg e ¥ f çâg s
+∞
+
 \subsubsection{ManyOne}
 
 The relations used in replacement must be "ManyOne" relations, otherwise the image may be larger than the domain, and Russell's paradox would reappear.
@@ -1577,15 +1599,15 @@ First we define the property of being a galaxy.
 πHOLCONST
 ‹ galaxy: GS ≠ BOOL
 ˜
-µs∑
-	galaxy s § (∂x∑ x çâg s)
-	± µt∑ t çâg s
-		¥ t Äâg s
-		± âg t çâg s
-		± ﬁâg t çâg s
-		± (µrel∑ ManyOne rel
-			¥ RelIm rel t Äâg s
-			¥ RelIm rel t çâg s)
+‹ µs∑
+‹	galaxy s § (∂x∑ x çâg s)
+‹	± µt∑ t çâg s
+‹		¥ t Äâg s
+‹		± âg t çâg s
+‹		± ﬁâg t çâg s
+‹		± (µrel∑ ManyOne rel
+‹			¥ RelIm rel t Äâg s
+‹			¥ RelIm rel t çâg s)
 ∞
 =GFT
 galaxies_∂_thm =
@@ -1942,14 +1964,18 @@ Though a functional formulation of replacement is most convenient for most appli
 The more convenient functional version will then be introduced by definition (so if you don't know what I'm talking about, look forward to compare the two versions).
 
 For the record the disadvantages of the functional one (if used as an axiom) are:
-<ol>
-<li>It can't be used to prove the existence of the empty set.</li>
-<li>When used to define separation it requires the axiom of choice.</li>
-</ol>
+
+\begin{enumerate}
+\item It can't be used to prove the existence of the empty set.
+\item When used to define separation it requires the axiom of choice.
+\end{enumerate}
 
 \subsubsection{Imagep}
+
 Now we prove a more convenient version of replacement which takes a HOL function rather than a relation as its argument.
 It states that the image of any set under a function is also a set.
+
+\ignore{
 =SML
 set_goal([],¨∂Imagep∑ µf:GS ≠ GS∑ µs: GS∑ 
 	(µx∑ x çâg Imagep f s § ∂e∑ e çâg s ± x = f e)Æ);
@@ -1963,20 +1989,36 @@ a (∂_tac ¨RelIm fr s'Æ);
 a (§_FC_T asm_rewrite_tac (get_spec ¨RelImÆ));
 save_cs_∂_thm (pop_thm ());
 =TEX
-"Imagep f s" is the image of s through f.
+}%ignore
+
+$¨Imagep f sÆ$ is the image of $s$ through $f$.
+
 πHOLCONST
-Imagep : (GS ≠ GS) ≠ GS ≠ GS
+‹ Imagep : (GS ≠ GS) ≠ GS ≠ GS
 ˜
-µf s∑ 
-	µx∑ x çâg Imagep f s
-	§ ∂e∑ e çâg s ± x = f e
+‹ µf s∑ 
+‹	µx∑ x çâg Imagep f s
+‹	§ ∂e∑ e çâg s ± x = f e
 ∞
+
+\ignore{
 =SML
 val Imagep_spec = get_spec ¨ImagepÆ;
 add_pc_thms "'gst-ax" (map get_spec [¨ImagepÆ]);
 set_merge_pcs ["basic_hol", "'gst-ax"];
 =TEX
+}%ignore
+
+\subsubsection{Galaxy Closure}
+
 We now show that galaxies are closed under Image.
+
+=GFT
+GImagepC = 
+	Ù µg∑ galaxy g ¥ µs∑ s çâg g ¥ µf∑ Imagep f s Äâg g ¥ Imagep f s çâg g
+=TEX
+
+\ignore{
 =SML
 set_goal([],¨µg∑ galaxy g
 	¥ µs∑ s çâg g
@@ -2000,6 +2042,7 @@ a (list_spec_nth_asm_tac 5 [¨sÆ,¨frÆ]
 	THEN asm_rewrite_tac[]);
 val GImagepC = save_pop_thm "GImagepC";
 =TEX
+}%ignore
 
 \subsection{Pair and Sing sets}
 
@@ -2043,21 +2086,16 @@ However, having proven that this can be done (details omitted), we can introduce
 (the ProofPower tool shows that it has accepted my proof by putting this extension into the "definitions" section of the theory listing).
 
 πHOLCONST
-Pair : GS ≠ GS ≠ GS
+‹ Pair : GS ≠ GS ≠ GS
 ˜
-µs t e:GS∑
-	e çâg Pair s t
-	§ e = s ≤ e = t	
+‹ µs t e:GS∑ e çâg Pair s t § e = s ≤ e = t	
 ∞
-=TEX
-
-\subsubsection{Pair membership and equality theorems}
 
 =GFT
 Pair_ç_thm =
 	Ù µ x y∑ x çâg Pair x y ± y çâg Pair x y
 Pair_eq_thm =
-	Ù µ s t u v∑ Pair s t = Pair u v § s = u ± t = v ≤ s = v ± t = u=TEX
+	Ù µ s t u v∑ Pair s t = Pair u v § s = u ± t = v ≤ s = v ± t = u
 =TEX
 
 \ignore{
@@ -2101,6 +2139,13 @@ val Pair_eq_thm =
 
 \subsubsection{Galaxy Closure}
 
+=GFT
+GClosePair = 
+	Ù µg∑ galaxy g ¥ µs t∑ s çâg g ± t çâg g
+			¥ Pair s t çâg g
+=TEX
+
+\ignore{
 =SML
 set_goal([],¨µg∑ galaxy g ¥ µs t∑ s çâg g ± t çâg g ¥ Pair s t çâg gÆ);
 a (REPEAT strip_tac);
@@ -2145,20 +2190,26 @@ a (POP_ASM_T ante_tac
 	THEN asm_rewrite_tac[]);
 val GClosePair = save_pop_thm "GClosePair";
 =TEX
+}%ignore
 
-\subsubsection{Singleton definition}
+\subsubsection{Unit Sets}
 
-Since ``Sing'' is used in the theory of groups I shall use ``Sing'' for singleton.
+Since ``Unit'' is used in the theory of groups I use ``Sing'' for singleton sets.
 
 πHOLCONST
-Sing : GS ≠ GS
+‹ Sing : GS ≠ GS
 ˜
-µs∑ Sing s = Pair s s
+‹ µs∑ Sing s = Pair s s
 ∞
+
+The following theorem tells you what the members of a unit sets are.
+
+=GFT
+Sing_thm = 
+	Ù  µs e∑	e çâg Sing s § e = s
 =TEX
 
-\subsubsection{Sing extension theorem}
-The following theorem tells you what the members of a unit sets are.
+\ignore{
 =SML
 set_goal([],¨µs e∑
 	e çâg Sing s § e = sÆ);
@@ -2170,9 +2221,16 @@ val Sing_thm = pop_thm ();
 add_pc_thms "'gst-ax" [get_spec ¨PairÆ, Sing_thm];
 set_merge_pcs ["basic_hol", "'gst-ax"];
 =TEX
+}%ignore
 
-\subsubsection{Sing equality theorem}
 The following theorem tells you when two unit sets are equal.
+
+=GFT
+Sing_eq_thm = 
+	Ù µs t∑ Sing s = Sing t § s = t
+=TEX
+
+\ignore{
 =SML
 set_goal([],¨µs t∑
 	Sing s = Sing t
@@ -2183,8 +2241,16 @@ val Sing_eq_thm = pop_thm ();
 add_pc_thms "'gst-ax" [Sing_eq_thm];
 set_merge_pcs ["basic_hol", "'gst-ax"];
 =TEX
+}%ignore
 
 \subsubsection{Galaxy Closure}
+
+=GFT
+GCloseSing = 
+	Ù µg∑ galaxy g ¥ µs∑ s çâg g ¥ Sing s çâg g
+=TEX
+
+\ignore{
 =SML
 set_goal([],¨µg∑ galaxy g ¥ µs∑ s çâg g ¥ Sing s çâg gÆ);
 a (REPEAT strip_tac
@@ -2192,11 +2258,21 @@ a (REPEAT strip_tac
 a (REPEAT (asm_fc_tac[GClosePair]));
 val GCloseSing = save_pop_thm "GCloseSing";
 =TEX
+}%ignore
 
 \subsubsection{Sing-Pair equations}
 
 The following theorems tell you when Pairs are really Sings.
 
+=GFT
+Sing_Pair_eq_thm = 
+	Ù µs t u∑ Sing s = Pair t u § s = t ± s = u
+
+Pair_Sing_eq_thm = 
+	Ù µs t u∑ Pair s t = Sing u § s = u ± t = u
+=TEX
+
+\ignore{
 =SML
 set_goal([],
 	¨µs t u∑
@@ -2224,6 +2300,7 @@ a (prove_tac [
 	µ_elim ¨Pair s tÆ gs_ext_axiom]);
 val Pair_Sing_eq_thm = pop_thm ();
 =TEX
+}%ignore
 
 \subsection{Union and Intersection}
 
@@ -2370,7 +2447,6 @@ val °âgÄâg_thm3 = save_thm ("°âgÄâg_thm3",
 \subsection{Some Elementary Consequences of the Axioms}
 
 \subsubsection{Consequences of Well-Foundedness}
-
 
 =GFT
 not_x_in_x_thm =
@@ -2640,7 +2716,6 @@ add_pc_thms "'gst-fun" [≥Ìâgöâg_thm];
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
 =TEX
 
-
 \subsubsection{Projections}
 
 The following functions may be used for extracting the components of ordered pairs.
@@ -2708,6 +2783,22 @@ set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
 =TEX
 }%ignore
 
+\subsection{MkPair and MkTriple}
+
+It proves convenient to have constructors which take HOL pairs and triples as parameters.
+
+πHOLCONST
+‹ MkPairâg : GS ∏ GS ≠ GS
+˜
+‹ µlr∑ MkPairâg lr = (Fst lr) Ìâg (Snd lr)
+∞
+
+πHOLCONST
+‹ MkTripleâg : GS ∏ GS ∏ GS ≠ GS
+˜
+‹ µt∑ MkTripleâg t = (Fst t) Ìâg (MkPairâg (Snd t))
+∞
+
 \subsection{Relations}
 
 A relation is defined as a set of ordered pairs.
@@ -2723,6 +2814,7 @@ This is necessary because the loose specification of ordered pair does not provi
 declare_infix(240,"∏âg");
 =TEX
 
+\ignore{
 =SML
 set_goal([],¨∂ $∏âg∑ 
 µs t e∑ e çâg s ∏âg t §
@@ -2737,7 +2829,6 @@ a (∂_tac ¨
 Æ);
 =TEX
 
-\ignore{
 =SML
 a (prove_tac[]);
 (* *** Goal "1" *** *)
@@ -2762,16 +2853,12 @@ save_cs_∂_thm (pop_thm ());
 =TEX
 }%ignore
 
-After completing this proof cartesian product can be specified by conservative extension as follows:
-
 πHOLCONST
- $∏âg : GS ≠ GS ≠ GS
+‹ $∏âg : GS ≠ GS ≠ GS
 ˜
-µs t e∑ e çâg s ∏âg t §
-	∂l r∑l çâg s ± r çâg t
-	± e = l Ìâg r
+‹ µs t e∑ e çâg s ∏âg t §
+‹	∂l r∑l çâg s ± r çâg t ± e = l Ìâg r
 ∞
-=TEX
 
 \ignore{
 =SML
@@ -2824,6 +2911,23 @@ add_pc_thms "'gst-fun" [Ìâgçâg∏âg_thm];
 set_merge_pcs ["basic_hol", "'gst-ax", "'gst-fun"];
 =TEX
 }%ignore
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+stop;
+
+set_goal([], ¨s ∏âg t çâg = {z | }Æ);
+
+set_goal([], ¨µg∑ galaxy g ¥ (µs t∑ s çâg g ± t çâg g ¥ s ∏âg t çâg g)Æ);
+a (REPEAT strip_tac THEN fc_tac [get_spec ¨galaxyÆ, GCloseSep, ]);
+
+=TEX
+}%ignore
+
+
 
 \subsubsection{Relation Space}
 
@@ -3319,10 +3423,10 @@ This is the set of all total functions over some domain and codomain.
 =SML
 declare_infix (240, "≠âg");
 πHOLCONST
- $≠âg : GS ≠ GS ≠ GS
+‹ $≠âg : GS ≠ GS ≠ GS
 ˜
-µs t∑ s ≠âg t = Sep (s ﬂâg t)
-	Ãr∑ dom r = s
+‹ µs t∑ s ≠âg t = Sep (s ﬂâg t)
+‹	Ãr∑ dom r = s
 ∞
 
 \subsubsection{Function Space Non-Empty}
@@ -3380,6 +3484,12 @@ a (DROP_NTH_ASM_T 4 (fn x => fc_tac [rewrite_rule [get_spec ¨$ÄâgÆ] x]));
 val ∂≠âg_thm = save_pop_thm "∂≠âg_thm";
 =TEX
 }%ignore
+
+πHOLCONST
+‹ ≠âg_closed : GS ≠ BOOL
+˜
+‹ µs∑ ≠âg_closed s § µd c∑ d çâg s ± c çâg s ¥ d ≠âg c çâg s
+∞
 
 \subsection{Functional Abstraction}
 
