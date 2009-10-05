@@ -1,6 +1,5 @@
-
 =TEX
-\def\rbjidtDFdoc{$$Id: t032.doc,v 1.1 2009/09/16 09:46:49 rbj Exp $$}
+\def\rbjidtADCdoc{$$Id: t032.doc,v 1.2 2009/10/05 09:18:19 rbj Exp $$}
 
 This document has not really been started yet.
 
@@ -10,8 +9,12 @@ For the purposes of this analytic history the single most important concern is w
 For this we consider primarily the most fundamental parts of his metaphysics, which we do partly through the perspective of Bertrand Russell \cite{russellPL}, whose own philosophy of Logical Atomism was influenced by Leibniz and will be considered later.
 
 Leibniz contributed also to our ideas about the applications of logic, through his ``universal characteristic'' and ``calculus ratiocinator''.
+Some kind of analysis of his ideas in this area would be nice.
+
 
 \section{Leibniz On Identity}
+
+This just shows the triviality of the identity of indiscernibles in our logical context, and raises the question, what more substantive point is Leibniz making and has it any substance?
 
 =SML
 open_theory "misc2";
@@ -96,3 +99,677 @@ val leibniz_identity = Ù µ x y∑ (µ P∑ P x § P y) ¥ x = y : THM
 So, in this context, that indiscernibles are identical is an elementary consequence of the fact that for every entity `e' there is a predicate `equal to e' which is satisfied only by e.
 
 Leibniz intended by his principle something more substantial, which is harder to capture.
+
+\section{Metaphysics}\label{LMETAPHYSICS}
+
+This is an adaptation of the model of Aristotelian logic and metaphysics in section \ref{METAPHYSICSII}, to reflect the most crucial differences between Aristotle and Leibniz.
+
+Russell \cite{russellPL} represents Leibniz as having adhered rather strictly to Aristotle's logic with bad consequences for his metaphysics, in particular he sees the idea of monads as having arisen from the idea that all propositions have subject/predicate form.
+This is something into which I hope to look more closely in due course.
+
+However, our analysis of Aristole suggests that if his metaphysics is so construed as to make his logic sound, then existence is necessary, and this view is incorporated into our model (which may go too far in this matter).
+For Leibniz however the position on existence is pretty clear.
+Existence of substantial individuals is the only thing which is contingent, all else is necessary.
+
+The following model is therefore an exploration of what happens if we tweak the underlying model to ensure exactly that.
+One thing that we should expect, is that the syllogisms which exhibit the ``existential fallacy'' will no longer be sound.
+The second thing which seems to flow from that is the irrelevance of the essential/accidental distinction which is possibly the most important feature of Aristotelian metaphysics.
+In \ref{METAPHYSICSII} I assume that this distinction is intended to correspond to that between necessary and contingent truth (though this may be tendentious, I am not aware of explicit textual support for it).
+This can no longer be done, and I therefore abandon Aristotelian metaphysics altogether returning to a treatment of the syllogism less influenced by metaphysics.
+
+The connection with Grice and Codd is no longer relevant so that material also is excised.
+
+=SML
+open_theory "misc2";
+force_new_theory "leibniz02";
+force_new_pc "`leibniz02";
+=TEX
+
+\ignore{
+=SML
+force_new_pc €"'leibniz02"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'leibniz02";
+set_merge_pcs ["misc2", "'leibniz02"];
+=TEX
+}%ignore
+
+\subsection{The Subject Matter}
+
+Once the essential/accidental distinction is discarded, we are left with a metaphysic in which the key distinction is between individual substances and predicates.
+
+We take an individual to be something which is only truly predicable of itself, and other predicates as collections of individuals, once again accounting for (essential) predication as set inclusion (having represented an individual as a unit set).
+This subset relation is fixed, but the individual substances which are the extensions of predicates are themselves contingent.
+
+=SML
+new_type ("ISUB", 0);
+=TEX
+
+Let us take a new type for a fixed population of predicates.
+
+=SML
+new_type ("PRED", 0);
+=TEX
+
+Whose extension is fixed.
+
+πHOLCONST
+‹ €extension› : PRED ≠ ISUB 
+˜¸¸¸¸¸¸
+‹ T
+∞
+
+However, the extension is defined in terms of individual substances whose existence is contingent, and so we still have the possibility of distinguishing essential predication from accidental, according to whether inclusion obtains on the full extension, or merely on the extensions restricted to the individuals which actually exist.
+
+A possible world is therefore a collection of individuals.
+
+=SML
+declare_type_abbrev ("W", [], îISUB Æ);
+=TEX
+
+We to distinguish one possible world which is the actual world:
+
+πHOLCONST
+‹ €actual_world› : W
+˜¸¸¸¸¸¸
+‹ T
+∞
+
+Subjects and predicates are just things of type {\it PRED}.
+
+\subsection{Predication}
+
+Though the retreat from accidental predication simplifies matters I will retain a presentation of the syllogism similar to that in Section \ref{METAPHYSICSII}, for the sake of its readability.
+
+So I separate out the quantifier by defining {\it All} and {\it Some} appropriately, and retain the postfix negator even though only one kind of predication is now available.
+(in fact I could define the two kinds of predication because the I still have available two kinds of extension, but the modal operators suffice to express the distinction between the two kinds of predication).
+
+I will then treat the modal operators as operators over propositions, and introduce the syllogism as a kind of judgement.
+
+The type of the primitive copulas is:
+
+=SML
+declare_type_abbrev("COPULA", [], îISUB ≠ PRED ≠ (W ≠ BOOL)Æ);
+=TEX
+
+The first parameter is an individual substance rather than a PRED, the quantifying operato will arrange for each of the relevant individuals to be supplied.
+
+\paragraph{Propositions}
+
+=SML
+declare_type_abbrev ("MPROP", [], îW ≠ BOOLÆ);
+=TEX
+
+\paragraph{Complementation}
+
+The distinction between affirmative and negative is achieved by a postfix negation so we can say ``is not'', or ``are not'' (which in this models would be synonyms, so we will go with ``are'' only.
+
+=SML
+declare_postfix (100, "not");
+=TEX
+
+πHOLCONST
+‹ $€not› : COPULA ≠ COPULA
+˜¸¸¸¸¸¸
+‹ µpred∑ pred not = Ãpa t w∑ ≥ pred pa t w 
+∞
+
+\paragraph{Quantifiers}
+
+The quantifiers expect to be supplied with a copula and a term.
+The quantifier then predicates using the copula the term of everything or something in the domain of quantification (which is the subject term).
+The copulas are defined below.
+
+=IGN
+declare_prefix(400, "All");
+declare_prefix(400, "Some");
+=TEX
+
+πHOLCONST
+‹ €All› : PRED ≠ (ISUB ≠ PRED ≠ MPROP) ≠ PRED ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ s r p∑ All s r p = Ãw∑ µz∑ z ç extension s ± z ç w ¥ r z p w
+∞
+
+πHOLCONST
+‹ €Some› : PRED ≠ (ISUB ≠ PRED ≠ MPROP) ≠ PRED ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ s r p∑ Some s r p = Ãw∑ ∂z∑ z ç extension s ± z ç w ± r z p w
+∞
+
+\paragraph{Predication}
+
+For essential predication it is necessary that the individual and the predicate are both of the same category and then reduces under our model to set membership.
+In effect. since the non-substantial individuals are tagged with their category, we need only deal separately with the distinction between substantial and non-substantial and the set inclusion will ensure a match in the non-substantial categories.
+
+πHOLCONST
+‹ €are› : ISUB ≠ PRED ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µ i t∑ are i t = Ãw∑ i ç extension t
+∞
+
+\paragraph{Modal Operators}
+
+In this model the model operators are operators over propositions.
+
+πHOLCONST
+‹ €®› : MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp∑ ® p = Ãw∑ ∂w'∑ p w' 
+∞
+
+πHOLCONST
+‹ €©› : MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp∑ © p = Ãw∑ µw'∑ p w' 
+∞
+
+\subsection{Propositional Operators}
+
+Though the truth functional propositional operators do not feature in the syllogism it is nevertheless useful to have them in giving a full account of Aristotle's logic and they are therefore here defined.
+
+That these propositional operators are ``truth functional'', in a context in which propositions are not regarded as denoting truth values requires a little explanation perhaps.
+Our propositions are families of truth values indexed by possible worlds, i.e. functions from possible worlds to truth values, or in the context of a two valued logic (which Aristotle's seems to be), sets of possible worlds.
+In this context the usual truth functional operators can be expressed by mapping the usual operator over the set of possible worlds, i.e. the result in every possible world is the result of applying the truth functional operator to the values of the propositions in that possible world.
+These also correspond to the obvious set theoretic operation if the propositions are thought of as sets of possible worlds, i.e. intersetion for conjunction, complementation for negation.
+
+The symbols for the operators are already in use, so we define the operations using decorated variants of the symbols and use an alias to allow the undecorated symbol to be used.
+
+
+πHOLCONST
+‹ €≥âa› : MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp∑ ≥âa p = Ãw∑ ≥ (p w) 
+∞
+
+=SML
+declare_alias ("≥", ¨≥âaÆ);
+=TEX
+
+=SML
+declare_infix(220, "±âa");
+=TEX
+
+πHOLCONST
+‹ $€±âa› : MPROP ≠ MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp q∑ (p ±âa q) = Ãw∑ (p w) ± (q w) 
+∞
+
+=SML
+declare_alias ("±", ¨$±âaÆ);
+=TEX
+
+=SML
+declare_infix(210, "¥âa");
+=TEX
+
+πHOLCONST
+‹ $€¥âa› : MPROP ≠ MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp q∑ (p ¥âa q) = Ãw∑ p w ¥ q w 
+∞
+
+=SML
+declare_alias ("¥", ¨$¥âaÆ);
+=TEX
+
+=SML
+declare_infix(200, "§âa");
+=TEX
+
+πHOLCONST
+‹ $€§âa› : MPROP ≠ MPROP ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µp q∑ (p §âa q) = Ãw∑ p w § q w 
+∞
+
+=SML
+declare_alias ("§", ¨$§âaÆ);
+=TEX
+
+\subsection{Quantification}
+
+The Grice/Code analysis makes use of quantifiers, particularly existential quantification.
+To verify the formulae in this context we therefore need to define modal version of the quantifiers. 
+
+=SML
+declare_binder "µâa";
+=TEX
+
+πHOLCONST
+‹ $€µâa› : (PRED ≠ MPROP) ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µmpf∑ $µâa mpf = Ãw∑ µt∑ mpf t w
+∞
+=SML
+declare_alias ("µ", ¨$µâaÆ);
+=TEX
+
+=SML
+declare_binder "∂âa";
+=TEX
+
+πHOLCONST
+‹ $€∂âa› : (PRED ≠ MPROP) ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µmpf∑ $∂âa mpf = Ãw∑ ∂t∑ mpf t w
+∞
+=SML
+declare_alias ("∂", ¨$∂âaÆ);
+=TEX
+
+\subsection{Judgements}
+
+I'm not yet clear what to offer here, so for the present I will define two kinds of sequent, which will be displayed with the symbols $ò$ asnd $ê$. the former being a kind of contingent material implication and the latter a necessary implication.
+
+Both form of judgement seem suitable for expressing the rules of the syllogism at first glance but which can also be used for conversions.
+
+The first expresses a contingent entailment, that if some arbitrary finite (possibly empty) collection of premises are contingently true, then some conclusion will also be true.
+Since the consequence is material, and the premisses might be contingent, the conclusion might also be contingent.
+One might hope that if the rules of the syllogism are applied and the premises are necessary, then so will be the conclusions. 
+
+=SML
+declare_infix(100, "ò");
+=TEX
+
+πHOLCONST
+‹ $€ò› : MPROP LIST ≠ MPROP ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µlp c∑ lp ò c § Fold (Ãp t∑ p actual_world ± t) lp T ¥ c actual_world
+∞
+
+This one says that in every possible world the premises entail the conclusion (still material).
+
+=SML
+declare_infix(100, "ê");
+=TEX
+
+πHOLCONST
+‹ $€ê› : MPROP LIST ≠ MPROP ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µlp c∑ lp ê c § µw∑ Fold (Ãp t∑ p w ± t) lp T ¥ c w
+∞
+
+In the present context the choice between the two is probably immaterial, since we know no more about the actual world than any other, so anything that we can prove to be true contingently, we can also prove to be true necessarily.
+
+\subsection{Conversions}
+
+\paragraph{Premisses, their Modes and Conversions}
+
+See: \href{http://texts.rbjones.com/rbjpub/philos/classics/aristotl/o3102c.htm#2}{Prior Analytics Book 1 Part 2 Paragraph 2}.
+
+\begin{quote}
+First then take a universal negative with the terms A and B.
+
+If no B is A, neither can any A be B. For if some A (say C) were B, it would not be true that no B is A; for C is a B.
+
+But if every B is A then some A is B. For if no A were B, then no B could be A. But we assumed that every B is A.
+
+Similarly too, if the premiss is particular. For if some B is A, then some of the As must be B. For if none were, then no B would be A. But if some B is not A, there is no necessity that some of the As should not be B; e.g. let B stand for animal and A for man. Not every animal is a man; but every man is an animal.
+\end{quote}
+
+These work out fine for {\it izz}, so I will do those first, and then show that they fail for {\it hazz} and {\it is}.
+
+The first and third conversions are most useful when expressed as an equation, since our proof system is based primarily on rewriting using equations.
+
+=GFT
+€are_not_lemma› =
+	Ù All B (are not) A = All A (are not) B
+€some_are_lemma› =
+	Ù Some B are A = Some A are B
+=TEX
+
+These we also supply as our Aristotelian judgements, together with the second which does not give an equation.
+The second conversion embodies the existential fallacy, and therefore is not provable here.
+
+=GFT
+€are_conv1› = Ù
+	[All B (are not) A] ê All A (are not) B
+
+€are_conv2› = Ù
+	[All B izz A] ê Some A izz B
+
+€are_conv3› = Ù
+	[Some B izz A] ê Some A izz B
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨All B (are not) A = All A (are not) BÆ);
+a (rewrite_tac [ext_thm]);
+a (strip_tac THEN rewrite_tac [get_spec ¨AllÆ]);
+a (contr_tac);
+(* *** Goal "1" *** *)
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule (map get_spec [¨areÆ, ¨$notÆ]))));
+a (asm_fc_tac[]);
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule (map get_spec [¨areÆ, ¨$notÆ]))));
+val are_not_lemma = save_pop_thm "are_not_lemma";
+
+set_goal([], ¨Some B are A = Some A are BÆ);
+a (rewrite_tac [ext_thm]);
+a (strip_tac THEN rewrite_tac (map get_spec [¨SomeÆ, ¨areÆ]));
+a (contr_tac);
+a (spec_nth_asm_tac 1 ¨zÆ);
+val some_are_lemma = save_pop_thm "some_are_lemma";
+
+set_goal([], ¨[All B (are not) A] ê All A (are not) BÆ);
+a (rewrite_tac (map get_spec [¨$êÆ, ¨$§âaÆ]));
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, are_not_lemma]);
+val are_conv1 = save_pop_thm "are_conv1";
+
+=IGN
+set_goal([], ¨[All B izz A] ê  Some A izz BÆ);
+a (rewrite_tac (map get_spec [¨$êÆ]));
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, get_spec ¨SomeÆ, get_spec ¨izzÆ]);
+a (REPEAT strip_tac);
+a (∂_tac ¨(Fst B, MemOf (Snd B))Æ THEN asm_rewrite_tac[]);
+a (SPEC_NTH_ASM_T 1 ¨(Fst B, MemOf (Snd B))Æ (rewrite_thm_tac o (rewrite_rule[])));
+val izz_conv2 = save_pop_thm "izz_conv2";
+=SML
+
+set_goal([], ¨[Some B are A] ê  Some A are BÆ);
+a (rewrite_tac (map get_spec [¨$êÆ]));
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨SomeÆ, get_spec ¨areÆ]);
+a (REPEAT strip_tac);
+a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
+val are_conv3 = save_pop_thm "are_conv3";
+=TEX
+}%ignore
+
+\subsection{Modal Conversions}
+
+\paragraph{Prior Analytics Book 1 Part 3}
+
+See: \href{http://texts.rbjones.com/rbjpub/philos/classics/aristotl/aristotl/o3103c.htm}{Universal and Possible Premisses and their Conversions}.
+
+These are the conversions in relation to necessity and possibility described by Aristotle:
+
+\begin{enumerate}
+\item If it is necessary that no B is A, it is necessary also that no A is B.
+\item If all or some B is A of necessity, it is necessary also that some A is B.
+\item If it is possible that all or some B is A, it will be possible that some A is B.
+\item and so on
+\end{enumerate}
+
+So in this section Aristotle only offers variants of the previous conversions with either ``possible'' or ``necessary'' attached to both premiss and conclusion.
+
+We can prove generally that modal operators can be introduced into a conversion:
+
+=GFT
+€®_conv› =
+	Ù [P] ê Q ¥ [® P] ê ® Q
+
+€©_conv› =
+	Ù [P] ê Q ¥ [© P] ê © Q
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨[P] ê Q ¥ [® P] ê ® QÆ);
+a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨®Æ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨w'Æ THEN asm_fc_tac[]);
+val ®_conv = save_pop_thm "®_conv";
+
+set_goal([], ¨[P] ê Q ¥ [© P] ê © QÆ);
+a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ]));
+a (REPEAT strip_tac);
+a (asm_ufc_tac[] THEN asm_rewrite_tac[]);
+val ©_conv = save_pop_thm "©_conv";
+=TEX
+}%ignore
+
+Now according to Leibniz all predication is necessary, only existence is contingent.
+However, the contingency of existence means that this must be interpreted as a claim about predicates applied only to individuals.
+
+
+=GFT
+€®AllBareA_thm› = Ù [] ê ® (All B are A)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨[] ê ® (All B are A)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨$®Æ])
+	THEN REPEAT strip_tac);
+a (∂_tac ¨extension AÆ);
+a (rewrite_tac [get_spec ¨AllÆ, get_spec ¨areÆ, ç_in_clauses]
+	THEN REPEAT strip_tac);
+val ®AllBareA_thm = save_pop_thm "®AllBareA_thm";
+=IGN
+set_goal([¨µA B∑ [All A are B] ê © (All A are B)Æ], ¨µA B∑ [] ê © (All A are B)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨$©Æ])
+	THEN REPEAT strip_tac);
+a (∂_tac ¨extension AÆ);
+a (rewrite_tac [get_spec ¨AllÆ, get_spec ¨areÆ, ç_in_clauses]
+	THEN REPEAT strip_tac);
+val ®AllBareA_thm = save_pop_thm "®AllBareA_thm";
+=TEX
+}%ignore
+
+
+The upshot is that to show that our model captures the necessity of predication (in the sense in which this is conceivable), we need a way to talk about individuals.
+
+πHOLCONST
+‹ €individual› : PRED ≠ MPROP
+˜¸¸¸¸¸¸
+‹ µA∑ individual A = Ãw∑ ∂a∑ extension A = {a}
+∞
+
+=GFT
+€®AarenotA_thm› = Ù [] ê ® (All A (are not) A)
+=IGN
+€are_®_thm› = Ù [All A are B] ê ® (All A are B)
+€not_©_are_thm› = Ù [] ò (≥ © (All A are B))
+€©_are_thm2› = Ù [© (All A are B)] ê All A are B
+€not_©_are_thm2› = Ù [] ê (≥ © (All A are B))
+=TEX
+
+There are many theorems which one would naturally prove at this point, to facilitate further proofs and proof automation, which are not expressible syllogistically.
+Proof automation depends heavily on the demonstration of equations, so that proof may proceed by rewriting.
+But syllogisms are not suitable for this.
+
+The natural way to proceed in such a case is to continue in this theory doing things which support proofs of syllogisms without being restrained to syllogisms, and then to have a separate theory in which the syllogistic claims are presented.
+Some reflection is desirable on what the philosophical objectives are and what course will best contribute to those purposes.
+
+\ignore{
+=SML
+set_goal([], ¨[] ò ® (All A (are not) A)Æ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨$®Æ])
+	THEN REPEAT strip_tac);
+a (∂_tac ¨{}Æ);
+a (rewrite_tac [get_spec ¨AllÆ, get_spec ¨areÆ, get_spec ¨$notÆ, ç_in_clauses]
+	THEN REPEAT strip_tac);
+val ®AarenotA_thm = save_pop_thm "®AarenotA_thm";
+
+=IGN
+
+set_goal([], ¨≥[All A are B] ò © (All  A are B)Æ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨areÆ])
+	THEN REPEAT strip_tac);
+val are_©_thm = save_pop_thm "are_©_thm";
+
+set_goal([], ¨≥[All A are B] ê © (All  A are B)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨areÆ])
+	THEN REPEAT strip_tac);
+a (∂_tac ¨actual_worldÆ THEN REPEAT strip_tac);
+val are_©_thm = save_pop_thm "are_©_thm";
+
+
+set_goal([], ¨[] ò ≥ © (All A hazz B)Æ);
+a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ, ¨$≥âaÆ, ¨hazzÆ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[] THEN strip_tac);
+a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
+val not_©_hazz_thm = save_pop_thm "not_©_hazz_thm";
+
+set_goal([], ¨[© (All A izz B)] ê All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val ©_izz_thm2 = save_pop_thm "©_izz_thm2";
+
+set_goal([], ¨[© (All A hazz B)] ê All A izz BÆ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ])
+	THEN REPEAT strip_tac);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
+	THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[] THEN strip_tac);
+a (lemma_tac ¨∂d∑ d ç PeSet (Snd A)Æ THEN1 rewrite_tac[]);
+a (∂_tac ¨(Fst A, d)Æ THEN asm_rewrite_tac[]);
+val ©_hazz_thm2 = save_pop_thm "©_hazz_thm2";
+
+set_goal([], ¨[All A izz B] ê © (All  A izz B)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ])
+	THEN REPEAT strip_tac);
+val izz_©_thm2 = save_pop_thm "izz_©_thm2";
+
+set_goal([], ¨[] ê ≥ © (All A hazz B)Æ);
+a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ, ¨$≥âaÆ, ¨hazzÆ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[] THEN strip_tac);
+a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
+val not_©_hazz_thm2 = save_pop_thm "not_©_hazz_thm2";
+=TEX
+}%ignore
+
+Here are some general modal results which I have not noticed in Aristotle as yet.
+
+=GFT
+€©_elim_thm› =
+	Ù [© P] ò P
+€®_intro_thm› =
+	Ù [P] ò ® P
+€©_®_thm› =
+	Ù [© P] ò ® P
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨[© P] ò PÆ);
+a (rewrite_tac (map get_spec [¨$òÆ, ¨FoldÆ, ¨$©Æ]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val ©_elim_thm = save_pop_thm "©_elim_thm";
+
+set_goal([], ¨[P] ò ® PÆ);
+a (rewrite_tac (map get_spec [¨$òÆ, ¨FoldÆ, ¨$®Æ]) THEN contr_tac THEN asm_fc_tac[]);
+val ®_intro_thm = save_pop_thm "©_intro_thm";
+
+set_goal([], ¨[© P] ò ® PÆ);
+a (rewrite_tac (map get_spec [¨$òÆ, ¨FoldÆ, ¨$©Æ, ¨$®Æ]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val ©_®_thm = save_pop_thm "©_®_thm";
+=TEX
+}%ignore
+
+\subsection{Other Conversions}
+
+The following coversions relate to the square of opposition, but I have not yet discovered where they appear in Aristotle.
+They work for all the copulas, so I have used a free variable for the copulas.
+
+=GFT
+≥_All_conv_thm =
+	Ù (≥ All A cop B) = Some A (cop not) B
+≥_All_not_conv_thm2 =
+	Ù (≥ All A (cop not) B) = Some A cop B
+≥_Some_conv_thm =
+	Ù (≥ Some A cop B) = All A (cop not) B
+≥_Some_not_conv_thm =
+	Ù (≥ Some A (cop not) B) = All A cop B
+=TEX
+
+They are contraries out of Aristotles square of opposition
+
+\ignore{
+=SML
+set_goal([], ¨(≥ All A cop B) = Some A (cop not) BÆ);
+a (rewrite_tac (map get_spec [¨AllÆ, ¨SomeÆ, ¨$notÆ, ¨≥âaÆ]));
+a (rewrite_tac[ext_thm] THEN contr_tac THEN asm_fc_tac[]);
+val ≥_All_conv_thm = save_pop_thm "≥_All_conv_thm";
+
+set_goal([], ¨(≥ All A (cop not) B) = Some A cop BÆ);
+a (rewrite_tac (map get_spec [¨AllÆ, ¨SomeÆ, ¨$notÆ, ¨≥âaÆ]));
+a (rewrite_tac[ext_thm] THEN contr_tac THEN asm_fc_tac[]);
+val ≥_All_not_conv_thm2 = save_pop_thm "≥_All_not_conv_thm2";
+
+set_goal([], ¨(≥ Some A cop B) = All A (cop not) BÆ);
+a (rewrite_tac (map get_spec [¨AllÆ, ¨SomeÆ, ¨$notÆ, ¨≥âaÆ]));
+a (rewrite_tac[ext_thm] THEN contr_tac THEN asm_fc_tac[]);
+val ≥_Some_conv_thm = save_pop_thm "≥_Some_conv_thm";
+
+set_goal([], ¨(≥ Some A (cop not) B) = All A cop BÆ);
+a (rewrite_tac (map get_spec [¨AllÆ, ¨SomeÆ, ¨$notÆ, ¨≥âaÆ]));
+a (rewrite_tac[ext_thm] THEN contr_tac THEN asm_fc_tac[]);
+val ≥_Some_not_conv_thm = save_pop_thm "≥_Some_not_conv_thm";
+=TEX
+}%ignore
+
+Normally theorems like this would be proved closed, but it looks less Aristotelian without the quantifiers and we can imagine they are schemata.
+To use them it will usually be desirable to close them, which is easily done, e.g.:
+
+=SML
+all_µ_intro ≥_Some_not_conv_thm;
+=TEX
+
+=GFT ProofPower output
+val it = Ù µ A cop B∑ (≥ Some A (cop not) B) = All A cop B : THM
+=TEX
+
+\subsection{Syllogisms}
+
+The abolition of accidental predication should result in a syllogistic logic which corresponds to Aristotle, though the contingency of existence means that the existential fallacies really are fallacies.
+
+We can, by methods similar to those used above obtain automatic proofs of the syllogisms which are valid in this model.
+
+The details are omitted, but the valid syllogisms have been proven and stored in the theory, see: \thyref{leibniz02}.
+
+\ignore{
+=SML
+fun 	€opfun_from_char› cop "a" s p = ¨All ësÆ ëcopÆ ëpÆÆ
+|	opfun_from_char cop "e" s p = ¨All ësÆ (ëcopÆ not) ëpÆÆ
+|	opfun_from_char cop "i" s p = ¨Some ësÆ ëcopÆ ëpÆÆ
+|	opfun_from_char cop "o" s p = ¨Some ësÆ (ëcopÆ not) ëpÆÆ;
+
+fun €opfuntrip_from_text› cop s =
+	let val [a, b, c] = (map (opfun_from_char cop) o vowels_from_string) s;
+	in (a, b, c)
+	end;
+
+fun €opfuntrip_from_text_cc› (cop1,cop2) s =
+	let val [v1, v2, v3] = vowels_from_string s;
+	    val [a, b, c] = [opfun_from_char cop1 v1, opfun_from_char cop2 v2, opfun_from_char ¨hazzÆ v3];
+	in (a, b, c)
+	end;
+=TEX
+
+The following functions construct a syllogism.
+
+=SML
+fun €mk_are_syll› vt (a, b, c, d) (f1, f2, f3) =
+	¨[ëf1 a bÆ; ëf2 c dÆ] ê
+		ëf3 (mk_var("ø", vt)) (mk_var("P", vt))ÆÆ;
+
+fun €mk_cop_syllp› cop (s, n) =
+	([], mk_are_syll îPREDÆ (nth (n-1) (figures îPREDÆ)) (opfuntrip_from_text cop s));
+
+fun €mk_cop_syllp_cc› cc (s, n) =
+	([], mk_are_syll îPREDÆ (nth (n-1) (figures îPREDÆ)) (opfuntrip_from_text_cc cc s));
+
+fun €mk_are_syllp› (s, n) = mk_cop_syllp ¨areÆ (s, n);
+
+val €syll_are_tac2› =
+	asm_prove_tac (map get_spec [¨$êÆ, ¨AllÆ, ¨SomeÆ, ¨areÆ, ¨$notÆ, ¨FoldÆ])
+	THEN contr_tac THEN REPEAT_N 2 (all_asm_fc_tac[])
+	THEN (spec_nth_asm_tac 1 ¨z:ISUBÆ)
+	THEN REPEAT_N 2 (all_asm_fc_tac[]);
+
+fun €syll_are_rule2› g = tac_proof(g, syll_are_tac2);
+
+val €sps_are1› = syll_prove_and_store mk_are_syllp "_are";
+
+val €valid_are_sylls› = map (sps_are1 syll_are_tac2) syllogism_data1;
+=IGN
+set_goal(mk_are_syllp ("Baroco", 2));
+a (syll_are_tac2);
+
+=TEX
+
+}%ignore
