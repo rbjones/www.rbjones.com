@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.18 2009/04/28 13:12:16 rbj Exp $
+# $Id: rules.mk,v 1.19 2009/10/15 19:46:58 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -7,7 +7,7 @@
 
 vpath %.in $(SRCDIR)
 vpath %.xsl $(COMDIR)
-vpath %.sxx $(XLDPDIR)
+#vpath %.xsl $(XLCOMDIR)
 
 Makefile: $(MKDEPS)
 	cd $(TOPSRCDIR); ./configure --prefix=$(prefix)
@@ -89,9 +89,9 @@ $(HTML004i) $(HTML001i): %-i.html : %.html
 
 $(HTML004m) $(HTML001m): %-m.html : %.html
 
-$(HTMLTHLS): %.html: %.xml $(XLDPDIR)/xslt001s8.sxx xslt002.xsl frame01.xsl pp-symbol.ent ppft.xsl X-Logic.xsl
+$(HTMLTHLS): %.html: %.xml $(XLCOMDIR)/xslt001s8.xsl xslt002.xsl frame01.xsl pp-symbol.ent ppft.xsl X-Logic.xsl
 	xxml2xml <$*.xml >$*.xmlt
-	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt001s8.sxx root=$(BLDROOT) \
+	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt001s8.xsl root=$(BLDROOT) \
 	dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs
 
 $(COMDIRCPY): %: $(COMDIR)/%
@@ -257,8 +257,8 @@ $(HTML005f): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl Index
 #$(HTM005f): %.htm: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl IndexFrame.xsl MainFrame.xsl pp-symbol.ent ppft.xsl X-Logic.xsl sitespecific.xsl
 #	$(JAVA) $(XSLTPROC) $*.xmlt $(XLCOMDIR)/xslt001$(XSLTSUFF).xsl dir=$(BLDDIR) name=$*
 
-$(HTM005f): %.htm: %.xmlt $(XLDPDIR)/xslt001s8.sxx pp-symbol.ent
-	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt001s8.sxx root=$(BLDROOT) \
+$(HTM005f): %.htm: %.xmlt $(XLCOMDIR)/xslt001s8.xsl pp-symbol.ent
+	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt001s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* suffix=htm imagedir=rbjgifs 
 
 $(XFTFILES): %.xft: %.xml stripfile.xsl
@@ -279,14 +279,14 @@ $(XMLT006) $(XMLT007) $(XMLT008): %.xmlt: %.xml
 $(HTML006): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl IndexFrame.xsl MainFrame.xsl pp-symbol.ent ppft.xsl X-Logic.xsl sitespecific.xsl
 	$(JAVA) $(XSLTPROC) $*.xmlt $(XLCOMDIR)/xslt001$(XSLTSUFF).xsl dir=$(BLDDIR) name=$*
 
-$(HTML007f): %.html: %.xmlt $(XLDPDIR)/xslt001s8.sxx pp-symbol.ent
-	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt001s8.sxx root=$(BLDROOT) \
+$(HTML007f): %.html: %.xmlt $(XLCOMDIR)/xslt001s8.xsl pp-symbol.ent
+	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt001s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
 
 $(HTML007i) $(HTML007m): $(HTML007f)
 
-$(HTML008): %.html: %.xmlt $(XLDPDIR)/xslt004s8.sxx pp-symbol.ent
-	$(JAVA) $(XSLT2PROC) -c $*.xmlt $(XLDPDIR)/xslt004s8.sxx root=$(BLDROOT) \
+$(HTML008): %.html: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
+	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
 
 $(ISAPDFO): %.pdf: %.ldd
