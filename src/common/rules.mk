@@ -1,8 +1,8 @@
-# $Id: rules.mk,v 1.19 2009/10/15 19:46:58 rbj Exp $
+# $Id: rules.mk,v 1.20 2009/10/16 12:16:23 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
-.PHONY: build $(SUBBUILDS) vars thisinstall $(THISINSTALL) install \
+.PHONY: build buildxmlt buildother $(SUBBUILDXMLT) $(SUBBUILDOTHER) vars thisinstall $(THISINSTALL) install \
 	uninstall $(UNINSTALL) $(SUBINSTALLS) isablddummy
 
 vpath %.in $(SRCDIR)
@@ -112,8 +112,11 @@ $(XLDPDIRCPY): %: $(XLDPDIR)/%
 $(SUBINSTALLS): %.install: 
 	cd $* && $(MAKE) install
 
-$(SUBBUILDS): %.build: 
-	cd $* && $(MAKE) build
+$(SUBBUILDOTHER): %.buildother: 
+	cd $* && $(MAKE) buildother
+
+$(SUBBUILDXMLT): %.buildxmlt: 
+	cd $* && $(MAKE) buildxmlt
 
 $(PPDOC): %.doc : %.xml
 	xml2ppdoc <$^ >$*.doc
@@ -237,8 +240,12 @@ THISINSTALL=installweb installdata installbins installlibs installperllibs insta
 
 ppthds: $(PPTHD) $(PPPPTHD)
 
-build: $(BUILDFIRST) $(SUBBUILDS) $(BINFILES) $(DATAFILES) $(LIBFILES) $(PERLLIBFILES) \
+buildxmlt: $(SUBBUILDXMLT) $(XMLT) $(ENTFILES)
+
+buildother: $(BUILDFIRST) $(SUBBUILDOTHER) $(BINFILES) $(DATAFILES) $(LIBFILES) $(PERLLIBFILES) \
 	$(SMLLIBFILES) $(WEBFILES) $(BUILDEXTRAS)
+
+build: buildxmlt buildother
 
 install: build $(THISINSTALL) $(SUBINSTALLS)
 
