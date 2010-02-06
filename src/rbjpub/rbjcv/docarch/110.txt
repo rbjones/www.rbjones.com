@@ -1,0 +1,1010 @@
+.nr PS 11
+.nr VS 14
+.RP
+.TL
+Structured Function Theory in SML
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document describes (part of) a foundation system
+derived from classical set theory in the following way:
+.IP 1
+Take functions and application as primitive rather
+than sets and membership.
+.IP 2
+Eliminate the distinction between formulae and terms.
+.IP 3
+Introduce structuring and `polymorphism'
+.LP
+Note that it is not a type theory, it is a type free
+(but well founded) theory of functions.
+.LP
+No explicit account of the handling of exceptions is given.
+This is not necessary as long as the exception values are confined to a small enough space.
+If exceptions were allowed to take any value problems would arise.
+.AE
+.ds LH 
+.ds CH Structured Function Theory
+.ds RH \*(DY Page \\n(PN
+.ds LF DS/FMU/RBJ/110   Issue 0.5
+.ds CF Structured Function Theory
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.so /escher/usr2/projects/infra/msmacros/roff.defs
+.LP
+This paper, prepared as a contribution to the formal treatment of the proposedVDM-SL BSI standard, is at the same time representative of a more general position on suitable foundations for the application of formal methods in Computer Science.
+I have felt it desirable to give some account of this position in the early sections of the paper, in the hope that this will help the reader to understand the technical details which follow.
+.KE
+.LP
+The main dogma I identify here without justification:
+
+.RS
+To obtain the highest levels of assurance of the correctness of implemented computer systems it is desirable to work within a single coherent formal framework of a highly expressive nature, comparable in proof-theoretic strength to the traditional foundation systems for classical mathematics (e.g. Zermelo-Fraenkel set theory).
+.RE
+
+.LP
+The formal system described in this document has been obtained by starting with a classical set theory and making the following changes to bring it closer to what would be appropriate for a foundation for VDM (or Z).
+.LP
+First, the primitives are changed, taking functions rather than sets,
+function application rather than membership, and functional abstraction
+rather than set comprehension as primitive.
+Though this may sound rather a radical step it is primarily cosmetic,
+the system remains closer to set theory than a type theory, not
+least because it remains type free, and inherits the full expressiveness
+of set theory.
+(Slightly stronger than Church's type theory, roughly the same as NBG)
+.LP
+In keeping with this cosmetic shift towards the syntax of functions rather
+than sets, the distinction between terms and formulae is discarded.
+One might think of this as treating boolean terms as formulae, if only the
+language were typed.
+Since it is not, one has to accept all terms as candidates for proof,
+with just (some of) the terms denoting "T" being in fact provable.
+(The language is too expressive to have a complete proof system)
+.LP
+Further to this I have incorporated in this language structuring
+as required for substantial applications, and a type free analog
+of "polymorphism".
+.LP
+The language is defined primarily by a semantics in set theory.
+The semantic mapping is factored through the syntax of set theory,
+enabling a formal definition to be given by a computable mapping defined
+in SML (standard ML).
+.LP
+To obtain the true semantics of the language first decide on a model
+of the set theory described in DS/FMU/RBJ/116, any model will do.
+Such a model determines a mapping from the terms of the set theory into the domain of the model (i.e. sets), it gives a semantics to the language of sets.
+By composing this map with the map shown below, from the terms of
+the language of functions into terms of set theory, you will obtain a map from the terms of the language of functions into sets.
+.LP
+The language is incomplete insofar as there need to be further primitives
+before it becomes comparable to set theory.
+These could be supplied as part of a global environment but I havn't done that yet.
+.LP
+SML is described in ECS-LFCS-86-2 (University of Edinburgh, Laboratory
+for Foundations of Computer Science).
+.KE
+.KS
+.NH
+PRELIMINARY DISCUSSIONS
+.LP
+In the course of this and previous work I have developed a position on logical foundations for computer science with which the reader should have some acquaintance if he is to gain a full understanding of the following formal material.
+.LP
+These discussions are intended in an informal way to bring out and justify the less conventional aspects of the proposal.
+.LP
+Apologies to the protagonists of major schools of thought (e.g. category theory and constructivism) which I have given a low profile.
+.KE
+.KS
+.NH 2
+Sets, Functions and Types
+.LP
+The question whether to take sets or functions as primitive in
+our logical foundations is one which has been with us since the beginnings
+of mathematical logic.
+.KE
+.LP
+At the beginning of this century there appeared two principal methods of evading the modern antinomies.
+The first was to use an axiomatic set theory in which unrestricted comprehension (set abstraction) was replaced by separation (set abstraction over an already given set) augmented by further axioms to ensure population of the universe in an orderly way.
+The second was Russell's Theory of Types.
+.LP
+Since then it has been traditional for foundation systems based on sets to be type-free, and foundation systems based on functions to be Type Theories.
+It is not uncommon for authors to claim that a language of functions can only be made into a consistent logic by the imposition of a type system.
+.LP
+While there are examples of typed set theories, I know of no consistent type-free foundation system with functions as primitive.
+.LP
+The following system is offered as such.
+.LP
+How is this done?
+.LP
+It is done primarily by viewing its construction as simply an exercise in providing a new syntax for set theory, inheriting from set theory mechanisms sufficient to preserve consistency.
+The effect is to replace restrictions on term formation by restrictions on beta reduction.
+A function can be applied to anything, but you don't always get what you might have expected.
+.LP
+There still remain many degrees of freedom.
+Among the alternatives are:
+.RS
+.KS
+.IP "\fBUse Comprehension\fP"
+.br
+In a set theory with classes such as NBG (Von-Neumann, Bernays, Goedel) or UST(DS/FMU/RBJ/116), unrestricted comprehension is available.
+A theory of functions allowing unrestricted functional abstraction could therefore be given a semantics in such a set theory.
+The proof theory for the language of functions would then have to reflect the
+proof theory of NBG and would have to reflect the distinction between sets and proper classes in some way appropriate to a theory of functions.
+Maybe have `proper' functions and `improper' ones, where an improper function is like a proper class, and may not therefore be found either in the domain or in the range of a any function.
+This would result in a constraint on beta reduction, requiring that both the argument and the result of a function application are proper before beta reduction can take place.
+.KE
+.KS
+.IP "\fBUse Separation\fP"
+.br
+Alternatively, if functional abstraction is confined over specific domain and range then it can be given a semantics using separation.
+In this case beta reduction would be conditional on the argument falling in the domain, and result in the co-domain.
+A language of this sort would be obtained by taking the syntax of Z but discarding the type system.
+Similarly a type-free VDM-SL look-alike might be given a semantics in this way.
+A theory populated by the function space constructor corresponding to this form of abstraction would have a proof theoretic strength similar to that of Zermelo set theory, or Church's simple theory of types.
+It would lack the power conferred by the axiom of replacement upon ZF.
+.KE
+.KS
+.IP "\fBUse Separation and Replacement\fP"
+.br
+This option falls between the two preceding in terms of the likely (proof theoretic) strength of the resulting system.
+The idea here is to restrict the domain of functional abstraction (to a set) but not the co-domain.
+If the function theory had no improper functions the result could always be interpreted as a set in ZF, NBG or UST, (this result depends on the use of the axiom of replacement, stating that the range of a functional relation is a set if the domain is).
+Beta reduction would be permitted provided that the argument fell in the domain of the function and provided the result of the beta reduction would be a set.
+.KE
+.RE
+.LP
+The following is based on separation and replacement.
+.KS
+.NH 2
+Types, Sets and Polymorphism
+.LP
+Polymorphism is a term which has been used I believe exclusively in connection with type systems.
+Yet here I am claiming to include polymorphism in a type free language of functions.
+Just what do I mean by such a claim?
+.KE
+.LP
+Polymorphism is another thing which was seen to be necessary on one side of the set-theory/type-theory divide but not on the other.
+The need for polymorphism in type-theories was evident at their first introduction by Russell,
+and is reflected in the Principia by the use of `typical ambiguity'.
+Probably the closest modern analogue to this is the polymorphism found in Mike Gordon's HOL system.
+.LP
+While Russell found it necessary to use typical ambiguity, no comparable provision was thought to
+be necessary in Zermelo's set theory, appearing at the same time, though later some set theories have
+made slight concessions in the form of proper classes.
+.LP
+In fact, much the same problems are present in set theory as necessitate polymorphism in type theories.
+The function mapping any list onto its length exists no more in (ZFC) set theory than it does in a
+monomorphic type theory.
+We have to settle for a lot of different functions each giving the length of lists over some specific
+type or set.
+.LP
+In a set theory having proper classes (NBG) the length function exists as a class, but if classes are used as functions there can be no higher order functions.
+Even the exotic hierarchy of Universes topped by classes as found in UST does not have any impact on this problem.
+.LP
+Moving from a type theory to a well founded type free set or function theory does not make the problems disappear, so we do need some analogue of polymorphism.
+The need for polymorphism does not disappear unless we go to reflexive systems, models for the type free lambda calculus with unrestricted beta reduction, but if this is used in a logic the paradoxes will re-emerge.
+.LP
+The solution is to represent polymorphic objects as functions from type environments to sets.
+If in the context of NBG we take to represent the `length' function the class representing the function which takes any set to the length function over lists formed from elements of that set, we can find a form of function abstraction and application which works.
+Both the function and its argument are polymorphic, which means that they are functions over sets which yield monomorphic length functions and lists respectively.
+.KS
+.NH 2
+On the meaning of `set theoretic'.
+.LP
+The distinction between domain theoretic and set theoretic semantics is one which has been extensively discussed.
+Unfortunately precise distinction under consideration is infrequently defined.
+The naive expectation that a `set theoretic' semantics is one providing denotations which are sets, and that this is contrasted with `domain theoretic' because a `domain theoretic' semantics provides denotations which are not sets, is of course not correct.
+.KE
+.LP
+Making a guess on the basis of the usage of the term a more plausible definition might be:
+.IP
+A set theoretic semantics is one in which:
+.RS
+.IP 1.
+The semantics is provided by a mapping from abstract syntax into the universe of a classical well-founded set theory (e.g. ZF or NBG, the well-foundedness is important).
+.IP 2
+Functions in the language are assigned to functions represented in extension as graphs, i.e. many-one relations, relations in turn being represented as sets of ordered pairs.
+.RE
+.LP
+The combination of well foundedness with the classical representation of functions results in no function being in its own domain or range, and therefore rules out many of the features found in programming languages.
+.LP
+In the absence of well-foundedness (e.g. using one of Quine's systems) self-application is not excluded.
+Even in a well-founded set theory there are many ways of encoding functions as sets which permit self-application, examples of these are the models of the lambda calculus (including reflexive domains).
+.LP
+A more commonly cited reason for adopting reflexive domains rather than classical function spaces, is the need for solutions to reflexive domain equations:
+.DS
+V \*u \*r + V \(-> V 
+.DE
+.LP
+Where V is some space of values, + is disjoint union, and \(-> is some function space constructor.
+.LP
+In this case, even taking advantage of the `\*u', allowing non-standard representations of functions, there remains a problem of cardinality if \(-> is interpreted as the classical function space.
+In order that the two sides of the equation can have the same cardinality, the function space constructor must construct a smaller function space than does the classical function space constructor.
+.LP
+Typically a topology is defined over the sets, which are now called domains, and the function space contains only the continuous functions.
+This ploy is satisfactory for providing semantics for programming languages, since all the functions of interest in that context are computable.
+However, when we come to express specifications, then we need functions which are neither computable nor continuous, not strict or even monotonic.
+.LP
+The expressiveness obtained in Church's Type Theory through the function space constructor allowing predicates of any order, is lost if the function space is restricted to continuous functions.
+Whether there is any function space contructor sufficiently conservative to admit solutions of recursive domain equations, and yet sufficiently liberal to admit quantification is, as far as I am aware, not yet known.
+.KS
+.NH 2
+Functions and Function Spaces
+.LP
+.KE
+.KS
+I have suggested that whether a semantics is `set theoretic' or not seems to depend primarily on:
+.IP
+How functions are encoded as sets.
+.IP
+Which functions appear in a function space.
+.KE
+.LP
+For VDM as it presently appears it is not obvious that the classical function encodings or the classical function space will provide a satisfactory semantics.
+.LP
+This problem interacts strongly with the question "how strong do we want VDM to be as a logical system".
+There are reasons for wishing VDM to have the same order of expressiveness as classical set theory, or at least, \(*w-order logic.
+If this were to be achieved it would have to be achieved either through the function space constructor, by providing for properties of any order to be obtained as boolean valued functions, or through the power set constructor, if this were the full classical power set.
+.LP
+If the expressiveness were to be obtained through the function space then it would be necessary to ensure that universal quantification is available in the function spaces as a value of type ((*\(->bool)\(->bool) for every type *.
+This would rule out some options on the function space.
+e.g. continuity or monotonicity.
+Depending on how you want the rules of quantification to turn out it might also rule out strictness.
+.LP
+The following problems have an impact upon this.
+.RS
+.IP "\fBpartiality\fP"
+VDM needs partial functions and partial function spaces.
+In the simplest case this is achievable simply by representing a partial function as the total function over the domain of definition of the partial function.
+The partial function space is the union of the total functions over all subsets of the domain.
+However this representation is acceptable only if we don't want non-strict functions.
+.IP "\fBstrictness\fP"
+.IP "\fBmonotonicity\fP"
+.IP "\fBcontinuity\fP"
+.IP "\fBexceptions\fP"
+.RE
+.KS
+.NH 2
+Constructive Mathematics
+.LP
+It has frequently been claimed that constructive logics are more appropriate for use in computer science.
+The formal system described here makes no concession to this viewpoint.
+While not professing a specialist knowledge I am able to explain why I have made provision here for the unfettered development of the whole of classical mathematics.
+.KE
+.LP
+Unfortunately the word constructive labels a great diversity of systems and propensities (enen to my knowledge), and my reasons for not adopting them vary frfom one to the next.
+I therefore have to give a whole list of explanations for why this system is not more constructive than it is.
+.KS
+.LP
+Here is a list of features which are associated with constructivism:
+.RS
+.IP 1
+Dropping the law of the excluded middle, the Intuitionistic propositional calculus.
+.IP 2
+Constructive proofs, disallowing use of the axiom of choice.
+.IP 3
+Limitations on Cardinality
+.IP 4
+Predicativity
+.IP 5
+The Howard/Curry correspondence.
+.IP 6
+Constructive Analysis
+.RE
+.KE
+.LP
+Discussions of these features are given below.
+They are not offered as refutations but as mitigation of my neglect of constructivism.
+.NH 3
+The Law of the Excluded Middle and Intuitionsitic Logic
+.LP
+Intuitionists have traditionally been suspicious about the excessively lavish ontology of classical mathematics, and the law of the excluded middle has been identified as culpable in allowing existence proofs which are `constructively unsound'.
+.LP
+While these arguments are still current in explanations of Intuitionistic Logic, I find them difficult to understand for the following reasons:
+.RS
+.IP 1
+First Order classical logic, even with the law of the excluded middle, is ontologically neutral.
+It effectively implies no more than the existence of a single object.
+.IP 2
+Looking at first order axiomatisations of set theory it is plain that the source of the lavish ontology is not any quirk of the propositional logic, but a series of axioms which explicitly populate the universe (these may be expressed as existence axioms, as they mostly are in UST, or as axioms having the same effect by asserting properties of sets yielded by built in function names, e.g. \*m or \(*m).
+Probably the most culpable, from the intuitionistic perspective is the axiom of choice.
+.IP 3
+The omission of the law of the excluded middle has no effect on the resulting ontology.
+IZF, Intuitionistic Zermelo Fraenkel, while based on intuitionistic logic, has been proven to be as expressive as ZF.
+.RE
+.LP
+There are other reasons for considering logics without the law of the excluded middle, and the theory shown here does not have such a law at the level of propositions, but these are quite distinct from the intuitionstic reasons, and the resulting logics differ from intuitionistic logic.
+.NH 3
+Constructive Proofs and the Axiom of Choice
+.LP
+I note in passing that constructive proofs are not a benefit conferred by constructive foundations, being equally possible within a classical framework.
+We can appreciate the merits of constructive proofs without refusing to consider any other.
+.NH 3
+Limitations on Cardinality
+.LP
+.NH 3
+Predicativity
+.NH 3
+The Howard/Curry correspondence
+.NH 3
+Constructive Analysis
+.NH 2
+Institutions.
+.NH 2
+Reflexive Foundations
+.KS
+.NH
+PRELIMINARY DEFINITIONS
+.LP
+The following is a theory of polymorphic values, most of which are functions.
+A polymorphic value is a function from type environments to monomorphic values.
+A monomorphic value is either a member of some primitive type (e.g. strings), or of a type constructed from these using one of the primitive type constructors (e.g. the function space constructor).
+.LP
+An expression in our language has a value in some environment in which various variables have been assigned values.
+These variables may be either individual variables or type variables, and sets of assignments to individual or type variables are known here as value environments or type environments respectively.
+They are represented as functions from strings, (variable names) to values or types (sets of values, represented as partial boolean functions).
+.LP
+The meaning of an expression is therefore given as a map from value environments to polymorphic values (or polyvalues), which may also be viewed as a curried function from value environments and type environments into monovalues.
+.LP
+For initial purposes it it not necessary for me to closely identify the value space or the type space, and we suppose values and types both to lie in the smallest universe of UST, (V \(es).
+However, functional abstraction must be confined over specific domains, and in order to define the semantic mappings the spaces of value environments and type environments must be identified.
+.LP
+The initial material following is devoted to that end, and given our simplifying assumption about the value and type spaces this is dominated by the definition of the set of strings, over which the reader may skip with little loss.
+.LP
+There follows the definition of the abstract syntax and the semantic mappings, which while not as transparent as I might have hoped, are at least reasonably compact.
+.LP
+Before entering on the definition of the formal system I introduce the definitions of various functions and constants which will be used in defining the semantic mappings.
+.KE
+.sv lpf
+infix 1 \*(bs;
+infix 9 !!;
+structure SFT = struct
+structure DEN = struct
+local open UST.FTM 
+in
+.sw
+.KS
+.NH 2
+Booleans
+.NH 3
+Truth and the Unit set
+.LP
+.sv lpf
+val T_den		= unit (\(es);
+val Unit_den	= unit (T_den);
+.sw
+.LP
+T_den is meaning of the true proposition (there is only one).
+Unit_den is the denotation of the unit set, which contains just the
+true proposition.
+.KE
+.KS
+.NH 3
+Booleans
+.sv lpf
+val F_den		= Unit_den;
+val bool_den	= pair T_den F_den;
+.sw
+.KE
+.KS
+.NH 2
+Natural Numbers
+.LP
+The Von-Neumann representation for natural numbers is used.
+This has been installed in the underlying set theory with a special term constructor `Nat'.
+.KE
+.LP
+Each number is repesented by the set of all numbers smaller than itself, zero being the smallest.
+.LP
+The ordering on these numbers is therefore set inclusion.
+.LP
+The term of UST representing the successor function is the
+following term:
+.sv lpf
+val suc_den	= comp ("v",\*k("w",\*k("x",
+				Var "v" == opair (Var "w") (Var "x")
+				\*e (Var "x") == suc (Var "w"))));
+.sw
+.LP
+A hereditary class is one which is closed under the successor
+relationship.
+.LP
+The following function takes a term and yields the formula which
+asserts that the class represented by the term is hereditary.
+.sv lpf
+fun hered class =	let val x = freev [class] "x"
+			in	\*j (x, (Var x) \(mo class \(rh ((suc (Var x) \(mo class)))
+			end;
+.sw
+.LP
+Now  can define the set of natural numbers as the intersection of
+all hereditary sets containing zero.
+.sv lpf
+val Nat_den = \(ca (comp ("x", \(es \(mo (Var "x") \*e (hered (Var "x"))));
+.sw
+.LP
+This will be a set.
+.KS
+.NH 2
+Lists
+.LP
+The ubiquitous empty set will serve again as the empty list,
+and `opair' gives ordered pairs from which lists may be constructed.
+.KE
+.LP
+List_den takes a list of terms (names for sets) and yeilds a term which
+naming the set representing the list of the sets denoted by the terms.
+.sv lpf
+fun	list_den []		= \(es					|
+	list_den (h::t)	= opair h (list_den t);
+.sw
+.LP
+We need to define terms representing sets of lists containing
+elements draw from given sets.
+This is done in a manner similar to the definition of the natural
+numbers, by taking the intersection of all relations having a particular
+property.
+.LP
+If S is the set concerned then the list_closed classes are
+those classes C satisfying the following conditions:
+.RS
+.IP 1
+\(es \(mo C
+.IP 2
+if x \(mo S and y \(mo C then opair(x y) \(mo C
+.RE
+.LP
+.sv lpf
+fun list_closed_sets_over s =
+		let	val [c,x,y] = map (freev [s]) ["c","x","y"]
+		in	comp(c,
+				\(es \(mo (Var c)
+			\*e	\*j(x, \*j(y,
+				(Var x) \(mo s \*e ((Var y) \(mo (Var c))
+				\(rh (opair(Var x)(Var y) \(mo (Var c)))))
+		end;
+.sw
+.LP
+This will always be a proper class.
+.LP
+The set of lists over a set S is the intersection of all
+sets list_closed over S.
+.sv lpf
+fun lists_over s =
+	let val x = freev [s] "x"
+	in	\(ca (list_closed_sets_over s)
+	end;
+.sw
+.LP
+This function will yeild a set if given a set.
+.KS
+.NH 2
+Strings
+.LP
+The term representing a string is obtained by converting the
+string to a list of ascii codes and using the above procedures to
+obtain a term.
+.sv lpf
+fun string_den s = Lit s;
+.sw
+.KE
+.LP
+Since `ord' will always yield a number less than `max_char_code' the set of strings
+may be obtained as:
+.sv lpf
+val max_char_code = 255;
+val String_den = lists_over (Nat (max_char_code + 1));
+.sw
+.LP
+.KS
+.NH 2
+Monomorphic Function Application
+.LP
+There are lots of problems about function application, for example how to deal with exceptions, which I have not yet addressed.
+Here is a first approximation.
+.sv lpf
+fun	t1 !! t2	=	let	val v = freev [t1,t2] "v"
+				in	\(*m (comp (v, opair t2 (Var v) \(mo t1))
+				end;
+.sw
+.KE
+.KS
+.NH 2
+Monomorphic Functional Abstraction
+.LP
+In the following definition of functional abstraction the variable v will be a variable name (string), the one being bound in the abstraction.
+The variable d is a term describing the range of variation of v (it is used as if it were a boolean valued function).
+The term t gives the value to be returned by the function.
+.sv lpf
+fun	\(*l v d t	=	let	val v' = freev [d,t] v
+				in	comp (v', \*k(v,	d !! (Var v) == T_den \*e
+								(Var v') == (opair (Var v) t)))
+				end;
+.sw
+.KE
+.KS
+.NH 2
+Finite Map Constructor
+.LP
+We will later need to construct a number of finite maps, and therefore define here a functioin to assist in such constructions.
+.sv lpf
+fun	mk_map []		= \(es
+|	mk_map ((a,v)::t)	= \(cu (pair (unit (opair a v)) (mk_map t));
+.sw
+.KE
+.KS
+.NH 2
+Monomorphic Partial Function Spaces
+.LP
+In the following, value environments and type environments will
+both be partial function spaces.
+Such function spaces may be defined using `dom' `ran' and `sv',
+defined in DS/FMU/RBJ/085.
+.KE
+.LP
+A partial function from A to B is a single valued relation
+whose domain is a subset of A and whose codomain is a subset of B.
+.sv lpf
+fun Pfun_den a b =let val x = freev [a,b] "x"
+			in	comp(x,	is_sv (Var x) \*e
+						ran (Var x) \(ib b \*e
+						dom (Var x) \(ib a)
+			end;
+.sw
+.KS
+.NH 2
+Monomorphic Dependent Partial Function Spaces
+.LP
+The main constructor iteration of which populates our the universe of our theory of functions is the dependent partial function space constructor.
+.KE
+.LP
+A dependent partial function space is determined by a function yielding types.
+The function is required to give for every member of its domain a set of values within which the values of functions in the dependent function space must lie for the given argument.
+The term dependent indicates that the `type' of the value obtained when applying the function depends upon the value to which it is applied.
+The idea is similar to that found in constructive type theories.
+.sv lpf
+fun Dpfun_den tf =
+	let val [x,y] = map (freev [tf]) ["x","y"]
+	in	comp(x,	is_sv (Var x) \*e
+				(dom (Var x) \(ib (dom tf)) \*e
+				\*j(y, Var y \(mo (dom (Var "x"))
+					\(rh ((Var "x") !! (Var "y") \(mo (tf !! (Var "y")))
+				   ) 
+			)
+			end;
+.sw
+.KS
+.NH 2
+Types
+.LP
+A `type' is a partial function from the first universe into the unit set.
+.sv lpf
+val Type_den = Pfun_den (V \(es) Unit_den;
+.sw
+.LP
+I think it might be better to have a partial equivalence relation over the smallest universe, or over a suitable subset of that universe, but for the time being a partial predicate will do.
+.LP
+The following function may be used to convert a term denoting a set into a term denoting the corresponding `type'.
+.sv lpf
+fun Type s =	let	val v = freev [s] "v"
+			in	\(*l v s T_den
+			end;
+.sw
+.LP
+Using this function we now name the primitive types:
+.sv lpf
+val void_type	= \(es
+and unit_type	= Type Unit_den
+and bool_type	= Type bool_den
+and nat_type	= Type Nat_den
+and string_type	= Type String_den
+.sw
+.KE
+.KS
+.NH 2
+Environments
+.NH 3
+Type Environments
+.LP
+A `type environment' is a map from strings to types.
+.sv lpf
+val Type_env_den = Pfun_den String_den (Type_den);
+.sw
+.KE
+.LP
+The standard type environment for our language contains just the types defined above, and may be constructed using mk_map as follows:
+.sv lpf
+val std_type_env = mk_map [	(Lit "VOID",	void_type),
+					(Lit "UNIT",	unit_type),
+					(Lit "BOOL",	bool_type),
+					(Lit "NAT",		nat_type),
+					(Lit "STRING",	string_type)	];
+.sw
+.KS
+.NH 3
+Monomorphic Values
+.LP
+A monovalue is simply a member of the smallest universe
+(I may cut this back later).
+.KE
+.KS
+.NH 3
+Polymorphic Values
+.LP
+A polyvalue is a partial map from type environments to monovalues.
+.sv lpf
+val Polyval_den	 = Pfun_den Type_env_den (V \(es);
+.sw
+.LP
+All expressions in SFT are described in the semantics as denoting polyvalues.
+Where the expression would not naturally be thought of as polymorphic this will result in a constant function from type environments to monovalues.
+This is just a technical device to simplify the semantics.
+.LP
+To facilitate definitions which follow a function is given here which converts a monomorphic value to a polymorphic one:
+.sv lpf
+fun mk_poly_from_mono m	=	let	val v = freev [m] "v"
+					in	\(*l "v" Type_env_den m
+					end;
+.sw 
+.KE
+.KS
+.NH 3
+Value Environments
+.LP
+A value environment is a partial function from strings to polyvalues.
+.sv lpf
+val Val_env_den	= Pfun_den String_den Polyval_den;
+.sw
+.KE
+.KS
+.LP
+The standard value environment for SFT is:
+.sv lpf
+val std_value_env	= mk_map [
+	(Lit "T",	mk_poly_from_mono (Lit "T_den")),
+	(Lit "F",	mk_poly_from_mono (Lit "F_den"))
+	
+									]; 
+(* may also contain =, \(rh, \(no, range, union, unitmap, pair, and more *)
+.sw
+.KE
+.LP
+These are all sets in UST, but would not be in ZF or NBG.
+.ig cx
+.KS
+.NH 2
+for some
+.sv lpf
+fun	forsome p []	= false		|
+	forsome p (h::t)	= p h orelse forsome p t;
+.sw
+.KE
+.cx
+.KS
+.NH 2
+End of DEN
+.sv lpf
+end; (* of local clause *)
+end; (* of SFT.DEN *)
+.sw
+.KE
+.KS
+.NH
+ABSTRACT SYNTAX
+.sv lpf
+structure SFT =
+struct
+.sw
+.sv lpf
+local open UST.FTM in
+infix 1 \*(bs;
+datatype fterm =	Ivar	of var					| (* individual variable *)
+			Tvar	of var					| (* type variable *)
+			Slit	of string				| (* string literal *)
+			Tapp	of (fterm * fterm)			| (* function application *)
+			Tabs	of (var * fterm * fterm)		| (* functional abstraction *)
+			Vbin	of (fterm * fterm)			| (* local variable binding *)
+			Tbin	of (fterm * fterm)			| (* `type' instantiation *)
+			\(*P of fterm					| (* dependent function space *)
+			op \*(bs of fterm * fterm;			  (* sequent *)
+
+.sw
+.KE
+.LP
+Some explanation of the sparsity of the abstract syntax is in order here.
+.LP
+First we may usefully break the constructors in the abstract syntax into the following groups:
+.RS
+.IP Ivar
+
+.IP Tapp,Tabs
+.br
+These characterise the language as a language of functions, playing the role here which is served in first order set theory by the membership predicate and comprehension or separation.
+
+.IP Vbin
+.br
+Adds to the language the structuring facilities.
+
+.IP Tvar,Tbin
+.br
+Make provision for polymorphism.
+
+.IP Slit,\(*P
+.br
+These are present to populate the universe.
+This is the role played by the majority of the non-logical axioms of first order set theory.
+In formalising set theory it is optional whether or not special functions are included in the syntax to represent the operations forming sets (provided the choice function is available).
+In UST many of the existence requirements are stated explicitly as existence axioms without there being any associated function in the primitive abstract syntax.
+Here we are not yet giving the proof theory, the universe is populated partly by giving appropriate meaning to these three constructors of the abstract syntax, and partly by the provision of further features in the standard environent, (for which, see below).
+
+.IP \*(bs
+.br
+Provides an element of non-strictness into an otherwise strict regime.
+.RE
+.LP
+The provision of structuring and polymorphism depend here on the extensive use of maps over the domain of strings in a variety of roles.
+Many of these uses are sufficient to justify the use of the dependent function space constructor rather than the simple function space constructor.
+The effect is to enable, for example, a type of labelled compound structures to be regarded as a (dependent) function from the labels into appropriate values.
+.LP
+The language depends upon the identification of a variety of constructs, all of which are treated, or are expected to be treated at higher levels, as maps defined over strings.
+.LP
+These include:
+.IP Specifications
+.br
+Will be maps from names to modules.
+.IP Modules
+.br
+Will be maps from module models into bool, where
+.IP Models
+.br
+are maps from names to values and
+.IP "Composite Values"
+.br
+are also maps from names to values.
+.IP "Value Bindings"
+.br
+such as might be found in a local declaration, are again maps from names to values.
+.IP "Type Bindings"
+.br
+Which are used to instantiate polymorphic values, are maps from names to types.
+.IP "Parametric Modules"
+.br
+May be represented as maps from structures to module models.
+.LP
+For example, a qualified name, a.b.c can be interpreted as special syntax for the applicative expression a "b" "c".
+.LP
+Whether this all hangs together I am not yet entirely sure, but that is the idea behind this proposal.
+.LP
+You may have noted that I am proposing to step away from the use of the satisfaction relation to give a meaning to loose specifications.
+This step offers a purer denotational account of the semantics, and is consistent with the general replacement of sets by functions throughout this proposal.
+A satisfaction relationship ("is a model of") can be re-interpreted as a denotational map into sets of models, which in turn is reinterpreted as a property of models (or structures0, and represented as a propositional (boolean valued) function.
+.sv lpf
+end;
+end; (* of structure SFT.SFT *)
+.sw
+.NH
+THE SEMANTIC MAPPINGS
+.LP
+.sv lpf
+structure SEM = struct
+local	open UST.FTM;
+	open DEN;
+	open SFT;
+in
+.sw
+.KS
+.NH 2
+Individual Variables
+.LP
+An individual variable in a known environment will denote a polyvalue.
+It therefore can be regarded as denoting a function from environments
+to polyvalues.
+Since an environment is a map from strings to polyvalues the semantic
+value map for individuals is simply reverse application:
+.sv lpf
+fun	fterm_den (Ivar v) = \(*l "ve" Val_env_den (\(*l "te" Type_env_den
+					(((Var "ve") !! (string_den v)) !! (Var "te")))
+.sw
+.KE
+.KS
+.NH 2
+Type Variables
+.LP
+The denotation of a type variable is independent of the value
+environment, depending only upon the type environment.
+.sv lpf
+|	fterm_den (Tvar v) = \(*l "ve" Val_env_den (\(*l "te" Type_env_den
+					((Var "te") !! (string_den v)))
+.sw
+.KE
+.KS
+.NH 2
+Literals
+.LP
+A literal denotes the constant function from value and type environments to
+itself.
+.sv lpf
+|	fterm_den (Slit s) = \(*l "ve" Val_env_den (\(*l "te" Type_env_den (string_den s))
+.sw
+.KE
+.KS
+.NH 2
+Polymorphic Function Application
+.LP
+Before applying a function I must first retrieve its value using the
+current value environment and type environment and then apply it to its
+argument.
+.sv lpf
+|	fterm_den (Tapp (func,arg)) =
+		let	val func_den = fterm_den func 
+			and arg_den = fterm_den arg
+		in	\(*l "ve" Val_env_den (\(*l "te" Type_env_den 
+				(func_den !! (Var "ve") !! (Var "te")) !!
+				(arg_den !! (Var "ve") !! (Var "te")))
+		end
+.sw
+.KE
+.KS
+.NH 2
+Polymorphic Functional Abstraction
+.LP
+Similarly in forming a function  type instantiate the body before
+doing the abstraction, and then abstract in respect of value and type environments.
+.sv lpf
+|	fterm_den (Tabs (v,dom,res)) =
+	let	val [dom_den, res_den] = map fterm_den [dom, res];
+		val [ve,te] = map (freev [Var v, dom_den, res_den]) ["ve","te"]
+	in	\(*l ve Val_env_den (\(*l te Type_env_den 
+			(\(*l v
+		(dom_den !! (Var ve) !! (Var te))
+		(res_den !! (rel_update (Var ve) (string_den v) (unit (opair (Var te) (Var v)))) !! (Var te))))
+		end
+.sw
+.LP
+Here a monomorphic function is formed by evaluating the body of the abstraction in a value environment in which the variable `v' has been assigned the value submitted as parameter, rather than the value which would have been discovered in the environment in the absence of the abstraction.
+This is achieved by overriding the value environment at the variable name `v', with the polyvalue defined only in the current type environment and yeilding the value of the actual parameter.
+This contortion renders the semantics in the context that we have no functions which take or yield polymorphic values.
+The sematnics of lambda abstraction yields a collection of functions each of which will accept only monovalues as parameters and yield monovalues as results.
+.KE
+.KS
+.NH 2
+Value Binding
+.LP
+The individual variable binding shown here is dynamic, in the sense that any expression
+may be used to modify the environment to be used in evaluating some other
+expression.
+This avoids thinking about abstract syntax for binding and makes the feature more flexible, allowing the use of the same mechanism for local structuring and modularisation (though these would be expected to have differing concrete syntax).
+.LP
+In the value binding expression the first subexpression should evaluate to a collection of bindings.
+That is, a (polymorphic) map from identifiers (strings) to values.
+This is used to override the current environment for the purpose of evaluating the second subexpression.
+However, before this can be done it needs to be transformed from a polymorphic map to a map yeilding polyvalues (since this is what a value environment is).
+This is just matter of changing the order of the arguments to a higher order function.
+.sv lpf
+|	fterm_den (Vbin (bindings, expression)) =
+		let	val bin_den = fterm_den bindings 
+			and exp_den = fterm_den expression;
+			val new_env =	\(*l "name" String_den (\(*l "type_env" Type_env_den
+						(bin_den !! (Var "ve") !! (Var "type_env")!! (Var "name")))
+		in	\(*l "ve" Val_env_den 
+			(exp_den !! (rel_over (Var "ve") new_env))
+		end
+.sw
+.KE
+.LP
+Note that in the above that the binding is instantiated using the value environment
+and is then used to modify the value environment.
+The binding should therefore be understood as supplying polymorphic values in the environment of the expression.
+.KS
+.NH 2
+Type Bindings
+.LP
+Because  don't have a real type system here it isn't possible to type-instantiate the polymorphic constants using type inference.
+So explicit instantiation is required.
+This is done here by binding the type variables.
+It should be understood as an alternative syntax for supplying a type environment to instantiate individual constants as an additional parameter.
+This is not expected to be reflected at the level of concrete syntax in VDM.
+.sv lpf
+|	fterm_den (Tbin (type_bin, expression)) =
+		let	val bin_den = fterm_den type_bin 
+			and exp_den = fterm_den expression
+		in	\(*l "ve" Val_env_den (\(*l "te" Type_env_den 
+			(exp_den !!	(Var "ve") !!
+			(rel_over (Var "te") (bin_den !! (Var "ve") !! (Var "te")))))
+		end
+.sw
+.KE
+.KS
+.NH 2
+The Dependent Partial Function Space Constructor
+.LP
+This is the primary vehicle for populating the universe of the theory.
+If given a function yeilding types, it will construct a type of dependent partial functions.
+Each function in this type will be partially defined over the domain of the original function, and will given any element of the domain of that function return an element whose type is that returned by the first function.
+.sv lpf
+|	fterm_den (\(*P tfun) =
+		let	val tfun_den = fterm_den tfun
+		in	\(*l "ve" Val_env_den	(\(*l "te" Type_env_den
+			(Type (Dpfun_den (tfun_den !! (Var "ve") !! (Var "te"))))
+							)
+		end
+.sw
+.KE
+.KS
+.NH 2
+The Sequent Constructor
+.LP
+This is semantically rather like a sequent but doesn't play quite such a central role as it would in a sequent calculus.
+It is a relationship between two fterms which holds if the fterm on the right is T_den, or if the fterm on the left is not T_den.
+The usual sequent allowing multiple terms on the left may be defined using this.
+.KE
+.sv lpf
+|	fterm_den (op \*(bs (left_fterm, right_fterm)) =
+		let	val [left_fterm_den, right_fterm_den] = map fterm_den [left_fterm, right_fterm];
+			val left_val = left_fterm_den !! (Var "ve") !! (Var "te")
+			and right_val = right_fterm_den !! (Var "ve") !! (Var "te");
+			val x = freev [left_val, right_val] "x";
+		in	\(*l "ve" Val_env_den (\(*l "te" Type_env_den
+			(\(*m (comp(x, (right_val == T_den \*e (Var x) == T_den)
+				\*d (\(no(left_val == T_den) \*e (Var x) == T_den)
+				\*d (left_val == T_den \*e (\(no (right_val == T_den)) \*e (Var x) == F_den)
+					)
+				)	
+			)			)
+		end;
+;	(* end of fterm_den *)
+.sw
+.KS
+.NH 2
+End of SEM
+.LP
+.sv lpf
+end;	(* of local clause *)
+end;	(* of structure SFT.SEM *)
+.sw
+.KE
+.KS
+.NH
+PROOF RULES
+.LP
+The proof theory here defined is directly inherited from UST.
+In principle more natural axioms and rules could be proven or programmed using the metalanguage SML.
+In a following document such rules will be given (but will probably not be formally derived).
+.sv lpf
+structure PRR = struct
+local open UST.THM DEN SFT SEM in
+
+fun std_val t = fterm_den (Tbin (std_type_env, Vbin (std_value_env, t)));
+
+abstype funthm = \(bv of fterm 
+with
+fun mk_fthm term thm =
+	let val f = formula thm
+	in	if	f = ((std_val term)  == (std_val T_den))
+		then	\(bv term
+		else	\(bv (Ivar "T")
+	end;
+fun dest_fthm (\(bv t) = t;
+end; (* of abstype funthm *)
+end; (* of local clause *)
+end; (* of structure PRR *)
+.sw
+.KE
+.KS
+.NH
+THE END
+.sv lpf
+end; (* of structure SFT *)
+.sw
+.KE
+.ig cx
+.sv lpf
+open SFT.DEN SFT.SFT SFT.SEM SFT.PRR;
+.sw
+.cx

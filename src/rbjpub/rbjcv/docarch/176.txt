@@ -1,0 +1,210 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.LP
+.TL
+The Syntax of Z
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DBC/RBJ/176   Issue 0.1
+.ds CH The Syntax of Z
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/RBJ/176   Issue 0.1
+.ds CF The Syntax of Z
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This document contains a specification of the syntax of Z in
+the variant of BNF accepted by the syntax translator in DBC/RBJ/060.
+The syntax description is translated into a form acceptable to the parser
+in DBC/RBJ/058 yeilding a parser for Z.
+.LP
+I follow as closely as possible the presentation in ?.
+.ig cx
+PolyML.use "/escher/usr2/rbj/sml/056.sml";
+PolyML.use "/escher/usr2/rbj/sml/058.sml";
+PolyML.use "/escher/usr2/rbj/sml/060.sml";
+PolyML.use "/escher/usr2/rbj/sml/176.sml";
+.cx
+.KE
+.sv sml
+structure M176 =
+struct
+open X056 X058 X060;
+.sw
+.KS
+.NH
+THE CONCRETE SYNTAX OF Z
+.NH 2
+Lexical Elements
+.LP
+Using pro-tem the sml scanner, we define here some syntactic categories which might be expected to be dealt with by the Z scanner.
+.sv syn
+WORD	=	Iden;
+INT	=	Integer_lit;
+DECOR	=	{ "'" | "?" | "!" };
+BLANK_LINE	= ";";
+AX_START	=	"|a-";
+SCH_START	=	"|s-";
+GEN_START	=	"|g-";
+BAR	=	"|-";
+END	=	"-|";
+Ident	=	WORD [ DECOR |];
+.sw
+.sv syn
+specification	=	{paragraph ? ";"};
+
+paragraph	=
+		Gen_Formals
+	|	Axiomatic_Box
+	|	Schema_Box
+	|	Generic_Box
+	|	WORD [ Gen_Formals |] "”" term
+	|	Def_lhs "==" Expression
+	|	term;
+
+Gen_Formals	=	"[" { Ident ? "," } "]";
+.sw
+.sv syn
+Axiomatic_Box	=	AX_START Decl_Part BAR term END;
+
+Schema_Box	=	SCH_START WORD [Gen_Formals |] Decl_Part BAR term END;
+
+Generic_Box	=	GEN_START [Gen_formals |] Decl_Part BAR term END;
+.sw
+.sv syn
+Decl_Part	=	{ Basic_Decl ? ";" };
+
+Def_Lhs	=
+		Ident Ident [Ident|]
+	|	Var_Name [Gen_Formals |];
+
+Var_Name	=	Ident | "(" Op_Name ")";
+Op_Name	=
+		"_Ñ_Ò"
+	|	"_" Ident ["_"|]
+	|	Ident "_";
+.sw
+.KE
+.sv syn
+aterm	=
+		Ident
+	|	"(" term ")" [DECOR |]
+	|	["ƒ"|"„"|"À"|""] Schema_Text "Ž" term
+	|	"‡" Schema_Text ["Ž" term |]
+	|	"¾" { term ? "," } "¿"
+	|	"»" { term ? "," } "¼"
+	|	"(" { term ? "," } ")"
+	|	"{" { term ? "," } "}"
+	|	"[" {Schema_Text ["Ž" term |]} "]";
+
+term	=	{ aterm };
+.sw
+.sv syn
+Schema_Text	=	Declaration ["|" term |];
+
+Declaration	=	{Basic_Decl ? ";"};
+
+Basic_Decl	=
+		{Decl_Name ? ";"} ":" term
+	|	Schema_Ref
+	|	"(" term ")";
+
+Decl_Name	=	Ident | Op_Name;
+
+Schema_ref	=	WORD DECOR [Gen_Actuals |];
+
+Gen_Actuals	=	"[" { term ? ","} "]";
+.sw
+.KS
+.NH
+TRANSLATION
+.LP
+.sv sml
+local	val Z_phrases =
+		(diag:=false;
+		translate_syntax res1 "/escher/usr2/rbj/sml/176.syn")
+in	val Z_syntax = {initial = "term", phrases = Z_phrases}
+end;
+.sw
+.KE
+.KS
+.NH
+TESTING
+.LP
+.sv sml
+fun open_stream (p as ref {stream, reserved, toklist, stat, tok}) =
+	let	val {tokens, remains, status} = scan_to (!p)
+	in	(p:= {stream=stream, reserved=reserved, toklist = tokens,
+					stat = status, tok=tok};())
+	end;
+.sw
+.KE
+.sv sml
+val nulltree = PLis [];
+fun parse_zterm (p as ref {stream, reserved, toklist, stat, tok}) syntax = 
+	case toklist of 
+	[]	=>	raise end_of_input	|
+	t	=>	(case parse_tree syntax t of
+			result as Success {tokens=toks,tree} =>
+				(p:= {stream=stream, reserved=reserved, toklist = toks,
+					stat=stat, tok=tok};
+				if 	!diag
+				then	(print tree;
+					print "\enparse succeeded\en";
+					tree)
+				else	(print "\enparse succeeded\en";
+					tree))	|
+			result	=> (print "\en\en*******PARSE FAILED**********\en\en";
+						print tokens;nulltree))
+				handle ? =>
+				(print "\en\en************EXCEPTION************\en\en";
+				diag:=true;
+				((parse_tree syntax t;
+				print toklist) handle ? => print toklist);
+				nulltree);
+.sw
+.sv sml
+fun parse_zed string = parse_tree;
+fun next_dec stream = parse_zterm stream Z_syntax;
+fun translate_prog stream = (open_stream stream; while not (next_dec stream = nulltree) do ());
+fun translate_mod id =	let val stream = mk_stream id (Res_al "") res1
+				in print ("\enparsing:" ^ id ^ "\en");translate_prog stream
+				end handle end_of_input => ();
+fun test_run list = map translate_mod list;
+.sw
+.ig cx
+test_run modules;
+.cx
+.KS
+.sv sml
+end; (* of M176 *)
+.sw
+.sv sml
+structure X176 =
+struct
+val open_stream = M176.open_stream
+val parse_zterm = M176.parse_zterm
+val Z_syntax = M176.Z_syntax
+val parse_zed = M176.parse_zed
+val translate_mod = M176.translate_mod
+val next_dec = M176.next_dec
+val mk_stream = M176.mk_stream
+end; (* of X176 *)
+.sw
+.sv zed
+[a:† | true]
+
+)
+
+.sw
+.ig cx
+ExportML ("176.x", "sml/176/06/02 - sml parser", []);
+.cx

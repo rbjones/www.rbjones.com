@@ -1,0 +1,476 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.so /escher/usr2/projects/infra/msmacros/lroff2.defs
+.nr P 1 Presentation Flag
+.nr D 0 Document Flag
+.LP
+.TL
+Security Modelling in Z and HOL
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.AE
+.ds LH 
+.ds CH 
+.ds RH 
+.ds LF DS/FMU/RBJ/167
+.ds CF 
+.ds RF Issue 0.1 \*(DY Page \\n(PN
+.sv
+	bool ::= T | F
+.sw
+.LP
+Given a state consisting of one highly classified and one lowly
+classified object:
+.sd STATE
+high, low :bool
+.se
+.LP
+can we specify loosely an operation on the state which does not
+result in any information transfer from `high' to `low'?
+.sd ˜STATE
+STATE, STATE'
+.sb
+?
+.se
+.LP
+It is easy enough to give a specific operation satisfying this requirement,
+but to capture the requirement loosely we have to use a loose specification
+outside of the schema, e.g.:
+.KE
+.KS
+.sv
+	f: STATE ã STATE
+.sb
+	És∞ s¨:STATEé (s∞.low = s¨.low)
+			ä ((f s∞).low = (f s¨).low)
+.sw
+.LP
+We could then write our schema:
+.sd ˜STATE
+STATE, STATE'
+.sb
+	\(*hSTATE' = f \(*hSTATE
+.se
+.LP
+but since all the work has been done in the specification
+of `f' the use of the schema appears superfluous.
+.KE
+.KS
+.LP
+Note that in the axiomatic definition of f, the requirement
+is expressed as a property of f, but this property has
+not itself been given a name.
+.LP
+It is therefore not possible to express in the object language
+the claim that some other explicitly defined function has this property.
+.LP
+For example the following function has the required property:
+.sv
+	g: STATE ã STATE
+.sb
+	És :STATEé g s = s
+.sw
+.LP
+but we cannot state this in Z without restating the original property
+(though it can be said in the metalanguage).
+.KE
+.KS
+.LP
+To enable such correctness propositions to be expressed we must
+give a name to the property itself as follows:
+.sv
+	secure : ë (STATE ã STATE)
+.sb
+	f ù secure Ç
+	És∞ s¨:STATEé (s∞.low = s¨.low)
+			ä (f s∞).low = (f s¨).low
+.sw
+.LP
+The conjecture that `g' satisfies this specification can now be expressed:
+.DS
+		Ö? g ù secure
+.DE
+.KE
+.KS
+.LP
+If we define a further requirement:
+.sv
+	safe : ë (STATE ã STATE)
+.sb
+	f ù safe Ç
+	És∞ s¨:STATEé (s∞.high = s¨.high)
+			ä (f s∞).high = (f s¨).high
+.sw
+Then the combination of these two requirements:
+.sv
+	no_flow : ë (STATE ã STATE)
+.sb
+	no_flow = secure † safe
+.sw
+.LP
+may be regarded as a REFINEMENT of the original specification "secure".
+.LP
+That it is a refinement can be expressed in the object language
+as the conjecture:
+.DS
+	Ö? no_flow • secure
+.DE
+.LP
+Note that here refinement is defined as a relationship between
+specifications which is distinct from the relationship between
+a specification and an implementation.
+.KE
+.KS
+.DS C
+\fBSPECIFYING OPERATIONS AS FUNCTIONS\fP
+.DE
+.LP
+.sp
+.nf
+Type of \fIObject\fP
+	\fBAUTO\fP
+Type of \fISpecification\fP
+	\fBë AUTO\fP
+Type of \fIOperation\fP
+	\fBIN â STATE ã STATE â OUT\fP
+		\(ib ë(IN â STATE â STATE â OUT)
+Type of \fISpecification of\fP Operation
+	\fBë (IN â STATE ã STATE â OUT)\fP
+Type of \fINon-Deterministic\fP Operation
+	\fBIN â STATE ã ë∞ (STATE â OUT)\fP
+Type of \fISpecification of Non-Deterministic\fP Operation
+	\fBë (IN â STATE ã ë∞ (STATE â OUT))\fP
+Type of \fIPartial\fP Operation
+	\fBIN â STATE ñ STATE â OUT\fP
+Type of \fISpecification of Partial\fP Operation
+	\fBë (IN â STATE ñ STATE â OUT)\fP
+Type of \fIPartial Non-Deterministic\fP Operation
+	\fBIN â STATE ñ ë∞ (STATE â OUT)\fP
+Type of \fISpecification of Partial Non-Deterministic\fP Operation
+	\fBë (IN â STATE ñ ë∞ (STATE â OUT))\fP
+.KE
+.KS
+.DS C
+\fBZ SCHEMAS INTERPRETED AS OPERATIONS\fP
+.DE
+.LP
+Until the publication of Spivey's book "understanding Z" no account
+was available of how schemas are to be interpreted as specifications
+of operations.
+.LP
+Spivey gives an account of a satisfaction relationship between schemas and
+implementations which can be formalised within Z as follows.
+.LP
+Let us consider this with reference to schemas describing the secure
+operations discussed above.
+.LP
+The type of a schema describing an operation over STATE is:
+.sv
+SOPTYPE == ë ˜STATE
+.sw
+.LP
+According to Spivey this is a loose specification of a
+non-deterministic partial operation (in the general case).
+It may therefore be interpreted as an entity of type:
+.sv
+FTYPE == 	STATE ñ ë∞ STATE
+.sw
+.sv
+INTTYPE == 	\fBë (STATE ñ ë∞ STATE)\fP
+.sw
+.LP
+A formal account of this interpretation would therefore be
+a map from OPTYPE to INTTYPE:
+.sv
+MAPTYPE == OPTYPE ã INTTYPE
+.sw
+.sv
+_satisfies_ : FTYPE ê SOPTYPE
+.sb
+ÉSOPTYPE:S, FTYPE:fé
+	f satisfies S Ç
+		És:STATEé
+			f s • {S | \(*hSTATE = s é \(*hSTATE'}
+.sw
+.LP
+note that:
+.DS
+	f satisfies S Ä g satisfies S
+		ä (f merge g) satisfies S
+
+	where (f merge g) x = f x ° g x
+.DE
+.KE
+.ig cx
+extend_theory`form167`;;
+.cx
+Â
+›new_theory `form167`;;
+›new_parent`pf`;;
+›loadf`infra`;;
+Ê
+«`STATE``S`ÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›high:bool, low :bool
+…
+›T
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+»
+›	secure : (STATE ã STATE) ã bool
+…
+›	f ù secure Ç
+›	És∞ s¨:STATEé (s∞.S_low = s¨.S_low)
+›			ä ((f s∞).S_low = (f s¨).S_low)
+À
+»
+›	g: STATE ã STATE
+…
+›	És :STATEé g s = s
+À
+Â
+set_goal([],"g ù secure");;
+e (REWRITE_TAC[secure_THM;X_2e_DEF;g_THM]);;
+let g_secure_THM = save_top_thm `g_secure_THM`;;
+Ê
+»
+›	safe : (STATE ã STATE) ã bool
+…
+›	f ù safe Ç
+›	És∞ s¨:STATEé (s∞.S_high = s¨.S_high)
+›			ä ((f s∞).S_high = (f s¨).S_high)
+À
+Â
+set_goal([],"g ù safe");;
+e (REWRITE_TAC[safe_THM;X_2e_DEF;g_THM]);;
+let g_safe_THM = save_top_thm `g_safe_THM`;;
+Ê
+»
+	no_flow : (STATE ã STATE) ã bool
+…
+	no_flow = secure † safe
+À
+Â
+set_goal([],"Éféf ù no_flow Ç f ù secure Ä f ù safe");;
+e (REWRITE_TAC[no_flow_THM; †_DEF; ù_DEF]);;
+let no_flow_THM1 = save_top_thm `no_flow_THM1`;;
+Ê
+Â
+set_goal([],"g ù no_flow");;
+e (REWRITE_TAC[no_flow_THM1; g_secure_THM; g_safe_THM]);;
+let g_no_flow_THM = save_top_thm `g_no_flow_THM`;;
+Ê
+Â
+set_goal([],"no_flow • secure");;
+e (REWRITE_TAC[no_flow_THM; †_DEF; •_DEF; ù_DEF]
+	THEN TAUT_TAC);;
+let no_flow_secure_THM = save_top_thm `no_flow_secure_THM`;;
+Ê
+.NH 1
+SECURE SYSTEM DESIGN USING SECURITY KERNEL
+.LP
+The secure system is just a function over the state which has the property `secure'.
+We show that such a system can be constructed from two subsystems, one of which is a trusted security kernel, and the other of which is an untrusted user program.
+The trustedness of the kernel is represented by a specificaiton for the kernel which it must satisfy if the total system is to be secure.
+The untrustedness of the user program is reflected in its trivial specification.
+.LP
+The design consists of a set of subcomponent specifications and a construction showing how the system is built from the subcomponents.
+.NH 2
+The user program specification
+.LP
+The user program is any function which operates on the state.
+.sv
+	USER_PROGRAM_TYPE == STATE ã STATE
+.sw
+Â
+let USER_PROGRAM_TYPE = ":STATE ã STATE";;
+Ê
+.sv
+	user_program_specification : ë USER_PROGRAM_TYPE
+.sb
+	user_program_specification = {f:USER_PROGRAM_TYPE}
+.sw
+»
+›	user_program_specification : ^USER_PROGRAM_TYPE ã bool
+…
+›	user_program_specification = çf:^USER_PROGRAM_TYPEéT
+À
+.NH 2
+The Kernel Specification
+.LP
+The kernel mediates between the user program and the secure data store.
+.sv
+	KERNEL_TYPE == USER_PROGRAM_TYPE â bool ã (STATE ã STATE)
+.sw
+.sv
+	kernel_specification : ë KERNEL_TYPE
+.sb
+	k ù kernel_specification Ç
+	Éf:USER_PROGRAM_TYPE, b:boolé k(f,b) ù secure
+.sw
+Â
+let KERNEL_TYPE = ":^USER_PROGRAM_TYPE â bool ã (STATE ã STATE)";;
+Ê
+»
+›	kernel_specification :
+›	^KERNEL_TYPE ã bool
+…
+›	k ù kernel_specification Ç
+›	É(f:^USER_PROGRAM_TYPE) (b:bool)é k(f,b) ù secure
+À
+.LP
+i.e. a kernel is something which can run an untrusted program at any classification without permitting a breach of security.
+.NH 2
+The Construction
+.LP
+The system as a whole consists of a security kernel running some application at some clearance.
+Let us leave the classification loosely undefined.
+.sv
+	user_clearance:bool
+.sw
+»
+›	user_clearance:bool
+…
+›	T	
+À
+.LP
+The construction is a function which takes a security kernel and a user program and yields a secure system:
+.sv
+	secure_system_construction : (KERNEL_TYPE â (STATE ã STATE))
+				ã (STATE ã STATE)
+.sb
+	Ék:KERNEL_TYPE, u:STATE ã STATEé
+		secure_system_construction (k,u) = k(u,user_clearance)
+.sw
+»
+›	secure_system_construction : (^KERNEL_TYPE â ^USER_PROGRAM_TYPE)
+				ã (STATE ã STATE)
+…
+›	É(k:^KERNEL_TYPE) (u:^USER_PROGRAM_TYPE)é
+		secure_system_construction (k,u) = k(u,user_clearance)	
+À
+.LP
+The correctness of this design is the conjecture that this construction will always yield secure system when applied to subcomponents which meet their specifications.
+.sv
+?Ö Ék:KERNEL_TYPE, u:USER_PROGRAM_TYPEé
+		u ù user_program_specification
+	Ä	k ù kernel_specification
+	ä	secure_system_construction(k,u) ù secure
+.sw
+Â
+set_goal([],"É(k:^KERNEL_TYPE) (u:^USER_PROGRAM_TYPE)é
+		u ù user_program_specification
+	Ä	k ù kernel_specification
+	ä	secure_system_construction(k,u) ù secure");;
+e (REWRITE_TAC[kernel_specification_THM; secure_system_construction_THM]
+	THEN REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+let design_correct_THM = save_top_thm `design_correct_THM`;;
+Ê
+.NH 2
+An Implementation of the Kernel
+.LP
+The design correctness was a very trivial result, because of the way the kernel specification was written.
+This may look like cheating, but we now show an example of a security kernel and prove that it meets the specification.
+.LP
+The kernel filters the current state before passing it on to the user program, and then filters the state computed by the application before using it to update the real state.
+These two filtering operations represent the placement of constraints on read and on write which are dependent on the clearance of the user program.
+.LP
+Filtering isnt strict;y possible because of the primitive structure of the state.
+.LP
+We define a function which takes two STATEs and a classification and merges the two states taking values dominated by the classification from the first state and other values from the second.
+.sv
+	_dominates_ : bool ê bool
+.sb
+	Éx:boolé x dominates x Ä T dominates F
+.sw
+Á
+›	dominates: bool ã bool ã bool
+…
+›	É(x:bool)(y:bool)é dominates x y Ç y ä x	
+À
+Â
+print_theory`form167`;;
+Ê
+.DS L
+The Theory form167
+Parents --  HOL     pf     
+Types --  ":STATE"     
+Constants --
+  IS_STATE ":bool â bool ã bool"
+  REP_STATE ":STATE ã bool â bool"
+  ABS_STATE ":bool â bool ã STATE"     S_high ":STATE ã bool"
+  S_low ":STATE ã bool"     secure ":(STATE ã STATE) ã bool"
+  g ":STATE ã STATE"     safe ":(STATE ã STATE) ã bool"
+  no_flow ":(STATE ã STATE) ã bool"
+  user_program_specification ":(STATE ã STATE) ã bool"
+  kernel_specification
+    ":((STATE ã STATE) â bool ã (STATE ã STATE)) ã bool"
+  user_clearance ":bool"
+  secure_system_construction
+    ":((STATE ã STATE) â bool ã (STATE ã STATE)) â (STATE ã STATE) ã
+      (STATE ã STATE)"     
+Curried Infixes --  dominates ":bool ã (bool ã bool)"     
+Axioms --
+  STATE_AXIOM
+    Ö Ñrepé
+        (Éx' x''é (rep x' = rep x'') ä (x' = x'')) Ä
+        (Éxé p_or_choice IS_STATE x = (Ñx'é x = rep x'))
+  
+Definitions --
+  REP_STATE
+    Ö REP_STATE =
+       (árepé
+         (Éx' x''é (rep x' = rep x'') ä (x' = x'')) Ä
+         (Éxé p_or_choice IS_STATE x = (Ñx'é x = rep x')))
+  ABS_STATE  Ö Éxé ABS_STATE x = (áx'é x = REP_STATE x')
+  
+Theorems --
+  IS_STATE_THM  Ö Éhigh lowé IS_STATE(high,low)
+  STATE_assorted_THMS
+    Ö (Éa a'é (REP_STATE a = REP_STATE a') = (a = a')) Ä
+       (Éré p_or_choice IS_STATE r = (Ñaé r = REP_STATE a)) Ä
+       (Ér r'é
+         p_or_choice IS_STATE r ä
+         p_or_choice IS_STATE r' ä
+         ((ABS_STATE r = ABS_STATE r') = (r = r'))) Ä
+       (Éaé Ñré (a = ABS_STATE r) Ä p_or_choice IS_STATE r) Ä
+       (Éaé ABS_STATE(REP_STATE a) = a) Ä
+       (Éré p_or_choice IS_STATE r = (REP_STATE(ABS_STATE r) = r))
+  STATE_IS_REP_THM  Ö Éxé IS_STATE(S_high x,S_low x)
+  ABS_REP_STATE_THM  Ö Éxé ABS_STATE(S_high x,S_low x) = x
+  S_high_THM  Ö Éhigh lowé S_high(ABS_STATE(high,low)) = high
+  S_low_THM  Ö Éhigh lowé S_low(ABS_STATE(high,low)) = low
+  secure_THM
+    Ö Éfé
+        f ù secure Ç
+        (És∞ s¨é
+          (s∞ . S_low = s¨ . S_low) ä
+          ((f s∞) . S_low = (f s¨) . S_low))
+  g_THM  Ö Ésé g s = s
+  g_secure_THM  Ö g ù secure
+  safe_THM
+    Ö Éfé
+        f ù safe Ç
+        (És∞ s¨é
+          (s∞ . S_high = s¨ . S_high) ä
+          ((f s∞) . S_high = (f s¨) . S_high))
+  g_safe_THM  Ö g ù safe
+  no_flow_THM  Ö no_flow = secure † safe
+  no_flow_THM1  Ö Éfé f ù no_flow Ç f ù secure Ä f ù safe
+  g_no_flow_THM  Ö g ù no_flow
+  no_flow_secure_THM  Ö no_flow • secure
+  user_program_specification_THM
+    Ö user_program_specification = (çfé T)
+  kernel_specification_THM
+    Ö Éké k ù kernel_specification Ç (Éf bé (k(f,b)) ù secure)
+  user_clearance_THM  Ö T
+  secure_system_construction_THM
+    Ö Ék ué secure_system_construction(k,u) = k(u,user_clearance)
+  design_correct_THM
+    Ö Ék ué
+        u ù user_program_specification Ä k ù kernel_specification ä
+        (secure_system_construction(k,u)) ù secure
+  dominates_THM  Ö Éx yé x dominates y Ç y ä x
+.DE

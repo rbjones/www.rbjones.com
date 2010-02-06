@@ -1,0 +1,407 @@
+\documentstyle[11pt]{article}
+                           
+\title{A Type of Types in HOL}
+\author{Roger Bishop Jones}
+\date{}
+\pagestyle{headings}
+\oddsidemargin 1cm
+\evensidemargin 1cm
+\topmargin 0in
+\textheight 9in
+\parskip 9pt
+\textwidth 6in
+\parindent 0pt
+\begin{document}
+\maketitle
+\tableofcontents
+\section{INTRODUCTION}
+The objective of this document is to establish within HOL a universal
+domain.
+Over this domain will be constructed, a reflexive type system, with
+a type of types such that type:type.
+
+To do this we first define a Partial Combinatory Algebra over the type num.
+This enables us to define the notion of validity in terms of which the
+elements of the algebra (the natural numbers) may be given various
+interpretations.
+
+The interpretations of interest to us are:
+\begin{enumerate}
+\item {\em ranges}, these are sets of natural numbers.
+\item {\em pacs}, these are partial characteristic functions
+over the natural numbers.
+\item {\em types}, these will form a rich reflexive type structure
+with a type of types.
+\end{enumerate}
+
+\section{PARTIAL COMBINATORY ALGEBRAS}
+We address a specific group of partial combinatory algebras which are
+determined by encodings of the partial recursive functions over the
+natural numbers as natural numbers.
+
+We first define the set of partial recursive functions.
+Then we define what we mean by an effective numeric encoding of
+the partial recursive functions.
+Then we define how any such effective encoding induces a set of {\em valid}
+numbers, which in turn permits the interpretation of natural numbers of
+representatives of sets, partial characteristic functions, and finally types
+and type constructors.
+
+The notion of partial combinatory algebra is not particularly central to
+the account.
+It just happens that an encoding of the sort we describe gives rise
+to a partial combinatory algebra.
+
+For a definition of a PCA, the reader may consult {\em Foundations of
+Constructive Mathematics} by Michael J. Beeson,
+Chapter VI (ISBN 0 387 12173 0), but this should not be necessary to
+follow our account.
+
+\subsection{Partial Recursive Functions}
+
+We begin by defining the partial recursive functions over natural numbers.
+
+These form a subset of the partial functions over the natural numbers
+which are definable from a given set of partial functions using a fixed
+set of operators over partial functions.
+
+The following definition is adapted from {\em Algebraic Recursion Theory} by
+L.L.Ivanov (ISBN 0-470-20725-6), Chapter 2, which however it should not be
+necessary to consult.
+
+\begin{verbatim}
+new_theory(`080`);;
+new_parent(`041`);;
+loadf(`041`);;
+\end{verbatim}
+We represent a partial function as a (curried) binary relation over the
+natural numbers.
+It must of course be single valued.
+
+\begin{verbatim}
+let pfunn = ":num->num->bool";;
+\end{verbatim}
+
+The partial recursive functions are generated from certain particular
+partial functions by four operators over partial functions.
+The initial functions are:
+\begin{enumerate}
+\item [l] (left projection)
+\item [r] (right projection)
+\item [i] (identity function)
+\item [c0] (constant zero)
+\item [s] (successor function)
+\end{enumerate}
+with definitions:
+\begin{verbatim}
+new_definition(`pair`,
+   "(pair:num->num->num) x y =
+      ((x*x) + (y*y) + (2*x*y) + x + (3*y))/2");;
+new_definition(`l`,
+   "l:^pfunn = \z x.?y. z = pair x y");;
+new_definition(`r`,
+   "r:^pfunn = \z y.?x. z = pair x y");;
+new_definition(`i`,
+   "i:^pfunn = \z y.z = y");;
+new_definition(`c0`,   
+   "c0:^pfunn = \x y.y = 0");;
+new_definition(`s`,
+   "s:^pfunn = \x y.y = x+1");;
+\end{verbatim}
+The operators are:
+\begin{enumerate}
+\item [rco] (composition)
+\item [Pi] (function product)
+\item [Pr] (primitive recursion)
+\item [Ln] (least n)
+\end{enumerate}
+defined:
+\begin{verbatim}
+new_definition(`rco`,"(rco:^pfunn->^pfunn->^pfunn) f g
+  = \x z.?y.f x y /\ g y z");;
+
+new_definition(`Pi`,"(Pi:^pfunn->^pfunn->^pfunn) f g
+  = \x y. ?u v. (y = pair u v) /\
+      f x u /\ g y v");;
+
+new_prim_rec_definition(`aPr`,    
+  "(!(f:^pfunn)(g:^pfunn)(ls:num).aPr 0 f g ls
+    = ((@t:num.f ls t), ?t:num.f ls t))	/\
+      !(m:num)(f:^pfunn)(g:^pfunn)(ls:num).(aPr (SUC m) f g ls
+       = ((@t:num.?x:num.
+                g x t /\
+                (x = pair ls (pair m (FST (aPr m f g ls))))),
+           ?t:num.?x:num.
+                g x t /\
+                (SND (aPr m f g ls)) /\
+                (x = pair ls (pair m (FST (aPr m f g ls))))))");;
+
+new_definition(`Pr`,"(Pr:^pfunn->^pfunn->^pfunn) f g
+  = \x y. ?u. (y = (FST (aPr x f g u))) /\
+              (SND (aPr x f g u)) /\
+              (l x u)");;
+
+new_definition(`Ln`,"(Ln:^pfunn->^pfunn) f =
+  \p q.  f (pair p q) 0 /\
+         (!u. u < q ==> ?v. f (pair p u) (SUC v))");;
+\end{verbatim}
+
+The partial recursive functions are the functions which may be defined
+using the above five primitives and the four operators, i.e. it is
+the closure of the set of primitive functions under the operators.
+
+\subsection{Encodings}
+
+A numeric encoding is a (total) function from the natural numbers onto the
+partial recursive functions.
+
+An effective numeric encoding is an encoding for which there exists effective
+constructors and destructors over the natural numbers such that
+the destructors invert the constructors, and the constructors map under
+the encodings onto the four operators.
+
+What do we mean here by effective?
+We mean again, recursive, in some cases partial and in some total.
+
+\begin{verbatim}
+new_definition(`is_encoding`,"(is_encoding:(num->^pfunn)->bool) funv =
+  ?(el:num)(er:num)(ei:num)(ec0:num)(es:num)(erco:num)(ePi:num)(ePr:num)(eLn:num)
+   (is_rco:num)(is_Pi:num)(is_Pr:num)(is_Ln:num)
+   (l_rco:num)(r_rco:num)(l_Pi:num)(r_Pi:num)(l_Pr:num)(r_Pr:num)(l_Ln:num).
+    (!(f:num) (x:num) (y:num) (z:num). ((funv f) x y /\ (funv f) x z)
+                                       ==> (y=z)) /\
+    ((funv el) = l) /\
+    ((funv er) = r) /\
+    ((funv ei) = i) /\
+    ((funv ec0) = c0) /\
+    ((funv es) = s) /\
+    (!(n:num)(m:num). ?(f:num). (funv erco)(pair n m) f /\
+      ((funv f) = rco (funv n) (funv m)) /\
+      ((funv is_rco) f 0) /\ ((funv is_Pi) f 1) /\
+      ((funv is_Pr) f 1) /\ ((funv is_Ln) f 1) /\
+      ((funv l_rco) f n) /\ ((funv r_rco) f m)) /\
+    (!(n:num)(m:num). ?(f:num). (funv ePi) (pair n m) f /\
+      ((funv f) = Pi (funv n) (funv m)) /\
+      ((funv is_rco) f 1) /\ ((funv is_Pi) f 0) /\
+      ((funv is_Pr) f 1) /\ ((funv is_Ln) f 1) /\
+      ((funv l_Pi) f n) /\ ((funv r_Pi) f m)) /\
+    (!(n:num)(m:num). ?(f:num). (funv ePr) (pair n m) f /\
+      ((funv f) = Pr (funv n) (funv m)) /\
+      ((funv is_rco) f 1) /\ ((funv is_Pi) f 1) /\
+      ((funv is_Pr) f 0) /\ ((funv is_Ln) f 1) /\
+      ((funv l_Pr) f n) /\ ((funv r_Pr) f m)) /\
+    (!(n:num). ?(f:num). (funv eLn) n f /\  ((funv f) = Ln (funv n)) /\
+      ((funv is_rco) f 1) /\ ((funv is_Pi) f 1) /\
+      ((funv is_Pr) f 1) /\ ((funv is_Ln) f 0) /\
+      ((funv l_Ln) f n))");;
+\end{verbatim}
+
+\subsection{An encoding}
+
+We encode the partial functions as natural numbers in the following
+way:
+\begin{enumerate}
+\item enc l = 0
+\item enc r = 1
+\item enc i = 2
+\item enc c0 = 3
+\item enc s = 4
+\item enc rco f g = 4*(pair (enc f) (enc g)) + 5
+\item enc Pi f g = 4*(pair (enc f) (enc g)) + 6
+\item enc Pr f g = 4*(pair (enc f) (enc g)) + 7
+\item enc Ln f = 4*(enc f) + 8
+\end{enumerate}
+We translate the operators over encodings as follows:
+\begin{verbatim}
+new_definition(`enc_rco`,"(enc_rco:num->num->num) ef eg = 4*(pair ef eg)+5");;
+new_definition(`enc_Pi`,"(enc_Pi:num->num->num) ef eg = 4*(pair ef eg)+6");;
+new_definition(`enc_Pr`,"(enc_Pr:num->num->num) ef eg = 4*(pair ef eg)+7");;
+new_definition(`enc_Ln`,"(enc_Ln:num->num) ef = 4*ef +8");;
+\end{verbatim}
+The inverse of the encoding function assigns a partial function to each
+natural number and is formally defined below.
+In order to use primitive recursion in the definition we define
+first an auxiliary function which for each natural number n
+returns a mapping from the natural numbers to the partial
+functions which is correct for every argument up to n.
+\begin{verbatim}
+new_definition(`adec`,"(adec:num->(num->^pfunn)->^pfunn) m cdec =
+  @pf:^pfunn. (?ef eg. (m = enc_rco ef eg) /\
+                       (pf = rco (cdec ef) (cdec eg)))
+    \/        (?ef eg. (m = enc_Pi ef eg) /\
+                       (pf = Pi (cdec ef) (cdec eg)))
+    \/        (?ef eg. (m = enc_Pr ef eg) /\
+                       (pf = Pr (cdec ef) (cdec eg)))
+    \/        (?ef.    (m = enc_Ln ef) /\
+                       (pf = Ln (cdec ef)))");;
+
+new_prim_rec_definition(`bdec`,"
+  (!(x:num).(bdec:num->num->^pfunn) 0 x =
+        (x=0) => l   |
+         (x=1) => r   |
+          (x=2) => c0  |
+           (x=3) => s   |
+                 @pf:^pfunn.T) /\
+  (!(m:num) (x:num). bdec (SUC m) x =
+         ((x < 5) \/ (x < (SUC m))) => bdec m x   |
+          (x = (SUC m)) => adec m (bdec m) |
+           (@pf:^pfunn.T))");;
+
+new_definition(`dec`,"(dec:num->^pfunn) x = bdec x x");;
+\end{verbatim}
+
+\subsubsection{encodings}
+An encoding is simply a map from the natural numbers onto the partial
+recursive functions:
+\section{The Theory}
+ \begin{verbatim}
+The Theory 080
+Parents --  HOL     041     
+Constants --
+  pair ":num -> (num -> num)"     l ":num -> (num -> bool)"
+  r ":num -> (num -> bool)"     i ":num -> (num -> bool)"
+  c0 ":num -> (num -> bool)"     s ":num -> (num -> bool)"
+  rco
+    ":(num -> (num -> bool)) ->
+      ((num -> (num -> bool)) -> (num -> (num -> bool)))"
+  Pi
+    ":(num -> (num -> bool)) ->
+      ((num -> (num -> bool)) -> (num -> (num -> bool)))"
+  aPr
+    ":num ->
+      ((num -> (num -> bool)) ->
+       ((num -> (num -> bool)) -> (num -> num # bool)))"
+  Pr
+    ":(num -> (num -> bool)) ->
+      ((num -> (num -> bool)) -> (num -> (num -> bool)))"
+  Ln ":(num -> (num -> bool)) -> (num -> (num -> bool))"
+  is_encoding ":(num -> (num -> (num -> bool))) -> bool"
+  enc_rco ":num -> (num -> num)"     enc_Pi ":num -> (num -> num)"
+  enc_Pr ":num -> (num -> num)"     enc_Ln ":num -> num"
+  adec
+    ":num -> ((num -> (num -> (num -> bool))) -> (num -> (num -> bool)))"
+  bdec ":num -> (num -> (num -> (num -> bool)))"
+  dec ":num -> (num -> (num -> bool))"     
+Definitions --
+  pair
+    |- pair x y =
+       ((x * x) + ((y * y) + ((2 * (x * y)) + (x + (3 * y))))) / 2
+  l  |- l = (\z x. ?y. z = pair x y)
+  r  |- r = (\z y. ?x. z = pair x y)
+  i  |- i = (\z y. z = y)
+  c0  |- c0 = (\x y. y = 0)
+  s  |- s = (\x y. y = x + 1)
+  rco  |- rco f g = (\x z. ?y. f x y /\ g y z)
+  Pi  |- Pi f g = (\x y. ?u v. (y = pair u v) /\ f x u /\ g y v)
+  aPr_DEF
+    |- aPr =
+       PRIM_REC
+       (\f g ls. (@t. f ls t),(?t. f ls t))
+       (\g00012 m f g ls.
+         (@t. ?x. g x t /\ (x = pair ls(pair m(FST(g00012 f g ls))))),
+         (?t x.
+           g x t /\
+           SND(g00012 f g ls) /\
+           (x = pair ls(pair m(FST(g00012 f g ls))))))
+  Pr
+    |- Pr f g =
+       (\x y. ?u. (y = FST(aPr x f g u)) /\ SND(aPr x f g u) /\ l x u)
+  Ln
+    |- Ln f =
+       (\p q. f(pair p q)0 /\ (!u. u < q ==> (?v. f(pair p u)(SUC v))))
+  is_encoding
+    |- is_encoding funv =
+       (?el er ei ec0 es erco ePi ePr eLn is_rco is_Pi is_Pr is_Ln
+         l_rco r_rco l_Pi r_Pi l_Pr r_Pr l_Ln.
+         (!f x y z. funv f x y /\ funv f x z ==> (y = z)) /\
+         (funv el = l) /\
+         (funv er = r) /\
+         (funv ei = i) /\
+         (funv ec0 = c0) /\
+         (funv es = s) /\
+         (!n m.
+           ?f.
+            funv erco(pair n m)f /\
+            (funv f = rco(funv n)(funv m)) /\
+            funv is_rco f 0 /\
+            funv is_Pi f 1 /\
+            funv is_Pr f 1 /\
+            funv is_Ln f 1 /\
+            funv l_rco f n /\
+            funv r_rco f m) /\
+         (!n m.
+           ?f.
+            funv ePi(pair n m)f /\
+            (funv f = Pi(funv n)(funv m)) /\
+            funv is_rco f 1 /\
+            funv is_Pi f 0 /\
+            funv is_Pr f 1 /\
+            funv is_Ln f 1 /\
+            funv l_Pi f n /\
+            funv r_Pi f m) /\
+         (!n m.
+           ?f.
+            funv ePr(pair n m)f /\
+            (funv f = Pr(funv n)(funv m)) /\
+            funv is_rco f 1 /\
+            funv is_Pi f 1 /\
+            funv is_Pr f 0 /\
+            funv is_Ln f 1 /\
+            funv l_Pr f n /\
+            funv r_Pr f m) /\
+         (!n.
+           ?f.
+            funv eLn n f /\
+            (funv f = Ln(funv n)) /\
+            funv is_rco f 1 /\
+            funv is_Pi f 1 /\
+            funv is_Pr f 1 /\
+            funv is_Ln f 0 /\
+            funv l_Ln f n))
+  enc_rco  |- enc_rco ef eg = 4 * ((pair ef eg) + 5)
+  enc_Pi  |- enc_Pi ef eg = 4 * ((pair ef eg) + 6)
+  enc_Pr  |- enc_Pr ef eg = 4 * ((pair ef eg) + 7)
+  enc_Ln  |- enc_Ln ef = 4 * (ef + 8)
+  adec
+    |- adec m cdec =
+       (@pf.
+         (?ef eg. (m = enc_rco ef eg) /\ (pf = rco(cdec ef)(cdec eg))) \/
+         (?ef eg. (m = enc_Pi ef eg) /\ (pf = Pi(cdec ef)(cdec eg))) \/
+         (?ef eg. (m = enc_Pr ef eg) /\ (pf = Pr(cdec ef)(cdec eg))) \/
+         (?ef. (m = enc_Ln ef) /\ (pf = Ln(cdec ef))))
+  bdec_DEF
+    |- bdec =
+       PRIM_REC
+       (\x.
+         ((x = 0) => 
+          l | 
+          ((x = 1) => r | ((x = 2) => c0 | ((x = 3) => s | (@pf. T))))))
+       (\g00013 m x.
+         ((x < 5 \/ x < (SUC m)) => 
+          g00013 x | 
+          ((x = SUC m) => adec m g00013 | (@pf. T))))
+  dec  |- dec x = bdec x x
+  
+Theorems --
+  aPr
+    |- (!f g ls. aPr 0 f g ls = (@t. f ls t),(?t. f ls t)) /\
+       (!m f g ls.
+         aPr(SUC m)f g ls =
+         (@t. ?x. g x t /\ (x = pair ls(pair m(FST(aPr m f g ls))))),
+         (?t x.
+           g x t /\
+           SND(aPr m f g ls) /\
+           (x = pair ls(pair m(FST(aPr m f g ls))))))
+  bdec
+    |- (!x.
+         bdec 0 x =
+         ((x = 0) => 
+          l | 
+          ((x = 1) => r | ((x = 2) => c0 | ((x = 3) => s | (@pf. T)))))) /\
+       (!m x.
+         bdec(SUC m)x =
+         ((x < 5 \/ x < (SUC m)) => 
+          bdec m x | 
+          ((x = SUC m) => adec m(bdec m) | (@pf. T))))
+\end{verbatim}
+\end{document}

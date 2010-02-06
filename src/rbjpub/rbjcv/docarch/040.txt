@@ -1,0 +1,390 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+The Consistency of T37
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/040   Issue 0.1
+.ds CH The Consistency of T37
+.ds RH \*(DY
+.ds LF DTC/RBJ/040   Issue 0.1
+.ds CF The Consistency of T37
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+This document is an attempt to prove the consistency of the formal system
+specified in DTC/RBJ/037, an axiomatisation of the Theory of Restricted
+Generality.
+The proof involves extensive use of the functional programming language 
+Miranda, in which the specification of T37 was expressed.
+Sections of the document written in Miranda are enclosed 
+between marks | |< and | |> in the text.
+.KE
+.KS
+.LP
+We first load the definition of the formal system (for which the reader
+should refer to DTC/RBJ/037), and extensions (defined in DTC/RBJ/039).
+.DS L
+||<
+%nolist
+%insert "039"
+||>
+.DE
+.KE
+.NH
+THE PRIMITIVE SYSTEM
+.DS
+||<
+%insert "sets"
+||>
+.DE
+.NH 2
+Abstract Syntax
+.DS
+||<
+pterm ::= S | K | pterm $Ap pterm
+||>
+.DE
+.NH 2
+Auxiliary Definitions
+.LP
+We define a \fIproforma\fR and the operation \fIst\fR of substituting a pterm
+into a proforma to facilitate precise definition of the inference rules.
+.DS
+||<
+proforma ::= M | T pterm | proforma $Pap proforma
+
+st :: proforma -> pterm -> pterm
+
+st M u 		= u
+st (T t) u		= t
+st (p $Pap q) u	= (st p u) $Ap (st q u)
+||>
+.DE
+.LP
+The following abbreviations improve the readability of the formal 
+specification.
+.DS
+||<
+pk u v	= (K $Ap u) $Ap v
+ps u v w	= ((S $Ap u) $Ap v) $Ap w
+||>
+.DE
+.NH 2
+Axioms and Inference Rules
+.NH 3
+signature
+.DS
+||<
+abstype ptheorem
+with	pkaxiom	:: ptheorem
+	pkrule	:: (ptheorem,proforma,pterm,pterm)		-> ptheorem
+	srule	:: (ptheorem,proforma,pterm,pterm,pterm)	-> ptheorem
+
+ptheorem 	== pterm
+||>
+.DE
+.NH 3
+axiom
+.DS
+||<
+pkaxiom			= K
+||>
+.DE
+.NH 3
+inference rules
+.DS
+||<
+pkrule (th,p,u,v)	= st p (pk u v), th = st p u
+pkrule s		= pkaxiom
+
+srule (th,p,u,v,w)	= st p (ps u v w), th = st p (( u $Ap w) $Ap (v $Ap w))
+srule s		= pkaxiom
+||>
+.DE
+.NH 2
+The Set of Theorems
+.DS
+||<
+pterms 	= us [	[K],
+			[S],
+			{t $Ap u| t,u<-pterms}	]
+
+proformas	= us [	[M],
+			[T t | t<-pterms],
+			{p $Pap q | p,q <- proformas}	]
+			
+
+ptheorems 	= us [	[pkaxiom],
+			{pkrule (t,p,u,v) | 	t <- ptheorems;
+						p <- proformas;
+						u,v <- pterms	},
+			{srule (t,p,u,v,w) |	t <- ptheorems;
+						p <- proformas;
+						u,v,w <- pterms	}	]	
+||>
+.DE
+.NH
+???
+.LP
+The extended primitive system includes one further primitive, and
+further axioms and inference rules to support this primitive.
+We wish to add to the primitive system provision for the use of
+derived inference rules.  This requires an additional rule which
+enables the result of a derived inference rule to be accepted as a ptheorem.
+.LP
+The definition of the third inference rule depends upon the following function and pterm definitions:
+.RS
+.IP red
+a function which reduces a pterm to head normal form (if if has one).
+.IP enc
+a function which encodes pterms into (normal) pterms.
+.IP dec
+the inverse of enc
+.IP dec_pterm
+a pterm which represents the dec function.
+.RE
+.DS
+||<
+red			:: pterm -> pterm
+enc 			:: pterm -> pterm
+dec 			:: pterm -> pterm
+dec_pterm 			:: pterm
+||>
+.DE
+.NH
+FUNCTIONS IN THE METANOTATION
+.LP
+In this section we define some useful Miranda functions.
+These consist of the functions \fIred\fR, \fIenc\fR and \fIdec\fR, 
+mentioned in the previous section.  
+We also define in Miranda functions corresponding to the pterms 
+\fIfunction_space_pterm\fR and \fIenc_type_of_enc_theo\fR.
+These latter are provided to make more transparent the definition of the
+pterms in the following section (and to act as a guide in the construction
+of these pterms).
+.LP
+To facilitate definitions of pterms in the object language we make provision
+for the use of functional abstraction, and define a fix point operator to
+permit recursive definitions. 
+Since the object language itself contains no variables we use a slightly richer language including variables, and define a mapping from abstractions in the latter language into the pterms of our primitive system.  
+.NH 2
+Defining Abstraction
+.NH 3
+abstract syntax
+.DS
+||<
+var_pterm 	::= 	Vp [char] | Kv | Sv | var_pterm $Vpap var_pterm
+||>
+.DE
+.NH 3
+identity pterm
+.DS
+||<
+ip	= 	(Sv $Vpap Kv) $Vpap Kv
+||>
+.DE
+.NH 3
+abstraction
+.DS
+||<
+vabst :: [char] -> var_pterm -> var_pterm
+
+vabst v (Vp w)		= 	ip, v=w
+vabst v (t $Vpap u)	= 	(Sv $Vpap (vabst v t)) $Vpap (vabst v u)
+vabst v u		=	Kv $Vpap u
+||>
+.DE
+.NH 3
+multiple abstraction
+.DS
+||<
+vabsl :: [[char]] -> var_pterm -> var_pterm
+
+vabsl [] vt 		= vt
+vabsl (a:b) vt 	= vabst a (vabsl b vt)
+||>
+.DE
+.NH 3
+closure
+.LP
+We define a predicate "closed" which is satisfied by "var_pterm"s which contain no variables.
+.DS
+||<
+closed (Vp n) 	= False
+closed Kv 		= True
+closed Sv		= True
+closed (t $Vpap u)	= (closed t) & (closed u)
+||>
+.DE
+.LP
+and  a mapping from closed var_pterms to pterms:
+.DS
+||<
+v_to_t 		:: var_pterm -> pterm
+
+v_to_t Kv		= K
+v_to_t Sv		= S
+v_to_t (t $Vpap u)	= (v_to_t t) $Ap (v_to_t u)
+||>
+.DE
+.NH 3
+Recursion
+.LP
+To enable recursive definitions of pterms representing functions we define
+a fix point operator.
+.DS
+||<
+vsap 	= (vabsl ["x"] ((Vp "x") $Vpap (Vp "x")))
+
+vfix 	= vabsl ["f"] (vsap $Vpap (vabsl ["x"] ((Vp "f") 
+				$Vpap ((Vp "x") $Vpap (Vp "x")))))
+fix	= v_to_t vfix
+
+defrec vars expr	= v_to_t (vfix $Vpap (vabsl vars expr))
+||>
+.DE
+.NH 2
+Reduction
+.DS
+||<
+red K						= K
+red S						= S
+red ((K $Ap u) $Ap v)			= red u
+red (((S $Ap u) $Ap v) $Ap w)	= red ((u $Ap w) $Ap (v $Ap w))
+red (t $Ap u)				= red (red t $Ap u), ~((red t) = t)
+red (t $Ap u)				= red t $Ap u
+||>
+.DE
+.NH 2
+Encoding
+.LP
+To define encodings of pterms we define first the two pterms "ptrue" and "pfalse", and then a pair constructor.  "ptrue" and "pfalse" are both in normal form, as is any element of the free algbra generated from them by the pair constructor.  Furthermore, "ptrue" and "pfalse" are distinguishable, and pairs may be dismembered, so we may construct with these elements an encoding and a decoding of the pterms of our primitive system.
+.DS
+||<
+ptrue,pfalse,pair	:: pterm
+
+vtrue 	= Kv
+vfalse = (vabsl ["x","y"] (Vp "y"))
+vpair 	= (vabsl ["x","y","z"] (((Vp "z") $Vpap (Vp "x")) $Vpap (Vp "y")))
+
+ptrue	= red (v_to_t vtrue)
+pfalse	= red (v_to_t vfalse)
+pair	= red (v_to_t vpair)
+||>
+.DE
+.LP
+It is convenient to introduce the abbreviations:
+.DS
+||<
+pear u v	= red ((pair $Ap u) $Ap v)
+first u		= u $Ap ptrue
+secnd u		= u $Ap pfalse
+cond t u v	= (t $Ap u) $Ap v
+||>
+.DE
+.LP
+The algorithm for encoding may now be specified:
+.DS
+||<
+enc K			= pear ptrue ptrue
+enc S			= pear ptrue pfalse
+enc (t $Ap u)	= pear pfalse (pear (enc t) (enc u))
+||>
+.DE
+.NH 2
+Decoding
+.LP
+We define dec, the inverse of enc. Informally the algorithm is:
+.DS
+dec  (pear ptrue ptrue) 		= K
+dec  (pear ptrue pfalse) 		= S
+dec  (pear pfalse (pear A B)) 	= (dec A) $Ap (dec B)
+.DE
+.LP
+However, this is not legal Miranda, and we
+would like to define dec so that it will work even when the encoding is not in
+normal form.
+We therefore use a definition which does not rely on pattern matching.
+Note that "dec" is a total function over encodings, but not over pterms in 
+general, and that it is only weakly extensional.
+.DS
+||<
+
+dec x 		= K, red x = enc K
+		= S, red x = enc S
+		= (dec a) $Ap (dec b)
+			where 	a = first (secnd x)
+				b = secnd (secnd x)
+||>
+.DE
+.NH
+TERMS IN THE OBJECT LANGUAGE
+.LP
+In this section we complete the formal definition of the extended primitive 
+system by defining the pterms in the object language \fIdec_pterm\fR,
+\fIfunction_space_pterm\fR and \fIenc_type_of_enc_theo\fR.
+.NH 2
+Decoding
+.LP
+We translate the definition of dec to give a pterm dec_pterm.
+First we supply an informal recursive definition with sugared conditional:
+.DS
+
+dect x	=	IF	x $Ap ptrue
+		THEN	IF	x $Ap pfalse
+				THEN		K
+				ELSE		S
+		ELSE		((dect ((x $Ap pfalse) $Ap ptrue)) 
+				$Ap (dect ((x $Ap pfalse) $Ap pfalse)))
+
+.DE
+.LP
+And now we translate the definition of dec using the fixpoint operator
+previously defined.
+.DS
+||<
+dec_pterm = defrec ["dec","x"] 
+		((((Vp "x") $Vpap vtrue) 
+		$Vpap 	((((Vp "x") $Vpap vfalse) 
+					$Vpap Kv) 
+					$Vpap Sv))
+		$Vpap	(((Vp "dec") $Vpap 
+				(((Vp "x") $Vpap vfalse) $Vpap vtrue))
+		    $Vpap ((Vp "dec") $Vpap 
+				(((Vp "x") $Vpap vfalse) $Vpap vfalse)))
+		)
+||>
+.DE
+.LP
+We note that dec_pterm, in consequence of its recursive definition, has no
+normal form.
+.DS
+||<
+tp t = (t,dec (enc t))
+tpl = map tp pterms
+||>
+.DE
+.NH 2
+The Type of Theorems
+.DS
+||<
+enc_type_of_enc_theo = enc dec_pterm
+||>
+.DE
+.DS
+||<
+%list
+||>
+.DE

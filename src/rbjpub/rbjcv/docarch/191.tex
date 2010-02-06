@@ -1,0 +1,613 @@
+=TEX
+\begin{slide}{}
+\begin{center}
+{\bf Verifying Security Properties\\
+with\\
+the ICL Z proof tool}
+
+\ \\
+\ \\
+\ \\
+
+\small{R.B.~Jones \\
+\ \\
+International Computers Limited,\\
+Eskdale Road,\\
+Winnersh,\\
+Wokingham,\\
+Berks RG11 5TT\\
+\ \\
+tel: 0734 693131 x6536,\\
+fax: 0734 697636\\
+email: uucp: rbj@uucp}
+\end{center}
+\end{slide}
+
+\begin{slide}{}
+\begin{center}
+{\bf TOPICS}
+
+methods for verification
+of critical systems
+
+fully worked micro-examples
+
+illustration of use
+of Z proof tool
+
+comparisons between proof
+in Z and in HOL
+\end{center}
+\end{slide}
+
+\begin{slide}{}
+\begin{center}
+{\bf METHODOLOGICAL TOPICS}
+\end{center}
+
+\begin{itemize}
+\item
+the need for formalisation of correctness propositions
+\item
+the formalisation of critical properties
+\item
+establishing the consistency of specifications
+\item
+difficulties with instantiation
+\item
+problems with ``traditional'' specifications
+\item
+the opportunity for proving conjectures about criticality of subsystems
+\item
+systematic design and proof structure
+\end{itemize}
+\end{slide}
+
+\begin{slide}{}
+Â
+›new_theory"‚example1·";
+Ê
+Ë
+›	[‚DATA·]
+Ê
+È‚STATE·ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›	classified_data :Ü ñ DATA
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+È‚ÒSTATE·ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›  STATE; STATE'
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+È‚OPERATION·ÕÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›  ÒSTATE;
+›  clear? :Ü
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+\end{slide}
+\begin{slide}{}
+È‚READ·ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›  OPERATION;
+›  class?	:Ü;
+›  data!	: DATA
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›  class? ù dom classified_data
+›Ä class? û clear?
+›Ä data! = classified_data class?
+›Ä classified_data' = classified_data
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+\end{slide}
+\begin{slide}{}
+È‚COMPUTE·ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕﬂ
+›  OPERATION;
+›  class?	:Ü;
+›  computation?	:(Ü ñ DATA) ã DATA
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›  class? ù dom classified_data
+›Ä class? ü clear?
+›Ä classified_data' = classified_data ï {class? ó 
+›    computation? (0 Ó clear? ö classified_data)}
+ ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ‡
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf PROBLEMS WITH
+``NAIVE'' SPECIFICATION}
+\end{center}
+\begin{itemize}
+\item
+specifies {\em a} secure system
+(at best)
+not secure systems in general
+\item
+a real system specification will be very large even if critical property remains simple
+\item
+there is no formal basis for judging whether a large specification of this kind is a specification of a {\it secure} system
+\item
+rules of refinement make the {\it meaning} of such specifications obscure
+\end{itemize}
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf FORMALISATION OF
+CRITICAL REQUIREMENT}
+\end{center}
+\begin{itemize}
+\item
+establish ``type'' of system
+\item
+formally define which systems meet the requirement
+\item
+no need to specify in detail what the systems do 
+\end{itemize}
+\end{slide}
+\begin{slide}{}
+Â
+›new_theory"‚example2·";
+Ê
+Ë
+› [‚IN·,‚OUT·,‚DATA·]
+› ‚STATE2·	==	Ü ñ DATA
+›
+› ‚SYSTEM·	==	(Ü â IN â STATE2)
+›			ã (STATE2 â OUT)
+Ê
+Í
+› ‚out_secure· : ë SYSTEM
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+› Ésys:SYSTEMé sys ù out_secure Ç
+›
+› (É clear:Ü; inp:IN; s,s':STATE2 |
+› ((0Ó clear ö s) = (0Ó clear ö s')é
+›    second (sys (clear, inp, s))
+›    = second (sys (clear, inp, s'))))
+À
+\end{slide}
+\begin{slide}{}
+Í
+› ‚state_secure· : ë SYSTEM
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›
+› Ésys:SYSTEMé sys ù state_secure Ç
+›
+› (Éclass, clear:Ü; inp:IN; s,s':STATE2 |
+› ((0Ó class ö s) = (0Ó class ö s')é
+›
+›  (0Ó class ö (first (sys (clear, inp, s))))
+›  = (0Ó class ö (first (sys (clear, inp, s'))))))
+À
+Í
+› ‚secure· : ë SYSTEM
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›
+› Ésys:SYSTEMé sys ù secure Ç
+› sys ù state_secure Ä sys ù out_secure
+À
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf ``ARCHITECTURAL DESIGN''}
+\end{center}
+\begin{itemize}
+\item
+formal model of the top level structure of the system
+\item
+separate out critical from non-critical functions
+\item
+identify top level subsystems
+\item
+specify how the system is constructed from the subsystems
+\item
+specify the critical requirements on the subsystems
+\end{itemize}
+\end{slide}
+\begin{slide}{}
+Ë
+› ‚APPLICATION· == (IN â STATE2)
+›			ã (STATE2 â OUT)
+›
+› ‚KERNEL·	 == APPLICATION
+›			ã SYSTEM
+Ê
+
+Í
+› ‚construction· : APPLICATION â KERNEL
+›			ã SYSTEM
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›
+› Éappl:APPLICATION; kernel:KERNELé
+› 	construction (appl, kernel) = kernel appl
+À
+\end{slide}
+\begin{slide}{}
+Í
+› ‚secure_kernel· : ë KERNEL
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›
+› É kernel:KERNELé kernel ù secure_kernel Ç
+›
+› (Éappl:APPLICATIONé
+›	(construction (appl, kernel)) ù secure)
+À
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf PROOF OF CORRECTNESS
+of
+ARCHITECTURAL DESIGN}
+\end{center}
+
+Prove that IF the subsystems satisfy their critical requirements, AND they are fitted together in the prescribed way, THEN the resulting system will satisfy the system critical requirements.
+\end{slide}
+\begin{slide}{}
+\begin{center}
+Z PROOF STYLE
+\end{center}
+\begin{itemize}
+\item
+special Z goal package implemented in ICL HOL prototype
+\item
+proofs like HOL proofs except that assumptions and conclusions are Z predicates
+\item
+parser and pretty printer expect and deliver Z not HOL (with escape into HOL if necessary)
+\item
+implementation on ``product'' HOL will be much better integrated
+\end{itemize}
+\end{slide}
+\begin{slide}{}
+Â
+zset_goal([],ª
+ Ékernel:KERNEL;appl:APPLICATIONé
+  kernel ù secure_kernel
+  ä secure (construction (appl,kernel))º);
+Ê
+
+
+ÛHOL output
+(Ékernel: KERNEL; appl: APPLICATION | true é
+  ((kernel ù secure_kernel)
+  ä ((construction (appl, kernel)) ù secure)))
+Ê
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf REWRITING IN Z}
+\end{center}
+\begin{itemize}
+\item
+most axiomatic descriptions give rise (at best) to {\it conditional} rewriting rules
+\item
+definitions of predicates can be transformed to unconditional rewriting rules (often)
+\item
+definitions of functions cannot (in general) be made unconditional
+\item
+present proof system requires either explicit instantiation of conditional rewriting rules or instantiation by resolution
+\item
+ideal (target for product) is powerful conditional context sensitive rewriting
+\end{itemize}
+\end{slide}
+\begin{slide}{}
+Â
+val secure_kernel_sim = iff_simp
+  (z_specification "-" "secure_kernel");
+Ê
+
+ÛHOL output
+val secure_kernel_sim =  Ö
+  ((kernel ù secure_kernel) Ç
+   ((kernel ù KERNEL) Ä
+    (Éappl: APPLICATION | true é
+    ((construction (appl, kernel)) ù secure)))) : thm
+Ê
+Â
+ze (Zrewrite_tac[secure_kernel_sim]);
+Ê
+ÛHOL output
+(Ékernel: KERNEL; appl: APPLICATION | true é
+  (((kernel ù KERNEL) Ä
+  (Éappl: APPLICATION | true é
+    ((construction (appl, kernel)) ù secure)))
+  ä ((construction (appl, kernel)) ù secure)))
+Ê
+\end{slide}
+\begin{slide}{}
+Â
+ze (REPEAT Zstrip_tac);
+Ê
+ÛHOL output
+1 subgoal
+   [ (kernel ù KERNEL) ]
+   [ (appl ù APPLICATION) ]
+   [ (Éappl: APPLICATION | true é
+      ((construction (appl, kernel)) ù secure)) ]
+
+((construction (appl, kernel)) ù secure)
+Ê
+Â
+ze Zres_tac;
+Ê
+ÛHOL output
+subgoal proved
+Ê
+\end{slide}
+\begin{slide}{}
+Í
+› ‚kernel_implementation· : KERNEL
+…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕ
+›
+›  É clear:Ü; inp:IN; state:STATE2;
+›	appl:APPLICATION é
+›
+›  kernel_implementation appl (clear, inp, state) = 
+›
+›  ((state ï ((0 Ó (clear-1)) õ
+›	(first (appl (inp, (0 Ó clear) ö state)))),
+›  second (appl (inp, (0 Ó clear) ö state))))
+À
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf Set Theoretic Lemmas}
+\end{center}
+Â
+› [Zset_eq_thm, •_thm, ö_thm1,
+          õ_thm4, ï_thm, first_thm];
+Ê
+ÛHOL output 
+val it =
+   [Ö ((x = y) =
+          (Éz: U | trueé ((z ù x) Ç (z ù y)))),
+    Ö ((P • Q) Ç
+          (Éz: U | trueé ((z ù P) ä (z ù Q)))),
+    Ö ((x ù (S ö R)) Ç
+          ((x ù R) Ä ((first x) ù S))),
+    Ö ((x ù (S õ R)) Ç
+          ((x ù R) Ä å((first x) ù S))),
+    Ö ((x ù (A ï B)) Ç ((x ù B) Å
+          ((x ù A) Ä å(Ñy: U | true é
+                (((first x), y) ù B))))),
+    Ö ((first (x, y)) = x)] : thm list
+Ê
+\end{slide}
+\begin{slide}{}
+Â
+val SET_TAC = EVERY
+  [Zrewrite_tac[Zset_eq_thm, •_thm,
+    ö_thm1, õ_thm4, ï_thm, first_thm],
+  REPEAT Zstrip_tac,
+  Zres_tac, Zres_tac,
+  Zasm_rewrite_tac[]];
+Ê
+ÛHOL output
+val SET_TAC = fn : tactic
+Ê
+Â
+fun SET_RULE t =
+   TAC_PROOF(([],t),SET_TAC);
+Ê
+ÛHOL output
+val SET_RULE = fn : TERM -> thm   
+Ê
+\end{slide}
+\begin{slide}{}
+\begin{center}
+{\bf Arithmetic Lemmas\\
+
+Required for Proof\\}
+\end{center}
+Â
+val leÓlemma1 = new_axiom "leÓlemma1"
+    ªx û y ä (0 Ó x) • (0 Ó y)º;
+
+
+val leÓlemma2 = new_axiom "leÓlemma2"
+    ªå x û y ä (0 Ó y) • (0 Ó (x - 1))º;
+Ê
+\end{slide}
+\begin{slide}{}
+Â
+zset_goal([],ª
+  kernel_implementation ù secure_kernel
+º);
+Ê
+ÛHOL output
+(kernel_implementation ù secure_kernel)
+Ê
+Â
+ze (Zrewrite_tac[kidec, secure_kernel_sim,
+     secure_sim, state_secure_sim, out_secure_sim]
+    THEN REPEAT Zstrip_tac);
+Ê
+ÛHOL output
+Note: tactic produced 2 duplicated subgoals
+3 subgoals
+...
+   [ (appl ù APPLICATION) ]
+((construction (appl, kernel_implementation))
+      ù SYSTEM)
+Ê
+\end{slide}
+\begin{slide}{}
+Â
+[condec, kidec, Z_pair_â_sym, fun_app_thm];
+Ê
+ÛHOL output
+val it =
+  [ Ö (construction
+      ù ((APPLICATION â KERNEL) ã SYSTEM)),
+    Ö (kernel_implementation ù KERNEL),
+    Ö (((x ù X) Ä (y ù Y)) Ç ((x, y) ù (X â Y))),
+    Ö (Éf: (X ã Y); x: X | true é ((f x) ù Y))]
+ : thm list
+Ê
+Â
+ze (EVERY[
+   ASSUME_TAC condec,
+   ASSUME_TAC kidec,
+   Zimp_res_tac   Z_pair_â_sym,
+   Zimp_res_tac   fun_app_thm]);
+Ê
+\end{slide}
+
+\begin{slide}{}
+ÛHOL output
+subgoal proved
+2 subgoals
+...
+
+   [ (appl ù APPLICATION) ]
+   [ (class ù Ü) ]
+   [ (clear ù Ü) ]
+   [ (inp ù IN) ]
+   [ (s ù STATE2) ]
+   [ (s' ù STATE2) ]
+   [ (((0 Ó class) ö s) = ((0 Ó class) ö s')) ]
+
+(((0 Ó class) ö (first
+     ((construction (appl, kernel_implementation))
+          (clear, inp, s))))
+ =
+((0 Ó class) ö (first
+     ((construction (appl, kernel_implementation))
+          (clear, inp, s')))))
+Ê
+\end{slide}
+\begin{slide}{}
+Â
+ze (EVERY[
+   ASSUME_TAC kidec,
+   Zimp_res_rewrite_tac conpred,
+   Zimp_res_rewrite_tac kipred,
+   Zrewrite_tac [first_thm]]);
+Ê
+ÛHOL output
+1 subgoal
+
+...
+   [ (((0 Ó class) ö s) = ((0 Ó class) ö s')) ]
+...
+
+(((0 Ó class) ö (s ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s)))))))
+ =
+((0 Ó class) ö (s' ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s'))))))))
+Ê
+\end{slide}
+
+\begin{slide}{}
+Â
+ze (ASM_CASES_TACªclear û classº);
+Ê
+ÛHOL output
+2 subgoals
+...
+   [ (((0 Ó class) ö s) = ((0 Ó class) ö s')) ]
+...
+   [ (clear û class) ]
+
+(((0 Ó class) ö (s ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s)))))))
+ =
+((0 Ó class) ö (s' ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s'))))))))
+Ê
+Â
+ze (Zimp_res_tac leÓlemma1);
+ze (Zimp_res_rewrite_tac (SET_RULE ª(A • B) ä
+ (B ö z) = (B ö z') ä (A ö z) = (A ö z')º));
+Ê
+\end{slide}
+
+\begin{slide}{}
+ÛHOL output
+1 subgoal
+ ...
+   [ (((0 Ó class) ö s) = ((0 Ó class) ö s')) ]
+...
+   [ (((0 Ó clear) ö s) = ((0 Ó clear) ö s')) ]
+
+   (((0 Ó class) ö (s ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s')))))))
+ = ((0 Ó class) ö (s' ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s'))))))))
+Ê
+Â
+ze (Zimp_res_rewrite_tac(SET_RULE
+ªx ö z = x ö z' ä x ö (z ï y) = x ö (z' ï y)º));
+Ê
+\end{slide}
+
+\begin{slide}{}
+ÛHOL output
+subgoal proved
+1 subgoal
+...
+   [ (((0 Ó class) ö s) = ((0 Ó class) ö s')) ]
+...
+   [ å(clear û class) ]
+
+   (((0 Ó class) ö (s ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s)))))))
+ = ((0 Ó class) ö (s' ï ((0 Ó (clear - 1))
+     õ (first (appl (inp, ((0 Ó clear) ö s'))))))))
+Ê
+Â
+ze (EVERY[Zimp_res_then MP_TAC leÓlemma2,UNDISCH_TAC
+ ª(0 Ó class)ö(s∫STATE2)=(0 Ó class)ö s'º,
+ Zrewrite_tac[SET_RULE
+ ª(A ö z) = (A ö z') ä (A • B) ä
+     (A ö (z ï (B õ s))) = (A ö (z' ï (B õ s')))º]]);
+Ê
+\end{slide}
+
+\begin{slide}{}
+ÛHOL output
+subgoal proved
+1 subgoal
+...
+   [ (((0 Ó clear) ö s) = ((0 Ó clear) ö s')) ]
+
+   ((second ((construction
+      (appl, kernel_implementation))(clear, inp, s)))
+ = (second ((construction
+      (appl, kernel_implementation))(clear, inp, s'))))
+Ê
+Â
+ze (EVERY[
+   ASSUME_TAC kidec,
+   Zimp_res_rewrite_tac conpred,
+   Zimp_res_rewrite_tac kipred,
+   Zasm_rewrite_tac [second_thm]]);
+Ê
+ÛHOL output
+subgoal proved
+main goal proved
+Ê
+\end{slide}
+
+
+\begin{slide}{}
+\begin{center}
+{\bf THE CORRECTNESS PROPOSITION}
+\end{center}
+
+Ë
+› Éapp:APPLICATIONé
+›   construction(app, kernel_implementation)
+›      ù secure
+Ê
+
+\begin{itemize}
+\item
+this is a trivial consequence of the previous results
+\item
+in general overall correctness results will follow straightforwardly from \\
+design/implementation correctness results
+\end{itemize}
+\end{slide}
+
+
+\begin{slide}{}
+\end{slide}
+
+
+
+
+

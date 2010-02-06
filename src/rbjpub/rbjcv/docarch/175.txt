@@ -1,0 +1,734 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.so /escher/usr2/projects/infra/msmacros/roffp20.defs
+.nr P 1 Presentation Flag
+.nr D 0 Document Flag
+.LP
+.TL
+Proof support for Z via HOL
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.ct D
+.cx
+.ct P
+This document consists of the overheads for a presentation at IED project 1563 quarterly meeting on May 4 1990.
+.cx
+.AE
+.ds LH \s-8\s-8DS/FMU/RBJ/175\s+8\s+8
+.ds CH \s-8\fB\fP\s+8
+.ds RH \s-8\s-8Issue 0.1 \*(DY Page \\n(PN\s+8\s+8
+.ds LF \s-8\s+8
+.ds CF \s-8\fB\fP\s+8
+.ds RF \s-8\s+8
+.ct P
+.nr PS 24
+.nr VS 28
+.cx
+.KS
+.DS C
+\fBDEGREES of RECKLESSNESS
+in SEEKING
+PROOF SUPPORT for Z\fP
+
+.DE
+.IP 1
+REWRITE SPECIFICATION in BARE HOL
+
+.IP 2
+USE PRE/POST PROCESSORS with HOL
+
+.IP 3
+IMPLEMENT Z-like PARSER/PRETTY PRINTER for HOL
+
+.IP 4
+ADD some CONSPICUOUSLY CONSERVATIVE EXTENSIONS to HOL
+
+.IP 5
+CHANGE to LOGIC more SUITABLE FOR Z
+
+.DS C
+(CHANGE of PARADIGM
+NOT CONSIDERED)
+.DE
+.KE
+.KS
+.DS L
+\s+4\fBOBJECTIVE:\fP\s-4
+.DE
+.DS C
+
+Proof support for Z
+
+Achieve high assurance requirements
+
+
+.DE
+.DS L
+\s+4\fBPROBLEM:\fP\s-4
+
+.DE
+.DS C
+Complexity of Z
+
+Lack of proof rules for Z
+
+
+.DE
+.DS L
+\s+4\fBSOLUTION:\fP\s-4
+
+
+.DE
+.DS C
+SEMANTIC EMBEDDING OF Z IN HOL
+.DE
+.KE
+.KS
+.DS C
+\s+4\fBSEMANTIC EMBEDDING\fP\s-4
+
+
+CAN BE ACHIEVED USING ONLY
+CONSERVATIVE EXTENSIONS
+
+
+CAN BE IMPLEMENTED WITHOUT
+KNOWLEDGE OF Z PROOF RULES
+
+
+CONSTITUTES FORMAL SEMANTICS
+FOR Z
+
+
+\s-2IMPLEMENTATION SUPPORTS DERIVATION
+OF PROOF RULES FOR Z\s+2
+
+
+Z PROOF SYSTEM COMES WITH (ALMOST)
+SAME ASSURANCE OF CONSISTENCY
+AS HOL
+.DE
+.KE
+.KS
+.DS C
+\s+4\fBHOW TO DO IT\fP\s-4
+
+
+.DE
+.LP
+.IP 1
+Implement parser/type-checker for Z yielding abstract syntax decorated with types
+
+.IP 2
+Specify (in Z) and implement a map from the abstract syntax of Z to abstract syntax of HOL
+
+.IP 3
+Write pretty printer for Z (in HOL)
+
+.IP 4
+Specify and implement `definitions' for Z constructs
+
+.IP 5
+Derive proof rules for Z
+
+.IP 6
+Develop libraries (of theorems, rules, tactics..)
+.DE
+.KE
+.KS
+.DS C
+
+\fBHOL TYPES AND TERMS\fP
+
+
+.DE
+.DS L
+‚TYPE· ::=
+
+	  ‚mk_vartype· ææ string øø
+
+	| ‚mk_type· ææstring â seq TYPEøø
+
+
+‚FTERM· ::=
+
+	  ‚mk_var· ææstring â TYPEøø
+
+	| ‚mk_const· ææstring â TYPEøø
+
+	| ‚mk_comb· ææFTERM â FTERMøø
+
+	| ‚mk_abs· ææstring â TYPE â FTERMøø
+.DE
+.KE
+.KS
+.DS C
+\fBZ TYPES\fP
+.DE
+.DS L
+‚ZTYPE· ::=	‚givenT· ææIDENTøø
+
+	|	‚varT· ææIDENTøø
+
+	|	‚powerT· ææZTYPEøø
+
+	|	‚tupleT· ææseq ZTYPEøø
+
+	|	‚schemaT· ææIDENT ú ZTYPEøø
+
+‚GTYPE·	==	seq IDENT â ZTYPE
+.DE
+.KE
+.KS
+.DS C
+\fB TYPE MAPPING\fP
+.DE
+.DS L
+.sd
+ ‚hol_mtype· : ZTYPE ã TYPE
+.sb
+ hol_mtype (givenT i)
+	= mk_type (val_IDENT i,æø)
+
+ hol_mtype (varT i)
+	= mk_vartype (val_IDENT i)
+
+ hol_mtype (powerT t)
+	= mk_type (`ë`,æhol_mtype(t)ø)
+
+ hol_mtype (tupleT st)
+	= hol_mtype(schemaT
+	   (st o val_numeral o val_IDENT))
+
+ hol_mtype (schemaT tm)
+	= bind_type (hol_mtype o tm)
+.se
+.DE
+.KE
+.KS
+.DS C
+\fBSCHEMA TYPES in HOL\fP
+
+
+HOL TYPE CONSTRUCTORS TAKE
+ONLY TYPES AS PARAMETERS
+
+.DE
+.LP
+The Z `schemaT' constructor takes a MAP from IDENTIFIERS to TYPES as its parameter.
+.DS C
+
+
+HOW DO WE COPE?
+
+
+Use INFINITE FAMILY of type constructors,
+putting some of the information in the name.
+
+
+schemaT{`x`óÜ, `f`ó(Ü ã Ü)}
+
+is mapped to
+
+mk_type(`S\d\s-4[f,x]\s+4\u`, [":Ü"; ":Ü ã Ü"])
+
+.DE
+.KE
+.KS
+.DS C
+\fBZ LANGUAGE\fP
+
+.DE
+.DS L
+SPEC ::=	given IDENT,...,IDENT
+	|	let SCHEMA end
+	|	let WORD[IDENT,...,IDENT]
+			= SEXP
+	|	SPEC in SPEC.
+
+SEXP ::=	schema SCHEMA end
+	|	SDES
+	|	å SEXP
+	|	SEXP Ä SEXP
+	|	SEXP Å SEXP
+	|	SEXP ä SEXP
+	|	SEXP ¡ SEXP
+	|	SEXP ƒ (IDENT,...,IDENT)
+	|	Ñ SCHEMA é SEXP
+	|	É SCHEMA é SEXP.
+.DE
+.KE
+.KS
+.DS L
+
+SDES	::=	WORD DECOR [TERM,...,TERM].
+
+
+SCHEMA ::=	DECL | PRED.
+
+
+DECL ::=	IDENT : TERM
+		| SDES
+		| DECL ; DECL.
+
+
+PRED ::=	TERM = TERM
+		| TERM ù TERM
+		| true
+		| false
+		| å PRED
+		| PRED Ä PRED
+		| PRED Å PRED
+		| PRED ä PRED
+		| Ñ SCHEMA é PRED
+		| É SCHEMA é PRED.
+.DE
+.KE
+.KS
+.DS L
+
+
+
+
+TERM ::=	IDENT
+		| §[TERM]
+		| {TERM,...,TERM}
+		| {SCHEMA é TERM}
+		| SDES
+		| ë TERM
+		| (TERM,...,TERM)
+		| ≠WORD DECOR
+		| TERM.IDENT
+		| TERM(TERM)
+		| çSCHEMAéTERM
+		| áSCHEMAéTERM.
+
+IDENT ::=	WORD DECOR
+.DE
+.KE
+.KS
+.DS C
+\fBSKETCH of MAPPING\fP
+
+.DE
+.IP 1.
+Map
+.DS C
+
+SCHEMA EXPRESSIONS
+PREDICATES
+TERMS
+
+all to
+
+HOL TERMS
+of appropriate types
+.DE
+
+
+.IP 2.
+Use infinite family of types and operators for schemas
+
+
+.IP 3.
+Systematic treatment of variable binding constructs
+
+.KE
+.nr PS 16
+.nr VS 19
+.KS
+.DS L
+‚SPEC·	::=	‚given·		ææseq IDENT â SPECøø
+	|	‚axdefs·		ææseq IDENT â SCHEMAøø
+	|	‚schdef·		ææWORD â seq IDENT â ZTERMøø
+	|	‚constr·		ææseq IDENT â ZTERMøø
+	|	‚in·		ææSPEC â SPECøø
+
+‚SCHEMA· == DECL â PRED
+
+‚DECL·	::=	‚dec·		ææIDENT â ZTERM â ZTYPEøø
+	|	‚decsexp·		ææZTERMøø
+	|	‚decpr·		ææDECL â DECLøø
+
+‚PRED·	::=	‚predeq·		ææZTERM â ZTERMøø
+	|	‚predmem·	ææZTERM â ZTERMøø
+	|	‚predtrue·
+	|	‚predfalse·
+	|	‚predneg·		ææPREDøø
+	|	‚predand·		ææPRED â PREDøø
+	|	‚predor·		ææPRED â PREDøø
+	|	‚predimp·		ææPRED â PREDøø
+	|	‚prediff·		ææPRED â PREDøø
+	|	‚predexi·		ææSCHEMA â PREDøø
+	|	‚predunexi·	ææSCHEMA â PREDøø
+	|	‚preduni·		ææSCHEMA â PREDøø
+	|	‚predsexp·		ææZTERMøø
+
+‚ZTERM·	==	ZTERMB â ZTYPE
+‚IDENT·	==	WORD â DECOR
+‚WORD·	==	string
+‚DECOR·	==	string
+.DE
+.KE
+.KS
+.DS L
+‚ZTERMB· ::=
+		‚termvar·	ææIDENTøø
+	|	‚termcon·	ææIDENTøø
+	|	‚termgcon·	ææIDENT â seq ZTERMøø
+	|	‚termseq·	ææseq ZTERMøø
+	|	‚termsetd·	ææseq ZTERMøø
+	|	‚termseta·	ææSCHEMA â ZTERMøø
+	|	‚termtuple·	ææseq ZTERMøø
+	|	‚termprod·	ææseq ZTERMøø
+	|	‚termtheta·	ææZTERM â DECORøø
+	|	‚termsel·	ææZTERM â IDENTøø
+	|	‚termapp·	ææZTERM â ZTERMøø
+	|	‚termlam·	ææSCHEMA â ZTERMøø
+	|	‚termmu·	ææSCHEMA â ZTERMøø
+
+	|	‚schema·	ææSCHEMAøø
+	|	‚schdes·	ææWORD â seq ZTERMøø
+	|	‚schdec·	ææZTERM â DECORøø
+	|	‚schpre·	ææZTERMøø
+	|	‚schneg·	ææZTERMøø
+	|	‚schand·	ææZTERM â ZTERMøø
+	|	‚schor·		ææZTERM â ZTERMøø
+	|	‚schimp·	ææZTERM â ZTERMøø
+	|	‚scheq·		ææZTERM â ZTERMøø
+	|	‚schpro·	ææZTERM â ZTERMøø
+	|	‚schide·	ææZTERM â seq IDENTøø
+	|	‚schexi·	ææSCHEMA â ZTERMøø
+	|	‚schunexi·	ææSCHEMA â ZTERMøø
+	|	‚schuni·	ææSCHEMA â ZTERMøø
+	|	‚schdel·	ææZTERMøø
+	|	‚schxi·		ææZTERMøø
+	|	‚schcomp·	ææZTERM â ZTERMøø
+.DE
+.KE
+.KS
+.DS L
+.sv
+ ‚mk_predtrue·			:				TERM
+ ‚mk_predneg·			: TERM ñ			TERM
+ ‚mk_predand·, ‚mk_predor·	: TERM â TERM ñ	TERM
+
+ ‚is_predneg_·, ‚is_predand_·, ‚is_predor_· : ë TERM
+
+ ‚dest_predneg· 			: TERM ñ TERM
+ ‚dest_predand·, ‚dest_predor·	: TERM ñ (TERM â TERM)
+
+…
+
+ mk_predtrue	= mk_const(`true`, bool_type)
+ mk_predneg	= mk_neg
+ mk_predand	= mk_conj
+ mk_predor		= mk_disj
+
+ is_predneg	= ran(mk_predneg)	= dom(dest_predneg)
+ is_predand	= ran(mk_predand)	= dom(dest_predand)
+ is_predor	= ran(mk_predor)		= dom(dest_predor)
+
+ mk_predneg	œ dest_predneg	= id[is_predneg]
+ mk_predand	œ dest_predand	= id[is_predand]
+ mk_predor		œ dest_predor	= id[is_predor]
+À
+.DE
+.KE
+.nr PS 24
+.nr VS 28
+.KS
+.DS C
+\fBDERIVED SYNTAX\fP
+
+
+ç a b c é e
+=
+çaé çbé çcé e
+
+
+and has a derived constructor:
+
+list_mk_abs : seq TERM â TERM ñ TERM
+
+
+
+Éxé P x
+=
+($É) çxé P x
+
+may be constructed using:
+
+mk_forall : TERM â TERM ñ TERM
+
+
+.DE
+.KE
+.KS
+.DS C
+\fBBINDING CONSTRUCTS\fP
+
+.DE
+.LP
+HOL has only one variable binding construct:
+.DS C
+
+Lambda Abstraction
+
+ç variable é term
+
+.DE
+.LP
+But the concrete syntax is much richer.
+.LP
+For example, the `let' expression:
+.DS C
+
+let a = b in c
+
+.DE
+.LP
+which is syntactic sugar for:
+.DS C
+
+LET (ç aéc) b
+
+.DE
+.LP
+Note that the name of the variable is unimportant, and hence not part of the value denoted by the expression.
+.KE
+.KS
+.DS C
+\fBLAMBDA ABSTRACTION in Z\fP
+.DE
+.LP
+In Z lambda abstraction has the more elaborate form:
+
+.DS C
+ç DECL | PRED é TERM
+
+e.g.
+
+ç x:Ü; f:Ü ã Ü | x>3 é f x
+.DE
+.LP
+This example may be analysed thus:
+.DS L
+
+DECL =	x:Ü f:Ü ã Ü
+
+PRED =	x > 3
+
+TERM =	f x
+
+.DE
+.LP
+We map each of these constructs into HOL in the `standard' way and form a schema binding in which these are the fields.
+.KE
+.KS
+.LP
+However, the DECL must be mapped to a predicate \fNand\fP a characteristic tuple.
+
+.LP
+DECL maps to:
+.DS C
+
+D = x ù Ü Ä y ù Ü ã Ü
+
+and
+
+T = (x,y)
+
+.DE
+.KE
+.KS
+.DS C
+\fBLAMBDA ABSTRACTION PACKAGE\fP
+.DE
+.LP
+These four components are then collected into a schema binding and each of the variables in the signature is bound by abstraction giving:
+.DS C
+
+package = çx yé mk_S\d\s-2[t,d,p,b]\s+2\u T D P B
+
+.DE
+.LP
+Then we apply a binding operator, which embodies the semantics of abstraction in Z.
+.DS C
+
+˜¨  package
+
+.DE
+.LP
+Where:
+.DS L
+
+˜¨  p =	ABS_ë (çt:S\d\s-2[1,2]\s+2\ué Ñx yé
+
+	let	q = p x y
+	in	q.d Ä q.p
+		Ä t.1 ó t.2 = q.t ó q.b)
+.DE
+.KE
+.KS
+.DS C
+\fBRELATIONSHIP WITH SPIVEY Z\fP
+
+.DE
+.LP
+DISCREPANCIES:
+
+.IP 1
+different treatment of partiality
+
+.IP 2
+different equality and membership
+
+.LP
+ADDITIONAL FEATURES:
+
+.IP 1
+support for loose generics
+
+.IP 2
+possible support for generic free types
+
+.IP 3
+more `orthogonal'(?)
+
+.IP 4
+extra constructors
+
+.IP 5
+support for conservative extensions
+
+.IP 6
+automatic consistency proofs
+.KE
+.KS
+.DS C
+\fBWHAT IS DONE SYNTACTICALLY\fP
+
+
+NOT MUCH!
+
+
+constructs involving hidden variables
+
+
+schema designators (or expressions)
+use as predicates
+
+
+schema designators as declarations
+
+
+variable binding constructs
+
+
+theta terms
+
+.DE
+.KE
+.KS
+.DS C
+\fBNOT DONE SYNTACTICALLY\fP
+
+
+schema operations,
+
+including:
+
+
+hiding, projection
+
+
+\(*D \(*C
+
+
+decoration (except in \(*H terms)
+.DE
+.KE
+.KS
+.DS C
+\fBODDITIES ABOUT EQUALITY(1)\fP
+
+
+LAW of REFLECTION
+
+
+.DE
+.LP
+According to Spivey's semantics this does not always hold, e.g.:
+.DS
+
+Ö å(§ 1 = § 1)
+
+.DE
+.LP
+This sounds like bad news, I would prefer to stick to classical equality.
+.DS C
+
+=, ==, î
+
+are all these semantically the same?
+.DE
+.KE
+.KS
+.DS C
+\fBODDITIES ABOUT EQUALITY(2)\fP
+
+CLOSURE UNDER
+EQUALITY SUBSTITUTIONS
+
+.DE
+.LP
+The language is not at present closed under equality substitutions.
+
+.DS
+Ö S = [a,b:Ü | P]
+
+Ö S = S ° S
+
+?Ö S = [a,b:Ü | P] ° [a,b:Ü | P]
+
+Ö S = S Ä S
+
+?Ö S ° S = S Ä S
+
+?Ö \(*HS = \(*H(S ° S)
+
+?Ö [S | P] = [S ° S | P]
+.DE
+.KE
+.KS
+.DS C
+\fBMORE EXOTIC EQUATIONS\fP
+
+
+
+
+Ö Ç = =
+
+is a theorem of HOL
+
+
+
+which may be used
+to rewrite legal Z
+into semantically identical
+illegal Z
+
+
+
+
+.DE
+.KE
+.nr PS 20
+.nr VS 24
+.KS
+.KE

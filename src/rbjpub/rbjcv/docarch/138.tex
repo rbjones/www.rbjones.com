@@ -1,0 +1,1244 @@
+=TEX
+\showboxbreadth=999 \showboxdepth=999
+\documentstyle[11pt,TQ,hol1]{article}
+\pagestyle{TQ}
+\TPPtitle{Zermelo-Fraenkel set theory in HOL (part 1)}
+\TPPref{DBC/RBJ/138}
+\def\SCCSversion{%I%
+}
+\TPPissue{\SCCSversion}
+\TPPclass{}
+\TPPdate{\FormatDate{%E%
+}}
+\TPPauthor{Roger Bishop Jones}
+\TPPstatus{Draft}
+\TPPtype{}
+\TPPabstract{This document consists of a formal axiomatisation in HOL of Zermelo-Fraenkel set theory.}
+\TPPdistribution{}
+
+\def\TPPheadcentre{}
+\def\TPPheadcentreproject{FST PROJECT}
+
+\begin{document}
+\TPPsetsizes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeTPPfrontpage
+\vfill
+\newpage
+
+\section{DOCUMENT CONTROL}
+\subsection{Contents list}
+\tableofcontents
+\subsection{Document cross references}
+\begin{thebibliography}{99}
+
+\bibitem{LAM}
+  {\em Introduction to higher order categorical logic}, L.Lambek and P.J.Scott,
+Cambridge University Press 1986, ISBN 0-521-24665-2
+\end{thebibliography}
+
+\subsection{Changes history}  % to get section number "0.3'
+
+First version.
+
+\subsection{Changes forecast}
+
+Under development, highly incomplete, totally volatile.
+
+\subsection{Abbreviations and notation}
+\begin{tabular}{ll}
+HOL & Higher Order Logic\\
+\end{tabular}
+\section{INTRODUCTION}
+This is a minimally modified transcription into HOL of the formalisation of ZF found in {\bf The Logical Foundations of Mathematics} by William S. Hatcher (Pergammon 1982 ISBN $0-08-025800$).
+The fact that this is an axiomatisation in higher order logic rather than first order logic has some consequences, but doesn't cause any very major changes.
+
+I mention here just two points:
+\begin{itemize}
+\item[$§$]
+In HOL logical equivalence is interchangeable with equality over type BOOL(i.e. $Ù ¨µ(a:BOOL)(b:BOOL). (a=b) § (a§b)¨$).
+Though equivalence is used in the axioms, equivalent lemmas are then proven using equality, and these lemmas are used in subsequent proofs.
+\item[$=$]
+Equality is in the basic HOL system, and so we do not need to define is as Hatcher does.
+However, Hatcher has a curious division of labour between his definition of equality and his axiom of extensionality (ZF1).
+It looks as though his definition of equality in fact gives half of the necessary facts for equality together with extensionality, and his axiom of extensionality is just the other half of the equality axiom.
+The fact that equality is built into HOL means that Hatcher's ZF1 is provable in HOL, but his definition of equality isn't!
+\end{itemize}
+\section{ZERMELO-FRAENKEL ZFSET THEORY}
+\subsection{Formalisation of ZF}
+First we start a new theory for ZF and declare the new type ZFSET.
+=IGN
+extend_theory"zf138";
+loadf"infra";
+load_definitions "zf138";
+load_theorems "zf138";
+load_axioms "zf138";
+%val NOT_FORALL_TAC = rewrite_tac[NOT_FORALL] THEN BETA_TAC;
+val PURE_NOT_FORALL_TAC = pure_rewrite_tac[NOT_FORALL] THEN BETA_TAC;
+val NOT_EXISTS_TAC = rewrite_tac[NOT_EXISTS] THEN BETA_TAC;
+val PURE_NOT_EXISTS_TAC = pure_rewrite_tac[NOT_EXISTS] THEN BETA_TAC;%
+push_proof_context prove_∂_epc;
+=TEX
+=SML
+new_theory"zf138";
+new_type ("ZFSET",0);
+push_proof_context prove_∂_epc;
+val asm_ante_tac = undisch_tac;
+fun taut_rule t = tac_proof(([],t), REPEAT µ_tac THEN taut_tac);
+usefile"/hat/users/rbj/demo/dtd067";
+usefile"/hat/users/rbj/demo/imp067";
+val res_tac = REPEAT strip_tac THEN (TRY_T(basic_res_tac 3 []));
+val res_tac1 = basic_res_tac 3 [];
+val res_tac2 = REPEAT strip_tac THEN (TRY_T((basic_res_tac 3 []) ORELSE (basic_res_tac1 3 [])));
+fun res_rule t = tac_proof (([],t), res_tac2);
+=TEX
+\subsubsection{Membership and Extensionality}
+Next we introduce the membership predicate and the axiom of extensionality.
+This differs from Hatcher's presentation since the equality rules are already built into HOL, whereas Hatcher's definition of equality is in fact the rule of extensionality.
+=SML
+new_const ("çâz",¨:ZFSET ≠ ZFSET ≠ BOOLÆ);
+declare_infix (230,"çâz");
+val EXT = new_axiom (["EXT"],¨
+	µ (x:ZFSET)(y:ZFSET)∑(µ (z:ZFSET)∑ z çâz x § z çâz y) ¥ (x = y)
+Æ);
+=TEX
+Hatchers theorem 1 is simply proved in HOL:
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑(xâ1 = xâ2) ¥ µ(xâ3:ZFSET)∑ xâ1 çâz xâ3 § xâ2 çâz xâ3
+Æ);
+a (REPEAT_UNTIL (is_§ o snd) strip_tac THEN asm_rewrite_tac []);
+val ZF_thm1 = save_pop_thm "ZF_thm1";
+=TEX
+The following rewrite rule will be useful for proving equality of sets.
+=SML
+push_goal([],¨
+	µ(x:ZFSET)(y:ZFSET)∑ (x = y) § (µ(z:ZFSET)∑ z çâz x § z çâz y)
+Æ);
+a (REPEAT_N 5 strip_tac THEN (TRY_T (asm_rewrite_tac[])));
+a(strip_asm_tac(list_µ_elim [¨xÆ,¨yÆ] EXT));
+a(spec_asm_tac ¨µ z∑ z çâz x § z çâz yÆ¨zÆ);
+a(spec_asm_tac ¨µ z∑ z çâz x § z çâz yÆ¨zÆ);
+val ZF_le1 = save_pop_thm "ZF_le1";
+=TEX
+
+Hatcher's theorem 2 is too trivial to be worth saving:
+=SML
+val ZF_thm2 = refl_conv ¨x:ZFSETÆ;
+=TEX
+
+Now we define non-membership and inequality.
+=SML
+declare_infix (230,"éâz");
+=TEX
+πHOLCONST
+	$éâz: ZFSET ≠ ZFSET ≠ BOOL
+˜
+	µx y∑ x éâz y = ≥(x çâz y)
+∞
+=SML
+val éâz = get_specification "éâz";
+declare_infix (200,"Ω");
+πHOLCONST
+	$Ω: 'a ≠ 'a ≠ BOOL
+˜
+	µx y∑ x Ω y § ≥(x = y)
+∞
+=SML
+val Ω = get_specification "Ω";;
+=TEX
+\subsubsection{Separation}
+
+The constant $å?âz$ is introduced for separation.
+Though suggestive of abstraction it is not itself a binder.
+
+=SML
+new_const ("åâz",¨:ZFSET ≠ (ZFSET ≠ BOOL) ≠ ZFSETÆ);
+val ZF2 = new_axiom(["ZF2"],¨
+	µ(A:ZFSET≠BOOL)(z:ZFSET)(x:ZFSET)∑ x çâz (åâz z A) §  x çâz z ± A x
+Æ);
+=TEX
+\subsubsection{The Empty Set}
+=SML
+new_const ("öâz",¨:ZFSETÆ);
+
+val ZF3 = new_axiom (["ZF3"],¨
+	(öâz:ZFSET) = åâz öâz Ãxâ1:ZFSET∑ F
+Æ);
+=TEX
+
+We now prove that nothing is a member of the empty set.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ xâ1 éâz öâz
+Æ);
+a (pure_rewrite_tac [éâz]);
+a (pure_once_rewrite_tac [ZF3]);
+a (rewrite_tac [ZF2]);
+val ZF_thm3 = save_pop_thm "ZF_thm3";
+=TEX
+
+The following form is more convenient.
+=SML
+val ZF_le2 = save_thm ("ZF_le2", rewrite_rule [éâz] ZF_thm3);
+=TEX
+
+The empty set is unique.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)∑(µ(xâ2:ZFSET)∑xâ2 éâz xâ1) § (öâz = xâ1)
+Æ);
+a (rewrite_tac [éâz,ZF_le1,ZF_le2]);
+val ZF_thm4 = save_pop_thm "ZF_thm4";
+=TEX
+
+A helpful lemma for proving non-emptyness:
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ xâ2 çâz xâ1 ¥ xâ1 Ω öâz
+Æ);
+a (rewrite_tac [Ω,ZF_le1,ZF_le2]);
+a (	REPEAT strip_tac
+	THEN ∂_tac ¨xâ2Æ
+	THEN REPEAT strip_tac);
+val ZF_le3 = save_pop_thm "ZF_le3";
+=TEX
+\subsubsection{Power Sets}
+
+The power set is defined using the subset relationship:
+=SML
+declare_infix (250,"Äâz");
+πHOLCONST
+	$Äâz: ZFSET≠ZFSET≠BOOL
+˜
+	µa b∑ a Äâz b = µc∑ c çâz a ¥ c çâz b
+∞
+=SML
+val Äâz = get_specification "Äâz";
+=TEX
+
+We prove some obvious properties of $Äâz$:
+
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ (xâ1 Äâz xâ2 ± xâ2 Äâz xâ1) ¥ (xâ1 = xâ2)
+Æ);
+a (rewrite_tac [Äâz, ZF_le1]);
+a (REPEAT strip_tac);
+a (spec_asm_tac ¨µ c∑ c çâz xâ1 ¥ c çâz xâ2Æ ¨zÆ);
+a (spec_asm_tac ¨µ c∑ c çâz xâ2 ¥ c çâz xâ1Æ ¨zÆ);
+val ZF_thm5 = save_pop_thm "ZF_thm5";
+
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ xâ1 Äâz xâ1
+Æ);
+a (rewrite_tac [Äâz]);
+val ZF_thm6 = save_pop_thm "ZF_thm6";
+
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)(xâ3:ZFSET)∑ (xâ1 Äâz xâ2 ± xâ2 Äâz xâ3) ¥ (xâ1 Äâz xâ3)
+Æ);
+a (rewrite_tac [Äâz] THEN REPEAT strip_tac);
+a (spec_asm_tac ¨µ c∑ c çâz xâ2 ¥ c çâz xâ3Æ ¨cÆ);
+a (spec_asm_tac ¨µ c∑ c çâz xâ1 ¥ c çâz xâ2Æ ¨cÆ);
+val ZF_thm7 = save_pop_thm "ZF_thm7";
+
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ öâz Äâz xâ1
+Æ);
+a (rewrite_tac [Äâz, ZF_le2]);
+val ZF_thm8 = save_pop_thm "ZF_thm8";
+
+new_const("âz",¨:ZFSET ≠ ZFSETÆ);
+val ZF4 = new_axiom(["ZF4"],¨
+	µ(y:ZFSET)(x:ZFSET)∑ x çâz (âz y) § x Äâz y
+Æ);
+=TEX
+
+\subsubsection{Pairs}
+=SML
+new_const("pair",¨:ZFSET ≠ ZFSET ≠ ZFSETÆ);
+val ZF5 = new_axiom(["ZF5"],¨
+	µ(y:ZFSET)(z:ZFSET)(x:ZFSET)∑ x çâz (pair y z) § (x=y) ≤ (x=z)
+Æ);
+
+push_goal([],¨
+	µ(x:ZFSET)(y:ZFSET)∑ x çâz (pair x y) ± y çâz (pair x y)
+Æ);
+a (REPEAT strip_tac THEN rewrite_tac [ZF5]);
+val ZF_le4 = save_pop_thm "ZF_le4";
+
+πHOLCONST
+‹	unit:ZFSET ≠ ZFSET
+˜
+‹	µx ∑ unit x = pair x x
+∞
+=SML
+val unit = get_specification "unit";
+push_goal([],¨
+	µxâ1 xâ2:ZFSET∑ xâ1 çâz unit xâ2 = (xâ1 = xâ2)
+Æ);
+a (strip_tac THEN rewrite_tac [unit, ZF5, ZF_le4]);
+val ZF_thm9 = save_pop_thm "ZF_thm9";
+=TEX
+=SML
+push_goal([],¨
+	µ(x:ZFSET)∑ unit x Ω öâz
+Æ);
+a (rewrite_tac [Ω,ZF_thm9,ZF_le1,ZF_le2]);
+a (REPEAT strip_tac);
+a (∂_tac ¨xÆ);
+a (REPEAT strip_tac);
+val ZF_le2b = save_pop_thm "ZF_le2b";
+=TEX
+=IGN
+drop_main_goal();
+=SML
+push_goal([],¨
+	µ(x:ZFSET)(y:ZFSET)∑ (unit x = unit y) = (x = y)
+Æ);
+a (rewrite_tac [list_µ_elim [¨unit xÆ,¨unit yÆ] ZF_le1, ZF_thm9]);
+a (REPEAT strip_tac THEN (TRY_T (asm_rewrite_tac[])));
+(* why no REPEAT_WHILE? *)
+a (spec_asm_tac ¨µ z∑ z = x § z = yÆ ¨xÆ);
+(* strip_assume_tac, etc. should apply refl_conv? 
+	(test for ≥(x=x) and (x=x)?) *)
+a (strip_asm_tac (refl_conv ¨xÆ));
+val ZF_le13 = save_pop_thm "ZF_le13";
+
+declare_infix (300,"Ìâz");
+πHOLCONST
+$Ìâz:ZFSET ≠ ZFSET ≠ ZFSET
+˜
+	µa b∑ a Ìâz b = pair (unit a) (pair a b)
+∞
+=SML
+val Ìâz = get_specification "Ìâz";
+
+push_goal([],¨
+	µ(x:ZFSET)(y:ZFSET)∑ (unit x) çâz (x Ìâz y) ± (pair x y) çâz (x Ìâz y)
+Æ);
+a (REPEAT strip_tac THEN rewrite_tac [Ìâz, ZF_le4]);
+val ZF_le5 = save_pop_thm "ZF_le5";
+=TEX
+\subsubsection{Union and Intersection}
+=SML
+new_const("ﬁâz",¨:ZFSET ≠ ZFSETÆ);
+val ZF6 = new_axiom(["ZF6"],¨
+	µ(y:ZFSET)(x:ZFSET)∑ x çâz (ﬁâz y) § ∂(z:ZFSET)∑z çâz y ± x çâz z
+Æ);
+fun prove_thm (key,term,tactic) = save_thm(key, tac_proof(([],term),tactic));
+(* should we provide "prove_thm"? *)
+
+πHOLCONST
+$	•âz:ZFSET ≠ ZFSET
+˜
+	µ x∑ •âz x = åâz (ﬁâz x) Ã y∑ µz∑ z çâz x ¥ y çâz z
+∞
+=SML
+val •âz = get_specification "•âz";
+
+declare_infix (280,"¿âz");
+
+πHOLCONST
+$	¿âz:ZFSET≠ZFSET≠ZFSET
+˜
+	µ x y ∑  x ¿âz y = ﬁâz (pair x y)
+∞
+=SML
+val ¿âz = get_specification "¿âz";
+
+declare_infix (290,"°âz");
+
+πHOLCONST
+$	°âz:ZFSET≠ZFSET≠ZFSET
+˜
+	µ x y ∑  x °âz y = •âz (pair x y)
+∞
+=SML
+val °âz = get_specification "°âz";
+
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)(xâ3:ZFSET)∑xâ1 çâz (xâ2 ¿âz xâ3) § xâ1 çâz xâ2 ≤ xâ1 çâz xâ3
+Æ);
+a(rewrite_tac [¿âz,ZF6,ZF5]);
+a (REPEAT strip_tac);
+a (undisch_tac ¨xâ1 çâz zÆ
+	THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (undisch_tac ¨xâ1 çâz zÆ
+	THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨xâ2Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xâ3Æ THEN asm_rewrite_tac[]);
+val ZF_thm10 = save_pop_thm "ZF_thm10";
+
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)(xâ3:ZFSET)∑xâ1 çâz (xâ2 °âz xâ3) § xâ1 çâz xâ2 ± xâ1 çâz xâ3
+Æ);
+a(rewrite_tac [°âz,•âz,ZF2,ZF5,ZF6]);
+a (REPEAT strip_tac);
+a (undisch_tac ¨xâ1 çâz zÆ THEN asm_rewrite_tac[]);
+a (spec_asm_tac ¨µ z∑ z = xâ2 ≤ z = xâ3 ¥ xâ1 çâz zÆ ¨xâ3Æ);
+a (strip_asm_tac (refl_conv ¨xâ3Æ));
+a (spec_asm_tac ¨µ z∑ z = xâ2 ≤ z = xâ3 ¥ xâ1 çâz zÆ ¨xâ2Æ);
+a (strip_asm_tac (refl_conv ¨xâ2Æ));
+a (spec_asm_tac ¨µ z∑ z = xâ2 ≤ z = xâ3 ¥ xâ1 çâz zÆ ¨xâ3Æ);
+a (strip_asm_tac (refl_conv ¨xâ3Æ));
+a (∂_tac ¨xâ2Æ THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac[]);
+a (asm_rewrite_tac[]);
+val ZF_thm11 = save_pop_thm "ZF_thm11";
+=TEX
+\subsubsection{Natural Numbers}
+=SML
+πHOLCONST
+	suc: ZFSET ≠ ZFSET
+˜
+	µx ∑ suc x =  x ¿âz (unit x)
+∞
+val suc = get_specification "suc";
+
+πHOLCONST
+	Nat: Ó ≠ ZFSET
+˜
+  µn∑		Nat 0		= öâz
+	±	Nat (n+1)	= suc (Nat n)
+∞
+val Nat = get_specification "Nat";
+=TEX
+\subsubsection{The Axiom of Regularity}
+
+The following axiom Hatcher calls the axiom of regularity, sometimes it is called the axiom of well foundedness.
+=SML
+val ZF7 = new_axiom (["ZF7"],¨
+	µ(x:ZFSET)∑x Ω öâz ¥ ∂(y:ZFSET)∑ y çâz x ± (y °âz x = öâz)
+Æ);
+=TEX
+
+We now prove some consequences of well foundedness.
+=SML
+push_goal([],¨
+	µxâ1:ZFSET∑ xâ1 éâz xâ1
+Æ);
+a (ante_tac ZF7 THEN rewrite_tac [éâz, Ω, ZF_le1, ZF_le2] THEN c_contr_tac);
+a (spec_asm_tac
+	¨µ x∑ ≥ (µ z∑ ≥ z çâz x) ¥ (∂ y∑ y çâz x ± (µ z∑ ≥ z çâz y °âz x))Æ
+	¨åâz xâ1 (Ãx∑ x = xâ1)Æ);
+a (spec_asm_tac ¨µ z∑ ≥ z çâz åâz xâ1 (Ã x∑ x = xâ1)Æ ¨xâ1Æ);
+a (asm_ante_tac ¨≥ xâ1 çâz åâz xâ1 (Ã x∑ x = xâ1)Æ);
+a (rewrite_tac[ZF2]);
+a goal_in_asms_tac;
+a (spec_asm_tac ¨µ z∑ ≥ z çâz y °âz åâz xâ1 (Ã x∑ x = xâ1)Æ ¨xâ1Æ);
+a (list_undisch_tac [
+	¨y çâz åâz xâ1 (Ã x∑ x = xâ1)Æ,
+	¨≥ xâ1 çâz y °âz åâz xâ1 (Ã x∑ x = xâ1)Æ]);
+a (rewrite_tac[ZF2, ZF_thm11, taut_rule ¨µa b c∑a ± b ¥ c § b ¥ a ¥ cÆ]);
+a (strip_tac THEN asm_rewrite_tac[]);
+val ZF_thm12 = save_pop_thm "ZF_thm12";
+
+
+val PURE_NOT_FORALL_TAC = conv_tac (TOP_MAP_C ≥_µ_conv);
+val NOT_FORALL_TAC = PURE_NOT_FORALL_TAC THEN (rewrite_tac[]);
+
+val PURE_NOT_EXISTS_TAC = conv_tac (TOP_MAP_C ≥_∂_conv);
+val NOT_EXISTS_TAC = PURE_NOT_EXISTS_TAC THEN (rewrite_tac[]);
+
+repeat drop_main_goal;
+push_goal([],¨
+	µxâ1 xâ2∑ xâ1 çâz xâ2 ¥ xâ2 éâz xâ1
+Æ);
+a (ante_tac ZF7 THEN rewrite_tac [éâz,Ω,ZF_le1,ZF_le2, ZF5, ZF_thm11] THEN c_contr_tac);
+a (spec_nth_asm_tac 3 ¨pair xâ1 xâ2Æ);
+a (spec_nth_asm_tac 1 ¨xâ1Æ);
+a (undisch_tac ¨≥ xâ1 çâz pair xâ1 xâ2Æ THEN rewrite_tac [ZF5]);
+a (undisch_tac ¨y çâz pair xâ1 xâ2Æ THEN rewrite_tac [ZF5] THEN c_contr_tac);
+a (spec_asm_tac ¨µ z∑ ≥ (z çâz y ± z çâz pair xâ1 xâ2)Æ ¨xâ2Æ);
+a (undisch_tac ¨≥ xâ2 çâz yÆ THEN asm_rewrite_tac []);
+a (undisch_tac ¨≥ xâ2 çâz pair xâ1 xâ2Æ THEN asm_rewrite_tac [ZF5]);
+a (spec_asm_tac ¨µ z∑ ≥ (z çâz y ± z çâz pair xâ1 xâ2)Æ ¨xâ1Æ);
+a (undisch_tac ¨≥ xâ1 çâz yÆ THEN asm_rewrite_tac []);
+a (undisch_tac ¨≥ xâ1 çâz pair xâ1 xâ2Æ THEN asm_rewrite_tac [ZF5]);
+val ZF_thm13 = save_pop_thm "ZF_thm13";
+=TEX
+(* 
+val map_conv_tac = conv_tac o TOP_MAP_C;
+*)
+
+The following function {\em set} takes a list of sets and returns the set containing just those elements:
+=SML
+val set = new_list_rec_definition("set",¨
+	(set [] = öâz) ±
+	(set (CONS h t) = (unit h) ¿âz (set t))
+Æ);
+=TEX
+push_proof_context prove_∂_epc;
+
+πHOLCONST
+	set: ZFSET LIST ≠ ZFSET
+	˜
+	set [] = öâz ±
+	µ h t∑ set (Cons h t) = (unit h) ¿âz (set t)
+∞
+val set = it;
+
+One more consequence of well-foundedness:
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)(xâ3:ZFSET)∑ xâ1 çâz xâ2 ± xâ2 çâz xâ3 ¥ xâ3 éâz xâ1 ± xâ3 Ω xâ1
+Æ);
+a (ante_tac ZF7 THEN rewrite_tac [set, éâz,Ω,ZF_le1, ZF_le2, ZF5, ZF_thm10, ZF_thm11]
+	THEN  strip_tac);
+a (spec_nth_asm_tac 1 ¨set[(xâ1:ZFSET);(xâ2:ZFSET);(xâ3:ZFSET)]Æ);
+a (undisch_tac  ¨µ z∑ ≥ z çâz set [xâ1; xâ2; xâ3]Æ
+	THEN rewrite_tac [set, éâz,Ω,ZF_le2, ZF5, ZF_thm9, ZF_thm10, ZF_thm11]);
+a (strip_tac);
+a ( THEN asm_rewrite_tac[]);
+
+
+a res_tac;
+a (ante_tac ZF7 THEN rewrite_tac [set, éâz,Ω,ZF_le1,ZF_le2, ZF5, ZF_thm9, ZF_thm10, ZF_thm11]
+	THEN  c_contr_tac);
+
+(* *** Goal "1" *** *)
+
+a (spec_nth_asm_tac 4 ¨set[(xâ1:ZFSET);(xâ2:ZFSET);(xâ3:ZFSET)]Æ);
+
+(* *** Goal "1.1" *** *)
+a (undisch_tac¨µ z∑ ≥ z çâz set [xâ1; xâ2; xâ3]Æ
+	THEN rewrite_tac [ZF_thm9, ZF_thm10, set, ZF_le2]
+	THEN strip_tac THEN ∂_tac ¨xâ1Æ
+	THEN rewrite_tac[]);
+
+(* *** Goal "1.2" *** *)
+a (undisch_tac ¨µ z∑ ≥ (z çâz y ± z çâz set [xâ1; xâ2; xâ3])Æ
+	THEN undisch_tac ¨y çâz set [xâ1; xâ2; xâ3]Æ
+	THEN rewrite_tac [ZF_thm9, ZF_thm10, set, ZF_le2]);
+a (strip_tac THEN asm_rewrite_tac[]
+	THEN strip_tac);
+
+a (∂_tac ¨xâ3Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xâ1Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xâ2Æ THEN asm_rewrite_tac[]);
+	
+(* *** Goal "2" *** *)
+
+
+a (spec_nth_asm_tac 1 ¨xâ1Æ);
+a (undisch_tac¨≥ xâ1 çâz set [xâ1; xâ2; xâ3]Æ THEN rewrite_tac [ZF_thm9, ZF_thm10, set]);
+
+(* *** Goal "1.2" *** *)
+
+a (spec_nth_asm_tac 1 ¨xâ1Æ);
+
+(* *** Goal "1.2.1" *** *)
+
+a (undisch_tac ¨y çâz set [xâ1; xâ2; xâ3]Æ
+	THEN  rewrite_tac [set, ZF_le2, ZF_thm9, ZF_thm10]);
+	THEN c_contr_tac);
+
+(* *** Goal "1.2.1.1" *** *)
+a (spec_asm_tac  );
+
+(* old proof starts here *)
+
+a (EVERY[
+	rewrite_tac[éâz; Ω];
+	REPEAT strip_tac;
+	MP_TAC ZF7;
+	TAUT_rewrite_tac ¨a ¥ F = ≥a¨;
+	NOT_FORALL_TAC;
+	EXISTS_TAC ¨set[(xâ1:ZFSET);(xâ2:ZFSET);(xâ3:ZFSET)]¨;
+	rewrite_tac [set;Ω;ZF_le1;ZF_thm11;
+		ZF_thm10;rewrite_rule[éâz]ZF_thm3;unit];
+	TAUT_rewrite_tac ¨≥ (≥a ¥ b) = ≥a ± ≥b¨;
+	strip_tac ]);
+=TEX
+
+Giving four subgoals.
+
+The first:
+=SML
+a (EVERY[
+	NOT_FORALL_TAC;
+	EXISTS_TAC ¨xâ1:ZFSET¨;
+	asm_rewrite_tac [ZF5]]);
+=TEX
+
+The second:
+=SML
+a (asm_rewrite_tac [ZF5]);
+a (NOT_EXISTS_TAC);
+a (TAUT_rewrite_tac ¨≥(a ± b) = a ¥ ≥bÆ);
+a (EVERY [strip_tac; strip_tac; NOT_FORALL_TAC; asm_rewrite_tac[]]);
+a (EXISTS_TAC ¨xâ3:ZFSET¨ THEN asm_rewrite_tac []);
+a (EXISTS_TAC ¨xâ1:ZFSET¨ THEN asm_rewrite_tac []);
+a (EXISTS_TAC ¨xâ2:ZFSET¨ THEN asm_rewrite_tac []);
+=TEX
+
+The third:
+=SML
+a NOT_FORALL_TAC;
+a (EXISTS_TAC ¨xâ1:ZFSETÆ);
+a (asm_rewrite_tac [ZF5]);
+=TEX
+And the fourth:
+=SML
+a (EVERY [
+	RMP_TAC ¨F¨;
+	rewrite_tac[];
+	MP_TAC ZF_thm13;
+	rewrite_tac [éâz];
+	NOT_FORALL_TAC;
+	NOT_FORALL_TAC;
+	EXISTS_TAC ¨xâ1:ZFSET¨;
+	EXISTS_TAC ¨xâ2:ZFSET¨;
+	asm_rewrite_tac [];
+	accept_tac (rewrite_rule [ASSUME ¨xâ3 = xâ1¨] (ASSUME ¨xâ2 çâz xâ3Æ))]);
+
+val ZF_thm14 = save_pop_thm "ZF_thm14";
+=TEX
+\subsubsection{Ordinals}
+
+Transitive sets:
+=SML
+val Trans = new_definition("Trans",¨
+	(Trans:ZFSET ≠ BOOL) x = µ(y:ZFSET)∑ y çâz x ¥ y Äâz x
+Æ);
+=TEX
+
+Connected sets:
+=SML
+val Con = new_definition("Con",¨
+	(Con:ZFSET ≠ BOOL) x =
+	µ(y:ZFSET)(z:ZFSET)∑ (y çâz x ± z çâz x ± z Ω y) ¥ (z çâz y ≤ y çâz z)
+Æ);
+
+val ZF_le6 = save_thm("ZF_le6",
+	TAUT_rewrite_rule ¨a ± b ± ≥ c ¥ d = a ± b ¥ c ≤ d¨
+	(rewrite_rule [Ω] Con));
+
+val ZF_le7 = save_thm("ZF_le7",
+	TAUT_rewrite_rule ¨a ± b ± ≥ c ¥ d = a ¥ b ¥ c ≤ d¨
+	(rewrite_rule [Ω] Con));
+
+push_goal([],¨
+	Trans(x1:ZFSET) = µ(x2:ZFSET)(x3:ZFSET)∑(x2 çâz x1 ± x3 çâz x2 ¥ x3 çâz x1)
+Æ);
+a (rewrite_tac [Trans;Äâz]);
+a (EQ_TAC THEN REPEAT strip_tac THEN RES_TAC);
+val ZF_le8 = save_pop_thm "ZF_le8";
+=TEX
+
+Ordinal numbers:
+=SML
+val On = new_definition("On",¨
+	(On:ZFSET ≠ BOOL) x = Trans x ± Con x
+Æ);
+=TEX
+
+Hatcher's exercise to prove that an ordinal is transitive under $çâz$.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)(xâ3:ZFSET)(xâ4:ZFSET)∑
+		((On(xâ1) ± xâ2 çâz xâ1 ± xâ3 çâz xâ1 ± xâ4 çâz xâ1 ± xâ2 çâz xâ3 ± xâ3 çâz xâ4)
+			¥ xâ2 çâz xâ4)
+Æ);
+a (rewrite_tac [On;Con;ZF_le8;Ω;Äâz] THEN REPEAT strip_tac);
+
+a (LEMMA ¨≥(xâ4 çâz xâ2) ± ≥(xâ4 = xâ2)Æ);
+a RES_TAC;
+a RES_TAC;
+a (LEMMA ¨(xâ2 çâz xâ3) ± (xâ3 çâz xâ4)Æ);
+a (IMP_RES_TAC (SPECL [¨xâ2¨;¨xâ3¨;¨xâ4¨] (rewrite_rule [Ω;éâz] ZF_thm14)));
+a (asm_rewrite_tac []);
+a (asm_rewrite_tac []);
+val ZF_le9 = save_pop_thm "ZF_le9";
+=TEX
+\subsubsection{Ordinals}
+=SML
+push_goal([],¨
+µ(p:ZFSET≠BOOL)(q:ZFSET≠BOOL)∑ (µ(x:ZFSET)∑ p x ¥ q x) ¥ ((µ(x:ZFSET)∑p x) ¥ µ(x:ZFSET)∑q x)
+Æ);
+a (strip_tac THEN strip_tac THEN strip_tac);
+a FORALL_OUT_TAC;
+a (asm_rewrite_tac[]);
+val ZF_le10 = save_pop_thm "ZF_le10";
+=TEX
+
+The ordinals are totally ordered by $çâz$.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ xâ1 Äâz xâ2 ± xâ1 Ω öâz ± (On xâ2)
+		¥ ∂(xâ3:ZFSET)∑ xâ3 çâz xâ1
+			± µ(xâ4:ZFSET)∑ xâ4 çâz xâ1 ¥ (xâ4 = xâ3) ≤ xâ3 çâz xâ4
+Æ);
+a (rewrite_tac [Äâz;Ω;On;ZF_le7]);
+a (REPEAT strip_tac);
+a (MP_TAC (SPEC ¨xâ1:ZFSET¨ ZF7));
+a (asm_rewrite_tac[Ω]);
+a (TAUT_rewrite_tac ¨a ¥ b = ≥b ¥ ≥aÆ);
+a NOT_EXISTS_TAC;
+a FORALL_OUT_TAC;
+a (TAUT_rewrite_tac ¨≥(a ± b) ¥ ≥(a ± c) = (a ± c) ¥ bÆ);
+a (rewrite_tac [SPEC ¨x °âz xâ1¨ ZF_le1]);
+a (rewrite_tac [ZF_thm11; rewrite_rule [éâz] ZF_thm3]);
+a (TAUT_rewrite_tac ¨≥(a ± b) = b ¥ ≥aÆ);
+a (REPEAT strip_tac);
+a RES_TAC;
+a (MP_TAC (SPECL [¨x:ZFSET¨;¨xâ4:ZFSET¨] (ASSUME ¨µy z∑
+        y çâz xâ2 ¥
+        z çâz xâ2 ¥
+        (z = y) ≤ z çâz y ≤ y çâz zÆ)));
+a (RMP_TAC ¨(x çâz xâ2 ± xâ4 çâz xâ2 ± ≥(xâ4 çâz x))Æ);
+a TAUT_TAC;
+a (asm_rewrite_tac []);
+
+val ZF_thm15 = save_pop_thm "ZF_thm15";
+=TEX
+
+The empty set is an ordinal.
+=SML
+val ZF_thm16 = prove_thm ("ZF_thm16",¨
+	On öâz
+Æ,
+	rewrite_tac [On;Trans;Con;ZF_le2]);
+=TEX
+
+A subset of a connected set is connected.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑Con xâ1 ± xâ2 Äâz xâ1 ¥ Con xâ2
+Æ);
+a(rewrite_tac [Con;Ω;Äâz]);
+a(TAUT_rewrite_tac ¨a ± b ¥ c = b ¥ a ¥ cÆ);
+a (strip_tac THEN strip_tac THEN strip_tac);
+a (FORALL_OUT_TAC THEN strip_tac THEN FORALL_OUT_TAC);
+a (TAUT_rewrite_tac ¨a ¥b ¥ c = b ¥ a ¥ cÆ);
+a (strip_tac THEN strip_tac);
+a (RES_TAC THEN asm_rewrite_tac []);
+val ZF_thm17 = save_pop_thm "ZF_thm17";
+=TEX
+
+Every member of an ordinal is an ordinal.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ On xâ1 ± xâ2 çâz xâ1 ¥ On xâ2
+Æ);
+a (rewrite_tac [On]);
+a (TAUT_rewrite_tac ¨a ¥ b ± c = (a ¥ b) ± (a ¥ c)Æ);
+a (strip_tac THEN strip_tac THEN strip_tac);
+=TEX
+
+subgoal 1
+=SML
+a (rewrite_tac[Trans;Äâz]);
+a (REPEAT strip_tac);
+a RES_TAC;
+a RES_TAC;
+a (IMP_RES_TAC (SPECL [¨c:ZFSET¨;¨y:ZFSET¨]
+			(rewrite_rule [Ω;éâz] ZF_thm14)));
+a (IMP_RES_TAC (rewrite_rule [Con;Ω] (ASSUME ¨Con (xâ1:ZFSET)Æ)));
+a (IMP_RES_TAC (TAUT_RULE ¨xâ2 çâz c ¥ ≥xâ2 çâz c ¥ c çâz xâ2Æ));
+=TEX
+
+subgoal 2
+=SML
+a (rewrite_tac [Trans]);
+a (REPEAT strip_tac);
+a (RES_TAC THEN IMP_RES_TAC ZF_thm17);
+val ZF_thm18 = save_pop_thm "ZF_thm18";
+=TEX
+
+Successor:
+=SML
+val Sc = new_definition("Sc",¨
+	(Sc:ZFSET≠BOOL) x = ∂(y:ZFSET)∑ On y ± (suc y = x)
+Æ);
+=TEX
+
+Limit ordinals:
+=SML
+val Lim = new_definition("Lim",¨
+	(Lim:ZFSET≠BOOL) x = On x ± x Ω öâz ± ≥ (Sc x)
+Æ);
+=TEX
+
+Natural numbers:
+=SML
+val N = new_definition("N",¨
+	(N:ZFSET≠BOOL) x =
+			On x
+		±	((x = öâz) ≤ (Sc x))
+		±	 µ(y:ZFSET)∑(y çâz x ¥ (y = öâz) ≤ (Sc y))
+Æ);
+=TEX
+
+The empty set is a natural number.
+=SML
+val ZF_thm19 = prove_thm("ZF_thm19",¨
+	N öâz
+Æ,
+	rewrite_tac [N;ZF_thm16;ZF_le2]);
+=TEX
+
+Every non-zero Natural number is a successor.
+=SML
+push_goal([],¨
+	µ(x:ZFSET)∑ N x ± x Ω öâz ¥ Sc x
+Æ);
+a (REPEAT strip_tac);
+a (DEF_RES_TAC N);
+a (DEF_RES_TAC Ω);
+val ZF_le11 = save_pop_thm "ZF_le11";
+=TEX
+
+Every natural number is transitive and connected.
+=SML
+push_goal([],¨
+	µ(x:ZFSET)∑ N x ¥ Trans x ± Con x
+Æ);
+a (rewrite_tac[N; On]);
+a (REPEAT strip_tac THEN asm_rewrite_tac []);
+val ZF_le12 = save_pop_thm "ZF_le12";
+=TEX
+
+Zero is not the successor of any set.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ öâz Ω suc xâ1
+Æ);
+a (rewrite_tac [Ω; suc; ZF_le1;ZF_le2]);
+a (strip_tac THEN NOT_FORALL_TAC);
+a (EXISTS_TAC ¨xâ1:ZFSETÆ);
+a (rewrite_tac [ZF_thm10;ZF_thm9]);
+val ZF_thm20 = save_pop_thm "ZF_thm20";
+=TEX
+
+The successor of an ordinal is an ordinal.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ On xâ1 ¥ On (suc xâ1)
+Æ);
+a (strip_tac THEN strip_tac);
+a (rewrite_tac [On; suc]);
+a (DEF_RES_TAC On);
+a (DEF_RES_TAC (rewrite_rule [Äâz] Trans));
+a strip_tac;
+a (rewrite_tac [Trans; ZF_thm9;ZF_thm10]);
+a (REPEAT strip_tac);
+a (DEF_RES_TAC Trans);
+a (IMP_RES_TAC
+	(((SPECL [¨y:ZFSET¨;¨xâ1:ZFSET¨;¨(xâ1:ZFSET) ¿âz (unit xâ1)¨]) o
+	(TAUT_rewrite_rule ¨a ± b ¥ c = a ¥ b ¥ cÆ)) ZF_thm7));
+a (RMP_TAC ¨(xâ1:ZFSET) Äâz (xâ1 ¿âz (unit xâ1))Æ);
+a (asm_rewrite_tac[]);
+a (pure_rewrite_tac [Äâz; ZF_thm10]);
+a (TAUT_SIMP_TAC THEN rewrite_tac[]);
+a (asm_rewrite_tac [Äâz; ZF_thm10]
+	THEN TAUT_SIMP_TAC THEN rewrite_tac[]);
+
+a(pure_rewrite_tac[ZF_le7;Ω;ZF_thm9;ZF_thm10]);
+a (DEF_RES_TAC ZF_le7);
+a (REPEAT strip_tac);
+=TEX
+
+Leaving four sugoals
+
+first
+=SML
+a (accept_tac (MP (MP (SPEC_ALL (ASSUME
+	¨µy z∑ y çâz xâ1 ¥ z çâz xâ1 ¥ (z = y) ≤ z çâz y ≤ y çâz zÆ))
+	(ASSUME ¨y çâz xâ1Æ)) (ASSUME ¨z çâz xâ1Æ)));
+=TEX
+
+second
+=SML
+a (rewrite_tac [rewrite_rule [SYM (ASSUME ¨z = xâ1Æ)] (ASSUME ¨y çâz xâ1Æ)]);
+=TEX
+
+third
+=SML
+a (rewrite_tac [rewrite_rule [SYM (ASSUME ¨y = xâ1Æ)] (ASSUME ¨z çâz xâ1Æ)]);
+=TEX
+
+fourth
+=SML
+a (rewrite_tac [rewrite_rule [SYM (ASSUME ¨y = xâ1Æ)] (ASSUME ¨z = xâ1Æ)]);
+val ZF_thm21 = save_pop_thm "ZF_thm21";
+=TEX
+
+The successor of a natural number is a natural number.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)∑ N xâ1 ¥ N (suc xâ1)
+Æ);
+a (pure_rewrite_tac [N]);
+a (strip_tac THEN strip_tac THEN IMP_RES_TAC ZF_thm21
+		THEN asm_rewrite_tac[]);
+
+a strip_tac;
+a DISJ2_TAC;
+a (pure_rewrite_tac [Sc]);
+a (EXISTS_TAC ¨öâzÆ);
+a (rewrite_tac[ZF_thm16]);
+
+a strip_tac;
+a (rewrite_tac [suc;Sc;ZF_thm10;ZF_le2;ZF_thm9]);
+a TAUT_TAC;
+
+a strip_tac;
+a DISJ2_TAC;
+a (pure_rewrite_tac [suc; Sc]);
+a (EXISTS_TAC ¨xâ1:ZFSETÆ);
+a (asm_rewrite_tac[]);
+
+a (pure_rewrite_tac [suc; ZF_thm9; ZF_thm10]);
+a (REPEAT strip_tac);
+a (RES_TAC THEN asm_rewrite_tac []);
+a DISJ2_TAC;
+a (accept_tac (rewrite_rule [SYM (ASSUME ¨(y:ZFSET) = xâ1Æ)] (ASSUME ¨Sc xâ1Æ)));
+
+val ZF_thm22 = save_pop_thm "ZF_thm22";
+=TEX
+
+The successor function is injective.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ (suc xâ1 = suc xâ2) ¥ (xâ1 = xâ2)
+Æ);
+a (TAUT_rewrite_tac ¨a ¥ b = ≥b ¥ ≥aÆ);
+a (strip_tac THEN strip_tac THEN strip_tac);
+a (pure_rewrite_tac [suc; ZF_le1; ZF_thm10]);
+a (pure_rewrite_tac [ZF_thm9]);
+a (TAUT_rewrite_tac ¨(a = b) = (a ¥ b) ± (b ¥ a)Æ);
+a strip_tac;
+a (ASSUME_TAC (REFL ¨xâ1Æ));
+a (ASSUME_TAC (REFL ¨xâ2Æ));
+a RES_TAC;
+
+a (MP_TAC ZF_thm13);
+a (TAUT_rewrite_tac ¨a ¥ F = ≥aÆ);
+a (NOT_FORALL_TAC THEN NOT_FORALL_TAC);
+a (EXISTS_TAC ¨xâ1:ZFSETÆ);
+a (EXISTS_TAC ¨xâ2:ZFSETÆ);
+a (asm_rewrite_tac [éâz]);
+
+a (MP_TAC (ASSUME ¨≥(xâ1 = xâ2)Æ) THEN rewrite_tac [ASSUME ¨xâ2 = xâ1¨]);
+
+val ZF_thm23 = save_pop_thm "ZF_thm23";
+=TEX
+
+Every member of a natural number is a natural number.
+=SML
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ N xâ1 ± xâ2 çâz  xâ1 ¥ N xâ2
+Æ);
+a (pure_rewrite_tac [N]);
+a (strip_tac THEN strip_tac);
+a (TAUT_rewrite_tac ¨a ± b ¥ c = b ¥ a ¥ cÆ);
+a strip_tac;
+a (LEMMA ¨xâ2 çâz xâ1 ¥ ≥(xâ1 = öâz)Æ);
+a RES_TAC;
+a (asm_rewrite_tac[]);
+a strip_tac;
+a (IMP_RES_TAC ZF_thm18);
+a (asm_rewrite_tac []);
+a strip_tac;
+a (IMP_RES_TAC (SPEC ¨xâ2:ZFSET¨
+	(ASSUME ¨µy∑ y çâz xâ1 ¥ (y = öâz) ≤ Sc yÆ))
+	THEN asm_rewrite_tac[]);
+
+a (DEF_RES_TAC On);
+a (DEF_RES_TAC Trans);
+
+a strip_tac;
+a strip_tac;
+a RES_TAC;
+a (MP_TAC (rewrite_rule [ASSUME ¨xâ2 = öâz¨] (ASSUME ¨y çâz xâ2Æ)));
+a (rewrite_tac [SPEC ¨y:ZFSET¨ ZF_le2]);
+
+a (DEF_RES_TAC Äâz);
+a (RES_TAC THEN asm_rewrite_tac[]);
+
+a (TAUT_rewrite_tac ¨a ¥ ≥b = b ¥ ≥aÆ);
+a (strip_tac THEN rewrite_tac[ASSUME ¨xâ1 = öâz¨;ZF_le2]);
+
+val ZF_thm24 = save_pop_thm "ZF_thm24";
+=TEX
+
+The principle of induction over the natural numbers.
+=SML
+push_goal([],¨
+	µ(A:ZFSET ≠ BOOL)∑ A öâz ± (µ(x:ZFSET)∑ N x ± A x ¥ A (suc x))
+				¥ µ(x:ZFSET)∑ N x ¥ A x
+Æ);
+a (strip_tac THEN strip_tac);
+a (TAUT_rewrite_tac ¨a = ≥≥aÆ);
+a PURE_NOT_FORALL_TAC;
+a (TAUT_rewrite_tac ¨≥(a ¥ b) = a ± ≥bÆ);
+a strip_tac;
+
+lemma ¨∂L:ZFSET∑ (L = åâz (suc x) Ãx:ZFSET∑ ≥ (A x))¨;
+
+ a (EXISTS_TAC ¨åâz (suc x) Ãx:ZFSET∑ ≥ (A x)Æ);
+ a (asm_rewrite_tac[]);
+
+lemma ¨x çâz L¨;
+
+ a (asm_rewrite_tac[ZF2;suc;ZF_thm9;ZF_thm10]);
+ a (BETA_TAC THEN asm_rewrite_tac[]);
+
+lemma ¨µ(y:ZFSET)∑ y çâz L ¥ ≥ ((A:ZFSET≠BOOL) y)¨;
+
+ a (REPEAT strip_tac);
+ a (MP_TAC (ASSUME ¨L = åâz(suc x)(Ãx∑ ≥A x)Æ));
+ a (pure_rewrite_tac [ZF_le1; ZF2]);
+ a BETA_TAC;
+ a (TAUT_rewrite_tac ¨a ¥ F = ≥aÆ);
+ a NOT_FORALL_TAC;
+ a (EXISTS_TAC ¨y:ZFSETÆ);
+ a (asm_rewrite_tac[]);
+
+lemma ¨L Ω öâz¨;
+
+ a (pure_rewrite_tac[Ω;ZF_le1]);
+ a NOT_FORALL_TAC;
+ a (EXISTS_TAC ¨x:ZFSETÆ);
+ a (asm_rewrite_tac[ZF_le2]);
+
+lemma ¨∂b:ZFSET∑ b çâz L ± (b °âz L = öâz)¨;
+
+ a (IMP_RES_TAC ZF7);
+
+lemma ¨L Äâz (suc x)¨;
+
+ a (rewrite_tac[Äâz]);
+ a (asm_rewrite_tac[ZF2]);
+ a TAUT_SIMP_TAC;
+
+lemma ¨b çâz (suc x)¨;
+
+ a (DEF_RES_TAC Äâz);
+
+lemma ¨N (suc x)¨;
+
+ a (IMP_RES_TAC ZF_thm22);
+
+lemma ¨N b¨;
+
+ a (IMP_RES_TAC ZF_thm24);
+
+lemma ¨b Ω öâz¨;
+
+ a (pure_rewrite_tac[Ω]);
+ a strip_tac;
+ a (IMP_RES_TAC (SPEC ¨b¨ (ASSUME ¨µy∑ y çâz L ¥ ≥A yÆ)));
+ a (MP_TAC (rewrite_rule [SYM (ASSUME ¨b = öâzÆ)] (ASSUME ¨(A:ZFSET≠BOOL) öâzÆ)));
+ a (asm_rewrite_tac[]);
+
+lemma ¨Sc b¨;
+
+ a (IMP_RES_TAC ZF_le11);
+
+lemma ¨∂c:ZFSET∑ (b = suc c) ± On c¨;
+
+ a (MP_TAC (rewrite_rule [Sc] (ASSUME ¨Sc bÆ)));
+ a (TAUT_rewrite_tac ¨a ¥ b = ≥b ¥ ≥aÆ);
+ a NOT_EXISTS_TAC;
+ a FORALL_OUT_TAC;
+ a (TAUT_rewrite_tac ¨≥b ¥ ≥a = a ¥ bÆ);
+ a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+
+lemma ¨N c¨;
+
+ lemma ¨N (suc c)¨;
+
+  a (rewrite_tac[SYM (ASSUME ¨b = suc cÆ);ASSUME ¨N b¨]);
+
+  lemma ¨c çâz (suc c)¨;
+
+   a (rewrite_tac[suc; ZF_thm9; ZF_thm10]);
+
+  a (IMP_RES_TAC(SPECL[¨suc (c:ZFSET)¨;¨c:ZFSET¨]ZF_thm24));
+
+lemma ¨c çâz b¨;
+
+ a (asm_rewrite_tac[]);
+ a (rewrite_tac[suc; ZF_thm9; ZF_thm10]);
+
+lemma ¨≥(c çâz L)¨;
+
+ a strip_tac;
+ a (MP_TAC (ASSUME ¨b °âz L = öâzÆ));
+ a (pure_rewrite_tac[ZF_le1;ZF_thm9;ZF_thm10;ZF_thm11;ZF_le2]);
+ a (TAUT_rewrite_tac ¨a ¥ F = ≥aÆ);
+ a NOT_FORALL_TAC;
+ a (EXISTS_TAC ¨c:ZFSETÆ);
+ a (asm_rewrite_tac[]);
+
+lemma ¨Trans (suc x)¨;
+
+ a (rewrite_tac [MP (SPEC ¨suc x¨ ZF_le12) (ASSUME ¨N(suc x)Æ)]);
+
+lemma ¨c çâz (suc x)¨;
+ a (DEF_RES_TAC Trans);
+ a (DEF_RES_TAC Äâz);
+
+lemma ¨(A:ZFSET≠BOOL) c¨;
+ a (MP_TAC (CONJ (ASSUME¨c çâz (suc x)Æ)(ASSUME¨≥c çâz LÆ)));
+ a(pure_rewrite_tac[ASSUME ¨L = åâz(suc x)(Ãx∑ ≥(A:ZFSET≠BOOL) x)¨;ZF2]);
+ a BETA_TAC;
+ a TAUT_TAC;
+
+lemma ¨(A:ZFSET≠BOOL) b¨;
+ a (asm_rewrite_tac[]);
+ a RES_TAC;
+
+a RES_TAC;
+val ZF_thm25 = save_pop_thm "ZF_thm25";
+=TEX
+
+No the example of proof by induction.
+=IGN
+push_goal([],¨
+	µ(xâ1:ZFSET)(xâ2:ZFSET)∑ (N xâ1 ± xâ2 çâz xâ1) ¥ (suc xâ2) çâz (suc xâ1)
+Æ);
+a (REPEAT strip_tac);
+
+lemma ¨µ(xâ1:ZFSET)∑ N xâ1 ¥ µ(xâ2:ZFSET)∑ xâ2 çâz xâ1 ¥ (suc xâ2) çâz (suc xâ1)¨;
+
+ lemma ¨∂A:ZFSET≠BOOL∑ A = Ã(xâ1:ZFSET)∑ µ(xâ2:ZFSET)∑ xâ2 çâz xâ1 ¥ (suc xâ2) çâz (suc xâ1)¨;
+
+  a (EXISTS_TAC ¨Ã(xâ1:ZFSET)∑ µ(xâ2:ZFSET)∑ xâ2 çâz xâ1 ¥ (suc xâ2) çâz (suc xâ1)Æ);
+  a (asm_rewrite_tac[]);
+
+ lemma ¨(A:ZFSET≠BOOL) öâz ± µ(x:ZFSET)∑ N x ± A x ¥ A (suc x)¨;
+  a (REPEAT strip_tac);
+
+  a (asm_rewrite_tac[]);
+  a BETA_TAC;
+  a (rewrite_tac [ZF_le2]);
+
+  a (asm_rewrite_tac[] THEN BETA_TAC);
+  a (REPEAT strip_tac);
+  a (rewrite_tac [SPEC ¨suc x¨ (GEN_ALL suc);ZF_thm9;ZF_thm10]);
+  a DISJ2_TAC;
+
+  a (IMP_RES_TAC ZF_thm22);
+
+
+ a (MP_TAC (SPEC_ALL ZF_thm25));
+ a (asm_rewrite_tac[] THEN BETA_TAC);
+ a (TAUT_rewrite_tac ¨((a ± b) ¥ c) = a ¥ b ¥ cÆ);
+ a (REPEAT strip_tac);
+=TEX
+\subsection{The completing axioms}
+\subsubsection{The axiom of infinity}
+
+=SML
+new_const ("◊",¨:ZFSETÆ);
+val ZF8 = new_axiom ("ZF8",¨
+	µ(xâ1:ZFSET)∑ xâ1 çâz ◊ § N xâ1
+Æ);
+val ZF8b = prove_thm ("ZF8b",
+	¨µ(xâ1:ZFSET)∑ xâ1 çâz ◊ = N xâ1Æ,
+	once_rewrite_tac[ZF_le0] THEN accept_tac ZF8);
+=TEX
+\subsubsection{Replacement}
+
+=SML
+val ZF9 = new_axiom ("ZF9",¨
+	µ(f:ZFSET≠ZFSET≠BOOL)(r:ZFSET)∑(µ(x:ZFSET)(y:ZFSET)(z:ZFSET)∑
+	(f x y ± f x z ¥ (z = y))) ¥
+		∂(w:ZFSET)∑µ(y:ZFSET)∑y çâz w § ∂(x:ZFSET)∑x çâz r ± f x y
+Æ);
+val ZF9b = prove_thm ("ZF9b",
+	¨µ(f:ZFSET≠ZFSET≠BOOL)(r:ZFSET)∑(µ(x:ZFSET)(y:ZFSET)(z:ZFSET)∑
+	(f x y ± f x z ¥ (z = y))) ¥
+		∂(w:ZFSET)∑µ(y:ZFSET)∑y çâz w = ∂(x:ZFSET)∑x çâz r ± f x yÆ,
+	once_rewrite_tac[ZF_le0] THEN accept_tac ZF9);
+=TEX
+\subsection{Relations, functions, and simple recursion}
+
+Relations:
+=SML
+val relation = new_definition ("relation",¨
+	(relation:ZFSET ≠ BOOL) x = µ(y:ZFSET)∑ y çâz x ¥ ∂(w:ZFSET)(z:ZFSET)∑ y = (w Ìâz z)
+Æ);
+=TEX
+
+Functions:
+=SML
+val function = new_definition ("function",¨
+	(function:ZFSET ≠ BOOL) x =
+		relation x ±
+		µ(y:ZFSET)(w:ZFSET)(z:ZFSET)∑ (y Ìâz z) çâz x ± (y Ìâz w) çâz x ¥ (z = w)
+Æ);
+
+val domain = new_definition ("domain",¨
+	(domain:ZFSET≠ZFSET) x = åâz (ﬁâz (ﬁâz x))  Ã y:ZFSET∑ ∂ z:ZFSET∑ (y Ìâz z) çâz x
+Æ);
+
+val image = new_definition ("image",¨
+	(image:ZFSET ≠ ZFSET) x = åâz (ﬁâz (ﬁâz x)) Ã y:ZFSET∑ ∂ z:ZFSET∑ (z Ìâz y) çâz x
+Æ);
+
+val âz = new_infix_definition ("âz",¨
+	(âz:ZFSET ≠ ZFSET ≠ ZFSET) x z = ﬁâz (åâz (image x) Ã y:ZFSET∑ (z Ìâz y) çâz x)
+Æ);
+
+val 
+=GRUMBLE
+cannot convert character code 170 '™'
+=SML
+âz = new_infix_definition("
+=GRUMBLE
+cannot convert character code 170 '™'
+=SML
+âz",¨
+	(
+=GRUMBLE
+cannot convert character code 170 '™'
+=SML
+âz:ZFSET ≠ ZFSET ≠ ZFSET) t r =
+		åâz (((t ¿âz r))) Ã(y:ZFSET)∑∂(u:ZFSET)(v:ZFSET)∑ (y = (u Ìâz v)) ± u çâz t ± v çâz r
+Æ);
+=TEX
+\subsection{The Axiom of Choice}
+
+The axiom of choice is here introduced as an axiom.
+This isn't strictly necessary since there is a choice function in HOL already, and the choice function in set theory could be defined using the HOL choice function.
+However the presentation follows closer to Hatcher by just introducing Hatcher's choice axiom.
+=SML
+new_const ("”",¨:ZFSET ≠ ZFSETÆ);
+val ZF10 = new_axiom ("ZF10",¨
+	µ xâ1:ZFSET ∑ xâ1 Ω öâz ¥ (” xâ1) çâz xâ1
+Æ);
+=TEX
+\section{REFORMULATION of REPLACEMENT}
+
+=SML
+push_goal([],¨
+	µ(f:ZFSET ≠ ZFSET)(d:ZFSET)∑ ∂(s:ZFSET)∑ µ(x:ZFSET)∑
+			x çâz s = ∂(y:ZFSET)∑ y çâz d ± (x = f y)
+Æ);
+a (REPEAT GEN_TAC);
+lemma_proof ¨∂(rel:ZFSET ≠ ZFSET ≠ BOOL)∑ µ(x:ZFSET)(y:ZFSET)∑ rel x y = (y = f x)¨
+	[EXISTS_TAC ¨Ã(x:ZFSET)(y:ZFSET)∑ y = f x¨; REPEAT GEN_TAC;
+	BETA_TAC; REFL_TAC];
+lemma_proof ¨µ(x:ZFSET)(y:ZFSET)(z:ZFSET)∑ rel x y ± rel x z ¥ (z = y)¨
+	[asm_rewrite_tac[] THEN REPEAT strip_tac THEN asm_rewrite_tac[]];
+lemma_proof ¨∂w∑ µy∑ y çâz w = (∂x∑ x çâz d ± rel x y)¨
+	[IMP_RES_TAC (SPECL [¨rel:ZFSET≠ZFSET≠BOOL¨;¨d:ZFSET¨] ZF9b)];
+a (EXISTS_TAC ¨w:ZFSET¨ THEN asm_rewrite_tac[]);
+val ZF_thm26 = save_pop_thm "ZF_thm26";
+=TEX
+\section{THE THEORY}
+=IGN
+\input{/escher/usr2/rbj/zf/zf138.th.prt}
+=TEX
+\end{document}
+
+

@@ -1,0 +1,1217 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff.defs
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.RP
+.TL
+Pure function theory in HOL
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document consists of the introduction into HOL of a pure theory of (partial) functions.
+.AE
+.ds LH 
+.ds CH PF in HOL
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/FMU/RBJ/123   Issue 0.1
+.ds CF PF in HOL
+.ds RF Page \\n(PN
+.ig cx
+extend_theory`pf123`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+map load_definitions [`zf120`;`zf122`;`pf123`];;
+map load_theorems [`zf120`;`zf122`;`pf123`];;
+map load_axioms [`zf120`;`zf122`;`pf123`];;
+map delete_cache [`zf120`;`zf122`;`pf123`];;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let NEW_GOAL_TAC t = RMP_TAC t THENL [STRIP_TAC; ALL_TAC];;
+let new_goal t = expand (NEW_GOAL_TAC t);;
+let NEW_GOAL_PROOF_TAC t p = RMP_TAC t THENL [STRIP_TAC THEN p; ALL_TAC];;
+let new_goal_proof t p = expand (NEW_GOAL_PROOF_TAC t p);;
+.cx
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+.hd
+new_theory`pf123`;;
+new_parent`zf122`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+map load_definitions [`zf120`;`zf122`];;
+map load_theorems [`zf120`;`zf122`];;
+map load_axioms [`zf120`;`zf122`];;
+map delete_cache [`zf120`;`zf122`];;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let NEW_GOAL_TAC t = RMP_TAC t THENL [STRIP_TAC; ALL_TAC];;
+let new_goal t = expand (NEW_GOAL_TAC t);;
+let NEW_GOAL_PROOF_TAC t p = RMP_TAC t THENL [STRIP_TAC THEN p; ALL_TAC];;
+let new_goal_proof t p = expand (NEW_GOAL_PROOF_TAC t p);;
+.he
+.KE
+.NH
+INTRODUCING THE NEW TYPE
+.LP
+.NH 2
+The Defining Property
+.LP
+The following property selects those sets which are obtainable from the empty set by iterating the construction of functions.
+.LP
+The property (of properties) of being "function hereditary" is used to define the collection of functions.
+.LP
+A property is function hereditary if it holds of some set under the following conditions:
+.RS
+.IP 1
+The set is a function (a many-one relation).
+.IP 2
+Bottom is not in the range of the function.
+.IP 3
+Every element in the domain or range of the function has the property.
+.RE
+.LP
+.hd
+let ´_DEF = new_definition(`´_DEF`,"´:SET = unit(¤ — ¤)");;
+
+let function_hereditary_DEF = new_definition(`function_hereditary_DEF`,"
+	(function_hereditary:(SET‹bool)‹bool) p =
+	ƒ(f:SET)Ž function f € ´ “ (image f) €
+		(ƒ(x:SET)Ž x  (field f) Šp x)
+	Š p f
+");;
+.he
+A function is any set which has every function-hereditary property.
+.ig cx
+ý = ¤
+a² —² b² = unit (a — b)
+a² •² b² = a • b
+´² = (ý —² ý)
+T² = ´² —² ý
+F² = ´² •² T²
+UNIT = T² —² T²
+BOOL = UNIT •² (F² —² T²)
+0² = ý —² T²
+suc² x² = x² —² T²
+.cx
+.hd
+let pure_function_DEF = new_definition(`pure_function_DEF`,"
+	(pure_function:SET‹bool) s = ƒ(p:SET‹bool)Ž function_hereditary p Š p s
+");;
+.he
+.LP
+We will need to use the following lemma stating that pure_function is function hereditary:
+.hd
+set_goal([],"
+	function_hereditary pure_function
+");;
+expand(REWRITE_TAC [function_hereditary_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (REWRITE_TAC [pure_function_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (DEF_RES_TAC function_hereditary_DEF);;
+expand RES_TAC;;
+.he
+.hd
+lemma "ƒxŽ x  (field f) Š p x";;
+ expand (REPEAT STRIP_TAC);;
+ expand RES_TAC;;
+ expand (DEF_RES_TAC pure_function_DEF);;
+
+expand RES_TAC;;
+
+let PF_t01 = save_top_thm `PF_t01`;;
+.he
+.LP
+We now obtain the inductive principle that any function_hereditary property is true of all the pure functions:
+.hd
+set_goal([],"
+	ƒ(p:SET‹bool)Ž function_hereditary p Š
+		ƒ(x:SET)Ž pure_function x Š p x
+");;
+expand (REPEAT STRIP_TAC);;
+expand (DEF_RES_TAC function_hereditary_DEF);;
+expand (DEF_RES_TAC pure_function_DEF);;
+let PF_t02 = save_top_thm `PF_t02`;;
+.he
+.hd
+set_goal([],"
+	function_hereditary function
+");;
+expand(REWRITE_TAC [function_hereditary_DEF]);;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+let PF_t03 = save_top_thm `PF_t03`;;
+.he
+.hd
+set_goal([],"
+	function_hereditary x:SETŽ(´ “ image x)
+");;
+expand(REWRITE_TAC [function_hereditary_DEF] THEN BETA_TAC);;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+let PF_t04 = save_top_thm `PF_t04`;;
+.he
+.hd
+set_goal([],"
+	ƒx:SETŽ pure_function x Š function x € (´ “ image x)
+");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+expand (ASSUME_TAC PF_t03);;
+expand (IMP_RES_TAC PF_t02);;
+expand (ASSUME_TAC PF_t04);;
+expand (IMP_RES_TAC PF_t02);;
+expand (ACCEPT_TAC (BETA_RULE (ASSUME "(xŽ ´ “ (image x))x")));;
+let PF_t05 = save_top_thm `PF_t05`;;
+.he
+.hd
+set_goal([],"
+	ƒx:SETŽ pure_function x Š
+		ƒy:SETŽ y  (field x) Špure_function y
+");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+
+lemma "function_hereditary (x:SET)Ž
+		function x €
+		´ “ (image x) €
+		ƒ(y:SET)Ž y  (field x) Š pure_function y";;
+  expand (PURE_REWRITE_TAC [function_hereditary_DEF] THEN BETA_TAC);;
+  expand (REPEAT STRIP_TAC);;
+
+  expand (ASM_REWRITE_TAC[]);;
+
+  expand (ASM_REWRITE_TAC[]);;
+
+  expand RES_TAC;;
+  expand (ASSUME_TAC PF_t01);;
+  expand (DEF_RES_TAC function_hereditary_DEF);;
+  expand RES_TAC;;
+
+expand (DEF_RES_TAC pure_function_DEF);;
+expand RES_TAC;;
+expand (ASSUME_TAC (BETA_RULE (ASSUMP "(xŽ
+         function x €
+         ´ “ (image x) €
+         (ƒyŽ y  (field x) Š pure_function y))
+       x")));;
+expand (ASM_REWRITE_TAC[]);;
+let PF_t06 = save_top_thm `PF_t06`;;
+.he
+.NH 2
+Non-emptyness
+.LP
+Before introducing the type determined by this property we must prove that it is non-empty.
+.hd
+set_goal([],"
+	pure_function ¤
+");;
+expand (REWRITE_TAC [pure_function_DEF; function_hereditary_DEF]);;
+expand (REPEAT STRIP_TAC);;
+
+lemma "function ¤";;
+  expand (REWRITE_TAC [function;relation;ZF_le2]);;
+
+lemma "´ “ (image ¤)";;
+  expand (REWRITE_TAC[“_DEF;image_DEF;´_DEF;ZF_le2;ZF2]);;
+
+lemma "(ƒxŽ x  (field ¤) Š p x)";;
+  expand (REWRITE_TAC [ZF_thm10; field_DEF; domain_DEF; image_DEF; ZF_le2; ZF2]);;
+
+expand RES_TAC;;
+
+let PF_t07 = save_top_thm `PF_t07`;;
+.he
+.hd
+set_goal([],"
+	„(x:SET)Ž pure_function x
+");;
+expand (EXISTS_TAC "¤");;
+expand (ACCEPT_TAC PF_t07);;
+
+let PF_t08 = save_top_thm `PF_t08`;;
+.he
+.NH 2
+Type introduction
+.LP
+Now we introduce the new type:
+.hd
+let DEF_PF = new_type_definition(`PF`,"pure_function",PF_t08);;
+.he
+.hd
+let PF_ONE_ONE = REWRITE_RULE [definition `bool` `ONE_ONE_DEF`]
+							(CONJUNCT1 DEF_PF);;
+.he
+.LP
+.hd
+set_goal([],"
+	ƒ(x:PF)(y:PF)Ž (x=y) = (REP_PF x = REP_PF y)
+");;
+expand (REPEAT STRIP_TAC THEN EQ_TAC);;
+expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+expand (REWRITE_TAC [PF_ONE_ONE]);;
+let PF_t09 = save_top_thm `PF_t09`;;
+.he
+.ig cx
+set_goal([],"
+	ƒ(P:*‹bool)Ž ($„ P) Š P ($‡ P)
+");;
+expand (STRIP_TAC);;
+expand (TAUT_REWRITE_TAC "a Š b = Œb Š Œa");;
+expand NOT_EXISTS_TAC;;
+expand (TAUT_REWRITE_TAC "Œa Š b = Œb Š a");;
+expand NOT_FORALL_TAC;;
+expand (TAUT_REWRITE_TAC "ŒŒa = a");;
+expand (STRIP_TAC);;
+expand (IMP_RES_TAC SELECT_AX);;
+let PF_l2 = save_top_thm `PF_l2`;;
+.cx
+.hd
+let  ABS_PF_DEF = new_definition(`ABS_PF_DEF`,"
+	(ABS_PF:SET‹PF) s = ‡p:PFŽ REP_PF p = s
+");;
+.he
+.hd
+let PF_l3 = INST_TYPE [":PF",":*"] SELECT_AX;;
+
+set_goal([],"
+	pure_function x Š (REP_PF (ABS_PF x) = x)
+");;
+expand (REWRITE_TAC [ABS_PF_DEF;DEF_PF]);;
+expand (STRIP_TAC);;
+lemma "REP_PF x' = x";;
+expand (ASM_REWRITE_TAC[]);;
+expand (IMP_RES_TAC (BETA_RULE (SPEC "(x':PF)Ž REP_PF x' = (x:SET)" PF_l3)));;
+let PF_t10 = save_top_thm `PF_t10`;;
+.he
+.LP
+.hd
+set_goal([],"
+	ƒ(x:PF)Ž ABS_PF(REP_PF x) = x
+");;
+expand (REWRITE_TAC [ABS_PF_DEF]);;
+lemma "ƒ(x:PF)(y:PF)Ž (REP_PF x = REP_PF y) = (x = y)";;
+expand (REPEAT STRIP_TAC THEN EQ_TAC);;
+expand (MATCH_ACCEPT_TAC PF_ONE_ONE);;
+expand (STRIP_TAC THEN (ASM_REWRITE_TAC[]));;
+expand (STRIP_TAC THEN (ASM_REWRITE_TAC[]));;
+expand (ACCEPT_TAC (MP
+	(BETA_RULE (SPECL ["p:PFŽ p = x";"x:PF"]
+		(INST_TYPE [":PF",":*"] SELECT_AX)))
+	(REFL "x:PF")));;
+let PF_t11 = save_top_thm `PF_t11`;;
+.he
+.LP
+ABS_PF mat be thought of as a function which lifts a value from the representation type to the new `abstract type'.
+Analogues for operators are introduced here:
+.hd
+let lift_monop_DEF = new_definition(`lift_monop_DEF`,"
+	(lift_monop:(SET‹SET)‹(PF‹PF)) f = x:PFŽ ABS_PF(f (REP_PF x))
+");;
+let lift_binop_DEF = new_definition(`lift_binop_DEF`,"
+	(lift_binop:(SET‹SET‹SET)‹(PF‹PF‹PF)) f =
+		(x:PF)(y:PF)Ž ABS_PF(f (REP_PF x)(REP_PF y))
+");;
+.he
+.LP
+Before defining abstraction it is necessary to identify the values "´²" and "T²".
+.hd
+let ý_DEF = new_definition(`ý_DEF`,"
+	(ý:PF) = ABS_PF ¤
+");;
+.he
+.hd
+let unit_map_DEF = new_definition(`unit_map_DEF`,"
+	(unit_map:SET‹SET‹SET) x y = ((y = ´) => ¤ | unit(x — y))
+");;
+
+let —²_DEF = new_infix_definition(`—²_DEF`,"
+	(—²:PF‹PF‹PF) = lift_binop unit_map 
+");;
+.he
+.hd
+let ´²_DEF = new_definition(`´²_DEF`,"
+	(´²:PF) = ý —² ý
+");;
+
+let T²_DEF = new_definition(`T²_DEF`,"
+	(T²:PF) = ´² —² ý
+");;
+.he
+.LP
+.hd
+let truef_DEF = new_definition(`truef_DEF`,"
+	(truef:SET) = REP_PF T²
+");;
+.he
+.hd
+let set_to_type_DEF = new_definition(`set_to_type_DEF`,"
+	(set_to_type:SET‹SET) s = s ª (unit (REP_PF T²))
+");;
+let monop_set_to_type_DEF = new_definition(`monop_set_to_type_DEF`,"
+	(monop_set_to_type:(SET‹SET)‹(SET‹SET)) o = s:SETŽ set_to_type (o s)
+");;
+.he
+.hd
+let dom_DEF = new_definition(`dom_DEF`,"
+	dom	= lift_monop (monop_set_to_type domain)
+");;
+let ran_DEF = new_definition(`ran_DEF`,"
+	ran	= lift_monop (monop_set_to_type image)
+");;
+let fie_DEF = new_definition(`fie_DEF`,"
+	fie	= lift_monop (monop_set_to_type field)
+");;
+.he
+.LP
+Some general lemmas would be useful showing how properties are lifted.
+.NH
+TRUTH
+.DS L
+let F²_DEF = new_definition(`F²_DEF`,"
+	(F²:PF) = T² •² (ý —² ý)
+");;
+.DE
+.NH
+Abstraction and Application
+.LP
+The most fundamental operations concerned with functions are functional abstraction and function application.
+.LP
+Functional Application
+.LP
+First we define the appropriate operation on SET and then we lift it to PF.
+.hd
+let function_application_DEF = new_definition(`function_application_DEF`,"
+	(function_application:SET‹SET‹SET) f a =
+		a  (domain f) => f © a | ´
+");;
+.he
+.hd
+let ²_DEF = new_infix_definition(`²_DEF`,"
+	² = lift_binop function_application
+");;
+.he
+.hd
+%
+let PF_hereditary_DEF = new_definition(`PF_hereditary_DEF`,"
+	(PF_hereditary_DEF:(PF‹bool)‹bool) p =
+		ƒ(x:PF)Ž(ƒ(y:PF)Ž	(fie x) ² y Šp y) Š p x
+");;
+%
+.he
+.LP
+We should be able to prove an axiom of extensionality.
+.LP
+First we prove the property of sets corresponding to the required property of pure functions.
+.hd
+let func_extensional_DEF = new_definition(`func_extensional_DEF`,"
+	func_extensional x y =
+		((x = y) =	(ƒ(z:SET)Ž
+		(function_application x z = (function_application y z))
+				)
+		)
+");;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x
+		Š (y  (domain x) = (function_application x y ˆ ´))
+");;
+expand (EVERY[
+		REWRITE_TAC [function_application_DEF; NE_DEF];
+		REPEAT STRIP_TAC; EQ_TAC]);;
+.he
+.sv "HOL output"
+2 subgoals
+"Œ((y  (domain x) => x © y | ´) = ´) Š y  (domain x)"
+    [ "pure_function x" ]
+
+"y  (domain x) Š Œ((y  (domain x) => x © y | ´) = ´)"
+    [ "pure_function x" ]
+.sw
+.hd
+expand (EVERY[
+	STRIP_TAC;
+	ASM_REWRITE_TAC[];
+	IMP_RES_TAC PF_t05;
+	IMP_RES_TAC (SPECL ["x:SET";"y:SET";"´"]ZF2_thm4);
+	ASM_REWRITE_TAC[];
+	STRIP_TAC;
+	IMP_RES_TAC (SPECL ["y:SET";"´:SET";"x:SET"] ZF2_thm7);
+	ASSUME_TAC (REWRITE_RULE [“_DEF] (ASSUME "´ “ (image x)"));
+	RES_TAC]);;
+
+expand (EVERY[
+	TAUT_REWRITE_TAC "Œa Š b = Œb Š a";
+	STRIP_TAC;
+	ASM_REWRITE_TAC[]]);;
+let PF_t12 = save_top_thm `PF_t12`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)(z:SET)Ž function x € y  (domain x)
+	Š ((function_application x y = z) = ((y — z)  x))
+");;
+expand (EVERY[
+	REWRITE_TAC [function_application_DEF];
+	REPEAT STRIP_TAC;
+	IMP_RES_TAC ZF2_thm4;
+	EQ_TAC; ASM_REWRITE_TAC[]]);;
+let PF_t13 = save_top_thm `PF_t13`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)(z:SET)Ž pure_function x € y  (domain x)
+	Š ((function_application x y = z) = ((y — z)  x))
+");;
+expand (EVERY[
+	REWRITE_TAC [function_application_DEF];
+	REPEAT STRIP_TAC;
+	IMP_RES_TAC PF_t05;
+	IMP_RES_TAC ZF2_thm4;
+	EQ_TAC; ASM_REWRITE_TAC[]]);;
+let PF_t14 = save_top_thm `PF_t14`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x Š pure_function y
+		Š	func_extensional x y
+");;
+expand (EVERY[
+	REPEAT STRIP_TAC;
+	PURE_ONCE_REWRITE_TAC[func_extensional_DEF];
+	EQ_TAC; REPEAT STRIP_TAC]);;
+.he
+.sv "HOL output"
+2 subgoals
+"x = y"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+
+"function_application x z = function_application y z"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "x = y" ]
+.sw
+.hd
+expand (ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+goal proved
+Ž … function_application x z = function_application y z
+
+Previous subproof:
+"x = y"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+.sw
+.hd
+expand (EVERY[
+	PURE_REWRITE_TAC [ZF_le1];
+	REPEAT STRIP_TAC; EQ_TAC; REPEAT STRIP_TAC]);;
+.he
+.sv "HOL output"
+2 subgoals
+"z  x"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  y" ]
+
+"z  y"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  x" ]
+.sw
+.hd
+lemma "„(v:SET)(w:SET)Ž z = (v — w)";;
+expand	(IMP_RES_TAC PF_t05);;
+expand	(DEF_RES_TAC function);;
+expand	(DEF_RES_TAC relation);;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+%
+lemma_proof "„(v:SET)(w:SET)Ž z = (v — w)"
+	[IMP_RES_TAC PF_t05;
+	DEF_RES_TAC function;
+	DEF_RES_TAC relation];;
+expand (ASM_REWRITE_TAC[]);;
+%
+.he
+.sv "HOL output"
+"(v — w)  y"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  x" ]
+    [ "z = v — w" ]
+.sw
+.hd
+lemma_proof "(v — w)  x"
+	[ACCEPT_TAC	(REWRITE_RULE [ASSUMP "z = v — w"] (ASSUMP "z  x"))];;
+
+lemma_proof	"v  (domain x)"
+	[IMP_RES_TAC ZF2_thm7];;
+
+lemma_proof "function_application x v = w"
+	[IMP_RES_TAC (SPECL ["x:SET";"v:SET";"w:SET"] PF_t14);
+	ASM_REWRITE_TAC[]];;
+
+lemma_proof "function_application y v = w"
+	[ASM_REWRITE_TAC[SYM (SPEC "v:SET" (ASSUMP
+	"ƒzŽ function_application x z = function_application y z"))]];;
+.he
+.hd
+lemma_proof "function_application x v ˆ ´"
+	[IMP_RES_THEN DEF_RES_TAC (SPECL["x:SET";"v:SET"]PF_t12)];;
+
+lemma_proof "function_application y v ˆ ´"
+  	[ACCEPT_TAC (REWRITE_RULE [SPEC "v:SET"
+	(ASSUMP "ƒzŽ function_application x z = function_application y z")]
+	(ASSUMP "(function_application x v) ˆ ´"))];;
+
+lemma_proof	"v  (domain y)"
+	[IMP_RES_TAC (SPECL ["y:SET";"v:SET"] PF_t12);
+	ASM_REWRITE_TAC[]];;
+.he
+.sv "HOL output"
+"(v — w)  y"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  x" ]
+    [ "z = v — w" ]
+    [ "(v — w)  x" ]
+    [ "v  (domain x)" ]
+    [ "function_application x v = w" ]
+    [ "function_application y v = w" ]
+    [ "(function_application x v) ˆ ´" ]
+    [ "(function_application y v) ˆ ´" ]
+    [ "v  (domain y)" ]
+.sw
+.hd
+expand (IMP_RES_TAC (SPECL ["y:SET";"v:SET";"w:SET"] PF_t14));;
+expand (ACCEPT_TAC (REWRITE_RULE
+		[ASSUMP "(function_application y v = w) = (v — w)  y"]
+		(ASSUMP "function_application y v = w")));;
+.he
+.sv "HOL output"
+Previous subproof:
+"z  x"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  y" ]
+.sw
+.hd
+lemma "„(v:SET)(w:SET)Ž z = (v — w)";;
+expand (EVERY
+		[IMP_RES_TAC PF_t05;
+		DEF_RES_TAC function;
+		DEF_RES_TAC relation]);;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+"(v — w)  x"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  y" ]
+    [ "z = v — w" ]
+.sw
+.hd
+lemma_proof "(v — w)  y"
+	[ACCEPT_TAC	(REWRITE_RULE [ASSUMP "z = v — w"] (ASSUMP "z  y"))];;
+
+lemma_proof	"v  (domain y)"
+	[IMP_RES_TAC ZF2_thm7];;
+
+lemma_proof "function_application x v = w"
+	[IMP_RES_TAC (SPECL ["y:SET";"v:SET";"w:SET"] PF_t14);
+	ASM_REWRITE_TAC[]];;
+
+lemma_proof "function_application x v = w"
+	[ASM_REWRITE_TAC[SYM (SPEC "v:SET" (ASSUMP
+	"ƒzŽ function_application x z = function_application y z"))]];;
+.he
+.hd
+lemma_proof "function_application y v ˆ ´"
+	[IMP_RES_THEN DEF_RES_TAC (SPECL["y:SET";"v:SET"]PF_t12)];;
+
+lemma_proof "function_application x v ˆ ´"
+  	[ACCEPT_TAC (REWRITE_RULE [SYM (SPEC "v:SET"
+	(ASSUMP "ƒzŽ function_application x z = function_application y z"))]
+	(ASSUMP "(function_application y v) ˆ ´"))];;
+
+lemma_proof	"v  (domain x)"
+	[IMP_RES_TAC (SPECL ["x:SET";"v:SET"] PF_t12);
+	ASM_REWRITE_TAC[]];;
+.he
+.sv "HOL output"
+"(v — w)  x"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "ƒzŽ function_application x z = function_application y z" ]
+    [ "z  y" ]
+    [ "z = v — w" ]
+    [ "(v — w)  y" ]
+    [ "v  (domain y)" ]
+    [ "function_application x v = w" ]
+    [ "(function_application y v) ˆ ´" ]
+    [ "(function_application x v) ˆ ´" ]
+    [ "v  (domain x)" ]
+.sw
+.hd
+expand (IMP_RES_TAC (SPECL ["x:SET";"v:SET";"w:SET"] PF_t14));;
+expand (ACCEPT_TAC (REWRITE_RULE
+	[ASSUMP "(function_application x v = w) = (v — w)  x"]
+	(ASSUMP "function_application x v = w")));;
+.he
+.sv "HOL output"
+goal proved
+… ƒx yŽ
+    pure_function x Š pure_function y Š func_extensional x y
+.sw
+.hd
+let PF_t15 = save_top_thm `PF_t15`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x € pure_function y € y ˆ ´
+		Š pure_function (unit (x — y))
+");;
+expand (PURE_REWRITE_TAC [NE_DEF] THEN REPEAT STRIP_TAC);;
+expand (TMP_TAC (SPEC "unit(x — y)" (REWRITE_RULE [function_hereditary_DEF] PF_t01)));;
+expand (REPEAT STRIP_TAC);;
+
+expand (ACCEPT_TAC (SPEC_ALL ZF2_thm9));;
+.he
+.hd
+expand (PURE_REWRITE_TAC [“_DEF; image_DEF; ZF2]);;
+expand (TAUT_REWRITE_TAC "Œ(a € b) = Œa  Œb" THEN DISJ2_TAC THEN BETA_TAC);;
+expand (PURE_REWRITE_TAC [ZF_thm9; ZF2_thm3]);;
+expand (ASM_REWRITE_TAC[]);;
+expand (UNDISCH_TAC "Œ(y = ´)");;
+expand (TAUT_REWRITE_TAC "Œa Š Œb = b Š a");;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC []);;
+.he
+.hd
+expand (RMP_TAC "(x' = x)  (x' = y)");;
+expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+expand (STRIP_ASSUME_TAC (BETA_RULE
+	(REWRITE_RULE [field_DEF; image_DEF; domain_DEF;
+				ZF2; ZF_thm9; ZF_thm10; ZF2_thm3]
+	(ASSUMP "x'  (field(unit(x — y)))")))
+	THEN ASM_REWRITE_TAC[]);;
+let PF_t16 = save_top_thm `PF_t16`;;
+.he
+.hd
+set_goal([],"
+	pure_function ´
+");;
+expand (PURE_REWRITE_TAC [´_DEF]);;
+expand (TMP_TAC (SPECL ["¤";"¤"] PF_t16));;
+expand (REWRITE_TAC [PF_t07; ´_DEF; NE_DEF; ZF_le1]);;
+expand (NOT_FORALL_TAC THEN EXISTS_TAC "¤ — ¤");;
+expand (REWRITE_TAC [ZF_le2; ZF_thm9]);;
+let PF_t17 = save_top_thm `PF_t17`;;
+.he
+.hd
+%
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x € (y  field x)
+		Š pure_function y
+");;
+expand (REPEAT STRIP_TAC);;
+%
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x Š pure_function y
+		Š pure_function (function_application x y)
+");;
+expand (REPEAT STRIP_TAC);;
+expand (ASM_CASES_TAC "y  (domain x)" THEN ASM_REWRITE_TAC[]);;
+
+lemma_proof "„z:SETŽ function_application x y = z"
+	[EXISTS_TAC "function_application x y"; REWRITE_TAC[]];;
+
+lemma_proof "(function_application x y = z) Š (y — z)  x"
+	[IMP_RES_TAC PF_t14; ASM_REWRITE_TAC[]];;
+
+expand RES_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand (IMP_RES_TAC (SPECL ["y:SET";"z:SET";"x:SET"] ZF2_thm7));;
+
+lemma_proof "z  (field x)" [ASM_REWRITE_TAC [field_DEF; ZF_thm10]];;
+
+expand (IMP_RES_TAC PF_t06);;
+
+lemma_proof "function_application x y = ´"
+	[IMP_RES_THEN (DEF_RES_TAC o (TAUT_REWRITE_RULE
+		"(a = Œb) = (Œa = b)") o (REWRITE_RULE [NE_DEF])) PF_t12];;
+
+expand (ASM_REWRITE_TAC [PF_t17]);;
+
+let PF_t18 = save_top_thm `PF_t18`;;
+.he
+.hd
+set_goal([],"
+	ƒx:PFŽ pure_function (REP_PF x)
+");;
+expand (REWRITE_TAC [CONJUNCT2 DEF_PF]);;
+expand (STRIP_TAC THEN EXISTS_TAC "x:PF" THEN REFL_TAC);;
+let PF_t19 = save_top_thm `PF_t19`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)Ž pure_function x € pure_function y
+		Š (ƒ(z:PF)Ž function_application x (REP_PF z)
+				= function_application y (REP_PF z))
+		Š (x = y)
+");;
+expand (REPEAT STRIP_TAC);;
+lemma "ƒ(w:SET)Ž function_application x w = function_application y w";;
+expand (STRIP_TAC THEN ASM_CASES_TAC "pure_function w");;
+lemma "„x'Ž w = REP_PF x'";;
+  expand (DEF_RES_TAC (SPEC "w:SET" (CONJUNCT2 DEF_PF)));;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "function_application x w = ´";;
+  lemma "Œ (w  domain x)";;
+    expand (IMP_RES_TAC PF_t06);;
+    lemma "Œw  (field x)";;
+      expand (STRIP_TAC THEN RES_TAC);;
+    expand (UNDISCH_TAC "Œw  (field x)"
+	THEN REWRITE_TAC [field_DEF; ZF_thm10]);;
+    expand TAUT_TAC;;
+  expand (IMP_RES_THEN (DEF_RES_TAC o
+	(TAUT_REWRITE_RULE "(a = Œb) = (Œa = b)") o
+	(REWRITE_RULE [NE_DEF])) (SPECL ["x:SET";"w:SET"] PF_t12));;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "function_application y w = ´";;
+  lemma "Œ (w  domain y)";;
+    expand (IMP_RES_TAC PF_t06);;
+    lemma "Œw  (field y)";;
+      expand (STRIP_TAC THEN RES_TAC);;
+    expand (UNDISCH_TAC "Œw  (field y)"
+	THEN REWRITE_TAC [field_DEF; ZF_thm10]);;
+    expand TAUT_TAC;;
+  expand (IMP_RES_THEN (DEF_RES_TAC o
+	(TAUT_REWRITE_RULE "(a = Œb) = (Œa = b)") o
+	(REWRITE_RULE [NE_DEF])) (SPECL ["y:SET";"w:SET"] PF_t12));;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma_proof "func_extensional x y" [IMP_RES_TAC PF_t15];;
+expand (DEF_RES_TAC func_extensional_DEF);;
+expand (ASM_REWRITE_TAC[]);;
+let PF_t20 = save_top_thm `PF_t20`;;
+.he
+.LP
+.hd
+set_goal([],"
+	ƒ(x:PF)(y:PF)Ž (x = y) = (ƒ(z:PF)Ž x ² z = y ² z)
+");;
+expand (REPEAT STRIP_TAC THEN EQ_TAC);;
+.he
+.sv "HOL output"
+2 subgoals
+"(ƒzŽ x ² z = y ² z) Š (x = y)"
+
+"(x = y) Š (ƒzŽ x ² z = y ² z)"
+.sw
+.hd
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+goal proved
+… (x = y) Š (ƒzŽ x ² z = y ² z)
+
+Previous subproof:
+"(ƒzŽ x ² z = y ² z) Š (x = y)"
+.sw
+.hd
+expand (REWRITE_TAC [PF_t09;²_DEF;—²_DEF;´²_DEF;lift_binop_DEF]);;
+expand BETA_TAC;;
+.he
+.hd
+lemma "(ƒ(y:PF)(z:PF)ŽREP_PF(ABS_PF(function_application(REP_PF y)(REP_PF z))) =
+       function_application(REP_PF y)(REP_PF z))
+";;
+  expand (STRIP_TAC THEN STRIP_TAC);;
+  lemma_proof "pure_function (REP_PF x)" [REWRITE_TAC [PF_t19]];;
+  lemma_proof "pure_function (REP_PF y)" [REWRITE_TAC [PF_t19]];;
+  lemma_proof "pure_function (REP_PF z)" [REWRITE_TAC [PF_t19]];;
+  lemma_proof "pure_function (function_application(REP_PF x)(REP_PF z))"
+	[IMP_RES_TAC PF_t18];;
+  lemma_proof "pure_function (function_application(REP_PF y)(REP_PF z))"
+	[IMP_RES_TAC PF_t18];;
+  expand (IMP_RES_TAC PF_t10);;
+.he
+.hd
+expand (ASM_REWRITE_TAC[]);;
+lemma_proof "pure_function (REP_PF x)" [REWRITE_TAC [PF_t19]];;
+lemma_proof "pure_function (REP_PF y)" [REWRITE_TAC [PF_t19]];;
+expand (IMP_RES_TAC PF_t20);;
+let PF_t21 = save_top_thm `PF_t21`;;
+.he
+.NH
+ý, the everywhere undefined function
+.LP
+This is a primitive.
+.hd
+set_goal([],"
+	ƒ(x:PF)Ž ý ² x = ´²
+");;
+expand (REWRITE_TAC[ý_DEF; ²_DEF; lift_binop_DEF;´²_DEF; —²_DEF; ´_DEF; unit_map_DEF]
+		THEN BETA_TAC THEN STRIP_TAC);;
+lemma_proof	"pure_function ¤"		[ACCEPT_TAC PF_t07];;
+expand (IMP_RES_TAC PF_t10 THEN ASM_REWRITE_TAC[]);;
+lemma_proof	"Œ(REP_PF x)  (domain ¤)"
+		[REWRITE_TAC [domain_DEF; ZF2; ZF_le2]];;
+lemma_proof "function_application ¤(REP_PF x) = unit(¤ — ¤)"
+	[IMP_RES_THEN
+		(DEF_RES_TAC o TAUT_REWRITE_RULE "(a = Œb) = (Œa = b)")
+		(REWRITE_RULE [NE_DEF; ´_DEF] PF_t12)];;
+expand (ASM_REWRITE_TAC []);;
+expand (ASM_CASES_TAC "unit(¤ — ¤) = ¤" THEN ASM_REWRITE_TAC[]);;
+lemma "Œ(¤ = unit(¤ — ¤))";;
+  expand (UNDISCH_TAC"Œ(unit(¤ — ¤) = ¤)"
+	THEN TAUT_REWRITE_TAC "Œa Š Œb = b Š a"
+	THEN STRIP_TAC);;
+expand (CONV_TAC SYM_CONV THEN ACCEPT_TAC (ASSUMP "¤ = unit(¤ — ¤)"));;
+expand (ASM_REWRITE_TAC[]);;
+
+let PF_t22 = save_top_thm `PF_t22`;;
+.he
+.NH
+—², the unit map
+.LP
+This is also primitive.
+.LP
+The following lemma will be useful in establishing the important properties.
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)(z:SET)Ž	pure_function x € pure_function y
+	Š pure_function (unit_map x y)
+");;
+expand (EVERY[	REPEAT STRIP_TAC;
+			REWRITE_TAC [unit_map_DEF]]);;
+.he
+.sv "HOL output"
+"pure_function((y = ´) => ¤ | unit(x — y))"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+.sw
+.hd
+expand (ASM_CASES_TAC "y = ´" THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+2 subgoals
+"pure_function(unit(x — y))"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "Œ(y = ´)" ]
+
+"pure_function ¤"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "y = ´" ]
+.sw
+.hd
+expand (ACCEPT_TAC PF_t07);;
+.he
+.sv "HOL output"
+goal proved
+… pure_function ¤
+
+Previous subproof:
+"pure_function(unit(x — y))"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "Œ(y = ´)" ]
+.sw
+.hd
+expand (IMP_RES_TAC (REWRITE_RULE [NE_DEF] PF_t16));;
+.he
+.sv "HOL output"
+goal proved
+… ƒx y zŽ
+    pure_function x € pure_function y Š
+    pure_function(unit_map x y)
+.sw
+.hd
+let PF_t23 = save_top_thm `PF_t23`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)(z:SET)Ž Œ(y  (domain x))
+	Š (function_application x y = ´)
+");;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC [function_application_DEF]);;
+let PF_t24 = save_top_thm `PF_t24`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:SET)(y:SET)(z:SET)Ž	pure_function x € pure_function y
+	Š (function_application (unit_map x y) z = ((z = x) => y | ´))
+");;
+expand (REPEAT STRIP_TAC);;
+expand (ASM_CASES_TAC "z  domain(unit_map x y)");;
+.he
+.sv "HOL output"
+2 subgoals
+"function_application(unit_map x y)z = ((z = x) => y | ´)"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "Œz  (domain(unit_map x y))" ]
+
+"function_application(unit_map x y)z = ((z = x) => y | ´)"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "z  (domain(unit_map x y))" ]
+.sw
+.hd
+lemma "(function_application (unit_map x y) z = ((z = x) => y | ´))
+		= (z — ((z = x) => y | ´))  (unit_map x y)";;
+lemma_proof "pure_function (unit_map x y)" [IMP_RES_TAC PF_t23];;
+lemma_proof "function (unit_map x y)" [IMP_RES_TAC PF_t05];;
+expand (IMP_RES_TAC (SPECL ["unit_map x y";"z";"(z = x) => y | ´"] PF_t13));;
+.he
+.sv "HOL output"
+goal proved
+Previous subproof:
+"function_application(unit_map x y)z = ((z = x) => y | ´)"
+    [ "pure_function x" ]
+    [ "pure_function y" ]
+    [ "z  (domain(unit_map x y))" ]
+    [ "(function_application(unit_map x y)z = ((z = x) => y | ´)) =
+       (z — ((z = x) => y | ´))  (unit_map x y)" ]
+.sw
+.hd
+expand (ASM_REWRITE_TAC[]);;
+expand (REWRITE_TAC [unit_map_DEF]);;
+lemma "Œ(y = ´)";;
+	expand STRIP_TAC;;
+	lemma_proof "unit_map x y = ¤" [ASM_REWRITE_TAC [unit_map_DEF]];;
+	expand (ACCEPT_TAC ((BETA_RULE o REWRITE_RULE
+		[ASSUMP "unit_map x y = ¤"; domain_DEF; ZF2; ZF_le2])
+		(ASSUMP "z  (domain(unit_map x y))")));;
+.he
+.hd
+expand (ASM_REWRITE_TAC[ZF_thm9; ZF2_thm3]);;
+expand (MP_TAC ((CONJUNCT2 o BETA_RULE o REWRITE_RULE
+	[domain_DEF; ZF2; ZF_le2; ZF_thm9; ZF2_thm3;
+		unit_map_DEF; ASSUMP "Œ(y = ´)"])
+		(ASSUMP "z  (domain(unit_map x y))")));;
+expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+
+expand (IMP_RES_TAC PF_t24 THEN ASM_REWRITE_TAC[]);;
+expand (ASM_CASES_TAC "(z = x)");;
+expand (ASM_REWRITE_TAC[]);;
+expand (UNDISCH_TAC "Œz  (domain(unit_map x y))"
+	THEN TAUT_REWRITE_TAC "Œa Š b = Œb Š a"
+	THEN ASM_REWRITE_TAC
+	[domain_DEF; unit_map_DEF; ZF2]);;
+expand (SUBST1_TAC (SYM_CONV "´ = y"));;
+expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+expand (BETA_TAC THEN ASM_REWRITE_TAC[unit_map_DEF;ZF6]);;
+expand STRIP_TAC;;
+expand (REWRITE_TAC[ZF6; ZF_thm9; ZF2_thm3]);;
+expand (EXISTS_TAC "pair x y" THEN REWRITE_TAC[]);;
+expand (REWRITE_TAC[ZF5] THEN EXISTS_TAC "x — y");;
+expand (REWRITE_TAC [—_DEF; ZF5]);;
+
+expand (EXISTS_TAC "y:SET" THEN ASM_REWRITE_TAC[unit_map_DEF;ZF_thm9]);;
+
+expand (ASM_REWRITE_TAC[]);;
+let PF_t25 = save_top_thm `PF_t25`;;
+.he
+.hd
+set_goal([],"
+	´² = ABS_PF ´
+");;
+expand (REWRITE_TAC[´²_DEF;—²_DEF; ý_DEF; unit_map_DEF;
+		lift_binop_DEF; ´_DEF]);;
+expand BETA_TAC;;
+expand (ASSUME_TAC PF_t07);;
+expand (IMP_RES_TAC PF_t10);;
+expand (ASM_REWRITE_TAC[]);;
+lemma  "Œ (¤ = unit(¤ — ¤))";;
+	expand STRIP_TAC;;
+	lemma "(¤ — ¤)  ¤";;
+		lemma "(¤ — ¤)  unit(¤ — ¤)";;
+			expand (REWRITE_TAC [ZF_thm9]);;
+		expand (ACCEPT_TAC (REWRITE_RULE
+			[SYM (ASSUMP "¤ = unit(¤ — ¤)")]
+			(ASSUMP "(¤ — ¤)  (unit(¤ — ¤))")));;
+		expand (MP_TAC (ASSUMP "(¤ — ¤)  ¤") THEN REWRITE_TAC [ZF_le2]);;
+expand (ASM_REWRITE_TAC[]);;
+let PF_t26 = save_top_thm `PF_t26`;;
+.he
+.hd
+set_goal([],"
+	ƒ(x:PF)(y:PF)(z:PF)Ž (x —² y) ² z = ((z = x) => y | ´²)
+");;
+expand (EVERY [	REPEAT STRIP_TAC;
+			REWRITE_TAC [—²_DEF; ²_DEF; lift_binop_DEF];
+			BETA_TAC]);;
+lemma_proof "pure_function (REP_PF x)"
+	[REWRITE_TAC [DEF_PF]; EXISTS_TAC "x"; REFL_TAC];;
+lemma_proof "pure_function (REP_PF y)"
+	[REWRITE_TAC [DEF_PF]; EXISTS_TAC "y"; REFL_TAC];;
+lemma_proof "function_application(unit_map(REP_PF x)(REP_PF y))(REP_PF z) =
+       ((REP_PF z = REP_PF x) => REP_PF y | ´)"
+	[IMP_RES_TAC (SPECL ["REP_PF x";"REP_PF y";"REP_PF z"] PF_t25)];;
+lemma "REP_PF (ABS_PF (unit_map(REP_PF x)(REP_PF y)))
+		= unit_map(REP_PF x)(REP_PF y)";;
+	lemma_proof "pure_function (unit_map(REP_PF x)(REP_PF y))"
+			[IMP_RES_TAC PF_t23];;
+	expand (IMP_RES_TAC PF_t10);;
+expand (ASM_REWRITE_TAC[]);;
+expand (ASM_CASES_TAC "z = x");;
+expand (ASM_REWRITE_TAC[PF_t11]);;
+expand (ASM_REWRITE_TAC[]);;
+expand (ASM_REWRITE_TAC [SYM (SPECL ["z:PF";"x:PF"] PF_t09); PF_t26]);;
+let PF_t27 = save_top_thm `PF_t27`;;
+.he
+.NH
+THE END
+.hd
+close_theory`pf123`;;
+print_theory`pf123`;;
+.he
+.KS
+.NH
+THE THEORY pf123
+.LP
+.DS L
+The Theory pf123
+Parents --  ZF2     ZF2     
+Types --  ":PF"     
+Constants --
+  ´ ":SET"     function_hereditary ":(SET ‹ bool) ‹ bool"
+  pure_function ":SET ‹ bool"     REP_PF ":PF ‹ SET"
+  ABS_PF ":SET ‹ PF"     lift_monop ":(SET ‹ SET) ‹ (PF ‹ PF)"
+  lift_binop ":(SET ‹ (SET ‹ SET)) ‹ (PF ‹ (PF ‹ PF))"
+  ý ":PF"     unit_map ":SET ‹ (SET ‹ SET)"     ´² ":PF"
+  T² ":PF"     truef ":SET"     set_to_type ":SET ‹ SET"
+  monop_set_to_type ":(SET ‹ SET) ‹ (SET ‹ SET)"
+  dom ":PF ‹ PF"     ran ":PF ‹ PF"     fie ":PF ‹ PF"
+  function_application ":SET ‹ (SET ‹ SET)"
+  func_extensional ":SET ‹ (SET ‹ bool)"     
+Curried Infixes --
+  —² ":PF ‹ (PF ‹ PF)"     ² ":PF ‹ (PF ‹ PF)"     
+Axioms --
+  DEF_PF
+    … ONE_ONE REP_PF € (ƒxŽ pure_function x = („x'Ž x = REP_PF x'))
+  
+Definitions --
+  ´_DEF  … ´ = unit(¤ — ¤)
+  function_hereditary_DEF
+    … function_hereditary p =
+       (ƒfŽ
+         function f €
+         ´ “ (image f) €
+         (ƒxŽ x  (field f) Š p x) Š
+         p f)
+  pure_function_DEF
+    … pure_function s = (ƒpŽ function_hereditary p Š p s)
+  ABS_PF_DEF  … ABS_PF s = (‡pŽ REP_PF p = s)
+  lift_monop_DEF  … lift_monop f = (xŽ ABS_PF(f(REP_PF x)))
+  lift_binop_DEF
+    … lift_binop f = (x yŽ ABS_PF(f(REP_PF x)(REP_PF y)))
+  ý_DEF  … ý = ABS_PF ¤
+  unit_map_DEF  … unit_map x y = ((y = ´) => ¤ | unit(x — y))
+  —²_DEF  … $—² = lift_binop unit_map
+  ´²_DEF  … ´² = ý —² ý
+  T²_DEF  … T² = ´² —² ý
+  truef_DEF  … truef = REP_PF T²
+  set_to_type_DEF  … set_to_type s = s ª (unit(REP_PF T²))
+  monop_set_to_type_DEF  … monop_set_to_type o = (sŽ set_to_type(o s))
+  dom_DEF  … dom = lift_monop(monop_set_to_type domain)
+  ran_DEF  … ran = lift_monop(monop_set_to_type image)
+  fie_DEF  … fie = lift_monop(monop_set_to_type field)
+  function_application_DEF
+    … function_application f a = (a  (domain f) => f © a | ´)
+  ²_DEF  … $² = lift_binop function_application
+  func_extensional_DEF
+    … func_extensional x y =
+       ((x = y) =
+        (ƒzŽ function_application x z = function_application y z))
+  
+Theorems --
+  PF_t01  … function_hereditary pure_function
+  PF_t02  … ƒpŽ function_hereditary p Š (ƒxŽ pure_function x Š p x)
+  PF_t03  … function_hereditary function
+  PF_t04  … function_hereditary(xŽ ´ “ (image x))
+  PF_t05  … ƒxŽ pure_function x Š function x € ´ “ (image x)
+  PF_t06
+    … ƒxŽ
+        pure_function x Š (ƒyŽ y  (field x) Š pure_function y)
+  PF_t07  … pure_function ¤
+  PF_t08  … „xŽ pure_function x
+  PF_t09  … ƒx yŽ (x = y) = (REP_PF x = REP_PF y)
+  PF_t10  … pure_function x Š (REP_PF(ABS_PF x) = x)
+  PF_t11  … ƒxŽ ABS_PF(REP_PF x) = x
+  PF_t12
+    … ƒx yŽ
+        pure_function x Š
+        (y  (domain x) = (function_application x y) ˆ ´)
+  PF_t13
+    … ƒx y zŽ
+        function x € y  (domain x) Š
+        ((function_application x y = z) = (y — z)  x)
+  PF_t14
+    … ƒx y zŽ
+        pure_function x € y  (domain x) Š
+        ((function_application x y = z) = (y — z)  x)
+  PF_t15
+    … ƒx yŽ
+        pure_function x Š pure_function y Š func_extensional x y
+  PF_t16
+    … ƒx yŽ
+        pure_function x € pure_function y € y ˆ ´ Š
+        pure_function(unit(x — y))
+  PF_t17  … pure_function ´
+  PF_t18
+    … ƒx yŽ
+        pure_function x Š
+        pure_function y Š
+        pure_function(function_application x y)
+  PF_t19  … ƒxŽ pure_function(REP_PF x)
+  PF_t20
+    … ƒx yŽ
+        pure_function x € pure_function y Š
+        (ƒzŽ
+          function_application x(REP_PF z) =
+          function_application y(REP_PF z)) Š
+        (x = y)
+  PF_t21  … ƒx yŽ (x = y) = (ƒzŽ x ² z = y ² z)
+  PF_t22  … ƒxŽ ý ² x = ´²
+  PF_t23
+    … ƒx y zŽ
+        pure_function x € pure_function y Š
+        pure_function(unit_map x y)
+  PF_t24
+    … ƒx y zŽ Œy  (domain x) Š (function_application x y = ´)
+  PF_t25
+    … ƒx y zŽ
+        pure_function x € pure_function y Š
+        (function_application(unit_map x y)z = ((z = x) => y | ´))
+  PF_t26  … ´² = ABS_PF ´
+  PF_t27  … ƒx y zŽ (x —² y) ² z = ((z = x) => y | ´²)
+.DE
+.KE

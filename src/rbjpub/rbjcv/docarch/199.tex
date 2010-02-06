@@ -1,0 +1,420 @@
+=TEX
+% 199.doc   @(#) 92/08/06 1.1 199.doc
+% COPYRIGHT (c) International Computers Limited, 1992
+\documentstyle[hol1]{article}
+
+\pagestyle{empty}
+\thispagestyle{empty}
+
+\makeatletter
+
+\parskip=0.5\parskip
+% Change the next line to read 245mm when page numbers to be included
+%\textheight = 265mm
+%\ftaboveboxskip=2mm minus 1mm
+%\ftbelowboxskip=2mm minus 1mm
+%\def\section{\@startsection {section}{1}{\z@}{-3.5ex plus -1ex minus 
+% -2.5ex}{2.3ex plus .2ex}{\Large\bf}}
+%\def\subsection{\@startsection{subsection}{2}{\z@}{-3.25ex plus -1ex minus 
+% -2.5ex}{1.5ex plus .2ex}{\large\bf}}
+%\def\subsubsection{\@startsection{subsubsection}{3}{\z@}{-3.25ex plus 
+% -1ex minus -2.5ex}{1.5ex plus .2ex}{\normalsize\bf}}
+%\def\paragraph{\@startsection
+% {paragraph}{4}{\z@}{3.25ex plus 1ex minus 2.5ex}{-1em}{\normalsize\bf}}
+%\def\subparagraph{\@startsection
+% {subparagraph}{4}{\parindent}{3.25ex plus 1ex minus 
+% .2ex}{-1em}{\normalsize\bf}}
+ 
+% From latex.tex
+
+\def\@dottedtocline#1#2#3#4#5{\ifnum #1>\c@tocdepth \else
+  \vskip \z@ plus .2pt
+  {\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
+    \parindent #2\relax\@afterindenttrue
+   \interlinepenalty\@M
+   \leavevmode 
+   \@tempdima #3\relax \advance\leftskip \@tempdima \hbox{}\hskip -\leftskip
+    #4\nobreak
+    \hfill\ 
+%\leaders\hbox{$\m@th \mkern \@dotsep mu.\mkern \@dotsep 
+%       mu$}\hfill \nobreak \hbox to\@pnumwidth{\hfil\rm #5}
+\par}\fi}
+
+% From article.sty
+
+\def\l@section#1#2{\addpenalty{\@secpenalty} \addvspace{1.0em plus 1pt}
+\@tempdima 1.5em \begingroup
+ \parindent \z@ \rightskip \@pnumwidth 
+ \parfillskip -\@pnumwidth 
+ \bf \leavevmode \advance\leftskip\@tempdima \hskip -\leftskip #1\nobreak%
+ \hfill\ 
+%\nobreak\hbox to\@pnumwidth{\hss #2}
+\par
+ \endgroup}
+
+% From ???
+
+% To make index entries have section numbers
+
+\def\@wrindex#1{\let\thepage\relax
+   \xdef\@gtempa{\write\@indexfile{\string
+      \indexentry{#1}{\@currentlabel}}}\endgroup\@gtempa
+   \if@nobreak \ifvmode\nobreak\fi\fi\@esphack}
+
+\makeatother % Stops "@" characters being allowed in macro names.
+
+\newcommand{\Dontprint}[1]{}
+
+\makeindex
+\thispagestyle{empty}
+\begin{document}
+\thispagestyle{empty}
+\date{} 
+\title{\vspace{-3pc}\bf Ramsey's Theorem in ProofPower}
+\author{\large Roger Bishop Jones\\
+    \normalsize International Computers Limited, \\
+    \normalsize Eskdale Road,
+    \normalsize Winnersh, 
+    \normalsize Berks, England, RG11 5TT. \\
+    \normalsize Phone: +44 734 693131, E-mail: R.B.Jones@win0109.uucp
+}
+\maketitle
+\begin{abstract}
+\noindent 
+This paper contains a HOL proof of Ramsey's Theorem.
+\end{abstract}
+
+
+\section{Introduction}
+
+=SML 
+open_theory"fin_set";
+new_theoryÛ"finsetthms"İ;
+use_file"/hat/users/rbj/form/fin";
+new_theoryÛ"ramsey"İ;
+¹HOLCONST
+Ü Ûsymgİ : ('a ğ ¸ ('a ª 'a))ğ
+÷üüüüüüüüüüüüüüüüüüüüüüüü
+Ü	µ (V,E)· (V,E)  symg
+Ü
+Ü	¤ E  (VªV) ± µ x y· (x,y)  E ¤ (y,x)  E
+Ü
+°
+=SML
+declare_infix(300, "clique_of");
+
+¹HOLCONST
+Ü $Ûclique_ofİ  :  'a ğ ­ ('a ğ ¸ ('a ª 'a)) ­ BOOL
+÷üüüüüüüüüüüüüüüüüüüüüüüü
+Ü	µ C (V,E)· C clique_of (V,E)
+Ü
+Ü	¤ C € V ± (C ¸ C)\(Id C) € E
+°
+=SML
+declare_infix(300, "indep_of");
+
+¹HOLCONST
+Ü $Ûindep_ofİ  :  'a ğ ­ ('a ğ ¸ ('a ª 'a)) ­ BOOL
+÷üüüüüüüüüüüüüüüüüüüüüüüü
+Ü	µ C (V,E)· C indep_of (V,E)
+Ü
+Ü	¤ C € V ± (C ¸ C) ¡ E € Id C
+°
+
+¹HOLCONST
+Ü $Ûwitİ  :  î ­ î ­ î
+÷üüüüüüüüüüüüüüüüüüüüüüüü
+Ü	µ l‰1 l‰2·
+Ü	wit l‰1 l‰2 =
+Ü	if l‰1 = 1 ² l‰2 = 1
+Ü	then 1
+Ü	else (wit l‰1 (l‰2 - 1)) + (wit (l‰1 - 1) l‰2)
+Ü	
+°
+Now we prepare for the proof by assigning ml names to the specifications and setting the proof context:
+=SML
+val symg_def = get_spec¬symg®;
+val clique_of_def = get_spec¬$clique_of®;
+val indep_of_def = get_spec¬$indep_of®;
+set_pc"hol1";
+=TEX
+Our goal is:
+=SML
+set_goal([],¬
+	µ l‰1 l‰2· ¶n· µ (V,E) ·
+	(V,E)  symg ± V  Finite ± #V ¾ n ´
+		(¶ C · C clique_of (V,E) ± #C = l‰1)
+	²	(¶ C · C indep_of (V,E) ± #C = l‰2)
+	®);
+=TEX
+first we prepare for induction:
+=SML
+a (REPEAT strip_tac);
+a (LEMMA_T ¬¶l· l = l‰1 + l‰2® (STRIP_THM_THEN ante_tac) THEN1 prove_¶_tac);
+a (intro_µ_tac (¬l‰1®,¬l‰1®) THEN intro_µ_tac (¬l‰2®,¬l‰2®));
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(* ?ô *)  ¬µ l‰2 l‰1
+           · l = l‰1 + l‰2
+               ´ (¶ n
+               · µ (V, E)
+                 · (V, E)  symg ± V  Finite ± Size V ¾ n
+                     ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                       ² (¶ C· C indep_of (V, E) ± Size C = l‰2))®
+=SML
+a (cov_induction_tac ¬l®);
+a (REPEAT strip_tac);
+a (asm_ante_tac ¬µ m
+           · m < l
+               ´ (µ l‰2 l‰1
+               · m = l‰1 + l‰2
+                   ´ (¶ n
+                   · µ (V, E)
+                     · (V, E)  symg ± V  Finite ± Size V ¾ n
+                         ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                           ² (¶ C· C indep_of (V, E) ± Size C = l‰2)))®
+    THEN asm_rewrite_tac [] THEN strip_tac);
+=TEX
+now we do the ``base cases''.
+=SML
+a (cases_tac ¬l‰1=0® THEN_TRY asm_rewrite_tac[]);
+=GFT ProofPower output
+(*  3 *)  ¬l = l‰1 + l‰2®
+(*  2 *)  ¬µ m
+           · m < l‰1 + l‰2
+               ´ (µ l‰2 l‰1
+               · m = l‰1 + l‰2
+                   ´ (¶ n
+                   · µ (V, E)
+                     · (V, E)  symg ± V  Finite ± n ¼ Size V
+                         ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                           ² (¶ C· C indep_of (V, E) ± Size C = l‰2)))®
+(*  1 *)  ¬l‰1 = 0®
+
+(* ?ô *)  ¬¶ n
+           · µ (V, E)
+             · (V, E)  symg ± V  Finite ± n ¼ Size V
+                 ´ (¶ C· C clique_of (V, E) ± Size C = 0)
+                   ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+=SML
+a (¶_tac ¬0®);
+a (asm_rewrite_tac[symg_def,clique_of_def,indep_of_def,¸_def]);
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬{}®);
+a (strip_asm_tac size_thm1);
+=GFT ProofPower output
+(* *** Goal "2" *** *)
+
+(*  3 *)  ¬l = l‰1 + l‰2®
+(*  2 *)  ¬µ m
+           · m < l‰1 + l‰2
+               ´ (µ l‰2 l‰1
+               · m = l‰1 + l‰2
+                   ´ (¶ n
+                   · µ (V, E)
+                     · (V, E)  symg ± V  Finite ± n ¼ Size V
+                         ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                           ² (¶ C· C indep_of (V, E) ± Size C = l‰2)))®
+(*  1 *)  ¬³ l‰1 = 0®
+
+(* ?ô *)  ¬¶ n
+           · µ (V, E)
+             · (V, E)  symg ± V  Finite ± n ¼ Size V
+                 ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                   ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+=SML
+a (cases_tac ¬l‰2=0® THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬0®);
+a (REPEAT strip_tac);
+a (¶_tac ¬{}®);
+a (asm_rewrite_tac[symg_def,clique_of_def,
+	indep_of_def,¸_def,id_def, size_thm1]);
+=GFT ProofPower output
+(* *** Goal "2.2" *** *)
+
+(*  4 *)  ¬l = l‰1 + l‰2®
+(*  3 *)  ¬µ m
+           · m < l‰1 + l‰2
+               ´ (µ l‰2 l‰1
+               · m = l‰1 + l‰2
+                   ´ (¶ n
+                   · µ (V, E)
+                     · (V, E)  symg ± V  Finite ± n ¼ Size V
+                         ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                           ² (¶ C· C indep_of (V, E) ± Size C = l‰2)))®
+(*  2 *)  ¬³ l‰1 = 0®
+(*  1 *)  ¬³ l‰2 = 0®
+
+(* ?ô *)  ¬¶ n
+           · µ (V, E)
+             · (V, E)  symg ± V  Finite ± n ¼ Size V
+                 ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                   ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+=SML
+a (CASES_T ¬l‰1 = 1 ± l‰2 = 1® asm_tac);
+a (¶_tac ¬1®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬¶ e· e  V®);
+a (cases_tac ¬# V = 0®);
+a (asm_ante_tac ¬1 ¼ Size V® THEN asm_rewrite_tac[]);
+=TEX
+Take a diversion to prove another result about finite sets.
+=SML
+push_goal([],¬µ V · V  Finite ´ (Size V = 0 ¤ V = {})®);
+a (strip_tac THEN fin_set_induction_tac );
+a (rewrite_tac[size_thm1]);
+a (strip_asm_tac (list_µ_elim [¬V®,¬x®] size_thm5));
+a (asm_rewrite_tac[]);
+a (prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¬V®,¬x®] size_thm5));
+a (asm_rewrite_tac[]);
+a (prove_tac[]);
+a (strip_asm_tac (list_µ_elim [¬V®,¬x®] size_thm5));
+a (asm_rewrite_tac[]);
+a (prove_tac[]);
+val size_thm8 = pop_thm();
+=TEX
+Now return to the main proof:
+=SML
+a (strip_asm_tac (µ_elim ¬V® size_thm8));
+a (¶_tac ¬x®);
+a strip_tac;
+a (¶_tac ¬x®);
+a strip_tac;
+a (¶_tac ¬{e}®);
+a (asm_rewrite_tac[indep_of_def, ¸_def, id_def]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+=IGN
+push_goal([],¬µv· Size {v} = 1®);
+a (asm_rewrite_tac[size_def]);
+=SML
+set_labelled_goal "2.2.2";
+a (spec_nth_asm_tac 4 ¬l‰1 + l‰2 - 1®);
+a (strip_asm_tac (µ_elim ¬l‰1® î_cases_thm));
+a (strip_asm_tac (µ_elim ¬l‰2® î_cases_thm));
+a (asm_ante_tac ¬³ l‰1 + l‰2 - 1 < l‰1 + l‰2®
+	THEN asm_rewrite_tac[]);
+=GFT ProofPower output
+(* *** Goal "2.2.2" *** *)
+
+(*  5 *)  ¬l = l‰1 + l‰2®
+(*  4 *)  ¬µ m
+           · m < l‰1 + l‰2
+               ´ (µ l‰2 l‰1
+               · m = l‰1 + l‰2
+                   ´ (¶ n
+                   · µ (V, E)
+                     · (V, E)  symg ± V  Finite ± n ¼ Size V
+                         ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                           ² (¶ C· C indep_of (V, E) ± Size C = l‰2)))®
+(*  3 *)  ¬³ l‰1 = 0®
+(*  2 *)  ¬³ l‰2 = 0®
+(*  1 *)  ¬µ l‰2' l‰1'
+           · l‰1 + l‰2 - 1 = l‰1' + l‰2'
+               ´ (¶ n
+               · µ (V, E)
+                 · (V, E)  symg ± V  Finite ± n ¼ Size V
+                     ´ (¶ C· C clique_of (V, E) ± Size C = l‰1')
+                       ² (¶ C· C indep_of (V, E) ± Size C = l‰2'))®
+
+(* ?ô *)  ¬¶ n
+           · µ (V, E)
+             · (V, E)  symg ± V  Finite ± n ¼ Size V
+                 ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                   ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+=SML
+(* prepare first summand of witness *)
+	
+a (list_spec_nth_asm_tac 1 [¬l‰2®,¬l‰1 - 1®]);	
+a (strip_asm_tac (µ_elim ¬l‰1® î_cases_thm));
+a (strip_asm_tac (µ_elim ¬l‰2® î_cases_thm));
+a (asm_ante_tac ¬³ l‰1 + l‰2 - 1 = (l‰1 - 1) + l‰2®
+	THEN asm_rewrite_tac[plus_assoc_thm]);
+	
+(* prepare second summand of witness *)
+
+a (list_spec_nth_asm_tac 2 [¬l‰2 - 1®,¬l‰1®]);	
+
+(* supply witness *)
+
+a (¶_tac ¬n + n'®);
+a (REPEAT strip_tac);
+a (LIST_DROP_NTH_ASM_T [7,11] (Combinators.K id_tac));
+=GFT ProofPower output
+(* *** Goal "2.2.2.2.2" *** *)
+
+(* 10 *)  ¬l = l‰1 + l‰2®
+(*  9 *)  ¬³ l‰1 = 0®
+(*  8 *)  ¬³ l‰2 = 0®
+(*  7 *)  ¬³ (l‰1 = 1 ± l‰2 = 1)®
+(*  6 *)  ¬µ V E
+           · (V, E)  symg ± V  Finite ± n ¼ Size V
+               ´ (¶ C· C clique_of (V, E) ± Size C = l‰1 - 1)
+                 ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+(*  5 *)  ¬µ V E
+           · (V, E)  symg ± V  Finite ± n' ¼ Size V
+               ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                 ² (¶ C· C indep_of (V, E) ± Size C = l‰2 - 1)®
+(*  4 *)  ¬(V, E)  symg®
+(*  3 *)  ¬V  Finite®
+(*  2 *)  ¬n + n' ¼ Size V®
+(*  1 *)  ¬µ C· ³ (C clique_of (V, E) ± Size C = l‰1)®
+
+(* ?ô *)  ¬¶ C· C indep_of (V, E) ± Size C = l‰2®
+=SML
+(* now chose an element of V *)
+a (lemma_tac ¬¶ v‰0 · v‰0  V®);
+set_labelled_goal "2.2.2.2.2.2";
+set_pc"hol";
+a (lemma_tac  ¬¶ s‰1 · s‰1 = ({x | (x, v‰0)  E} ¡ V)\{v‰0}®
+ THEN1 prove_¶_tac);
+a (lemma_tac ¬¶ s‰2 · s‰2 = ({x | ³ (x, v‰0)  E} ¡ V)\{v‰0}®
+ THEN1 prove_¶_tac);
+=GFT ProofPower output
+(* *** Goal "2.2.2.2.2.2" *** *)
+
+(* 13 *)  ¬l = l‰1 + l‰2®
+(* 12 *)  ¬³ l‰1 = 0®
+(* 11 *)  ¬³ l‰2 = 0®
+(* 10 *)  ¬³ (l‰1 = 1 ± l‰2 = 1)®
+(*  9 *)  ¬µ V E
+           · (V, E)  symg ± V  Finite ± n ¼ Size V
+               ´ (¶ C· C clique_of (V, E) ± Size C = l‰1 - 1)
+                 ² (¶ C· C indep_of (V, E) ± Size C = l‰2)®
+(*  8 *)  ¬µ V E
+           · (V, E)  symg ± V  Finite ± n' ¼ Size V
+               ´ (¶ C· C clique_of (V, E) ± Size C = l‰1)
+                 ² (¶ C· C indep_of (V, E) ± Size C = l‰2 - 1)®
+(*  7 *)  ¬(V, E)  symg®
+(*  6 *)  ¬V  Finite®
+(*  5 *)  ¬n + n' ¼ Size V®
+(*  4 *)  ¬µ C· ³ (C clique_of (V, E) ± Size C = l‰1)®
+(*  3 *)  ¬v‰0  V®
+(*  2 *)  ¬s‰1 = {x|(x, v‰0)  E} ¡ V \ {v‰0}®
+(*  1 *)  ¬s‰2 = {x|³ (x, v‰0)  E} ¡ V \ {v‰0}®
+
+(* ?ô *)  ¬¶ C· C indep_of (V, E) ± Size C = l‰2®
+=TEX
+%\bibliographystyle{fmu}
+%\bibliography{fmu}
+\section*{Index of Formal Names}
+%\newbox\COLC
+%\newbox\COLB
+%\newbox\COLA
+%\setbox\COLC=\vbox{{\footnotesize\printindex}}
+%\newdimen\H
+%\H=\ht\COLC
+%\divide\H by 3\advance\H by\ht\strutbox
+%\splittopskip=\ht\strutbox\vbadness=10000
+%\setbox\COLA=\vsplit\COLC to \H
+%\setbox\COLB=\vsplit\COLC to \H
+%\valign{#\vfil\cr\box\COLA\cr\noalign{\hfill}\box\COLB\cr
+%  \noalign{\hfill}\box\COLC\cr}
+\printindex
+\end{document}
+
+
+
+

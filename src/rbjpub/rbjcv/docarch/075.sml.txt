@@ -1,0 +1,116 @@
+infix 5 \(rh;
+infix 6 % ;
+infix 7 :!;
+infix 6 !: == \(mo;
+type var	= string;
+
+datatype
+	typed_var	= op :! of (var * term)
+and	separation 	= op !: of (typed_var * formula)
+and	formula	=	T of term				|
+				\(no of formula			|
+				op \(rh of (formula * formula)	|
+				\*k of (var * formula)		|
+				op == of (term * term)		|
+				op \(mo of (term * term)
+
+and	term	= 		V of var			|
+				\(es				|
+				Nat				|
+				op % of (term * term)		|
+				\*m of term			|
+				\(*m of term			|
+				\(cu of term			|
+				$ of separation;
+
+infix 8 \(*e;
+fun	x \(*e []	= false					|
+	x \(*e (y::z)	= x = y orelse x \(*e z;
+
+infix 8 \(sb;
+fun	[] \(sb y	= true					|
+	(h::t) \(sb y	= h \(*e y andalso t \(sb y;
+
+fun	m\(cu []		= []				|
+	m\(cu (a::b)	= a @ (m\(cu b);
+infix 8 --;
+fun	[] -- a		= []					|
+	(h::t) -- a	= if h=a then t -- a else h::(t -- a);
+infix 8 \e;
+fun	a \e []	= a						|
+	a \e (h::t)	= (a -- h) \e t;
+
+fun	term_freevars (V v)	= [v]					|
+	term_freevars \(es	= []					|
+	term_freevars Nat	= []					|
+	term_freevars (a%b)	= term_freevars a @ (term_freevars b)	|
+	term_freevars (\*m t)	= term_freevars t			|
+	term_freevars (\(*m t)	= term_freevars t			|
+	term_freevars (\(cu t)	= term_freevars t			|
+	term_freevars ($(v:!t!:f))	= (term_freevars t) @ (freevars f -- v)
+and	term_list_freevars term_list	= m\(cu (map term_freevars term_list)
+
+and	freevars (T t)			= term_freevars t			|
+	freevars (\(no f)		= freevars f				|
+	freevars (f1 \(rh f2)		= freevars f1 @ (freevars f2)		|
+	freevars (\*k (v,f))		= freevars f -- v			|
+	freevars (t1 == t2)		= term_freevars t1 @ (term_freevars t2)	|
+	freevars (t1 \(mo t2)		= term_freevars t1 @ (term_freevars t2);
+
+fun	primed nv varl =	if	nv \(*e varl
+			then	primed (nv^"'") varl
+			else	nv;
+
+infix 9 inn;
+datatype ('a)inc = op inn of ('a * 'a);;
+
+infix 8 t_subs_for;
+fun	term t_subs_for ivar inn (V v)
+		=	if	ivar = v
+			then	term
+			else	V v					|
+	term t_subs_for ivar inn \(es	= \(es				|
+	term t_subs_for ivar inn Nat	= Nat				|
+	term t_subs_for ivar inn (t1 % t2)
+		=	term t_subs_for ivar inn t1 % (term t_subs_for ivar inn t2)	|
+	term t_subs_for ivar inn (\*m t)
+		=	(\*m (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn (\(*m t)
+		=	(\(*m (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn (\(cu t)
+		=	(\(cu (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn ($(v:!t!:f))
+		=	if	ivar = v
+			then	$(v:!(term t_subs_for ivar inn t)!:f)
+			else	let	val nv = primed v (term_freevars term @
+									(freevars f -- v))
+					and nt = term t_subs_for ivar inn t
+					and nf = term subs_for v inn
+							((V v) subs_for v inn f)
+				in	$(nv:!nt!:nf)
+				end
+and	curried_t_subs term ivar term'
+		=	term t_subs_for ivar inn term'
+
+infix 8 subs_for;
+and	term subs_for ivar inn (T t)
+		=	T (term subs_for ivar inn t)				|
+	term subs_for ivar inn (\(no form)
+		=	\(no (term subs_for ivar inn form)			|
+	term subs_for ivar inn (form1 \(rh form2)
+		=	(term subs_for ivar inn form1)
+			\(rh (term subs_for ivar inn form2)			|
+	term subs_for ivar inn (\*k (ivar',form))
+		=	(\*k (ivar',term subs_for ivar inn form))		|
+	term subs_for ivar inn (t1 == t2)
+		=	(term t_subs_for ivar inn t1)
+			== (term t_subs_for ivar inn t2)			|
+	term subs_for ivar inn (t1 \(mo t2)
+		=	(term t_subs_for ivar inn t1)
+			\(mo (term t_subs_for ivar inn t2)			|
+and	curried_subs a b c = a subs_for b inn c;
+
+let fun unit s = s % s;;
+
+let val bty = unit Nat;;
+

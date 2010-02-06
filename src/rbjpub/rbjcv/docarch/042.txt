@@ -1,0 +1,961 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/rbj/keys/roff.defs
+.LP
+.TL
+Recursive Data Types in HOL
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/042   Issue 0.2
+.ds CH Recursive Data Types in HOL
+.ds RH \*(DY
+.ds LF DTC/RBJ/042   Issue 0.2
+.ds CF Recursive Data Types in HOL
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+This document describes a means of constructing recursively defined
+data types in higher order logic (HOL), and documents special ML procedures
+developed to facilitate this process.
+.LP
+By "recursive data type" we mean, in the first instance, a collection of
+data types constructed from a set of (non-recursive) data types by
+(recursive) iteration of labelled record type, and disjoint union type
+constructions.
+Provision of recursive data types is therefore intricately bound up with
+support of labelled record types and disjoint unions.
+Non-recursive disjoint unions, labelled records and enumeration types are
+special cases of the constructs provided.
+.LP
+Infinite (or cyclic) data structures are not supported.
+.KE
+.ig cx
+.LP
+Some of the developments necessary to support these data types are
+taken from theory 041, documented in DTC/RBJ/041.
+.KE
+.hd
+new_theory `042`;;
+new_parent `041`;;
+.he
+.hd m
+load(`041`,false);;
+.he
+.hd m
+z_loading := false;;
+.he
+.hd
+z_loading := true;;
+.he
+.cx
+.KS
+.NH
+DESCRIBING RECURSIVE DATA TYPES IN ML
+.LP
+First we define an ML type for describing structured data types.
+Values of this type are used as parameters to the functions which
+we provide for defining structured data types in HOL.
+.KE
+.LP
+Recursive data types normally come in groups, defined by mutually
+recursive equations.
+In our system each type in a group is either a product type or a union
+type, and is described by a set of field descriptions.
+.KS
+.LP
+Each field either of a union or of a product, has associated with it a
+field type.
+A field type may take one of three forms.
+It may be void, it may be the name of another type within this
+group of recursive types, or it may be (for the purposes of the
+construction in hand) primitive.
+.hd m
+type field_type	=	V | T of string | P of type;;
+.he
+.KE
+.KS
+.LP
+A field description associates a string with a field type.
+In the case of a product this string labels the component of the
+product and forms a part of the name of the projection function from
+the product type yielding this component.
+In the case of a union type the name is used for the constructor or
+injection for the component.
+.LP
+Field names for products must be unique only within a single product
+type.
+Field names for unions must be unique within a theory.
+.hd m
+typeabbrev field_desc	= string # field_type;;
+.he
+.KE
+.KS
+.LP
+These field descriptions are collected together and designated as
+product types or union types to give a structured type.
+.hd m
+type struc_type  =	Prod		of field_desc list	|
+			Union	of field_desc list;;
+.he
+.KE
+.KS
+.LP
+These types must be given names and collected together into a complete
+collection in which every type mentioned is defined.
+Such a collection has type \fIrec_types\fP.
+.hd m
+typeabbrev rec_types = (string # struc_type) list;;
+.he
+.KE
+.KS
+.NH
+THE REPRESENTATION OF VALUES WITH RECURSIVE DATA TYPES.
+.LP
+Our first task is to determine a HOL data type which will serve
+as representatives for objects with recursive types.
+We confine ourselves to finite data structures obtained from
+certain "primitive" (non-recursive) types by finite iteration of
+labelled product and disjoint union constructions.
+.KE
+.LP
+Each such data item may be regarded as a tree with labelled arcs.
+The leaves of the tree are the primitive data values from which the
+compound value was constructed.
+Where a disjoint union constructor is used there will be just one 
+branch descending from the relevant node.
+This will be labelled with the appropriate constructor.
+.LP
+Where a product construction is used there will be one branch
+for each component labelled by the projection name.
+.LP
+Each primitive on the tree may be located if the sequence of branch labels
+descending from it to the root is known, and this sequence may be thought
+of as its address.
+The information in the data structure may therefore be alternatively
+thought of as a (partial) mapping from addresses to primitive values,
+where an address is simply a list of arc labels.
+.LP
+Using iteration of the \fIsum\fP type constructor to give disjoint unions,
+and disjoint unions, of void components as enumerated types, we can represent
+the values in our recursive domains as partial functions from addresses
+(consisting of lists of the enumeration type formed from all the constructors)
+to values (consisting of the disjoint union of all the primitive types).
+.hd m
+let	is_P	f	= (case f of  P p .true) ? false;;
+
+let	is_T	f	= (case f of  T p .true) ? false;;
+
+let	P_type	= fun P t	.t;;
+
+let	T_name	= fun T name	.name;;
+
+let	body		= fun Prod b .b | Union b .b;;
+
+let	names	= map fst;;
+
+let	cnstr_names	= names o body;; 
+.he
+.hd m
+let	list_it f l e	= itlist f e l;;
+
+letrec	max		= fun	[]	.0	|
+				(h. t)	.(h > tmax => h | tmax where tmax = max t);;
+
+letrec	up_to from to	= if from>to then [] else from.(up_to (from+1) to);;
+
+let	range	= up_to 1;;
+
+let	map_int f n	= map f (range n);;
+.he
+.hd m
+let	struc_Ps	= (map P_type) o (filter is_P) o (map snd) o body;;
+
+let	struc_Ts	= (map T_name) o (filter is_T) o (map snd) o body;;
+
+let	rec_Ps:rec_types\(->type list
+		= make_set o (list_it append []) o (map (struc_Ps o snd));;
+
+let	rec_Ts:rec_types\(->string list
+		= make_set o (list_it append []) o (map (struc_Ts o snd));;
+.he
+.hd m
+let max_cnstr_width l = max (map length (map (cnstr_names o snd) l));;
+ 
+let c_void l = ":void";;
+.he
+.hd m
+letrec list_mk_pair = fun
+	[]	.failwith `list_mk_pair - empty list`	|
+	[t]	.t	|
+	(f.s.t)	.mk_pair(f,list_mk_pair (s.t));;
+.he
+.KS
+.NH
+THINGS THAT OUGHT TO BE IN 041
+.LP
+.NH 2
+Constructing Partial Functions from Lists
+.LP
+Before adding more to this we define some primitive polymorphic functions
+which allow a useful range of operations on all structured data types
+defined in the above way.
+.KE
+.KS
+.LP
+For constructing objects of schema types and of disjoint union types 
+we need a function which will take a list of *dom # *cod pairs and construct
+from them a partial function.
+.hd
+list_rec_def(`list_mk_pfun`,"
+	((list_mk_pfun:(*dom # *cod) list\(->(*dom,*cod)pfun) [] = pf_empty)
+\*e	(\*j(a:*dom # *cod)(l:(*dom # *cod)list).
+	list_mk_pfun (CONS a l) = ((list_mk_pfun l) pf_add (FST a)) (SND a))");;
+.he
+.KE
+.KS
+.LP
+We also require a function which will form the union of two partial functions.
+.hd
+new_infix_definition(`pf_merge`,"pf_merge (lf:(*dom,*cod)pfun) (rf:(*dom,*cod)pfun) =
+	(mk_pfun:(*dom\(->(void+*cod))\(->(*dom,*cod)pfun)
+		\arg:*dom. lf pdef arg =>
+				pf_val (lf apf arg) |
+				(rf pdef arg => pf_val (rf apf arg) | pf_u)");;
+.he
+.KE
+.KS
+.LP
+And a function to merge a list of partial functions.
+.hd
+list_rec_def(`pf_list_merge`,"
+	(pf_list_merge ([]:(*dom,*cod)pfun list) = (pf_empty:(*dom,*cod)pfun))
+ \*e	(pf_list_merge (CONS (a:(*dom,*cod)pfun) l) = a pf_merge (pf_list_merge l))");;
+.he
+.KE
+.KS
+Map defined in HOL.
+.hd
+list_rec_def(`rmap`,"
+	((rmap:*dom list\(->(*dom\(->*cod)\(->*cod list) [] f = [])
+ \*e 	(rmap (CONS a l) f = CONS (f a) (rmap l f))");;
+.he
+.hd
+new_definition(`map`,"map (f:*dom\(->*cod) l = rmap l f");;
+.he
+.KE
+.KS
+.NH 2
+Disjoint Union Injections
+.LP
+We must construct injections from the primitive types to the codomain
+of the representing function type before we can generate the predicates.
+.hd m
+letrec new_disj_type type_list	= 
+	if	null type_list
+	then	failwith `new_disj_type - empty type list`
+	else	if	null (tl type_list)
+		then	hd type_list
+		else	":^(hd type_list)+^(new_disj_type (tl type_list))";;
+.he
+.KE
+.hd m
+letrec inj_fun_r type_list typ =
+ 	if	null type_list
+	then	failwith `inj_fun_r - empty type_list`
+	else	let	tl_list	= tl type_list
+	 in	if	hd type_list = typ 
+		then	let	var	= "v:^typ"
+		 in	if	null (tl_list)
+			then	var
+			else	"(INL:^typ\(->(^typ+^(new_disj_type tl_list))) ^var"
+		else	let	term	= inj_fun_r (tl_list) typ
+		 in	"(INR:^(type_of term)\(->(^(hd type_list)+^(type_of term))) ^term";;
+.he
+.hd m
+let mk_injection type_list typ =
+	let term = inj_fun_r type_list typ
+ in	"\(*lv:^typ. ^term";;
+.he
+.KS
+.LP
+.NH 2
+Domain Values
+.LP
+We also need to be able to construct the values of the 'enumerated type' which forms
+the domain of the partial function in the representing type.
+.LP
+First we provide a procedure for constructing the domain type.
+.hd m
+letrec new_enum_type n	= 
+	if	n = 0
+	then	failwith `new_enum_type - n=0`
+	else	if	n = 1
+		then	":void"
+		else	":void+^(new_enum_type (n-1))";;
+.he
+The following function constructs the \fIm\fPth component of an \fIn\fP-valued enumerated type.
+.hd m
+letrec dom_val n m =
+ 	if	n = 0 or m = 0 or n < m
+	then	failwith `dom_val - n=0 or m=0 or n<m`
+	else	if	m = 1 
+		then	let	val	= "\(*mx:void.T"
+		 in	if	n = 1
+			then	val
+			else	"(INL:void\(->^(new_enum_type n)) ^val"
+		else	let	term	= dom_val (n-1) (m-1)
+		 in	"(INR:^(type_of term)\(->(void+^(type_of term))) ^term";;
+.he
+.LP
+dom_vals constructs a list of the first m values of a n-valued enumerated type.
+.hd m
+letrec dom_vals n m = (m = 0) => [] | (dom_vals n (m-1)) @ [dom_val n m];;
+.he
+.KE
+.KS
+.NH 2
+Projections from Tuples
+.LP
+The following function constructs a projection for the \fIm\fPth component of some
+\fIn\fP-tuple.
+.hd m
+let tuple_project term n m =
+	letrec tpr term n m =
+ 		if	n = 0 or m = 0 or n < m
+		then	failwith `tuple_select - n=0 or m=0 or n<m`
+		else	if	m = 1 
+			then	let	val	= term
+			 in	if	n = 1
+				then	(val,false)
+				else	(val,true)
+			else	let	(t,f)	= tpr term (n-1) (m-1)
+			 in	("SND ^t",f)
+ in	let	t,f	= tpr term n m
+ in	f => "FST ^t" | t;;
+.he
+.KE
+.KS
+.LP
+\fItuple_projections\fP constructs a list of the first \fIm\fP projections from an \fIn\fP-tuple \fIterm\fP.
+.hd m
+letrec tuple_projections term n m =
+	if	(m = 0)
+	then	[]
+	else	(tuple_projections term n (m-1)) @ [tuple_project term n m];;
+.he
+.KE
+.KS
+.LP
+The following function constructs a type consisting of an \fIn\fP-fold boolean product.
+.hd m
+letrec bool_tuple_type n = n=1 => ":bool" | ":bool#^(bool_tuple_type (n-1))";;
+.he
+.KE
+.KS
+.LP
+Next we construct a function which projects the \fIm\fPth component of an \fIn\fP-tuple of booleans.
+.hd m
+let bool_project n m =
+	let term = "x:^(bool_tuple_type n)"
+ in	"\(*l^term.^(tuple_project term n m)";;
+.he
+.KE
+.KS
+.LP
+And a function which returns a full list of boolean projections from an \fIn\fP-tuple.
+.hd m
+let bool_projections n = 
+	letrec bpr n m = (m = 0) => [] | (bpr n (m-1)) @ [bool_project n m]
+ in	bpr n n;;
+.he
+.KE
+.KS
+.NH
+CONSTRUCTING THE REPRESENTATION DOMAIN
+.LP
+.hd m
+let mk_rep_type type_list =
+	let	width	= max_cnstr_width type_list
+ in	let	dom	= new_enum_type width
+	and	cod	=	let	Ps	= rec_Ps type_list
+					in	null Ps => ":void" | new_disj_type (Ps)
+ in	let	lab_list = ":^dom list"
+ in	let	rep_type = ":(^lab_list, ^cod)pfun"
+ in	(rep_type, width);;
+.he
+.KE
+.KS
+.NH
+SOME FUNCTIONS DEFINED ON THE REPRESENTATION DOMAIN
+.LP
+.NH 2
+Primitive Construction
+.LP
+A primitive is a partial function which has a value only for the empty list:
+.hd
+new_definition(`mk_primitive`,
+	"mk_primitive (v:*cod) = list_mk_pfun [([]:*dom list),v]");;
+.he
+.KE
+.KS
+.NH 2
+Injections into Disjoint Unions
+.LP
+An element of a disjoint union type is a partial function which is
+defined only on (some) lists whose head is the constructor for the
+component in question.
+The constructor therefore takes a list element and a partial function
+over lists of that type, and yields a partial function which has the 
+same value for a list whos head is the contructor as the given partial
+has on the tail of the list.
+.hd
+new_definition(`inject`,
+	"inject (d:*dom) (f:(*dom list,*cod)pfun) =
+	 (mk_pfun:(*dom list \(-> (void+*cod))\(->(*dom list,*cod)pfun) (\l:*dom list.
+		NULL l =>
+			pf_u	|
+			(((HD l) = d) \*e (f pdef (TL l))) =>
+				pf_val (f apf (TL l)) |
+				pf_u)");;
+.he
+.KE
+.KS
+.LP
+And a function which will deliver the label of an object of disjoint
+union type:
+.hd
+new_definition(`union_comp`,"union_comp (f:(*dom list,*cod)pfun)
+	= \(*my.\*kz.f pdef (CONS y z)");;
+.he
+.KE
+.KS
+.NH 2
+Constructing Labelled Records
+.LP
+A labelled record is the union of a set of objects of some disjoint union type.
+.hd
+new_definition(`mk_schema`,"mk_schema (v:(*dom # (*dom list,*cod)pfun)list) =
+	pf_list_merge ((map \(*l((x:*dom),(y:(*dom list,*cod)pfun)).inject x y) v)");;
+.he
+.KE
+.KS
+.NH 2
+Extracting Values
+.LP
+We can also describe fully polymorphic projection which takes an
+arbitrary label and returns the value of that component if it has one.
+.hd
+new_definition(`proj`,"proj (t:*dom) (s:(*dom list,*cod)pfun) =
+	mk_pfun \(*ll:*dom list.
+		(s pdef (CONS t l)) =>
+			 pf_val (s apf (CONS t l)) |
+			 pf_u");;
+.he
+.KE
+.KS
+.NH
+GENERATING THE DEFINING PREDICATES
+.LP
+A predicate must be generated for each type.
+The complex bit of this is generting the predicates for the recursive types.
+We therefore deal with the predicates for the non-recursive types first.
+.KE
+.KS
+.NH 2
+Primitive Types
+.LP
+Predicates for primitive types never need recursive definitions, and are therefore
+the simplest to generate.
+.KE
+.KS
+.LP
+The predicates for the primitive types are formed from an injection from the primitive type 
+into the codomain of the representation type by the following function:
+.hd
+new_definition(`mk_is_primitive`,
+	"(mk_is_primitive:(*primitive_type\(->*cod)\(->(*dom list,*cod)pfun\(->bool) inj rep =
+	\*kv:*primitive_type. rep = mk_primitive (inj v)");;
+.he
+.KE
+.KS
+.LP
+Using mk_injection we can therefore obtain the list of predicates by mapping
+mk_is_primitive over the list of injections.
+.hd m
+let primitive_predicate rept injection =
+	let	[dom;cod]	= snd (dest_type rept)
+ in	"(mk_is_primitive:^(type_of injection)\(->(^rept\(->bool)) ^injection";;
+
+let primitive_terms rept type_list typ = 
+	let	inj	= mk_injection type_list typ
+ in	(typ, inj, primitive_predicate rept inj, "^inj (\(*mx:^typ.T)");;
+
+let p_term_assoc type_list rept = map (primitive_terms rept type_list) type_list;;
+.he
+.KE
+.KS
+.NH 2
+Disjoint Union Types
+.LP
+Disjoint unions may or may not need recursively defined predicates.
+We deal with the simple case first.
+.KE
+.LP
+The predicate for a simple disjoint union is the disjunction of the predicates
+for each of the component parts.
+.LP
+The predicates from the component parts read informally "there exists some object
+of the relevant type such that its injection is the object in hand".
+To construct this predicate we therefore need to know the predicate for the component,
+and the injection function for the component.
+.hd m
+let u_comp_pred (comp_pred, inj) =
+			"\*kc.(^comp_pred c) \*e (v = ^inj c)";;
+.he
+To form the complete predicate we therefore need a list of component predicate
+injection pairs:
+.hd m
+let u_pred pair_list = "\(*lv.^(list_mk_disj (map u_comp_pred pair_list))";;
+.he
+.KS
+.NH 2
+Product Types
+.LP
+To get the brain into gear we show a schematic:
+.DS L
+\(*ls.\*kc c' c''. is_t1 c \*e is_t2 c' \*e is_t3 c''
+		\*e s = mk_schema [d1,c; d2,c'; d3,c'']
+.DE
+.KE
+.LP
+For the product types we must simultaneously obtain a set of values satisfying
+the predicates for each component and the combine these to form the product.
+The combination can be done with the \fImk_schema\fP operation.
+.LP
+Since we need a complete collection of such objects each must be given a separate name.
+This will be done using variants of c.
+The existential quantifiers need to be at the (almost) outermost level,
+so we must form the predicates first, and apply mk_schema to them,
+before closing the formula.
+.KS
+.LP
+First a procedure for generating a list of variants of a variable.
+.hd m
+letrec variants v n =
+	if	n = 0
+	then	[]
+	else	let vars = variants v (n-1)
+	 in	(variant vars v).vars;;
+.he
+.KE
+.hd m
+let prod_preds = (list_mk_conj o (map mk_comb) o combine);;
+
+let prod_pairs l =
+	let pair_list = ((map mk_pair) o combine) l
+ in	mk_list (type_of (hd pair_list)) pair_list;;
+.he
+.hd m
+let mk_prod_pred rep_type preds doms vars =
+	let	exist_clauses	= prod_preds (preds,vars)
+	and	s_clause		= "(s:^rep_type) = mk_schema ^(prod_pairs (doms,vars))"
+ in	let	exist_closure	= list_mk_exists (vars, "^exist_clauses \*e ^s_clause")
+ in	"\(*ls:^rep_type.^exist_closure";;
+
+let mk_product_predicate rep_type n preds =
+	let	l	= length preds
+ in	let	doms	= dom_vals n l
+	and	vars	= variants "c:^rep_type" l
+ in	mk_prod_pred rep_type preds doms vars;;
+.he
+.KS
+.NH 2
+Control Framework
+.LP
+The general scheme for the constructions is as follows:
+.RS
+.IP [1]
+Process the leaves.
+.IP [2]
+Iteratively process every type which depends only upon types
+already processed until there are no types left which do not
+recurse.
+.IP [3]
+Process all the recursing types.
+.RE
+.KE
+.LP
+This is a peculiar compromise, since on one extreme we could treat
+all the types as mutually recursive and omit steps 1 and 2, and on the
+other, we might be able to divide the set of recursive types into
+subgroups which do not recurse through each other.
+.KS
+.LP
+We do not adopt the first extreme because:
+.RS
+.IP {a}
+It would probably slow down the whole process.
+.IP {b}
+I need to do steps 1 and 2 before I have any hope of understanding how
+to do step 3.
+.RE
+.KE
+.LP
+We do not adopt the latter extreme, because it looks like hard work,
+only saves mill, and probably doesn't often happen.
+Furthermore if it really makes any difference the user can split
+his definition into parts.
+.LP
+We now consider the control structure which will take us through this process.
+.LP
+Let us suppose that for each type, as it is processed, all the necessary aspects
+of processing are done together.
+As types are processed type will be moved off the original list of unprocessed
+types and onto a list of processed types.
+Each of these will be association lists, associating the necessary information with
+name of the type.
+.LP
+.NH 3
+Some useful functions
+.LP
+For checking:
+.RS
+.IP [i]
+Whether a given type can be non-recursively constructed from a given list of types.
+.IP [ii]
+Whether all the types mentioned in a list of types are
+defined in that type list (for a diagnostic).
+.RE
+.LP
+.hd m
+let t_defined rec_types type_name = mem type_name (names rec_types);;
+
+let rt_defined (r:rec_types) (s:struc_type) = forall (t_defined r) (struc_Ts s);;
+
+let undefined_rts rec_types = subtract (rec_Ts rec_types) (names rec_types);;
+.he
+.LP
+To understand how the main algorithm works it is essential to know the data
+structures being processed.
+.LP
+From the parameters supplied to new_rectypes, the top level procedure, are 
+constructed a single large data structure.
+This data structure is a four-tuple of which the four components have the 
+following roles:
+.RS
+.IP (a)
+The first component contains information of a global nature, i.e. not specific
+to any single one of the types being defined.
+Initially this consists of:
+.RS
+.IP [i]
+The name of the complex of types.
+.IP [ii]
+The HOL type which will be used to represent the various types.
+.IP [iii]
+Useful terms associated with the primitive types which are constructed
+during initialisation.
+This is a list of tuples each of which contains:
+.RS
+.IP a)
+A primitive type.
+.IP b)
+A term which is the injection function from the primitive type into
+the representation domain.
+.IP c)
+A term which is the predicate indicating whether any member of the representing
+domain is a representative of a member of this primitive type.
+.RE
+.hd m
+typeabbrev primitive_terms = (type # term # term) list;;
+.he
+.IP [iv]
+The number of elements in the enumeration type which is the domain of
+the representation type.
+.RE
+.hd m
+typeabbrev global_data = string # type # primitive_terms # int;;
+.he
+.RE
+.IP (b)
+The second component contains the details of those types which
+have not yet been processed, in just the form in which they are
+supplied, i.e. as a rec_types.
+.IP (c)
+The third component contains the details of types which have been
+processed, in their original form.
+.IP (d)
+The fourth contains the items of data which resulted from the processing
+of the types already processed.
+These form an association list indexed by the type names.
+.hd m
+typeabbrev other_data = (string # term) list;;
+.he
+.RE
+.hd m
+typeabbrev all_data = global_data # rec_types # rec_types # other_data;;
+.he
+.LP
+The algorithm consists in processing this four-tuple by various means,
+each of which may transfer types from the unprocessed list to the processed
+list.
+When the processed list is empty the constructions are complete.
+.LP
+This type processing is factored first into four stages.
+.RS
+.IP "\fIInitial processing\fP"
+During this phase the data structure described above is set up,
+showing all types unprocessed.
+.IP "\fINon-recursive types\fP"
+During this phase all types are processed which do not participate
+in recursion.
+.IP "\fIRecursive types\fP"
+Here the mutually recursive types are processed.
+.IP "\fIFinal processing\fP"
+Wind up actions.
+.RE
+.LP
+.NH 3
+Initial Processing
+.LP
+.hd m
+let check_completeness rec_types =
+	let	u_n	= undefined_rts rec_types
+ in	u_n = [] => ()	|
+	failwith `check_completeness - the following types are mentioned but not defined: `
+			^ (itlist (\(*lx y.x^`, `^y) (tl u_n) (hd u_n)) ^ `.`;;
+
+let do_initiation (name, rec_types) =
+	check_completeness rec_types;
+	let	prims	= rec_Ps rec_types
+	and	(rept, width)	= mk_rep_type rec_types
+ in	((name, rept, prims = [] => [] | p_term_assoc (rec_Ps rec_types) rept, width),
+	rec_types,
+	[],
+	[]);;
+.he
+.LP
+.NH 3
+Processing Non-Recursive Types
+.LP
+.NH 4
+Unions
+.LP
+In order to construct the predicate for a non-recursive union we must
+assemble a list of predicates and injections for each component of the
+union.
+.LP
+Non-recursive unions are not processed until after all their components,
+so all the component predicates will be available.
+The injections are constructed using \fIinject\fP.
+.LP
+The total data structure resulting after constructing the predicate for
+the union consists of:
+.RS
+.IP (a)
+The name of the type.
+.IP (b)
+The term which is the predicate.
+.hd m
+typeabbrev union_data = string # term;;
+.he
+.RE
+.LP
+We now show the procedure for retrieving the predicate for the component.
+.hd m
+let void_pred rep_type = 
+	let [dom; cod] = snd (dest_type rep_type)
+ in	"\(*lv:^rep_type.v=(list_mk_pfun [[]:^dom,\(*mx:^cod.T])";;
+
+let predicate ((_, rep_type, terms,_),_,_,results) = fun
+	P t	.fst (snd (snd (assoc t terms)))		|
+	T n	.snd (assoc n results)		|
+	V	.void_pred rep_type;;
+
+let predicates g = map (predicate g);;
+.he
+.hd m
+let injections ((_,u,_,l),_,_,_) t =
+	map (\(*lv:term. "(inject ^v):^u\(->^u") (map (dom_val l) (range (length t)));;
+
+let union_predicate g t = (u_pred o combine) (predicates g t, injections g t);;
+.he
+.hd m
+let do_nonrec_U g (gn,s) = (gn, union_predicate g (map snd s));;
+.he
+.NH 4
+Products
+.LP
+The construction of the predicate for non-recursive product is similar to that for the union.
+The differences are that the predicates for the components must all be saare conjoined rather 
+than disjoined
+.hd m
+let product_predicate g t = 
+	let	((_,rep_type,_,n),_,_,_) = g
+	and	preds	= predicates g t
+ in	mk_product_predicate rep_type n preds;;
+
+let do_nonrec_P g (gn,s) = (gn, product_predicate g (map snd s));;
+.he
+.NH 4
+Non-Recursive Types
+.LP
+Processing a single non-recursive type is done by the procedure \fIdo_nonrectype\fP.
+.hd m
+let do_nonrectype ad (name, st) =
+	case st of	Union u	.do_nonrec_U ad (name, u)	|
+				Prod p	.do_nonrec_P ad (name, p);;
+.he
+.LP
+Processing of non-recursive types is done in batches.
+We strip out of the as-yet-unprocessed types all those which
+can be defined using only types already processed.
+Then we process those types.
+.hd m
+let nonrectypes_step (g,u,d,r) =
+	let ok, not_ok = partition ((rt_defined d) o snd) u
+	in 	ok = [] => failwith `nonrectypes_step - finished`	|
+			(g,
+			not_ok,
+			d @ ok,
+			r @ (map (do_nonrectype (g,u,d,r)) ok));;
+.he
+.LP
+This is repeated until there are no more unprocessed types.
+.hd m
+letrec careful_repeat_f message_list f arg =
+	(careful_repeat_f message_list f) (f arg) ?? message_list arg;;
+.he
+.hd m
+let do_nonrectype_preds four_tuple =
+	careful_repeat_f [`nonrectypes_step - finished`] nonrectypes_step four_tuple;;
+.he
+.NH 3
+Recursive Types
+.LP
+By contrast with the non-recursive types, all the recursive types are done in
+a single batch (could be modified later).
+In fact the same code is invoked to do the recursive types as to do the non-recursive
+types, but in the recursive case the invokation is preceded and followed by extra work.
+.LP
+The predicates for recursive types are constructed in three stages.
+.RS
+.IP 1
+Predicates are constructed using the recursion variable f for each of the
+recursive types (these are called \fIfirst_preds\fP).
+.IP 2
+The non-recursive predicate construction code is invoked to construct the
+predicates again, using the predicates constructed in step 1
+(these predicates are called \fIsecond_preds\fP).
+.IP 3
+The predicates contructed in stage 2 are all bundled together into a tuple,
+an abstraction on f and (m:int) is constructed and PRIM_REC is applied.
+Then projections are taken from the result to obtain the final version of the
+predicates.
+.RE
+The reader is recommended to study the worked example to understand how this
+works.
+.LP
+We need a procedure for constructing the predicates.
+The following procedure takes a projection function, \fIpr\fP
+and constructs a function of the form \fI\(*lx:^rep_type.pr (f x)\fP.
+.LP
+.hd m
+let do_rectype_preds (g,u,d,r) =
+	let	mk_first_pred rep_type pr	= "\(*lx:^rep_type.^pr (f x)"
+	and	(_,rep_type,_,_)	= g
+	and	len_u	= length u
+ in	let	first_preds	= combine (	map fst u,
+							map	(mk_first_pred rep_type)
+								(bool_projections len_u))
+ in	let	second_preds	= map (do_nonrectype (g,[],u @ d, r @ first_preds)) u
+ in	let	clause_tuple	= list_mk_pair (map (snd o dest_abs o snd) second_preds)
+	and	bool_t_t	= bool_tuple_type len_u
+	and	false_tuple	= list_mk_pair (map_int (\(*lx."F") len_u)
+ in	let	rec_preds	= "PRIM_REC (\(*l(r:^rep_type).^false_tuple) (\(*l(f:^rep_type\(->^bool_t_t) (m:num) (v:^rep_type).^clause_tuple)"
+ in	let	predicates	= map (\(*lx."\(*lr:^rep_type.\*kn:num.^x (^rec_preds n r)") (bool_projections len_u)
+ in	(g, [], u @ d, r @ (combine (map fst second_preds, predicates)));;
+.he
+.hd m
+let make_predicates = do_rectype_preds o do_nonrectype_preds;;
+.he
+.LP
+.KS
+.NH
+THE THEORY 042
+.DS L
+The Theory 042
+Parents --  HOL     041     
+Constants --
+  pf_empty ":(*dom,*cod)pfun"
+  list_mk_pfun ":(*dom # *cod)list \(-> (*dom,*cod)pfun"
+  pf_list_merge ":((*dom,*cod)pfun)list \(-> (*dom,*cod)pfun"
+  rmap ":(*dom)list \(-> ((*dom \(-> *cod) \(-> (*cod)list)"
+  map ":(*dom \(-> *cod) \(-> ((*dom)list \(-> (*cod)list)"
+  mk_primitive ":*cod \(-> ((*dom)list,*cod)pfun"
+  inject ":*dom \(-> (((*dom)list,*cod)pfun \(-> ((*dom)list,*cod)pfun)"
+  union_comp ":((*dom)list,*cod)pfun \(-> *dom"
+  mk_schema
+    ":(*dom # ((*dom)list,*cod)pfun)list \(-> ((*dom)list,*cod)pfun"
+  proj ":*dom \(-> (((*dom)list,*cod)pfun \(-> ((*dom)list,*cod)pfun)"
+  mk_is_primitive
+    ":(*primitive_type \(-> *cod) \(-> (((*dom)list,*cod)pfun \(-> bool)"     
+Curried Infixes --
+  pf_merge ":(*dom,*cod)pfun \(-> ((*dom,*cod)pfun \(-> (*dom,*cod)pfun)"
+  
+Definitions --
+  pf_empty  |- pf_empty = mk_pfun(\(*lx. pf_u)
+  list_mk_pfun_DEF
+    |- list_mk_pfun =
+       LIST_REC_D pf_empty(\(*la g00012. (g00012 pf_add (FST a))(SND a))
+  pf_merge
+    |- lf pf_merge rf =
+       mk_pfun
+       (\(*larg.
+         (lf pdef arg => 
+          pf_val(lf apf arg) | 
+          (rf pdef arg => pf_val(rf apf arg) | pf_u)))
+  pf_list_merge_DEF
+    |- pf_list_merge = LIST_REC_D pf_empty(\(*la g00013. a pf_merge g00013)
+  rmap_DEF
+    |- rmap = LIST_REC_D(\(*lf. [])(\(*la g00014 f. CONS(f a)(g00014 f))
+  map  |- map f l = rmap l f
+  mk_primitive  |- mk_primitive v = list_mk_pfun[[],v]
+  inject
+    |- inject d f =
+       mk_pfun
+       (\(*ll.
+         (NULL l => 
+          pf_u | 
+          (((HD l = d) \*e f pdef (TL l)) => pf_val(f apf (TL l)) | pf_u)))
+  union_comp  |- union_comp f = (\(*my. \*kz. f pdef (CONS y z))
+  mk_schema
+    |- mk_schema v = pf_list_merge(map(UNCURRY(\(*lx y. inject x y))v)
+  proj
+    |- proj t s =
+       mk_pfun
+       (\(*ll. (s pdef (CONS t l) => pf_val(s apf (CONS t l)) | pf_u))
+  mk_is_primitive
+    |- mk_is_primitive inj rep = (\*kv. rep = mk_primitive(inj v))
+  
+Theorems --
+  list_mk_pfun
+    |- (list_mk_pfun[] = pf_empty) \*e
+       (\*ja l.
+         list_mk_pfun(CONS a l) =
+         ((list_mk_pfun l) pf_add (FST a))(SND a))
+  pf_list_merge
+    |- (pf_list_merge[] = pf_empty) \*e
+       (pf_list_merge(CONS a l) = a pf_merge (pf_list_merge l))
+  rmap  |- (rmap[]f = []) \*e (rmap(CONS a l)f = CONS(f a)(rmap l f))
+.DE
+.KE

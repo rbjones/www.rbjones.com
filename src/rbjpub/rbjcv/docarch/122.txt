@@ -1,0 +1,1170 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff.defs
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.RP
+.TL
+Zermelo-Fraenkel set theory in HOL (part 2)
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document consists of a formal axiomatisation in HOL of Zermelo-Fraenkel set theory.
+.AE
+.ds LH 
+.ds CH ZF in HOL part 2
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/FMU/RBJ/122   Issue 0.3
+.ds CF ZF in HOL part 2
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+ZF in HOL part 2.
+Part 1 is DS/FM/RBJ/120, which includes all Hatcher's definitions and the first twenty-five of his theorems.
+This theory provides further material as required for applications of the theory.
+.KE
+.ig cx
+extend_theory`zf122`;;
+map load_definitions [`zf120`;`zf122`];;
+map load_theorems [`zf120`;`zf122`];;
+map load_axioms [`zf120`;`zf122`];;
+map delete_cache [`zf120`;`zf122`];;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+.cx
+.hd
+new_theory`zf122`;;
+new_parent`zf120`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+load_definitions `zf120`;;
+load_theorems `zf120`;;
+load_axioms `zf120`;;
+delete_cache`zf120`;;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+.he
+.NH
+ORDERED PAIRS
+.LP
+.hd
+let field_DEF = new_definition(`field_DEF`,"
+	(field:SETãSET) s = (domain s) ° (image s)
+");;
+.he
+.NH 2
+Left projection
+.LP
+.hd
+let fst_DEF = new_definition(`fst_DEF`,"
+	(fst:SETãSET) s = £(¢ s)
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é fst(x ó y) = x
+");;
+expand (PURE_REWRITE_TAC[fst_DEF; ¢_DEF; ó_DEF; ZF_le1; ZF2; ZF6]);;
+expand (REWRITE_TAC [ZF5] THEN BETA_TAC THEN REPEAT STRIP_TAC THEN EQ_TAC);;
+expand STRIP_TAC;;
+expand (ACCEPT_TAC (
+	REWRITE_RULE
+		[REWRITE_RULE [ZF_thm9]
+			(REWRITE_RULE [ASSUMP "z'' = unit x"] (ASSUMP "z' ù z''"))]
+					(ASSUMP "z ù z'")));;
+expand (ASSUME_TAC (REFL "unit x"));;
+expand RES_TAC;;
+expand (ACCEPT_TAC (REWRITE_RULE [REWRITE_RULE [ZF_thm9]
+		(ASSUMP "z' ù (unit x)")] (ASSUMP "z ù z'")));;
+expand (STRIP_TAC THEN EXISTS_TAC "x:SET" THEN ASM_REWRITE_TAC[]);;
+expand STRIP_TAC;;
+expand (EXISTS_TAC  "unit x");;
+expand (ASM_REWRITE_TAC[ZF_thm9]);;
+expand (REPEAT STRIP_TAC);;
+expand (ASM_REWRITE_TAC [ZF_thm9]);;
+expand (ASM_REWRITE_TAC [ZF5]);;
+let ZF2_thm1 = save_top_thm `ZF2_thm1`;;
+.he
+.NH 2
+Difference
+.LP
+.hd
+let dif_DEF = new_infix_definition(`dif_DEF`,"
+	(dif:SETãSETãSET) s t = sep s çx:SETé x ì t
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(v:SET)(w:SET)é (pair x v = pair x w) = (v = w)
+");;
+expand(REWRITE_TAC [SPECL ["pair x v";"pair x w"] ZF_le1]);;
+expand (REWRITE_TAC [ZF5]);;
+expand (REPEAT STRIP_TAC THEN EQ_TAC
+	THEN REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+lemma_proof "(v = x) Å (v = w)"
+	[REWRITE_TAC [REWRITE_RULE [] (SPEC "v:SET" 
+	(ASSUME "Ézé (z = x) Å (z = v) = (z = x) Å (z = w)"))]];;
+lemma_proof "(w = x) Å (w = v)"
+	[REWRITE_TAC [REWRITE_RULE [] (SPEC "w:SET" 
+	(ASSUMP "Ézé (z = x) Å (z = v) = (z = x) Å (z = w)"))]];;
+expand (ASM_REWRITE_TAC[]);;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_le1 = save_top_thm `ZF2_le1`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é
+		z ù (x dif y) = z ù x Ä z ì y
+");;
+expand (REWRITE_TAC [dif_DEF; NE_DEF; ì_DEF; ZF2]);;
+expand (BETA_TAC THEN REPEAT STRIP_TAC);;
+expand (EQ_TAC THEN REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[] THEN RES_TAC);;
+let ZF2_le2 = save_top_thm `ZF2_le2`;;
+.he
+.NH 2
+Right projection
+.LP
+.hd
+let snd_DEF = new_definition(`snd_DEF`,"
+	(snd:SETãSET) s = (s = unit(unit (fst s))) => fst s
+					| £((£ s) dif (unit(fst s)))
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é snd(x ó y) = y
+");;
+expand (PURE_REWRITE_TAC[snd_DEF; ZF2_thm1] THEN REPEAT STRIP_TAC);;
+expand (ASM_CASES_TAC "x = y" THEN ASM_REWRITE_TAC[ó_DEF; unit_DEF]);;
+lemma "å(x = y) ä å(pair(pair x x)(pair x y) = pair(pair x x)(pair x x))";;
+  expand (TAUT_REWRITE_TAC " åa ä åb = b ä a");;
+  expand STRIP_TAC;;
+  lemma "pair x y = pair x x";;
+    expand (DEF_RES_TAC (SPECL
+	["pair x x";"pair x y";"pair x x"] ZF2_le1));;
+  expand (DEF_RES_TAC (SPECL
+	["x:SET";"y:SET";"x:SET"] ZF2_le1));;
+  expand (ACCEPT_TAC (SYM (ASSUMP "y:SET = x")));;
+expand RES_TAC;;
+expand (ASM_REWRITE_TAC[ZF_le1]);;
+expand (REWRITE_TAC [ZF6; ZF5; ZF2_le2; ì_DEF]);;
+expand (STRIP_TAC THEN EQ_TAC THEN STRIP_TAC);;
+expand (CONTR_TAC (REWRITE_RULE
+		[ASSUMP "z'' = pair x x"; ZF5; ASSUMP "å(z' = x)"]
+		(ASSUMP "z' ù z''")));;
+expand (ACCEPT_TAC (REWRITE_RULE [REWRITE_RULE
+		[ASSUMP "z'' = pair x y"; ZF5; ASSUMP "å(z' = x)"]
+		(ASSUMP "z' ù z''")] (ASSUMP "z ù z'")));;
+expand (EXISTS_TAC "y:SET");;
+expand (ASM_REWRITE_TAC[]);;
+expand STRIP_TAC;;
+expand (EXISTS_TAC "pair x y");;
+expand (REWRITE_TAC [ZF5]);;
+expand (ASM_REWRITE_TAC []);;
+expand (UNDISCH_TAC "å(x = y)" THEN
+	TAUT_REWRITE_TAC "åa ä åb = b ä a" THEN STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm2 = save_top_thm `ZF2_thm2`;;
+.he
+.he
+.NH 2
+Equality of ordered pairs
+.hd
+set_goal([],"
+	É(v:SET)(w:SET)(x:SET)(y:SET)(z:SET)é
+		((v ó w) = (x ó y)) = (v = x) Ä (w = y)
+");;
+expand (REPEAT STRIP_TAC THEN EQ_TAC THEN REPEAT STRIP_TAC);;
+expand (ACCEPT_TAC (REWRITE_RULE [ZF2_thm1]
+		(AP_TERM "fst" (ASSUME "v ó w = x ó y"))));;
+expand (ACCEPT_TAC (REWRITE_RULE [ZF2_thm2]
+		(AP_TERM "snd" (ASSUME "v ó w = x ó y"))));;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm3 = save_top_thm `ZF2_thm3`;;
+.he
+.NH
+EXTENSIONALITY OF FUNCTIONS
+.LP
+.hd
+set_goal([],"
+	É(x:SET)é(ÑÉ(y:SET)é y ù x) ä É(y:SET)éy ù x ä((áy:SETé y ù x) = y)
+");;
+expand (PURE_REWRITE_TAC [EXISTS_UNIQUE_DEF]);;
+expand (BETA_TAC THEN BETA_TAC THEN (REPEAT STRIP_TAC));;
+expand (IMP_RES_TAC (BETA_RULE (SPEC "çy:SETé y ù x"
+		(INST_TYPE [":SET",":*"] SELECT_AX))));;
+expand (IMP_RES_TAC (SPECL ["áyé y ù x";"y"] (ASSUME "Éx' yé x' ù x Ä (y ù x ä (x' = y))")));;
+let ZF2_l1 = save_top_thm `ZF2_l1`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)é(ÑÉ(y:SET)é y ù x)
+			ä (x = unit (áy:SETé y ù x))
+");;
+expand (REPEAT STRIP_TAC);;
+expand (IMP_RES_TAC ZF2_l1);;
+expand (PURE_REWRITE_TAC [ZF_le1]);;
+expand (PURE_REWRITE_TAC [ZF_thm9]);;
+expand (STRIP_TAC THEN EQ_TAC);;
+expand STRIP_TAC;;
+expand RES_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand STRIP_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand (MP_TAC (CONJUNCT1 (BETA_RULE (REWRITE_RULE [EXISTS_UNIQUE_DEF]
+		(ASSUME "ÑÉ yé y ù x")))) THEN STRIP_TAC);;
+expand RES_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_l2 = save_top_thm `ZF2_l2`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä y ù domain x
+			ä((x © y = z) = (y ó z) ù x)
+");;
+expand (PURE_REWRITE_TAC[domain_DEF; ZF2] THEN BETA_TAC);;
+expand (REPEAT STRIP_TAC THEN EQ_TAC);;
+% 2 subgoals %
+.he
+.hd
+% 1 %
+  expand (PURE_REWRITE_TAC [©_DEF]);;
+  expand (PURE_REWRITE_TAC [ZF_le1]);;
+  expand (PURE_REWRITE_TAC [ZF6;ZF2] THEN BETA_TAC);;
+  expand (DEF_RES_TAC function);;
+  expand (ASM_CASES_TAC "(z:SET) = z'");;
+% 2 subgoals %
+.he
+.hd
+% 1/1 %
+    expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+% 1/2 %
+    expand (TAUT_REWRITE_TAC "a ä b = åb ä åa");;
+    expand NOT_FORALL_TAC;;
+    expand STRIP_TAC;;
+    expand (MP_TAC (ASSUME "å(z = z')"));;
+    expand (SUBST1_TAC (SPECL ["z:SET";"z':SET"] ZF_le1));;
+    expand NOT_FORALL_TAC;;
+    expand STRIP_TAC;;
+    expand (EXISTS_TAC "x':SET");;
+    expand (ASM_CASES_TAC "x' ù z");;
+% 2 subgoals %
+.he
+.hd
+% 1/2/1 %
+      expand (ASM_REWRITE_TAC[]);;
+      expand NOT_EXISTS_TAC;;
+      expand STRIP_TAC;;
+      expand (TAUT_REWRITE_TAC "å (a Ä b) = a ä åb");;
+      expand STRIP_TAC;;
+      expand RES_TAC;;
+      expand (ONCE_ASM_REWRITE_TAC[]);;
+      expand (ACCEPT_TAC (REWRITE_RULE [ASSUME "x' ù z"]
+		(ASSUME "å(x' ù z = x' ù z')")));;
+.he
+.hd
+% 1/2/2 %
+      expand (ASM_REWRITE_TAC[]);;
+      expand (EXISTS_TAC "z':SET");;
+      expand (REWRITE_TAC [REWRITE_RULE [ASSUME "åx' ù z"]
+			(ASSUME "å(x' ù z = x' ù z')")]);;
+      expand (PURE_REWRITE_TAC[image_DEF;ZF2;ZF6]
+		THEN BETA_TAC THEN STRIP_TAC);;
+% 2 subgoals %
+.he
+.hd
+% 1/2/2/1 %
+        expand STRIP_TAC;;
+% 2 subgoals %
+.he
+.hd
+% 1/2/2/1/1 %
+          expand (EXISTS_TAC "pair (y:SET) (z':SET)");;
+          expand (REWRITE_TAC [ZF5]);;
+          expand (EXISTS_TAC "y ó z'");;
+          expand (ASM_REWRITE_TAC [ó_DEF;ZF5]);;
+.he
+.hd
+% 1/2/2/1/2 %
+          expand (EXISTS_TAC "y:SET");;
+          expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+% 1/2/2/2 %
+        expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+% 2 %
+  expand (STRIP_TAC THEN PURE_REWRITE_TAC [©_DEF]);;
+  expand (PURE_REWRITE_TAC[ZF_le1]);;
+  expand (PURE_REWRITE_TAC[ZF6;ZF2] THEN BETA_TAC);;
+  expand (DEF_RES_TAC function);;
+  expand RES_TAC;;
+  expand STRIP_TAC;;
+  expand EQ_TAC;;
+.he
+.hd
+% 2/1 %
+    expand STRIP_TAC;;
+    expand RES_TAC;;
+    expand (REWRITE_TAC [ASSUME "z:SET = z'''"; ASSUME "z'' ù z'''"]);;
+.he
+.hd
+% 2/2 %
+    expand STRIP_TAC;;
+    expand (EXISTS_TAC "z:SET");;
+    expand (PURE_ONCE_ASM_REWRITE_TAC []);;
+    expand (REWRITE_TAC [image_DEF;ZF2;ZF6] THEN BETA_TAC);;
+    expand STRIP_TAC;;
+% 2 subgoals %
+.he
+.hd
+% 2/2/1 %
+      expand (EXISTS_TAC "pair (y:SET) (z':SET)");;
+      expand (REWRITE_TAC [ZF5]);;
+      expand (EXISTS_TAC "y ó z'");;
+      expand (ONCE_ASM_REWRITE_TAC[]);;
+      expand (REWRITE_TAC [ó_DEF;ZF5]);;
+.he
+.hd
+% 2/2/2 %
+    expand (EXISTS_TAC "y:SET" THEN ONCE_ASM_REWRITE_TAC[]);;
+let ZF2_thm4 = save_top_thm `ZF2_thm4`;;
+.he
+.hd
+set_goal([],"
+	É(w:SET)(x:SET)é (Ñ(z:SET)é (w ó z) ù x) ä w ù (domain x)
+");;
+expand (EVERY[
+	PURE_REWRITE_TAC [domain_DEF;ZF2;ZF6];
+	BETA_TAC;
+	REPEAT STRIP_TAC]);;
+% 2 subgoals %
+.he
+.hd
+% 1
+"Ñzé (Ñz'é z' ù x Ä z ù z') Ä w ù z"
+    [ "(w ó z) ù x" ]
+%
+
+expand (EVERY[
+	EXISTS_TAC "pair w z";
+	REWRITE_TAC [ZF5];
+	EXISTS_TAC "w ó z";
+	ASM_REWRITE_TAC[];
+	REWRITE_TAC [ó_DEF;ZF5]]);;
+.he
+.hd
+% 2
+"Ñzé (w ó z) ù x"
+    [ "(w ó z) ù x" ]
+%
+expand (EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm6 = save_top_thm `ZF2_thm6`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é x ù (domain y) = Ñ(z:SET)é (x ó z) ù y
+");;
+expand (REPEAT STRIP_TAC THEN EQ_TAC THEN REWRITE_TAC [ZF2_thm6]);;
+.he
+sv "HOL output"
+"x ù (domain y) ä (Ñzé (x ó z) ù y)"
+.sw
+.hd
+expand (REWRITE_TAC [domain_DEF; ZF2; ZF6]
+		THEN BETA_TAC THEN REPEAT STRIP_TAC);;
+.he
+.sv "HOL output"
+"Ñzé (x ó z) ù y"
+    [ "z' ù y" ]
+    [ "z ù z'" ]
+    [ "x ù z" ]
+    [ "(x ó z'') ù y" ]
+.sw
+.hd
+expand (EXISTS_TAC "z'':SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm11 = save_top_thm `ZF2_thm11`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é x ù (image y) = Ñ(z:SET)é (z ó x) ù y
+");;
+expand (EVERY [REPEAT STRIP_TAC; EQ_TAC;
+	REWRITE_TAC [image_DEF; ZF2; ZF6];
+	BETA_TAC; STRIP_TAC]);;
+.he
+sv "HOL output"
+2 subgoals
+"(Ñzé (Ñz'é z' ù y Ä z ù z') Ä x ù z) Ä
+ (Ñzé (z ó x) ù y)"
+    [ "(z ó x) ù y" ]
+
+"Ñzé (z ó x) ù y"
+    [ "z' ù y" ]
+    [ "z ù z'" ]
+    [ "x ù z" ]
+    [ "(z'' ó x) ù y" ]
+.sw
+.hd
+expand (EXISTS_TAC "z'':SET" THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+goal proved
+é Ö Ñzé (z ó x) ù y
+
+Previous subproof:
+"(Ñzé (Ñz'é z' ù y Ä z ù z') Ä x ù z) Ä
+ (Ñzé (z ó x) ù y)"
+    [ "(z ó x) ù y" ]
+.sw
+.hd
+expand (STRIP_TAC);;
+expand (EXISTS_TAC "pair z x" THEN REWRITE_TAC[ZF5]);;
+expand (EXISTS_TAC "z ó x" THEN ASM_REWRITE_TAC[ó_DEF; ZF5]);;
+expand (EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm13 = save_top_thm `ZF2_thm13`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä å(y ù domain x)
+			ä(x © y = §)
+");;
+expand (REWRITE_TAC [ZF_le1; ZF_le2]);;
+expand (STRIP_TAC THEN STRIP_TAC);;
+expand (TAUT_REWRITE_TAC "a Ä åb ä c = a ä åc ä b");;
+expand (STRIP_TAC THEN NOT_FORALL_TAC);;
+expand (REWRITE_TAC [©_DEF;ZF2;ZF6;domain_DEF] THEN BETA_TAC);;
+expand (REPEAT STRIP_TAC);;
+expand (EXISTS_TAC "pair (y:SET) (z:SET)");;
+expand (REPEAT STRIP_TAC);;
+expand (EXISTS_TAC "y ó z");;
+expand (ASM_REWRITE_TAC[ó_DEF;ZF5]);;
+expand (REWRITE_TAC[ZF5]);;
+expand (EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm5 = save_top_thm `ZF2_thm5`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é (x ó y) ù z ä x ù (domain z) Ä y ù (image z)
+");;
+expand (PURE_REWRITE_TAC [domain_DEF; image_DEF;ZF2;ZF6]);;
+expand BETA_TAC;;
+expand (REPEAT STRIP_TAC);;
+
+expand (EVERY[
+	EXISTS_TAC "pair x y";
+	STRIP_TAC THENL [	EXISTS_TAC "x ó y" THEN	ASM_REWRITE_TAC [];
+				ALL_TAC];
+	REWRITE_TAC [ó_DEF;ZF5]]);;
+
+expand (EXISTS_TAC "y:SET" THEN ASM_REWRITE_TAC[]);;
+
+expand (EVERY[
+	EXISTS_TAC "pair x y";
+	STRIP_TAC THENL [	EXISTS_TAC "x ó y" THEN	ASM_REWRITE_TAC [];
+				ALL_TAC];
+	REWRITE_TAC [ó_DEF;ZF5]]);;
+
+expand (EXISTS_TAC "x:SET" THEN ASM_REWRITE_TAC[]);;
+
+let ZF2_thm7 = save_top_thm `ZF2_thm7`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é
+	function x Ä function y	Ä ((domain x) = (domain y))
+		ä ((x = y) = (É(z:SET)é x © z = y © z))
+");;
+expand (EVERY[
+	STRIP_TAC; STRIP_TAC;
+	SUBST1_TAC (SPECL ["domain x";"domain y"] ZF_le1);
+	REPEAT STRIP_TAC;
+	EQ_TAC]);;
+.he
+.LP
+2 subgoals:
+.sv "HOL output
+"(Ézé x © z = y © z) ä (x = y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "Ézé z ù (domain x) = z ù (domain y)" ]
+
+"(x = y) ä (Ézé x © z = y © z)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "Ézé z ù (domain x) = z ù (domain y)" ]
+.sw
+.hd
+expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "Hol output"
+Previous subproof:
+"(Ézé x © z = y © z) ä (x = y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "Ézé z ù (domain x) = z ù (domain y)" ]
+.sw
+.hd
+expand (EVERY[
+	SUBST1_TAC (SPEC_ALL ZF_le1);
+	STRIP_TAC; STRIP_TAC; EQ_TAC; STRIP_TAC]);;
+.he
+.sv "\fBHOL output\fP"
+2 subgoals
+"z ù x"
+    [ "function x" ]
+    [ "function y" ]
+    [ "Ézé z ù (domain x) = z ù (domain y)" ]
+    [ "Ézé x © z = y © z" ]
+    [ "z ù y" ]
+
+"z ù y"
+    [ "function x" ]
+    [ "function y" ]
+    [ "Ézé z ù (domain x) = z ù (domain y)" ]
+    [ "Ézé x © z = y © z" ]
+    [ "z ù x" ]
+.sw
+.hd
+expand (LEMMA_PROOF "Ézé z ù (domain x) ä z ù (domain y)"
+	[ASM_REWRITE_TAC[]]);;
+
+lemma "Ñ(w:SET)(z':SET)é z = w ó z'";;
+  expand (DEF_RES_TAC function);;
+  expand (DEF_RES_TAC relation);;
+
+expand (ONCE_ASM_REWRITE_TAC[]);;
+lemma "(w ó z') ù x";;
+    expand(ONCE_ASM_REWRITE_TAC [SYM (ASSUME"z = w ó z'")]);;
+    expand(ONCE_ASM_REWRITE_TAC []);;
+
+lemma "w ù (domain x)";;
+  expand (IMP_RES_TAC ZF2_thm7);;
+expand RES_TAC;;
+
+lemma "x © w = z'";;
+  expand (IMP_RES_TAC (SPECL ["x:SET";"w";"z':SET"] ZF2_thm4));;
+  expand (ASM_REWRITE_TAC []);;
+
+lemma "y © w = z'";;
+  expand (REWRITE_TAC[SYM(SPEC"w:SET"(ASSUME "Ézé x © z = y © z"))]);;
+  expand (ASM_REWRITE_TAC[]);;
+
+expand (IMP_RES_TAC (SPECL ["y:SET";"w:SET";"z':SET"] ZF2_thm4));;
+expand (REWRITE_TAC [SYM (ASSUME "(y © w = z') = (w ó z') ù y")]);;
+expand (ACCEPT_TAC(ASSUME "y © w = z'"));;
+.he
+.hd
+expand (LEMMA_PROOF "Ézé z ù (domain y) ä z ù (domain x)"
+	[ASM_REWRITE_TAC[]]);;
+
+lemma "Ñ(w:SET)(z':SET)é z = w ó z'";;
+  expand (DEF_RES_TAC function);;
+  expand (DEF_RES_TAC relation);;
+
+expand (ONCE_ASM_REWRITE_TAC[]);;
+lemma "(w ó z') ù y";;
+    expand(ONCE_ASM_REWRITE_TAC [SYM (ASSUME"z = w ó z'")]);;
+    expand(ONCE_ASM_REWRITE_TAC []);;
+
+lemma "w ù (domain y)";;
+  expand (IMP_RES_TAC ZF2_thm7);;
+expand RES_TAC;;
+
+lemma "y © w = z'";;
+  expand (IMP_RES_TAC (SPECL ["y:SET";"w";"z':SET"] ZF2_thm4));;
+  expand (ASM_REWRITE_TAC []);;
+
+lemma "x © w = z'";;
+  expand (REWRITE_TAC[SYM(SPEC"w:SET"(ASSUME "Ézé x © z = y © z"))]);;
+  expand (ASM_REWRITE_TAC[]);;
+
+expand (IMP_RES_TAC (SPECL ["x:SET";"w:SET";"z':SET"] ZF2_thm4));;
+expand (REWRITE_TAC [SYM (ASSUME "(x © w = z') = (w ó z') ù x")]);;
+expand (ACCEPT_TAC(ASSUME "x © w = z'"));;
+.he
+.hd
+let ZF2_thm8 = save_top_thm `ZF2_thm8`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é function (unit (x ó y))
+");;
+expand (REPEAT STRIP_TAC THEN PURE_REWRITE_TAC [function;relation]);;
+expand (PURE_REWRITE_TAC [ZF_thm9]);;
+expand (REPEAT STRIP_TAC);;
+expand (EXISTS_TAC "x:SET" THEN EXISTS_TAC "y:SET" THEN ASM_REWRITE_TAC[]);;
+expand (ASSUME_TAC (REWRITE_RULE [SYM (ASSUMP "y' ó w = x ó y")]
+		(ASSUMP "y' ó z = x ó y")));;
+expand (DEF_RES_TAC
+		(SPECL ["y':SET";"z:SET";"y':SET";"w:SET";"z:SET"] ZF2_thm3));;
+let ZF2_thm9 = save_top_thm `ZF2_thm9`;;
+.he
+.NH
+RELATIONAL OVERRIDE
+.LP
+.hd
+let ï_DEF = new_infix_definition(`ï_DEF`,"
+	(ï:SETãSETãSET) r1 r2 = sep (r1 ° r2)
+	(çp:SETé p ù r2 Å
+	(p ù r1 Ä (å(Ñ(x:SET)(y:SET)(z:SET)é (p = (x ó y)) Ä (x ó z) ù r2)))
+	)
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é function x Ä function y ä function (x ï y)
+");;
+expand (REPEAT STRIP_TAC THEN PURE_REWRITE_TAC [function;ï_DEF]);;
+expand STRIP_TAC;;
+expand (PURE_REWRITE_TAC [relation; ZF2]);;
+expand BETA_TAC;;
+expand (PURE_REWRITE_TAC [ZF_thm10]);;
+expand (EVERY[
+		REPEAT STRIP_TAC;
+		DEF_RES_TAC function;
+		DEF_RES_TAC relation]);;
+.he
+.hd
+expand (PURE_REWRITE_TAC [ZF2;ZF_thm10] THEN BETA_TAC);;
+expand (EVERY[
+		REPEAT STRIP_TAC;
+		DEF_RES_TAC function;
+		DEF_RES_TAC relation;
+		RES_TAC]);;
+expand (MP_TAC (ASSUMP
+	"å(Ñx' y'' z'é (y' ó z = x' ó y'') Ä (x' ó z') ù y)"));;
+expand (TAUT_REWRITE_TAC "åa ä b = åb ä a" THEN STRIP_TAC);;
+expand (EVERY (map EXISTS_TAC ["y':SET"; "z:SET"; "w:SET"]));;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+expand (MP_TAC (ASSUMP
+	"å(Ñx' y'' zé (y' ó w = x' ó y'') Ä (x' ó z) ù y)"));;
+expand (TAUT_REWRITE_TAC "åa ä b = åb ä a" THEN STRIP_TAC);;
+expand (EVERY (map EXISTS_TAC ["y':SET"; "w:SET"; "z:SET"]));;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm10 = save_top_thm `ZF2_thm10`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é function x Ä function y ä
+		(domain (x ï y) = domain x ° (domain y))
+");;
+expand (EVERY[
+			REPEAT STRIP_TAC;
+			PURE_REWRITE_TAC [ZF_le1];
+			PURE_REWRITE_TAC [ï_DEF; ZF_thm10; ZF2; ZF6; ZF2_thm11]]);;
+expand (EVERY[BETA_TAC; STRIP_TAC; EQ_TAC; STRIP_TAC]);;
+.he
+.sv "HOL output"
+6 subgoals
+"Ñz'é
+  ((z ó z') ù x Å (z ó z') ù y) Ä
+  ((z ó z') ù y Å
+   (z ó z') ù x Ä
+   å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y))"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù y" ]
+
+"Ñz'é
+  ((z ó z') ù x Å (z ó z') ù y) Ä
+  ((z ó z') ù y Å
+   (z ó z') ù x Ä
+   å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y))"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù x" ]
+
+"(Ñz'é (z ó z') ù x) Å (Ñz'é (z ó z') ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù y" ]
+    [ "(z ó z') ù x" ]
+    [ "å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y)" ]
+
+"(Ñz'é (z ó z') ù x) Å (Ñz'é (z ó z') ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù y" ]
+
+"(Ñz'é (z ó z') ù x) Å (Ñz'é (z ó z') ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù x" ]
+    [ "å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y)" ]
+
+"(Ñz'é (z ó z') ù x) Å (Ñz'é (z ó z') ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù x" ]
+    [ "(z ó z') ù y" ]
+.sw
+.hd
+expand (DISJ1_TAC THEN EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ1_TAC THEN EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ2_TAC THEN EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ2_TAC THEN EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+2 subgoals
+"Ñz'é
+  ((z ó z') ù x Å (z ó z') ù y) Ä
+  ((z ó z') ù y Å
+   (z ó z') ù x Ä
+   å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y))"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù y" ]
+
+"Ñz'é
+  ((z ó z') ù x Å (z ó z') ù y) Ä
+  ((z ó z') ù y Å
+   (z ó z') ù x Ä
+   å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y))"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù x" ]
+.sw
+.hd
+expand (ASM_CASES_TAC "Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y");;
+expand (UNDISCH_TAC "Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y"
+	THEN STRIP_TAC);;
+expand (EXISTS_TAC "z'':SET");;
+expand (DEF_RES_TAC (SPECL ["z:SET";"z':SET";"x':SET";"y':SET";"z:SET"] ZF2_thm3));;
+expand (ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+.he
+.sv "HOL output"
+Previous subproof:
+"Ñz'é
+  ((z ó z') ù x Å (z ó z') ù y) Ä
+  ((z ó z') ù y Å
+   (z ó z') ù x Ä
+   å(Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y))"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó z') ù y" ]
+.sw
+.hd
+expand (ASM_CASES_TAC "Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y");;
+expand (UNDISCH_TAC "Ñx' y' z''é (z ó z' = x' ó y') Ä (x' ó z'') ù y"
+	THEN STRIP_TAC);;
+expand (EXISTS_TAC "z'':SET");;
+expand (DEF_RES_TAC (SPECL ["z:SET";"z':SET";"x':SET";"y':SET";"z:SET"] ZF2_thm3));;
+expand (ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm12 = save_top_thm `ZF2_thm12`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é function x Ä function y ä
+		image (x ï y) • (image x) ° (image y)
+");;
+expand (EVERY[
+	REWRITE_TAC [•_DEF; ZF2; ZF_thm10; ZF2_thm13; ï_DEF];
+	BETA_TAC; REPEAT STRIP_TAC]);;
+.he
+.sv "HOL output"
+4 subgoals
+"(Ñzé (z ó c) ù x) Å (Ñzé (z ó c) ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó c) ù y" ]
+    [ "(z ó c) ù x" ]
+    [ "å(Ñx' y' z'é (z ó c = x' ó y') Ä (x' ó z') ù y)" ]
+
+"(Ñzé (z ó c) ù x) Å (Ñzé (z ó c) ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó c) ù y" ]
+
+"(Ñzé (z ó c) ù x) Å (Ñzé (z ó c) ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó c) ù x" ]
+    [ "å(Ñx' y' z'é (z ó c = x' ó y') Ä (x' ó z') ù y)" ]
+
+"(Ñzé (z ó c) ù x) Å (Ñzé (z ó c) ù y)"
+    [ "function x" ]
+    [ "function y" ]
+    [ "(z ó c) ù x" ]
+    [ "(z ó c) ù y" ]
+.sw
+.hd
+expand (DISJ1_TAC THEN EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ1_TAC THEN EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ2_TAC THEN EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+expand (DISJ2_TAC THEN EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm14 = save_top_thm `ZF2_thm14`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä function y ä
+	å (z ù domain (x ï y)) ä å (z ù (domain x)) Ä å (z ù (domain y))
+");;
+expand (EVERY[
+	TAUT_REWRITE_TAC "åa ä åb Ä åc = b Å c ä a";
+	REPEAT STRIP_TAC;
+	LEMMA_PROOF "domain(x ï y) = domain x ° domain y"
+						[IMP_RES_TAC ZF2_thm12];
+	ASM_REWRITE_TAC [ZF_thm10]]);;
+let ZF2_thm15 = save_top_thm `ZF2_thm15`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä function y ä
+	(z ù domain (x ï y) = (z ù (domain x)) Å (z ù (domain y)))
+");;
+expand (EVERY[
+	REPEAT STRIP_TAC;
+	IMP_RES_TAC ZF2_thm12;
+	ASM_REWRITE_TAC [ZF_thm10]]);;
+let ZF2_thm16 = save_top_thm `ZF2_thm16`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä function y ä
+	((x © z = y © z) = (x © z = §) Ä (y © z = §) Å
+				Ñ(w:SET)é (z ó w) ù x Ä (z ó w) ù y)
+");;
+expand (REPEAT STRIP_TAC THEN EQ_TAC THEN STRIP_TAC);;
+expand (TAUT_REWRITE_TAC "a Å b = åa ä b");;
+expand (REPEAT STRIP_TAC);;
+expand (EXISTS_TAC "x © z" THEN STRIP_TAC);;
+.he
+.hd
+lemma_proof "å(x © z = §)"
+	[UNDISCH_TAC "å((x © z = §) Ä (y © z = §))";
+	ASM_REWRITE_TAC[]];;
+lemma_proof "z ù (domain x)"
+	[IMP_RES_TAC (TAUT_REWRITE_RULE "a Ä åb ä c = a ä åc ä b"
+		(SPECL ["x:SET";"z:SET";"y:SET"] ZF2_thm5))];;
+expand (IMP_RES_TAC (SPECL ["x:SET";"z:SET";"x © z"] ZF2_thm4));;
+expand (REWRITE_TAC [SYM (ASSUMP "(x © z = x © z) = (z ó (x © z)) ù x")]);;
+.he
+.hd
+expand (ASM_REWRITE_TAC[]);;
+lemma_proof "å(y © z = §)"
+	[UNDISCH_TAC "å((x © z = §) Ä (y © z = §))";
+	REWRITE_TAC[SYM (ASSUMP "x © z = y © z")]];;
+lemma_proof "z ù (domain y)"
+	[IMP_RES_TAC (TAUT_REWRITE_RULE "a Ä åb ä c = a ä åc ä b"
+		(SPECL ["y:SET";"z:SET";"x:SET"] ZF2_thm5))];;
+expand (IMP_RES_TAC (SPECL ["y:SET";"z:SET";"y © z"] ZF2_thm4));;
+expand (REWRITE_TAC [SYM (ASSUMP "(y © z = y © z) = (z ó (y © z)) ù y")]);;
+.he
+.hd
+expand (ASM_REWRITE_TAC[]);;
+lemma_proof "z ù domain x"
+	[IMP_RES_TAC (SPECL ["z:SET";"w:SET";"x:SET"] ZF2_thm7)];;
+expand (IMP_RES_TAC (SPECL ["x:SET";"z:SET";"w"] ZF2_thm4));;
+expand (DEF_RES_TAC (SYM (ASSUMP "(x © z = w) = (z ó w) ù x")));;
+expand (ASM_REWRITE_TAC[]);;
+lemma_proof "z ù domain y"
+	[IMP_RES_TAC (SPECL ["z:SET";"w:SET";"y:SET"] ZF2_thm7)];;
+expand (IMP_RES_TAC (SPECL ["y:SET";"z:SET";"w"] ZF2_thm4));;
+expand (DEF_RES_TAC (SYM (ASSUMP "(y © z = w) = (z ó w) ù y")));;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm17 = save_top_thm `ZF2_thm17`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é y • (x ï y)
+");;
+expand (PURE_REWRITE_TAC [•_DEF; ï_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (PURE_REWRITE_TAC [ZF2; ZF_thm10]);;
+expand (BETA_TAC THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm18 = save_top_thm `ZF2_thm18`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é function x Ä function y ä
+		((x ï y) © z = (z ù (domain y) => y © z | x © z))
+");;
+expand (EVERY[
+		REPEAT STRIP_TAC]);;
+expand (ASM_CASES_TAC "z ù domain (y)" THEN ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma_proof "function (x ï y)" [IMP_RES_TAC ZF2_thm10];;
+expand (IMP_RES_THEN (çxéPURE_REWRITE_TAC[x]) (SPECL ["(x ï y)"] ZF2_thm17));;
+expand DISJ2_TAC;;
+lemma_proof "Ñz'é (z ó z') ù y"
+	[DEF_RES_TAC (SPECL ["z:SET";"y:SET"] ZF2_thm11)];;
+expand (EXISTS_TAC "z':SET" THEN ASM_REWRITE_TAC[]);;
+expand (IMP_RES_TAC (SPECL ["x:SET";"y:SET";"(z ó z')"]
+				(PURE_REWRITE_RULE [•_DEF] ZF2_thm18)));;
+expand (ASM_CASES_TAC "z ù (domain x)");;
+.he
+.hd
+lemma_proof "Ñz'é (z ó z') ù x"
+	[DEF_RES_TAC (SPECL ["z:SET";"y:SET"] ZF2_thm11)];;
+lemma "(z ó z') ù (x ï y)";;
+expand (PURE_REWRITE_TAC [ï_DEF; ZF2; ZF_thm10]);;
+expand BETA_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand (DISJ2_TAC);;
+expand (REPEAT (CHANGED_TAC NOT_EXISTS_TAC));;
+expand (REWRITE_TAC [ZF2_thm3]);;
+expand (TAUT_REWRITE_TAC "å((a Ä b) Ä c) = (a ä b ä åc)");;
+expand (EVERY[STRIP_TAC;STRIP_TAC;STRIP_TAC;STRIP_TAC;STRIP_TAC]);;
+expand (REWRITE_TAC [SYM (ASSUMP "z = x'")]);;
+.he
+.hd
+lemma "É(x:SET)é å(z ó x) ù y";;
+expand (DEF_RES_TAC (TAUT_REWRITE_RULE "(a = b) = (åa = åb)"
+				(SPECL ["z:SET";"y:SET"] ZF2_thm11)));;
+expand (STRIP_TAC THEN REWRITE_TAC
+	[CONV_RULE NOT_EXISTS_CONV (ASSUMP "å(Ñz'é (z ó z') ù y)")]);;
+expand (ASM_REWRITE_TAC[]);;
+lemma_proof "z ù domain (x ï y)"
+	[IMP_RES_THEN (çxéASM_REWRITE_TAC[x; ZF_thm10]) ZF2_thm12];;
+lemma_proof "function (x ï y)" [IMP_RES_TAC ZF2_thm10];;
+expand (IMP_RES_THEN (DEF_RES_TAC o SYM)
+	(SPECL ["x:SET";"z:SET";"z':SET"] ZF2_thm4));;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma_proof "åz ù (domain (x ï y))"
+		[IMP_RES_THEN (çxéPURE_REWRITE_TAC[x]) ZF2_thm12;
+		ASM_REWRITE_TAC [ZF_thm10]];;
+lemma_proof "function (x ï y)" [IMP_RES_TAC ZF2_thm10];;
+lemma_proof "((x ï y) © z = §) Ä (x © z = §)"
+	[IMP_RES_TAC ZF2_thm5;
+	IMP_RES_TAC (SPECL ["(x ï y)";"z:SET";"z:SET"] ZF2_thm5);
+	ASM_REWRITE_TAC[]];;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm19 = save_top_thm `ZF2_thm19`;;
+.he
+.hd
+set_goal([],"É(x:SET)é x ° x = x");;
+expand (REWRITE_TAC [ZF_le1; ZF_thm10]
+		THEN REPEAT STRIP_TAC THEN TAUT_TAC);;
+let ZF2_thm34 = save_top_thm `ZF2_thm34`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é x ° y = y ° x
+");;
+expand (REWRITE_TAC [ZF_le1; ZF_thm10]
+		THEN REPEAT STRIP_TAC THEN TAUT_TAC);;
+let ZF2_thm20 = save_top_thm `ZF2_thm20`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é (x ° y) ° z = x ° (y ° z)
+");;
+expand (REWRITE_TAC [ZF_le1; ZF_thm10]
+		THEN REPEAT STRIP_TAC THEN TAUT_TAC);;
+let ZF2_thm21 = save_top_thm `ZF2_thm21`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é x ° (y ° z) = (x ° y) ° z
+");;
+expand (REWRITE_TAC [ZF_le1; ZF_thm10]
+		THEN REPEAT STRIP_TAC THEN TAUT_TAC);;
+let ZF2_thm25 = save_top_thm `ZF2_thm25`;;
+.he
+.hd
+set_goal([],"É(x:SET)é x • x");;
+expand (PURE_REWRITE_TAC[•_DEF] THEN REPEAT GEN_TAC THEN TAUT_TAC);;
+let ZF2_thm33 = save_top_thm `ZF2_thm33`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é x • y Ä y • z ä x • z
+");;
+expand (EVERY[
+		PURE_REWRITE_TAC [•_DEF];
+		REPEAT STRIP_TAC; RES_TAC; RES_TAC]);;
+let ZF2_thm22 = save_top_thm `ZF2_thm22`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é x • y ä (x ° z) • (y ° z)
+");;
+expand (EVERY[
+		PURE_REWRITE_TAC [•_DEF; ZF_thm10];	REPEAT STRIP_TAC;
+		RES_TAC; RES_TAC; ASM_REWRITE_TAC[]]);;
+let ZF2_thm23 = save_top_thm `ZF2_thm23`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)(z:SET)é x • y ä (z ° x) • (z ° y)
+");;
+expand (EVERY[
+		PURE_REWRITE_TAC [•_DEF; ZF_thm10];	REPEAT STRIP_TAC;
+		RES_TAC; RES_TAC; ASM_REWRITE_TAC[]]);;
+let ZF2_thm24 = save_top_thm `ZF2_thm24`;;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é function x Ä function y ä
+		field (x ï y) • field x ° field y
+");;
+expand (REWRITE_TAC [field_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (IMP_RES_THEN (çxéPURE_REWRITE_TAC[x]) ZF2_thm12);;
+expand (PURE_REWRITE_TAC [ZF2_thm21]);;
+expand (TMP_TAC (SPECL
+		["(domain y) ° (image(x ï y))";
+		"(image x) ° ((domain y) ° (image y))";
+		"domain x"] ZF2_thm24));;
+expand (PURE_REWRITE_TAC [ZF2_thm25]);;
+expand (PURE_ONCE_REWRITE_TAC [ZF2_thm20]);;
+expand (PURE_REWRITE_TAC [ZF2_thm25]);;
+expand (TMP_TAC (SPECL
+		["image(x ï y)";"(image y) ° (image x)";"domain y"]
+		ZF2_thm23));;
+expand (PURE_ONCE_REWRITE_TAC [ZF2_thm20]);;
+expand (IMP_RES_TAC ZF2_thm14);;
+let ZF2_thm26 = save_top_thm `ZF2_thm26`;;
+.he
+.NH
+CARTESIAN PRODUCT
+.LP
+.hd
+set_goal([],"
+	É(x:SET)(v:SET)(w:SET)é x ù v ™ w =
+		Ñ(y:SET)(z:SET)é y ù v Ä z ù w Ä (x = y ó z)
+");;
+expand (REPEAT GEN_TAC THEN REWRITE_TAC [™_DEF; ZF2; ZF4] THEN BETA_TAC);;
+expand (EQ_TAC THEN STRIP_TAC);;
+expand (EXISTS_TAC "u:SET" THEN EXISTS_TAC "v':SET" THEN ASM_REWRITE_TAC[]);;
+expand STRIP_TAC;;
+expand (ASM_REWRITE_TAC [•_DEF; ó_DEF; ZF4; ZF5; ZF_thm9; ZF_thm10]);;
+expand (EVERY[GEN_TAC; STRIP_TAC; ASM_REWRITE_TAC []; REPEAT STRIP_TAC]);;
+expand (DEF_RES_TAC ZF_thm9 THEN ASM_REWRITE_TAC[]);;
+expand (DEF_RES_TAC ZF5 THEN ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "y:SET" THEN EXISTS_TAC "z:SET");;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm27 = save_top_thm `ZF2_thm27`;;
+.he
+.NH
+FUNCTIONAL ABSTRACTION
+.LP
+First we define functional abstraction.
+.hd
+let zfabs_DEF = new_definition(`zfabs`,"
+	(zfabs:SETã(SETãSET)ãSET) d val = 
+		áx:SETé Éy:SETé
+	y ù x = Ñ(v:SET)(w:SET)é (y = v ó w) Ä (w = val v) Ä (v ù d)
+");;
+.he
+.LP
+The following property characterises functional abstraction.
+.hd
+set_goal([],"
+	É(d:SET)(val:SETãSET)(y:SET)é	y ù (zfabs d val) =
+		Ñ(v:SET)(w:SET)é (y = v ó w) Ä (w = val v) Ä (v ù d)");;
+expand (PURE_REWRITE_TAC [zfabs_DEF] THEN REPEAT GEN_TAC);;
+lemma "Ñ(x:SET)é
+	Éyé y ù x = (Ñv wé (y = v ó w) Ä (w = val v) Ä v ù d)";;
+  expand(REPEAT STRIP_TAC);;
+  lemma_proof "Ñ(s:SET)é É(x:SET)é x ù s = Ñ(y:SET)é y ù d Ä (x = val y)"
+	[REWRITE_TAC [ZF_thm26]];;
+  expand (EXISTS_TAC "sep (d ™ s) (ç(x:SET)é val (fst x) = snd x)");;
+  expand (REWRITE_TAC [ZF2; ZF2_thm27]);;
+  expand (BETA_TAC THEN REPEAT STRIP_TAC);;
+  expand (EQ_TAC THEN REPEAT STRIP_TAC);;
+
+  expand (EXISTS_TAC "y':SET" THEN EXISTS_TAC "z:SET" THEN ASM_REWRITE_TAC[]);;
+  expand (UNDISCH_TAC "val(fst y) = snd y"
+		THEN ASM_REWRITE_TAC[ZF2_thm1; ZF2_thm2]);;
+  expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+
+  expand (EXISTS_TAC "v:SET" THEN EXISTS_TAC "w:SET" THEN ASM_REWRITE_TAC[]);;
+  expand (EXISTS_TAC "v:SET");;
+  expand (ASM_REWRITE_TAC[]);;
+
+  expand (ASM_REWRITE_TAC[ZF2_thm1; ZF2_thm2]);;
+expand (IMP_RES_TAC (BETA_RULE (SPECL
+	["çx:SETéÉyé y ù x = (Ñv wé (y = v ó w) Ä (w = val v) Ä v ù d)";"x:SET"]	(INST_TYPE [":SET",":*"] SELECT_AX))));;
+expand (ASM_REWRITE_TAC[]);;
+let ZF2_thm28 = save_top_thm `ZF2_thm28`;;
+.he
+We prove that functional abstraction always yields a function.
+.hd
+set_goal([],"É(d:SET)(val:SETãSET)é function (zfabs d val)");;
+expand (PURE_REWRITE_TAC[ZF2_thm28; function; relation]);;
+expand (REPEAT STRIP_TAC);;
+expand (EXISTS_TAC "v:SET" THEN EXISTS_TAC "w:SET" THEN ASM_REWRITE_TAC[]);;
+expand (UNDISCH_TAC "y ó z = v ó w'"
+	THEN UNDISCH_TAC "y ó w = v' ó w''"
+	THEN REWRITE_TAC[ZF2_thm3]);;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+expand (REWRITE_TAC (map (SYM o ASSUMP) ["y:SET = v";"y:SET = v'"]));;
+let ZF2_thm29 = save_top_thm `ZF2_thm29`;;
+.he
+.LP
+A lemma giving the effect of abstracting over the empty set.
+.hd
+set_goal([],"É(f:SETãSET)é zfabs § f = §");;
+expand (PURE_REWRITE_TAC[ZF_le1] THEN REWRITE_TAC[ZF2_thm28]);;
+expand (REPEAT STRIP_TAC THEN EQ_TAC THEN REPEAT STRIP_TAC
+	THEN IMP_RES_TAC ZF_le2);;
+let ZF2_thm30 = save_top_thm `ZF2_thm30`;;
+.he
+.LP
+The following theorem says that the domain of a function constructed
+using zfabs is just the first argument.
+.hd
+set_goal([],"É(d:SET)(f:SETãSET)é domain(zfabs d f) = d");;
+expand (REPEAT GEN_TAC THEN PURE_REWRITE_TAC[ZF_le1]
+	THEN PURE_REWRITE_TAC[domain_DEF; ZF2; ZF6; ZF2_thm28; ZF2_thm3]
+	THEN BETA_TAC);;
+expand (REPEAT STRIP_TAC THEN EQ_TAC THEN REPEAT STRIP_TAC);;
+expand (ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "pair z z" THEN REWRITE_TAC[ZF5]);;
+expand (EXISTS_TAC "z ó (f z)" THEN ASM_REWRITE_TAC[]);;
+expand (STRIP_TAC);;
+expand (EVERY (map EXISTS_TAC ["z:SET";"(f:SETãSET) z"])
+		THEN ASM_REWRITE_TAC[]);;
+expand (REWRITE_TAC[ó_DEF; ZF5; unit_DEF]);;
+expand (EVERY (map EXISTS_TAC ["(f:SETãSET) z";"z:SET";"(f:SETãSET) z"])
+	THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm31 = save_top_thm `ZF2_thm31`;;
+.he
+.LP
+Now the equivalent of beta reduction, showing the interaction between functional abstraction and function application.
+.hd
+set_goal([],"
+	É(d:SET)(f:SETãSET)(x:SET)é
+		x ù d ä ((zfabs d f) © x = f x)
+");;
+expand (REPEAT STRIP_TAC);;
+lemma_proof "function (zfabs d f)" [REWRITE_TAC[ZF2_thm29]];;
+lemma_proof "x ù (domain (zfabs d f))" [ASM_REWRITE_TAC[ZF2_thm31]];;
+expand (IMP_RES_TAC (SPECL ["zfabs d f";"x:SET";"(f:SETãSET) x"] ZF2_thm4));;
+expand (ASM_REWRITE_TAC[ZF2_thm28]);;
+expand (EXISTS_TAC "x:SET" THEN EXISTS_TAC "(f:SETãSET) x"
+	THEN ASM_REWRITE_TAC[]);;
+let ZF2_thm32 = save_top_thm `ZF2_thm32`;;
+.he
+.KS 
+.NH
+THE THEORY ZF2
+.LP
+.hd
+close_theory`zf122`;;
+.he
+.DS L
+.so /escher/usr2/rbj/zf/zf122.th.prt
+
+.DE
+.KE

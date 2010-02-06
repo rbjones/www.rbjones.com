@@ -1,0 +1,200 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+The Calculus of Constructions in Miranda
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+This paper consists of a translation into Miranda of the definition
+of Coquand's Calculus of Constructions.
+.AE
+.ds LH \s-2The Calculus of Constructions in Miranda\s+2
+.ds CH \s-2\s+2
+.ds RH \s-2\*(DY\s+8
+.ds LF \s-2DTC/RBJ/059   Issue 0.1\s+2
+.ds CF \s-2\s+2
+.ds RF \s-2Page \\n(PN\s+2
+.KS
+.NH
+INTRODUCTION
+.LP
+The following specifies in Miranda the formal system which is given
+by Coquand and Huet in INRIA Rapport de Recherche No. 503.
+.NH
+The Abstract Syntax of Terms
+.sv mira
+term	::=	Type			|
+		Prop			|
+		Id [char]		|
+		In num		|		|| de Bruijn index
+	    	term $A term	|		|| Application
+		Lambda term	|		|| Abstraction
+		Pi term term			|| Product
+.sw
+.KE
+.LP	
+We now define some operations over lists (or sets).
+.LP
+The union of two sets:
+.sv mira
+[] $union a = a
+(a:b) $union c	=	a:d where d = b,			c=[]
+			=	(hd c):(b $union (tl c)),	otherwise
+.sw
+.LP
+The union of a set of sets:
+.sv mira
+us []		=	[]
+us (a:b)	=	a $union (us b) 
+.sw
+.LP
+The length of a list (or cardinality of a finite set)
+.sv mira
+len []	= 0
+len (a:b)	= 1 + (len b)
+.sw
+.LP
+.sv mira
+assignment == [term,term]
+.sw
+.LP
+We now define the set of valid assignments.
+.sv mira
+abstype valid_assignment
+with	empty_assignment	:: valid_assignment
+	
+valid_assignment == assignment
+.sw
+.sv mira
+terms	= objects $union contexts
+objects = us (map o [0..])
+contexts= us (map c [0..])
+.sw
+.DS L
+|| rap n f a applies f to a n times
+
+rap 0 f a	= a
+rap n f a	= f (rap (n-1) f a)
+
+|| sel selects a term from a list of terms
+ 
+sel 1 (a:b) 	= a
+sel n (a:b)	= sel (n-1) b, n>1
+
+|| l n selects term n from a context and adds n to its indices
+
+t $l n  	= rap n ee (sel n t)
+
+|| (m $sub n) is defined as n with m substituted throughout for 1
+
+m $sub (I 1)	= m
+m $sub S 	= S
+m $sub (n $L o) = (m $sub n) $L (m $sub o)
+m $sub (n $P o)	= (m $sub n) $P (m $sub o)
+m $sub (n $A o) = (m $sub n) $A (m $sub o)
+.DE
+.KS
+.NH
+The Inference System of Constructions  
+.DS L
+sequent	::=	[term] $Se rhs
+
+rhs	::=	Co term		|	|| context
+		term $Ta term	|	|| type assignment
+		term $Eq term	 	|| equation (conversion)
+
+abstype theorem
+with 	star				:: theorem
+	assu,proi,absi,refl,symm 	:: theorem -> theorem
+	vari				:: num -> theorem -> theorem
+	appi,tran,prco,beta,tyco	:: theorem -> theorem -> theorem
+	abco,apco		:: theorem -> theorem -> theorem -> theorem
+
+theorem == sequent
+
+star				=  [] $Se (Co S)
+
+|| assumption
+
+assu (t $Se (Co u))		= (u:t) $Se (Co S)
+assu (t $Se (u $Ta S))		= (u:t) $Se (Co S)
+assu s				= star
+
+|| product introduction
+
+proi ((mm:t) $Se (Co u)) 	= t $Se (Co (mm $P u))
+proi ((m1:t) $Se (m2 $Ta S)) 	= t $Se ((m1 $P m2) $Ta S)
+
+|| variable introduction
+
+vari k (t $Se (Co S))		= t $Se ((I k) $Ta (t $l k)), k < (len t)
+vari k s			= star
+
+|| abstraction introduction
+
+absi ((m1:t) $Se (m2 $Ta pp))	= t $Se ((m1 $L m2) $Ta (m1 $P pp))
+absi s				= star
+
+|| application introduction
+
+appi 	(z $Se (mm $Ta (pp $P qq))) (z $Se (nn $Ta pp))
+				= z $Se ((mm $A nn) $Ta (nn $sub qq))
+appi t u			= star
+.DE
+.KE
+.KS
+.NH
+The Conversion Rules
+.DS L
+|| reflexivity
+
+refl (t $Se (Co d))		= (t $Se (d $Eq d))
+refl t				= star
+
+|| symmetry
+
+symm (t $Se (mm $Ta d))		= (t $Se (mm $Eq mm))
+symm t				= star
+
+|| transitivity
+
+tran (z $Se (p1 $Eq p2)) (z $Se (p2 $Eq p3))
+				= (z $Se (p1 $Eq p3))
+tran t u			= star
+
+
+|| product conversion
+
+prco (z $Se (p1 $Eq p2)) ((p1:z) $Se (m1 $Eq m2))
+				= (z $Se ((p1 $P m1) $Eq (p2 $P m2)))
+prco t u			= star
+
+|| abstraction conversion
+
+abco (z $Se (p1 $Eq p2)) ((p1:z) $Se (m1 $Eq m2)) ((p1:z) $Se (m1 $Ta n1))
+				= (z $Se ((p1 $L m1) $Eq (p2 $L m2)))
+abco t u v			= star
+
+|| application conversion
+
+apco (z $Se ((mm $A nn) $Ta pp)) (z $Se (mm $Eq m1)) (z $Se (nn $Eq n1))
+				= (z $Se ((mm $A nn) $Eq (m1 $A n1)))
+apco t u v			= star
+
+|| beta conversion
+
+beta ((aa:z) $Se (mm $Ta pp)) (z $Se (nn $Ta aa))
+ 				= (z $Se (((aa $L mm) $A nn) $Eq (nn $sub mm)))
+beta t u			= star
+
+|| type conversion
+
+tyco (z $Se (mm $Ta pp)) (z $Se (pp $Eq qq))
+				= (z $Se (mm $Ta qq))
+tyco t u			= star
+.DE
+.KE

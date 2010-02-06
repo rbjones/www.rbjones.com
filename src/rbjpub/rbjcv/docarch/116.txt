@@ -1,0 +1,1130 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.RP
+.TL
+Universal Set Theory mk 2
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document consists of a formal specification in SML
+of a variant of classical first order set theory.
+This particular variant consists of ZFC augmented by a
+hierarchy of universes, each enjoying the same closure properties as ZFC.
+Proper classes are also available.
+.IP "\fBChanges in this issue\fP"
+This version of UST takes several steps in the direction of usability.
+Various logical operators have been included as primitive which were previously derived, propositional variables have been introduced, and special syntax for integers and strings.
+.IP
+All pure tautologies are now axioms.Substitution rules have been included for for propositional variables, for equivalence theorems and equality theorems.
+.IP "\fBChanges Forecast\fP"
+A very crude local structuring mechanism may be included.
+The axiom of well foundation may be replaced by an equivalent axiom of noetherian induction.
+The choice function may be dropped in favour of an axiom of choice not using the choice function.
+.AE
+.ds LH 
+.ds CH UST mk 2
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/FMU/RBJ/116   Issue 0.6
+.ds CF UST mk 2
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This document provides a formal description of a variant of classical
+set theory axiomatised in first order logic.
+This is claimed to be a suitable formal foundation for the VDM specification
+language.
+It is richer than strictly necessary, but this makes some of the constructions
+simpler, and provides more flexibility for dealing with problems in the
+current model.
+.KE
+.LP
+It could be used simply to give a formal description of the current type
+model, which would help in deriving the proof theory.
+In this case the iterative constructions in the model could be simplified
+by taking intersections of sets containing the basic types and closed
+under the type constructors.
+.LP
+More radical changes are also possible, such as closing the type universe
+under a full partial function space constructor, and eliminating the
+two tier construction of the present model.
+Special provision is made in the choice function to smooth the use
+of graphs to represent partial functions over spaces not containing
+a bottom element.
+.LP
+Even after such constructions there remain larger sets which will support
+semantics for polymorphism and modularity.
+.LP
+The set theory is roughly NBG with added universes.
+The smallest universe is the universe of ZFC, and every universe is a member
+of a larger universe with similar closure properties.
+.LP
+The specification is written in the language SML (standard ML).
+.LP
+SML is described in ECS-LFCS-86-2 (University of Edinburgh, Laboratory
+for Foundations of Computer Science).
+.KS
+.NH
+ABSTRACT SYNTAX
+.LP
+Here we define the priorities of the infix operators introduced.
+.sv lpf
+infix 4 \*h;
+infix 5 \(rh;
+infix 6 \*d;
+infix 7 \*e;
+infix 8 == \(mo \(*e -- \(ib
+infix 8	subs_for		bl_subs_for		psubs_for		bl_psubs_for
+		t_subs_for		t_bl_subs_for	t_psubs_for		t_bl_psubs_for;
+infix 9 inn;
+.sw
+.ig cx
+.LP
+The following inhibits the exhaustiveness check on pattern matching, without which compilation fails (this is a bug in the compiler).
+.sv lpf
+let val {CheckMatch,...} = Debug in CheckMatch := false end;
+.sw
+.cx
+.LP
+This document defines one structure, UST (Universal Set Theory), containing sevaral sub-structures.
+The first, FTM (Formula and TerM) defines the syntax of the language.
+.sv lpf
+structure UST =
+struct
+structure FTM =
+struct
+.sw
+.KE
+.sv lpf
+type var	= string;
+.sw
+.KS
+.sv lpf
+datatype	formula	=
+	Pvar of string				| (* propositional variable *)
+	\(no of formula				| (* logical negation *)
+	op \(rh of (formula * formula)		| (* material implication *)
+	op \*d of (formula * formula)		| (* logical or *)
+	op \*e of (formula * formula)		| (* logical and *)
+	op \*h of (formula * formula)		| (* logical equivalence *)
+	\*j of (var * formula)			| (* universal quantification *)
+	\*k of (var * formula)			| (* existential quantification *)
+	op == of (term * term)			| (* equality *)
+	op \(mo of (term * term)			| (* membership *)
+	T					  	  (* truth *)
+.sw
+.KE
+.KS
+.LP
+These constructs have their normal meanings.
+.sv lpf
+and	term	=
+	Var of var					| (* individual variable *)
+	\(*m of term					| (*  choice function *)
+	comp of (var * formula)			| (* set comprehension *)
+	V of term					| (* Universe *)
+	Pair of (term * term)			| (* unordered pairs *)
+	\*m of term					| (* power set *)
+	\(cu of term					| (* distributed union *)
+	\(ca of term					| (* distributed union *)
+	Nat of int					| (* Natural numbers *)
+	Lit of string				| (* strings *)
+	\(es;
+.sw
+.KE
+.sv lpf
+val F = \(no T; (* false *)
+.sw
+.KS
+.LP
+The meanings of these term constructors are:
+.RS
+.IP Var
+Variables
+.IP \(*m
+choice function (following Oxford Z usage)
+yields a set, which will be a member of its argument except
+in the case that the argument is \(es.
+.IP comp
+.br
+comprehension, "comp(a,b)" is more usually written {a | b}
+.br
+comprehension rather than separation is allowed but does not
+necessarily yield a set.
+It yields the class of sets which satisfy the predicate "\(*l a.b", and may be a proper class.
+.IP V
+V x is a "universe" containing x.
+.br
+A universe is a set which satisfies very liberal closure conditions,
+it is closed under all the set forming operations of ZFC.
+Every set is a member of some universe, and V x is a universe containing
+x.
+.IP Pair
+.br
+Pair (x,y) is the set containing just x and y, normally written {x,y}.
+.IP \*m
+The Power set constructor, yielding the set of all subsets of some set.
+.br
+e.g. \*m{1,2} = {{},{1},{2},{1,2}}
+.IP \(cu
+\(cu is distributed union, the union of a set of sets.
+e.g. \(cu{{1,2},{2,3}} = {1,2,3}
+.IP \(ca
+\(ca is distributed intersection, the intersection of a set of sets.
+e.g. \(ca{{1,2},{2,3}} = {2}
+.IP Nat
+These are the natural numbers including zero.
+Note that "Nat -i = Nat i".
+This is just a convenient shorthand for the Von-Neumann representation for the natural numbers, they are not `urelements'.
+.IP Lit
+Strings are also provided with abbreviations.
+.IP \(es
+The empty set.
+.RE
+.KE
+.LP
+.KS
+.NH
+PRELIMINARIES
+.NH 2
+Set Theory in the Metalanguage (sml)
+.LP
+First a few definitions which enable us to talk about lists as
+if they were sets.
+.KE
+.sv lpf
+fun	x \(*e []	= false						|
+	x \(*e (y::z)	= x = y orelse x \(*e z;
+.sw
+.sv lpf
+fun	m\(cu []	= []						|
+	m\(cu (a::b)	= a @ (m\(cu b);
+.sw
+.LP
+Note here that:
+.IP
+m\(cu is here defined as a single prefix operator meaning distributed union.
+.IP
+@ is the concatenation operator built into SML.
+.LP
+.sv lpf
+fun	[] -- a		= []						|
+	(h::t) -- a	= if h=a then t -- a else h::(t -- a);
+.sw
+.LP
+For many purposes the duplication which may arise in the use of these operators is unimportant, for some however duplicates must be removed.
+.sv lpf
+fun	pack_set []		= []						|
+	pack_set (h::t) = (h:: (pack_set (t -- h)));
+.sw 
+.KS
+.NH 2
+Free Variables
+.LP
+We define the free variables in a formula or term as follows:
+.sv lpf
+fun	term_freevars (Var v)		= [v]
+|	term_freevars (\(*m t)		= term_freevars t
+|	term_freevars (comp (v,f))	= freevars f -- v
+|	term_freevars (V t)		= term_freevars t
+|	term_freevars (Pair (f,s))	= term_freevars f @ (term_freevars s)
+|	term_freevars (\*m t)		= term_freevars t
+|	term_freevars (\(cu t)		= term_freevars t
+|	term_freevars (\(ca t)		= term_freevars t
+|	term_freevars (Nat i)		= []
+|	term_freevars (Lit s)		= []
+|	term_freevars \(es		= []
+
+and	term_list_freevars term_list	= m\(cu (map term_freevars term_list)
+.sw
+.KE
+.LP
+.sv lpf
+and	freevars (Pvar p)			= []							|
+	freevars (\(no f)			= freevars f						|
+	freevars (f1 \(rh f2)		= freevars f1 @ (freevars f2)			|
+	freevars (f1 \*d f2)			= freevars f1 @ (freevars f2)			|
+	freevars (f1 \*e f2)			= freevars f1 @ (freevars f2)			|
+	freevars (f1 \*h f2)		= freevars f1 @ (freevars f2)			|
+	freevars (\*j (v,f))			= freevars f -- v					|
+	freevars (\*k (v,f))			= freevars f -- v					|
+	freevars (t1 == t2)		= term_freevars t1 @ (term_freevars t2)	|
+	freevars (t1 \(mo t2)			= term_freevars t1 @ (term_freevars t2)	|
+	freevars T = [];
+.sw
+.KS
+.NH 2
+Propositional Variables
+.LP
+A pure propositional formula is one which contains no terms or quantification.
+The following procedure will return the set of propositional variables in a pure propositional formula.
+In the case that the formula is not pure, occurrences of proposition variables inside quantifiers or inside terms will be ignored.
+.KE
+.sv lpf
+fun	propvars (Pvar p)			= [p]							|
+	propvars (\(no f)			= propvars f					|
+	propvars (f1 \(rh f2)		= propvars f1 @ (propvars f2)			|
+	propvars (f1 \*d f2)			= propvars f1 @ (propvars f2)			|
+	propvars (f1 \*e f2)			= propvars f1 @ (propvars f2)			|
+	propvars (f1 \*h f2)		= propvars f1 @ (propvars f2)			|
+	propvars f = [];
+.sw
+.LP
+.KS
+.NH 3
+Simplification of formulae
+.LP
+The following procedure simplifies a formula while assigning a truth value to a propositional variable.
+The parameter v is the variable to which assignment is being made, t is the truth value being assigned, and the third parameter is the formula to be simplified.
+.sv lpf
+fun	simpl v t (Pvar p)		= if p = v then t else (Pvar p)			|
+	simpl v t (\(no f)		=
+		(case (simpl v t f)
+		of	(\(no f') => f'			|
+			f' => (\(no f'))							|
+	simpl v t (f1 \(rh f2)		=
+		(case (simpl v t f1, simpl v t f2)
+		of	(\(no T,x) => T		|
+			(x,T) => T			|
+			(T,\(no T) => \(no T		|
+			(x,y) => x \(rh y)							|
+	simpl v t (f1 \*d f2)		=
+		(case (simpl v t f1, simpl v t f2)
+		of	(T,x)=>T			|
+			(x,T)=>T			|
+			(\(no T, \(no T) => F		|
+			(x,y) => x \*d y)							|
+	simpl v t (f1 \*e f2)		=
+		(case (simpl v t f1, simpl v t f2)
+		of	(T,T) => T			|
+			(\(no T, x) => F		|
+			(x, \(no T) => F		|
+			(x, y) => x \*e y)							|
+	simpl v t (f1 \*h f2)		=
+		(case (simpl v t f1, simpl v t f2)
+		of	(T,T) => T 			|
+			(\(no T, \(no T) => T		|
+			(T, \(no T) => F		|
+			(\(no T, T) => F		|
+			(x, y) => x \*h y)							|
+	simpl v t f		= f;
+.sw
+.KE
+.KS
+.NH
+SUBSTITUTION
+.LP
+This section contains definitions of various substitution operations needed in defining the axioms and inference rules which follow later.
+These concern the substitution of formulae for propositional variables, or of terms for individual variables (variables ranging over the domain of discourse), in some term or formula.
+For each of the above four cases functions are provided which rename bound variables which would otherwise capture a free variable in the term or formula being substituted, and similar functions are provided which perform no variable renaming, allowing free variables to be captured.
+These latter functions are used in defining the inference rules allowing substitution of equals for equals or equivalents for equivalents, which in nether case need consider whether variables free in the equality or equivalence ststement are also free in the premiss or conclusion of the inference rule.
+.LP
+The procedures for substituting into terms and formulae will in each case be mutually recursive, following the mutual recursion in the abstract syntax.
+.LP
+.sv lpf
+datatype ('a,'b)inc = op inn of ('a * 'b);
+.sw
+.KE
+.LP
+Function `primed' may be used to find new variable names which do not clash with the variables supplied as the second argument.
+The first argument will have primes appended to it until it is distinct from all the names in the second argument.
+.sv lpf
+fun	primed nv varl =
+			if	nv \(*e varl
+			then	primed (nv^"'") varl
+			else	nv;
+fun	freev terml v = primed v (term_list_freevars terml);
+.sw
+.KE
+.KS
+.NH 2
+Substitution of Terms
+.NH 3
+Into Terms
+.LP
+First substitution of a term (term) for a free variable (ivar) in a term is defined.
+Renaming of bound variables will be accomplished if this is necessary to prevent capture of the free variables of the term to be substituted.
+.sv lpf
+fun	term t_subs_for ivar inn (Var v)
+		=	if	ivar = v
+			then	term
+			else	Var v
+|	term t_subs_for ivar inn (\(*m t)
+		=	(\(*m (term t_subs_for ivar inn t))
+|	term t_subs_for ivar inn (comp(v,f))
+		=	if	ivar = v
+			then	(comp(v,f))
+			else	let	val nv = primed v (term_freevars term @
+									(freevars f -- v))
+					val nf = term subs_for ivar inn
+							((Var nv) subs_for v inn f)
+				in	(comp(nv,nf))
+				end
+|	term t_subs_for ivar inn (V t)
+		=	V (term t_subs_for ivar inn t)
+|	term t_subs_for ivar inn (Pair (f,s))
+		=	Pair (	term t_subs_for ivar inn f,
+				term t_subs_for ivar inn s	)
+|	term t_subs_for ivar inn (\*m t)
+		=	\*m (term t_subs_for ivar inn t)
+|	term t_subs_for ivar inn (\(cu t)
+		=	\(cu (term t_subs_for ivar inn t)
+|	term t_subs_for ivar inn (\(ca t)
+		=	\(ca (term t_subs_for ivar inn t)
+|	term t_subs_for ivar inn (Nat i)
+		=	Nat i
+|	term t_subs_for ivar inn (Lit s)
+		=	Lit s
+|	term t_subs_for ivar inn \(es
+		=	\(es
+and	curried_t_subs term ivar term'
+		=	term t_subs_for ivar inn term'
+.sw
+.KE
+.LP
+.KS
+.NH 3
+Into Formulae
+.LP
+Next substitution of a term for a free variable in a formula.
+.sv lpf
+and	term subs_for ivar inn (Pvar p)		=	(Pvar p)								|
+	term subs_for ivar inn (\(no form)		=	\(no (term subs_for ivar inn form)				|
+	term subs_for ivar inn (form1 \(rh form2)
+		=	(term subs_for ivar inn form1) \(rh (term subs_for ivar inn form2)		|
+	term subs_for ivar inn (form1 \*d form2)
+		=	(term subs_for ivar inn form1) \*d (term subs_for ivar inn form2)		|
+	term subs_for ivar inn (form1 \*e form2)
+		=	(term subs_for ivar inn form1) \*e (term subs_for ivar inn form2)		|
+	term subs_for ivar inn (form1 \*h form2)
+		=	(term subs_for ivar inn form1) \*h (term subs_for ivar inn form2)		|
+	term subs_for ivar inn (\*j (ivar',form))
+		=	if	ivar = ivar'
+			then	(\*j (ivar',form))
+			else	let	val nv = primed ivar' (term_freevars term @
+									(freevars form -- ivar'))
+					val nf = term subs_for ivar inn
+							((Var nv) subs_for ivar' inn form)
+				in	(\*j(nv,nf))
+				end											|
+	term subs_for ivar inn (\*k (ivar',form))
+		=	if	ivar = ivar'
+			then	(\*k (ivar',form))
+			else	let	val nv = primed ivar' (term_freevars term @
+									(freevars form -- ivar'))
+					val nf = term subs_for ivar inn
+							((Var nv) subs_for ivar' inn form)
+				in	(\*k(nv,nf))
+				end											|
+	term subs_for ivar inn (t1 == t2)
+		=	(term t_subs_for ivar inn t1) == (term t_subs_for ivar inn t2)		|
+	term subs_for ivar inn (t1 \(mo t2)
+		=	(term t_subs_for ivar inn t1) \(mo (term t_subs_for ivar inn t2)			|
+	term subs_for ivar inn T = T
+
+and	curried_subs a b c = a subs_for b inn c;
+.sw
+.KE
+.KS
+.NH 2
+Blind Substitution of Terms
+.LP
+These variants ignore capture of variables.
+.NH 3
+Into Terms
+.LP
+First define substitution of a term for a free variable in a term.
+.sv lpf
+fun	term t_bl_subs_for ivar inn (Var v)
+		=	if	ivar = v
+			then	term
+			else	Var v
+|	term t_bl_subs_for ivar inn (\(*m t)
+		=	(\(*m (term t_bl_subs_for ivar inn t))
+|	term t_bl_subs_for ivar inn (comp(v,f))
+		=	if	ivar = v
+			then	comp(v,f)
+			else	comp(v, term bl_subs_for ivar inn f)
+|	term t_bl_subs_for ivar inn (V t)
+		=	V (term t_bl_subs_for ivar inn t)
+|	term t_bl_subs_for ivar inn (Pair(f,s))
+		=	Pair(	term t_bl_subs_for ivar inn f,
+				term t_bl_subs_for ivar inn s	)
+|	term t_bl_subs_for ivar inn (\*m t)
+		=	\*m (term t_bl_subs_for ivar inn t)
+|	term t_bl_subs_for ivar inn (\(cu t)
+		=	\(cu (term t_bl_subs_for ivar inn t)
+|	term t_bl_subs_for ivar inn (\(ca t)
+		=	\(ca (term t_bl_subs_for ivar inn t)
+|	term t_bl_subs_for ivar inn (Nat i)
+		=	Nat i
+|	term t_bl_subs_for ivar inn (Lit s)
+		=	Lit s
+|	term t_bl_subs_for ivar inn \(es
+		=	\(es
+and	curried_t_subs term ivar term'
+		=	term t_bl_subs_for ivar inn term'
+.sw
+.KE
+.LP
+.KS
+.NH 3
+Into Formulae
+.LP
+Next we define substitution of a term for a free variable in a formula.
+.sv lpf
+and	term bl_subs_for ivar inn (Pvar p)		=	(Pvar p)								|
+	term bl_subs_for ivar inn (\(no form)		=	\(no (term bl_subs_for ivar inn form)				|
+	term bl_subs_for ivar inn (form1 \(rh form2)
+		=	(term bl_subs_for ivar inn form1) \(rh (term bl_subs_for ivar inn form2)		|
+	term bl_subs_for ivar inn (form1 \*d form2)
+		=	(term bl_subs_for ivar inn form1) \*d (term bl_subs_for ivar inn form2)		|
+	term bl_subs_for ivar inn (form1 \*e form2)
+		=	(term bl_subs_for ivar inn form1) \*e (term bl_subs_for ivar inn form2)		|
+	term bl_subs_for ivar inn (form1 \*h form2)
+		=	(term bl_subs_for ivar inn form1) \*h (term bl_subs_for ivar inn form2)		|
+	term bl_subs_for ivar inn (\*j (ivar',form))
+		=	if	ivar = ivar'
+			then	\*j (ivar', form)
+			else	\*j (ivar', term bl_subs_for ivar inn form)										|
+	term bl_subs_for ivar inn (\*k (ivar',form))
+		=	if	ivar = ivar'
+			then	\*k (ivar', form)
+			else	\*k (ivar', term bl_subs_for ivar inn form)											|
+	term bl_subs_for ivar inn (t1 == t2)
+		=	(term t_bl_subs_for ivar inn t1) == (term t_bl_subs_for ivar inn t2)		|
+	term bl_subs_for ivar inn (t1 \(mo t2)
+		=	(term t_bl_subs_for ivar inn t1) \(mo (term t_bl_subs_for ivar inn t2)			|
+	term bl_subs_for ivar inn T = T
+
+and	curried_bl_subs a b c = a bl_subs_for b inn c;
+.sw
+.KE
+.LP
+.KS
+.NH 2
+Substitution of Formulae
+.NH 3
+Into Terms
+.LP
+The following function substitutes a formula (prop) for a propositional variable in a second forumula.
+Renaming of bound variables occurs as necessary to avoid capture of free variables.
+.sv lpf
+fun	prop t_psubs_for pvar inn (Var v)
+		=	Var v
+|	prop t_psubs_for pvar inn (\(*m t)
+		=	(\(*m (prop t_psubs_for pvar inn t))
+|	prop t_psubs_for pvar inn (comp(v,f))
+		=	let	val nv = primed v (freevars prop @
+									(freevars f -- v))
+				val nf = prop psubs_for pvar inn
+							((Var nv) subs_for v inn f)
+				in	(comp(nv,nf))
+				end
+|	prop t_psubs_for pvar inn (V t)
+		=	V (prop t_psubs_for pvar inn t)
+|	prop t_psubs_for pvar inn (Pair (f,s))
+		=	Pair (	prop t_psubs_for pvar inn f,
+				prop t_psubs_for pvar inn s	)
+|	prop t_psubs_for pvar inn (\*m t)
+		=	\*m (prop t_psubs_for pvar inn t)
+|	prop t_psubs_for pvar inn (\(cu t)
+		=	\(cu (prop t_psubs_for pvar inn t)
+|	prop t_psubs_for pvar inn (\(ca t)
+		=	\(ca (prop t_psubs_for pvar inn t)
+|	prop t_psubs_for pvar inn (Nat i)
+		=	Nat i
+|	prop t_psubs_for pvar inn (Lit s)
+		=	Lit s
+|	prop t_psubs_for pvar inn \(es
+		=	\(es
+and	curried_t_psubs prop pvar term'
+		=	prop t_psubs_for pvar inn term'
+.sw
+.KE
+.KS
+.NH 3
+Into Formulae
+.LP
+Next substitution of a formula (prop) for a propositional variable (p) in a formula is defined, renaming bound variables as necessary.
+.sv lpf
+and	prop psubs_for pvar inn (Pvar p)		=	prop								|
+	prop psubs_for pvar inn (\(no form)		=	\(no (prop psubs_for pvar inn form)				|
+	prop psubs_for pvar inn (form1 \(rh form2)
+		=	(prop psubs_for pvar inn form1) \(rh (prop psubs_for pvar inn form2)		|
+	prop psubs_for pvar inn (form1 \*d form2)
+		=	(prop psubs_for pvar inn form1) \*d (prop psubs_for pvar inn form2)		|
+	prop psubs_for pvar inn (form1 \*e form2)
+		=	(prop psubs_for pvar inn form1) \*e (prop psubs_for pvar inn form2)		|
+	prop psubs_for pvar inn (form1 \*h form2)
+		=	(prop psubs_for pvar inn form1) \*h (prop psubs_for pvar inn form2)		|
+	prop psubs_for pvar inn (\*j (ivar,form))
+		=	let	val nv = primed ivar (freevars prop @
+									(freevars form -- ivar))
+				val nf = prop psubs_for pvar inn
+							((Var nv) subs_for ivar inn form)
+				in	(\*j(nv,nf))
+				end											|
+	prop psubs_for pvar inn (\*k (ivar,form))
+		=	let	val nv = primed ivar (freevars prop @
+									(freevars form -- ivar))
+				val nf = prop psubs_for pvar inn
+							((Var nv) subs_for ivar inn form)
+				in	(\*k(nv,nf))
+				end											|
+	prop psubs_for pvar inn (t1 == t2)
+		=	(prop t_psubs_for pvar inn t1) == (prop t_psubs_for pvar inn t2)		|
+	prop psubs_for pvar inn (t1 \(mo t2)
+		=	(prop t_psubs_for pvar inn t1) \(mo (prop t_psubs_for pvar inn t2)			|
+	prop psubs_for pvar inn T = T
+
+and	curried_psubs a b c = a psubs_for b inn c;
+.sw
+.KE
+.KS
+.NH 2
+Blind Substitution of Formulae
+.NH 3
+Into Terms
+.LP
+For use in equivalence substitutions we require a variant of the procedure for substituting a formula for a propositional variable which allows capture of free (individual) variables.
+.sv lpf
+fun	prop t_bl_psubs_for pvar inn (Var v)
+		=	Var v
+|	prop t_bl_psubs_for pvar inn (\(*m t)
+		=	(\(*m (prop t_bl_psubs_for pvar inn t))
+|	prop t_bl_psubs_for pvar inn (comp(v,f))
+		=	comp(v, prop bl_psubs_for pvar inn f)
+|	prop t_bl_psubs_for pvar inn (V t)
+		=	V (prop t_bl_psubs_for pvar inn t)
+|	prop t_bl_psubs_for pvar inn (Pair (f,s))
+		=	Pair (	prop t_bl_psubs_for pvar inn f,
+				prop t_bl_psubs_for pvar inn s	)
+|	prop t_bl_psubs_for pvar inn (\*m t)
+		=	\*m (prop t_bl_psubs_for pvar inn t)
+|	prop t_bl_psubs_for pvar inn (\(cu t)
+		=	\(cu (prop t_bl_psubs_for pvar inn t)
+|	prop t_bl_psubs_for pvar inn (\(ca t)
+		=	\(ca (prop t_bl_psubs_for pvar inn t)
+|	prop t_bl_psubs_for pvar inn (Nat i)
+		=	Nat i
+|	prop t_bl_psubs_for pvar inn (Lit s)
+		=	Lit s
+|	prop t_bl_psubs_for pvar inn \(es
+		=	\(es
+and	curried_t_bl_psubs prop pvar term'
+		=	prop t_bl_psubs_for pvar inn term'
+.sw
+.KE
+.KS
+.NH 3
+Into Formulae
+.LP
+.sv lpf
+and	prop bl_psubs_for pvar inn (Pvar p)		=	prop								|
+	prop bl_psubs_for pvar inn (\(no form)	=	\(no (prop bl_psubs_for pvar inn form)	|
+	prop bl_psubs_for pvar inn (form1 \(rh form2)
+		= (prop bl_psubs_for pvar inn form1) \(rh (prop bl_psubs_for pvar inn form2)	|
+	prop bl_psubs_for pvar inn (form1 \*d form2)
+		= (prop bl_psubs_for pvar inn form1) \*d (prop bl_psubs_for pvar inn form2)	|
+	prop bl_psubs_for pvar inn (form1 \*e form2)
+		= (prop bl_psubs_for pvar inn form1) \*e (prop bl_psubs_for pvar inn form2)	|
+	prop bl_psubs_for pvar inn (form1 \*h form2)
+		= (prop bl_psubs_for pvar inn form1) \*h (prop bl_psubs_for pvar inn form2)	|
+	prop bl_psubs_for pvar inn (\*j (ivar,form))
+		= (\*j (ivar, prop bl_psubs_for pvar inn form))						|
+	prop bl_psubs_for pvar inn (\*k (ivar,form))
+		= (\*j (ivar, prop bl_psubs_for pvar inn form))						|
+	prop bl_psubs_for pvar inn (t1 == t2)
+		= (prop t_bl_psubs_for pvar inn t1) == (prop t_bl_psubs_for pvar inn t2)		|
+	prop bl_psubs_for pvar inn (t1 \(mo t2)
+		= (prop t_bl_psubs_for pvar inn t1) \(mo (prop t_bl_psubs_for pvar inn t2)			|
+	prop bl_psubs_for pvar inn T = T
+
+and	curried_bl_psubs a b c = a bl_psubs_for b inn c;
+.sw
+.KE
+.LP
+.KS
+.NH
+DERIVED CONSTRUCTORS
+.NH 2
+Subset
+.LP
+.sv lpf
+fun a \(ib b	=	let	val x = freev [a,b] "x"
+				in	\*j (x,(Var x \(mo a) \(rh (Var x \(mo b))
+				end;
+.sw
+.KE
+.LP
+.KS
+.NH 2
+Sets
+.LP
+This set theory has classes.
+Everything is a class, a set is a class which is the member of
+a class (or a set).
+.sv lpf
+fun set a =	let val x = (freev [a] "x")
+		in	\*k(x, a \(mo (Var x))
+		end;
+.sw
+.KE
+.LP
+The empty set is the class which has no members (an axiom asserts
+that this is a set).
+.sv lpf
+(* val \(es = comp("x",\(no(Var "x" == Var "x")); *)
+.sw
+.KS
+.NH 2
+Pairs Ordered Pairs and unit sets.
+.LP
+We define here a curried version of \fIPair\fP, called \fIpair\fP,
+and give the usual definition of ordered pairs.
+.sv lpf
+fun pair a b = Pair (a,b);
+
+fun opair a b = pair a (pair a b);
+.sw
+.KE
+.sv lpf
+fun left a =
+		let	val [x ,y] = map (freev [a]) ["x","y"]
+		in	\(*m (comp(x, \*k(y, a == opair (Var x) (Var y))))
+		end;
+.sw
+.sv lpf
+fun right a =
+		let	val [x ,y] = map (freev [a]) ["x","y"] 
+		in	\(*m (comp(x, \*k(y, a == opair (Var y) (Var x))))
+		end;
+
+fun unit a = pair a a;
+.sw
+.LP
+.KS
+.NH 2
+Power Set, Union, Intersection
+.LP
+.sv lpf
+(* fun \*m a =	let val x = (freev [a] "x")
+		in	comp (x,(Var x \(ib a))
+		end; *)
+.sw
+.sv lpf
+(* fun \(cu a =
+		let	val [x ,y] = map (freev [a]) ["x","y"]
+		in	comp (x,\*k (y,(Var x \(mo (Var y)) \*e (Var y \(mo a)))
+		end; *)
+.sw
+.sv lpf
+(* fun \(ca a =
+		let	val [x ,y] = map (freev [a]) ["x","y"]
+		in	comp (x,\*j (y,(Var y \(mo a) \(rh (Var x \(mo (Var y))))
+		end; *)
+.sw
+.LP
+.KE
+.KS
+.NH 2
+Relations and (Partial) Functions
+.LP
+A relation is simply a set of ordered pairs.
+.sv lpf
+fun is_rel a =	let	val [w,x,y,z] = map (freev [a]) ["w","x","y","z"]
+		in	\*j(w, (Var w \(mo a) \(rh
+				\*k(x,\*k(y, ((Var w) == opair (Var x) (Var y)))))
+		end;
+.sw
+.KE
+.LP
+dom and ran are respectively the domain and range of a relation.
+.sv lpf
+fun dom f =
+		let 	val [x,y] = map (freev [f]) ["x","y"]
+		in	comp (x,\*k(y,opair (Var x) (Var y) \(mo f))
+		end;
+fun ran f =	let 	val [x,y] = map (freev [f]) ["x","y"]
+		in	comp (x,\*k(y,opair (Var y) (Var x) \(mo f))
+		end;
+.sw
+.KS
+.LP
+The following defines the property of being a single valued relation
+(many-one).
+.sv lpf
+fun is_sv a =	let	val [x,y,z] = map (freev [a]) ["x","y","z"]
+			in	is_rel a \*e
+			\*j(x,\*j(y,\*j(z,
+			(opair (Var x) (Var y) \(mo a) \*e
+			(opair (Var x) (Var z) \(mo a) \(rh ((Var y) == (Var z)))))
+		end;
+
+.sw
+.KE
+.LP
+The following function is the domain co-restriction of a relation.
+The domain restriction of r to d is the class of ordered pairs in r whose
+left member is not in d.
+.sv lpf
+fun dom_corestr r d =
+	let	val x = freev [r,d] "x"
+	in	comp(x, (Var x) \(mo r \*e (\(no(left (Var x) \(mo d)))
+	end;
+.sw
+.LP
+Relational override is defined by a domain restriction and a union.
+.sv lpf
+fun rel_over r1 r2 = \(cu (pair (dom_corestr r1 (dom r2)) r2);
+.sw
+.LP
+Relational update is a version of override for a single value.
+.sv lpf
+fun rel_update r1 a v = rel_over r1 (opair a v);
+.sw
+.LP
+.KS
+.NH
+THE ABSTRACT DATA TYPE THEOREM
+.LP
+The set theory is formalised as a hilbert style axiom system by defining
+an abstract data type of theorems, where theorems are represented
+by formulae.
+.KE
+.KS
+.NH 2
+Inference Rules
+.LP
+Inference rules are formalised as functions from theorems to theorems,
+and axioms schemata as functions on any type yeilding theorems.
+.KE
+.sv lpf
+end; (* of FTM *)
+structure THM = struct
+local open FTM in
+abstype theorem = \*o of formula
+with
+.sw
+.LP
+.KS
+.NH 3
+Modus Ponens
+.LP
+Modus Ponens takes two theorems of the form \*o A, \*o A \(rh B and returns
+\*o B.
+If the second theorem is not of the correct form then it will just return
+the first.
+This preserves the soundness of the logic while avoiding the extra
+complexity of exception handling.
+.sv lpf
+fun	MP (\*o A) (\*o (op \(rh (B,C)))	= if A=B then  \*o C else  \*o A			|
+	MP x y				= x;
+.sw
+.KE
+.KS
+.NH 3
+Generalisation
+.LP
+UI takes as parameters a theorem and a variable name, returning
+a generalisation of the theorem.
+.sv lpf
+fun UI (\*o A) x = \*o (\*j(x,A));
+.sw
+.KE
+.NH 3
+Propositional Substitution
+.LP
+Any formula may be substituted in place of a propositional variable in any theorem.
+Free variables in the formula being substituted will cause renaming of bound variables if the propositional variable occurs in the scope of such a binding.
+.sv lpf
+fun PS f pvar (\*o t) = \*o (f psubs_for pvar inn t);
+.sw
+.NH 3
+Equivalence Substitution
+.LP
+Any formula (rhf) may be substituted in place of a formula provably equivalent to it (lhf), in any theorem (sf) yielding a theorem.
+This is possible even if variables free in the formulae rhf,lhf are bound in the premiss sf or the conclusion.
+.sv lpf
+fun EQVS f pv (\*o sf) (\*o (op \*h (lhf, rhf))) =
+	if	lhf bl_psubs_for pv inn f = sf
+	then	\*o (rhf bl_psubs_for pv inn f)
+	else	\*o T;
+.sw
+.NH 3
+Equality Substitution
+.LP
+Any term may be substituted in place of a term provably equal to it.
+.sv lpf
+fun EQLS f v (\*o sf) (\*o (op == (lht, rht))) =
+	if	lht bl_subs_for v inn f = sf
+	then	\*o (rht bl_subs_for v inn f)
+	else	\*o T;
+.sw
+.LP
+.KS
+.NH 2
+Propositional Axioms
+.LP
+All pure tautologies are axioms.
+.KE
+.KE
+.KS
+.LP
+Any pure tautology is an axiom.
+A pure tautology is a tautology in which all atomic formulae are either propositional variables or T.
+.LP
+Function `tautc' checks a formula to determine whether it is a pure tautology.
+.sv lpf
+fun	tautc x T		=	true						|
+	tautc [] f		=	false						|
+	tautc (h::t) f	=	(tautc t (simpl h T f))
+					andalso (tautc t (simpl h F f));
+.sw
+.LP
+The inference rule TAUTC will return a theorem given a formula which is a pure tautology.
+.sv lpf
+fun TAUT f =	if tautc (pack_set ((propvars f)@[""])) f = true
+			then \*o f
+			else \*o T;
+.sw
+.KE
+.LP
+.KS
+.NH 2
+Axioms of Quantification
+.LP
+In the quantification schemata A and B are arbitrary formulae, x is
+a variable name and t a term.
+Instead of rejecting combinations which would not be sound variables
+will be renamed (by priming) as appropriate to arrive at a valid instance.
+.sv lpf
+fun Q1 A x t	= \*o (\*j(x,A) \(rh (t subs_for x inn A));
+fun Q2 A x		= \*o (A \(rh \*j(primed x (freevars A),A));
+fun Q3 A B x	= \*o (\*j(x,A \(rh B) \(rh (\*j(x,A) \(rh \*j(x,B)));
+fun Q4 A x		= \*o (\*k(x,A) \*h \(no(\*j(x,\(noA)));
+.sw
+.KE
+.LP
+.KS
+.NH 2
+Equality and Membership
+.LP
+Equality need not be primitive, axiom EQ could be replaced by a similar
+definition in the metalanguage.
+.sv lpf
+fun EQ a b x	=
+			let	val nx = freev [a,b] x
+			in	\*o ((a==b) \*h (\*j(nx,
+					(Var nx \(mo a \*h Var nx \(mo b))))
+			end;
+fun EXT a b x	=
+			let	val nx = freev [a,b] x
+			in	\*o ((a==b) \*h (\*j(nx,
+					(a \(mo (Var nx) \*h b \(mo (Var nx)))))
+			end;
+.sw
+.LP
+.NH 2
+Term Constructor Axioms
+.LP
+.NH 3
+Pair
+.NH 3
+Union
+.NH 3
+Intersection
+.NH 3
+Natural Numbers
+.LP
+.sv lpf
+fun	suc n	= \(cu (pair n (unit n));
+val	NAT0	= \*o ((Nat 0) == \(es);
+fun	NAT n	=	if n<0
+				then \*o (Nat (0-n) == Nat n)
+				else \*o (Nat (n+1) == \(cu (pair (Nat n) (unit (Nat n))));
+.sw
+.NH 3
+Strings
+.LP
+.sv lpf
+fun	LIT ""	=	\*o ((Lit "")	== \(es)				|
+	LIT s		=
+		case explode s of
+		[]	=>	\*o ((Lit "") == \(es)				|
+		(h::t)	=>	\*o ((Lit (implode (h::t)))
+						== opair (Nat (ord h)) (Lit (implode t)));
+.sw
+.NH 3
+The empty set
+.sv lpf
+val ES_AX = \*o (\(es == comp(x,F));
+.sw
+.KE
+.KS
+.NH 2
+Comprehension
+.LP
+By contrast with Zermelo-Fraenkel we have comprehension rather than
+separation.
+This is sound because a comprehension does not always yield a set,
+it may yield a class, and because, as the following axiom states,
+it yields a class which contains just those sets which satisfy the
+predicate (omitting any classes which satisfy the predicate).
+Proper classes are not members of anything (that is the definition of a proper class), and the argument about whether the Russell class is a member of itself proves that the class is proper rather than giving rise to a contradiction.
+.sv lpf
+fun COM x p	= \*o (\*j (x,set (Var x) \*e p \*h (Var x) \(mo comp(x,p)));
+.sw
+.KE
+.KS
+.NH 2
+The Empty Set
+.LP
+The empty class is a set.
+.sv lpf
+fun S\(es x		= \*o (set \(es);
+.sw
+.KE
+.LP
+.KS
+.NH 2
+Universes and Closure
+.LP
+The function U maps each set onto a universe containing it.
+A universe is a transitive set (every member of it is a subset of it)
+closed under the set forming operations of Zermelo-Fraenkel, viz 
+pair and power set formation, union, and replacement.
+These axioms imply also closure under separation, pairing, and choice
+from non-empty sets.
+The availability of classes makes the statement of the replacement
+axiom smoother.
+.KE
+.LP
+Urep looks slightly stronger than the equivalent closure condition
+in Cohn, since it asserts that the range of the function is in the
+same universe as the domain, Cohn merely states that the union of
+the range is in the universe and that the range itself is a set.
+.sv lpf
+fun Umem u	= \*o (set u \(rh u \(mo (V u) \*e set (V u));
+fun Utrans u x	= \*o (x \(mo (V u) \(rh x \(ib (V u));
+fun Upair u x y	= \*o (x \(mo (V u) \*e (x \(mo (V u))
+				\(rh (Pair (x,y)) \(mo V u
+				);
+fun Upower u a	= \*o (a \(mo (V u) \(rh (\*m a \(mo (V u)));
+fun Union u a	= \*o (a \(mo (V u) \(rh (\(cu a \(mo (V u)));
+fun Urep u f	= \*o (is_sv f \*e (dom f) \(mo (V u) \*e (ran f) \(ib (V u)
+					\(rh	(ran f) \(mo (V u));
+.sw
+.KS
+.NH 2
+Choice
+.LP
+The choice function maps every non-empty class onto a member of itself.
+It maps the empty set onto an unspecified class.
+.KE
+.LP
+This formulation of the choice axiom is in the first clause like the
+usual formulation for ZF.
+The second clause is my innovation, in order to ensure that the value
+obtained on application of a partial function to an element outside its
+domain is distinct from any element in its range.
+(it is \(*m \(es, which is by this axiom a proper class and hence may not
+be in the range of any function).
+.sv lpf
+fun CH t = \*o ((set (\(*m t) \*h (\(no (t == \(es)))
+			\*e ((\(no (t == \(es)) \*h (\(*m t) \(mo t));
+.sw
+.KS
+.NH 2
+Foundation
+.LP
+The axiom of foundation is needed to permit inductive definitions.
+.sv lpf
+fun FO t =	let	val y = primed "y" (term_freevars t)
+		in	\*o (t==\(es \*d
+			\*k(y,Var y \(mo t \*e (\(ca (pair t (Var y)) == \(es)))
+		end;
+.sw
+.KE
+.KS
+.NH 2
+Extracting the Formula from a Theorem
+.LP
+The following procedure allows inspection of the content of a theorem from outside the abstract data type.
+.sv lpf
+fun formula(\*o t) = t;
+.sw
+.KE
+.ig cx
+.sv lpf
+fun ftaut f = formula (TAUT f);
+.sw
+.cx
+.KS
+.NH 2
+End of Abstract Data Type
+.LP
+.sv lpf
+end; (* of local clause *)
+end; (* of abstract data type *)
+end; (* of structure THM *)
+end; (* of structure UST *)
+.sw
+.KE
+.ig cx
+.LP
+The following re-establishes the exhaustiveness check on pattern matching, without which compilation fails (this is a bug in the compiler).
+.sv lpf
+let val {CheckMatch,...} = Debug in CheckMatch := true end;
+.sw
+.cx
+.ig cx
+.sv lpf
+open UST.FTM UST.THM;
+.sw
+.LP
+Test cases.
+.DS L
+val [pa,pb,pc,pd,pe,pf,pg,ph,pi] = map Pvar ["a","b","c","d","e","f","g","h","i"];
+val ta = ftaut T = T;
+val tb = ftaut pa = T;
+val tc = ftaut (pa \(rh pa)=(pa \(rh pa);
+val td = ftaut (pa \(rh pb)=T;
+val te = ftaut (pa \(rh (pb \(rh pa))=(pa \(rh (pb \(rh pa));
+val tf = ftaut ((pa \(rh pb \(rh pc)
+	\(rh ((pa \(rh pb) \(rh (pb \(rh pc)))=((pa \(rh pb \(rh pc)
+	\(rh ((pa \(rh pb) \(rh (pb \(rh pc)));
+val tg = ftaut ((pa \(rh pb \(rh pc)
+	\(rh ((pa \(rh pc) \(rh (pb \(rh pc)))=((pa \(rh pb \(rh pc)
+	\(rh ((pa \(rh pc) \(rh (pb \(rh pc)));
+val th = ftaut (pa \*d (\(no pa))=(pa \*d (\(no pa));
+val ti = ftaut (pa \*d (\(no pb))=T;
+val tj = ftaut ((pa \(rh pb \(rh pc \(rh pd \(rh pe \(rh pf \(rh pg \(rh ph \(rh pi)
+	\(rh (pa \*e pb \*e pc \*e pd \*e pe \*e pf \*e pg \*e ph \*e pi))
+	=T;
+val tk = ftaut ((pa \(rh (pb \(rh (pc \(rh (pd \(rh (pe \(rh (pf \(rh (pg \(rh (ph \(rh (pi
+	\(rh (pa \*e pb \*e pc \*e pd \*e pe \*e pf \*e pg \*e ph \*e pi)))))))))))=((pa \(rh (pb \(rh (pc \(rh (pd \(rh (pe \(rh (pf \(rh (pg \(rh (ph \(rh (pi
+	\(rh (pa \*e pb \*e pc \*e pd \*e pe \*e pf \*e pg \*e ph \*e pi)))))))))));
+val tl = ftaut ((pb \(rh (pc \(rh (pd \(rh (pe \(rh (pf \(rh (pg \(rh (ph \(rh (pi
+	\(rh (pa \*e pb \*e pc \*e pd \*e pe \*e pf \*e pg \*e ph \*e pi))))))))))
+	=T;
+val tm = ftaut (\(no ( \(no T)) = (\(no ( \(no T));
+val tr = ta andalso tb andalso tc andalso td andalso te andalso tf
+	andalso tg andalso th andalso ti andalso tj andalso tk andalso tl andalso tm; 
+.DE
+.cx
+.KE
+.KE
+.KS
+.LP
+The types inferred by the SML compiler were:
+.DS L
+.DE
+.KE

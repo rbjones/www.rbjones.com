@@ -1,0 +1,1370 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff.defs
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.RP
+.TL
+Zermelo-Fraenkel set theory in HOL (part 1)
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document consists of a formal axiomatisation in HOL of Zermelo-Fraenkel set theory.
+.AE
+.ds LH 
+.ds CH ZF in HOL part 1
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/FMU/RBJ/120   Issue 0.4
+.ds CF ZF in HOL part 1
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This is a minimally modified transcription into HOL of the formalisation of ZF found in \fIThe Logical Foundations of Mathematics\fP by William S. Hatcher (Pergammon 1982 ISBN 0-08-025800).
+The fact that this is an axiomatisation in higher order logic rather than first order logic has some consequences, but doesn't cause any very major changes.
+.LP
+I mention here just two points:
+.IP Ç
+In HOL logical equivalence is interchangeable with equality over type bool(i.e. Ö "É(a:bool)(b:bool). (a=b) Ç (aÇb)").
+Since the rewrite facilities depend upon equality it is easier to dispense with equivalence and use equality instead, which I have done here.
+.IP =
+Equality is in the basic HOL system, and so we do not need to define is as Hatcher does.
+However, Hatcher has a curious division of labour between his definition of equality and his axiom of extensionality (ZF1).
+It looks as though his definition of equality in fact gives half of the necessary facts for equality together with extensionality, and his axiom of extensionality is just the other half of the equality axiom.
+The fact that equality is built into HOL means that Hatcher's ZF1 is provable in HOL, but his definition of equality isn't!
+.KE
+.NH
+ZERMELO-FRAENKEL SET THEORY
+.NH 2
+Formalisation of ZF
+.LP
+First we start a new theory for ZF and declare the new type SET.
+.ig cx
+extend_theory`ZF`;;
+load_definitions `ZF`;;
+load_theorems `ZF`;;
+load_axioms `ZF`;;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+.cx
+.hd
+new_theory`zf120`;;
+%
+new_parent`infra`;;
+loadf`infra`;;
+%
+new_type 0 `SET`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+.he
+.NH 3
+Membership and Extensionality
+.LP
+Next we introduce the membership predicate and the axiom of extensionality.
+This differs from Hatcher's presentation since the equality rules are already built into HOL, whereas Hatcher's definition of equality is in fact the rule of extensionality.
+.hd
+new_infix (`ù`,":SET ã SET ã bool");;
+
+let EXT = new_axiom (`EXT`,"
+	É (x:SET)(y:SET)é(É (z:SET)é z ù x = z ù y) ä(x = y)
+");;
+.he
+.LP
+Hatchers theorem 1 is trivially proved in HOL:
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é(x∞ = x¨) ä É(xÆ:SET)é x∞ ù xÆ = x¨ ù xÆ
+");;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC []);;
+let ZF_thm1 = save_top_thm `ZF_thm1`;;
+.he
+.LP
+The following rewrite rule will be useful for proving equality of sets.
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é (x = y) = (É(z:SET)é z ù x = z ù y)
+");;
+expand (EVERY [REPEAT STRIP_TAC;EQ_TAC;REPEAT STRIP_TAC;ASM_REWRITE_TAC[]]);;
+expand (IMP_RES_TAC (SPEC_ALL EXT));;
+let ZF_le1 = save_top_thm `ZF_le1`;;
+.he
+.LP
+Theorem 2 is too trivial to be worth saving:
+.hd
+let ZF_thm2 = REFL "x:SET";;
+.he
+.LP
+Now we define non-membership and inequality.
+.hd
+let ì_DEF = new_infix_definition(`ì_DEF`,"
+	ì (x:SET)(y:SET) = å(x ù y)
+");;
+let NE_DEF = new_infix_definition(`NE_DEF`,"
+	à (x:*)(y:*) = å(x = y)
+");;
+.he
+.NH 3
+Separation
+.LP
+The constant \fIsep\fP is introduced for separation.
+.hd
+new_constant (`sep`,":SET ã (SET ã bool) ã SET");;
+let ZF2 = new_axiom(`ZF2`,"
+	É(A:SETãbool)(z:SET)(x:SET)é x ù (sep z A) =  x ù z Ä A x
+");;
+.he
+.NH 3
+The Empty Set
+.hd
+new_constant (`§`,":SET");;
+
+let ZF3 = new_axiom (`ZF3`,"
+	(§:SET) = sep § ç x∞:SETé F
+");;
+.he
+.LP
+We now prove that nothing is a member of the empty set.
+.hd
+set_goal([],"
+	É(x∞:SET)é x∞ ì §
+");;
+expand (PURE_REWRITE_TAC [ì_DEF]);;
+expand (PURE_ONCE_REWRITE_TAC [ZF3]);;
+expand (REWRITE_TAC [ZF2]);;
+let ZF_thm3 = save_top_thm `ZF_thm3`;;
+.he
+.LP
+The following form is more convenient.
+.hd
+let ZF_le2 = save_thm (`ZF_le2`, REWRITE_RULE [ì_DEF] ZF_thm3);;
+.he
+.LP
+The empty set is unique.
+.hd
+set_goal([],"
+	É(x∞:SET)é(É(x¨:SET)éx¨ ì x∞) = (§ = x∞)
+");;
+expand (STRIP_TAC THEN EQ_TAC);;
+expand (REWRITE_TAC [ì_DEF]);;
+expand STRIP_TAC;;
+expand (RMP_TAC "(Éz:SETé z ù § = z ù x∞:SET)");;
+expand (ACCEPT_TAC (SPECL ["§";"x∞:SET"] EXT));;
+expand (ONCE_REWRITE_TAC [ZF3]);;
+expand (ASM_REWRITE_TAC [ZF2]);;
+expand STRIP_TAC;;
+expand (IMP_RES_TAC (SPECL ["§";"x∞:SET"] (INST_TYPE [":SET",":*"] EQ_SYM)));;
+expand (ONCE_ASM_REWRITE_TAC []);;
+expand (REWRITE_TAC [ZF_thm3]);;
+let ZF_thm4 = save_top_thm `ZF_thm4`;;
+.he
+.LP
+A helpful lemma for proving non-emptyness:
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é x¨ ù x∞ ä x∞ à §
+");;
+expand (REWRITE_TAC [NE_DEF]);;
+expand (TAUT_REWRITE_TAC "a ä åb = b ä åa");;
+expand STRIP_TAC;;
+expand STRIP_TAC;;
+expand STRIP_TAC;;
+expand (ASM_REWRITE_TAC[ZF_le2]);;
+let ZF_le3 = save_top_thm `ZF_le3`;;
+.he
+.NH 3
+Power Sets
+.LP
+The power set is defined using the subset relationship:
+.hd
+let •_DEF = new_infix_definition(`•_DEF`,	"
+	(•:SETãSETãbool) a b	= Éc:SETé c ù a ä c ù b
+");;
+.he
+.LP
+We prove some obvious properties of •:
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é (x∞ • x¨ Ä x¨ • x∞) ä (x∞ = x¨)
+");;
+expand (REWRITE_TAC [•_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (TMP_TAC (SPECL ["x∞:SET";"x¨:SET"] EXT));;
+expand (STRIP_TAC THEN EQ_TAC THEN ASM_REWRITE_TAC[]);;
+let ZF_thm5 = save_top_thm `ZF_thm5`;;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)é x∞ • x∞
+");;
+expand (REWRITE_TAC [•_DEF]);;
+let ZF_thm6 = save_top_thm `ZF_thm6`;;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)(xÆ:SET)é (x∞ • x¨ Ä x¨ • xÆ) ä (x∞ • xÆ)
+");;
+expand (REWRITE_TAC [•_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (RES_TAC THEN RES_TAC);;
+let ZF_thm7 = save_top_thm `ZF_thm7`;;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)é § • x∞
+");;
+expand (REWRITE_TAC [•_DEF]);;
+expand (ONCE_REWRITE_TAC [ZF3]);;
+expand (REWRITE_TAC [ZF2]);;
+let ZF_thm8 = save_top_thm `ZF_thm8`;;
+.he
+.hd
+new_constant(`ë`,":SET ã SET");;
+let ZF4 = new_axiom(`ZF4`,"
+	É(y:SET)(x:SET)é x ù (ë y) = x • y
+");;
+.he
+.NH 3
+Pairs
+.hd
+new_constant(`pair`,":SET ã SET ã SET");;
+let ZF5 = new_axiom(`ZF5`,"
+	É(y:SET)(z:SET)(x:SET)é x ù (pair y z) = (x=y) Å (x=z)
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é x ù (pair x y) Ä y ù (pair x y)
+");;
+expand (REPEAT STRIP_TAC THEN REWRITE_TAC [ZF5]);;
+let ZF_le4 = save_top_thm `ZF_le4`;;
+.he
+.hd
+let unit_DEF = new_definition(`unit_DEF`,"
+	(unit:SET ã SET) x = pair x x
+");;
+.he
+.hd
+set_goal([],"
+	Éx∞:SETé x∞ ù unit x¨ = (x∞ = x¨)
+");;
+expand (STRIP_TAC THEN REWRITE_TAC [unit_DEF;ZF5;ZF_le4]);;
+let ZF_thm9 = save_top_thm `ZF_thm9`;;
+.he
+.ig cx
+.hd
+%
+set_goal([],"
+	É(x:SET)é unit x à §
+");;
+expand (STRIP_TAC THEN REWRITE_TAC [unit_DEF;ZF5;ZF_le4]);;
+let ZF_le1 = save_top_thm `ZF_le1`;;
+%
+.he
+.cx
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é (unit x = unit y) = (x = y)
+");;
+  expand (REPEAT STRIP_TAC THEN EQ_TAC);;
+  expand (REWRITE_TAC [SPECL["unit x'";"unit y'"] ZF_le1]);;
+  expand (REWRITE_TAC [ZF_thm9]);;
+  expand STRIP_TAC;;
+  expand (ASSUME_TAC (REFL "x:SET"));;
+  expand (DEF_RES_TAC (ASSUMP "Éz:SETé (z = x) = (z = y)"));;
+  expand (STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+let ZF_le13 = save_top_thm `ZF_le13`;;
+.he
+.hd
+let ó_DEF = new_infix_definition (`ó_DEF`,"
+	(ó:SET ã SET ã SET) a b = pair (unit a) (pair a b)
+");;
+.he
+.hd
+set_goal([],"
+	É(x:SET)(y:SET)é (unit x) ù (x ó y) Ä (pair x y) ù (x ó y)
+");;
+expand (REPEAT STRIP_TAC THEN REWRITE_TAC [ó_DEF;ZF_le4]);;
+let ZF_le5 = save_top_thm `ZF_le5`;;
+.he
+.NH 3
+Union and Intersection
+.hd
+new_constant(`£`,":SET ã SET");;
+let ZF6 = new_axiom(`ZF6`,"
+	É(y:SET)(x:SET)é x ù (£ y) = Ñ(z:SET)éz ù y Ä x ù z
+");;
+.he
+.hd
+let ¢_DEF = new_definition(`¢_DEF`,	"
+	(¢:SET ã SET) x = sep (£ x) ç y:SETé É(z:SET)é z ù x ä y ù z
+");;
+
+let °_DEF = new_infix_definition(`°_DEF`,"
+	° (x:SET)(y:SET) = £ (pair x y)
+");;
+
+let †_DEF = new_infix_definition(`†_DEF`,"
+	† (x:SET)(y:SET) = ¢ (pair x y)
+");;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)(xÆ:SET)éx∞ ù (x¨ ° xÆ) = x∞ ù x¨ Å x∞ ù xÆ
+");;
+expand(REWRITE_TAC [°_DEF;ZF6;ZF5]);;
+expand (REPEAT STRIP_TAC);;
+expand EQ_TAC;;
+expand (EVERY [
+	STRIP_TAC;
+ 	UNDISCH_TAC "x∞ ù z";
+	ASM_REWRITE_TAC [];
+	STRIP_TAC;
+	ASM_REWRITE_TAC []]);;
+expand STRIP_TAC;;
+expand (EXISTS_TAC "x¨:SET");;
+expand (ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "xÆ:SET");;
+expand (ASM_REWRITE_TAC[]);;
+let ZF_thm10 = save_top_thm `ZF_thm10`;;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)(xÆ:SET)éx∞ ù (x¨ † xÆ) = x∞ ù x¨ Ä x∞ ù xÆ
+");;
+expand(REWRITE_TAC [†_DEF;¢_DEF;ZF2;ZF5;ZF6]);;
+expand BETA_TAC;;
+expand (REPEAT STRIP_TAC);;
+expand EQ_TAC;;
+let rr t = REWRITE_RULE []
+	(SPEC t (ASSUME "Éz:SETé (z = x¨) Å (z = xÆ) ä x∞ ù z"))
+in expand (REPEAT STRIP_TAC THEN REWRITE_TAC (map rr ["x¨:SET";"xÆ:SET"]));;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+expand (EXISTS_TAC "x¨:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF_thm11 = save_top_thm `ZF_thm11`;;
+.he
+.NH 3
+Natural Numbers
+.hd
+let suc_DEF = new_definition(`suc_DEF`,"
+	suc (x:SET) = x ° (unit x)
+");;
+
+let Nat_DEF = new_prim_rec_definition(`Nat`,"
+	(Nat 0 = §) Ä
+	(Nat (SUC n) = suc (Nat n))
+");;
+.he
+.NH 3
+The Axiom of Regularity
+.LP
+The following axiom Hatcher calls the axiom of regularity, sometimes it is called the axiom of well foundedness.
+.hd
+let ZF7 = new_axiom (`ZF7`,"
+	É(x:SET)éx à § ä Ñ(y:SET)é y ù x Ä (y † x = §)
+");;
+.he
+.LP
+We now prove some consequences of well foundedness.
+.hd
+set_goal([],"
+	Éx∞:SETé x∞ ì x∞
+");;
+expand (STRIP_TAC THEN REWRITE_TAC [ì_DEF]);;
+expand STRIP_TAC;;
+expand (MP_TAC ZF7);;
+expand (RMP_TAC "Ñxé x à § Ä å(Ñyé y ù x Ä (y † x = §))");;
+expand (REWRITE_TAC[NOT_FORALL_CONV "å(Éxé x à § ä (Ñyé y ù x Ä (y † x = §)))"]);;
+expand (RMP_TAC "
+	É(x:SET)é x à § Ä å(Ñyé y ù x Ä (y † x = §))
+			= å(x à § ä (Ñyé y ù x Ä (y † x = §)))");;
+expand STRIP_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand (STRIP_TAC THEN TAUT_TAC);;
+expand (EXISTS_TAC "unit x∞:SET");;
+expand (REWRITE_TAC [NE_DEF;ZF_thm9;NOT_EXISTS_CONV"å(Ñyé (y = x∞) Ä (y † (unit x∞) = §))"]);;
+.he
+.hd
+expand (STRIP_TAC);;
+expand (RMP_TAC "x∞ ù unit x∞");;
+expand (ASM_REWRITE_TAC[REWRITE_RULE [ì_DEF] ZF_thm3]);;
+expand (REWRITE_TAC [ZF_thm9;ZF_le1]);;
+expand (REWRITE_TAC
+	[NOT_FORALL_CONV "å(Éz:SETé (Éz':SETé z' ù z = z' ù x∞) = z ù §)"]);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (REWRITE_TAC[REWRITE_RULE [ì_DEF]ZF_thm3]);;
+expand (REWRITE_TAC [ZF_thm9]);;
+.he
+.hd
+expand STRIP_TAC;;
+expand (RMP_TAC "(y = x∞) ä å (y † (unit x∞) = §)");;
+expand TAUT_TAC;;
+expand STRIP_TAC;;
+expand (ASM_REWRITE_TAC[ZF_le1;ZF_thm11]);;
+expand (REWRITE_TAC [REWRITE_RULE [ì_DEF]ZF_thm3]);;
+expand (ASM_REWRITE_TAC[NOT_FORALL_CONV "å(Ézé å(z ù x∞ Ä z ù (unit x∞)))"]);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (ASM_REWRITE_TAC [ZF_thm9]);;
+let ZF_thm12 = save_top_thm `ZF_thm12`;;
+.he
+.hd
+set_goal([],"å $É (pf:*ãbool) = $Ñ (ç x:*é å pf x)");;
+expand (RMP_TAC "(pf:*ãbool) = ç x:*é pf x");;
+expand (STRIP_TAC THEN ONCE_ASM_REWRITE_TAC[]);;
+expand BETA_TAC;;
+expand (REWRITE_TAC [NOT_FORALL_CONV "å(Éxé pf x)"]);;
+expand (REWRITE_TAC [ETA_AX]);;
+.he
+.hd
+let NOT_FORALL = save_top_thm `NOT_FORALL`;;
+
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+.he
+.hd
+set_goal([],"å $Ñ (pf:*ãbool) = $É (ç x:*é å pf x)");;
+expand (RMP_TAC "(pf:*ãbool) = ç x:*é pf x");;
+expand (STRIP_TAC THEN ONCE_ASM_REWRITE_TAC[]);;
+expand BETA_TAC;;
+expand (REWRITE_TAC [NOT_EXISTS_CONV "å(Ñxé pf x)"]);;
+expand (REWRITE_TAC [ETA_AX]);;
+.he
+.hd
+let NOT_EXISTS = save_top_thm `NOT_EXISTS`;;
+
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+.he
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é x∞ ù x¨ ä x¨ ì x∞
+");;
+expand (REWRITE_TAC[ì_DEF; TAUT_RULE "a ä åb = å(a Ä b)"]);;
+expand (REPEAT STRIP_TAC);;
+expand (MP_TAC ZF7 THEN TAUT_REWRITE_TAC "a ä F = åa");;
+expand NOT_FORALL_TAC;;
+expand (EXISTS_TAC "pair (x∞:SET) (x¨:SET)");;
+expand (REWRITE_TAC [NE_DEF;ZF_le1]);;
+expand (REWRITE_TAC [ZF_thm11]);;
+expand (REWRITE_TAC [REWRITE_RULE[ì_DEF]ZF_thm3]);;
+expand (TAUT_REWRITE_TAC "å (åa ä b) = åa Ä åb");;
+expand (STRIP_TAC THEN NOT_FORALL_TAC);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (ASM_REWRITE_TAC [ZF5]);;
+.he
+.hd
+expand (ASM_REWRITE_TAC [ZF5]);;
+expand NOT_EXISTS_TAC;;
+expand (TAUT_REWRITE_TAC "å(a Ä b) = a ä åb");;
+expand (EVERY [STRIP_TAC; STRIP_TAC; NOT_FORALL_TAC; ASM_REWRITE_TAC[]]);;
+expand (EXISTS_TAC "x¨:SET" THEN ASM_REWRITE_TAC []);;
+expand (EXISTS_TAC "x∞:SET" THEN ASM_REWRITE_TAC []);;
+let ZF_thm13 = save_top_thm `ZF_thm13`;;
+.he
+.LP
+The following function \fIset\fP takes a list of sets and returns the set containing just those elements:
+.hd
+let set = new_list_rec_definition(`set`,"
+	(set [] = §) Ä
+	(set (CONS h t) = (unit h) ° (set t))
+");;
+.he
+.LP
+One more consequence of well-foundedness:
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)(xÆ:SET)é x∞ ù x¨ Ä x¨ ù xÆ ä xÆ ì x∞ Ä xÆ à x∞
+");;
+expand (EVERY[
+	REWRITE_TAC[ì_DEF; NE_DEF];
+	REPEAT STRIP_TAC;
+	MP_TAC ZF7;
+	TAUT_REWRITE_TAC "a ä F = åa";
+	NOT_FORALL_TAC;
+	EXISTS_TAC "set[(x∞:SET);(x¨:SET);(xÆ:SET)]";
+	REWRITE_TAC [set;NE_DEF;ZF_le1;ZF_thm11;
+		ZF_thm10;REWRITE_RULE[ì_DEF]ZF_thm3;unit_DEF];
+	TAUT_REWRITE_TAC "å (åa ä b) = åa Ä åb";
+	STRIP_TAC ]);;
+.he
+.LP
+Giving four subgoals.
+.LP
+The first:
+.hd
+expand (EVERY[
+	NOT_FORALL_TAC;
+	EXISTS_TAC "x∞:SET";
+	ASM_REWRITE_TAC [ZF5]]);;
+.he
+.LP
+The second:
+.hd
+expand (ASM_REWRITE_TAC [ZF5]);;
+expand (NOT_EXISTS_TAC);;
+expand (TAUT_REWRITE_TAC "å(a Ä b) = a ä åb");;
+expand (EVERY [STRIP_TAC; STRIP_TAC; NOT_FORALL_TAC; ASM_REWRITE_TAC[]]);;
+expand (EXISTS_TAC "xÆ:SET" THEN ASM_REWRITE_TAC []);;
+expand (EXISTS_TAC "x∞:SET" THEN ASM_REWRITE_TAC []);;
+expand (EXISTS_TAC "x¨:SET" THEN ASM_REWRITE_TAC []);;
+.he
+.LP
+The third:
+.hd
+expand NOT_FORALL_TAC;;
+expand (EXISTS_TAC "x∞:SET");;
+expand (ASM_REWRITE_TAC [ZF5]);;
+.he
+And the fourth:
+.hd
+expand (EVERY [
+	RMP_TAC "F";
+	REWRITE_TAC[];
+	MP_TAC ZF_thm13;
+	REWRITE_TAC [ì_DEF];
+	NOT_FORALL_TAC;
+	NOT_FORALL_TAC;
+	EXISTS_TAC "x∞:SET";
+	EXISTS_TAC "x¨:SET";
+	ASM_REWRITE_TAC [];
+	ACCEPT_TAC (REWRITE_RULE [ASSUME "xÆ = x∞"] (ASSUME "x¨ ù xÆ"))]);;
+
+let ZF_thm14 = save_top_thm `ZF_thm14`;;
+.he
+.NH 3
+Ordinals
+.LP
+Transitive sets:
+.hd
+let Trans_DEF = new_definition(`Trans_DEF`,"
+	(Trans:SET ã bool) x = É(y:SET)é y ù x ä y • x
+");;
+.he
+.LP
+Connected sets:
+.hd
+let Con_DEF = new_definition(`Con_DEF`,"
+	(Con:SET ã bool) x =
+	É(y:SET)(z:SET)é (y ù x Ä z ù x Ä z à y) ä (z ù y Å y ù z)
+");;
+.he
+.hd
+let ZF_le6 = save_thm(`ZF_le6`,
+	TAUT_REWRITE_RULE "a Ä b Ä å c ä d = a Ä b ä c Å d"
+	(REWRITE_RULE [NE_DEF] Con_DEF));;
+.he
+.hd
+let ZF_le7 = save_thm(`ZF_le7`,
+	TAUT_REWRITE_RULE "a Ä b Ä å c ä d = a ä b ä c Å d"
+	(REWRITE_RULE [NE_DEF] Con_DEF));;
+.he
+.hd
+set_goal([],"
+	Trans(x1:SET) = É(x2:SET)(x3:SET)é(x2 ù x1 Ä x3 ù x2 ä x3 ù x1)
+");;
+expand (REWRITE_TAC [Trans_DEF;•_DEF]);;
+expand (EQ_TAC THEN REPEAT STRIP_TAC THEN RES_TAC);;
+let ZF_le8 = save_top_thm `ZF_le8`;;
+.he
+.LP
+Ordinal numbers:
+.hd
+let On_DEF = new_definition(`On_DEF`,"
+	(On:SET ã bool) x = Trans x Ä Con x
+");;
+.he
+.LP
+Hatcher's exercise to prove that an ordinal is transitive under ù.
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)(xÆ:SET)(x±:SET)é
+		((On(x∞) Ä x¨ ù x∞ Ä xÆ ù x∞ Ä x± ù x∞ Ä x¨ ù xÆ Ä xÆ ù x±)
+			ä x¨ ù x±)
+");;
+expand (REWRITE_TAC [On_DEF;Con_DEF;ZF_le8;NE_DEF;•_DEF] THEN REPEAT STRIP_TAC);;
+
+expand (LEMMA "å(x± ù x¨) Ä å(x± = x¨)");;
+expand RES_TAC;;
+expand RES_TAC;;
+expand (LEMMA "(x¨ ù xÆ) Ä (xÆ ù x±)");;
+expand (IMP_RES_TAC (SPECL ["x¨";"xÆ";"x±"] (REWRITE_RULE [NE_DEF;ì_DEF] ZF_thm14)));;
+expand (ASM_REWRITE_TAC []);;
+expand (ASM_REWRITE_TAC []);;
+let ZF_le9 = save_top_thm `ZF_le9`;;
+.he
+
+
+
+.NH 3
+Ordinals
+.LP
+.hd
+set_goal([],"
+É(p:SETãbool)(q:SETãbool)é (É(x:SET)é p x ä q x) ä ((É(x:SET)ép x) ä É(x:SET)éq x)
+");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+expand FORALL_OUT_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+let ZF_le10 = save_top_thm `ZF_le10`;;
+.he
+.LP
+The ordinals are totally ordered by ù.
+.ig cx
+.cx
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é x∞ • x¨ Ä x∞ à § Ä (On x¨)
+		ä Ñ(xÆ:SET)é xÆ ù x∞
+			Ä É(x±:SET)é x± ù x∞ ä (x± = xÆ) Å xÆ ù x±
+");;
+expand (REWRITE_TAC [•_DEF;NE_DEF;On_DEF;ZF_le7]);;
+expand (REPEAT STRIP_TAC);;
+expand (MP_TAC (SPEC "x∞:SET" ZF7));;
+expand (ASM_REWRITE_TAC[NE_DEF]);;
+expand (TAUT_REWRITE_TAC "a ä b = åb ä åa");;
+expand NOT_EXISTS_TAC;;
+expand FORALL_OUT_TAC;;
+expand (TAUT_REWRITE_TAC "å(a Ä b) ä å(a Ä c) = (a Ä c) ä b");;
+expand (REWRITE_TAC [SPEC "x † x∞" ZF_le1]);;
+expand (REWRITE_TAC [ZF_thm11; REWRITE_RULE [ì_DEF] ZF_thm3]);;
+expand (TAUT_REWRITE_TAC "å(a Ä b) = b ä åa");;
+expand (REPEAT STRIP_TAC);;
+expand RES_TAC;;
+expand (MP_TAC (SPECL ["x:SET";"x±:SET"] (ASSUME "Éy zé
+        y ù x¨ ä
+        z ù x¨ ä
+        (z = y) Å z ù y Å y ù z")));;
+expand (RMP_TAC "(x ù x¨ Ä x± ù x¨ Ä å(x± ù x))");;
+expand TAUT_TAC;;
+expand (ASM_REWRITE_TAC []);;
+
+let ZF_thm15 = save_top_thm `ZF_thm15`;;
+.he
+.LP
+The empty set is an ordinal.
+.hd
+let ZF_thm16 = prove_thm (`ZF_thm16`,"
+	On §
+",
+	REWRITE_TAC [On_DEF;Trans_DEF;Con_DEF;ZF_le2]);;
+.he
+.LP
+A subset of a connected set is connected.
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)éCon x∞ Ä x¨ • x∞ ä Con x¨
+");;
+expand(REWRITE_TAC [Con_DEF;NE_DEF;•_DEF]);;
+expand(TAUT_REWRITE_TAC "a Ä b ä c = b ä a ä c");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+expand (FORALL_OUT_TAC THEN STRIP_TAC THEN FORALL_OUT_TAC);;
+expand (TAUT_REWRITE_TAC "a äb ä c = b ä a ä c");;
+expand (STRIP_TAC THEN STRIP_TAC);;
+expand (RES_TAC THEN ASM_REWRITE_TAC []);;
+let ZF_thm17 = save_top_thm `ZF_thm17`;;
+.he
+.LP
+Every member of an ordinal is an ordinal.
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é On x∞ Ä x¨ ù x∞ ä On x¨
+");;
+expand (REWRITE_TAC [On_DEF]);;
+expand (TAUT_REWRITE_TAC "a ä b Ä c = (a ä b) Ä (a ä c)");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+.he
+.LP
+subgoal 1
+.hd
+expand (REWRITE_TAC[Trans_DEF;•_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand RES_TAC;;
+expand RES_TAC;;
+expand (IMP_RES_TAC (SPECL ["c:SET";"y:SET"]
+			(REWRITE_RULE [NE_DEF;ì_DEF] ZF_thm14)));;
+expand (IMP_RES_TAC (REWRITE_RULE [Con_DEF;NE_DEF] (ASSUME "Con (x∞:SET)")));;
+expand (IMP_RES_TAC (TAUT_RULE "x¨ ù c ä åx¨ ù c ä c ù x¨"));;
+.he
+.LP
+subgoal 2
+.hd
+expand (REWRITE_TAC [Trans_DEF]);;
+expand (REPEAT STRIP_TAC);;
+expand (RES_TAC THEN IMP_RES_TAC ZF_thm17);;
+let ZF_thm18 = save_top_thm `ZF_thm18`;;
+.he
+.LP
+Successor:
+.hd
+let Sc_DEF = new_definition(`Sc_DEF`,"
+	(Sc:SETãbool) x = Ñ(y:SET)é On y Ä (suc y = x)
+");;
+.he
+.LP
+Limit ordinals:
+.hd
+let Lim_DEF = new_definition(`Lim_DEF`,"
+	(Lim:SETãbool) x = On x Ä x à § Ä å (Sc x)
+");;
+.he
+.LP
+Natural numbers:
+.hd
+let N_DEF = new_definition(`N_DEF`,"
+	(N:SETãbool) x = On x Ä ((x = §) Å (Sc x)) Ä É(y:SET)é(y ù x ä (y = §) Å (Sc y))
+");;
+.he
+.LP
+The empty set is a natural number.
+.hd
+let ZF_thm19 = prove_thm(`ZF_thm19`,"
+	N §
+",
+	REWRITE_TAC [N_DEF;ZF_thm16;ZF_le2]);;
+.he
+.LP
+Every non-zero Natural number is a successor.
+.hd
+set_goal([],"
+	É(x:SET)é N x Ä x à § ä Sc x
+");;
+expand (REPEAT STRIP_TAC);;
+expand (DEF_RES_TAC N_DEF);;
+expand (DEF_RES_TAC NE_DEF);;
+let ZF_le11 = save_top_thm `ZF_le11`;;
+.he
+.LP
+Every natural number is transitive and connected.
+.hd
+set_goal([],"
+	É(x:SET)é N x ä Trans x Ä Con x
+");;
+expand (REWRITE_TAC[N_DEF; On_DEF]);;
+expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC []);;
+let ZF_le12 = save_top_thm `ZF_le12`;;
+.he
+.LP
+Zero is not the successor of any set.
+.hd
+set_goal([],"
+	É(x∞:SET)é § à suc x∞
+");;
+expand (REWRITE_TAC [NE_DEF; suc_DEF; ZF_le1;ZF_le2]);;
+expand (STRIP_TAC THEN NOT_FORALL_TAC);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (REWRITE_TAC [ZF_thm10;ZF_thm9]);;
+let ZF_thm20 = save_top_thm `ZF_thm20`;;
+.he
+.LP
+The successor of an ordinal is an ordinal.
+.hd
+set_goal([],"
+	É(x∞:SET)é On x∞ ä On (suc x∞)
+");;
+expand (STRIP_TAC THEN STRIP_TAC);;
+expand (REWRITE_TAC [On_DEF; suc_DEF]);;
+expand (DEF_RES_TAC On_DEF);;
+expand (DEF_RES_TAC (REWRITE_RULE [•_DEF] Trans_DEF));;
+expand STRIP_TAC;;
+expand (REWRITE_TAC [Trans_DEF; ZF_thm9;ZF_thm10]);;
+expand (REPEAT STRIP_TAC);;
+expand (DEF_RES_TAC Trans_DEF);;
+expand (IMP_RES_TAC
+	(((SPECL ["y:SET";"x∞:SET";"(x∞:SET) ° (unit x∞)"]) o
+	(TAUT_REWRITE_RULE "a Ä b ä c = a ä b ä c")) ZF_thm7));;
+expand (RMP_TAC "(x∞:SET) • (x∞ ° (unit x∞))");;
+expand (ASM_REWRITE_TAC[]);;
+expand (PURE_REWRITE_TAC [•_DEF; ZF_thm10]);;
+expand (TAUT_SIMP_TAC THEN REWRITE_TAC[]);;
+expand (ASM_REWRITE_TAC [•_DEF; ZF_thm10]
+	THEN TAUT_SIMP_TAC THEN REWRITE_TAC[]);;
+.he
+.hd
+expand(PURE_REWRITE_TAC[ZF_le7;NE_DEF;ZF_thm9;ZF_thm10]);;
+expand (DEF_RES_TAC ZF_le7);;
+expand (REPEAT STRIP_TAC);;
+.he
+.LP
+Leaving four sugoals
+.LP
+first
+.hd
+expand (ACCEPT_TAC (MP (MP (SPEC_ALL (ASSUME "Éy zé
+   y ù x∞ ä z ù x∞ ä (z = y) Å z ù y Å y ù z")) (ASSUME "y ù x∞")) (ASSUME "z ù x∞")));;
+.he
+.LP
+second
+.hd
+expand (REWRITE_TAC [REWRITE_RULE [SYM (ASSUME "z = x∞")] (ASSUME "y ù x∞")]);;
+.he
+.LP
+third
+.hd
+expand (REWRITE_TAC [REWRITE_RULE [SYM (ASSUME "y = x∞")] (ASSUME "z ù x∞")]);;
+.he
+.LP
+fourth
+.hd
+expand (REWRITE_TAC [REWRITE_RULE [SYM (ASSUME "y = x∞")] (ASSUME "z = x∞")]);;
+let ZF_thm21 = save_top_thm `ZF_thm21`;;
+.he
+.LP
+The successor of a natural number is a natural number.
+.hd
+set_goal([],"
+	É(x∞:SET)é N x∞ ä N (suc x∞)
+");;
+expand (PURE_REWRITE_TAC [N_DEF]);;
+expand (STRIP_TAC THEN STRIP_TAC THEN IMP_RES_TAC ZF_thm21
+		THEN ASM_REWRITE_TAC[]);;
+.he
+.hd
+expand STRIP_TAC;;
+expand DISJ2_TAC;;
+expand (PURE_REWRITE_TAC [Sc_DEF]);;
+expand (EXISTS_TAC "§");;
+expand (REWRITE_TAC[ZF_thm16]);;
+.he
+.hd
+expand STRIP_TAC;;
+expand (REWRITE_TAC [suc_DEF;Sc_DEF;ZF_thm10;ZF_le2;ZF_thm9]);;
+expand TAUT_TAC;;
+.he
+.hd
+expand STRIP_TAC;;
+expand DISJ2_TAC;;
+expand (PURE_REWRITE_TAC [suc_DEF; Sc_DEF]);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+expand (PURE_REWRITE_TAC [suc_DEF; ZF_thm9; ZF_thm10]);;
+expand (REPEAT STRIP_TAC);;
+expand (RES_TAC THEN ASM_REWRITE_TAC []);;
+expand DISJ2_TAC;;
+expand (ACCEPT_TAC (REWRITE_RULE [SYM (ASSUME "(y:SET) = x∞")] (ASSUME "Sc x∞")));;
+
+let ZF_thm22 = save_top_thm `ZF_thm22`;;
+.he
+.LP
+The successor function is injective.
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é (suc x∞ = suc x¨) ä (x∞ = x¨)
+");;
+expand (TAUT_REWRITE_TAC "a ä b = åb ä åa");;
+expand (STRIP_TAC THEN STRIP_TAC THEN STRIP_TAC);;
+expand (PURE_REWRITE_TAC [suc_DEF; ZF_le1; ZF_thm10]);;
+expand (PURE_REWRITE_TAC [ZF_thm9]);;
+expand (TAUT_REWRITE_TAC "(a = b) = (a ä b) Ä (b ä a)");;
+expand STRIP_TAC;;
+expand (ASSUME_TAC (REFL "x∞"));;
+expand (ASSUME_TAC (REFL "x¨"));;
+expand RES_TAC;;
+.he
+.hd
+expand (MP_TAC ZF_thm13);;
+expand (TAUT_REWRITE_TAC "a ä F = åa");;
+expand (NOT_FORALL_TAC THEN NOT_FORALL_TAC);;
+expand (EXISTS_TAC "x∞:SET");;
+expand (EXISTS_TAC "x¨:SET");;
+expand (ASM_REWRITE_TAC [ì_DEF]);;
+.he
+.hd
+expand (MP_TAC (ASSUME "å(x∞ = x¨)") THEN REWRITE_TAC [ASSUME "x¨ = x∞"]);;
+
+let ZF_thm23 = save_top_thm `ZF_thm23`;;
+.he
+.LP
+Every member of a natural number is a natural number.
+.hd
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é N x∞ Ä x¨ ù  x∞ ä N x¨
+");;
+expand (PURE_REWRITE_TAC [N_DEF]);;
+expand (STRIP_TAC THEN STRIP_TAC);;
+expand (TAUT_REWRITE_TAC "a Ä b ä c = b ä a ä c");;
+expand STRIP_TAC;;
+expand (LEMMA "x¨ ù x∞ ä å(x∞ = §)");;
+expand RES_TAC;;
+expand (ASM_REWRITE_TAC[]);;
+expand STRIP_TAC;;
+expand (IMP_RES_TAC ZF_thm18);;
+expand (ASM_REWRITE_TAC []);;
+expand STRIP_TAC;;
+expand (IMP_RES_TAC (SPEC "x¨:SET"
+	(ASSUME "Éyé y ù x∞ ä (y = §) Å Sc y"))
+	THEN ASM_REWRITE_TAC[]);;
+.he
+.hd
+expand (DEF_RES_TAC On_DEF);;
+expand (DEF_RES_TAC Trans_DEF);;
+
+expand STRIP_TAC;;
+expand STRIP_TAC;;
+expand RES_TAC;;
+expand (MP_TAC (REWRITE_RULE [ASSUME "x¨ = §"] (ASSUME "y ù x¨")));;
+expand (REWRITE_TAC [SPEC "y:SET" ZF_le2]);;
+.he
+.hd
+expand (DEF_RES_TAC •_DEF);;
+expand (RES_TAC THEN ASM_REWRITE_TAC[]);;
+
+expand (TAUT_REWRITE_TAC "a ä åb = b ä åa");;
+expand (STRIP_TAC THEN REWRITE_TAC[ASSUME "x∞ = §";ZF_le2]);;
+
+let ZF_thm24 = save_top_thm `ZF_thm24`;;
+.he
+.LP
+The principle of induction over the natural numbers.
+.hd
+set_goal([],"
+	É(A:SET ã bool)é A § Ä (É(x:SET)é N x Ä A x ä A (suc x))
+				ä É(x:SET)é N x ä A x
+");;
+expand (STRIP_TAC THEN STRIP_TAC);;
+expand (TAUT_REWRITE_TAC "a = ååa");;
+expand PURE_NOT_FORALL_TAC;;
+expand (TAUT_REWRITE_TAC "å(a ä b) = a Ä åb");;
+expand STRIP_TAC;;
+.he
+.hd
+lemma "ÑL:SETé (L = sep (suc x) çx:SETé å (A x))";;
+
+ expand (EXISTS_TAC "sep (suc x) çx:SETé å (A x)");;
+ expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "x ù L";;
+
+ expand (ASM_REWRITE_TAC[ZF2;suc_DEF;ZF_thm9;ZF_thm10]);;
+ expand (BETA_TAC THEN ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "É(y:SET)é y ù L ä å ((A:SETãbool) y)";;
+
+ expand (REPEAT STRIP_TAC);;
+ expand (MP_TAC (ASSUME "L = sep(suc x)(çxé åA x)"));;
+ expand (PURE_REWRITE_TAC [ZF_le1; ZF2]);;
+ expand BETA_TAC;;
+ expand (TAUT_REWRITE_TAC "a ä F = åa");;
+ expand NOT_FORALL_TAC;;
+ expand (EXISTS_TAC "y:SET");;
+ expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "L à §";;
+
+ expand (PURE_REWRITE_TAC[NE_DEF;ZF_le1]);;
+ expand NOT_FORALL_TAC;;
+ expand (EXISTS_TAC "x:SET");;
+ expand (ASM_REWRITE_TAC[ZF_le2]);;
+.he
+.hd
+lemma "Ñb:SETé b ù L Ä (b † L = §)";;
+
+ expand (IMP_RES_TAC ZF7);;
+.he
+.hd
+lemma "L • (suc x)";;
+
+ expand (REWRITE_TAC[•_DEF]);;
+ expand (ASM_REWRITE_TAC[ZF2]);;
+ expand TAUT_SIMP_TAC;;
+.he
+.hd
+lemma "b ù (suc x)";;
+
+ expand (DEF_RES_TAC •_DEF);;
+.he
+.hd
+lemma "N (suc x)";;
+
+ expand (IMP_RES_TAC ZF_thm22);;
+.he
+.hd
+lemma "N b";;
+
+ expand (IMP_RES_TAC ZF_thm24);;
+.he
+.hd
+lemma "b à §";;
+
+ expand (PURE_REWRITE_TAC[NE_DEF]);;
+ expand STRIP_TAC;;
+ expand (IMP_RES_TAC (SPEC "b" (ASSUME "Éyé y ù L ä åA y")));;
+ expand (MP_TAC (REWRITE_RULE [SYM (ASSUME "b = §")] (ASSUME "(A:SETãbool) §")));;
+ expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "Sc b";;
+
+ expand (IMP_RES_TAC ZF_le11);;
+.he
+.hd
+lemma "Ñc:SETé (b = suc c) Ä On c";;
+
+ expand (MP_TAC (REWRITE_RULE [Sc_DEF] (ASSUME "Sc b")));;
+ expand (TAUT_REWRITE_TAC "a ä b = åb ä åa");;
+ expand NOT_EXISTS_TAC;;
+ expand FORALL_OUT_TAC;;
+ expand (TAUT_REWRITE_TAC "åb ä åa = a ä b");;
+ expand (REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "N c";;
+
+ lemma "N (suc c)";;
+
+  expand (REWRITE_TAC[SYM (ASSUME "b = suc c");ASSUME "N b"]);;
+
+  lemma "c ù (suc c)";;
+
+   expand (REWRITE_TAC[suc_DEF; ZF_thm9; ZF_thm10]);;
+
+  expand (IMP_RES_TAC(SPECL["suc (c:SET)";"c:SET"]ZF_thm24));;
+.he
+.hd
+lemma "c ù b";;
+
+ expand (ASM_REWRITE_TAC[]);;
+ expand (REWRITE_TAC[suc_DEF; ZF_thm9; ZF_thm10]);;
+.he
+.hd
+lemma "å(c ù L)";;
+
+ expand STRIP_TAC;;
+ expand (MP_TAC (ASSUME "b † L = §"));;
+ expand (PURE_REWRITE_TAC[ZF_le1;ZF_thm9;ZF_thm10;ZF_thm11;ZF_le2]);;
+ expand (TAUT_REWRITE_TAC "a ä F = åa");;
+ expand NOT_FORALL_TAC;;
+ expand (EXISTS_TAC "c:SET");;
+ expand (ASM_REWRITE_TAC[]);;
+.he
+.hd
+lemma "Trans (suc x)";;
+
+ expand (REWRITE_TAC [MP (SPEC "suc x" ZF_le12) (ASSUME "N(suc x)")]);;
+.he
+.hd
+lemma "c ù (suc x)";;
+ expand (DEF_RES_TAC Trans_DEF);;
+ expand (DEF_RES_TAC •_DEF);;
+.he
+.hd
+lemma "(A:SETãbool) c";;
+ expand (MP_TAC (CONJ (ASSUME"c ù (suc x)")(ASSUME"åc ù L")));;
+ expand(PURE_REWRITE_TAC[ASSUME "L = sep(suc x)(çxé å(A:SETãbool) x)";ZF2]);;
+ expand BETA_TAC;;
+ expand TAUT_TAC;;
+.he
+.hd
+lemma "(A:SETãbool) b";;
+ expand (ASM_REWRITE_TAC[]);;
+ expand RES_TAC;;
+.he
+.hd
+expand RES_TAC;;
+let ZF_thm25 = save_top_thm `ZF_thm25`;;
+.he
+.LP
+No the example of proof by induction.
+.hd
+%
+set_goal([],"
+	É(x∞:SET)(x¨:SET)é (N x∞ Ä x¨ ù x∞) ä (suc x¨) ù (suc x∞)
+");;
+expand (REPEAT STRIP_TAC);;
+
+lemma "É(x∞:SET)é N x∞ ä É(x¨:SET)é x¨ ù x∞ ä (suc x¨) ù (suc x∞)";;
+
+ lemma "ÑA:SETãboolé A = \(x∞:SET)é É(x¨:SET)é x¨ ù x∞ ä (suc x¨) ù (suc x∞)";;
+
+  expand (EXISTS_TAC "\(x∞:SET)é É(x¨:SET)é x¨ ù x∞ ä (suc x¨) ù (suc x∞)");;
+  expand (ASM_REWRITE_TAC[]);;
+
+ lemma "(A:SETãbool) § Ä É(x:SET)é N x Ä A x ä A (suc x)";;
+  expand (REPEAT STRIP_TAC);;
+
+  expand (ASM_REWRITE_TAC[]);;
+  expand BETA_TAC;;
+  expand (REWRITE_TAC [ZF_le2]);;
+
+  expand (ASM_REWRITE_TAC[] THEN BETA_TAC);;
+  expand (REPEAT STRIP_TAC);;
+  expand (REWRITE_TAC [SPEC "suc x" (GEN_ALL suc_DEF);ZF_thm9;ZF_thm10]);;
+  expand DISJ2_TAC;;
+
+  expand (IMP_RES_TAC ZF_thm22);;
+
+
+ expand (MP_TAC (SPEC_ALL ZF_thm25));;
+ expand (ASM_REWRITE_TAC[] THEN BETA_TAC);;
+ expand (TAUT_REWRITE_TAC "((a Ä b) ä c) = a ä b ä c");;
+ expand (REPEAT STRIP_TAC);;
+%
+.he
+.NH 2
+The completing axioms
+.NH 3
+The axiom of infinity
+.LP
+.hd
+new_constant (`ˇ`,":SET");;
+let ZF8 = new_axiom (`ZF8`,"
+	É(x∞:SET)é x∞ ù ˇ = N x∞
+");;
+.he
+.NH 3
+Replacement
+.LP
+.hd
+let ZF9 = new_axiom (`ZF9`,"
+	É(f:SETãSETãbool)(r:SET)é(É(x:SET)(y:SET)(z:SET)é
+	(f x y Ä f x z ä (z = y))) ä
+		Ñ(w:SET)éÉ(y:SET)éy ù w = Ñ(x:SET)éx ù r Ä f x y
+");;
+.he
+.NH 2
+Relations, functions, and simple recursion
+.LP
+Relations:
+.hd
+let relation_DEF = new_definition (`relation`,"
+	(relation:SET ã bool) x = É(y:SET)é y ù x ä Ñ(w:SET)(z:SET)é y = (w ó z)
+");;
+.he
+.LP
+Functions:
+.hd
+let function_DEF = new_definition (`function`,"
+	(function:SET ã bool) x =
+		relation x Ä
+		É(y:SET)(w:SET)(z:SET)é (y ó z) ù x Ä (y ó w) ù x ä (z = w)
+");;
+.he
+.hd
+let domain_DEF = new_definition (`domain_DEF`,"
+	(domain:SETãSET) x = sep (£ (£ x))  ç y:SETé Ñ z:SETé (y ó z) ù x
+");;
+
+let image_DEF = new_definition (`image_DEF`,"
+	(image:SET ã SET) x = sep (£ (£ x)) ç y:SETé Ñ z:SETé (z ó y) ù x
+");;
+.he
+.hd
+let ©_DEF = new_infix_definition (`©_DEF`,"
+	(©:SET ã SET ã SET) x z = £ (sep (image x) ç y:SETé (z ó y) ù x)
+");;
+.he
+.hd
+let ™_DEF = new_infix_definition(`™_DEF`,"
+	(™:SET ã SET ã SET) t r =
+		sep (ë(ë(t ° r))) ç(y:SET)éÑ(u:SET)(v:SET)é (y = (u ó v)) Ä u ù t Ä v ù r
+");;
+.he
+.NH 2
+The Axiom of Choice
+.LP
+The axiom of choice is here introduced as an axiom.
+This isn't strictly necessary since there is a choice function in HOL already, and the choice function in set theory could be defined using the HOL choice function.
+However the presentation follows closer to Hatcher by just introducing Hatcher's choice axiom.
+.hd
+new_constant (`˛`,":SET ã SET");;
+let ZF10 = new_axiom (`ZF10`,"
+	É x∞:SET é x∞ à § ä (˛ x∞) ù x∞
+");;
+.he
+.NH
+REFORMULATION of REPLACEMENT
+.LP
+.hd
+set_goal([],"
+	É(f:SET ã SET)(d:SET)é Ñ(s:SET)é É(x:SET)é
+			x ù s = Ñ(y:SET)é y ù d Ä (x = f y)
+");;
+expand (REPEAT GEN_TAC);;
+lemma_proof "Ñ(rel:SET ã SET ã bool)é É(x:SET)(y:SET)é rel x y = (y = f x)"
+	[EXISTS_TAC "ç(x:SET)(y:SET)é y = f x";	REPEAT GEN_TAC;
+	BETA_TAC;	REFL_TAC];;
+lemma_proof "É(x:SET)(y:SET)(z:SET)é rel x y Ä rel x z ä (z = y)"
+	[ASM_REWRITE_TAC[] THEN REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[]];;
+lemma_proof "Ñwé Éyé y ù w = (Ñxé x ù d Ä rel x y)"
+	[IMP_RES_TAC (SPECL ["rel:SETãSETãbool";"d:SET"] ZF9)];;
+expand (EXISTS_TAC "w:SET" THEN ASM_REWRITE_TAC[]);;
+let ZF_thm26 = save_top_thm `ZF_thm26`;;
+.he
+.NH
+THE END
+.hd
+close_theory `zf120`;;
+print_theory `zf120`;;
+.he
+.KS
+.NH
+THE THEORY ZF
+.LP
+.DS L
+The Theory ZF
+Parents --  HOL     
+Types --  ":SET"     
+Constants --
+  sep ":SET ã ((SET ã bool) ã SET)"     § ":SET"
+  ë ":SET ã SET"     pair ":SET ã (SET ã SET)"
+  unit ":SET ã SET"     £ ":SET ã SET"     ¢ ":SET ã SET"
+  suc ":SET ã SET"     Nat ":Ü ã SET"
+  set ":(SET)list ã SET"     Trans ":SET ã bool"
+  Con ":SET ã bool"     On ":SET ã bool"     Sc ":SET ã bool"
+  Lim ":SET ã bool"     N ":SET ã bool"     ˇ ":SET"
+  relation ":SET ã bool"     function ":SET ã bool"
+  domain ":SET ã SET"     image ":SET ã SET"
+  ˛ ":SET ã SET"     
+Curried Infixes --
+  ù ":SET ã (SET ã bool)"     ì ":SET ã (SET ã bool)"
+  à ":* ã (* ã bool)"     • ":SET ã (SET ã bool)"
+  ó ":SET ã (SET ã SET)"     ° ":SET ã (SET ã SET)"
+  † ":SET ã (SET ã SET)"     © ":SET ã (SET ã SET)"
+  ™ ":SET ã (SET ã SET)"     
+Axioms --
+  EXT  Ö Éx yé (Ézé z ù x = z ù y) ä (x = y)
+  ZF2  Ö ÉA z xé x ù (sep z A) = x ù z Ä A x
+  ZF3  Ö § = sep §(çx∞é F)
+  ZF4  Ö Éy xé x ù (ë y) = x • y
+  ZF5  Ö Éy z xé x ù (pair y z) = (x = y) Å (x = z)
+  ZF6  Ö Éy xé x ù (£ y) = (Ñzé z ù y Ä x ù z)
+  ZF7  Ö Éxé x à § ä (Ñyé y ù x Ä (y † x = §))
+  ZF8  Ö Éx∞é x∞ ù ˇ = N x∞
+  ZF9
+    Ö Éf ré
+        (Éx y zé f x y Ä f x z ä (z = y)) ä
+        (Ñwé Éyé y ù w = (Ñxé x ù r Ä f x y))
+  ZF10  Ö Éx∞é x∞ à § ä (˛ x∞) ù x∞
+  
+Definitions --
+  ì_DEF  Ö x ì y = åx ù y
+  NE_DEF  Ö x à y = å(x = y)
+  •_DEF  Ö a • b = (Écé c ù a ä c ù b)
+  unit_DEF  Ö unit x = pair x x
+  ó_DEF  Ö a ó b = pair(unit a)(pair a b)
+  ¢_DEF  Ö ¢ x = sep(£ x)(çyé Ézé z ù x ä y ù z)
+  °_DEF  Ö x ° y = £(pair x y)
+  †_DEF  Ö x † y = ¢(pair x y)
+  suc_DEF  Ö suc x = x ° (unit x)
+  Nat_DEF  Ö Nat = PRIM_REC §(çg00012 né suc g00012)
+  set_DEF
+    Ö set =
+       (çg00013é
+         LIST_PRIM_REC(çg00014 h té (unit h) ° g00014)§ g00013)
+  Trans_DEF  Ö Trans x = (Éyé y ù x ä y • x)
+  Con_DEF
+    Ö Con x =
+       (Éy zé y ù x Ä z ù x Ä z à y ä z ù y Å y ù z)
+  On_DEF  Ö On x = Trans x Ä Con x
+  Sc_DEF  Ö Sc x = (Ñyé On y Ä (suc y = x))
+  Lim_DEF  Ö Lim x = On x Ä x à § Ä åSc x
+  N_DEF
+    Ö N x =
+       On x Ä
+       ((x = §) Å Sc x) Ä
+       (Éyé y ù x ä (y = §) Å Sc y)
+  relation  Ö relation x = (Éyé y ù x ä (Ñw zé y = w ó z))
+  function
+    Ö function x =
+       relation x Ä
+       (Éy w zé (y ó z) ù x Ä (y ó w) ù x ä (z = w))
+  domain_DEF  Ö domain x = sep(£(£ x))(çyé Ñzé (y ó z) ù x)
+  image_DEF  Ö image x = sep(£(£ x))(çyé Ñzé (z ó y) ù x)
+  ©_DEF  Ö x © z = £(sep(image x)(çyé (z ó y) ù x))
+  ™_DEF
+    Ö t ™ r =
+       sep
+       (ë(ë(t ° r)))
+       (çyé Ñu vé (y = u ó v) Ä u ù t Ä v ù r)
+  
+Theorems --
+  ZF_thm1
+    Ö Éx∞ x¨é
+        (x∞ = x¨) ä
+        (ÉxÆé x∞ ù xÆ = x¨ ù xÆ)
+  ZF_le1  Ö Éx yé (x = y) = (Ézé z ù x = z ù y)
+  ZF_thm3  Ö Éx∞é x∞ ì §
+  ZF_le2  Ö Éx∞é åx∞ ù §
+  ZF_thm4  Ö Éx∞é (Éx¨é x¨ ì x∞) = (§ = x∞)
+  ZF_le3  Ö Éx∞ x¨é x¨ ù x∞ ä x∞ à §
+  ZF_thm5
+    Ö Éx∞ x¨é
+        x∞ • x¨ Ä x¨ • x∞ ä (x∞ = x¨)
+  ZF_thm6  Ö Éx∞é x∞ • x∞
+  ZF_thm7
+    Ö Éx∞ x¨ xÆé
+        x∞ • x¨ Ä x¨ • xÆ ä x∞ • xÆ
+  ZF_thm8  Ö Éx∞é § • x∞
+  ZF_le4  Ö Éx yé x ù (pair x y) Ä y ù (pair x y)
+  ZF_thm9  Ö Éx∞é x∞ ù (unit x¨) = (x∞ = x¨)
+  ZF_le13  Ö Éx yé (unit x = unit y) = (x = y)
+  ZF_le5
+    Ö Éx yé (unit x) ù (x ó y) Ä (pair x y) ù (x ó y)
+  ZF_thm10
+    Ö Éx∞ x¨ xÆé
+        x∞ ù (x¨ ° xÆ) =
+        x∞ ù x¨ Å x∞ ù xÆ
+  ZF_thm11
+    Ö Éx∞ x¨ xÆé
+        x∞ ù (x¨ † xÆ) =
+        x∞ ù x¨ Ä x∞ ù xÆ
+  Nat  Ö (Nat 0 = §) Ä (Nat(SUC n) = suc(Nat n))
+  ZF_thm12  Ö Éx∞é x∞ ì x∞
+  NOT_FORALL  Ö å$É pf = (Ñxé åpf x)
+  NOT_EXISTS  Ö å$Ñ pf = (Éxé åpf x)
+  ZF_thm13  Ö Éx∞ x¨é x∞ ù x¨ ä x¨ ì x∞
+  set  Ö (set[] = §) Ä (set(CONS h t) = (unit h) ° (set t))
+  ZF_thm14
+    Ö Éx∞ x¨ xÆé
+        x∞ ù x¨ Ä x¨ ù xÆ ä
+        xÆ ì x∞ Ä xÆ à x∞
+  ZF_le6
+    Ö Con x =
+       (Éy zé y ù x Ä z ù x ä (z = y) Å z ù y Å y ù z)
+  ZF_le7
+    Ö Con x =
+       (Éy zé y ù x ä z ù x ä (z = y) Å z ù y Å y ù z)
+  ZF_le8
+    Ö Trans x1 = (Éx2 x3é x2 ù x1 Ä x3 ù x2 ä x3 ù x1)
+  ZF_le9
+    Ö Éx∞ x¨ xÆ x±é
+        On x∞ Ä
+        x¨ ù x∞ Ä
+        xÆ ù x∞ Ä
+        x± ù x∞ Ä
+        x¨ ù xÆ Ä
+        xÆ ù x± ä
+        x¨ ù x±
+  ZF_le10  Ö Ép qé (Éxé p x ä q x) ä (Éxé p x) ä (Éxé q x)
+  ZF_thm15
+    Ö Éx∞ x¨é
+        x∞ • x¨ Ä x∞ à § Ä On x¨ ä
+        (ÑxÆé
+          xÆ ù x∞ Ä
+          (Éx±é
+            x± ù x∞ ä (x± = xÆ) Å xÆ ù x±))
+  ZF_thm16  Ö On §
+  ZF_thm17  Ö Éx∞ x¨é Con x∞ Ä x¨ • x∞ ä Con x¨
+  ZF_thm18  Ö Éx∞ x¨é On x∞ Ä x¨ ù x∞ ä On x¨
+  ZF_thm19  Ö N §
+  ZF_le11  Ö Éxé N x Ä x à § ä Sc x
+  ZF_le12  Ö Éxé N x ä Trans x Ä Con x
+  ZF_thm20  Ö Éx∞é § à (suc x∞)
+  ZF_thm21  Ö Éx∞é On x∞ ä On(suc x∞)
+  ZF_thm22  Ö Éx∞é N x∞ ä N(suc x∞)
+  ZF_thm23  Ö Éx∞ x¨é (suc x∞ = suc x¨) ä (x∞ = x¨)
+  ZF_thm24  Ö Éx∞ x¨é N x∞ Ä x¨ ù x∞ ä N x¨
+  ZF_thm25
+    Ö ÉAé A § Ä (Éxé N x Ä A x ä A(suc x)) ä (Éxé N x ä A x)
+  ZF_thm26  Ö Éf dé Ñsé Éxé x ù s = (Ñyé y ù d Ä (x = f y))
+.DE
+.KE

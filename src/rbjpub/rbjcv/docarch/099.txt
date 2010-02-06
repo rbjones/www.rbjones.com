@@ -1,0 +1,326 @@
+.nr PS 11
+.nr VS 14
+.ds G1 \" classification
+.ds G2 DBC/RBJ/099 \" reference
+.ds G3 0.1 \" Issue Number
+.ds G4 ??+i \" Pages
+.ds G5 Draft \" status
+.ds G6 The semantics of \(*C\" title
+.ds G7 Specification \" document type
+.ds G8  \" keywords
+.ds G9 Roger Bishop Jones
+.nr HM 0i
+.nr HM 0i
+.ds CH
+.ds CF
+.de F2 \" line across page
+.sp
+\l'6i'
+.sp
+..
+.de F1
+.F2
+.LP
+\fBDistribution: \fP* = top sheet only
+.LP
+.ce
+\s+3\*(G1\s-3
+..
+.TS \" Header
+expand tab(%);
+cp14 s s s
+cp14 s s s
+lp36 l l l
+^ l l l
+cp14 l l l
+cp14 ^ ^ ^.
+\*(G1
+
+I C L %Defence%Technology%Formal
+\^%Business%Development%Methods
+Defence%Centre%Department%
+Systems%%%
+.TE
+.F2
+.TS \" Document information
+tab(%) center;
+lfB l lfB l lfB l
+lfB l lfB l lfB l
+lfB l lfB l lfB l
+lfB l lfB l lfB l
+lfB l s   s s   s.
+Ref:%\*(G2%Issue:%\*(G3%Pages:%\*(G4
+
+Date:%\*(DY%Status:%\*(G5
+
+Title:%\*(G6
+
+Prepared by:%\*(G9
+
+Document Type:%\*(G7
+
+Supercedes:%
+
+Keywords:%\*(G8
+.TE
+.F2
+.LP
+.B
+Summary:
+.R
+.LP \" Document Summary
+.LP
+.wh -15 F1 \" distance from bottom of page for distribution list
+.bp
+.ch F1
+.nr HM 1i
+.nr FM 1i
+.TL
+\*(G6
+.AU
+\*(G9
+.AI
+Formal Methods Group,
+ICL Defence Systems.
+.LP
+.so /usr/local/rbj/keys/roff.defs
+.ds OH
+.ds EH
+.ds EF
+.ds OF
+.ds CH \s+2\*(G1\s-2
+.ds LH \s-2\*(G6\s+2
+.ds RH \\*(DY
+.ds CF \s+2\*(G1\s-2
+.ds LF \s-2\*(G2 issue \*(G3\s+2
+.ds RF Page %
+.NH 1
+INTRODUCTION
+.LP
+This document provides a formal semantics for combinatory logic
+with three primitive 0-ary constants, K, S and \(*C.
+The formal metalanguage we use is Z.
+.NH 1
+PRELIMINARIES
+.NH 2
+Equivalence Relations
+.LP
+.sv[A]
+equivalence : \*m(A \*n A)
+.sb
+equivalence r \*h
+\*jx,y,z:A.	r (x,x)
+	\*e	r (x,y) \(rh r (y,x)
+	\*e	r (x,y) \*e r (y,z) \(rh r (x,z)
+.sw
+.NH 1
+PURE COMBINATORS
+.NH 2
+Abstract Syntax
+.LP
+.sv
+TERM ::=	K				|
+		S				|
+		Ap <<TERM \(mu TERM>>
+.sw
+.sv
+_!_ : TERM \(-> TERM \(-> TERM
+.sb
+x ! y = Ap (x,y)
+.sw
+.NH 2
+Conversion Rules
+.LP
+.sv
+red	: \*m(TERM \*n TERM)
+.sb
+red r \*h
+\*jw,x,y,z:TERM. r (x, x)
+	\*e	r (K ! x ! y, x)
+	\*e	r (S ! x ! y ! z, (x ! z) ! (y ! z))
+	\*e	r (w, y) \*e r (x, z) \(rh r (w ! x, y ! z)
+.sw
+.sv
+conv : \*j(TERM \*h TERM)
+_tequiv_ : TERM \*h TERM
+.sb
+conv r \*h red r \*e equivalence r
+tequiv = \(ca {r:TERM\*nTERM | conv r}
+.sw
+.sv
+?\*o conv tequiv
+.sw
+.NH 2
+Semantic Mapping
+.LP
+.sv
+tclass	:TERM \(-> \*m TERM
+.sb
+tclass t = {x:TERM . x tequiv t} 
+.sw
+.LP
+The semantic codomain is the range of \fItclass\fP.
+.sv
+COMB \*g ran tclass
+.sw
+.NH 2
+Function Application
+.LP
+The semantics of function application is extracted from
+the semantic mapping in the following way:
+.sv
+_~_	:COMB \(-> COMB \(-> COMB
+.sb
+x ~ y = tclass (\(*m{z:TERM | tclass z = x} ! \(*m{z:TERM | tclass z = y})
+.sw
+.LP
+We also give names to the values of K and K(SKK) under the semantic mapping.
+.sv
+true		:COMB
+false		:COMB
+.sb
+true	= tclass K
+false	= tclass (K ! (S ! K ! K))
+.sw
+.LP
+.NH 1
+RESTRICTED QUANTIFICATION
+.LP
+We want to add to pure combinatory logic a further combinator \(*C
+representing restricted quantification.
+.LP
+Informally, we want \(*C A B to mean: \*jx. Ax\(rhBx,
+i.e. over the range determined by A, B is true.
+This is the closest analog in the type free combinatory logic to
+quantification in Church's type theory.
+.LP
+First we define formally the meaning of this over the pure combinators.
+.sv
+P\(*C :COMB \(-> \*m COMB
+.sb
+P\(*C x y = \*jz:COMB. (x ~ z = true) \(rh (y ~ z = true)
+.sw
+.LP
+Now we introduce the idea that a combinator may approximate P\(*C.
+.sv
+approxP\(*C	:\*m COMB
+.sb
+approxP\(*C x \*h \*jy,z:COMB.
+		x ~ y ~ z = true \(rh P\(*C x y
+	\*e	x ~ y ~ z = false \(rh \(no (P\(*C x y)
+.sw
+.LP
+We can also partially order those combinators which approximate P\(*C,
+according to how close they are to the real thing:
+.sv
+_closer_than_	:COMB \*n COMB
+.sb
+w closer_than x \*h approxP\(*C w \*e
+	\*jy,z:COMB.
+		x ~ y ~ z = true \(rh w ~ y ~ z = true
+	\*e	x ~ y ~ z = false \(rh w ~ y ~ z = false
+.sw
+.NH 1
+THE THEORY of RESTRICTED GENERALITY
+.NH 2
+Abstract Syntax
+.LP
+We now introduce a language with the extra primitive \(*C.
+.sv
+GTERM	::=	Kg					|
+			Sg					|
+			\(*C					|
+			Ag <<GTERM \(mu GTERM>>
+.sw
+.LP
+An infix form for application:
+.sv
+_%_	:GTERM \(-> GTERM \(-> GTERM
+.sb
+x % y = Ag (x,y)
+.sw
+.sv
+Fg \*g Kg % (Sg % Kg % Kg)
+.sw
+.NH 2
+Interpretations
+.LP
+We can interpret a GTERM as a COMB using the following map.
+.sv
+interp	:COMB \(-> GTERM \(-> COMB
+.sb
+interp c Kg = tclass K
+interp c Sg = tclass S
+interp c \(*C = c
+interp c (x%y) = (interp c x) ~ (interp c y)
+.sw
+.NH 2
+Validity and Inconsistency
+.LP
+A region of \(*C is a combinator which approximates \(*C together with
+all the combinators which are better than it.
+.sv
+REGION	: \*m (\*m COMB)
+.sb
+REGION r \*h \*kc:COMB.
+		c \(mo r \*e approxP\(*C c
+	\*e	\*jd:COMB. d \(mo r \(rh d closer_than c
+.sw
+.LP
+A GTERM is \fIvalid\fP, if it is true in some REGION, and inconsistent if
+false in some region.
+.sv
+valid			: \*m GTERM
+inconsistent		: \*m GTERM
+.sb
+valid t 		\*h \*kr:REGION. \*jx:COMB.
+				x\(mo r \(rh interp x t = true
+inconsistent t	\*h \*kr:REGION. \*jx:COMB.
+				x\(mo r \(rh interp x t = false
+.sw
+.NH 2
+Conversion
+.LP
+Now we can define conversion, which is as for terms, except that an
+additional rule is introduced for \(*C.
+.sv
+redg	: \*m(term \*n term)
+.sb
+redg r \*h
+\*jw,x,y,z:term. r (x, x)
+	\*e	r (Kg % x % y, x)
+	\*e	r (Sg % x % y % z, (x % z) % (y % z))
+	\*e	(valid (\(*C % x % y) \(rh r (\(*C % x % y, Kg))
+	\*e	(inconsistent (\(*C % x % y) \(rh r (\(*C % x % y, Fg))
+	\*e	r (w, y) \*e r (x, z) \(rh r (w % x, y % z)
+.sw
+.LP
+This reduction system satisfies the criteria for a \(*d reduction system
+(see Baredregt), and is therefore Church-Rosser.
+.sv
+convg : \*j(term \*h term)
+_tgequiv_ : term \*h term
+.sb
+convg r \*h redg r \*e equivalence r
+tgequiv = \(ca {r:term\*nterm | convg r}
+.sw
+.LP
+Since the reduction system is Church-Rosser the partition of GTERMs thus
+defined is non-trivial and in particular:
+.sv
+?\*o	\(no (Kg tgequiv Fg)
+.sw
+.NH 2
+Semantic Mapping
+.LP
+.sv
+tgclass	:GTERM \(-> \*j GTERM
+.sb
+tgclass t = {x:GTERM . x tgequiv t} 
+.sw
+.LP
+The semantic codomain is the range of \fItgclass\fP.
+.sv
+GCOMB \*g ran tgclass
+.sw
+.KE

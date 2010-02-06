@@ -1,0 +1,184 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/projects/infra/msmacros/roff.defs
+.so /escher/usr2/projects/infra/msmacros/roff2.defs
+.RP
+.TL
+Pure function theory part 3
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.LP
+This document consists of the third part of a pure theory of (partial) functions.
+.AE
+.ds LH 
+.ds CH PF in HOL part 3
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/FMU/RBJ/129   Issue 0.1
+.ds CF PF in HOL part 3
+.ds RF Page \\n(PN
+.ig cx
+extend_theory`pf129`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+map load_definitions [`zf120`;`zf122`;`pf123`;`pf128`;`pf129`];;
+map load_theorems [`zf120`;`zf122`;`pf123`;`pf128`;`pf129`];;
+map load_axioms [`zf120`;`zf122`;`pf123`;`pf128`;`pf129`];;
+map delete_cache [`zf120`;`zf122`;`pf123`;`pf128`;`pf129`];;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let NEW_GOAL_TAC t = RMP_TAC t THENL [STRIP_TAC; ALL_TAC];;
+let new_goal t = expand (NEW_GOAL_TAC t);;
+let NEW_GOAL_PROOF_TAC t p = RMP_TAC t THENL [STRIP_TAC THEN p; ALL_TAC];;
+let new_goal_proof t p = expand (NEW_GOAL_PROOF_TAC t p);;
+let MASSUMP = map ASSUMP;;
+let OREWRITE_TAC t = REWRITE_TAC[t];;
+.cx
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+.hd
+new_theory`pf129`;;
+new_parent`pf128`;;
+loadf`/escher/usr2/projects/infra/pholfiles/TAUT`;;
+map load_definitions [`zf120`;`zf122`;`pf123`;`pf128`];;
+map load_theorems [`zf120`;`zf122`;`pf123`;`pf128`];;
+map load_axioms [`zf120`;`zf122`;`pf123`;`pf128`];;
+map delete_cache [`zf120`;`zf122`;`pf123`;`pf128`];;
+let NOT_FORALL_TAC = REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let PURE_NOT_FORALL_TAC = PURE_REWRITE_TAC[NOT_FORALL] THEN BETA_TAC;;
+let NOT_EXISTS_TAC = REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let PURE_NOT_EXISTS_TAC = PURE_REWRITE_TAC[NOT_EXISTS] THEN BETA_TAC;;
+let NEW_GOAL_TAC t = RMP_TAC t THENL [STRIP_TAC; ALL_TAC];;
+let new_goal t = expand (NEW_GOAL_TAC t);;
+let NEW_GOAL_PROOF_TAC t p = RMP_TAC t THENL [STRIP_TAC THEN p; ALL_TAC];;
+let new_goal_proof t p = expand (NEW_GOAL_PROOF_TAC t p);;
+let MASSUMP = map ASSUMP;;
+let OREWRITE_TAC t = REWRITE_TAC[t];;
+.he
+.KE
+.KS
+.NH
+UNION AND CHOICE
+.LP
+The following definition of £² serves two roles.
+If applied to a set of sets, i.e. something which might have had type ":*‹bool‹bool", it will yield the union of the sets.
+If applied to a set of arbitrary functions, (":*‹**‹bool), it will yield some unspecified function which is defined over the union of the domains of the functions and makes an arbitrary choice between the functions defined at any point in the domain.
+i.e., an arbitrary functional subset of the union of the domain, defined over the domain of that union.
+.hd
+let sid_DEF = new_definition(`sid_DEF`,"
+	(sid:SET‹SET) s = sep (s ª s) x:SETŽ „(y:SET)Ž x = (y — y)
+");;
+.he
+.KE
+.hd
+let funion_DEF = new_definition(`funion_DEF`,"
+	(funion:PF‹SET) f = sabs (ABS_PF (sid (domain (£ (domain (REP_PF f))))))
+		x:PFŽ ‡y:PFŽ („z:PFŽ (f ² z) ˆ ´² € (y = z ² x))
+				 (ƒz:PFŽ ((f ² z) = ´²) € (y = ´²))
+");;
+
+let £²_DEF = new_definition(`£²_DEF`,"
+	(£²:PF ‹ PF) f = ABS_PF (funion f)
+");;
+.he
+.KS
+.NH
+LEMMAS BELONGING ELSEWHERE
+.NH 2
+Function Application
+.hd
+set_goal([],"
+	ƒ(f:PF)(x:PF)Ž f ² x = ABS_PF (function_application(REP_PF f)(REP_PF x))
+");;
+expand (REWRITE_TAC [²_DEF; lift_binop_DEF] THEN BETA_TAC THEN REWRITE_TAC[]);;
+let LBE1 = save_top_thm `LBE1`;;
+.he
+.KE
+.hd
+set_goal([],"
+	ƒ(f:PF)(x:PF)Ž pure_function (function_application(REP_PF f)(REP_PF x))
+");;
+expand (REPEAT GEN_TAC);;
+lemma_proof "pure_function (REP_PF f) € pure_function (REP_PF x)"
+		[REWRITE_TAC [PF_t19]];;
+expand (IMP_RES_TAC PF_t18);;
+let LBE2 = save_top_thm `LBE2`;;
+.he
+.hd
+set_goal([],"
+	ƒ(f:SET)(x:SET)Ž pure_function f Š
+		(x  (domain f) => 
+		((function_application f x = z) = (x — z)  f)	|
+		(function_application f x = ´))
+");;
+expand (REPEAT STRIP_TAC);;
+expand (ASM_CASES_TAC "x  (domain f)" THEN ASM_REWRITE_TAC[]);;
+expand (IMP_RES_TAC PF_t14);;
+expand (IMP_RES_TAC PF_t24);;
+let LBE3 = save_top_thm `LBE3`;;
+.he
+.KS
+.NH
+LEMMAS FOR THE UNION AXIOM
+.NH 2
+Funion yields a pure function
+.hd
+set_goal([],"
+	ƒ(f:PF)Ž pure_function (funion f)
+");;
+expand (REWRITE_TAC [funion_DEF;PFB23]);;
+let PFU_l1 = save_top_thm `PFU_l1`;;
+.he
+.KE
+.hd
+set_goal([],"
+	ƒ(f:PF)(g:PF)Ž((function_application(funion f)(REP_PF g)) = ´)
+	Š	ƒ(i:PF)Ž
+		((function_application(REP_PF f)(REP_PF i)) = ´)
+			((function_application(REP_PF i)(REP_PF g)) = ´)
+");;
+expand (REPEAT GEN_TAC);;
+lemma "((function_application(funion f)(REP_PF g)) = ´)
+		= Œ(REP_PF g)  (domain (funion f))";;
+  expand (ASSUME_TAC (SPEC_ALL PFU_l1)
+		THEN IMP_RES_TAC (SPECL ["funion f";"REP_PF g"] PF_t12));;
+expand (REWRITE_TAC [funion_DEF]);;
+.he
+.KS
+.NH
+THE UNION AXIOM
+.LP
+The following theorem characterises union over pure functions:
+.hd
+set_goal([],"
+	ƒ(f:PF)(g:PF)Ž (((£² f) ² g) ˆ ´²) =>
+		(„(i:PF)Ž (f ² i) ˆ ´² € (i ² g = (£² f) ² g))
+	|	(ƒ(i:PF)Ž (f ² i) ˆ ´² Š (i ² g = ´²))
+");;
+expand (REPEAT GEN_TAC);;
+expand (REWRITE_TAC [£²_DEF; LBE1; NE_DEF]);;
+lemma_proof "pure_function (funion f)" [REWRITE_TAC[PFU_l1]];;
+expand (IMP_RES_THEN OREWRITE_TAC PF_t10);;
+expand (ASM_CASES_TAC
+	"(ABS_PF(function_application(funion f)(REP_PF g)))
+		= ´²"
+	THEN ASM_REWRITE_TAC[]);;
+.he
+.KE
+.NH
+THE END
+.hd
+close_theory`pf129`;;
+.he
+.KS
+.DS
+.so /escher/usr2/rbj/zf/pf129.th.prt
+
+.DE
+.KE

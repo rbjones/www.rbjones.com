@@ -1,0 +1,83 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.nr P 1 Presentation Flag
+.nr D 0 Document Flag
+.LP
+.TL
+Church's Type Theory
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.ct D
+.cx
+.ct P
+.cx
+.AE
+.ds LH \s-8Church's Type theory\s+8
+.ds CH \s-2\s+2
+.ds RH \s-8\*(DY\s+8
+.ds LF \s-8DBC/RBJ/100\s+8
+.ds CF \s-2\s+2
+.ds RF \s-8Issue 0.1 Page \\n(PN\s+8
+.bp
+.KS
+.NH
+\fBTHE LAMBDA CALCULUS\fP
+.NH 2
+Abstract Syntax
+.sv lpf
+type name = string;
+infix ! \(mo --;
+
+datatype term =	V of name		|	(* variable		*)
+			op ! of term*term	|	(* application	*)
+			\(*l of name*term;	(* abstraction	*)
+.sw
+.KE
+.KS
+.NH 2
+Substitution
+.sv lpf
+fun	x \(mo []
+	=	false				|
+	x \(mo (y::z)
+	=	x = y orelse x \(mo z;
+.sw
+.KE
+.sv
+fun	[] -- a
+	=	[]					|
+	(h::t) -- a
+	=	 if h=a then t--a else h::(t--a);
+
+fun	freevars (V n)
+	=	[n]					|
+	freevars (a ! b)
+	=	(freevars a) @ (freevars b)	|
+	freevars (\(*l (n,t))
+	=	(freevars t) -- n;
+
+fun	primed v varl =
+	if	v \(mo varl
+	then	primed (v^"'") varl
+	else	v;
+
+fun	subst t1 n (V n2)
+	=	if n=n2 then t1 else (V n2)		|
+	subst t1 n (t2!t3)
+	=	(subst t1 n t2)!(subst t1 n t3)	|
+	subst t1 n (\(*l(n2,t2))
+	=	if	n=n2
+		then	(\(*l(n2,t2))
+		else	let	val nv = primed n2 (freevars t1 @
+						(freevars t2 -- n2))
+				val nf = subst t1 n (subst (V nv) n2 t2)
+			in	\(*l(nv,nf)
+			end;
+.sw
+.DE
+.KE
+

@@ -1,0 +1,253 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+Further Developing T37
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/039   Issue 0.1
+.ds CH Further Developing T37
+.ds RH \*(DY
+.ds LF DTC/RBJ/039   Issue 0.1
+.ds CF Further Developing T37
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+This document further develops the theory T37, specified in document
+DTC/RBJ/037.
+In particular it develops within the essentially type free framework of
+T37, an expressive type system.
+The specification is conducted in a readable semi-formal notation, backed
+up by a fully formal executable specification in Miranda.
+The semi-formal notation is marked by a vertical bar in the
+left margin.
+The formal notation is in the language Miranda and occurs 
+between marks | |< and | |> in the text.
+.KE
+.LP
+The specification of the formal system T37 is loaded directly from
+DTC/RBJ/037 to which the reader should refer.
+Further definitions are also loaded from DTC/RBJ/040.
+.DS L
+||<
+%insert "037"
+%nolist
+||>
+.DE
+.KE
+.KS
+.LP
+We use the notation [x]u as an abbreviation defined informally as follows:
+.sv
+[x]x = I
+[x]u = K u (if x does not occur in u)
+[x](u v) = S ([x]u) ([x]v)
+.sw
+.KE
+.KS
+.LP
+We will also abbreviate multiple abstractions thus:
+.sv
+[x,y...]u = [x][y]... u
+.sw
+.LP
+The miranda version of [x]u is the function \fIabst\fP.
+.DS L
+||<
+abst x (V y) = i, x=y
+abst x (V y) = k $A (V y), ~(x=y)
+abst x (C y) = k $A (C y)
+abst x (t $A u) = (s $A (abst x t)) $A (abst x u)
+||>
+.DE
+.KE
+.KS
+.LP
+The Miranda function providing multiple abstraction
+on a list of variables is \fI abstl\fP.
+.DS L
+||<
+abstl [] t = t
+abstl (x:y) t = abst x (abstl y t)
+||>
+.DE
+.KE
+.KS
+.NH
+DERIVING CURRY`S PARADOX
+.LP
+In this section we try hard to reconstruct Curry's Paradox in T37.
+.LP
+.KE
+Curry's paradox cannot be constructed using our version of implication
+since the deduction theorem does not hold for it.
+However, using \(*C an alternative definition of implication can be given
+for which the deduction theorem probably does hold.
+.sv
+(dci)		\*o \(sp	= [x,y] \(*C (K x)(K y)	(curry implication)
+.sw
+.DS L
+||<
+dci = def "\(sp" (abstl ["x","y"] (cl "\(*C" [ca "K" vx, ca "K" vy]))
+||>
+.DE
+.KS
+.NH
+LOGICAL CONNECTIVES
+.sv
+(dneg)			\*o \(no		= [x] (x = False)				(negation over Bool)
+(dbool)			\*o Bool 	= [x] x \*d \(no x				(the type of truth values)
+(dand)			\*o \*e		= [x,y] \(no (\(no x \*d \(no y)			(and)
+(dimp)			\*o \(rh		= [x,y] \(no x \*d y				(implication)
+(dequiv)			\*o \*h 	= [x,y] (x \(rh y) \*e (y \(rh x)		(equivalence)
+.sw
+.KE
+.DS L
+||<
+dneg	= def "\(no" 	(abst "x" (cl "="[vx, false]))
+dbool	= def "Bool" 	(abst "x" (cl "\*d"[vx, ca "\(no" vx]))
+dand	= def "\*e" 	(abstl ["x","y"] (ca "\(no" ((ca "\(no" vx) $A (ca "\(no" vy))))
+dimp	= def "\(rh" 	(abstl ["x","y"] (cl "\*d"[ca "\(no" vx, vy]))
+deqiv	= def "\*h" 	(abstl ["x","y"] (cl "\*e"[cl "\(rh"[vx, vy], cl "\(rh"[vy, vx]]))
+||>
+.DE
+.KS
+.NH
+QUANTIFIERS
+.NH 2
+The Universe and the Empty Type
+.LP
+.sv
+(duniv)			\*o U 		= K True					(the Universe)
+(dempty)			\*o \(es 		= K False					(the empty type)
+.sw
+.KE
+.DS L
+||<
+duniv	= def "U" (k $A true)
+dempty	= def "\(es" (k $A false)
+||>
+.DE
+.KS
+.NH 2
+Universal Quantification
+.LP
+.sv
+(dpi)				\*o \(*P 		= [x] \(*C U x					(unrestricted generality)
+(duq)				\*o \*j 		= \(*P						(universal quantifier)
+.sw
+.KE
+.DS L
+||<
+dpi	= def "\(*P" (abst "x" (cl "\(*C"[C "U", vx]))
+duq	= def "\*j" (C "\(*P")
+||>
+.DE
+.KS
+.NH 2
+Existential Quantification
+.LP
+.sv
+(dexists)			\*o \*k 		= [x]\(no \*j [y]\(no(x y)			(existential quantifier)
+.sw
+.KE
+.DS L
+||<
+dexists = def "\*k" (abst "x" (ca "\(no" (ca "\*j" (abst "y" (ca "\(no" (vx $A vy))))))
+||>
+.DE
+.KS
+.NH
+DOMAIN CONSTRUCTORS
+.LP
+We now define a selection of domain constructors.
+A domain is essentially a partial characteristic function which
+determines two disjoint recursively enumerable sets of combinatory
+terms.
+Domains are one component of types, the other is an equivalence relation
+representing equality over the type.
+.sv
+(df)			\*o \(-> 		= [x,y,z] \(*C x ([x2] y (z x2))		(function domain constructor)
+(dg)			\*o \*s 	= [x,y,z] \(*C x ([x2] (y x2)(z x2))	(dependent function domain)
+(dpair)		\*o pair	= [x,y,z]z x y				(ordered pair constructor)
+(dfst)			\*o fst		= [x]x true					(left projection)
+(dsnd)		\*o snd		= [x]x false					(right projection)
+(dcp)			\*o \(mu		= [x,y,z](x (fst z)) \*e (y (snd z))	(cartesian product domain)
+(ddp)			\*o \*t		= [x,y,z](x (fst z)) \*e (y (fst z) (snd z)) (dependent product domain)
+.sw
+.sv
+(rxe)			\*o \*u		= [A,x,y]\(*CA([z]x z = y z)	(restricted extensional equality)
+.sw
+.DS L
+||<
+
+df	= def "\(->" (abstl ["x","y","z"]
+	  (cl "\(*C" [vx, (abst "x2" (vy $A (vz $A (V "x2"))))]))
+
+dg	= def "\*s" (abstl ["x","y","z"] (cl "\(*C" [vx,
+	  (abst "x2" ((vy $A (V "x2")) $A (vz $A (V "x2"))))]))
+
+dpair	= def "pair" (abstl ["x","y","z"]((vz $A vy) $A vz))
+
+dfst	= def "fst" (abst "x" (vx $A true))
+
+dsnd	= def "snd" (abst "x" (vx $A false))
+
+dcp	= def "\(mu" (abstl ["x","y","z"]
+	  (cl "\*e" [vx $A (ca "fst" vz), vy $A (ca "snd" vz)]))
+
+ddp	= def "\*t" (abstl ["x","y","z"]
+	  (cl "\*e" [vx $A (ca "fst" vz),
+	  al [vy, ca "fst" vz, ca "snd" vz]]))
+%list
+||>
+.DE
+.KE
+.KS
+.NH
+TYPE CONSTRUCTORS
+.LP
+A type consists of a pair.
+The first element of the pair a domain, the second an equivalence relation over the domain.
+Objects of the type are equivalence classes of elements in the domain.
+.sv
+(fst)		\*o \(rh>	= [A,B,f]\(*C(A\(muA)[x](\(*C(snd A x) (snd B (pair (f (fst x)) (f (snd x))))	(function type constructor)
+(cpt)		\*o \(mu>	= [A,B,x] (A (fst x)) \*e (B (snd x)))	(cartesian product type constructor)
+.sw
+.KE
+.KS
+.NH
+OBSERVATIONS
+.LP
+Curry's paradox is not obviously derivable here because the "logical connectives"
+only work properly with values of type "bool".
+.LP
+Thus "u \(rh u" should not be provable, only "\(*C bool [u] u \(rh u".
+All the classical tautologies should be provable within the type "bool",
+but over U in general only a few tautologies involving explicit use of "true"
+and/or "false" should be provable.
+Modus Ponens is derivable, but we have at best a weakened form of the "deduction theorem".
+.LP
+Alternative definitions of the logical connectives can be constructed
+using \(*C rather than \*d.
+These would have permitted the construction of curry's paradox had made
+equality extensional.
+.LP
+Russell's paradox should fail because the law of the excluded middle only
+holds for values of type "bool".
+.LP
+Previous versions up to (at least) Issue 1.3 of this document were inconsistent by virtue of axiom (qx).
+This particular problem could have been fixed by replacing the axiom with a similar rule, but further reflection on the match between this formal system and the intended model has persuaded me to make drastic reductions in the strength of equality.
+This makes the formal system much more likely to be provably consistent, but I may have overdone it and made equality too weak.
+.KE
+

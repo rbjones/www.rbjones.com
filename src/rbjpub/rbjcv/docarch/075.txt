@@ -1,0 +1,220 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+Types for VDM using ZF
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DBC/RBJ/075   Issue 0.1
+.ds CH Types for VDM using ZF
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/RBJ/075   Issue 0.1
+.ds CF Types for VDM using ZF
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This document describes the semantics of the types of VDM.
+.KE
+.LP
+It does so using the language SML (standard ML) to define first
+the abstract syntax of first order set theory (ZFC), and then a
+useful collection of terms of ZFC and operators over these terms.
+These terms are taken to denote their meaning in the intended
+interpretation of ZFC.
+.LP
+We should then be in a position to define the abstract syntax of type
+expressions, and a mapping from this language into terms of ZFC.
+.LP
+SML is described in ECS-LFCS-86-2 (University of Edinburgh, Laboratory
+for Foundations of Computer Science).
+.KS
+.NH
+ABSTRACT SYNTAX
+.sv lpf
+infix 5 \(rh
+infix 6 % 
+infix 7 :!;
+infix 6 !: == \(mo;
+type var	= string;
+.sw
+.KE
+.sv lpf
+datatype
+	typed_var	= op :! of (var * term)
+and	separation 	= op !: of (typed_var * formula)
+and	formula	=	T of term					|
+				\(no of formula				|
+				op \(rh of (formula * formula)	|
+				\*k of (var * formula)			|
+				op == of (term * term)			|
+				op \(mo of (term * term)
+
+and	term	= 		V of var					|
+				\(es						|
+				Nat						|
+				op % of (term * term)			|
+				\*m of term					|
+				\(*m of term					|
+				\(cu of term					|
+				$ of separation;
+.sw
+.LP
+.KS
+.NH
+SUBSTITUTION
+.NH 2
+Set Theory in the Metalanguage (sml)
+.LP
+First a few definitions which enable us to talk about lists as
+if they were sets.
+.sv lpf
+infix 8 \(*e;
+fun	x \(*e []	= false				|
+	x \(*e (y::z)	= x = y orelse x \(*e z;
+.sw
+.KE
+.sv lpf
+infix 8 \(sb;
+fun	[] \(sb y	= true				|
+	(h::t) \(sb y	= h \(*e y andalso t \(sb y;
+.sw
+.sv lpf
+fun	m\(cu []		= []					|
+	m\(cu (a::b)	= a @ (m\(cu b);
+infix 8 --;
+fun	[] -- a		= []					|
+	(h::t) -- a	= if h=a then t -- a else h::(t -- a);
+infix 8 \e;
+fun	a \e []	= a					|
+	a \e (h::t)	= (a -- h) \e t;
+.sw
+.KS
+.NH 2
+Free Variables
+.LP
+We define the free variables in a formula or term as follows:
+.sv lpf
+fun	term_freevars (V v)	= [v]							|
+	term_freevars \(es	= []							|		term_freevars Nat		= []							|
+	term_freevars (a%b)	= term_freevars a @ (term_freevars b)	|
+	term_freevars (\*m t)	= term_freevars t					|
+	term_freevars (\(*m t)	= term_freevars t					|
+	term_freevars (\(cu t)	= term_freevars t					|
+	term_freevars ($(v:!t!:f))	= (term_freevars t) @ (freevars f -- v)
+and	term_list_freevars term_list	= m\(cu (map term_freevars term_list)
+.sw
+.KE
+.sv lpf
+and	freevars (T t)			= term_freevars t				|
+	freevars (\(no f)			= freevars f				|
+	freevars (f1 \(rh f2)		= freevars f1 @ (freevars f2)		|
+	freevars (\*k (v,f))		= freevars f -- v				|
+	freevars (t1 == t2)		= term_freevars t1 @ (term_freevars t2)	|
+	freevars (t1 \(mo t2)		= term_freevars t1 @ (term_freevars t2);
+.sw
+.KS
+.NH 2
+Substitutions
+.LP
+First define substitutions into terms.
+.sv lpf
+fun	primed nv varl =	if	nv \(*e varl
+			then	primed (nv^"'") varl
+			else	nv;
+.sw
+.sv lpf
+infix 9 inn;
+datatype ('a)inc = op inn of ('a * 'a);;
+.sw
+.KE
+.sv lpf
+infix 8 t_subs_for;
+fun	term t_subs_for ivar inn (V v)
+		=	if	ivar = v
+			then	term
+			else	V v							|
+	term t_subs_for ivar inn \(es	= \(es				|
+	term t_subs_for ivar inn Nat	= Nat				|
+	term t_subs_for ivar inn (t1 % t2)
+		=	term t_subs_for ivar inn t1 % (term t_subs_for ivar inn t2)	|
+	term t_subs_for ivar inn (\*m t)
+		=	(\*m (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn (\(*m t)
+		=	(\(*m (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn (\(cu t)
+		=	(\(cu (term t_subs_for ivar inn t))			|
+	term t_subs_for ivar inn ($(v:!t!:f))
+		=	if	ivar = v
+			then	$(v:!(term t_subs_for ivar inn t)!:f)
+			else	let	val nv = primed v (term_freevars term @
+									(freevars f -- v))
+					and nt = term t_subs_for ivar inn t
+					and nf = term subs_for v inn
+							((V v) subs_for v inn f)
+				in	$(nv:!nt!:nf)
+				end
+and	curried_t_subs term ivar term'
+		=	term t_subs_for ivar inn term'
+.sw
+.LP
+Next substitutions into formulae.
+.sv lpf
+infix 8 subs_for;
+and	term subs_for ivar inn (T t)
+		=	T (term subs_for ivar inn t)				|
+	term subs_for ivar inn (\(no form)
+		=	\(no (term subs_for ivar inn form)				|
+	term subs_for ivar inn (form1 \(rh form2)
+		=	(term subs_for ivar inn form1)
+			\(rh (term subs_for ivar inn form2)				|
+	term subs_for ivar inn (\*k (ivar',form))
+		=	(\*k (ivar',term subs_for ivar inn form))			|
+	term subs_for ivar inn (t1 == t2)
+		=	(term t_subs_for ivar inn t1)
+			== (term t_subs_for ivar inn t2)				|
+	term subs_for ivar inn (t1 \(mo t2)
+		=	(term t_subs_for ivar inn t1)
+			\(mo (term t_subs_for ivar inn t2)				|
+and	curried_subs a b c = a subs_for b inn c;
+.sw
+.KS
+.NH
+DERIVED CONSTRUCTORS
+.LP
+.sv lpf
+let fun unit s = s % s;;
+.sw
+.KE
+.KS
+.NH
+BASIC TYPES
+.LP
+.sv lpf
+.sw
+For the time being I will leave open the question of what are the basic types.
+To enable the subsequent definitions to be type checked I will define Bty
+to be a set containing only Nat, the natural numbers.
+.sv lpf
+let val bty = unit Nat;;
+.sw
+.KE
+.KS
+.NH
+OPERATORS
+.LP
+The operators are defined over all sets, and may not therefore be
+defined as sets.
+We define them as formulae expressing relationships between sets.
+.sv lpf
+
+.sw
+.KE
+.KE

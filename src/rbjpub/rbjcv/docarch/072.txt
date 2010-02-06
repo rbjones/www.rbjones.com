@@ -1,0 +1,544 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.RP
+.TL
+Logic for Partial Functions in SML
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+This document consists of a transciption into Standard ML of the
+proof theory of the Logic for Partial Functions due to Jen Huan Cheng.
+.AE
+.ds LH DBC/RBJ/072   Issue 1.0
+.ds CH LPF in SML
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/RBJ/072   Issue 1.0
+.ds CF LPF in SML
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This is a transcription of the proof theory of (first order) lpf
+(without equality) into sml (standard ml).
+The material is transcribed from "A Logic for Partial Functions",UMCS-86-7-1,
+by Jen Huan Cheng, Department of Computer Science, University of Manchester.
+I have made some adjustments, for technical convenience,
+which I do not, but some might, consider material.
+SML is described in ECS-LFCS-86-2 (University of Edinburgh, Laboratory for
+the Foundations of Computer Science).
+.KE
+.LP
+Concrete syntax is not considered.
+An sml datatype defines the abstract syntax of lpf, and an sml
+abstract datatype defines the type of provable sequents, as a
+proof checker in the LCF style.
+The constructors of the abstract datatype correspond to the axioms and 
+inference rules of lpf.
+.LP
+The main areas in which this transciption differs from the original are:
+.RS
+.IP formality
+.br
+The presentation is more formal and is given in SML
+(this is a "literate script", the sections marked by a vertical bar on the
+left have been type checked by the sml compiler)
+.IP quantification
+.br
+The unusual treatment of quantification adopted by Cheng has been dropped,
+since it seemed to me to clutter the syntax to no effect.
+.IP substitution
+.br
+There is a full specification of substitution.
+The apparent increase in complexity here is not caused by the change
+in handling of quantifiers, it arises simply from spelling out the
+details where Cheng finds this unnecessary.
+.IP identifiers
+.br
+The sets of identifiers used for propositional and individual variables,
+and for individual and function constants are not assumed to be disjoint.
+In the abstract syntax presented no ambiguity arises from this, and the
+proof theory should be sound.
+Similarly the same function name may be used at various arities, and will
+be treated as if it denoted a distinct function at each arity.
+We do not address disambiguation in concrete syntax, which might be achieved
+by the use of disjoint sets of identifiers.
+.IP sets
+.br
+Where Cheng uses sets in his metalanguage, I use lists.
+The effect is that inference rules normally operate only on the
+propositions at the head of the lists of propositions forming the
+sequents.
+In the weakening rules, which are formalised so as
+to permit arbitrary reordering of the lists, this weakness is remedied.
+.IP syntax
+.br
+The abstract syntax is simplified, first by discarding those elements
+which are not primitive and do not occur in the proof rules, secondly
+by reducing the number of non-terminal symbols to two, `formula' and `term'.
+.RE
+.LP
+Despite these `adjustments', the formal statement of the axioms and
+rules follows very closely the presentation on pp 54-56 of UMCS-86-7-1.
+.KS
+.NH
+ABSTRACT SYNTAX
+.sv lpf
+infix 6 \*d 
+infix 7 App;
+
+type prop_var	= string;
+type ind_var	= string;
+type ind_cons	= string;
+type fun_cons	= string;
+.sw
+.KE
+.sv lpf
+datatype formula	=	uu						|
+				P of (prop_var * term list)		|
+				E of term					|
+				\(no of formula				|
+				\(*D of formula				|
+				\(*d of formula				|
+				op \*d of (formula * formula)		|
+				\*k of (ind_var * formula)
+
+and	term	= 		Constant of ind_cons			|
+				Variable of ind_var			|
+				op App of (fun_cons * term list);
+.sw
+.LP
+.KS
+.NH
+SUBSTITUTION
+.NH 2
+Set Theoretic Preliminaries
+.LP
+First a few definitions which enable us to talk about lists as
+if they were sets.
+.LP
+First, membership:
+.sv lpf
+infix 8 \(mo;
+fun	x \(mo []	= false				|
+	x \(mo (y::z)	= x = y orelse x \(mo z;
+.sw
+.KE
+.LP
+`set' inclusion:
+.sv lpf
+infix 8 \(ib;
+fun	[] \(ib y	= true				|
+	(h::t) \(ib y	= h \(mo y andalso t \(ib y;
+.sw
+.LP
+Union of a set of sets, and removal of an element from a set:
+.sv lpf
+fun	\(cu []		= []					|
+	\(cu (a::b)	= a @ (\(cu b);
+infix 8 --;
+fun	[] -- a		= []					|
+	(h::t) -- a	= if h=a then t -- a else h::(t -- a);
+.sw
+.KS
+.NH 2
+Free Variables
+.LP
+We define the free variables in a formula or term as follows:
+.sv lpf
+fun	term_freevars (Constant c)		= []						|
+	term_freevars (Variable v)		= [v]						|
+	term_freevars (f App term_list)	= term_list_freevars term_list
+and	term_list_freevars term_list		= \(cu (map term_freevars term_list);
+.sw
+.KE
+.sv lpf
+fun	freevars uu				= []						|
+	freevars (P (pv,term_list))	= term_list_freevars term_list	|
+	freevars (E term)			= term_freevars term			|
+	freevars (\(no formula)		= freevars formula			|
+	freevars (\(*D formula)		= freevars formula			|
+	freevars (\(*d formula)		= freevars formula			|
+	freevars (form1 \*d form2)	= \(cu[freevars form1, freevars form2]	|
+	freevars (\*k (v,form))		= freevars form --v;
+.sw
+.KS
+.NH 2
+Permissible Substitutions
+.LP
+A substitution of a term for a variable in a formula is permissible
+only when no variable free in the term will become bound after the
+substitution.
+We make this condition precise here.
+.sv lpf
+infix 8 free_for;
+infix 9 inn;
+datatype ('a,''a) pair = op inn of ('a * ''a);
+.sw
+.KE
+.sv lpf
+fun	term free_for ind_var inn uu			= true							|
+	term free_for ind_var inn (P (pv,tl))		= true							|
+	term free_for ind_var inn (E term')		= true							|
+	term free_for ind_var inn (\(no form)		= term free_for ind_var inn form		|
+	term free_for ind_var inn (\(*D form)		= term free_for ind_var inn form 		|
+	term free_for ind_var inn (\(*d form)		= term free_for ind_var inn form 		|
+	term free_for ind_var inn (form1 \*d form2)	= term free_for ind_var inn form1 
+								andalso term free_for ind_var inn form2	|
+	term free_for ind_var inn (\*k (ind_var',form))	= not(ind_var' \(mo term_freevars term)
+								orelse not(ind_var \(mo freevars form);
+.sw
+.KS
+.NH 2
+Substitutions
+.LP
+First define substitutions into terms.
+.sv lpf
+infix 8 t_subs_for;
+fun	term t_subs_for ivar inn (Constant c)
+		=	(Constant c)						|
+	term t_subs_for ivar inn (Variable v)
+		=	if	ivar = v
+			then	term
+			else	Variable v						|
+	term t_subs_for ivar inn (f App t_list)
+		=	f App (map (curried_t_subs term ivar) t_list)
+and	curried_t_subs term ivar term'
+		=	term t_subs_for ivar inn term';
+.sw
+.KE
+.LP
+Next substitutions into formulae.
+.sv lpf
+infix 8 subs_for;
+fun	term subs_for ind_var inn uu
+		=	uu									|
+	term subs_for ind_var inn (P (pv,tl))
+		=	P (pv, map (curried_t_subs term ind_var) tl)		|
+	term subs_for ind_var inn (E term')
+		=	E (term t_subs_for ind_var inn term')			|
+	term subs_for ind_var inn (\(no form)
+		=	\(no (term subs_for ind_var inn form)				|
+	term subs_for ind_var inn (\(*D form)
+		=	\(*D (term subs_for ind_var inn form) 				|
+	term subs_for ind_var inn (\(*d form)
+		=	\(*d (term subs_for ind_var inn form) 				|
+	term subs_for ind_var inn (form1 \*d form2)
+		=	(term subs_for ind_var inn form1)
+			\*d (term subs_for ind_var inn form2)				|
+	term subs_for ind_var inn (\*k (ind_var',form))
+		=	(\*k (ind_var',term subs_for ind_var inn form))
+and	curried_subs a b c = a subs_for b inn c;
+.sw
+.KS
+.NH
+THE SEQUENT CALCULUS
+.LP
+.sv lpf
+infix \(->
+datatype sequent	= op \(-> of (formula list * formula list);
+.sw
+.KE
+.KS
+.NH 2
+The Abstract Data Type of Sequent-theorems
+.LP
+.sv lpf
+abstype sequent_theorem = \*o of sequent
+with
+.sw
+.KE
+.KS
+.NH 2
+The Axiom Schemata
+.LP
+.sv lpf
+	fun axiom_1 A	= \*o ( [A]		\(-> [A] )
+	fun axiom_2 A	= \*o ( [A,\(no A]	\(-> [] )
+	val axiom_3 	= \*o ( [uu]		\(-> [] )
+	val axiom_4 	= \*o ( [\(nouu]		\(-> [] )
+	fun axiom_5 c	= \*o ( []		\(-> [E (Constant c)] )
+	fun axiom_6 y	= \*o ( []		\(-> [E (Variable y)] )
+	fun axiom_7 t	= \*o ( [\(no (E t)]	\(-> [] )
+.sw
+.KE
+.KS
+.NH 2
+The Propositional Inference Rules
+.LP
+\(*D \(->:
+.sv lpf
+	fun	rule_1	(\*o ((\(noA::\(*G) \(-> \(*S))
+				(\*o ((A'::\(*G') \(-> \(*S'))
+	=		if	A=A' andalso \(*G=\(*G' andalso \(*S=\(*S'
+			then	\*o((\(*D A::\(*G) \(-> \(*S)
+			else	axiom_3						|
+		rule_1	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \(*D:
+.sv lpf
+	fun	rule_2a	(\*o (\(*G \(-> (A::\(*S)))
+	=			(\*o (\(*G \(-> (\(*D A::\(*S)))				|
+		rule_2a	st1 = axiom_3
+	fun	rule_2b	(\*o (\(*G \(-> (\(noA::\(*S)))
+	=			(\*o (\(*G \(-> (\(*D A::\(*S)))				|
+		rule_2b	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(no\(*D \(->:
+.sv lpf
+	fun	rule_3a	(\*o (\(*G \(-> (A::\(*S)))
+	=			(\*o ((\(no(\(*D A)::\(*G) \(-> \(*S))				|
+		rule_3a	st1 = axiom_3
+	fun	rule_3b	(\*o (\(*G \(-> (\(noA::\(*S)))
+	=			(\*o ((\(no(\(*D A)::\(*G) \(-> \(*S))				|
+		rule_3b	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \(no\(*D:
+.sv lpf
+	fun	rule_4	(\*o ((\(noA::\(*G) \(-> \(*S))
+				(\*o ((A'::\(*G') \(-> \(*S'))
+	=		if	A=A' andalso \(*G=\(*G' andalso \(*S=\(*S'
+			then	\*o(\(*G \(-> (\(no(\(*D A)::\(*S))
+			else	axiom_3						|
+		rule_4	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(no \(no \(->:
+.sv lpf
+	fun	rule_5	(\*o ((A::\(*G) \(-> \(*S))
+	=			\*o((\(no(\(no A)::\(*G) \(-> \(*S)				|
+		rule_5	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \(no \(no:
+.sv lpf
+	fun	rule_6	(\*o (\(*G \(-> (A::\(*S)))
+	=			(\*o (\(*G \(-> (\(no(\(no A)::\(*S)))				|
+		rule_6	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\*d \(->:
+.sv lpf
+	fun	rule_7	(\*o ((A::\(*G) \(-> \(*S))
+				(\*o ((B::\(*G') \(-> \(*S'))
+	=		if	\(*G=\(*G' andalso \(*S=\(*S'
+			then	\*o(((A \*d B)::\(*G) \(-> \(*S)
+			else	axiom_3							|
+		rule_7	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \*d:
+.sv lpf
+	fun	rule_8a B	(\*o (\(*G \(-> (A::\(*S)))
+	=			(\*o (\(*G \(-> ((A\*dB)::\(*S)))				|
+		rule_8a B	st1 = axiom_3
+	fun	rule_8b A	(\*o (\(*G \(-> (B::\(*S)))
+	=			(\*o (\(*G \(-> ((A\*dB)::\(*S)))				|
+		rule_8b A	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(no\*d \(->:
+.sv lpf
+	fun	rule_9a B	(\*o ((\(noA::\(*G) \(-> \(*S))
+	=			\*o((\(no(A\*dB)::\(*G) \(-> \(*S)				|
+		rule_9a B	st1 = axiom_3
+	fun	rule_9b A	(\*o ((\(noB::\(*G) \(-> \(*S))
+	=			\*o((\(no(A\*dB)::\(*G) \(-> \(*S)				|
+		rule_9b A	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \(no\*d:
+.sv lpf
+	fun	rule_10	(\*o (\(*G \(-> (\(noA::\(*S)))
+				(\*o (\(*G' \(-> (\(noB::\(*S')))
+	=		if	\(*G=\(*G' andalso \(*S=\(*S'
+			then	\*o (\(*G \(-> (\(no(A\*dB)::\(*S))
+			else	axiom_3							|
+		rule_10	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.NH 2
+The Quantification Rules
+.LP
+\*k \(->:
+.sv lpf
+	fun	rule_11 x	(\*o ((A::\(*G) \(-> \(*S))
+	=		if	not(x \(mo (\(cu (map freevars (\(*G@\(*S))))
+			then	\*o((\*k(x,A)::\(*G) \(-> \(*S)							else	axiom_3							|
+		rule_11 x	st1 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \*k:
+.sv lpf
+	fun	rule_12 x A	(\*o (\(*G \(-> (E t::\(*S)))
+				(\*o (\(*G' \(-> (A'::\(*S')))
+	=		if	\(*G=\(*G' andalso \(*S=\(*S'
+				andalso t free_for x inn A
+				andalso A' = t subs_for x inn A
+				andalso not(x \(mo (\(cu (map freevars (\(*G@\(*S))))
+			then	\*o (\(*G \(-> (\*k (x,A)::\(*S))
+			else	axiom_3							|
+		rule_12 x A	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(no\*k \(->:
+.sv lpf
+	fun	rule_13 x A	(\*o (\(*G \(-> (E t::\(*S)))
+				(\*o ((\(no A'::\(*G') \(-> \(*S'))
+	=		if	\(*G=\(*G' andalso \(*S=\(*S'
+				andalso t free_for x inn A
+				andalso A' = t subs_for x inn A
+				andalso not(x \(mo (\(cu (map freevars (\(*G@\(*S))))
+			then	\*o ((\(no(\*k(x,A))::\(*G) \(-> \(*S)
+			else	axiom_3							|
+		rule_13 x A	st1 st2 = axiom_3
+.sw
+.KE
+.KS
+.LP
+\(-> \(no\*k:
+.sv lpf
+	fun	rule_14 x	(\*o (\(*G \(-> (\(no A::\(*S)))
+	=		if	not(x \(mo (\(cu (map freevars (\(*G@\(*S))))
+			then	\*o (\(*G \(-> (\(no(\*k (x,A))::\(*S))
+			else	axiom_3							|
+		rule_14 x	st1 = axiom_3
+.sw
+.KE
+.KS
+.NH 2
+Structural Rules
+.LP
+Since I use lists rather than sets a formulation of the weakening
+rules which allows re-ordering is given.
+.LP
+.sv lpf
+	fun	rule_15 \(*G' \(*S' (\*o (\(*G \(-> \(*S))
+	=		if	\(*G \(ib \(*G' andalso \(*S \(ib \(*S'
+			then	\*o (\(*G' \(-> \(*S')
+			else	axiom_3							|
+		rule_15 \(*G' \(*S' st1 = axiom_3
+.sw
+.KE
+.KS
+.NH 2
+Cut Rule
+.LP
+.sv lpf
+	fun	rule_16	(\*o (\(*G1 \(-> (A::\(*S1)))
+				(\*o ((A'::\(*G2) \(-> \(*S2))
+	=		if	A = A' andalso not (A \(mo (\(*G2 @ \(*S1))
+			then	\*o ((\(*G1 @ \(*G2) \(-> (\(*S1 @ \(*S2))
+			else	axiom_3							|
+		rule_16 st1 st2	= axiom_3
+.sw
+.KE
+.sv lpf
+end;
+.sw
+.KS
+.NH
+TYPES
+.LP
+The following types are inferred by the SML compiler from the above script:
+.DS L
+> type prop_var = string
+> type ind_var = string
+> type ind_cons = string
+> type fun_cons = string
+> datatype term = App of fun_cons * (term list) | Constant of ind_cons | 
+Variable of ind_var
+  datatype formula = E of term | P of prop_var * (term list) | \*k of ind_var 
+* formula | \(*D of formula | \(*d of formula | \*d of formula * formula | uu | \(no
+ of formula
+  con Variable = fn : ind_var \(-> term
+  con Constant = fn : ind_cons \(-> term
+  con App = fn : (fun_cons * (term list)) \(-> term
+  con \(no = fn : formula \(-> formula
+  con uu = uu : formula
+  con \*d = fn : (formula * formula) \(-> formula
+  con \(*d = fn : formula \(-> formula
+  con \(*D = fn : formula \(-> formula
+  con \*k = fn : (ind_var * formula) \(-> formula
+  con P = fn : (prop_var * (term list)) \(-> formula
+  con E = fn : term \(-> formula
+> val \(mo = fn : (''a * (''a list)) \(-> bool
+> val \(ib = fn : ((''a list) * (''a list)) \(-> bool
+> val \(cu = fn : (('a list) list) \(-> ('a list)
+> val -- = fn : ((''a list) * ''a) \(-> (''a list)
+> val term_list_freevars = fn : (term list) \(-> (ind_var list)
+  val term_freevars = fn : term \(-> (ind_var list)
+> val freevars = fn : formula \(-> (ind_var list)
+> datatype ('a,'b) pair = inn of 'a * 'b
+  con inn = fn : ('a * 'b) \(-> (('a,'b) pair)
+> val free_for = fn : (term * ((ind_var,formula) pair)) \(-> bool
+> val curried_t_subs = fn : term \(-> (ind_var \(-> (term \(-> term))
+  val t_subs_for = fn : (term * ((ind_var,term) pair)) \(-> term
+> val curried_subs = fn : term \(-> (ind_var \(-> (formula \(-> formula))
+  val subs_for = fn : (term * ((ind_var,formula) pair)) \(-> formula
+> datatype sequent = \(-> of (formula list) * (formula list)
+  con \(-> = fn : ((formula list) * (formula list)) \(-> sequent
+> type sequent_theorem
+  val rule_16 = fn : sequent_theorem \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_15 = fn : (formula list) \(-> ((formula list) \(-> (sequent_theorem \(-> 
+sequent_theorem))
+  val rule_14 = fn : ind_var \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_13 = fn : ind_var \(-> (formula \(-> (sequent_theorem \(-> (
+sequent_theorem \(-> sequent_theorem)))
+  val rule_12 = fn : ind_var \(-> (formula \(-> (sequent_theorem \(-> (
+sequent_theorem \(-> sequent_theorem)))
+  val rule_11 = fn : ind_var \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_10 = fn : sequent_theorem \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_9b = fn : formula \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_9a = fn : formula \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_8b = fn : formula \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_8a = fn : formula \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_7 = fn : sequent_theorem \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_6 = fn : sequent_theorem \(-> sequent_theorem
+  val rule_5 = fn : sequent_theorem \(-> sequent_theorem
+  val rule_4 = fn : sequent_theorem \(-> (sequent_theorem \(-> sequent_theorem)
+  val rule_3b = fn : sequent_theorem \(-> sequent_theorem
+  val rule_3a = fn : sequent_theorem \(-> sequent_theorem
+  val rule_2b = fn : sequent_theorem \(-> sequent_theorem
+  val rule_2a = fn : sequent_theorem \(-> sequent_theorem
+  val rule_1 = fn : sequent_theorem \(-> (sequent_theorem \(-> sequent_theorem)
+  val axiom_7 = fn : term \(-> sequent_theorem
+  val axiom_6 = fn : ind_var \(-> sequent_theorem
+  val axiom_5 = fn : ind_cons \(-> sequent_theorem
+  val axiom_4 = - : sequent_theorem
+  val axiom_3 = - : sequent_theorem
+  val axiom_2 = fn : formula \(-> sequent_theorem
+  val axiom_1 = fn : formula \(-> sequent_theorem
+.DE
+.KE
+.KE

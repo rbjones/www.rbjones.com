@@ -1,0 +1,190 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/rbj/keys/roff.defs
+.LP
+.TL
+Recursive Data Types in HOL (temp extensions)
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/051   Issue 0.1
+.ds CH Recursive Data Types (temp)
+.ds RH \*(DY
+.ds LF DTC/RBJ/051   Issue 0.1
+.ds CF Recursive Data Types (temp)
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+.hd
+new_theory `051`;;
+new_parent `042`;;
+.he
+.hd m
+load (`042`,false);;
+.he
+.hd m
+z_loading := false;;
+.he
+.hd
+z_loading := true;;
+.he
+.KE
+.KS
+.NH
+CONSTRUCTING EXISTENTIAL WITNESSES
+.LP
+For each type a witness must be constructed.
+.KE
+.LP
+To do this the types must be processed in an appropriate order.
+A type is ready to have a witness constructed under the following
+conditions:
+.RS
+.IP "\fIDisjoint Union\fP"
+A disjoint union is ready if any of its components has a witness.
+.IP "\fILabelled Product\fP"
+A labelled product is ready if all of its components has a witness.
+.IP "\fIVoid and Primitive components\fP"
+always have witnesses.
+The witnesses are constructed during the initialisation phase.
+.RE
+.LP
+The code in this section does not merely construct witnesses.
+In the process of constructing the witnesses it constructs a plan for 
+a proof that the witnesses satisfy the predicates.
+.LP
+The structure of this plan is helps an understanding of the code and
+is documented by its ML type as follows.
+.DS L
+type component		=	Prim_W	of term	|
+						Comp_W	of string;;
+
+type trace			=	Prod_t	of component list	|
+						Union_t	of int # component;;
+
+typeabbrev witness	=	term # int # trace;;
+
+typeabbrev witnesses	=	(string # witness) list;;
+.DE
+.LP
+The following function when given a witness, the predicate it is a witness for,
+and an object of type \fIwitnesses\fP
+will return the theorem that the witness is indeed a witness.
+.DS L
+let	REX_TAC (witness,depth,tr) witnesses = THENL[
+	EXISTS_TAC witness;
+	top_beta;
+	EXISTS_TAC (nterm int);
+	REWRITE_TAC[PRIM_REC_THM];
+	TRACE_TAC witnesses tr]
+where	TRACE_TAC witnesses = fun
+		Prod_t cl	.
+
+
+where		top_beta	=	CONV_TAC BETA_CONV
+and		depth_beta	=	CONV_TAC (DEPTH_CONV BETA_CONV);;
+.DE
+.KS
+.NH
+NON-RECURSIVE EXISTENCE PROOFS
+.LP
+.NH 2
+Primitive Types
+.LP
+.NH 2
+Unions
+.LP
+.hd m
+let void_witproof rep_type = 
+	let [dom; cod] = snd (dest_type rep_type)
+ in	"\(*lv:^rep_type.v=(list_mk_pfun [[]:^dom,\(*mx:^cod.T])";;
+
+let witproof ((_, rep_type, terms,_),_,_,results,_) = fun
+	P t	.fst (snd (snd (assoc t terms))),TRUTH		|
+	T n	.snd (assoc n results),TRUTH		|
+	V	.void_witproof rep_type,TRUTH;;
+
+let witproofs g = map (witproof g);;
+.he
+.KE
+.hd m
+let u_witness ((_,u,_,l),_,_,_) t =
+	("(inject ^(dom_val l 1) ^t):^u") ;;
+.he
+.hd m
+let uex_tac wit1 thm wit2 = EVERY [
+	EXISTS_TAC wit1;
+	CONV_TAC BETA_CONV;
+	DISJ1_TAC;
+	EXISTS_TAC wit2;
+	REWRITE_TAC [];
+	ACCEPT_TAC thm];;
+
+let uex_thm pred l thm wit2 =
+	let goal = ([],"\*kx.^pred x")
+	and wit1 = "inject ^(dom_val l 1) ^wit2"
+ in	TAC_PROOF(goal, uex_tac wit1 thm wit2);;
+
+let do_nonrec_U_ex g (gn,s) =
+	let ((_,rep_type,_,n),_,_,d,_) = g 
+ in	let pred		= snd (assoc gn d) 
+ 	and witness,proof	= witproof g (hd s)
+ in	(gn, witness, uex_thm pred n proof witness);;
+.he
+.NH 2
+Products
+.LP
+.hd m
+let mk_product_ex g gn t = "t",TRUTH;;
+.he
+.hd m
+let do_nonrec_P_ex g (gn,s) =
+	(gn,
+	mk_product_ex g gn (map (witproof g) s));;
+.he
+.NH 2
+Non-recursive types
+.LP
+.hd m
+let do_nonrectype_exists ad (name, st) =
+	case st of	Union u	.do_nonrec_U_ex ad (name, map snd u)	|
+			Prod p	.do_nonrec_P_ex ad (name, map snd p);;
+.he
+.hd m
+let exist_proved u v = true;;
+
+let nonrectypes_estep (g,u,d,r,k) =
+	let ok, not_ok = partition ((exist_proved u) o snd) u
+	in 	ok = [] => failwith `nonrectypes_estep - finished`	|
+			(g,
+			d @ ok,
+			not_ok,
+			r,
+			k @ (map (do_nonrectype_exists (g,u,d,r,k)) ok));;
+.he
+.hd m
+let nonrectype_exists (g,u,d,r) =
+	careful_repeat_f [`nonrectypes_estep - finished`] nonrectypes_estep (g,u,d,r,[]);;
+.he
+.KE
+.KS
+.NH
+CONTROL
+.hd m
+let new_rectypes = make_predicates o do_initiation;;
+.he
+.KE
+.KS
+.NH
+THE THEORY 051
+.DS L
+.DE
+.KE

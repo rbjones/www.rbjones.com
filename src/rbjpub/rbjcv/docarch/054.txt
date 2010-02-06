@@ -1,0 +1,455 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.nr P 1 Presentation Flag
+.nr D 0 Document Flag
+.LP
+.TL
+Presentation at Cambridge Computer Labs
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+This is a summary of relevant work for presentation to the hardware verification
+group at Cambridge Computer Labs.
+.AE
+.ds LH \s-8DTC/RBJ/054\s+8
+.ds CH \s-8\*(DY\s+8
+.ds RH \s-8Page \\n(PN\s+8
+.nr PS 20
+.nr VS 24
+.LP
+.KS
+.NH
+INTRODUCTION
+.DS C
+
+
+
+TRANSLATING Z into HOL
+
+
+
+LOGICAL FOUNDATIONS
+
+
+
+RECURSIVE DATA TYPES in HOL
+
+
+
+USING HOL for METAMATHEMATICS
+.DE
+.KE
+.KS
+.NH
+Translating Z into HOL
+.DS C
+
+
+LABELLED PRODUCT DATA TYPES
+
+
+
+DISJOINT UNION DATA TYPES
+
+
+
+ENUMERATED DATA TYPES
+
+
+
+Sum, Lists, Partial Functions
+
+
+
+SCHEMA TYPES and CONSISTENCY
+.DE
+.KE
+.KS
+.NH
+SUMMARY of OUTPUT on FOUNDATIONS
+.DS C
+
+
+Logical Foundations and Formal Verification
+
+
+
+Implementing Cardelli's type:type in Turner's Miranda
+
+
+
+The Calculus of Constructions in Miranda
+
+
+
+Creative Foundations for Program Verification
+
+
+
+A new axiomatisation of the Theory
+of Restricted Generality
+
+
+
+A Combinatory Theory of Partial Functions
+.DE
+.KE
+.KS
+.NH
+Recursive Data Types in HOL
+.DS C
+
+
+To support recursive definitions of collections
+of labelled union and labelled product types.
+
+Work started but not very far progressed.
+
+Uses an ML type for describing data types.
+
+
+
+COMPLETED:
+computation of underlying representation type
+
+construction of the predicates defining the types
+
+
+
+IN PROGRESS:
+Construction of existence proofs (painful !)
+
+An awful lot still to be done
+.DE
+.KE
+.KS
+.NH
+Using HOL for METAMATHEMATICS
+.LP
+.DS C
+
+
+NOTHING DONE YET
+- NEEDS RECURSIVE DATA TYPES
+
+
+
+SYNTAX = free algebra defined with recursive data types
+
+
+
+THEOREMS defined using quotients
+
+
+
+QUOTIENT on FREE COMBINATORY ALGEBRA
+for models
+
+
+
+OBJECTIVE - To PROVE RESULTS
+about PROOF THEORETIC STRENGTH
+.DE
+.KE
+.KS
+.NH
+Z in HOL
+.NH 2
+PRIMITIVES in HOL
+.RS
+.IP \fBCLASS\fP
+.br
+We assume a fixed lattice of security classifications, elements of which have type \fIclass\fP.
+.hd m
+let CLASS = ":*class";;
+.he
+.RE
+.KE
+.KS
+.NH 2
+SCHEMAS in HOL
+.LP
+.sd CLASS_RANGE
+high,low	: CLASS
+.sb
+high dominates low
+.se
+.hd m
+let CLASS_RANGE = new_schema (`CR`,[
+			(`high`,	":^CLASS");
+			(`low`,	":^CLASS")	]);;
+.he
+.hd
+new_definition(`pCLASS_RANGE`,
+	"pCLASS_RANGE (cr:^CLASS_RANGE) =
+		dominates (CR_high cr) (CR_low cr)");;
+.he
+.KE
+.KS
+.NH 2
+ENUMERATED TYPES in HOL
+.LP
+.sv
+\fBDOCUMENT_TYPE\fP	\*g 	\fBDraft\fP			|
+					\fBPre-release\fP 	|
+					\fBCommentary\fP 	|
+					\fBRelease\fP 		|
+					\fBDowngrade\fP
+.sw
+.hd m
+let DOCUMENT_TYPE = new_enumerated_type 
+		[	`Draft`;
+			`Pre_Release`;
+			`Commentary`;
+			`Release`;
+			`Downgrade`	];;
+.he
+.KE
+.nr PS 16
+.nr VS 20
+.KS
+.NH 2
+Disjoint Unions in HOL
+.LP
+.sv
+\fBOPERATION\fP	\*g
+	\fBAssign_role\fP	<<ASSIGN_ROLE_PARS>>			|
+	\fBRemove_role\fP	<<REMOVE_ROLE_PARS>>		|
+	\fBCreate_doc\fP		<<CREATE_DOC_PARS>>			|
+	\fBCreate_para\fP	<<CREATE_PARA_PARS>>			|
+	\fBDisplay_doc\fP	<<DISPLAY_DOC_PARS>>			|
+	\fBDisplay_para\fP	<<DISPLAY_PARA_PARS>>		|
+	\fBDowngrade_doc\fP	<<DOWNGRADE_DOC_PARS>>		|
+	\fBDowngrade_para\fP	<<DOWNGRADE_PARA_PARS>>		|
+	\fBEdit_para\fP		<<EDIT_PARA_PARS>>			|
+	\fBChange_doc_type\fP<<CHANGE_DOC_TYPE_PARS>>
+.sw
+.hd m
+let OPERATION = new_disjoint_union
+[	(`Assign_role`,		ASSIGN_ROLE_PARS);
+	(`Remove_role`,		REMOVE_ROLE_PARS);
+	(`Create_doc`,		CREATE_DOC_PARS);
+	(`Create_para`,		CREATE_PARA_PARS);
+	(`Display_doc`,		DISPLAY_DOC_PARS);
+	(`Display_para`,		DISPLAY_PARA_PARS);
+	(`Downgrade_doc`,	DOWNGRADE_DOC_PARS);
+	(`Downgrade_para`,	DOWNGRADE_PARA_PARS);
+	(`Edit_para`,		EDIT_PARA_PARS);
+	(`Change_doc_type`,	CHANGE_DOC_TYPE_PARS)	];;
+.he
+.KE
+.nr VS 19
+.KS
+.NH 2
+FUNCTIONS over DISJOINT UNIONS
+.LP
+.sv
+\fBdo_op\fP	: STATE_STEP_FUNCTION
+.sb
+do_op (Assign_role pars) s		= assign_role pars s
+do_op (Remove_role pars) s		= remove_role pars s
+do_op (Create_doc pars) s		= create_doc pars s	
+do_op (Create_para pars) s		= create_para pars s
+do_op (Display_doc pars) s		= display_doc pars s
+do_op (Display_para pars) s		= display_para pars s
+do_op (Downgrade_doc pars) s	= downgrade_doc pars s 
+do_op (Downgrade_para pars) s	= downgrade_para pars s
+do_op (Edit_para pars) s		= edit_para pars s	
+do_op (Change_doc_type pars) s	= change_doc_type pars s
+.sw
+.hd
+dju_case_def `do_op` OPERATION [
+(`Assign_role`,		"assign_role		:^ASSIGN_ROLE");
+(`Remove_role`,		"remove_role	:^REMOVE_ROLE");
+(`Create_doc`,		"create_doc		:^CREATE_DOC");
+(`Create_para`,		"create_para	:^CREATE_PARA");
+(`Display_doc`,		"display_doc	:^DISPLAY_DOC");
+(`Display_para`,		"display_para	:^DISPLAY_PARA");
+(`Downgrade_doc`,	"downgrade_doc	:^DOWNGRADE_DOC");
+(`Downgrade_para`,	"downgrade_para	:^DOWNGRADE_PARA");
+(`Edit_para`,		"edit_para		:^EDIT_PARA");
+(`Change_doc_type`,	"change_doc_type	:^CHANGE_DOC_TYPE")
+						];;
+.he
+.KE
+.nr PS 20
+.nr VS 24
+.KS
+.NH 2
+Z SEMANTICS and PROOF THEORY
+
+
+.LP
+Are empty types legal?
+e.g.:
+.sd INT_PAIR
+left, right :INT
+.sb
+left > right \*e right > left
+.se
+.LP
+If not, how do we know that our schemas are legal?
+.LP
+If so, what is the status of declarations using empty types?
+e.g.:
+.sv
+ip:INT_PAIR
+.sw
+.LP
+Can we then assert:
+.sv
+\*o?	ip.left > ip.right \*e ip.right > ip.left
+.sw
+.LP
+?
+.KE
+.KS
+.LP
+There is a solution which provides a consistent proof theory for Z,
+and which translates into HOL.
+.LP
+We interpret schemas with non-empty bodies in the following way:
+.sv
+INT_PAIR =
+	{[left,right:INT] | left > right \*e right > left}
+	\(cu {\(*mp:[left,right:INT] | left > right \*e right > left}
+.sw
+.LP
+Inference rules relating to schema types must be qualified.
+.sv
+\*o	(\*kx:[left,right:INT].left > right \*e right > left)
+	\(rh \*jip:INT_PAIR.
+		ip.left > ip.right \*e ip.right > ip.left
+.sw
+.KE
+.KS
+.NH
+RECURSIVE DATA TYPES in HOL
+.NH 2
+ML type of type descriptions
+.hd m
+type field_type	=	V | T of string | P of type;;
+
+typeabbrev field_desc	= string # field_type;;
+
+type struc_type  =	Prod		of field_desc list	|
+			Union	of field_desc list;;
+
+typeabbrev rec_types = (string # struc_type) list;;
+.he
+.KE
+.KS
+.NH 2
+Sample Type Description
+.hd m
+let	UNION	= (`UNION`,
+	Union [`A`,V ;`B`,V ;`C`,P ":bool";
+		`D`, P ":bool\(->bool"])
+
+and	APP	= (`APP`,
+	Prod [`fun`, T `COMB`; `arg`, T `COMB`])
+
+and	COMB	= (`COMB`,
+	Union [`K`, V; `S`, V; `app`, T `APP`]);;
+
+let name = `COMBINATOR`;;
+
+let rec_types = [APP; COMB; UNION];;
+
+let nrt = new_rectypes (name, rec_types);;
+.he
+.KE
+.nr PS 16
+.nr VS 24
+.KS
+.NH 2
+Sample Predicates
+.DS L
+nrt = 
+(`COMBINATOR`,
+":((void + (void + (void + void)))list,bool + (bool \(-> bool))pfun",
+[":bool",
+ "\(*lv. INL v",
+ "mk_is_primitive(\(*lv. INL v)",
+ "(\(*lv. INL v)(\(*mx. T)";
+ ":bool \(-> bool",
+ "\(*lv. INR v",
+ "mk_is_primitive(\(*lv. INR v)",
+ "(\(*lv. INR v)(\(*mx. T)"],
+4),
+[],
+.DE
+.KE
+.DS L
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]],
+.DE
+.DS L
+[`UNION`,
+ "\(*lv.
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e (v = inject(INL(\(*mx. T))c)) \*d
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+     (v = inject(INR(INL(\(*mx. T)))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INL v)c \*e (v =
+						inject(INR(INR(INL(\(*mx. T))))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INR v)c \*e (v =
+						inject(INR(INR(INR(\(*mx. T))))c))";
+.DE
+.DS L
+ `APP`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. FST x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)";
+.DE
+.DS L
+ `COMB`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. SND x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)"]
+.DE
+
+
+

@@ -1,0 +1,413 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+Roger's Set Theory
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DBC/RBJ/087   Issue 0.1
+.ds CH RBJ Set Theory
+.ds RH \*(DY Page \\n(PN
+.ds LF DBC/RBJ/087   Issue 0.1
+.ds CF RBJ Set Theory
+.ds RF Page \\n(PN
+.LP
+.KS
+.NH
+INTRODUCTION
+.LP
+This document provides a formal description of a variant of classical
+set theory axiomatised in first order logic.
+.KE
+.LP
+The set theory is roughly NBG with a complete heirarchy of closure
+operators.
+It is adapted from DBC/RBJ/085 primarily by introduction of the
+primitive C.
+.LP
+The specification is written in the language SML (standard ML).
+.LP
+SML is described in ECS-LFCS-86-2 (University of Edinburgh, Laboratory
+for Foundations of Computer Science).
+.KS
+.NH
+ABSTRACT SYNTAX
+.sv lpf
+infix 4 \*h
+infix 5 \(rh
+infix 6 \*d 
+infix 7 \*e 
+infix 8 == \(mo \(*e -- \(ib t_subs_for subs_for;
+infix 9 inn;
+type var	= string;
+.sw
+.KE
+.sv lpf
+datatype
+	formula	=	\(no of formula				|
+				op \(rh of (formula * formula)		|
+				\*j of (var * formula)			|
+				op == of (term * term)			|
+				op \(mo of (term * term)
+.sw
+.LP
+These constructs have their normal meaning, viz. negation,
+material implication, existential quantification, equality and
+membership respectively.
+.sv lpf
+and	term	= 		Var of var					|
+				comp of (var * formula)			|
+				Cl of (term * term)			|
+				\(*m of term;
+.sw
+.LP
+The meanings of these term constructors are:
+.RS
+.IP Var
+Variables
+.IP comp
+.br
+comprehension, "comp(a,b)" is more usually written {a | b}
+.br
+comprehension rather than separation is allowed but does not
+necessarily yield a set.
+It yields the class of sets which satisfy the predicate "\(*l a.b".
+.IP Cl
+Cl (x,y) is a "universe" containing y satisfying closure condition x.
+.br
+Closure condition x is obtained by iterating the closure conditions
+for every set z \(mo x.
+.RE
+.LP
+.KS
+.NH
+SUBSTITUTION
+.NH 2
+Set Theory in the Metalanguage (sml)
+.LP
+First a few definitions which enable us to talk about lists as
+if they were sets.
+.KE
+.sv lpf
+fun	x \(*e []	= false					|
+	x \(*e (y::z)	= x = y orelse x \(*e z;
+.sw
+.sv lpf
+fun	m\(cu []	= []						|
+	m\(cu (a::b)	= a @ (m\(cu b);
+fun	[] -- a		= []						|
+	(h::t) -- a	= if h=a then t -- a else h::(t -- a);
+.sw
+.KS
+.NH 2
+Free Variables
+.LP
+We define the free variables in a formula or term as follows:
+.KE
+.sv lpf
+fun	term_freevars (Var v)		= [v]							|
+	term_freevars (comp (v,f))	= freevars f -- v					|
+	term_freevars (Cl (x,y))	= term_freevars x @ (term_freevars y)	|
+	term_freevars (\(*m t)		= term_freevars t
+	
+and	term_list_freevars term_list	= m\(cu (map term_freevars term_list)
+.sw
+.sv lpf
+and	freevars (\(no f)			= freevars f						|
+	freevars (f1 \(rh f2)		= freevars f1 @ (freevars f2)			|
+	freevars (\*j (v,f))			= freevars f -- v					|
+	freevars (t1 == t2)		= term_freevars t1 @ (term_freevars t2)	|
+	freevars (t1 \(mo t2)			= term_freevars t1 @ (term_freevars t2);
+.sw
+.KS
+.NH 2
+Substitutions
+.LP
+First define substitutions into terms.
+.sv lpf
+fun	primed nv varl =	if	nv \(*e varl
+			then	primed (nv^"'") varl
+			else	nv;
+fun	freev v terml = primed v (term_list_freevars terml);
+.sw
+.sv lpf
+datatype ('a,'b)inc = op inn of ('a * 'b);
+.sw
+.KE
+.sv lpf
+fun	term t_subs_for ivar inn (Var v)
+		=	if	ivar = v
+			then	term
+			else	Var v							|
+	term t_subs_for ivar inn (comp(v,f))
+		=	if	ivar = v
+			then	(comp(v,f))
+			else	let	val nv = primed v (term_freevars term @
+									(freevars f -- v))
+					val nf = term subs_for ivar inn
+							((Var nv) subs_for v inn f)
+				in	(comp(nv,nf))
+				end							|
+	term t_subs_for ivar inn (Cl (x,y))
+		=	Cl (term t_subs_for ivar inn x, term t_subs_for ivar inn y)	|
+	term t_subs_for ivar inn (\(*m t)
+		=	\(*m (term t_subs_for ivar inn t)
+and	curried_t_subs term ivar term'
+		=	term t_subs_for ivar inn term'
+.sw
+.LP
+Next substitutions into formulae.
+.sv lpf
+and	term subs_for ivar inn (\(no form)
+		=	\(no (term subs_for ivar inn form)				|
+	term subs_for ivar inn (form1 \(rh form2)
+		=	(term subs_for ivar inn form1)
+			\(rh (term subs_for ivar inn form2)				|
+	term subs_for ivar inn (\*j (ivar',form))
+		=	(\*j (ivar',term subs_for ivar inn form))			|
+	term subs_for ivar inn (t1 == t2)
+		=	(term t_subs_for ivar inn t1)
+			== (term t_subs_for ivar inn t2)				|
+	term subs_for ivar inn (t1 \(mo t2)
+		=	(term t_subs_for ivar inn t1)
+			\(mo (term t_subs_for ivar inn t2)
+and	curried_subs a b c = a subs_for b inn c;
+.sw
+.KS
+.NH
+DERIVED CONSTRUCTORS
+.LP
+.sv lpf
+fun op \*d (a,b) = (\(no a) \(rh b;
+fun op \*e (a,b) = \(no( (\(no a) \*d (\(no b));
+fun op \*h (a,b) = (a \(rh b) \*e (b \(rh a);
+fun \*k (v,f) = \(no (\*k(v,\(no f));
+fun op \(ib (a,b) =	let	val x = freev "x" [a,b]
+				in	\*j (x,(Var x \(mo a) \(rh (Var x \(mo b))
+				end;
+.sw
+.LP
+.KE
+.LP
+.sv lpf
+fun set a =	let val x = (freev "x" [a])
+		in	\*k(x, a \(mo (Var x))
+		end;
+
+val \(es = comp("x",\(no(Var "x" == Var "x"));
+
+fun pair a b =	let val x = (freev "x" [a,b])
+		in	comp (x,(Var x==a) \*d (Var x==b))
+		end;
+
+fun opair a b = pair a (pair a b);
+.sw
+.sv lpf
+fun unit a = pair a a;
+
+fun \*m a =	let val x = (freev "x" [a])
+		in	comp (x,(Var x \(ib a))
+		end;
+
+fun \(cu a =
+		let	val x = (freev "x" [a]);
+			val y = (freev "y" [a])
+		in	comp (x,\*k (y,(Var x \(mo (Var y)) \*e (Var y \(mo a)))
+		end;
+
+fun \(ca a =
+		let	val x = (freev "x" [a]);
+			val y = (freev "y" [a])
+		in	comp (x,\*j (y,(Var y \(mo a) \(rh (Var x \(mo (Var y))))
+		end;
+.sw
+.sv lpf
+fun sv a =	let	val x = freev "x" [a]
+			and y = freev "y" [a]
+			and z = freev "z" [a]
+		in	\*j(x,\*j(y,\*j(z,
+			(opair (Var x) (Var y) \(mo a) \*e
+			(opair (Var x) (Var z) \(mo a) \(rh ((Var y) == (Var z)))))
+		end;
+fun dom f =	let 	val x = freev "x" [f]
+			and y = freev "y" [f]
+		in	comp (x,\*k(y,opair (Var x) (Var y) \(mo f))
+		end;
+fun ran f =	let 	val x = freev "x" [f]
+			and y = freev "y" [f]
+		in	comp (x,\*k(y,opair (Var y) (Var x) \(mo f))
+		end;
+.sw
+.KS
+.NH
+THE ABSTRACT DATA TYPE THEOREM
+.LP
+The set theory is formalised as a hilbert style axiom system by defining
+an abstract data type of theorems, where theorems are represented
+by formulae.
+.KE
+.KS
+.NH 2
+Inference Rules
+.LP
+Inference rules are formalised as functions from theorems to theorems,
+and axioms schemata as functions on any type yeilding theorems.
+.KE
+.sv lpf
+abstype theorem = \*o of formula
+with
+.sw
+.NH 3
+Modus Ponens
+.LP
+.sv lpf
+fun	MP (\*o A) (\*o (B \(rh C))	= if A=B then  \*o C else  \*o A		|
+	MP x y				= x;
+.sw
+.NH 3
+Generalisation
+.LP
+.sv lpf
+fun UI (\*o A) x = \*o (\*j(x,A));
+.sw
+.NH 2
+Propositional Axioms
+.sv lpf
+fun P1 A B		= \*o ((A \(rh B) \(rh A);
+fun P2 A B C	= \*o ((A \(rh B \(rh C) \(rh (A \(rh B) \(rh (A \(rh C));
+fun P3 A B		= \*o ((\(no A \(rh \(no B) \(rh (B \(rh A));
+.sw
+.NH 2
+Axioms of Quantification
+.LP
+.sv lpf
+fun Q1 A x t	= \*o (\*j(x,A) \(rh (t subs_for x inn A));
+fun Q2 A x		= \*o (A \(rh (A \(rh \*j(primed x (freevars A),A)));
+fun Q3 A B x	= \*o (\*j(x,A \(rh B) \(rh \*j(x,A) \(rh \*j(x,B));
+.sw
+.NH 2
+Equality and Membership
+.LP
+.sv lpf
+fun EQ a b x	=
+			let	val nx = primed x (term_list_freevars[a,b])
+			in	\*o ((a==b) \*h (\*j(nx,
+					(Var nx \(mo a \*h Var nx \(mo b))))
+			end;
+fun EXT a b x	=
+			let	val nx = primed x (term_list_freevars[a,b])
+			in	\*o ((a==b) \*h (\*j(nx,
+					(a \(mo (Var nx) \*h b \(mo (Var nx)))))
+			end;
+
+.sw
+.NH 2
+Comprehension
+.LP
+.sv lpf
+fun COM x p	= \*o (\*j (x,set (Var x) \*e p \*h (Var x) \(mo comp(x,p)));
+.sw
+.NH 2
+Closure
+.LP
+We have a closure operator Cl which forms closures of varying strength.
+The first parameter is the strength, and the second an arbitrary set.
+Cl(u,v) then denotes a set containing v closed under all weaker closure
+operations.
+.sv lpf
+fun Cl\(es x	= \*o (set \(es);;
+fun Clmem u v	= \*o (set v \(rh (v \(mo (Cl (u,v)) \*e v \(ib (Cl (u,v))));
+fun ClC u v w x	= \*o (x \(mo Cl(u,v) \*e w \(mo u \(rh Cl(w,x) \(mo Cl(u,v));
+.sw
+.NH 2
+Choice
+.LP
+.sv lpf
+fun CH x = \*o (set (\(*m x) \*h (\(no (x == \(es)) \*h (\(*m x) \(mo x);
+.sw
+.NH 2
+Foundation
+.LP
+.sv lpf
+fun FO x =	let	val y = primed "y" (term_freevars x)
+		in	\*o (x==\(es \*d
+			\*k(y,Var y \(mo x \*e (\(ca (pair x (Var y)) == \(es)))
+		end;
+.sw
+.NH 2
+End of Abstract Data Type
+.LP
+.sv lpf
+end;
+.sw
+.LP
+The types inferred by the SML compiler were:
+.DS L
+> type var = string
+> datatype term = Cl of term * term | Var of var | \(*m of term | comp of var *
+ formula
+  datatype formula = \*j of var * formula | == of term * term | \(rh of formula *
+ formula | \(mo of term * term | \(no of formula
+  con comp = fn : (var * formula) \(-> term
+  con \(*m = fn : term \(-> term
+  con Var = fn : var \(-> term
+  con Cl = fn : (term * term) \(-> term
+  con \(no = fn : formula \(-> formula
+  con \(mo = fn : (term * term) \(-> formula
+  con \(rh = fn : (formula * formula) \(-> formula
+  con == = fn : (term * term) \(-> formula
+  con \*j = fn : (var * formula) \(-> formula
+> val \(*e = fn : (''a * (''a list)) \(-> bool
+> val m\(cu = fn : (('a list) list) \(-> ('a list)
+> val -- = fn : ((''a list) * ''a) \(-> (''a list)
+> val freevars = fn : formula \(-> (var list)
+  val term_list_freevars = fn : (term list) \(-> (var list)
+  val term_freevars = fn : term \(-> (var list)
+> val primed = fn : string \(-> ((string list) \(-> string)
+> val freev = fn : string \(-> ((term list) \(-> string)
+> datatype ('a,'b) inc = inn of 'a * 'b
+  con inn = fn : ('a * 'b) \(-> (('a,'b) inc)
+> val curried_subs = fn : term \(-> (var \(-> (formula \(-> formula))
+  val subs_for = fn : (term * ((var,formula) inc)) \(-> formula
+  val curried_t_subs = fn : term \(-> (var \(-> (term \(-> term))
+  val t_subs_for = fn : (term * ((var,term) inc)) \(-> term
+> val \*d = fn : (formula * formula) \(-> formula
+> val \*e = fn : (formula * formula) \(-> formula
+> val \*h = fn : (formula * formula) \(-> formula
+> val \$*k = fn : ('a * formula) \(-> formula
+> val \(ib = fn : (term * term) \(-> formula
+> val set = fn : term \(-> formula
+> val \(es = comp ("x",\(no(== (Var "x",Var "x"))) : term
+> val pair = fn : term \(-> (term \(-> term)
+> val opair = fn : term \(-> (term \(-> term)
+> val unit = fn : term \(-> term
+> val \*m = fn : term \(-> term
+> val \(cu = fn : term \(-> term
+> val \(ca = fn : term \(-> term
+> val sv = fn : term \(-> formula
+> val dom = fn : term \(-> term
+> val ran = fn : term \(-> term
+> type theorem
+  val FO = fn : term \(-> theorem
+  val CH = fn : term \(-> theorem
+  val ClC = fn : term \(-> (term \(-> (term \(-> (term \(-> theorem)))
+  val Clmem = fn : term \(-> (term \(-> theorem)
+  val Cl\(es = fn : 'a \(-> theorem
+  val COM = fn : var \(-> (formula \(-> theorem)
+  val EXT = fn : term \(-> (term \(-> (string \(-> theorem))
+  val EQ = fn : term \(-> (term \(-> (string \(-> theorem))
+  val Q3 = fn : formula \(-> (formula \(-> (var \(-> theorem))
+  val Q2 = fn : formula \(-> (string \(-> theorem)
+  val Q1 = fn : formula \(-> (var \(-> (term \(-> theorem))
+  val P3 = fn : formula \(-> (formula \(-> theorem)
+  val P2 = fn : formula \(-> (formula \(-> (formula \(-> theorem))
+  val P1 = fn : formula \(-> (formula \(-> theorem)
+  val UI = fn : theorem \(-> (var \(-> theorem)
+  val MP = fn : theorem \(-> (theorem \(-> theorem)
+.DE
+.KE

@@ -1,0 +1,262 @@
+.nr PS 11
+.nr VS 14
+.so /usr/local/rbj/keys/roff.defs
+.LP
+.TL
+The Abstract Syntax of Miranda
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+This paper consists of a definition in Miranda of datatypes corresponding
+to the abstract syntax of Miranda.
+.AE
+.ds LH \s-2DTC/RBJ/065   Issue 0.1\s+2
+.ds CH \s-2The Abstract syntax of Miranda\s+2
+.ds RH \s-2\*(DY\s+8
+.ds LF \s-2DTC/RBJ/065   Issue 0.1\s+2
+.ds CF \s-2The Abstract syntax of Miranda\s+2
+.ds RF \s-2Page \\n(PN\s+2
+.KS
+.NH
+INTRODUCTION
+.LP
+The following specifies in (partly in Miranda) the syntax of Miranda.
+The description comes in sveral parts as follows:
+.RS
+.IP 1
+The concrete lexical syntax
+.IP 2
+The abstract lexical syntax
+.IP 3
+The concrete source syntax
+.IP 4
+The abstract source syntax
+.IP 5
+The abstract lambda form
+.IP 6
+The abstract object code
+.IP 7
+The concrete object code
+.RE
+.LP
+These describe the various forms which a Miranda script may take
+during the process of compilation.
+We aim to find, for each such form, and for each stage in the
+translation, the most transparent formal description, either in
+Miranda itself, or in some other notation which we can transform
+into Miranda.
+.KS
+.NH
+CONCRETE LEXICAL SYNTAX
+.KE
+.KS
+.NH
+THE ABSTRACT LEXICAL SYNTAX - THE TYPE OF TOKENS
+.LP
+.KE
+.sv mira
+token	::=	Identifier	[char]	|
+		Num_lit	num		|
+		Char_lit	char		|
+		String_lit	[char]	|
+		Operator	[char]	|
+		Type_var	[char]	|
+		Delimiter	[char]	|
+		White_space
+.sw
+.KE
+.sv mira
+delimiters	=	["abstype","otherwise","show","type","where","with",
+			"%export","%free","%include","%insert","%list","%nolist",
+			"=", "==", "::=", "::", "=>", "|", "//", "->", ";", ",",
+			"(", ")", "[", "]", "{", "}", "<-", ".."]
+.sw
+.sv mira
+op_type	::=	Left_assoc	| Right_assoc | Assoc | Prefix
+
+operators	=	[	(":",		Left_assoc,		0),
+				("++",	Left_assoc,		0),
+				("--",		Left_assoc,		0),
+				("\*d",		Assoc,		1),
+				("&",		Assoc,		2),
+				("~",		Prefix,		3),
+				(">",		Assoc,		4),
+				(">=",	Assoc,		4),
+				("=",		Assoc,		4),
+				("~=",	Assoc,		4),
+				("<=",	Assoc,		4),
+				("<",		Assoc,		4),
+				("+",		Left_assoc,		5),
+				("-",		Left_assoc,		5),
+				("-",		Prefix,		6),
+				("*",		Left_assoc,		7),
+				("/",		Left_assoc,		7),
+				("div",	Left_assoc,		7),
+				("mod",	Left_assoc,		7),
+				("^",		Right_assoc,	8),
+				(".",		Assoc,		9),
+				("#",		Prefix,		10),
+				("!",		Left_assoc,		11)	]
+.sw
+.KS
+.NH
+THE CONCRETE SOURCE SYNTAX
+.LP
+.KE
+.KS
+.NH
+THE ABSTRACT SOURCE SYNTAX
+.LP
+.sv mira
+script	==	[decl]
+decl		::=
+			Type_decl		tform typ			|
+			Typecon_decl	tform constructs [law]	|
+			Abstype_decl	tform_list sig		|
+			Libdir_decl		libdir				|
+			Def_decl		def				|
+			Spec_decl		spec
+tform_list	==	(tform, [tform])
+def		::=
+			Fnform_def		fnform rhs			|
+			Pat_def		pat rhs
+law		==	(pat, lawrhs)
+sig		==	(spec, [spec])
+spec		::=
+			Var_spec		var_list typ			|
+			Type_spec		tform_list
+var_list	==	(var, [var])
+constructs	==	(construct, [construct])
+construct	==	(constructor, [field1])
+.sw
+.KE
+.sv mira
+rhs		::=
+			Simple_rhs		simple_rhs			|
+			Cases_rhs		cases
+simple_rhs	==	(my_exp, whdefsq)
+whdefsq	::=
+			Whdefs		whdefs			|
+			No_whdefs
+cases		::=
+			Alt_cases		alt cases			|
+			Lastcase_cases	lastcase
+alt		==	(my_exp, my_exp)
+lastcase	::=
+			Alt_lastcase		alt whdefsq			|
+			Exp_lastcase	my_exp whdefsq
+whdefs	==	(def, [def])
+.sw
+.sv mira
+lawrhs	::=
+			Simple_lawrhs	simple_rhs			|
+			Lawcases_lawrhs	lawcases
+lawcases	::=
+			Alt_lawcases	alt lawcases			|
+			Lastcase_lawcases	lastcase
+my_exp	::=
+			E1_exp		e1				|
+			Prefix_exp		prefix				|
+			Field_exp		field constructor field	|
+			Construct_exp	construct [field1]
+field		::=
+			Type_field		typ				|
+			Sargtype_field	argtype
+field1	::=
+			Argtype_field1	argtype			|
+			Sargtype_field1	argtype
+.sw
+.sv mira
+typ		::=
+			Argtype_typ	argtype			|
+			Typename_typ	typename [argtype]	|
+			Fs_typ		typ typ			|
+			Infix_typ		typ typename typ
+argtype	::=
+			Typename_argtype typename			|
+			Typevar_argtype	typevar			|
+			Tuple_argtype	[typ]				|
+			List_argtype	typ_list
+typ_list	==	(typ, [typ])
+tform		==	(typename, [typevar])
+fnform	::=
+			Var_fnform		var [formal]			|
+			Pat_fnform		pat var pat			|
+			Fnform_fnform	fnform [formal]
+.sw
+.sv mira
+pat		::=
+			Formal_pat		formal			|
+			Constr_pat		constructor			|
+			Pat_pat		pat pat			|
+			Plus_pat		pat pat			|
+			Infix_pat		pat constructor pat	|
+			Patfor_pat		pat [formal]
+formal	::=
+			Var_formal		var				|
+			Constr_formal	constructor			|
+			Lit_formal		literal				|
+			Tuple_formal	[pat]				|
+			List_formal		[pat]				|
+			Infix_formal	infix
+.sw
+.sv mira
+e1		::=
+			Simple_e1		simple [simple]		|
+			Prefix_e1		prefix e1			|
+			Infix_e1		e1 infix e1
+simple	::=
+			Var_simple		var					|
+			Constr_simple	constructor				|
+			Lit_simple		literal					|
+			Show_simple							|
+			Rsec_simple	infix e1				|
+			Lsec_simple	e1 infix				|
+			Tuple_simple	[my_exp]				|
+			List_simple		[my_exp]				|
+			Dd_simple		my_exp my_exp			|
+			Cdd_simple		my_exp my_exp my_exp	|
+			Zf_simple		my_exp qualifiers			|
+			Zfd_simple		my_exp qualifiers
+.sw
+.sv mira
+qualifiers	==	(qualifier, [qualifier])
+qualifier	::=
+			Exp_qualifier	my_exp				|
+			Gen_qualifier	generator
+generator	::=
+			Patl_generator	pat_list my_exp			|
+			Expl_generator	pat exp_list
+pat_list	==	(pat, [pat])
+exp_list	==	(my_exp, [my_exp])
+var		==	[char]
+typevar	==	[char]
+libdir	==	[char]
+prefix	==	[char]
+infix		==	[char]
+constructor	==	[char]
+typename	==	[char]
+literal	::=
+			Num_literal		num					|
+			Char_literal	char						|
+			String_literal	[char]	
+.sw
+.KE
+.KS
+.NH
+THE ABSTRACT LAMBDA FORM
+.LP
+.KE
+.KS
+.NH
+THE ABSTRACT OBJECT CODE
+.LP
+.KE
+.KS
+.NH
+THE CONCRETE OBJECT CODE
+.LP
+.KE
+.KE

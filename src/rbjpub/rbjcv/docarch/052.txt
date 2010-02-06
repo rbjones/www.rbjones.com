@@ -1,0 +1,1546 @@
+.nr PS 11
+.nr VS 14
+.so /escher/usr2/rbj/keys/roff.defs
+.LP
+.TL
+Worked Example of Recursive Data Type Definition
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/052   Issue 0.1
+.ds CH Recursive Data Types in HOL
+.ds RH \*(DY
+.ds LF DTC/RBJ/052   Issue 0.1
+.ds CF Recursive Data Types in HOL
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+.KE
+.hd
+new_theory `052`;;
+new_parent `051`;;
+.he
+.hd m
+load (`051`,false);;
+.he
+.hd m
+z_loading := false;;
+.he
+.hd
+z_loading := true;;
+.he
+.NH
+A WORKED EXAMPLE
+.LP
+The following example of a recursive data type construction is worked through
+manually, partly as a guide to the workings of the automated system, and partly
+as a way of clarifying thoughts while developing the system.
+.NH 2
+The ML description of the data types
+.LP
+The data type chosen is a very slight variation on the simplest definition
+of combinators.
+This is about the most compact example which tests most of the cases.
+.hd m
+let	comb_type	=
+	[	`APP`,	Prod	[`fun`, T `COMB`; `arg`, T `COMB`];
+		`COMB`,	Union	[`K`, V; `S`, P ":bool"; `app`, T `APP`]	];;
+.he
+.LP
+.NH 2
+The representing type
+.LP
+The label type is the enumeration type with the largest number of
+components found in any constitutent type.
+APP has two components and COMB three so the label type is:
+.hd m
+let label_type = ":void+void+void";;
+.he
+.LP
+For good measure we name at this point the three components of this
+enumerated type, viz:
+.hd m
+let en1 = "(INL:void\(->^label_type) \(*mx:void.T";;
+let en2 = "(INR:void+void\(->^label_type)((INL:void\(->void+void) \(*mx:void.T)";;
+let en3 = "(INR:void+void\(->^label_type)((INR:void\(->void+void) \(*mx:void.T)";;
+.he
+.LP
+The codomain type is the disjoint union of all the primitive types:
+.hd m
+let cod_type = ":bool";;
+.he
+.LP
+The representation type is then the partial functions from label lists
+into the codomain.
+.hd m
+let rep_type = ":(^label_type list, ^cod_type)pfun";;
+.he
+.NH 2
+The predicates
+.LP
+We need two predicates to define the subsets of the representation type
+which are elements of the intended types.
+These predicates are defined through mutual recursion, but also refer to the
+predicates for the primitive and void types over the same representation
+domain.
+.LP
+We therefore define first the predicate for the void type:
+.hd m
+let void_pred = "\(*lv:^rep_type.v = mk_primitive (\(*mx:^cod_type.T)";;
+.he
+.LP
+Next the predicate for the only (non-void) primitive.
+.hd m
+let bool_pred = "\(*lv:^rep_type.\*kb:bool.v = mk_primitive b";;
+.he 
+.NH 2
+The recursive predicates.
+.LP
+We first write the recursive predicates informally and then convert them into
+suitable format for a primitive recursive definition.
+.DS L
+is_APP app =
+\*kfun:^rep_type arg:^rep_type.
+	(is_COMB fun) \*e (is_COMB arg) \*e app = mk_schema [en1,fun; en2,arg];;
+is_COMB comb =
+	(\*kK:^rep_type. void_pred K \*e comb = inject en1 K)
+\*d	(\*kS:^rep_type. ^void_pred S \*e comb = inject en2 S)
+\*d	(\*kapp:^rep_type. is_APP app \*e comb = inject en3 app);;
+.DE
+.LP
+We massage this by stages into the right form of specification.
+.LP
+First we remove the mutuality by defining a the pair of predicates
+together.
+.DS L
+is_APP_COMB rep =
+(\*kfun:^rep_type arg:^rep_type.
+	(SND(is_APP_COMB fun)) \*e (SND(is_APP_COMB arg))
+	\*e rep = mk_schema [en1,fun; en2,arg],
+(\*kK:^rep_type. void_pred K \*e rep = inject en1 K)
+	\*d	(\*kS:^rep_type. void_pred S \*e rep = inject en2 S)
+	\*d	(\*kapp:^rep_type. FST(is_APP_COMB app) \*e rep = inject en3 app));;
+.DE
+.LP
+Note that is_APP and is_COMB may now be redefined:
+.DS L
+is_APP app	= FST (is_APP_COMB app)
+is_COMB rep	= SND (is_APP_COMB rep)
+.DE
+.LP
+Now we have to convert our single recursive definition into a primitive
+recursive definition.
+I had rather expected primitive recursion over lists to be appropriate
+since the domain of the representation type is a type of lists, but after
+straining my brain for a while and failing to find a primitive recursion over
+lists, I discovered that it is quite easy with numbers.
+.LP
+We could do it like this:
+.DS L
+new_prim_rec_definition(`is_APP_COMB`,
+	(is_APP_COMB 0 rep = (F,F))
+\*e	(is_APP_COMB (SUCC n) rep =
+(\*k(fun:^rep_type) (arg:^rep_type).
+	(SND(is_APP_COMB n fun)) \*e (SND(is_APP_COMB n arg))
+	\*e rep = mk_schema [en1,fun; en2,arg],
+(\*kK:^rep_type. void_pred K \*e rep = inject en1 K)
+	\*d	(\*kS:^rep_type. void_pred S \*e rep = inject en2 S)
+	\*d	(\*kapp:^rep_type. FST(is_APP_COMB n app) \*e rep = inject en3 app))");;
+.DE
+.LP
+but I don't want to define a new constant with that name, so I shall have to use
+PRIM_REC directly.
+.LP
+To do this we must replace the subterms of the form "is_APP_COMB n" by f, and abstract on f,
+giving.
+.DS L
+let rec_preds = "PRIM_REC (F,F) \f:^rep_type\(->(bool#bool).
+(\*k(fun:^rep_type) (arg:^rep_type).
+	(SND(f fun)) \*e (SND(f arg))
+	\*e rep = mk_schema [en1,fun; en2,arg],
+(\*kK:^rep_type. void_pred K \*e rep = inject en1 K)
+	\*d	(\*kS:^rep_type. void_pred S \*e rep = inject en2 S)
+	\*d	(\*kapp:^rep_type. FST(f app) \*e rep = inject en3 app))";;
+.DE
+.LP
+However one further adjustment will help the contruction of this term.
+This adjusts the structure so that the predicate for constituent is
+a subterm, viz:
+.hd m
+let rec_preds = "PRIM_REC (\(*lf:^rep_type.(F,F)) (\(*l(f:^rep_type\(->(bool#bool)) (m:num) (rep:^rep_type).
+((\*k(fun:^rep_type) (arg:^rep_type).
+	((\(*lx.SND(f x))fun) \*e ((\(*lx.SND(f x))arg)
+	\*e (rep = mk_schema [^en1,fun; ^en2,arg])),
+((\*kK:^rep_type. ^void_pred K \*e (rep = inject ^en1 K))
+	\*d	(\*kS:^rep_type. ^void_pred S \*e (rep = inject ^en2 S))
+	\*d	(\*kapp:^rep_type. (\(*lx.FST(f x)) app \*e (rep = inject ^en3 app)))))";;
+.he
+.LP
+The merit of this latter arrangement being that the body of the abstraction
+has exactly the same form as that appropriate for non-recursive definitions,
+excepting that the terms serving as predicates have in the case of the recursive
+components, a free variable "f".
+The same code can therefore be used for recursive types as was developed for the
+non-recursive types.
+.LP
+To complete the construction of the predicates we must existentially quantify over
+num and extract the appropriate component of the tuple.
+.hd m
+let is_APP	= "\(*lr:^rep_type.\*kn:num.FST (^rec_preds n r)";;
+let is_COMB	= "\(*lr:^rep_type.\*kn:num.SND (^rec_preds n r)";;
+.he
+.LP
+When the anti-quotations in these definitions are expanded the results are:
+.DS L
+let is_APP = "\(*lr:^rep_type.\*kn:num.FST (^rec_preds n r)";;
+is_APP = 
+"\(*lr.
+  \*kn.
+   FST
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. snd(f x))fun \*e
+        (\(*lx. snd(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK. void_pred K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS. void_pred S \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. fst(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    n 
+    r)"
+: term
+.DE
+.DS L
+#let is_COMB = "\(*lr:^rep_type.\*kn:num.SND (^rec_preds n r)";;
+is_COMB = 
+"\(*lr.
+  \*kn.
+   SND
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. snd(f x))fun \*e
+        (\(*lx. snd(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK. void_pred K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS. void_pred S \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. fst(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    n 
+    r)"
+: term
+.DE
+.LP
+.NH 2
+Existential Witnesses
+.LP
+The next step in introducing the new types is to find existential witnesses in
+order to prove that the types to be introduced are non-empty.
+One such witness is required for each new type to be introduced.
+.LP
+The construction of these witnesses must be done in an appropriate order so that
+witnesses for one type may be used to construct witnesses for another.
+At any stage in the process we may construct a witness for a product type only
+if all its fields have been witnessed (or are primitive or void).
+We may construct a witness for a union type if any of its components has a
+witness (or is primitive or void).
+.LP
+In this example we must therefore construct the witness for COMB first
+and then that for APP.
+.LP
+Clearly K is the easiest witness for COMB.
+.hd m
+let K = "(mk_primitive:^cod_type\(->^rep_type)\(*mx:^cod_type.T";;
+let COMB_witness = "(inject:^label_type \(-> ^rep_type \(-> ^rep_type)
+	^en1 ^K";;
+.he
+.LP
+The witness for APP is then formed using \fICOMB_witness\fP.
+.hd m
+let APP_witness = "mk_schema [^en1, ^COMB_witness; ^en2, ^COMB_witness]";;
+.he
+.NH 2
+Proving non-emptyness of the types
+.NH 3
+The easy way
+.LP
+For this example the proofs are straightforward and may be
+obtained as shown below.
+.hd m
+let COMB_exists = "\*kx:^rep_type.^is_COMB x";;
+let APP_exists = "\*kx:^rep_type.^is_APP x";;
+.he
+.hd m
+let e = expandf;;
+let t1 = CONV_TAC BETA_CONV;;
+let t2 = CONV_TAC (DEPTH_CONV BETA_CONV);;
+.he
+.hd
+set_goal ([],COMB_exists);;
+e (EXISTS_TAC COMB_witness);;
+e t1;;
+e (EXISTS_TAC "SUC 0");;
+e (PURE_REWRITE_TAC [PRIM_REC_THM]);;
+e t2;;
+e (PURE_REWRITE_TAC [SND]);;
+e DISJ1_TAC;;
+e (EXISTS_TAC K);;
+e (REWRITE_TAC []);;
+.he
+.hd
+save_top_thm `COMB_exists`;;
+.he
+.hd
+set_goal ([],APP_exists);;
+e (EXISTS_TAC APP_witness);;
+e t1;;
+e (EXISTS_TAC "SUC (SUC 0)");;
+e (PURE_REWRITE_TAC [PRIM_REC_THM]);;
+e t2;;
+e (PURE_REWRITE_TAC [FST]);;
+e ((EXISTS_TAC COMB_witness) THEN (EXISTS_TAC COMB_witness));;
+e t2;;
+e (REWRITE_TAC []);;
+e DISJ1_TAC;;
+e (EXISTS_TAC K);;
+e (REWRITE_TAC []);;
+.he
+.hd
+save_top_thm `APP_exists`;;
+.he
+.NH 3
+Better Ways
+.LP
+The above proof, if used as a pattern would result in extremely expensive
+type definitions.
+Time is wasted by effectively reproving all the existence results every
+time they are required.
+In cases of complex recursive types the expressions generated would be
+very large.
+Note that rewriting with PRIM_REC_THM completely unwinds the recursion.
+.LP
+We need a method of proof which does not have such rapidly escalating costs.
+Our first approach to such a proof assumes that we will prove a lemma for
+each type which assures us of the existence of elements of that type if
+elements of certain other types exist.
+In the case of a Union any one of the component types will do
+in the case of product all must exist.
+.LP
+For our example the lemmas required are:
+.hn
+let APP_exists_lemma = "(\*kx.^is_COMB x) \(rh (\*kx.^is_APP x)";;
+set_goal([],APP_exists_lemma);;
+.he
+.hn
+let mksr = "mk_schema:(^label_type#^rep_type)list \(-> ^rep_type";;
+let the_comb = "@x:^rep_type. ^is_COMB x";;
+e (STRIP_TAC);;
+e (EXISTS_TAC "^mksr [^en1, ^the_comb; ^en2, ^the_comb]");;
+.he
+.hn
+e t1;;
+e (EXISTS_TAC "SUC 1");;
+e (PURE_REWRITE_TAC [PRIM_REC_THM]);;
+.he
+.DS L
+.DE
+.KS
+.NH
+TEST CODE
+.LP
+.hd m
+let	UNION	= (`UNION`, Union [`A`,V ;`B`,V ;`C`,P ":bool";`D`, P ":bool\(->bool"])
+and	APP	= (`APP`, Prod [`fun`, T `COMB`; `arg`, T `COMB`])
+and	COMB	= (`COMB`, Union [`K`, V; `S`, V; `app`, T `APP`])
+and	PROD	= (`PROD`, Prod [`A`,T `UNION` ;`B`,V ;`C`,P ":bool";`D`, P ":bool\(->bool"]);;
+let combs = [APP; COMB];;
+let name = `COMBINATOR`;;
+let rec_types = combs;;
+let nrt = new_rectypes (name, rec_types);;
+let rec_types = [APP; COMB; UNION];;
+let nrt = new_rectypes (name, rec_types);;
+let rec_types = [COMB; UNION];;
+let nrt = new_rectypes (name, rec_types);;
+let rec_types = [APP; PROD; COMB; UNION];;
+let nrt = new_rectypes (name, rec_types);;
+.he
+.KE
+.KS
+.NH
+TEST LOG
+.DS L
+_  _         __        _
+|__|        |  |       |
+|  | IGHER  |__| RDER  |__ OGIC
+===============================
+(Built on Dec  8)
+
+#loadt`052.h`;;
+loadt`052.h`;;
+
+() : void
+
+Theory 051 loaded
+() : void
+
+[fasl 042_ml.o]
+[fasl 041_ml.o]
+.....................................................................................................() : void
+
+false : bool
+
+true : bool
+
+comb_type = 
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,P ":bool"; `app`,T `APP`]]
+: rec_types
+
+label_type = ":void + (void + void)" : type
+
+en1 = "INL(\(*mx. T)" : term
+
+en2 = "INR(INL(\(*mx. T))" : term
+
+en3 = "INR(INR(\(*mx. T))" : term
+
+cod_type = ":bool" : type
+
+rep_type = ":((void + (void + void))list,bool)pfun" : type
+
+void_pred = "\(*lv. v = mk_primitive(\(*mx. T)" : term
+
+bool_pred = "\(*lv. \*kb. v = mk_primitive b" : term
+
+rec_preds = 
+"PRIM_REC
+ (\(*lf. F,F)
+ (\(*lf m rep.
+   (\*kfun arg.
+     (\(*lx. SND(f x))fun \*e
+     (\(*lx. SND(f x))arg \*e
+     (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+   ((\*kK. (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+    (\*kS.
+      (\(*lv. v = mk_primitive(\(*mx. T))S \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+    (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))"
+: term
+
+is_APP = 
+"\(*lr.
+  \*kn.
+   FST
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK.
+         (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+         (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    n 
+    r)"
+: term
+
+is_COMB = 
+"\(*lr.
+  \*kn.
+   SND
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK.
+         (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+         (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    n 
+    r)"
+: term
+
+K = "mk_primitive(\(*mx. T)" : term
+
+COMB_witness = "inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))" : term
+
+APP_witness = 
+"mk_schema
+ [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+  INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]"
+: term
+
+COMB_exists = 
+"\*kx.
+  (\(*lr.
+    \*kn.
+     SND
+     (PRIM_REC
+      (\(*lf. F,F)
+      (\(*lf m rep.
+        (\*kfun arg.
+          (\(*lx. SND(f x))fun \*e
+          (\(*lx. SND(f x))arg \*e
+          (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+        ((\*kK.
+           (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+         (\*kS.
+           (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+           (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+         (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+      n 
+      r))
+  x"
+: term
+
+APP_exists = 
+"\*kx.
+  (\(*lr.
+    \*kn.
+     FST
+     (PRIM_REC
+      (\(*lf. F,F)
+      (\(*lf m rep.
+        (\*kfun arg.
+          (\(*lx. SND(f x))fun \*e
+          (\(*lx. SND(f x))arg \*e
+          (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+        ((\*kK.
+           (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+         (\*kS.
+           (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+           (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+         (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+      n 
+      r))
+  x"
+: term
+
+e = - : (tactic \(-> void)
+
+t1 = - : tactic
+
+t2 = - : tactic
+
+"\*kx.
+  (\(*lr.
+    \*kn.
+     SND
+     (PRIM_REC
+      (\(*lf. F,F)
+      (\(*lf m rep.
+        (\*kfun arg.
+          (\(*lx. SND(f x))fun \*e
+          (\(*lx. SND(f x))arg \*e
+          (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+        ((\*kK.
+           (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+         (\*kS.
+           (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+           (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+         (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+      n 
+      r))
+  x"
+
+() : void
+
+OK..
+"(\(*lr.
+   \*kn.
+    SND
+    (PRIM_REC
+     (\(*lf. F,F)
+     (\(*lf m rep.
+       (\*kfun arg.
+         (\(*lx. SND(f x))fun \*e
+         (\(*lx. SND(f x))arg \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK.
+          (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+          (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     n 
+     r))
+ (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))"
+
+() : void
+
+OK..
+"\*kn.
+  SND
+  (PRIM_REC
+   (\(*lf. F,F)
+   (\(*lf m rep.
+     (\*kfun arg.
+       (\(*lx. SND(f x))fun \*e
+       (\(*lx. SND(f x))arg \*e
+       (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+     ((\*kK.
+        (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+      (\*kS.
+        (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+        (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+      (\*kapp. (\(*lx. FST(f x))app \*e (rep . T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (S = mk_primitive(\(*mx. T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp.
+       FST((\(*lf. F,F)app) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INR(\(*mx. T)))app))))
+|- SND
+   ((\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK.
+         (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+         (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    (\(*lf. F,F)
+    0
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))))
+|- SND
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+))S)) \*d
+         (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+      n 
+      r))
+  x"
+
+() : void
+
+OK..
+"(\(*lr.
+   \*kn.
+    FST
+    (PRIM_REC
+     (\(*lf. F,F)
+     (\(*lf m rep.
+       (\*kfun arg.
+         (\(*lx. SND(f x))fun \*e
+         (\(*lx. SND(f x))arg \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK.
+          (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+          (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     n 
+     r))
+ (mk_schema
+  [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+   INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])"
+
+() : void
+
+OK..
+"\*kn.
+  FST
+  (PRIM_REC
+   (\(*lf. F,F)
+   (\(*lf m rep.
+     (\*kfun arg.
+       (\(*lx. SND(f x))fun \*e
+       (\(*lx. SND(f x))arg \*e
+       (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+     ((\*kK.
+        (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+      (\*kS.
+        (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+        (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+      (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+   n
+   (mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))"
+
+() : void
+
+OK..
+"FST
+ (PRIM_REC
+  (\(*lf. F,F)
+  (\(*lf m rep.
+    (\*kfun arg.
+      (\(*lx. SND(f x))fun \*e
+      (\(*lx. SND(f x))arg \*e
+      (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK. (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+       (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+  (SUC(SUC 0))
+  (mk_schema
+   [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+    INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))"
+
+() : void
+
+OK..
+"FST
+ ((\(*lf m rep.
+    (\*kfun arg.
+      (\(*lx. SND(f x))fun \*e
+      (\(*lx. SND(f x))arg \*e
+      (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK. (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+       (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+  ((\(*lf m rep.
+     (\*kfun arg.
+       (\(*lx. SND(f x))fun \*e
+       (\(*lx. SND(f x))arg \*e
+       (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+     ((\*kK.
+        (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+      (\*kS.
+        (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+        (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+      (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+   (\(*lf. F,F)
+   0)
+  (SUC 0)
+  (mk_schema
+   [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+    INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))"
+
+() : void
+
+OK..
+"FST
+ ((\*kfun arg.
+    SND
+    ((\(*lrep.
+       (\*kfun arg.
+         SND((\(*lf. F,F)fun) \*e
+         SND((\(*lf. F,F)arg) \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     fun) \*e
+    SND
+    ((\(*lrep.
+       (\*kfun arg.
+         SND((\(*lf. F,F)fun) \*e
+         SND((\(*lf. F,F)arg) \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     arg) \*e
+    (mk_schema
+     [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+      INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+     mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+  ((\*kK.
+     (K = mk_primitive(\(*mx. T)) \*e
+     (mk_schema
+      [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+       INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+      inject(INL(\(*mx. T))K)) \*d
+   (\*kS.
+     (S = mk_primitive(\(*mx. T)) \*e
+     (mk_schema
+      [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+       INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+      inject(INR(INL(\(*mx. T)))S)) \*d
+   (\*kapp.
+     FST
+     ((\(*lrep.
+        (\*kfun arg.
+          SND((\(*lf. F,F)fun) \*e
+          SND((\(*lf. F,F)arg) \*e
+          (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+        ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+         (\*kS.
+           (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+         (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+      app) \*e
+     (mk_schema
+      [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+       INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+      inject(INR(INR(\(*mx. T)))app))))"
+
+() : void
+
+OK..
+"\*kfun arg.
+  SND
+  ((\(*lrep.
+     (\*kfun arg.
+       SND((\(*lf. F,F)fun) \*e
+       SND((\(*lf. F,F)arg) \*e
+       (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+     ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+      (\*kS.
+        (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+      (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+   fun) \*e
+  SND
+  ((\(*lrep.
+     (\*kfun arg.
+       SND((\(*lf. F,F)fun) \*e
+       SND((\(*lf. F,F)arg) \*e
+       (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+     ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+      (\*kS.
+        (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+      (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+   arg) \*e
+  (mk_schema
+   [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+    INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+   mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])"
+
+() : void
+
+OK..
+"SND
+ ((\(*lrep.
+    (\*kfun arg.
+      SND((\(*lf. F,F)fun) \*e
+      SND((\(*lf. F,F)arg) \*e
+      (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+     (\*kS. (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+  (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))) \*e
+ SND
+ ((\(*lrep.
+    (\*kfun arg.
+      SND((\(*lf. F,F)fun) \*e
+      SND((\(*lf. F,F)arg) \*e
+      (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+     (\*kS. (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+  (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))) \*e
+ (mk_schema
+  [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+   INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+  mk_schema
+  [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+   INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])"
+
+() : void
+
+OK..
+"SND
+ ((\*kfun arg.
+    SND(F,F) \*e
+    SND(F,F) \*e
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+     mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+  ((\*kK.
+     (K = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+   (\*kS.
+     (S = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+      inject(INR(INL(\(*mx. T)))S)) \*d
+   (\*kapp.
+     FST(F,F) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+      inject(INR(INR(\(*mx. T)))app)))) \*e
+ SND
+ ((\*kfun arg.
+    SND(F,F) \*e
+    SND(F,F) \*e
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+     mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+  ((\*kK.
+     (K = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+   (\*kS.
+     (S = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+      inject(INR(INL(\(*mx. T)))S)) \*d
+   (\*kapp.
+     FST(F,F) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+      inject(INR(INR(\(*mx. T)))app)))) \*e
+ (mk_schema
+  [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+   INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+  mk_schema
+  [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+   INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])"
+
+() : void
+
+OK..
+"(\*kK.
+   (K = mk_primitive(\(*mx. T)) \*e
+   (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+ (\*kS.
+   (S = mk_primitive(\(*mx. T)) \*e
+   (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INR(INL(\(*mx. T)))S))"
+
+() : void
+
+OK..
+"\*kK.
+  (K = mk_primitive(\(*mx. T)) \*e
+  (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)"
+
+() : void
+
+OK..
+"(mk_primitive(\(*mx. T) = mk_primitive(\(*mx. T)) \*e
+ (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+  inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))"
+
+() : void
+
+OK..
+goal proved
+|- (mk_primitive(\(*mx. T) = mk_primitive(\(*mx. T)) \*e
+   (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+    inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))
+|- \*kK.
+    (K = mk_primitive(\(*mx. T)) \*e
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)
+|- (\*kK.
+     (K = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+   (\*kS.
+     (S = mk_primitive(\(*mx. T)) \*e
+     (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+      inject(INR(INL(\(*mx. T)))S))
+|- SND
+   ((\*kfun arg.
+      SND(F,F) \*e
+      SND(F,F) \*e
+      (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+       mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK.
+       (K = mk_primitive(\(*mx. T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (S = mk_primitive(\(*mx. T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp.
+       FST(F,F) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INR(\(*mx. T)))app)))) \*e
+   SND
+   ((\*kfun arg.
+      SND(F,F) \*e
+      SND(F,F) \*e
+      (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+       mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK.
+       (K = mk_primitive(\(*mx. T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) = inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (S = mk_primitive(\(*mx. T)) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp.
+       FST(F,F) \*e
+       (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)) =
+        inject(INR(INR(\(*mx. T)))app)))) \*e
+   (mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+    mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])
+|- SND
+   ((\(*lrep.
+      (\*kfun arg.
+        SND((\(*lf. F,F)fun) \*e
+        SND((\(*lf. F,F)arg) \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))) \*e
+   SND
+   ((\(*lrep.
+      (\*kfun arg.
+        SND((\(*lf. F,F)fun) \*e
+        SND((\(*lf. F,F)arg) \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    (inject(INL(\(*mx. T))(mk_primitive(\(*mx. T)))) \*e
+   (mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+    mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])
+|- \*kfun arg.
+    SND
+    ((\(*lrep.
+       (\*kfun arg.
+         SND((\(*lf. F,F)fun) \*e
+         SND((\(*lf. F,F)arg) \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     fun) \*e
+    SND
+    ((\(*lrep.
+       (\*kfun arg.
+         SND((\(*lf. F,F)fun) \*e
+         SND((\(*lf. F,F)arg) \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (S = mk_primitive(\(*mx. T)) \*e (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     arg) \*e
+    (mk_schema
+     [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+      INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+     mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])
+|- FST
+   ((\*kfun arg.
+      SND
+      ((\(*lrep.
+         (\*kfun arg.
+           SND((\(*lf. F,F)fun) \*e
+           SND((\(*lf. F,F)arg) \*e
+           (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+         ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+          (\*kS.
+            (S = mk_primitive(\(*mx. T)) \*e
+            (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+          (\*kapp.
+            FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+       fun) \*e
+      SND
+      ((\(*lrep.
+         (\*kfun arg.
+           SND((\(*lf. F,F)fun) \*e
+           SND((\(*lf. F,F)arg) \*e
+           (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+         ((\*kK. (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+          (\*kS.
+            (S = mk_primitive(\(*mx. T)) \*e
+            (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+          (\*kapp.
+            FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+       arg) \*e
+      (mk_schema
+       [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+        INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+       mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+    ((\*kK.
+       (K = mk_primitive(\(*mx. T)) \*e
+       (mk_schema
+        [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+         INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+        inject(INL(\(*mx. T))K)) \*d
+     (\*kS.
+       (S = mk_primitive(\(*mx. T)) \*e
+       (mk_schema
+        [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+         INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+        inject(INR(INL(\(*mx. T)))S)) \*d
+     (\*kapp.
+       FST
+       ((\(*lrep.
+          (\*kfun arg.
+            SND((\(*lf. F,F)fun) \*e
+            SND((\(*lf. F,F)arg) \*e
+            (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+          ((\*kK.
+             (K = mk_primitive(\(*mx. T)) \*e (rep = inject(INL(\(*mx. T))K)) \*d
+           (\*kS.
+             (S = mk_primitive(\(*mx. T)) \*e
+             (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+           (\*kapp.
+             FST((\(*lf. F,F)app) \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+        app) \*e
+       (mk_schema
+        [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+         INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))] =
+        inject(INR(INR(\(*mx. T)))app))))
+|- FST
+   ((\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK.
+         (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+         (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    ((\(*lf m rep.
+       (\*kfun arg.
+         (\(*lx. SND(f x))fun \*e
+         (\(*lx. SND(f x))arg \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK.
+          (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+          (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     (\(*lf. F,F)
+     0)
+    (SUC 0)
+    (mk_schema
+     [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+      INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))
+|- FST
+   (PRIM_REC
+    (\(*lf. F,F)
+    (\(*lf m rep.
+      (\*kfun arg.
+        (\(*lx. SND(f x))fun \*e
+        (\(*lx. SND(f x))arg \*e
+        (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+      ((\*kK.
+         (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+       (\*kS.
+         (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+         (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+       (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+    (SUC(SUC 0))
+    (mk_schema
+     [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+      INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))
+|- \*kn.
+    FST
+    (PRIM_REC
+     (\(*lf. F,F)
+     (\(*lf m rep.
+       (\*kfun arg.
+         (\(*lx. SND(f x))fun \*e
+         (\(*lx. SND(f x))arg \*e
+         (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+       ((\*kK.
+          (\(*lv. v = mk_primitive(\(*mx. T))K \*e (rep = inject(INL(\(*mx. T))K)) \*d
+        (\*kS.
+          (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+          (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+        (\*kapp. (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+     n
+     (mk_schema
+      [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+       INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))]))
+|- (\(*lr.
+     \*kn.
+      FST
+      (PRIM_REC
+       (\(*lf. F,F)
+       (\(*lf m rep.
+         (\*kfun arg.
+           (\(*lx. SND(f x))fun \*e
+           (\(*lx. SND(f x))arg \*e
+           (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+         ((\*kK.
+            (\(*lv. v = mk_primitive(\(*mx. T))K \*e
+            (rep = inject(INL(\(*mx. T))K)) \*d
+          (\*kS.
+            (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+            (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+          (\*kapp.
+            (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+       n 
+       r))
+   (mk_schema
+    [INL(\(*mx. T),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T));
+     INR(INL(\(*mx. T)),inject(INL(\(*mx. T))(mk_primitive(\(*mx. T))])
+|- \*kx.
+    (\(*lr.
+      \*kn.
+       FST
+       (PRIM_REC
+        (\(*lf. F,F)
+        (\(*lf m rep.
+          (\*kfun arg.
+            (\(*lx. SND(f x))fun \*e
+            (\(*lx. SND(f x))arg \*e
+            (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+          ((\*kK.
+             (\(*lv. v = mk_primitive(\(*mx. T))K \*e
+             (rep = inject(INL(\(*mx. T))K)) \*d
+           (\*kS.
+             (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+             (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+           (\*kapp.
+             (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+        n 
+        r))
+    x
+
+Previous subproof:
+goal proved
+() : void
+
+|- \*kx.
+    (\(*lr.
+      \*kn.
+       FST
+       (PRIM_REC
+        (\(*lf. F,F)
+        (\(*lf m rep.
+          (\*kfun arg.
+            (\(*lx. SND(f x))fun \*e
+            (\(*lx. SND(f x))arg \*e
+            (rep = mk_schema[INL(\(*mx. T),fun;INR(INL(\(*mx. T)),arg])),
+          ((\*kK.
+             (\(*lv. v = mk_primitive(\(*mx. T))K \*e
+             (rep = inject(INL(\(*mx. T))K)) \*d
+           (\*kS.
+             (\(*lv. v = mk_primitive(\(*mx. T))S \*e
+             (rep = inject(INR(INL(\(*mx. T)))S)) \*d
+           (\*kapp.
+             (\(*lx. FST(f x))app \*e (rep = inject(INR(INR(\(*mx. T)))app))))
+        n 
+        r))
+    x
+
+UNION = 
+`UNION`,
+Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]
+: (string # struc_type)
+APP = 
+`APP`,
+Prod [`fun`,T `COMB`; `arg`,T `COMB`]
+: (string # struc_type)
+COMB = 
+`COMB`,
+Union [`K`,V; `S`,V; `app`,T `APP`]
+: (string # struc_type)
+PROD = 
+`PROD`,
+Prod [`A`,T `UNION`; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]
+: (string # struc_type)
+
+combs = 
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`]]
+: rec_types
+
+name = `COMBINATOR` : string
+
+rec_types = 
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`]]
+: rec_types
+
+nrt = 
+(`COMBINATOR`,
+":((void + (void + void))list,void)pfun",
+[],
+3),
+[],
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`]],
+[`APP`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. FST x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc. (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(\(*mx. T)))c))))
+     n 
+     r)";
+ `COMB`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. SND x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc. (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(\(*mx. T)))c))))
+     n 
+     r)"]
+: ((string # type # (type # term # term # term) list # int) #
+   * list #
+   rec_types #
+   other_data)
+
+rec_types = 
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]]
+: rec_types
+
+nrt = 
+(`COMBINATOR`,
+":((void + (void + (void + void)))list,bool + (bool \(-> bool))pfun",
+[":bool",
+ "\(*lv. INL v",
+ "mk_is_primitive(\(*lv. INL v)",
+ "(\(*lv. INL v)(\(*mx. T)";
+ ":bool \(-> bool",
+ "\(*lv. INR v",
+ "mk_is_primitive(\(*lv. INR v)",
+ "(\(*lv. INR v)(\(*mx. T)"],
+4),
+[],
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]],
+[`UNION`,
+ "\(*lv.
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e (v = inject(INL(\(*mx. T))c)) \*d
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+     (v = inject(INR(INL(\(*mx. T)))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INL v)c \*e (v = inject(INR(INR(INL(\(*mx. T))))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INR v)c \*e (v = inject(INR(INR(INR(\(*mx. T))))c))";
+ `APP`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. FST x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)";
+ `COMB`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. SND x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)"]
+: ((string # type # (type # term # term # term) list # int) #
+   * list #
+   rec_types #
+   other_data)
+
+rec_types = 
+[`COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]]
+: rec_types
+
+evaluation failed     check_completeness - the following types are mentioned but not defined: APP. 
+
+#let rec_types = [APP; PROD; COMB; UNION];;
+let nrt = new_rectypes (name, rec_types);;
+rec_types = 
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `PROD`,
+ Prod [`A`,T `UNION`; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]]
+: rec_types
+
+#nrt = 
+(`COMBINATOR`,
+":((void + (void + (void + void)))list,bool + (bool \(-> bool))pfun",
+[":bool",
+ "\(*lv. INL v",
+ "mk_is_primitive(\(*lv. INL v)",
+ "(\(*lv. INL v)(\(*mx. T)";
+ ":bool \(-> bool",
+ "\(*lv. INR v",
+ "mk_is_primitive(\(*lv. INR v)",
+ "(\(*lv. INR v)(\(*mx. T)"],
+4),
+[],
+[`APP`,
+ Prod [`fun`,T `COMB`; `arg`,T `COMB`];
+ `COMB`,
+ Union [`K`,V; `S`,V; `app`,T `APP`];
+ `UNION`,
+ Union [`A`,V; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"];
+ `PROD`,
+ Prod [`A`,T `UNION`; `B`,V; `C`,P ":bool"; `D`,P ":bool \(-> bool"]],
+[`UNION`,
+ "\(*lv.
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e (v = inject(INL(\(*mx. T))c)) \*d
+   (\*kc.
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+     (v = inject(INR(INL(\(*mx. T)))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INL v)c \*e (v = inject(INR(INR(INL(\(*mx. T))))c)) \*d
+   (\*kc.
+     mk_is_primitive(\(*lv. INR v)c \*e (v = inject(INR(INR(INR(\(*mx. T))))c))";
+ `PROD`,
+ "\(*ls.
+   \*kc''' c'' c' c.
+    ((\(*lv.
+       (\*kc.
+         (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+         (v = inject(INL(\(*mx. T))c)) \*d
+       (\*kc.
+         (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+         (v = inject(INR(INL(\(*mx. T)))c)) \*d
+       (\*kc.
+         mk_is_primitive(\(*lv. INL v)c \*e
+         (v = inject(INR(INR(INL(\(*mx. T))))c)) \*d
+       (\*kc.
+         mk_is_primitive(\(*lv. INR v)c \*e
+         (v = inject(INR(INR(INR(\(*mx. T))))c)))
+     c''' \*e
+     (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c'' \*e
+     mk_is_primitive(\(*lv. INL v)c' \*e
+     mk_is_primitive(\(*lv. INR v)c) \*e
+    (s =
+     mk_schema
+     [INL(\(*mx. T),c''';INR(INL(\(*mx. T)),c'';INR(INR(INL(\(*mx. T))),c';
+      INR(INR(INR(\(*mx. T))),c])";
+ `APP`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. FST x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)";
+ `COMB`,
+ "\(*lr.
+   \*kn.
+    (\(*lx. SND x)
+    (PRIM_REC
+     (\(*lr. F,F)
+     (\(*lf m v.
+       (\*kc' c.
+         ((\(*lx. (\(*lx. SND x)(f x))c' \*e (\(*lx. (\(*lx. SND x)(f x))c) \*e
+         (s = mk_schema[INL(\(*mx. T),c';INR(INL(\(*mx. T)),c])),
+       ((\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INL(\(*mx. T))c)) \*d
+        (\*kc.
+          (\(*lv. v = list_mk_pfun[[],(\(*mx. T)])c \*e
+          (v = inject(INR(INL(\(*mx. T)))c)) \*d
+        (\*kc.
+          (\(*lx. (\(*lx. FST x)(f x))c \*e (v = inject(INR(INR(INL(\(*mx. T))))c))))
+     n 
+     r)"]
+: ((string # type # (type # term # term # term) list # int) #
+   * list #
+   rec_types #
+   other_data)
+
+.DE
+.KE
+THE THEORY 052
+.DS L
+.DE
+.KE

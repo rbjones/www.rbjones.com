@@ -1,0 +1,338 @@
+.nr PS 11
+.nr VS 14
+.nr F 0
+.so /escher/usr2/rbj/keys/roff.defs
+.LP
+.TL
+Translating Z into HOL
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB no
+.AE
+.ds LH DTC/RBJ/041   Issue 1.0
+.ds CH Translating Z into HOL
+.ds RH \*(DY
+.ds LF DTC/RBJ/041   Issue 1.0
+.ds CF Translating Z into HOL
+.ds RF Page \\n(PN
+.LP
+.ta 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.TA 0.8i 1.6i 2.4i 3.2i 4.0i 4.8i
+.KS
+.NH
+INTRODUCTION
+.LP
+This document describes a means of translating a subset of the specification
+language Z into higher order logic (HOL), and documents special ML procedures
+developed to facilitate this process.
+The first issue is merely annotated code rather than a careful exposition, and
+is issued for reference by people inspecting documents DTC/RBJ/035, DTC/RBJ/044
+and  DTC/RBJ/045.
+Definitions and brief explanations of those features of the translation into
+HOL which are not given in those papers may be found here.
+.LP
+A subsequent issue of this document may provide a more careful explanation of
+how to use the facilities, which will be separated from the annotated code.
+.KE
+.LP
+.ig cx
+.hd m
+letref z_loading	= false;;
+.he
+.hd
+letref z_loading	= true;;
+.he
+.cx
+.hd
+new_theory `041`;;
+new_parent `infra`;;
+.he
+.KS
+.NH
+TYPE CONSTRUCTION
+.NH 2
+Simple Type Construction
+.LP
+Where a new type constructor is to be defined which corresponds exactly to an
+already constructable polytype the basic type definition facility in HOL can
+be extended to provide automatic proof of existence and automatic definition of
+a constructor function, together with proof of appropriate properties.
+.KE
+.LP
+This facility is provided by the function \fIsim_type_def\fP defined below.
+\fIsim_type_def\fP takes just two parameters (paired), which specify the name
+of the new type constructor and the representation type.
+The type is then introduced using the function \(*lx:^rep_type.T to determine
+the domain of representations, and a function mk_\fItype_name\fP is defined
+of type (^rep_type->\fItype_name\fP).
+Polytypical representation types are handled correctly.
+.KS
+.LP
+To save a small bit of theorem proving on each use we prove the theorem:
+.DS L
+|- \*jx:*.(\x.T)x
+.DE
+.LP
+Which is then instantiated to the rep_type before being used to define
+the new type constructor.
+.KE
+.hd m
+let exists_thm = TAC_PROOF (([],"\*kx:*.(\x.T)x"),
+	EVERY	[EXISTS_TAC "\(*mx:*.T"; CONV_TAC BETA_CONV]	);;
+
+let	sim_type_def (tcon_name, rep_type)	=
+.he
+.LP
+Now we use the HOL type creation mechanism to introduce the new type constructor.
+This returns a theorem of the form:
+.DS L
+|- ONE_ONE REP_tcon \*e (\*jf. IS_SUM_REP f	= (\*kf'. f	= REP_tcon f'))
+.DE
+.hd m
+	let	is_rep	= "\(*lx:^rep_type.T"
+	and	rep_thm	= INST_TYPE [rep_type, ":*"] exists_thm
+ in	let	rep_thm	= new_type_definition (tcon_name, is_rep, rep_thm)
+.he
+.LP
+Now we define the abstraction function \fImk_tcon\fP as the inverse of the
+representation function \fIREP_tcon\fP (using the epsilon operator).
+.hd m
+	and	mk_def_n	= `mk_` ^ tcon_name ^ `_DEF`
+	and	rep_type	= hd (snd (dest_type (type_of is_rep)))
+ in	let	mk_v 	= mk_var (`mk_` ^ tcon_name, rep_type)
+	and	abs_type	= mk_type (tcon_name, tyvars is_rep)
+ in	let	rep_tcon_t	= mk_type(`fun`, [abs_type; rep_type])
+	and	mk_tcon_t	= mk_type(`fun`, [rep_type; abs_type])
+ in	let	rep_tcon_c	= mk_const ( `REP_` ^ tcon_name, rep_tcon_t)
+	and	mk_tcon_v	= mk_var ( `mk_` ^ tcon_name, mk_tcon_t)
+ in	let	mk_tcon_DEF	= new_definition (mk_def_n,
+	"^mk_tcon_v (f:^rep_type)	= \(*ms. f	= ^rep_tcon_c s")
+ in	let	mk_tcon_c	= mk_const ( `mk_` ^ tcon_name, mk_tcon_t)
+ in	(rep_thm, mk_tcon_DEF, rep_tcon_c);; 
+.he
+.NH 2
+General Type Constructions
+.LP
+The following procedure provides an enhanced facility for the definition
+of new type constructors.
+The code was obtained by cannibalising Tom Melham's 'sum' type construction
+code.
+.KE
+.hd m
+let	tcon (tcon_name, is_rep, rep_thm)	=
+.he
+.LP
+First we use the HOL type creation mechanism to introduce the new type constructor.
+This returns a theorem of the form:
+.DS L
+|- ONE_ONE REP_tcon \*e (\*jf. IS_SUM_REP f	= (\*kf'. f	= REP_tcon f'))
+.DE
+.hd m
+	let	rep_thm	=
+		new_type_definition (tcon_name, is_rep, rep_thm)
+.he
+.LP
+We then split up the parts of the theorem asserting that the representation
+function is 1:1 and onto.
+.hd m
+ in	let	ONTO_REP_tcon	= CONJUNCT2 rep_thm
+	and	ONE_ONE_REP_tcon	= REWRITE_RULE [definition `bool` `ONE_ONE_DEF`] 
+		      	 	   (CONJUNCT1 rep_thm) 
+.he
+.LP
+Now we define the abstraction function ABS_tcon as the inverse of the
+representation function REP_tcon (using the epsilon operator).
+.hd m
+	and	abs_def_n	= `ABS_` ^ tcon_name ^ `_DEF`
+	and	rep_type	= hd (snd (dest_type (type_of is_rep)))
+ in	let	abs_v 	= mk_var (`ABS_` ^ tcon_name, rep_type)
+	and	abs_type	= mk_type (tcon_name, tyvars is_rep)
+ in	let	rep_tcon_t	= mk_type(`fun`, [abs_type; rep_type])
+	and	abs_tcon_t	= mk_type(`fun`, [rep_type; abs_type])
+ in	let	rep_tcon_c	= mk_const ( `REP_` ^ tcon_name, rep_tcon_t)
+	and	abs_tcon_v	= mk_var ( `ABS_` ^ tcon_name, abs_tcon_t)
+ in	let	ABS_tcon_DEF	= new_definition (abs_def_n,
+	"^abs_tcon_v (f:^rep_type)	= \(*ms. f	= ^rep_tcon_c s")
+ in	let	abs_tcon_c	= mk_const ( `ABS_` ^ tcon_name, abs_tcon_t)
+.he
+.LP
+Next we prove that REP_tcon is the left inverse of ABS_tcon (for elements of
+the representation type that are tcon representations).
+.hd m
+ in	let	REP_ABS_THM	= 
+    TAC_PROOF(([], "^is_rep (f:^rep_type) \(rh 
+		    (^rep_tcon_c(^abs_tcon_c f)	= f)"),
+	      REWRITE_TAC [ONTO_REP_tcon; ABS_tcon_DEF] THEN
+	      DISCH_THEN (ACCEPT_TAC o SYM o SELECT_RULE))
+.he
+.LP
+We prove that everything given by the representation function REP_tcon
+lies in that part of the representing type which contains tcon representations.
+.hd m
+ in	let	IS_REP_REP_tcon	=
+    TAC_PROOF(([], "^is_rep (^rep_tcon_c (s:^abs_type))"),
+	      REWRITE_TAC [ONTO_REP_tcon] THEN
+	      EXISTS_TAC "s:^abs_type" THEN
+	      REFL_TAC)
+.he
+.LP
+Next we show that ABS_tcon is the left inverse of REP_tcon.
+I.e. that:
+.DS L
+|- ABS_tcon(REP_tcon s)	= s
+.DE
+.hd m
+ in	let	ABS_REP_THM	=
+    MATCH_MP ONE_ONE_REP_tcon (MATCH_MP (GEN_ALL REP_ABS_THM) IS_REP_REP_tcon)
+.he
+.LP
+We prove that ABS_tcon is one-to-one:
+.hd m
+ in	let	ABS_ONE_ONE	= TAC_PROOF(([],
+		"(^abs_tcon_c (^rep_tcon_c t)=^abs_tcon_c (^rep_tcon_c t'))
+		= (^rep_tcon_c t	= ^rep_tcon_c t')"	),
+		EQ_TAC THEN REWRITE_TAC [ABS_REP_THM] THEN DISCH_TAC THENL
+		[ASM_REWRITE_TAC []; IMP_RES_TAC ONE_ONE_REP_tcon])
+.he
+.LP
+The function returns a list of the theorems proven:
+.hd m
+ in 	[	rep_thm;
+		ONTO_REP_tcon;
+		ONE_ONE_REP_tcon;
+		ABS_tcon_DEF;
+		REP_ABS_THM;
+		IS_REP_REP_tcon;
+		ABS_REP_THM;
+		ABS_ONE_ONE	];;
+.he
+.KS
+.NH
+SEQUENCES
+.LP
+We propose to use the type `list` for sequences, primarily because the
+syntax available for constructing HOL lists matches that for Z
+sequences.
+.KE
+.KS
+.LP
+The following two functions should be used to introduce recursive
+definitions of functions over lists.
+They are used in a manner analogous to the similar functions for
+recursive definitions over number.
+.LP
+For the sake of brevity (in future code):
+.hd m
+let	list_rec_def	= new_list_rec_definition
+and	infix_list_rec_def	= new_infix_list_rec_definition;;
+.he
+.KE
+.NH 2
+Useful functions over lists
+.NH 3
+append
+.hd
+infix_list_rec_def(`$append`,"
+	(($append:* list \(-> * list \(-> * list) [] lst = lst)
+\*e	($append (CONS a l) lst = CONS a ($append l lst))");;
+.he
+.NH 3
+filter
+.LP
+The following function filters a list using a predicate.
+.hd
+list_rec_def(`filter`,"(filter [] (p:*\(->bool)	= [])
+	\*e (\*j(a:*)(l:* list)(p:*\(->bool).filter (CONS a l) p	= 
+			(p a)	=> CONS a (filter l p) | filter l p)");;
+.he
+.KS
+.NH
+PARTIAL FUNCTIONS
+.NH 2
+The type "unit"
+.LP
+We define the type "unit".
+..hd
+let	unit_rep	= "\(*l(x:bool).x=T"
+in let	unit_app	= "(\(*l(x:bool).x=T)T"
+in let	vl1	= BETA_CONV unit_app
+in let	vl2	= SYM vl1
+in let	vl3	= INST_TYPE [(":bool",":*")] EQ_REFL
+in let	vl4	= SPEC "T:bool" vl3
+in let	vl5	= EQ_MP vl2 vl4
+in let	vl6	= EXISTS ("\*k(x:bool).(\(*l(x:bool).x=T)x", "T") vl5
+in new_type_definition(`unit`,unit_rep, vl6);;
+..he
+.KE
+.LP
+A possible value is either a unit or some other value, i.e. it
+has a sum type.
+A partial function is then a total function yielding possible values.
+.hd
+let	pfun_thms	= sim_type_def (`pfun`, ":*->(unit+**)");;
+.he
+.LP
+A partial function should be applied using \fIapf\fP.
+.hd
+new_infix_definition(`apf`,"apf (f:(*,**)pfun) (a:*) = OUTR (REP_pfun f a)");;
+.he
+.LP
+To test whether a partial function is defined for some argument use \fIpdef\fP.
+.hd
+new_infix_definition(`pdef`,"pdef (f:(*,**)pfun) (a:*) = ISR (REP_pfun f a)");;
+.he
+.LP
+We need to define functional composition of pfuns.
+For this purpose we introduce four functions:
+.RS
+.IP o
+Normal (total) function composition.
+.IP pf_o_pf
+Composition of partial functions.
+.IP pf_o
+Composition of a partial function (on the left) with a total function.
+.IP o_pf
+Composition of a partial function (on the right) with a total function.
+.RE
+.hd
+new_infix_definition(`o`,"$o (left:*mid->*new) (right:*old->*mid) (arg:*old)
+		= left (right arg)");;
+new_infix_definition(`pf_o`,"$pf_o (left:(*mid,*new)pfun) (right:*old->*mid) (arg:*old)
+		= left apf (right arg)");;
+%
+new_infix_definition(`o_pf`,"$o_pf (left:*mid->*new) (right:(*old,*mid),pfun)
+		= mk_pfun \(*l(arg:*old).left (right arg)");;
+%
+.he
+.LP
+To facilitate construction of such functions we define a generic undefined
+object \fIundef\fP and an injection for defined values \fIpvalue\fP.
+.hd
+new_definition(`pf_u`,"(pf_u:(unit+*cod)) = INL \(*mx:unit.T");;
+
+new_definition(`pf_val`,"(pf_val:*cod\(->(unit+*cod)) p = INR p");;
+
+new_definition(`pf_empty`,"(pf_empty:(*dom,*cod)pfun) = mk_pfun (\(*lx.pf_u)");;
+.he
+.LP
+Two further functions are defined here, one for deleting an
+object from the domain of a partial function, and the other
+for adding or replacing an object.
+.hd
+new_infix_definition(`pf_add`,"$pf_add (f:(*dom,*cod)pfun) (x:*dom) (v:*cod)
+		= mk_pfun (\(*l(arg:*dom). (arg=x) => pf_val v |
+			f pdef arg => pf_val (f apf arg) | pf_u)");;
+new_infix_definition(`pf_del`,"$pf_del (f:(*dom,*cod)pfun) (x:*dom)
+		= mk_pfun (\(*l(arg:*dom). (arg=x) => pf_u |
+			f pdef arg => pf_val (f apf arg) | pf_u)");;
+.he
+.KE
+.KS
+.NH
+HOL LISTING OF THEORY 041
+.LP
+.DS L
+.DE
+.KE

@@ -1,0 +1,548 @@
+=TEX
+\documentstyle[11pt,hol]{article}
+
+\pagestyle{plain}
+
+%\advance\hoffset by .75in
+\advance\hoffset by .35in
+
+%\setlength{\textheight}{8.0in}
+\setlength{\textheight}{9.5in}
+%\setlength{\textwidth}{5.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\footheight}{0.0in}
+\setlength{\topmargin}{0.25in}
+\setlength{\headheight}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\oddsidemargin}{-.19in}
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{4pt}
+
+%
+\makeatletter
+\def\@normalsize{\@setsize\normalsize{11pt}\xpt\@xpt
+\abovedisplayskip 11pt plus2pt minus5pt\belowdisplayskip \abovedisplayskip
+\abovedisplayshortskip \z@ plus3pt\belowdisplayshortskip 6pt plus3pt
+minus3pt\let\@listi\@listI}
+%
+\def\subsize{\@setsize\subsize{12pt}\xipt\@xipt}
+%
+\def\section{\@startsection{section}{1}{\z@}{1.0ex plus 1ex minus
+ .2ex}{.2ex plus .2ex}{\large\bf}}
+%
+\def\subsection{\@startsection{subsection}{2}{\z@}{.2ex plus 1ex}
+{.2ex plus .2ex}{\subsize\bf}}
+\makeatother
+%
+\newcommand{\Dontprint}[1]{}
+\makeindex
+\begin{document}
+\date{} 
+\title{Formal Treatment of a Secure Database}
+\author{Roger Bishop Jones\\
+    ICL Secure Systems, \\
+    Eskdale Road, 
+    Winnersh, 
+    Berks, UK, RG11 5TT. \\
+    Phone +44 734 693131, E-mail R.B.Jones@win0109.uucp
+}
+\maketitle
+\begin{abstract}
+This paper consists of an annotated Z specification illustrating proposed methods for the verification of a multi level secure database.
+\end{abstract}
+
+\newpage
+
+\tableofcontents
+
+%{\bf References}
+
+%\listoftables
+%\listoffigures
+\newpage
+
+\section{Introduction}
+
+The example used in this paper is derived from the definitions of the SWORD relational query languages.
+Radical simplifications have been undertaken to permit a brief exposition of a method suitable for use (subject to some further elaboration) on the full SWORD specifications.
+
+The nature of these radical simplifications are summarised here.
+
+Firstly the abstract syntax of SWORD SQL is simplified as follows:
+
+\begin{description}
+\item[Value]\ 
+
+Only ``denote\_integer'' and ``binop'' are considered.
+
+\item[Col\_spec]\ 
+
+Unchanged.
+
+\item[Table\_spec]\ 
+
+Unchanged.
+
+\item[Col\_name]\ 
+
+Not used.
+
+\item[From\_spec]\ 
+
+Only ``Table\_spec'' is considered.
+
+\item[From\_name]\ 
+
+Not supported.
+
+\item[Set\_clause]\ 
+
+Not needed.
+
+\item[Tuple\_list]\ 
+
+Only ``all\_tuples'' is considered.
+
+\item[Insert\_list]\ 
+
+Not needed.
+
+\item[Classified\_value]\ 
+
+Only the ``Classify'' option is considered.
+
+\item[Select\_list]\ 
+
+Only ``select\_values'' is considered''.
+
+\item[Action]\ 
+
+Only ``select'' is considered''.
+
+\item[Query]\ 
+
+Only the ``action'' query is addressed.
+\end{description}
+
+Secondly the output from the system is modelled simply as a set of classified data values.
+
+\begin{description}
+\item[section 2 - a specification of critical requirements]\ 
+
+An example of a specification of critical requirements for a secure system is given.
+
+\item[section 3 - a formal model of a system architecture]\ 
+
+The first stage in the design and implementation of a system meeting the formalised critical requirements is to establish a system architecture which can be shown to guarantee satisfaction of the requirements.
+Such an architecture is exhibited, followed by a proof that it does indeed ensure conformance to the critical requirements.
+
+\end{description}
+
+\section{The Specification of Requirements}
+
+A new theory is introduced for the formal material.
+
+ๅ
+ new_theory"โmlsdbแ";
+ๆ
+
+The specification of critical requirements avoids detail about the specific operations supported by the system, and we therefore use `given sets' to represent the inputs and outputs.
+
+่
+Ý	[โStringแ,โDataแ,โClassแ]
+ๆ
+
+We asume that classifications are partially ordered by the relation {\it dominates}.
+
+๊
+Ý
+Ý	_dominates_ : Class  Class
+ษออออออออออออออออออออออออออ
+Ý	 x,y,z:Class 
+Ý			x dominates x
+Ý		€	(x dominates y € y dominates x  x = y)
+Ý		€	(x dominates y € y dominates z  x dominates z)
+ห
+
+
+\subsection{The Abstract Syntax of the Query Language}
+
+่
+Ý	Col_spec == seq String
+ๆ
+
+่
+Ý	Table_spec == seq String
+ๆ
+
+่
+Ý	From_spec == Table_spec
+ๆ
+
+่
+Ý	Value ::=	denote_integer	พพStringฟฟ		|
+Ý			denote_binop	พพValue  Valueฟฟ	|
+Ý			denote_class	พพStringฟฟ		|
+Ý			contents	พพCol_specฟฟ	
+ๆ
+
+่
+Ý	Select_list == seq Value
+ๆ
+
+้โTuple_listแอออออออออออออออออ฿
+Ý	sel		: Select_list;
+Ý	from		: From_spec;
+Ý	where		: Value;
+Ý	groupby		: Col_spec;
+Ý	having		: Value
+สออออออออออออออออออออออออเ
+
+่
+Ý	Query == Tuple_list
+ๆ
+
+\subsection{The Type of Models of Systems}
+
+The state of the system is modelled as a classified data space.
+
+่
+Ý	โSTATEแ == Class  Data
+ๆ
+
+An input to the system is a single classification and a query.
+
+่
+Ý	โINแ == Class  Query
+ๆ
+
+Output from a single query may be of mixed class and is therefore modelled in a way similar to the system state.
+For the purposes of this example information content in the ordering of the output data is therefore ignored.
+
+่
+Ý	โOUTแ == Class  Data
+ๆ
+
+A system is modelled as a transition function.
+This is to be regarded as a single function modelling all the permissible transitions of the system.
+To permit a non-interference style exposition of the ``no flows down'' requirement the transition takes complete input histories and yields the corresponding output history.
+
+We also require that the system is a total deterministic function.
+This is not likely to be the case in fact.
+This infelicity in the mathematical models is discussed below.
+
+่
+Ý	โSYSTEMแ ==
+Ý		{tf:(seq IN  STATE)  (STATE  seq OUT)
+Ý		|	 si:seq IN; s,s':STATE; so:seq OUT
+Ý			| (si,s) — (s',so)  tf
+Ý			 # si = # so
+Ý		}
+ๆ
+
+A stronger contraint is desirable here reflecting the expectation that the function is obtained by iterating a single step transition function.
+
+\subsection{Critical Requirements}
+
+We now attempt to capture (in fact {\em define}) what it means to say that such a system is {\em secure}.
+The critical requirement is then that the system be secure.
+
+The intended meaning of {\it secure} here concerns the nature of the information flows permitted by the system.
+We have not come to a firm view on the basis of the available material on whether the observations about sanitisation are offered as consequences of the `no flows down'' requirement, or whether they are intended as additional constraints.
+For the purposes of this example sanitisation is not considered.
+
+The formulation below is an ``interference style'' formulation.
+To express the flow constraint in this way it is first necessary to define filtering operations on the inputs and outputs from the system.
+
+Two sequences of inputs {\it si1} and {\it si2} are the same when viewed from a classification {\it class} if they have the same length and, at all the places where either sequence has an input whose classification is dominated by {\it class}, the values in the two sequences are identical.
+
+๊
+Ý	โsame_insแ : Class  (seq IN  seq IN)
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	class : Class; si1, si2 : seq IN 
+Ý	(si1,si2)  same_ins class 
+Ý
+Ý	# si1 = # si2
+Ý
+Ý €	( n: dom si1
+Ý	| class dominates (first (si1 n))  class dominates (first (si2 n))
+Ý	 si1 n = si2 n
+Ý	)
+ห
+
+Two sequences of outputs {\it so1} and {\it so2} are the same when viewed from a classification {\it class} if they have the same length and, at all the places in the sequence, the restrictions of the two output relations to those classifications dominated by {\it class} are identical.
+
+๊
+Ý	โsame_outsแ : Class  (seq OUT  seq OUT)
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	class : Class; so1, so2 : seq OUT 
+Ý	(so1,so2)  same_outs class 
+Ý
+Ý	# so1 = # so2
+Ý
+Ý €	( n: dom so1
+Ý	 {c:Class | class dominates c}  (so1 n) = {c:Class | class dominates c}  (so2 n)
+Ý	)
+ห
+
+The constraint on information flows proposed for verification is that outputs classified at classes dominated by any class {\it c} are independent of inputs at classifications which do not dominate {\it c}.
+We assume that mechanisms outside the scope of this model ensure that users see only output which they are cleared to see, and that inputs are correctly classified.
+
+This is expressed by saying that if two sequences of inputs are the same when viewed at a certain classification then the outputs will be the same when veiwed at that classification.
+
+๊
+Ý	โsecureแ : ‘ SYSTEM
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	sys:SYSTEM sys  secure 
+Ý
+Ý	( class : Class; si1,si2 :seq IN; state:STATE
+Ý	| (si1,si2)  same_ins class 
+Ý	 (second(sys (si1, state)), second(sys (si2, state)))  (same_outs class))
+ห
+
+The enunciation of the security requirement as a {\it property} of systems enables us to directly express the claim that (a mathematical model of) an implementation is secure.
+Some further elaboration of the type {\it SYSTEM}, probably making this type generic in various parameters, is likely to be necessary to ensure that this class of models is rich enough for the purposes in hand.
+The formal specifications of the design and implementation of the system will then be expressed as entities whose type is (some instance of) {\it SYSTEM}.
+The proposition that they are secure will then be expressible, and we hope provable, in Z, using the ICL Z proof tool.
+
+\subsection{SSQL specification}
+
+The proposed system is specified by the semantics of SSQL.
+To demonstrate that the SSQL specifications are secure in the sense defined above the SSQL specifications have to be formalised as definition of a particular {\it SYSTEM}.
+
+This contruction would be constructed from the formalised versions of the semantics for SSQL.
+
+๊
+Ý	โSSQL_systemแ : SYSTEM
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+\subsection{correctness property}
+
+Formalisation of the correctness property depends upon the formalisation of the semantics of SSQL and hence upon a more detailed model of the interface to the system.
+
+This can be achieved by making the critical requirement specification generic in those types the details of which are not relevant to the security requirements.
+
+If more radical changes in the form of model used to express the full requirements are desirable then new base types will be defined and an interpretation map will be specified which shows how systems represented using the new base types can be interpreted as systems represented by the original types.
+
+In this case we would suggest that the interpretation map should be reviewed formally (but not mathematically) to establish whether the map is a reasonable interpretation, and specifically whether it is liable to conceal insecurities, and used formally in the proofs that the ``implementation'' is secure.
+
+๊
+Ý	โcorrectแ : ‘ SYSTEM
+ษออออออออออออออออออออออออออออออ
+Ý	correct =	{sys:SYSTEM
+Ý			|  si: seq IN
+Ý			 sys (si, sinit) = SSQL_system (si, sinit)
+Ý			}
+ห
+
+If the formal construction
+
+
+\section{A Formal Model of a Secure System Architecture}
+
+The system may be implemented minimising the critical function, by implementing a correct {\it DBMS}, which is not required to enforce security, and trusted {\it FILTER}, which will enforce the security constraints.
+
+The {\it DBMS} is a subsystem which will provide direct access to the data base.
+The {\it FILTER} mediates access to the database.
+
+\subsection{Component Types}
+
+\subsubsection{The DBMS}
+
+The {\it DBMS} is modelled in a manner similar to the {\it SYSTEM} as a whole.
+In the target application we would not expect the query languages to be identical but for present purposes this will suffice.
+However, we would expect that the classifications attached to commands and data output will not be present on this interface (though classifications will appear in the data).
+
+่
+Ý	โDBMS_STATEแ == ‘ Data
+ๆ
+
+่
+Ý	โDBMS_INแ == Query
+ๆ
+
+่
+Ý	โDBMS_OUTแ == ‘ Data
+ๆ
+
+่
+Ý	โDBMSแ == (DBMS_IN  DBMS_STATE)  (DBMS_STATE  DBMS_OUT)
+ๆ
+
+\subsubsection{The FILTER}
+
+The filter takes queries in SSQL and responds to these queries by performing queries in SQL on the underlying database and sanitising the results.
+
+It can therefore be modelled as a function which when supplied with an underlying {\it DBMS} returns a {\it SYSTEM}.
+
+่
+Ý	โFILTERแ == DBMS  SYSTEM
+ๆ
+
+\subsection{Construction}
+
+Given the way the filter has been modelled, the construction of a system from a filter and a dbms is trivial.
+
+๊
+Ý	โconstructionแ : FILTER  DBMS  SYSTEM
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	filter:FILTER; dbms:DBMS construction (filter, dbms) = filter dbms
+ห
+
+\subsection{Requirements on Components}
+
+\subsubsection{Requirements on DBMS}
+
+Two properties are defined on the DBMS subsystem.
+
+The first expresses the properties it must have in order for the system using it to be secure.
+It is not possible to establish the details of this property at this stage.
+ 
+๊
+Ý	โsecure_dbmsแ : ‘ DBMS
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+
+A stronger property is defined which is the property of complete correctness of the DBMS subsystem.
+It is reasonable to expect that this property will be principally based on the formal semantics of SQL.
+
+๊
+Ý	โcorrect_dbmsแ : ‘ secure_dbms
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+
+For maximimum assurance the design of the secure database should exploit the underlying DBMS in a way which minimises the ways in which errors in the databaseis subsystem might make the overall system insecure.
+This will cause weakening of the property {\it secure\_dbms} and facilitate the construction of the necessary proofs.
+
+\subsubsection{Requirements on DBMS}
+
+Again two properties are relevant, security and correctness.
+
+Defining the property {\it secure\_filter} is the activity which focusses on those aspects of the functionality of the filter which are critical to enforcing the security requirements on the resulting {\it SYSTEM}.
+
+This contributes to the assurance of the system developed in two complementary but closely connected ways.
+Firstly it provides the information necessary to separate out those parts of the filter functionality which are security critical.
+Secondly it minimises the proofs relating to the filter as a whole necessary to establish security, and enables these proofs to be conducted either more rigorously, or more economically.
+
+๊
+Ý	โsecure_filterแ : ‘ FILTER
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+The full correctness property for the filter will state that the filter will p[rovide a system correctly implementing the semantics of SSQL provided that the DBMS correctly implements the semantics of SQL.
+
+๊
+Ý	โcorrect_filterแ : ‘ secure_filter
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+\subsection{Architecture Correctness Conjectures}
+
+We are now in a position to formulate a conjecture expressing the claim that the architectural design modelled above suffices for the construction of secure systems.
+
+Two conjectures are identified, one which states the security of the architecture and the other which states its correctness.
+
+The first conjecture states that whenever a system is built using $construction$ from a DBMS which is a $secure\_dbms$ together with a FILTER which is a $secure\_filter$, then the resulting system will be $secure$.
+
+่
+	?… 	 dbms:DBMS; filter:FILTER 
+		| dbms  secure_dbms € filter  secure_filter
+		 construction(filter, dbms)  secure
+ๆ
+
+The second conjecture expresses the claim that the architecture builds correct implementations.
+
+่
+	?… 	 dbms:DBMS; filter:FILTER 
+		| dbms  correct_dbms € filter  correct_filter
+		 construction(filter, dbms)  correct
+ๆ
+
+\section{A Model of a Secure Kernel}
+\subsection{The Model}
+
+We may now proceed to the definition of a function which we believe to be a $secure\_kernel$.
+We call this an implementation for present purposes.
+In another context we might regard this as a functional specification or a design.
+
+The specification is sufficiently explicit that it could be manually translated to a similar program in a functional programming language, though it is more plausible as a rather abstract model of a kernel which would be elaborated somewhat before implementation.
+
+The kernel adopts two measures to ensure that the application does not violate the security policy (the critical requirement).
+Firstly it ensures that the application does not have access to information which the user is not cleared to see.
+This is modelled by the kernel supplying the application with a filtered copy of the classified data store from which highly classified data has been removed.
+Secondly it ensures that the application does not transfer information from highly classified data into data classified lower.
+This is modelled by the kernel filtering the classified data store returned from the application, discarding lowly classified data before using this to update the state of the system.
+
+๊
+Ý	โdbms_implementationแ : DBMS
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+๊
+Ý	โfilter_implementationแ : FILTER
+ษออออออออออออออออออออออออออออออ
+Ý
+Ý	true
+ห
+
+
+\section{System Correctness Proposition}
+
+Even though we have said nothing about the behaviour of the application, we have done enough formal modelling to establish that a system built from {\it kernel\_implementation} and an application using {\it construction} will be secure.
+
+If the system is defined as:
+
+๊
+Ý	โsystemแ : SYSTEM
+ษออออออออออออออออออออออออออออออ
+Ý	system = construction(filter_implementation, dbms_implementation)
+ห
+
+The claim that this system is secure may then be expressed:
+
+่
+Ý…?	system  secure
+ๆ
+
+The proof of this conjecture is trivial given the two previous results.
+
+\section{Acknowledgements}
+
+
+\section*{Index of Formal Names}
+%\newbox\COLC
+%\newbox\COLB
+%\newbox\COLA
+%\setbox\COLC=\vbox{{\footnotesize\printindex}}
+%\newdimen\H
+%\H=\ht\COLC
+%\divide\H by 4\advance\H by\ht\strutbox
+%\splittopskip=\ht\strutbox\vbadness=10000
+%\setbox\COLA=\vsplit\COLC to \H
+%\setbox\COLB=\vsplit\COLC to \H
+%\valign{#\vfil\cr\box\COLA\cr\noalign{\hfill}\box\COLB\cr
+%  \noalign{\hfill}\box\COLC\cr}
+\printindex
+
+\end{document}
+
+
