@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 2010/02/06 16:21:37 rbj Exp $
+# $Id: Makefile.in,v 1.2 2010/02/07 15:34:49 rbj Exp $
 
 include @top_srcdir@/top_srcdir.mk
 RELSRCDIR=src/rbjpub/rbjcv/docarch
@@ -7,27 +7,38 @@ SUBDIRS=
 
 XML007=
 
-PERLSCRIPTS=tex2doc1.pl trans2.pl
+PERLSCRIPTS=ptex2qtex.pl trans2.pl
 
 XMLFILES=$(XML007)
 
-OLDPPTEX=138.tex  178.tex  186.tex  189.tex  194.tex  199.tex \
-	150.tex  180.tex  187.tex  191.tex  195.tex \
-	171.tex  181.tex  188.tex  193.tex  197.tex  
-OLDPPDOC=$(OLDPPTEX:.tex=.doc)
-OLDPPPDF=$(OLDPPTEX:.tex=.pdf)
+PLAINTEX=171.tex 178.tex 186.tex 187.tex 188.tex 189.tex 195.tex
+
+OLDPPPTEX=150.ptex 180.ptex 181.ptex 191.ptex 193.ptex 194.ptex
+OLDPPQTEX=$(OLDPPPTEX:.ptex=.qtex)
+OLDPPDOC=$(OLDPPPTEX:.ptex=.doc)
+OLDPPPDF=$(OLDPPPTEX:.ptex=.pdf)
+
+NEWPPTEX=138.qtex 197.qtex 199.qtex
+NEWPPDOC=$(NEWPPTEX:.qtex=.doc)
+NEWPPPDF=$(NEWPPTEX:.qtex=.pdf)
+
+ALLPPDOC=$(OLDPPDOC) $(NEWPPDOC)
+
+ALLTEX=$(PLAINTEX) $(OLDPPPTEX) $(NEWPPTEX)
 
 DOCPDF=$(OLDPPPDF)
 # PDF=$(OLDPPPDF)
+#PDF=$(NEWPPPDF)
 
 ENTFILES=pp-symbol.ent
 
-SRCDIRCPY=$(OLDPPTEX) $(PERLSCRIPTS)
+SRCDIRCPY2WEB= 000a.htm 000b.htm
+SRCDIRCPY=$(ALLTEX) $(PERLSCRIPTS) $(SRCDIRCPY2WEB)
 XLDPDIRCPY=$(ENTFILES)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-WEBFILES=$(HTML007) $(PDF)
+WEBFILES=$(HTML007) $(NEWPPPDF) $(PDF) $(SRCDIRCPY2WEB)
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -39,12 +50,17 @@ vpath %.xsl $(XLCOMDIR)
 
 # targets
 
-oldppdoc: $(OLDPPDOC)
+allppdoc: $(ALLPPDOC)
+
+
 
 # rules
 
-$(OLDPPDOC): %.doc: %.tex tex2doc1.pl trans2.pl
-	perl -w tex2doc1.pl $*
+$(OLDPPQTEX): %.qtex: %.ptex ptex2qtex.pl
+	perl -w ptex2qtex.pl $*
+
+$(OLDPPDOC) $(NEWPPDOC): %.doc : %.qtex
+	cp $*.qtex $*.doc
 
 # Dependencies
 

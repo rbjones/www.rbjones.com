@@ -1,12 +1,12 @@
-# $Id: tex2doc1.pl,v 1.1 2010/02/06 16:21:37 rbj Exp $
+# $Id: ptex2qtex.pl,v 1.1 2010/02/07 15:34:49 rbj Exp $
 
 $file=$ARGV[0];
 
-if (-r "$file.tex"){open (INPUT, "$file.tex");}
-else {die "File $file.tex not readable\n";};
+if (-r "$file.ptex"){open (INPUT, "$file.ptex");}
+else {die "File $file.ptex not readable\n";};
 #if (-e "$file.doc"){die "File $file.doc already exists\n";}
 #else {open (OUTPUT, "> $file.doc");};
-open (OUTPUT, "> $file.doc");
+open (OUTPUT, "> $file.qtex");
 
 $_=<INPUT>;
 while ($_)
@@ -33,17 +33,18 @@ sub nextstructure
 &nextline;};
 
 sub translate2
-{       print "$_\n";
+{
+#       print "$_\n";
 	s/\345/=SML/g;
 	s/\346/=TEX/g;
 	s/\313/\260/g;
 	s/\350/\271Z/g;
 	s/\342/\333/g;
-	s/\341/\335/g;
 	s/\352/\271ZAX/g;
 	s/\220/\252/g;
 	s/\351/\377/g;
 	s/\335/\334/g;
+	s/\341/\335/g;
 	s/\315/\374/g;
 	s/\337/\374/g;
 	s/\340/\374/g;
@@ -55,7 +56,7 @@ sub translate2
 	s/\212/\264/g;
 	s/\276/\247/g;
 	s/\277/\242/g;
-	s/\211/\270/g;
+#	s/\211/\270/g;
 	s/\213/\255/g;
 	s/\227/\355/g;
 	s/\235/\215/g;
@@ -64,7 +65,7 @@ sub translate2
 	s/\232/\362/g;
 	s/\221/\360/g;
 	s/\205/\364/g;
-	print "$_\n";
+#	print "$_\n";
 };
 
 sub windup
