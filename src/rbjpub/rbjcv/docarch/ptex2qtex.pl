@@ -1,4 +1,4 @@
-# $Id: ptex2qtex.pl,v 1.1 2010/02/07 15:34:49 rbj Exp $
+# $Id: ptex2qtex.pl,v 1.2 2010/02/10 11:17:12 rbj Exp $
 
 $file=$ARGV[0];
 
@@ -65,6 +65,7 @@ sub translate2
 	s/\232/\362/g;
 	s/\221/\360/g;
 	s/\205/\364/g;
+	s/\353/\235/g;
 #	print "$_\n";
 };
 
