@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.21 2010/01/25 13:11:02 rbj Exp $
+# $Id: rules.mk,v 1.22 2010/02/15 17:45:40 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -15,6 +15,7 @@ Makefile: $(MKDEPS)
 # variable definitions
 # the following variables should be defined in the makefile if required
 # TEXPDF = PDF documents to be produce from non-ProofPower.sty tex documents..
+# DOCPDF = PDF documents to be produced using docpdf
 # PPTHTO = (.th) names of proofpower theories for listing in TEX only
 # PPTH	= (.th) names of proofpower application theories for listing in HTML
 # PPPPTH	= (.th) names of proofpower built-in theories for listing in HTML
@@ -163,6 +164,9 @@ $(PERLBIN): % : %.pl
 	cp $< $*
 	chmod +x $*
 
+$(DOCPDF): %.pdf: %.doc
+	docpdf $*
+
 $(TEXPDF): %.pdf : %.tex
 	@echo "TEXPDF"
 	@pdflatex $*
@@ -230,7 +234,8 @@ installweb: $(WEBFILES) $(WEBDIRS) $(WEBSUBDIRS)
 # note that this only works if WEBDIRS is just one directory
 # to be included, not copied (i.e. the content goes up a level).
 # This is intended for html prepared by latex2html
-	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.htm $(RWEBDIR); fi
+	-if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.htm $(RWEBDIR); fi
+	-if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.html $(RWEBDIR); fi
 	if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.css $(RWEBDIR); fi
 	-if test "" != "$(WEBDIRS)"; then cp $(WEBDIRS)/*.png $(RWEBDIR); fi
 # WEBSUBDIRS allows multiple directories to be copied rather than included
@@ -319,7 +324,15 @@ $(ISAIMG): %.img : isablddummy
 
 isablddummy:
 
-$(LATEX2HTML): %.htm: %.tex
+$(LATEX2HTML): %.html: %.tex
+	texdvi -b $*
+	texdvi $*
+	texdvi $*
+	latex2html -split 3 -link 2 -toc_depth 5 -show_section_numbers \
+		-info "" -up_url "../index.html" -up_title "up" $<
+	touch $@
+
+$(LATEX2HTM): %.htm: %.tex
 	texdvi -b $*
 	texdvi $*
 	texdvi $*
