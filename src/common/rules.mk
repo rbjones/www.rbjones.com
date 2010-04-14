@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.23 2010/04/05 20:50:28 rbj Exp $
+# $Id: rules.mk,v 1.24 2010/04/14 21:55:44 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -112,6 +112,9 @@ $(XLDPDIRCPY): %: $(XLDPDIR)/%
 
 $(XLBINDIRCPY): %: $(XLBINDIR)/%
 	cp $(XLBINDIR)/$@ .
+
+$(LIBDIRCPY): %: $(LIBDIR)/%
+	cp $(LIBDIR)/$@ .
 
 $(SUBINSTALLS): %.install: 
 	cd $* && $(MAKE) install
