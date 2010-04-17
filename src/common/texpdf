@@ -1,7 +1,7 @@
 #! /bin/sh
 #	texpdf Adapted from ProofPower texdvi in: imp100.doc,v 1.17 2004/12/20 19:03:22 rda Exp
 # copright Lemma1 Ltd.
-#  Now $Id: texpdf,v 1.4 2010/04/15 12:08:07 rbj Exp $
+#  Now $Id: texpdf,v 1.5 2010/04/17 21:48:34 rbj Exp $
 
 PROGNAME=`basename $0`
 USAGE="$PROGNAME [-v] [-p TeX_program] <file> ..."
@@ -127,10 +127,15 @@ do
 		if test -r $idxfile
 		then
 		    cat $idxfile \
-		    | sed -e 's/\([^"]\)\([@!|]\)/\1"\2/g' \
+		    | sed -e 's/!!/\\"!/g' \
+		          -e 's/||/\\"|/g' \
+		          -e 's/@@/\\"@/g' \
+		          -e 's/\([^"]\)\([@!|]\)/\1"\2/g' \
+		          -e 's/\(\\"\)\([@!|]\)/\2/g' \
 		          -e 's/"|hyperpage/|hyperpage/g' \
 		    | makeindex -i -s rbjpp.ist -o $sidfile
-		    sed -i -e 's/delimiter 026E30F/Backslash/' $sidfile
+                    echo "makeindex rbjpp.ist"
+		    sed -i -e 's/\\delimiter /\\delimiter "/' $sidfile
 		fi
 	fi
 done
