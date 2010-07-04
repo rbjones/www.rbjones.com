@@ -1,5 +1,5 @@
 =IGN
-$Id: t025.doc,v 1.12 2010/05/26 19:20:05 rbj Exp $
+$Id: t025.doc,v 1.13 2010/07/04 05:58:02 rbj Exp $
 open_theory "ifol";
 set_merge_pcs ["rbjmisc", "'GS1", "'misc2", "'ifol"];
 =TEX
@@ -40,12 +40,12 @@ It consists primarily of things required in the documents on non well-founded se
 
 Created: 2008/07/11
 
-Last Change $ $Date: 2010/05/26 19:20:05 $ $
+Last Change $ $Date: 2010/07/04 05:58:02 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t025.pdf}
 
-$ $Id: t025.doc,v 1.12 2010/05/26 19:20:05 rbj Exp $ $
+$ $Id: t025.doc,v 1.13 2010/07/04 05:58:02 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1882,137 +1882,13 @@ val ºâtâ4_lin_glb_lemma2 = save_pop_thm "ºâtâ4_lin_glb_lemma2";
 =TEX
 }%ignore
 
-
-
 \section{INDEXED SETS}
 
-Two implementations of indexed sets are provided.
-The first is as total functions yielding OPTional values.
+There is a version of indexed sets in \cite{rbjt006}.
 
-In the second the functions yield DPOs.
+In this version the functions yield DPOs.
 This gives a complete partial order over the indexed sets which was required for some versions of infinitary first order logic.
 This is more complicated of course and not to be used unless essential.
-
-\subsection{Plain Version - IX}
-
-In this implementation of indexed sets we use discrete partial orders in the codomain, so that the resulting partial orders are complete.
-
-=SML
-declare_type_abbrev(€"IX"›, ["'a", "'b"], î'a ≠ 'b OPTÆ);
-=TEX
-
-πHOLCONST
-‹ €IxVal› : ('b, 'a) IX ≠ 'b ≠ 'a
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µis g∑ IxVal is g = ValueOf (is g)
-∞
-
-πHOLCONST
-‹ €IxRan› : ('b, 'a) IX ≠ 'a SET
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µis∑ IxRan is = {v | ∂¡∑ Value v = is ¡}
-∞
-
-πHOLCONST
-‹ €IxDom› : ('b, 'a) IX ≠ 'b SET
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µis∑ IxDom is = {i | IsDefined (is i)}
-∞
-
-=GFT
-€ix_domran_lemma› =
-   Ù µ x y∑ x ç IxDom y ¥ IxVal y x ç IxRan y
-
-€ix_valueof_ran_lemma› =
-   Ù µ x y∑ ≥ x y = Undefined ¥ ValueOf (x y) ç IxRan x
-=TEX
-
-\ignore{
-=SML
-set_goal ([], ¨µx y∑ x ç IxDom y ¥ IxVal y x ç IxRan yÆ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IxValÆ, get_spec ¨IxRanÆ]);
-a (strip_tac THEN ∂_tac ¨xÆ);
-a (strip_asm_tac (µ_elim ¨y xÆ opt_cases_thm) THEN asm_rewrite_tac[]);
-val ix_domran_lemma = save_pop_thm "ix_domran_lemma";
-
-set_goal ([], ¨µx y∑ ≥ x y = Undefined ¥ ValueOf (x y) ç IxRan xÆ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IxRanÆ]
-	THEN REPEAT strip_tac);
-a (strip_asm_tac (µ_elim ¨x yÆ (±_right_elim (±_right_elim (get_spec ¨ValueÆ)))));
-a (∂_tac ¨yÆ THEN asm_rewrite_tac[]);
-val ix_valueof_ran_lemma = save_pop_thm "ix_valueof_ran_lemma";
-=TEX
-}%ignore
-
-πHOLCONST
-‹ €IxUd› : ('a, 'b) IX ≠ 'a SET
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µis∑ IxUd is = {i | is i = Undefined}
-∞
-
-πHOLCONST
-‹ €IxOverRide› : ('a, 'b) IX ≠ ('a, 'b) IX ≠ ('a, 'b) IX
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µis1 is2∑ IxOverRide is1 is2 =
-‹	Ãi∑ if ≥ i ç IxUd is2 then is2 i else is1 i 
-∞
-
-=GFT
-€ixud_eq_iff_ixdom_eq_lemma› =
-   Ù µ x y∑ IxUd x = IxUd y § IxDom x = IxDom y
-
-€ixoverride_ixdom_lemma› =
-   Ù µ x y∑ IxDom (IxOverRide x y) = IxDom x ¿ IxDom y
-
-€ixoverride_ixud_lemma› =
-   Ù µ x y∑ IxUd (IxOverRide x y) = IxUd x \ IxDom y
-
-€ixoverride_ixran_lemma› =
-   Ù µ x y∑ IxRan (IxOverRide x y) Ä IxRan x ¿ IxRan y
-=TEX
-
-\ignore{
-=SML
-set_goal ([], ¨µx y∑ IxUd x = IxUd y § IxDom x = IxDom yÆ);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IxUdÆ]
-	THEN PC_T1 "hol1" prove_tac[]);
-val ixud_eq_iff_ixdom_eq_lemma = save_pop_thm "ixud_eq_iff_ixdom_eq_lemma";
-
-set_goal ([], ¨µx y∑ IxDom (IxOverRide x y) = IxDom x ¿ IxDom yÆ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨IxDomÆ, get_spec ¨IxOverRideÆ]
-	THEN PC_T "hol1" strip_tac
-	THEN strip_tac THEN rewrite_tac[ç_in_clauses, get_spec ¨IxUdÆ]);
-a (cases_tac ¨y x' = UndefinedÆ THEN asm_rewrite_tac[]);
-val ixoverride_ixdom_lemma = save_pop_thm "ixoverride_ixdom_lemma";
-
-set_goal ([], ¨µx y∑ IxRan (IxOverRide x y) Ä IxRan x ¿ IxRan yÆ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨IxRanÆ, get_spec ¨IxOverRideÆ]
-	THEN PC_T "hol1" strip_tac
-	THEN strip_tac THEN rewrite_tac[ç_in_clauses, get_spec ¨IxUdÆ]
-	THEN strip_tac THEN POP_ASM_T ante_tac);
-a (cases_tac ¨y ¡ = UndefinedÆ THEN asm_rewrite_tac[] THEN strip_tac);
-(* *** Goal "1" *** *)
-a (≤_left_tac THEN ∂_tac ¨¡Æ THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (≤_right_tac THEN ∂_tac ¨¡Æ THEN asm_rewrite_tac[]);
-val ixoverride_ixran_lemma = save_pop_thm "ixoverride_ixran_lemma";
-
-set_goal ([], ¨µx y∑ IxUd (IxOverRide x y) = IxUd x \ IxDom y Æ);
-a (REPEAT µ_tac
-	THEN rewrite_tac [get_spec ¨IxUdÆ, get_spec ¨IxDomÆ, get_spec ¨IxOverRideÆ]
-	THEN PC_T "hol1" strip_tac
-	THEN strip_tac THEN rewrite_tac[ç_in_clauses, get_spec ¨UndefinedÆ]);
-a (cases_tac ¨y x' = UndefinedÆ THEN asm_rewrite_tac[]);
-val ixoverride_ixud_lemma = save_pop_thm "ixoverride_ixud_lemma";
-
-add_pc_thms "'misc2" (map get_spec [] @ [ixud_eq_iff_ixdom_eq_lemma, ixoverride_ixdom_lemma, ixoverride_ixud_lemma]);
-set_merge_pcs ["rbjmisc", "'GS1", "'misc2"];
-=TEX
-}%ignore
-
-\subsection{DPO Version - IS}
 
 In this implementation of indexed sets we use discrete partial orders in the codomain, so that the resulting partial orders are complete.
 
