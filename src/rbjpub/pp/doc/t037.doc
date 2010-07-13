@@ -5,7 +5,7 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtACNdoc{$$Id: t037.doc,v 1.3 2010/07/13 12:18:43 rbj Exp $$}
+\def\rbjidtACNdoc{$$Id: t037.doc,v 1.4 2010/07/13 21:27:46 rbj Exp $$}
 
 I will endeavour to follow the structure of Grice's paper \emph{Vacuous names}\cite{griceVN, quineWO}.
 However, the method employed for the formal analysis, which is called ``shallow embedding'', is essentially semantic, and involves addressing semantic fundamentals before finding manageable syntactic presentations, and we therefore find it necessary to address key aspects of the semantics before considering the details of syntactic derivation.
@@ -37,7 +37,7 @@ Grice's Vacuous names may be seen in the first instance as a reaction against Ru
 
 \subsection{Preliminary Formalities}
 
-Just in case I need multiple incompatible accounts I have a ``top level'' theory under which all other gricean theories will be placed.
+Just in case I need multiple incompatible accounts I have a ``top level'' theory under which all other gricean theories will be placed and in which common aspects can be placed.
 
 =SML
 open_theory "rbjmisc";
@@ -45,12 +45,10 @@ force_new_theory "grice";
 =TEX
 
 \ignore{
-=IGN
+=SML
 force_new_pc Û"'grice"Ý;
 merge_pcs ["'savedthm_cs_¶_proof"] "'grice";
 set_merge_pcs ["rbjmisc", "'grice"];
-=SML
-set_pc "rbjmisc";
 =TEX
 }%ignore
 
@@ -266,6 +264,8 @@ declare_infix (400, "‰g");
 
 The definition says, if the term denotes then apply the predicate to the value denoted, otherwise the result of the predication is F (false).
 
+Note that this will not work for relations, we would have to define a separate similar predicator for each arity of relation in use.
+
 Now let's introduce Pegasus.
 The ``definition'' just says that Pegasus is the non-denoting value.
 
@@ -430,51 +430,245 @@ declare_infix(4, "˜");
 Ü µal c· (al ˜ c) ¤ (µ‰L al) ´ c
 °
 
+In the following theorems which capture the content of Grices rules for Q as theorems of C, the variables Æ, Ù, Ú... range over formulae (booleans) and ‡, „, Š... over lists of formulae.
+The notation ``[a; b; ...]'' is an explicit list formation (``[Æ]'' being a single element list) and the symbol ``$ë$'' is the concatenation operator over lists.
+
+In general the rules of Q can be formulated as theorems of C because C is a higher order logic, and can quantify over predicates.
+This means that where substition is involved in a rule, this is captured as a theorem by the use of a variable as a predicate applied to a variable as an argument.
+When such a theorem is instantiated using a lambda expression as the predicate, the substitution into the expression will be achieved by beta-reduction.
 
 =GFT
-ÛASSÝ =	ô µ A· [A] ˜ A
-ÛRAAÝ =	ô µA B C L· ([A]ëL ˜ B ± ³B) ´ (L ˜ ³A)
-ÛDNÝ =	ô µ A· [³ ³ A] ˜ A
-Û±IÝ =		ô µ A B· [A; B] ˜ A ± B
-Û±EÝ =	ô µ A B· ([A ± B] ˜ A) ± ([A ± B] ˜ B)
-Û²EÝ =	ô µ A B· ([A] ˜ A ² B) ± ([A] ˜ B ² A)
+ÛASSÝ =	ô µ Æ· [Æ] ˜ Æ
+ÛRAAÝ =	ô µÆ Ù Ú ‡· ([Æ] ë ‡ ˜ Ù ± ³Ù) ´ (‡ ˜ ³Æ)
+ÛDNÝ =	ô µ Æ· [³ ³ Æ] ˜ Æ
+Û±IÝ =		ô µ Æ Ù· [Æ; Ù] ˜ Æ ± Ù
+Û±EÝ =	ô µ Æ Ù· ([Æ ± Ù] ˜ Æ) ± ([Æ ± Ù] ˜ Ù)
+Û²IÝ =		ô µ Æ Ù Ú ‡ „ Š· ([Æ] ë ‡ ˜ Ú) ± ([Ù] ë „ ˜ Ú) ± (Š ˜ Æ ² Ù)
+			´ (‡ ë „ ë Š ˜ Ú)
+Û²EÝ =	ô µ Æ Ù· ([Æ] ˜ Æ ² Ù) ± ([Æ] ˜ Ù ² Æ)
+ÛCPÝ =	ô µ Æ Ù ‡· ([Æ] ë ‡ ˜ Ù) ´ (‡ ˜ Æ ´ Ù)
+ÛMPPÝ =	ô µ Æ Ù· [Æ ´ Ù; Æ] ˜ Ù
+ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
+ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
+Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
+Û¶EÝ =	ô µ ‡ P c x· (P x ˜ ‡) ´ (¶ x· P x ˜ ‡)
 =TEX
 
 \ignore{
 =SML
 val ˜_def = get_spec ¬$˜®;
 
-set_goal([], ¬µA· [A] ˜ A®);
+set_goal([], ¬µÆ· [Æ] ˜ Æ®);
 a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
 val ASS = save_pop_thm "ASS";
 
-set_goal([], ¬µA B C L· ([A]ëL ˜ B ± ³B) ´ (L ˜ ³A)®);
+set_goal([], ¬µÆ Ù Ú ‡· ([Æ]ë ‡ ˜ Ù ± ³Ù) ´ (‡ ˜ ³Æ)®);
 a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val RAA = save_pop_thm "RAA";
 
-set_goal([], ¬µA· [³³A] ˜ A®);
+set_goal([], ¬µÆ· [³³Æ] ˜ Æ®);
 a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
 val DN = save_pop_thm "DN";
 
-set_goal([], ¬µA B· [A; B] ˜ A ± B®);
+set_goal([], ¬µÆ Ù· [Æ; Ù] ˜ Æ ± Ù®);
 a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val ±I = save_pop_thm "±I";
 
-set_goal([], ¬µA B· ([A ± B] ˜ A) ± ([A ± B] ˜ B)®);
+set_goal([], ¬µÆ Ù· ([Æ ± Ù] ˜ Æ) ± ([Æ ± Ù] ˜ Ù)®);
 a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val ±E = save_pop_thm "±E";
 
-set_goal([], ¬µA B· ([A] ˜ A ² B) ± ([A] ˜ B ² A)®);
+set_goal([], ¬µÆ Ù· ([Æ] ˜ Æ ² Ù) ± ([Æ] ˜ Ù ² Æ)®);
 a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val ²E = save_pop_thm "²E";
-=IGN
-set_goal([], ¬µA B (C:BOOL) (L:BOOL LIST) (M:BOOL LIST) (N:BOOL LIST)· ([A]ëL ˜ C) ± ([B]ëM ˜ C) ± (N ˜ A ² B) ´ (L ë M ë N ˜ C)®);
+
+set_goal([], ¬µÆ Ù (Ú:BOOL) (‡:BOOL LIST) („:BOOL LIST) (Š:BOOL LIST)· ([Æ]ë ‡ ˜ Ú) ± ([Ù]ë „ ˜ Ú) ± (Š ˜ Æ ² Ù) ´ (‡ ë „ ë Š ˜ Ú)®);
 a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-val ²E = save_pop_thm "²E";
+val ²I = save_pop_thm "²I";
+
+set_goal([], ¬µÆ Ù ‡· ([Æ]ë ‡ ˜ Ù) ´ (‡ ˜ Æ ´ Ù)®);
+a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
+val CP = save_pop_thm "CP";
+
+set_goal([], ¬µÆ Ù· ([Æ ´ Ù; Æ] ˜ Ù)®);
+a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
+val MPP = save_pop_thm "MPP";
+
+set_goal([], ¬µ ‡ P· (µx· (‡ ˜ P x)) ´ (‡ ˜ µx· P x)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+val µI = save_pop_thm "µI";
+
+set_goal([], ¬µ ‡ P c· (‡ ˜ µx· P x) ´ (‡ ˜ P c)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+val µE = save_pop_thm "µE";
+
+set_goal([], ¬µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ ¶x· P x)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+val ¶I = save_pop_thm "¶I";
+
+set_goal([], ¬µ ‡ P c x· (P x ˜ ‡) ´ (¶x· P x ˜ ‡)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (asm_rewrite_tac[]);
+val ¶E = save_pop_thm "¶E";
 =TEX
 }%ignore
 
-\subsection{The Desiderata}
+An example of the effect of substitutions obtained by use of these theorems in C intended to mimic the rules of Q is as follows.
 
+Take ths simple case of $µE$, with the predicate
+=INLINEFT
+``Ìx· ³ Flies ‰g x''
+=TEX
+ which we seek to instantiate to Pegasus.
+
+We can specialise $µE$ to this case like this:
+=SML
+val sve = list_µ_elim [¬[]:BOOL LIST®, ¬Ìx· ³ Flies ‰g x®, ¬Pegasus®] µE;
+=TEX
+
+This gives the theorem:
+
+=GFT
+val sve =
+   ô ([] ˜ (µ x· (Ì x· ³ Flies ‰g x) x)) ´ ([] ˜ (Ì x· ³ Flies ‰g x) Pegasus) : THM
+=TEX
+
+in which there are two occurrences of the lambda expression in the places previously occupied by the variable $P$.
+
+The substitutions can the be effected by beta reduction which can be achieved by rewriting the theorem as follows:
+
+=SML
+rewrite_rule [] sve;
+=TEX
+
+Which yields a theorem justifying the required inference.
+
+=GFT
+val it = ô ([] ˜ (µ x· ³ Flies ‰g x)) ´ ([] ˜ ³ Flies ‰g Pegasus) : THM
+=TEX
+
+All the above rules simply explicate the standard aspects of the logic of Q and C and do not reflect the specific additional features which Grice requires in connection with vacuous names.
+They simply illustrate that the logical context for C includes as much standard logic as is provided in Q, and provide some tenuous indication that Grice's rules conform to standard logic as defined in Church's simple theory of types.
+The main risk for Grice is in the detail of his presentation, bearing in mind the additional complexities arising from his suffix notation, and the above exercise offers no assurance in that matter.
+
+\section{V. Existence}
+
+\subsection{A}
+
+We have already defined the propositional function ``Exists'' which tells us whether a name designates.
+
+The following theorem indicates that the propositional function captures the intent of Grice's ``+exists'' notation.
+
+=GFT
+ÛE1Ý =	ô µ Æ Á· Æ ‰g Á ´ Exists Á
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µÆ Á· Æ ‰g Á ´ Exists Á®);
+a (REPEAT µ_tac THEN rewrite_tac [Exists_def, get_spec ¬$‰g®]);
+val E1 = save_pop_thm "E1";
+=TEX
+}%ignore
+
+In system C Grice's notion of \emph{E\_committal} seems to be definable.
+The formal criteria for \emph{E\_committal} then becomes provability in HOL (which is not decidable).
+
+In Grice \emph{E\_committal} is a relationship, here it is a property of propositional functions.
+
+¹HOLCONST
+Ü ÛE_committalÝ : ('a ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Exists Á
+°
+
+The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
+
+=GFT
+ÛE_2Ý =	ô µ Æ· E_committal Æ
+			´ E_committal (ÌÁ· ³ ³ Æ Á)
+ÛE_3Ý =	ô µ Æ Ù· E_committal Æ ² E_committal Ù
+			´ E_committal (Ì Á· Æ Á ± Ù Á)
+ÛE_4Ý =	ô µ Æ Ù· E_committal Æ ± E_committal Ù
+			´ E_committal (Ì Á· Æ Á ² Ù Á)
+ÛE_5Ý =	ô µ Æ Ù· E_committal (Ì Á· ³ Æ Á) ± E_committal Ù
+			´ E_committal (Ì Á· Æ Á ´ Ù Á)
+ÛE_6µÝ =	ô µ Æ· (¶ Â· E_committal (Æ Â))
+			´ E_committal (Ì Á· µ Â· Æ Â Á)
+=TEX
+
+I have a problem proving the existential element of (6), so this clause is in doubt.
+I think Grice should be asking for ``%
+=INLINEFT
+µÂ· Ù(Â/×)
+=TEX
+'' to be \emph{E\_committal} for Á (in system Q), which corresponds in system C to the theorem:
+
+=GFT
+ÛE_6¶bÝ =	ô µ Æ· (µ Â· E_committal (Æ Â))
+			´ E_committal (Ì Á· ¶ Â· Æ Â Á)
+=TEX
+
+\ignore{
+=SML
+val E_committal_def = get_spec ¬E_committal®;
+
+set_goal([], ¬µÆ· E_committal Æ ´ E_committal (ÌÁ· ³ ³ (Æ Á))®);
+a (REPEAT strip_tac THEN asm_rewrite_tac[È_axiom]);
+val E_2 = save_pop_thm "E_2";
+
+set_goal([], ¬µÆ Ù· E_committal Æ ² E_committal Ù ´ E_committal (ÌÁ· Æ Á ± Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val E_3 = save_pop_thm "E_3";
+
+set_goal([], ¬µÆ Ù· E_committal Æ ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ² Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val E_4 = save_pop_thm "E_4";
+
+set_goal([], ¬µÆ Ù· E_committal (ÌÁ· ³ (Æ Á)) ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ´ Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val E_5 = save_pop_thm "E_5";
+
+set_goal([], ¬µÆ· (¶Â· E_committal (Æ Â)) ´ E_committal (ÌÁ· µÂ· (Æ Â) Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬Â® THEN asm_fc_tac[]);
+val E_6µ = save_pop_thm "E_6µ";
+
+set_goal([], ¬µÆ· (µÂ· E_committal (Æ Â)) ´ E_committal (ÌÁ· ¶Â· (Æ Â) Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val E_6¶b = save_pop_thm "E_6¶b";
+=TEX
+}%ignore
+
+
+The definition we have already given for \emph{Exists} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
+
+\subsection{B. ¶ Quantified Formulae}
+
+This has already been covered.
+
+Grice wishes to distinguish himself from Meinong, but his system allows quantification over non-existents, and he can therefore only distinguish himself from Meinong by distancing himself also from Quine's criteria of ontological committment.
+This he could easily do by adopting Carnap's distinction between internal and external questions, and denying that any metaphysical significance attaches to something being counted in the range of quantification.
+
+\section{Objections Considered}
+
+I will offer some discussion of Grice's problem here and then offer some of my own.
+
+\section{Identity}
+
+HOL already has identity and this identity is good for System C.
+It HOL it is a curried propositional function of polymorphic type ”'a ­ 'a ­ BOOL®.
+If applied using function application the universal law of reflexivity holds.
+
+To get a ``strict'' version of equality (i.e. one which is false when either argument does not exist) it is necessary to uncurry equality so that its type becomes ”('a ¸ 'a) ­ BOOL® and apply it using a special system C predicator for binary relations.
+
+This will not yield the same two notions of identity discussed by Grice, which will have to be further discussed here.
+
+\section{Semantics}
+
+\section{Names and Descriptions}
 
 \section{Conclusions}

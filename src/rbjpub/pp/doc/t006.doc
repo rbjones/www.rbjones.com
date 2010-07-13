@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.30 2010/07/13 12:18:43 rbj Exp $
+$Id: t006.doc,v 1.31 2010/07/13 21:27:46 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2010/07/13 12:18:43 $ $
+Last Changed $ $Date: 2010/07/13 21:27:46 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.30 2010/07/13 12:18:43 rbj Exp $ $
+$ $Id: t006.doc,v 1.31 2010/07/13 21:27:46 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -72,19 +72,12 @@ open PreConsisProof;
 =SML
 open_theory "cache'rbjhol";
 force_new_theory "rbjmisc";
-=IGN
-get_alias("Append", type_of ¬Append®);
-get_alias("Append", type_of ¬$ë®);
-=SML
 val _ =	let open ReaderWriterSupport.PrettyNames;
 	in add_new_symbols [ (["sqsubseteq2"], Value "Ã", Simple) ]
         end
 handle _ => ();
-get_alias_info "Append";
 new_parent "analysis";
-get_alias_info "Append";
 new_parent "equiv_rel";
-get_alias_info "Append";
 force_new_pc Û"'rbjmisc"İ;
 merge_pcs ["'prove_¶_´_conv", "'savedthm_cs_¶_proof"] "'rbjmisc";
 set_merge_pcs ["basic_hol1", "'sets_alg", "'¯", "'rbjmisc"];
@@ -599,16 +592,39 @@ declare_infix(300, "‰L");
 °
 
 =GFT
+Ûµ‰L_thmİ =
+   ô (µ‰L [] ¤ T) ± (µh list· µ‰L (Cons h list) ¤ h ± µ‰L list)
+
+Û¶‰L_thmİ =
+   ô (¶‰L [] ¤ F) ± (µ h list· ¶‰L (Cons h list) ¤ h ² ¶‰L list)
+
 Ûµ‰L_clausesİ =
    ô µ‰L [] ¤ T ± (µ t· µ‰L (Cons T t) ¤ µ‰L t) ± (µ t· µ‰L (Cons F t) ¤ F)
 
 Û¶‰L_clausesİ =
    ô ¶‰L [] ¤ F ± (µ t· ¶‰L (Cons F t) ¤ ¶‰L t) ± (µ t· ¶‰L (Cons T t) ¤ T)
+
+Ûµ‰L_append_thmİ =
+   ô µ l m· µ‰L (l ë m) ¤ µ‰L l ± µ‰L m
+
+Û¶‰L_append_thmİ =
+   ô µ l m· ¶‰L (l ë m) ¤ ¶‰L l ² ¶‰L m
 =TEX
 
 \ignore{
 =SML
 val µ‰L_def= get_spec ¬µ‰L®;
+val ¶‰L_def= get_spec ¬¶‰L®;
+
+set_goal([], ¬(µ‰L [] ¤ T)
+       ± (µh list· µ‰L (Cons h list) ¤ h ± µ‰L list)®);
+a (rewrite_tac [µ‰L_def, fold_def]);
+val µ‰L_thm = save_pop_thm "µ‰L_thm";
+
+set_goal([], ¬(¶‰L [] ¤ F)
+       ± (µh list· ¶‰L (Cons h list) ¤ h ² ¶‰L list)®);
+a (rewrite_tac [¶‰L_def, fold_def]);
+val ¶‰L_thm = save_pop_thm "¶‰L_thm";
 
 set_goal([], ¬(µ‰L [] ¤ T)
 	± (µt· µ‰L (Cons T t) ¤ µ‰L t)
@@ -617,8 +633,6 @@ set_goal([], ¬(µ‰L [] ¤ T)
 a (rewrite_tac [µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val µ‰L_clauses = save_pop_thm "µ‰L_clauses";
 
-val ¶‰L_def= get_spec ¬¶‰L®;
-
 set_goal([], ¬(¶‰L [] ¤ F)
 	± (µt· ¶‰L (Cons F t) ¤ ¶‰L t)
 	± (µt· ¶‰L (Cons T t) ¤ T)
@@ -626,17 +640,24 @@ set_goal([], ¬(¶‰L [] ¤ F)
 	± (µh· ¶‰L [h] ¤ h)®);
 a (rewrite_tac [¶‰L_def, fold_def] THEN REPEAT strip_tac);
 val ¶‰L_clauses = save_pop_thm "¶‰L_clauses";
-=IGN
 
-	± (µl m· ¶‰L (Append l m) ¤ (¶‰L l ² ¶‰L m))
+set_goal([],¬ (µl m· µ‰L (Append l m) ¤ (µ‰L l ± µ‰L m))®);
+a (REPEAT µ_tac);
+a (list_induction_tac ¬l® THEN strip_tac THEN asm_rewrite_tac[append_def, µ‰L_thm]);
+val µ‰L_append_thm = save_pop_thm "µ‰L_append_thm";
 
+set_goal([],¬ (µl m· ¶‰L (Append l m) ¤ (¶‰L l ² ¶‰L m))®);
+a (REPEAT µ_tac);
+a (list_induction_tac ¬l® THEN strip_tac THEN asm_rewrite_tac[append_def, ¶‰L_thm]);
+val ¶‰L_append_thm = save_pop_thm "¶‰L_append_thm";
 =TEX
 }%ignore
+
 \subsection{Proof Contexts}
 
 =SML
 add_pc_thms "'rbjmisc" (map get_spec [] @
-	[µ‰L_clauses, ¶‰L_clauses]);
+	[µ‰L_clauses, ¶‰L_clauses, µ‰L_thm, ¶‰L_thm, µ‰L_append_thm, ¶‰L_append_thm]);
 set_merge_pcs ["basic_hol1", "'sets_alg", "'¯", "'rbjmisc"];
 =TEX
 
