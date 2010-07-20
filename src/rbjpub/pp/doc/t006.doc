@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.31 2010/07/13 21:27:46 rbj Exp $
+$Id: t006.doc,v 1.32 2010/07/20 18:57:23 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2010/07/13 21:27:46 $ $
+Last Changed $ $Date: 2010/07/20 18:57:23 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.31 2010/07/13 21:27:46 rbj Exp $ $
+$ $Id: t006.doc,v 1.32 2010/07/20 18:57:23 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -300,6 +300,39 @@ val singleton_subset_lemma = save_pop_thm "singleton_subset_lemma";
 ˜¸¸¸¸¸¸
 ‹ µf A∑ FunImage f A = {b | ∂a∑ a ç A ± f a = b}
 ∞
+
+=GFT
+€FunImage_o_thm› =
+	Ù µ A f g∑ FunImage (f o g) A = FunImage f (FunImage g A)
+
+€FunImage_mono_thm› =
+	Ù µ A B f∑ A Ä B ¥ FunImage f A Ä FunImage f B
+=TEX
+
+\ignore{
+=SML
+val FunImage_def = get_spec ¨FunImageÆ;
+
+set_goal([], ¨µA f g∑ FunImage (f o g) A = FunImage f (FunImage g A)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [FunImage_def, sets_ext_clauses] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨g aÆ THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (∂_tac ¨aÆ THEN REPEAT strip_tac);
+(* *** Goal "1.2" *** *)
+a (POP_ASM_T ante_tac THEN rewrite_tac[o_def]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨a'Æ THEN asm_rewrite_tac[o_def]);
+val FunImage_o_thm = save_pop_thm "FunImage_o_thm";
+
+set_goal([], ¨µA B (f:'a ≠ 'b)∑ A Ä B ¥ FunImage f A Ä FunImage f BÆ);
+a (REPEAT µ_tac THEN rewrite_tac [FunImage_def, sets_ext_clauses] THEN REPEAT strip_tac);
+a (∂_tac ¨aÆ THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val FunImage_mono_thm = save_pop_thm "FunImage_mono_thm";
+=TEX
+}%ignore
+
 
 \subsection{Set Displays}
 
@@ -3147,6 +3180,8 @@ declare_type_abbrev(€"IX"›, ["'a", "'b"], î'a ≠ 'b OPTÆ);
 
 \ignore{
 =SML
+val IxVal_def = get_spec ¨IxValÆ;
+val IxRan_def = get_spec ¨IxRanÆ;
 val IxDom_def = get_spec ¨IxDomÆ;
 
 set_goal ([], ¨µx y∑ x ç IxDom y ¥ IxVal y x ç IxRan yÆ);
@@ -3235,7 +3270,8 @@ set_merge_pcs ["hol", "'rbjmisc"];
 πHOLCONST
 ‹ €IxCompIx› : ('a, 'b) IX ≠ ('b, 'c) IX ≠('a, 'c) IX
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µix jx∑ IxCompIx ix jx = Ãx∑ if IsDefined (ix x) then jx (ValueOf (ix x)) else Undefined
+‹ µix jx∑ IxCompIx ix jx = Ãx∑
+‹	if IsDefined (ix x) then jx (ValueOf (ix x)) else Undefined
 ∞
 
 πHOLCONST
@@ -3255,6 +3291,9 @@ declare_infix(200, "√");
 
 €IxDom_√_thm› =
 	Ù µ A B s∑ s ç IxDom A ± A √ B ¥ s ç IxDom B
+
+€√_IxVal_thm› =
+	Ù µ A B s∑ s ç IxDom A ± A √ B ¥ IxVal B s = IxVal A s
 =TEX
 
 \ignore{
@@ -3273,388 +3312,11 @@ set_goal([], ¨µA B s∑ s ç IxDom A ± A √ B ¥ s ç IxDom BÆ);
 a (REPEAT µ_tac THEN rewrite_tac[IxInc_def, IxDom_def] THEN REPEAT strip_tac
 	THEN (all_asm_fc_tac[]) THEN asm_rewrite_tac[]);
 val IxDom_√_thm = save_pop_thm "IxDom_√_thm";
-=TEX
-}%ignore
 
-\section{Universal Algebra}
-
-To make the operators fairly general within the constrainst imposed by the HOL type system we will have operators as functions over indexed sets of values.
-
-The following labelled product is used as a general notion of ``structure'' independent of signature.
-Of course any particular algebra will have a definite signature.
-
-A signature is a string indexed set of arities, where an arity is a natural number.
-
-=SML
-declare_type_abbrev ("SIG", [], î(STRING, Ó) IXÆ);
-=TEX
-
-The operators over the algebra are represented by functions from indexed sets of operands to a single result value.
-In this case we pack the arguments into a total function and ignore the values which do not correspond to the signature.
-The signature (i.e. the arity of each operator) is explicit in this structure, otherwise the range of significance of the operators would not be known.
-
-πHOLLABPROD €STRUCT›¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-‹	€SCar›		: 'a SET;
-‹	€SOps›		: (STRING, (Ó ∏ ((Ó ≠ 'a) ≠ 'a)))IX
-∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
-
-The following function extracts the signature from a structure.
-
-πHOLCONST
-‹ €Sig› : ('a) STRUCT ≠ SIG
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs∑ Sig s = IxCompIx (SOps s) (Ãx∑ Value (Fst x)) 
-∞
-
-=GFT
-€IxDom_Sig_thm› =
-	Ù µ S∑ IxDom (Sig S) = IxDom (SOps S)
-
-€ç_IxDom_Sig_thm› =
-	Ù µ S x∑ x ç IxDom (Sig S) § x ç IxDom (SOps S)
-=TEX
-
-\ignore{
-=SML
-val Sig_def = get_spec ¨SigÆ;
-
-set_goal ([], ¨µS∑ IxDom (Sig S) = IxDom (SOps S)Æ);
-a (strip_tac THEN rewrite_tac[Sig_def, IxCompIx_def, IxDom_def, sets_ext_clauses]
-	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
-val IxDom_Sig_thm = save_pop_thm "IxDom_Sig_thm";
-
-set_goal ([], ¨µS x∑ x ç IxDom (Sig S) § x ç IxDom (SOps S)Æ);
-a (strip_tac THEN rewrite_tac[Sig_def, IxCompIx_def, IxDom_def, sets_ext_clauses]
-	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
-val ç_IxDom_Sig_thm = save_pop_thm "ç_IxDom_Sig_thm";
-=TEX
-}%ignore
-
-\emph{IxInc} (aliased as $√$) is inclusion of indexed sets, and suffices for signature inclusion.
-
-=GFT
-€IxDom_Sig_SOps_thm› =
-	Ù µ A∑ IxDom (Sig A) = IxDom (SOps A)
-
-€SigInc_IxDom_Ä_thm› =
-   Ù µ A B∑ Sig A √ Sig B ¥ IxDom (Sig A) Ä IxDom (Sig B)
-
-€SigInc_IxDom_Sops_Ä_thm› =
-   Ù µ A B∑ Sig A √ Sig B ¥ IxDom (SOps A) Ä IxDom (SOps B)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¨µA∑ IxDom (Sig A) = IxDom (SOps A)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[Sig_def, IxDom_def, sets_ext_clauses, IxCompIx_def] THEN strip_tac);
-a (cond_cases_tac ¨SOps A x = UndefinedÆ);
-val IxDom_Sig_SOps_thm = save_pop_thm "IxDom_Sig_SOps_thm";
-
-set_goal([], ¨µA B∑ Sig A √ Sig B ¥ IxDom (Sig A) Ä IxDom (Sig B)Æ);
-a (REPEAT µ_tac THEN rewrite_tac[IxInc_def, IxDom_def]);
-a (PC_T "hol1" (REPEAT strip_tac) THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-val SigInc_IxDom_Ä_thm = save_pop_thm "SigInc_IxDom_Ä_thm";
-
-set_goal([], ¨µA B∑ Sig A √ Sig B ¥ IxDom (SOps A) Ä IxDom (SOps B)Æ);
-a (REPEAT strip_tac THEN fc_tac[SigInc_IxDom_Ä_thm]);
-a (asm_rewrite_tac [map_eq_sym_rule IxDom_Sig_SOps_thm]);
-val SigInc_IxDom_Sops_Ä_thm = save_pop_thm "SigInc_IxDom_Sops_Ä_thm";
-=TEX
-}%ignore
-
-This is probably too crude, it would probably be better to ignore the irrelevant behaviour of the operators (i.e. values off sig or out of domain).
-
-πHOLCONST
-‹ €StructInc› : ('a) STRUCT ≠ ('a) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs t∑ StructInc s t § SCar s = SCar t ± IxInc (SOps s) (SOps t) 
-∞
-
-=SML
-declare_alias("√", ¨StructIncÆ);
-=TEX
-
-There is a general requirement on structures that the operators are closed on the domain of the structure.
-
-πHOLCONST
-‹ €ClosedOp› : 'a SET ≠ (Ó ∏ ((Ó ≠ 'a) ≠ 'a)) ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs p∑ ClosedOp s p = µf∑ (µi∑ i < Fst p ¥ f i ç s) ¥ Snd p f ç s
-∞
-
-πHOLCONST
-‹ €ClosedStruct› : ('a) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs∑ ClosedStruct s § µp∑ p ç IxRan (SOps s) ¥ ClosedOp (SCar s) p
-∞
-
-\subsection{Packing Functions}
-
-The form of the operators is not idea for talking about the structures, so we define some functions which will make more convenient forms readily obtainable.
-
-There are two things we need to be able to do.
-The first is to convert 0-ary 1-ary and 2-ary operations in their usual convenient representation to the representation in which the arguments are collected into an indexed set.
-The second is to collect the operators into a name-indexed set.
-
-Note that the two kinds of indexed set are represented differently (not that they are different in kind).
-
-πHOLCONST
-‹ €pack0op› : 'a ≠ (Ó ∏ ((Ó ≠ 'a) ≠ 'a))
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µc∑ pack0op c = (0, Ãis∑ c)
-∞
-
-πHOLCONST
-‹ €pack1op› : ('a ≠ 'a) ≠ (Ó ∏ ((Ó ≠ 'a) ≠ 'a))
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µf∑ pack1op f = (1, Ãis∑ f (is 0))
-∞
-
-πHOLCONST
-‹ €pack2op› : ('a ≠ 'a ≠ 'a) ≠ (Ó ∏ ((Ó ≠ 'a) ≠ 'a))
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µf∑ pack2op f = (2, Ãis∑ f (is 0) (is 1))
-∞
-
-πHOLCONST
-‹ €packops› : (STRING ∏ (Ó ∏ ((Ó ≠ 'a) ≠ 'a)))LIST ≠ (STRING, (Ó ∏ ((Ó ≠ 'a) ≠ 'a)))IX
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹         packops [] = (Ãis∑ Undefined)
-‹ ± µh t∑ packops (Cons h t) = Ãis∑
-		if Fst h = is then Value (Snd h) else packops t is
-∞
-
-\subsection{Homomorphisms}
-
-Now we can define the notion of homomorphism.
-
-First we define the requirement on the homomorphism to map the domain of the source into the domain of the target.
-
-πHOLCONST
-‹ €FunClosed› : ('b)STRUCT  ∏ ('b ≠ 'c) ∏ ('c) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ A f B∑ FunClosed (A, f, B) § µ x∑ x ç SCar A ¥ f x ç SCar B
-∞
-
-=GFT
-€FunClosed_trans_thm› = Ù µ A f B g C∑
-	FunClosed (A, f, B) ± FunClosed (B, g, C) ¥ FunClosed (A, g o f, C)
-=TEX
-
-\ignore{
-=SML
-val FunClosed_def = get_spec ¨FunClosedÆ;
-
-set_goal([], ¨µ A f B g C∑ FunClosed (A, f, B) ± FunClosed (B, g, C) ¥ FunClosed (A, g o f, C)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [FunClosed_def] THEN REPEAT strip_tac THEN REPEAT (all_asm_ufc_tac[]));
-val FunClosed_trans_thm = save_pop_thm "FunClosed_trans_thm";
-=TEX
-}%ignore
-
-Then the requirement that the function respects an operator
-
-πHOLCONST
-‹ €HomOp› : ('b)STRUCT  ∏ ('b ≠ 'c) ∏ ('c) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ A B f∑ HomOp (A, f, B) § Sig A √ Sig B ± FunClosed (A, f, B) ±
-	µs∑ s ç IxDom (SOps A) ¥
-		let (is1, f1) = ValueOf (SOps A s)
-		and (is2, f2) = ValueOf (SOps B s)
-        	and d = SCar A
-		in µg∑ FunImage g {i | i < is1} Ä d
-			¥ f (f1 g) = f2 (Ãx∑ f (g x))
-∞
-
-=GFT
-=TEX
-
-\ignore{
-=SML
-val HomOp_def = get_spec ¨HomOpÆ;
-
-set_goal([], ¨µ A f B g C∑ HomOp (A, f, B) ± HomOp (B, g, C) ¥ HomOp (A, g o f, C)Æ);
-a (REPEAT µ_tac THEN rewrite_tac [HomOp_def, let_def] THEN strip_tac);
-a (all_fc_tac [FunClosed_trans_thm] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (all_fc_tac [IxInc_trans_thm]);
-(* *** Goal "2" *** *)
-a (ALL_ASM_FC_T rewrite_tac []);
-a (rule_nth_asm_tac 2 (rewrite_rule[map_eq_sym_rule IxDom_Sig_thm]));
-a (all_asm_fc_tac [IxDom_√_thm]);
-a (rule_nth_asm_tac 1 (rewrite_rule[IxDom_Sig_thm]));
-a (lemma_tac ¨FunImage (f o g') {i|i < Fst (ValueOf (SOps B s))} Ä SCar BÆ);
-(* *** Goal "2.1" *** *)
-a (lemma_tac ¨Fst (ValueOf (SOps B s)) = Fst (ValueOf (SOps A s))Æ);
-(* *** Goal "2.1.1" *** *)
-a (fc_tac [SigInc_IxDom_Sops_Ä_thm]);
-
-(* *** Goal "2.2" *** *)
-set_labelled_goal "2.2";
-a (ALL_ASM_FC_T (rewrite_tac o (map(rewrite_rule[
-			prove_rule [get_spec ¨$o:(('a≠'c)≠(('b≠'a)≠('b≠'c)))Æ, ext_thm] ¨(f o g') = (Ã x∑ f (g' x))Æ
-			]))) []);
-=IGN
-val HomClosed_comp_thm = save_pop_thm "HomClosed_comp_thm";
-=TEX
-}%ignore
-
-
-πHOLCONST
-‹ €AlgHom› : ('b)STRUCT  ∏ ('b ≠ 'c) ∏ ('c) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ A f B∑ AlgHom (A, f, B) §
-‹	Sig A √ Sig B ± FunClosed (A, f, B) ± HomOp (A, f, B)
-∞
-
-\subsection{Algebraic Equations}
-
-Algebraic equations in an algebra are preserved under homomorphism.
-
-To prove this general claim we must first define the concept of an algebraic equation, which will be done inductively.
-We need to be able to talk about the same algebraic equation over two distinct algebras so the notion will be parameterised by an algebra.
-
-We will represent an expression over an algebra by a function from a valuation of variables to a value.
-We generate the expressions for a specific ``signature''.
-The signature is just a triple giving the number of 0-ary, 1-ary and 2-ary operations in the algebra.
-
-=SML
-declare_type_abbrev("EXPR", ["'a"], î('a) STRUCT ≠ ((Ó ≠ 'a) ≠ 'a)Æ);
-=TEX
-
-There is no syntax in this account of polynomials, so the list is a list of the values of the variables.
-
-An equation is a pair of polynomials.
-
-To define the set of polynomials we first define the ways in which new polynomials can be constucted from a set already to hand.
-This is by the use of any of the operations in the algebra, and the operation involved is functional composition.
-
-πHOLCONST
-‹ €VExpr› : Ó ≠ 'a EXPR
-˜¸¸¸¸¸¸
-‹ µn∑ VExpr n = Ãa va∑ va n
-∞
-
-πHOLCONST
-‹ €VExprs› : Ó ≠ 'a EXPR SET
-˜¸¸¸¸¸¸
-‹ µn∑ VExprs n = {p | ∂m∑ m < n ± p = VExpr m}
-∞
-
-πHOLCONST
-‹ €CExprs› : SIG ≠ 'a EXPR SET ≠ 'a EXPR SET
-˜¸¸¸¸¸¸
-‹ µsig es∑ CExprs sig es = {e | ∂name arity am∑
-‹		name ç IxDom sig ± sig name = Value arity
-‹	±	(µi∑ i < arity ¥ am i ç es)
-‹	±	e = Ãstruct va∑  (Snd (ValueOf (SOps struct name))) (Ãi∑ am i struct va)}
-∞
-
-Now we define closure under the above operators.
-
-πHOLCONST
-‹ €ExprClosed› : SIG ≠ 'a EXPR SET ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µs es∑ ExprClosed s es § CExprs s es Ä es
-∞
-
-πHOLCONST
-‹ €Exprs› : SIG ≠ Ó ≠ 'a EXPR SET
-˜¸¸¸¸¸¸
-‹ µs n∑ Exprs s n = •{ps | ExprClosed s ps ± VExprs n Ä ps}
-∞
-
-\ignore{
-
-\subsection{Quotient Algebras}
-
- πHOLCONST
-‹ €QuotientStruct› : ('b, 'a) STRUCT ≠ ('b ≠ 'b ≠ BOOL) ≠ ('b SET, 'a) ALG
- ˜¸¸¸¸¸¸
-‹ µ A $¶âd∑ QuotientStruct A $¶âd = 
-‹	let (C, ops) = ≈(C, ops)∑ (MkSTRUCT C ops = A)
-‹	in let D = (C, $¶âd)
-‹	in MkSTRUCT (EquivClasses D) (Map (Ãop∑ op MonOpLift D) mops) 
- ∞
-
-}%ignore
-
-\section{Lattices (II)}
-
-The beginnings of a theory of lattices.
-This version was done using Universal Algebra, the previous version will be discarded if this version conformant with the approach to universal algebra is found satisfactory.
-
-=SML
-set_merge_pcs ["hol", "'rbjmisc"] ;
-=TEX
-
-\subsection{Signature and Defining Property}
-
-We will use the general structure type \emph{STRUCT} to represent lattice structures.
-
-We will use L and M as variables for lattices and the following infixity declarations will be useful as names for the corresponding operations.
-
-πHOLCONST
-‹ €MkLat› : 'a SET ≠ ('a ≠ 'a ≠ 'a) ≠ ('a ≠ 'a ≠ 'a) ≠ ('a) STRUCT
-˜¸¸¸¸¸¸
-‹ µd j m∑ MkLat d j m = MkSTRUCT d (packops [("≤âL" , pack2op j); ("≤âL" , pack2op m)])
-∞
-
-=SML
-declare_infix (235, "≤âL");
-declare_infix (235, "≤âM");
-declare_infix (240, "±âL");
-declare_infix (240, "±âM");
-=TEX
-
-
-πHOLCONST
-‹ €IsLat› : ('a) STRUCT ≠ BOOL
-˜¸¸¸¸¸¸
-‹ µ L∑	IsLat L § µ C $≤âL $±âL∑ StructInc (MkLat C $≤âL $±âL) L ¥ 
-‹       (µx y∑ x ç C ± y ç C ¥
-		x ≤âL y ç C ± x ±âL y ç C
-	±	x ≤âL y = y ≤âL x ± x ±âL y = y ±âL x
-	±	x ±âL (x ≤âL y) = x ± x ≤âL (x ±âL y) = x
-        ± (µz∑ z ç C
-		¥	(x ≤âL y) ≤âL z = x ≤âL (y ≤âL z)
-		±	(x ±âL y) ±âL z = x ±âL (y ±âL z)))
-∞
-
-\subsection{Elementary Theorems}
-
-=GFT
-€±âL_idempot_thm› =
-   Ù µ L∑ IsLat L ¥ (µ C $≤âL $±âL∑ MkLat C $≤âL $±âL Äâs L
-	¥ (µ x∑ x ç C ¥ x ±âL x = x))
-
-€≤âL_idempot_thm› =
-   Ù µ L∑ IsLat L ¥ (µ C $≤âL $±âL∑ MkLat C $≤âL $±âL Äâs L
-	¥ (µ x∑ x ç C ¥ x ≤âL x = x))
-=TEX
-
-\ignore{
-=SML
-val lat_def = get_spec ¨IsLatÆ;
-
-set_goal([], ¨µL∑ IsLat L ¥ µ C $≤âL $±âL∑ StructInc (MkLat C $≤âL $±âL) L ¥
-	µx∑ x ç C ¥ x ±âL x = xÆ);
-a (REPEAT strip_tac);
-a (lemma_tac ¨x ±âL x ç CÆ THEN1 all_ufc_tac [lat_def]);
-a (lemma_tac ¨x ±âL (x ≤âL x ±âL x) = xÆ THEN1 all_ufc_tac [lat_def]);
-a (lemma_tac ¨x ≤âL x ±âL x = xÆ THEN1 all_ufc_tac [lat_def]);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val ±âL_idempot_thm1 = save_pop_thm "±âL_idempot_thm1";
-
-set_goal([], ¨µL∑ IsLat L ¥ µ C $≤âL $±âL∑ StructInc (MkLat C $≤âL $±âL) L ¥
-	µx∑ x ç C ¥ x ≤âL x = xÆ);
-a (REPEAT_N 8 strip_tac);
-a (lemma_tac ¨x ≤âL x ç CÆ THEN1 all_ufc_tac [lat_def]);
-a (lemma_tac ¨x ≤âL (x ±âL (x ≤âL x)) = xÆ THEN1 all_ufc_tac [lat_def]);
-a (lemma_tac ¨x ±âL (x ≤âL x) = xÆ THEN1 all_ufc_tac [lat_def]);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val ≤âL_idempot_thm1 = save_pop_thm "≤âL_idempot_thm1";
+set_goal([], ¨µA B s∑ s ç IxDom A ± A √ B ¥ IxVal B s = IxVal A sÆ);
+a (REPEAT µ_tac THEN rewrite_tac[IxInc_def, IxDom_def, IxVal_def] THEN REPEAT strip_tac
+	THEN (all_asm_fc_tac[]) THEN asm_rewrite_tac[]);
+val √_IxVal_thm = save_pop_thm "√_IxVal_thm";
 =TEX
 }%ignore
 
