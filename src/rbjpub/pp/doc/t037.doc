@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADHdoc{$$Id: t037.doc,v 1.7 2010/07/20 19:07:20 rbj Exp $$}
+\def\rbjidtADHdoc{$$Id: t037.doc,v 1.8 2010/07/25 16:03:33 rbj Exp $$}
 
 I will endeavour to follow the structure of Grice's paper \emph{Vacuous names}\cite{griceVN, quineWO}.
 However, the method employed for the formal analysis, which is called ``shallow embedding'', is essentially semantic, and involves addressing semantic fundamentals before finding manageable syntactic presentations, and we therefore find it necessary to address key aspects of the semantics before considering the details of syntactic derivation.
@@ -128,20 +128,24 @@ To minimise confusion, the word predicate will only be used when Grice's notion 
 
 
 The use of lambda notation for making explicit the predicate to be applied may be illustrated simply using Grice's Pegasus example.
-We adopt a special notation for Grice's new kind of predication which will be an infix subscript g ``$‰g$'', so the application of the predicate ``$Flies$'' to the term ``$Pegasus$'' will be written ``%
+In using this method we must distinguish two kinds of predication.
+The kind whose scope we are now discussing, which is the only kind of predication in System Q, and the kind of predication which we have in HOL, consisting in the application of a propositional function to some argument.
+Henceforth these two will be distinguished by using the term ``predication'' only for the former, by making this kind of predication explicit in the concrete syntax as a copula, and by using the phrase ``application of a propositional function'' for the second kind of predication.
+The use of a copula not only visually distinguishes Griceian predication, but also allows us to control its semantics through the definition of the copula.
+
+The copula will be the word ``is'', and since we will be discussion more than one variant of Grice's system, the copulas will be distinguished by subscripts giving the name of the system to which they belong.
+In System C, then, the copula is ``$is‰c$'', so the application of the predicate ``$Flier$'' to the term ``$Pegasus$'' will be written ``%
 =INLINEFT
-Flies ‰g Pegasus
+Pegasus is‰c Flier
 =TEX
 ''.
-
-The subscript g is used just for the special kind of predication in which the object may possibly not exist, we still have the old fashioned kind which will be used in the lambda calculus possibly in defining complex predicates for application in the new manner.
 
 The two variants of ``Pegasus does not fly'' are then expressed as:
 
 \begin{centering}
 ``%
 =INLINEFT
-³ (Flies ‰g Pegasus)
+³ (Pegasus is‰c Flier)
 =TEX
 \end{centering}
 ''
@@ -151,12 +155,12 @@ and
 \begin{centering}
 ``%
 =INLINEFT
-(Ìx· ³ Flies x) ‰g Pegasus
+Pegasus is‰c (Ìx· ³ Flier x)
 =TEX
 ''.
 \end{centering}
 
-In the first case the predicate applied to Pegasus is $¬Flies®$, in the second case it is $¬Ìx· ³ Flies\ x®$ (which is a negation of Flies).
+In the first case the predicate applied to Pegasus is $¬Flier®$, in the second case it is $¬Ìx· ³ Flier\ x®$ (which is a negation of Flier, ``not a flier'').
 
 This technique makes it possible to examine the semantic aspects of System Q using formal machine assisted deductive reasoning, while avoiding the special intricacies of formalising Grice's special syntax.
 Whether this pays off in terms of perspicuity and penetration in the analysis remains to be seen.
@@ -222,222 +226,19 @@ We will suppose this to be a ``type'' in HOL, but will leave open the type by us
 To serve as denotions for terms in system $G_{HP}$ we use a disjoint union of two types, the first of which is the type of those things which do exist and the second is atype of surrogates for those things which do not exist.
 We use \emph{V} for Value.
 
-\section{System C}
+\subsection{Descriptions}
 
-A new theory is needed which I will call ``sysc'' which is created here:
+When Grice comes to discuss descriptions he has in mind a distinction between descriptions and names which would impact upon the kind of interpretation necessary for a semantic embedding.
+This in turn would impact the detailed definition of the copula.
 
-=SML
-open_theory "grice";
-force_new_theory "sysc";
-set_pc "rbjmisc";
-=TEX
+To make apparent the differences which would arise in treating descriptions as Grice intends we provide two treatments of those aspects of the logical system which depend upon the details of the semantics.
+These will be called System C and System S.
 
-Grice introduces a special notion of interpretation in terms of which to give the semantics of Q.
-An interpretation has a domain which is a set of correlates, some of which are unit sets, in which case the member of that unit set is called a designatum.
-For uniformity type we assume that all correlates are sets of sets.
+Certain aspects of our presentation, particularly those which simply illustrate the correspondence bewteen the classical propositional logic in System Q and that in {\Product-HOL}, are common to System C and System S and are therefore treated first.
 
-We allow the domain of an interpretation to be any type and for some element of that type to be identified as THE non-designating element.
+\section{Propositional Logic}\label{PropRules}
 
-¹HOLCONST
-Ü ÛâÝ: 'a 
-÷üüüüüü
-Ü T
-°
-
-We can then use inequality with $â$ as the property of being a designatum.
-The structure of these interpretations is isomorphic to that of Grice's preferred notion of interpretation, even though we do not use unit sets for correlates of designating constants.
-
-We may use HOL constants of appropriate type for Q constants and predicates, and HOL variables for Q variables, and the consequence should be that the theorems provable in HOL should be just those which are valid in Q.
-
-This is done by using T and F instead of Corr(1) and Corr(0) respectively.
-
-Now we define our special kind of predication.
-This is done by introducing a subscript g as a copula.
-The subscript is by itself to be used as an infix copula, it doesn't actually subscript anything, except the operation of applying a propositional function (which would otherwise be implicit in juxtaposition of the function and its subject.
-
-=SML
-declare_infix (400, "‰g");
-=TEX
-
-¹HOLCONST
-Ü $‰g: ('a ­ BOOL) ­ 'a ­ BOOL
-÷üüüüüü
-Ü µ p t· p ‰g t ¤ if t = â then F else p t
-°
-
-The definition says, if the term denotes then apply the predicate to the value denoted, otherwise the result of the predication is F (false).
-
-Note that this will not work for relations, we would have to define a separate similar predicator for each arity of relation in use.
-
-Here is the copula for applying a 2-ary relation.
-
-=SML
-declare_infix (400, "‰g‰2");
-=TEX
-
-¹HOLCONST
-Ü $‰g‰2: ('a ¸ 'b ­ BOOL) ­ ('a ¸ 'b) ­ BOOL
-÷üüüüüü
-Ü µ p t· p ‰g‰2 t ¤ if Fst t = â ² Snd t = â then F else p t
-°
-
-\ignore{
-=SML
-val ‰g_def = get_spec ¬$‰g®;
-val ‰g‰2_def = get_spec ¬$‰g‰2®;
-=TEX
-}%ignore
-
-Now let's introduce Pegasus.
-The ``definition'' just says that Pegasus is the non-denoting value.
-
-¹HOLCONST
-Ü ÛPegasusÝ : 'a
-÷üüüüüü
-Ü Pegasus = â
-°
-
-And the predicate \emph{Flies}.
-Note that the predicates apply only to real desigata under the normal HOL application, its only under our special predication that they become applicatble to possibly non denoting values.
-
-¹HOLCONST
-Ü ÛFliesÝ : 'a ­ BOOL
-÷üüüüüü
-Ü T
-°
-
-We can now prove in HOL the elementary facts we know about Pegasus flying, yielding the following theorems:
-
-=GFT
-ÛPegasus_lemma_1Ý =
-	ô Flies ‰g Pegasus ¤ F
-
-ÛPegasus_lemma_2Ý =
-	ô (Ì x· ³ Flies x) ‰g Pegasus = F
-
-ÛPegasus_lemma_3Ý =
-	ô ³ Flies ‰g Pegasus
-
-ÛPegasus_lemma_4Ý =
-	ô ³ (Ì x· ³ Flies x) ‰g Pegasus
-=TEX
-
-\ignore{
-=SML
-val g_def = get_spec ¬$‰g®;
-val Pegasus_def = get_spec ¬Pegasus®;
-val Flies_def = get_spec ¬Flies®;
-
-set_goal([], ¬Flies ‰g Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
-val Pegasus_lemma_1 = save_pop_thm "Pegasus_lemma_1";
-
-set_goal([], ¬(Ìx· ³ Flies x) ‰g Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
-val Pegasus_lemma_2 = save_pop_thm "Pegasus_lemma_2";
-
-set_goal([], ¬³ Flies ‰g Pegasus®);
-a (rewrite_tac [g_def, Pegasus_def]);
-val Pegasus_lemma_3 = save_pop_thm "Pegasus_lemma_3";
-
-set_goal([], ¬³ (Ìx· ³ Flies x) ‰g Pegasus®);
-a (rewrite_tac [g_def, Pegasus_def]);
-val Pegasus_lemma_4 = save_pop_thm "Pegasus_lemma_4";
-=TEX
-}%ignore
-
-In case you may doubt the neutrality of our use of lambda expressions, we show here that they are inessential to this approach, and can be dispensed with in favour of explict definitions of the predicates required.
-Thus we may instead define a predicate which is the denial of \emph{Flies}:
-
-¹HOLCONST
-Ü ÛDoesnt_FlyÝ : 'a ­ BOOL
-÷üüüüüü
-Ü µx· Doesnt_Fly x ¤ ³ Flies x
-°
-
-We can then prove the slightly reworded:
-
-=GFT
-ÛPegasus_lemma_5Ý = ô Doesnt_Fly ‰g Pegasus ¤ F
-=TEX
-
-the proof of which need not mention the predicate, since it suffices to know that the subject does not exist.
-
-\ignore{
-=SML
-set_goal([], ¬Doesnt_Fly ‰g Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
-val Pegasus_lemma_5 = save_pop_thm "Pegasus_lemma_5";
-=TEX
-}%ignore
-
-This general claim can be expressed in HOL and proven.
-To make it read sensibly however, it is best for us to define the relevant notion of existence.
-
-¹HOLCONST
-Ü ÛExistsÝ : 'a ­ BOOL
-÷üüüüüü
-Ü µx· Exists x ¤ T
-°
-
-The definition looks a bit bizarre and works for just the same reason that we do not need to know the predicate to know that predication to a non-existent will be false.
-This predicate will always be true, unless it is applied to a term which fails to denote.
-So we satisfy another of Grice's desiderata, that the non-existence of Pegasus can be stated.
-
-But first a more general result:
-
-=GFT
-ÛExists_lemma_1Ý =
-	ô µ P x· ³ Exists ‰g x ´ ³ P ‰g x
-=TEX
-
-\ignore{
-=SML
-val Exists_def = get_spec ¬Exists®;
-
-set_goal([], ¬µP x· ³ (Exists ‰g x) ´ ³ (P ‰g x)®);
-a (REPEAT µ_tac THEN rewrite_tac [g_def, Exists_def]
-	THEN REPEAT strip_tac);
-val Exists_lemma_1 = save_pop_thm "Exists_lemma_1";
-=TEX
-}%ignore
-
-Desideratum A8 is satisfied by the standard quantifiers in HOL.
-
-=GFT
-Û¶_lemma_1Ý = 
-	ô µ P· P ‰g Pegasus ´ (¶ x· P ‰g x)
-
-Ûµ_lemma_1Ý =
-	ô µ P· (µ x· P ‰g x) ´ P ‰g Pegasus
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µP:'a ­ BOOL· P ‰g (Pegasus:'a) ´ ¶x:'a· P ‰g x®);
-a (REPEAT strip_tac);
-a (¶_tac ¬Pegasus®);
-a (asm_rewrite_tac []);
-val ¶_lemma_1 = save_pop_thm "¶_lemma_1";
-
-set_goal([], ¬µP· (µx· P ‰g x) ´ P ‰g Pegasus®);
-a (REPEAT strip_tac);
-a (asm_rewrite_tac []);
-val µ_lemma_1 = save_pop_thm "µ_lemma_1";
-=TEX
-}%ignore
-
-
-\ignore{
-=SML
-force_new_pc "'ghp1";
-merge_pcs ["'savedthm_cs_¶_proof"] "'ghp1";
-set_merge_pcs ["rbjmisc", "'ghp1"];
-=TEX
-}%ignore
-
-\subsection{IVB-3 Inference-Rules}
-
+The following material is common to Systems C and S and shows how these systems relate to the propositional logic in System Q.
 Since we are working with a semantic embedding rather than a syntactic meta-theory we cannot prove results about derivations and instead present proofs about the semantics which show that the required inference rules would be sound.
 
 To do this we adopt a notation for expressing entailment in C in a manner parallel to the presentation of the natural deduction system of Q
@@ -456,7 +257,7 @@ In the following theorems which capture the content of Grices rules for Q as the
 $P$ ranges over propositional functions, values whose types are instances of ”'a ­ BOOL® (in which $'a$ is a type variable). 
 The notation ``[Æ; Ù; ...]'' is an explicit list formation (``[Æ]'' being a single element list) and the symbol ``$ë$'' is the concatenation operator over lists.
 
-In general the rules of Q can be formulated as theorems of C because C is a higher order logic, and can quantify over predicates.
+In general the rules of Q can be formulated as theorems of HOL because in a higher order logic, and can quantify over predicates.
 This means that where substitution is involved in a rule, this is captured as a theorem by the use of a variable as a predicate applied to a variable as an argument.
 When such a theorem is instantiated using a lambda expression as the predicate, the substitution into the expression will be achieved by beta-reduction.
 
@@ -471,10 +272,6 @@ When such a theorem is instantiated using a lambda expression as the predicate, 
 			´ (‡ ë „ ë Š ˜ Ú)
 ÛCPÝ =	ô µ Æ Ù ‡· ([Æ] ë ‡ ˜ Ù) ´ (‡ ˜ Æ ´ Ù)
 ÛMPPÝ =	ô µ Æ Ù· [Æ ´ Ù; Æ] ˜ Ù
-ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
-ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
-Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
-Û¶EÝ =	ô µ ‡ P c x· (P x ˜ ‡) ´ (¶ x· P x ˜ ‡)
 =TEX
 
 \ignore{
@@ -516,7 +313,238 @@ val CP = save_pop_thm "CP";
 set_goal([], ¬µÆ Ù· ([Æ ´ Ù; Æ] ˜ Ù)®);
 a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
 val MPP = save_pop_thm "MPP";
+=TEX
+}%ignore
 
+\section{System C}
+
+A new theory is needed which I will call ``sysc'' which is created here:
+
+=SML
+open_theory "grice";
+force_new_theory "gricec";
+set_pc "rbjmisc";
+=TEX
+
+Grice introduces a special notion of interpretation in terms of which to give the semantics of Q.
+An interpretation has a domain which is a set of correlates, some of which are unit sets, in which case the member of that unit set is called a designatum.
+For uniformity type we assume that all correlates are sets of sets.
+
+We allow the domain of an interpretation to be any type and for some element of that type to be identified as THE non-designating element.
+
+¹HOLCONST
+Ü ÛâÝ: 'a 
+÷üüüüüü
+Ü T
+°
+
+We can then use inequality with $â$ as the property of being a designatum.
+The structure of these interpretations is isomorphic to that of Grice's preferred notion of interpretation, even though we do not use unit sets for correlates of designating constants.
+
+We may use HOL constants of appropriate type for Q constants and predicates, and HOL variables for Q variables, and the consequence should be that the theorems provable in HOL should be just those which are valid in Q.
+
+This is done by using T and F instead of Corr(1) and Corr(0) respectively.
+
+Now we define our special kind of predication.
+This is done by introducing a subscript g as a copula.
+The subscript is by itself to be used as an infix copula, it doesn't actually subscript anything, except the operation of applying a propositional function (which would otherwise be implicit in juxtaposition of the function and its subject.
+
+=SML
+declare_infix (400, "is‰c");
+=TEX
+
+¹HOLCONST
+Ü $is‰c: 'a ­ ('a ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µ p t· t is‰c p ¤ if t = â then F else p t
+°
+
+The definition says, if the term denotes then apply the predicate to the value denoted, otherwise the result of the predication is F (false).
+
+Note that this will not work for relations, we would have to define a separate similar predicator for each arity of relation in use.
+
+Here is the copula for applying a 2-ary relation.
+
+=SML
+declare_infix (400, "is‰c‰2");
+=TEX
+
+¹HOLCONST
+Ü $is‰c‰2: ('a ¸ 'b) ­ ('a ¸ 'b ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µ p t· t is‰c‰2 p ¤ if Fst t = â ² Snd t = â then F else p t
+°
+
+\ignore{
+=SML
+val is‰c_def = get_spec ¬$is‰c®;
+val is‰c‰2_def = get_spec ¬$is‰c‰2®;
+=TEX
+}%ignore
+
+Now let's introduce Pegasus.
+The ``definition'' just says that Pegasus is the non-denoting value.
+
+¹HOLCONST
+Ü ÛPegasusÝ : 'a
+÷üüüüüü
+Ü Pegasus = â
+°
+
+And the predicate \emph{Flier}.
+Note that the predicates apply only to real desigata under the normal HOL application, its only under our special predication that they become applicatble to possibly non denoting values.
+
+¹HOLCONST
+Ü ÛFlierÝ : 'a ­ BOOL
+÷üüüüüü
+Ü T
+°
+
+We can now prove in HOL the elementary facts we know about Pegasus flying, yielding the following theorems:
+
+=GFT
+ÛPegasus_lemma_1Ý =
+	ô Pegasus is‰c Flier ¤ F
+
+ÛPegasus_lemma_2Ý =
+	ô Pegasus is‰c (Ì x· ³ Flier x) = F
+
+ÛPegasus_lemma_3Ý =
+	ô ³ Pegasus is‰c Flier 
+
+ÛPegasus_lemma_4Ý =
+	ô ³ Pegasus is‰c (Ì x· ³ Flier x)
+=TEX
+
+\ignore{
+=SML
+val is‰c_def = get_spec ¬$is‰c®;
+val Pegasus_def = get_spec ¬Pegasus®;
+val Flier_def = get_spec ¬Flier®;
+
+set_goal([], ¬Pegasus is‰c Flier ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
+val Pegasus_lemma_1 = save_pop_thm "Pegasus_lemma_1";
+
+set_goal([], ¬Pegasus is‰c (Ì x· ³ Flier x) ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
+val Pegasus_lemma_2 = save_pop_thm "Pegasus_lemma_2";
+
+set_goal([], ¬³ Pegasus is‰c Flier®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
+val Pegasus_lemma_3 = save_pop_thm "Pegasus_lemma_3";
+
+set_goal([], ¬³ Pegasus is‰c (Ì x· ³ Flier x)®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
+val Pegasus_lemma_4 = save_pop_thm "Pegasus_lemma_4";
+=TEX
+}%ignore
+
+In case you may doubt the neutrality of our use of lambda expressions, we show here that they are inessential to this approach, and can be dispensed with in favour of explict definitions of the predicates required.
+Thus we may instead define a predicate which is the denial of \emph{Flier}:
+
+¹HOLCONST
+Ü ÛNonFlierÝ : 'a ­ BOOL
+÷üüüüüü
+Ü µx· NonFlier x ¤ ³ Flier x
+°
+
+We can then prove the slightly reworded:
+
+=GFT
+ÛPegasus_lemma_5Ý = ô Pegasus is‰c NonFlier ¤ F
+=TEX
+
+the proof of which need not mention the predicate, since it suffices to know that the subject does not exist.
+
+\ignore{
+=SML
+set_goal([], ¬Pegasus is‰c NonFlier ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
+val Pegasus_lemma_5 = save_pop_thm "Pegasus_lemma_5";
+=TEX
+}%ignore
+
+This general claim can be expressed in HOL and proven.
+To make it read sensibly however, it is best for us to define the relevant notion of existence.
+
+¹HOLCONST
+Ü ÛExistentÝ : 'a ­ BOOL
+÷üüüüüü
+Ü µx· Existent x ¤ T
+°
+
+The definition looks a bit bizarre and works for just the same reason that we do not need to know the predicate to know that predication to a non-existent will be false.
+This predicate will always be true, unless it is applied to a term which fails to denote.
+So we satisfy another of Grice's desiderata, that the non-existence of Pegasus can be stated.
+
+But first a more general result:
+
+=GFT
+ÛExistent_lemma_1Ý =
+	ô µ P x· ³ x is‰c Existent ´ ³ x is‰c P
+=TEX
+
+\ignore{
+=SML
+val Existent_def = get_spec ¬Existent®;
+
+set_goal([], ¬µP x· ³ (x is‰c Existent) ´ ³ (x is‰c P)®);
+a (REPEAT µ_tac THEN rewrite_tac [is‰c_def, Existent_def]
+	THEN REPEAT strip_tac);
+val Existent_lemma_1 = save_pop_thm "Existent_lemma_1";
+=TEX
+}%ignore
+
+Desideratum A8 is satisfied by the standard quantifiers in HOL.
+
+=GFT
+Û¶_lemma_1Ý = 
+	ô µ P· Pegasus is‰c P ´ (¶ x· x is‰c P)
+
+Ûµ_lemma_1Ý =
+	ô µ P· (µ x· x is‰c P) ´ Pegasus is‰c P
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µP:'a ­ BOOL· Pegasus is‰c P ´ (¶ x· x is‰c P)®);
+a (REPEAT strip_tac);
+a (¶_tac ¬Pegasus®);
+a (asm_rewrite_tac []);
+val ¶_lemma_1 = save_pop_thm "¶_lemma_1";
+
+set_goal([], ¬µP· (µ x· x is‰c P) ´ Pegasus is‰c P®);
+a (REPEAT strip_tac);
+a (asm_rewrite_tac []);
+val µ_lemma_1 = save_pop_thm "µ_lemma_1";
+=TEX
+}%ignore
+
+
+\ignore{
+=SML
+force_new_pc "'gricec";
+merge_pcs ["'savedthm_cs_¶_proof"] "'gricec";
+set_merge_pcs ["rbjmisc", "'gricec"];
+=TEX
+}%ignore
+
+\subsection{Quantifier Inference-Rules}
+
+We now show the correspondence between the quantification rule in System Q with the standard quantifiers in HOL.
+Because of this correspondence we can use the standard HOL quantifiers in System C and get a good correspondence with System Q in this area.
+When we come to System S it will be necessary to redefine the quantifiers to obtain those qualifications on $µE$ and $¶I$ which are necessary to cope with Grice's ideas about failing descriptions.
+
+=GFT
+ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
+ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
+Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
+Û¶EÝ =	ô µ P Q· (µ x· [P x] ˜ Q) ´ ([¶ x· P x] ˜ Q)
+=TEX
+
+\ignore{
+=SML
 set_goal([], ¬µ ‡ P· (µx· (‡ ˜ P x)) ´ (‡ ˜ µx· P x)®);
 a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
 val µI = save_pop_thm "µI";
@@ -530,10 +558,9 @@ a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
 a (¶_tac ¬x® THEN asm_rewrite_tac[]);
 val ¶I = save_pop_thm "¶I";
 
-set_goal([], ¬µ ‡ P c x· (P x ˜ ‡) ´ (¶x· P x ˜ ‡)®);
+set_goal([], ¬µ P Q· (µx· ([P x] ˜ Q)) ´ ([¶x· P x] ˜ Q)®);
 a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-a (asm_rewrite_tac[]);
+a (asm_fc_tac[]);
 val ¶E = save_pop_thm "¶E";
 =TEX
 }%ignore
@@ -542,20 +569,20 @@ An example of the effect of substitutions obtained by use of these theorems in C
 
 Take ths simple case of $µE$, with the predicate
 =INLINEFT
-Ìx· ³ Flies ‰g x
+Ìx· ³ x is‰c Flier
 =TEX
  which we seek to instantiate to Pegasus.
 
 We can specialise $µE$ to this case like this:
 =SML
-val sve = list_µ_elim [¬[]:BOOL LIST®, ¬Ìx· ³ Flies ‰g x®, ¬Pegasus®] µE;
+val sve = list_µ_elim [¬[]:BOOL LIST®, ¬Ìx· ³ x is‰c Flier®, ¬Pegasus®] µE;
 =TEX
 
 This gives the theorem:
 
 =GFT
-val sve =
-   ô ([] ˜ (µ x· (Ì x· ³ Flies ‰g x) x)) ´ ([] ˜ (Ì x· ³ Flies ‰g x) Pegasus) : THM
+val sve =	ô ([] ˜ (µ x· (Ì x· ³ x is‰c Flier) x))
+		´ ([] ˜ (Ì x· ³ x is‰c Flier) Pegasus) : THM
 =TEX
 
 in which there are two occurrences of the lambda expression in the places previously occupied by the variable $P$.
@@ -569,7 +596,7 @@ rewrite_rule [] sve;
 Which yields a theorem justifying the required inference.
 
 =GFT
-val it = ô ([] ˜ (µ x· ³ Flies ‰g x)) ´ ([] ˜ ³ Flies ‰g Pegasus) : THM
+val it = ô ([] ˜ (µ x· ³ x is‰c Flier)) ´ ([] ˜ ³ Pegasus is‰c Flier) : THM
 =TEX
 
 All the above rules simply explicate the standard aspects of the logic of Q and C and do not reflect the specific additional features which Grice requires in connection with vacuous names.
@@ -580,18 +607,19 @@ The main risk for Grice is in the detail of his presentation, bearing in mind th
 
 \subsubsection{A}
 
-We have already defined the propositional function ``Exists'' which tells us whether a name designates.
+We have already defined the predicate ``Existent'' which tells us whether a name designates.
 
 The following theorem indicates that the propositional function captures the intent of Grice's ``+exists'' notation.
 
 =GFT
-ÛE1Ý =	ô µ Æ Á· Æ ‰g Á ´ Exists Á
+ÛE1Ý =	ô µÆ Á· Á is‰c Æ ´ Á is‰c Existent
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¬µÆ Á· Æ ‰g Á ´ Exists Á®);
-a (REPEAT µ_tac THEN rewrite_tac [Exists_def, get_spec ¬$‰g®]);
+set_goal([], ¬µÆ Á· Á is‰c Æ ´ Á is‰c Existent®);
+a (REPEAT µ_tac THEN rewrite_tac [Existent_def, get_spec ¬$is‰c®]);
+a (cond_cases_tac ¬Á = â®);
 val E1 = save_pop_thm "E1";
 =TEX
 }%ignore
@@ -604,7 +632,7 @@ In Grice \emph{E\_committal} is a relationship, here it is a property of proposi
 ¹HOLCONST
 Ü ÛE_committalÝ : ('a ­ BOOL) ­ BOOL
 ÷üüüüüü
-Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Exists Á
+Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Existent Á
 °
 
 The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
@@ -667,20 +695,16 @@ val E_6¶b = save_pop_thm "E_6¶b";
 }%ignore
 
 
-The definition we have already given for \emph{Exists} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
+The definition we have already given for \emph{Existent} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
 
-\subsubsection{B. ¶ Quantified Formulae}
+\subsubsection{B. Existentially Quantified Formulae}
 
 This has already been covered.
 
 Grice wishes to distinguish himself from Meinong, but his system allows quantification over non-existents, and he can therefore only distinguish himself from Meinong by distancing himself also from Quine's criteria of ontological committment.
 This he could easily do by adopting Carnap's distinction between internal and external questions, and denying that any metaphysical significance attaches to something being counted in the range of quantification.
 
-\section{Objections Considered}
-
-I will offer some discussion of Grice's problem here and then offer some of my own.
-
-\section{Identity}
+\subsection{Identity}
 
 HOL already has identity and this identity is good for System C.
 It HOL it is a curried propositional function of polymorphic type ”'a ­ 'a ­ BOOL®.
@@ -689,7 +713,7 @@ If applied using function application the universal law of reflexivity holds.
 To get a ``strict'' version of equality (i.e. one which is false when either argument does not exist) it is necessary to uncurry equality so that its type becomes ”('a ¸ 'a) ­ BOOL® and apply it using the system C copula for binary relations.
 
 These two seem to correspond to Grice's intended two kinds of equality insofar as the difference between the two is primarily that one does and the other does not allow that there may be true identities between non-denoting names.
-However this is achieved in system C by having two quite distinct identity relations only one of which is properly a predicate, and applied through our copula $‰g$.
+However this is achieved in system C by having two quite distinct identity relations only one of which is properly a predicate, and applied through our copula $is‰c$.
 The other is a propositional function which must be applied without use of the copula (because the copula forces strictness, i.e. forces predication to undefined values to yield falsehoods).
 
 Grice seems to think that the required distinction between equalities can be achieved by the use of his scoping subscripts, but I have not yet been convinced that his is correct in this.
@@ -726,52 +750,52 @@ To get a nice notation for ``strong'' equality we need to define it as an infix 
 We could use the $é$ symbol, but this usually represents an equivalence relation which is weaker than identity, so we will subscript the $=$ sign with g, suggesting that it is just the same thing applied through our copula.
 
 =SML
-declare_infix (200, "=‰g");
+declare_infix (200, "=‰c");
 =TEX
 
 ¹HOLCONST
-Ü $Û=‰gÝ : 'a ­ 'a ­ BOOL
+Ü $Û=‰cÝ : 'a ­ 'a ­ BOOL
 ÷üüüüüü
-Ü µx y:'a· (x =‰g y) = (Uncurry $=) ‰g‰2 (x,y)
+Ü µx y:'a· (x =‰c y) = (x,y) is‰c‰2 (Uncurry $=)
 °
 
 We can now prove:
 
 =GFT
 Pegasus_eq_lemma2 =
-	ô ³ Pegasus =‰g Pegasus
+	ô ³ Pegasus =‰c Pegasus
 =TEX
 
 And must rest content with the qualified rule:
 
 =GFT
-Ûeq‰g_refl_thmÝ =
-	ô µ x· Exists ‰g x ¤ x =‰g x
+Ûeq‰c_refl_thmÝ =
+	ô µ x· x is‰c Existent ¤ x =‰c x
 =TEX
 
 The ``strictness'' of this equality is expressed by the theorem (which would have made a better definition):
 
 =GFT
-eq‰g_strict_thm =
-	ô µ x y· x =‰g y ¤ Exists ‰g x ± Exists ‰g y ± x = y
+eq‰c_strict_thm =
+	ô µ x y· x =‰c y ¤ x is‰c Existent ± y is‰c Existent ± x = y
 =TEX
 
 \ignore{
 =SML
-val eq‰g_def = get_spec ¬$=‰g®;
+val eq‰c_def = get_spec ¬$=‰c®;
 
-set_goal([], ¬³ Pegasus =‰g Pegasus®);
-a (rewrite_tac[eq‰g_def, ‰g‰2_def, Pegasus_def]);
+set_goal([], ¬³ Pegasus =‰c Pegasus®);
+a (rewrite_tac[eq‰c_def, is‰c‰2_def, Pegasus_def]);
 val Pegasus_eq_lemma2 = save_pop_thm "Pegasus_eq_lemma2";
 
-set_goal([], ¬µx· Exists ‰g x ¤ x =‰g x®);
-a (rewrite_tac[eq‰g_def, ‰g_def, ‰g‰2_def, Exists_def]);
-val eq‰g_refl_thm = save_pop_thm "eq‰g_refl_thm";
+set_goal([], ¬µx· x is‰c Existent ¤ x =‰c x®);
+a (rewrite_tac[eq‰c_def, is‰c_def, is‰c‰2_def, Existent_def]);
+val eq‰c_refl_thm = save_pop_thm "eq‰c_refl_thm";
 
-set_goal([], ¬µx y· x =‰g y ¤ Exists ‰g x ± Exists ‰g y ± x = y®);
-a (rewrite_tac[eq‰g_def, ‰g_def, ‰g‰2_def, Exists_def]);
+set_goal([], ¬µx y· x =‰c y ¤ x is‰c Existent ± y is‰c Existent ± x = y®);
+a (rewrite_tac[eq‰c_def, is‰c_def, is‰c‰2_def, Existent_def]);
 a (REPEAT strip_tac);
-val eq‰g_strict_thm = save_pop_thm "eq‰g_strict_thm";
+val eq‰c_strict_thm = save_pop_thm "eq‰c_strict_thm";
 =TEX
 }%ignore
 
@@ -780,13 +804,13 @@ Its equivalence to the primitive equality in HOL can be illustrated by the follo
 
 =GFT
 Ûsnd_order_eq_thmÝ =
-	ô µ x y· x = y ¤ (µ P· P ‰g x ¤ P ‰g y)
+	ô µ x y· x = y ¤ (µ P· x is‰c P ¤ y is‰c P)
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¬µx y· x = y ¤ (µP· P ‰g x ¤ P ‰g y)®);
-a (rewrite_tac[‰g_def] THEN REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
+set_goal([], ¬µx y· x = y ¤ (µP· x is‰c P ¤ y is‰c P)®);
+a (rewrite_tac[is‰c_def] THEN REPEAT strip_tac THEN_TRY all_var_elim_asm_tac);
 a (spec_nth_asm_tac 1 ¬Ìz· z = x® THEN all_asm_ante_tac
 	THEN_TRY rewrite_tac[] THEN REPEAT strip_tac
 	THEN all_var_elim_asm_tac THEN_TRY asm_rewrite_tac[]
@@ -805,7 +829,7 @@ Even in that case a similar device would work as illuatrated by the following th
 	ô µ x y· x = y ¤ (µ P· P x ¤ P y)
 =TEX
 
-In which the gricean copula has been dropped so that the predication is no longer strict.
+In which the griceian copula has been dropped so that the predication is no longer strict.
 
 \ignore{
 =SML
@@ -815,14 +839,6 @@ a (SPEC_NTH_ASM_T 1 ¬Ìx· x = y® (strip_asm_tac o (rewrite_rule[])));
 val snd_order_eq_thm2 = save_pop_thm "snd_order_eq_thm2";
 =TEX
 }%ignore
-
-\subsection{Names and Descriptions}
-
-To provide for descriptions as distinct from names System S is to be considered and the discussion of this topic is therefore deferred until System S has been presented.
-
-\section{System S}
-
-
 
 \subsection{Names and Descriptions}
 
@@ -836,22 +852,24 @@ declare_binder "É";
 ¹HOLCONST
 Ü $ÛÉÝ : ('a ­ BOOL) ­ 'a
 ÷üüüüüü
-Ü µÆ· ($É Æ) = ÅÁ· (Æ ‰g Á ± µÂ· Æ ‰g Â ´ Â = Á) 
-		² (³¶Ç· Æ ‰g Ç ± µÂ· Æ ‰g Â ´ Â = Ç) ± Á = â
+Ü µÆ· ($É Æ) = ÅÁ· (Á is‰c Æ ± µÂ· Â is‰c Æ ´ Â = Á) 
+		² (³¶Ç· Ç is‰c Æ ± µÂ· Â is‰c Æ ´ Â = Ç) ± Á = â
 °
 
 =GFT
-ÛÉ_thm1Ý = ô µ Ç· Æ ‰g Ç ± (µ Â· Æ ‰g Â ´ Â = Ç) ´ $É Æ = Ç
-ÛÉ_thm2Ý = ô ³ (¶ Ç· Æ ‰g Ç ± (µ Â· Æ ‰g Â ´ Â = Ç)) ´ $É Æ = â
+ÛÉ_thm1Ý = ô µ Ç· Ç is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Ç) ´ $É Æ = Ç
+ÛÉ_thm2Ý = ô ³ (¶ Ç· Ç is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Ç)) ´ $É Æ = â
 =TEX
 
 \ignore{
 =SML
 val É_def = get_spec ¬$É®;
 
-set_goal([], ¬µÇ:'a· Æ ‰g Ç ± (µÂ· Æ ‰g Â ´ Â = Ç) ´ ($É Æ) = Ç ®);
+set_goal([], ¬µÇ:'a· Ç is‰c Æ ± (µÂ· Â is‰c Æ ´ Â = Ç) ´ ($É Æ) = Ç ®);
 a (REPEAT strip_tac THEN rewrite_tac [É_def]);
-a (Å_tac ¬ÅÁ· Æ ‰g Á ± (µ Â· Æ ‰g Â ´ Â = Á) ² ³ (¶ Ç· Æ ‰g Ç ± (µ Â· Æ ‰g Â ´ Â = Ç)) ± Á = â®);
+a (Å_tac ¬Å Á
+             · Á is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Á)
+                 ² ³ (¶ Ç· Ç is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Ç)) ± Á = â®);
 (* *** Goal "1" *** *)
 a (¶_tac ¬Ç® THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
@@ -861,16 +879,18 @@ a (asm_rewrite_tac[]);
 a (asm_fc_tac[]);
 val É_thm1 = save_pop_thm "É_thm1";
 
-set_goal([], ¬(³¶Ç:'a· Æ ‰g Ç ± (µÂ· Æ ‰g Â ´ Â = Ç)) ´ ($É Æ) = â®);
+set_goal([], ¬(³¶Ç:'a· Ç is‰c Æ ± (µÂ· Â is‰c Æ ´ Â = Ç)) ´ ($É Æ) = â®);
 a (strip_tac);
 a (REPEAT strip_tac THEN rewrite_tac [É_def]);
-a (Å_tac ¬ÅÁ· Æ ‰g Á ± (µ Â· Æ ‰g Â ´ Â = Á) ² ³ (¶ Ç· Æ ‰g Ç ± (µ Â· Æ ‰g Â ´ Â = Ç)) ± Á = â®);
+a (Å_tac ¬Å Á
+             · Á is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Á)
+                 ² ³ (¶ Ç· Ç is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Ç)) ± Á = â®);
 (* *** Goal "1" *** *)
 a (¶_tac ¬â® THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 3 ¬(Å Á
-             · Æ ‰g Á ± (µ Â· Æ ‰g Â ´ Â = Á)
-                 ² ³ (¶ Ç· Æ ‰g Ç ± (µ Â· Æ ‰g Â ´ Â = Ç)) ± Á = â)®);
+a (spec_nth_asm_tac 3 ¬Å Á
+             · Á is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Á)
+                 ² ³ (¶ Ç· Ç is‰c Æ ± (µ Â· Â is‰c Æ ´ Â = Ç)) ± Á = â®);
 a (spec_nth_asm_tac 3 ¬Â®);
 val É_thm2 = save_pop_thm "É_thm2";
 =TEX
@@ -883,13 +903,21 @@ Grice has effectively split the non-denoting expressions into two, those which c
 Since our embedding requires all expressions to have a value, we would have to add another kind of entity into the domain of interpretation and define quantifiers which operate over expressions which have a correlate but not over the values of non-denoting descriptions.
 
 This would effect most of the embedding, the whole would have to be reworked (in a routine way).
+We investigate this possibility in the next section.
 
+\section{System S}
 
-A new theory is needed which I will call ``sysc'' which is created here:
+System S contains two minor adjustments to System C which are concerned with the treatment of non-designating names and failing descriptions.
+In relation to non-designating names, the semantics in System C now allows that they have distinct correlates.
+In addition a new subdomain is introduced which provides at least one (since we can always prove that there is a failing description) surrogate for a failing description.
+The primary reason for recognising, in the semantics, denotations for failing descriptions, is so that we can arrange as Grice seems to require, that they do not fall into the range of the System C quantifiers.
+This in turn results in the qualification of the rules EG and UI.
+
+A new theory is needed which I will call ``grices'' which is created here:
 
 =SML
 open_theory "grice";
-force_new_theory "syss";
+force_new_theory "grices";
 set_pc "rbjmisc";
 =TEX
 
@@ -938,39 +966,40 @@ save_cs_¶_thm (pop_thm());
 The type of exressions in System S is given by the following type abbreviation:
 
 =SML
-declare_type_abbrev("SC", ["'a"], ”'a + 'b®);
+declare_type_abbrev("SC", [], ”'a + 'b®);
 =TEX
 
+
 ¹HOLCONST
-Ü ÛâÝ: 'a SC
+Ü ÛâÝ: SC
 ÷üüüüüü
 Ü â = InL â_corr
 °
 
-It will be useful to have tests and projections for values of type ”'a SC®.
+It will be useful to have tests and projections for values of type ”SC®.
 
 This propositional function tests whether an SC is a correlate:
 
 ¹HOLCONST
-Ü ÛIsCorrÝ: 'a SC ­ BOOL
+Ü ÛIsCorrÝ: SC ­ BOOL
 ÷üüüüüü
-Ü µv:'a SC· IsCorr v ¤ IsL v
+Ü µv:SC· IsCorr v ¤ IsL v
 °
 
-This function extracts the correlate (of type ”'a®) from a value of type ”'a SC®.
+This function extracts the correlate (of type ”'a®) from a value of type ”SC®.
 
 ¹HOLCONST
-Ü ÛCorrÝ: 'a SC ­ 'a
+Ü ÛCorrÝ: SC ­ 'a
 ÷üüüüüü
-Ü µv:'a SC· Corr v = OutL v
+Ü µv:SC· Corr v = OutL v
 °
 
-This propositional function tells us whether a value of type ”'a SC® is a denotatum.
+This propositional function tells us whether a value of type ”SC® is a denotatum.
 
 ¹HOLCONST
-Ü ÛIsDenÝ: 'a SC ­ BOOL
+Ü ÛIsDenÝ: SC ­ BOOL
 ÷üüüüüü
-Ü µv:'a SC· IsDen v ¤ IsCorr v ± denotatum (Corr v)
+Ü µv:SC· IsDen v ¤ IsCorr v ± denotatum (Corr v)
 °
 
 There are now difficulties in the treatment of constants and variables, since a HOL constant or variable constrained only by the type of the elements of an interpretation will not be known to denote (which is OK), but will not even be known to correlate, and hence may not even be in the range of quantification.
@@ -985,7 +1014,7 @@ declare_infix (400, "‰h");
 =TEX
 
 ¹HOLCONST
-Ü $‰h: ('a ­ BOOL) ­ 'a SC ­ BOOL
+Ü $‰h: ('a ­ BOOL) ­ SC ­ BOOL
 ÷üüüüüü
 Ü µ p t· p ‰h t ¤ if IsDen t then p (Corr t) else F
 °
@@ -1001,7 +1030,7 @@ declare_infix (400, "‰h‰2");
 =TEX
 
 ¹HOLCONST
-Ü $‰h‰2: ('a ¸ 'c ­ BOOL) ­ ('a SC ¸ 'c SC) ­ BOOL
+Ü $‰h‰2: ('a ¸ 'a ­ BOOL) ­ (SC ¸ SC) ­ BOOL
 ÷üüüüüü
 Ü µ p t· p ‰h‰2 t ¤ if IsDen (Fst t) ± IsDen (Snd t) then p (Corr (Fst t), Corr (Snd t)) else F
 °
@@ -1025,7 +1054,7 @@ val IsCorr_def = get_spec ¬IsCorr®;
 val Corr_def = get_spec ¬Corr®;
 val IsDen_def = get_spec ¬IsDen®;
 
-set_goal([], ¬¶Pegasus:'a SC· IsCorr Pegasus ± ³ IsDen Pegasus®);
+set_goal([], ¬¶Pegasus:SC· IsCorr Pegasus ± ³ IsDen Pegasus®);
 a (¶_tac ¬InL â_corr®);
 a (rewrite_tac [IsCorr_def, IsDen_def, Corr_def, â_corr_def]);
 val _ = save_cs_¶_thm (pop_thm());
@@ -1033,16 +1062,16 @@ val _ = save_cs_¶_thm (pop_thm());
 }%ignore
 
 ¹HOLCONST
-Ü ÛPegasusÝ : 'a SC
+Ü ÛPegasusÝ : SC
 ÷üüüüüü
 Ü IsCorr Pegasus ± ³ IsDen Pegasus
 °
 
-And the predicate \emph{Flies}.
+And the predicate \emph{Flier}.
 Note that the predicates apply only to real desigata under the normal HOL application, its only under our special predication that they become applicatble to possibly non denoting values.
 
 ¹HOLCONST
-Ü ÛFliesÝ : 'a ­ BOOL
+Ü ÛFlierÝ : 'a ­ BOOL
 ÷üüüüüü
 Ü T
 °
@@ -1051,63 +1080,63 @@ We can now prove in HOL the elementary facts we know about Pegasus flying, yield
 
 =GFT
 ÛPegasus_lemma_1Ý =
-	ô Flies ‰h Pegasus ¤ F
+	ô Flier ‰h Pegasus ¤ F
 
 ÛPegasus_lemma_2Ý =
-	ô (Ì x· ³ Flies x) ‰h Pegasus = F
+	ô (Ì x· ³ Flier x) ‰h Pegasus = F
 
 ÛPegasus_lemma_3Ý =
-	ô ³ Flies ‰h Pegasus
+	ô ³ Flier ‰h Pegasus
 
 ÛPegasus_lemma_4Ý =
-	ô ³ (Ì x· ³ Flies x) ‰h Pegasus
+	ô ³ (Ì x· ³ Flier x) ‰h Pegasus
 =TEX
 
 \ignore{
 =SML
-val g_def = get_spec ¬$‰h®;
+val is‰c_def = get_spec ¬$‰h®;
 val Pegasus_def = get_spec ¬Pegasus®;
-val Flies_def = get_spec ¬Flies®;
+val Flier_def = get_spec ¬Flier®;
 
-set_goal([], ¬Flies ‰h Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
+set_goal([], ¬Flier ‰h Pegasus ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
 val Pegasus_lemma_1 = save_pop_thm "Pegasus_lemma_1";
 
-set_goal([], ¬(Ìx· ³ Flies x) ‰h Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
+set_goal([], ¬(Ìx· ³ Flier x) ‰h Pegasus ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
 val Pegasus_lemma_2 = save_pop_thm "Pegasus_lemma_2";
 
-set_goal([], ¬³ Flies ‰h Pegasus®);
-a (rewrite_tac [g_def, Pegasus_def]);
+set_goal([], ¬³ Flier ‰h Pegasus®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
 val Pegasus_lemma_3 = save_pop_thm "Pegasus_lemma_3";
 
-set_goal([], ¬³ (Ìx· ³ Flies x) ‰h Pegasus®);
-a (rewrite_tac [g_def, Pegasus_def]);
+set_goal([], ¬³ (Ìx· ³ Flier x) ‰h Pegasus®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
 val Pegasus_lemma_4 = save_pop_thm "Pegasus_lemma_4";
 =TEX
 }%ignore
 
 In case you may doubt the neutrality of our use of lambda expressions, we show here that they are inessential to this approach, and can be dispensed with in favour of explict definitions of the predicates required.
-Thus we may instead define a predicate which is the denial of \emph{Flies}:
+Thus we may instead define a predicate which is the denial of \emph{Flier}:
 
 ¹HOLCONST
-Ü ÛDoesnt_FlyÝ : 'a ­ BOOL
+Ü ÛNonFlierÝ : 'a ­ BOOL
 ÷üüüüüü
-Ü µx· Doesnt_Fly x ¤ ³ Flies x
+Ü µx· NonFlier x ¤ ³ Flier x
 °
 
 We can then prove the slightly reworded:
 
 =GFT
-ÛPegasus_lemma_5Ý = ô Doesnt_Fly ‰h Pegasus ¤ F
+ÛPegasus_lemma_5Ý = ô NonFlier ‰h Pegasus ¤ F
 =TEX
 
 the proof of which need not mention the predicate, since it suffices to know that the subject does not exist.
 
 \ignore{
 =SML
-set_goal([], ¬Doesnt_Fly ‰h Pegasus ¤ F®);
-a (rewrite_tac [g_def, Pegasus_def]);
+set_goal([], ¬NonFlier ‰h Pegasus ¤ F®);
+a (rewrite_tac [is‰c_def, Pegasus_def]);
 val Pegasus_lemma_5 = save_pop_thm "Pegasus_lemma_5";
 =TEX
 }%ignore
@@ -1116,9 +1145,9 @@ This general claim can be expressed in HOL and proven.
 To make it read sensibly however, it is best for us to define the relevant notion of existence.
 
 ¹HOLCONST
-Ü ÛExistsÝ : 'a ­ BOOL
+Ü ÛExistentÝ : 'a ­ BOOL
 ÷üüüüüü
-Ü µx· Exists x ¤ T
+Ü µx· Existent x ¤ T
 °
 
 The definition looks a bit bizarre and works for just the same reason that we do not need to know the predicate to know that predication to a non-existent will be false.
@@ -1128,18 +1157,18 @@ So we satisfy another of Grice's desiderata, that the non-existence of Pegasus c
 But first a more general result:
 
 =GFT
-ÛExists_lemma_1Ý =
-	ô µ P x· ³ Exists ‰h x ´ ³ P ‰h x
+ÛExistent_lemma_1Ý =
+	ô µ P x· ³ Existent ‰h x ´ ³ P ‰h x
 =TEX
 
 \ignore{
 =SML
-val Exists_def = get_spec ¬Exists®;
+val Existent_def = get_spec ¬Existent®;
 
-set_goal([], ¬µP x· ³ (Exists ‰h x) ´ ³ (P ‰h x)®);
-a (REPEAT µ_tac THEN rewrite_tac [g_def, Exists_def]
+set_goal([], ¬µP x· ³ (Existent ‰h x) ´ ³ (P ‰h x)®);
+a (REPEAT µ_tac THEN rewrite_tac [is‰c_def, Existent_def]
 	THEN REPEAT strip_tac);
-val Exists_lemma_1 = save_pop_thm "Exists_lemma_1";
+val Existent_lemma_1 = save_pop_thm "Existent_lemma_1";
 =TEX
 }%ignore
 
@@ -1155,13 +1184,13 @@ Desideratum A8 is satisfied by the standard quantifiers in HOL.
 
 \ignore{
 =SML
-set_goal([], ¬µP:'a ­ BOOL· P ‰h (Pegasus:'a SC) ´ ¶x:'a SC· P ‰h x®);
+set_goal([], ¬µP:'a ­ BOOL· P ‰h (Pegasus:SC) ´ ¶x:SC· P ‰h x®);
 a (REPEAT strip_tac);
 a (¶_tac ¬Pegasus®);
 a (asm_rewrite_tac []);
 val ¶_lemma_1 = save_pop_thm "¶_lemma_1";
 
-set_goal([], ¬µP· (µx:'a SC· P ‰h x) ´ P ‰h (Pegasus:'a SC)®);
+set_goal([], ¬µP· (µx:SC· P ‰h x) ´ P ‰h (Pegasus:SC)®);
 a (REPEAT strip_tac);
 a (asm_rewrite_tac []);
 val µ_lemma_1 = save_pop_thm "µ_lemma_1";
@@ -1170,14 +1199,19 @@ val µ_lemma_1 = save_pop_thm "µ_lemma_1";
 
 However, the HOL native quantifiers are unsatisfactory since they quantify over the values introduced into the domain of the interpretation as correlates for failing descriptions.
 
-This is shown by the following lemma:
+This is shown by the following theorem:
 
 =GFT
+Û¶_not_Corr_thmÝ =
+	ô ¶ x· ³ IsCorr x
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¬¶x· IsCorr x ± ³ IsDen x®);
+set_goal([], ¬¶x:SC· ³ IsCorr x®);
+a (rewrite_tac [IsCorr_def]);
+a (¶_tac ¬InR (Åx:'b·T)® THEN rewrite_tac[]);
+val ¶_not_Corr_thm = save_pop_thm "¶_not_Corr_thm";
 =TEX
 }%ignore
 
@@ -1190,126 +1224,102 @@ set_merge_pcs ["rbjmisc", "'syss"];
 =TEX
 }%ignore
 
-\subsection{IVB-3 Inference-Rules}
+\subsection{Quantifier Definitions}
 
-Since we are working with a semantic embedding rather than a syntactic meta-theory we cannot prove results about derivations and instead present proofs about the semantics which show that the required inference rules would be sound.
+We now define quantifiers which quantify over correlates only, not over the values of failing descriptions.
 
-To do this we adopt a notation for expressing entailment in C in a manner parallel to the presentation of the natural deduction system of Q
+Quantifiers are propositional functions over propositional functions, and are usually syntactically ``binders'', so that they are expected to be applied to a lambda abstraction and the lambda in that expression is to be omitted.
+We use the usual quantifier symbols subscripted with \emph{s} to distinguish them from the standard quantifiers.
 
 =SML
-declare_infix(4, "˜");
+declare_binder "µ‰s";
+declare_binder "¶‰s";
 =TEX
 
+The domain of interpretation now includes correlates and some other things (for failing descriptions).
+The things for failing descriptions are to be excluded from the range of the quantifiers (they really really don't exist) so quantifiers range only over correlates.
+The dollar sign locally supresses the binder status for the purpose of giving the definition.
+
 ¹HOLCONST
-Ü $˜ : BOOL LIST ­ BOOL ­ BOOL
+Ü $Ûµ‰sÝ : (SC ­ BOOL) ­ BOOL
 ÷üüüüüü
-Ü µal c· (al ˜ c) ¤ (µ‰L al) ´ c
+Ü µf· $µ‰s f ¤ µx· IsCorr x ´ f x
 °
 
-In the following theorems which capture the content of Grices rules for Q as theorems of C, the variables Æ, Ù, Ú... range over formulae (boolean terms) and ‡, „, Š... over lists (finite sequences) of formulae.
-$P$ ranges over propositional functions, values whose types are instances of ”'a ­ BOOL® (in which $'a$ is a type variable). 
-The notation ``[Æ; Ù; ...]'' is an explicit list formation (``[Æ]'' being a single element list) and the symbol ``$ë$'' is the concatenation operator over lists.
+¹HOLCONST
+Ü $Û¶‰sÝ : (SC ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µf· $¶‰s f ¤ ¶x· IsCorr x ± f x
+°
 
-In general the rules of Q can be formulated as theorems of C because C is a higher order logic, and can quantify over predicates.
-This means that where substitution is involved in a rule, this is captured as a theorem by the use of a variable as a predicate applied to a variable as an argument.
-When such a theorem is instantiated using a lambda expression as the predicate, the substitution into the expression will be achieved by beta-reduction.
+To express the rules for these new quantifiers we define a new notion of existence.
+This cannot be a bona-fide predicate, since such a predicate would of necessity be false of the correlates which are not designata (if applied through the copula), so it must be thought of as a propositional function to be applied without the copula.
+
+¹HOLCONST
+Ü ÛExistent‰sÝ : SC ­ BOOL
+÷üüüüüü
+Ü µx· Existent‰s x ¤ ¶‰s y· x = y
+°
+
+\subsection{Quantifier Inference-Rules}
+
+The propositional rules are common to Systems C and S and are shown above in Section \ref{PropRules}.
+
+We have new quantifiers in System S, and the quantifier rules will be modified accordingly.
 
 =GFT
-ÛASSÝ =	ô µ Æ· [Æ] ˜ Æ
-ÛRAAÝ =	ô µÆ Ù Ú ‡· ([Æ] ë ‡ ˜ Ù ± ³Ù) ´ (‡ ˜ ³Æ)
-ÛDNÝ =	ô µ Æ· [³ ³ Æ] ˜ Æ
-Û±IÝ =		ô µ Æ Ù· [Æ; Ù] ˜ Æ ± Ù
-Û±EÝ =	ô µ Æ Ù· ([Æ ± Ù] ˜ Æ) ± ([Æ ± Ù] ˜ Ù)
-Û²IÝ =		ô µ Æ Ù· ([Æ] ˜ Æ ² Ù) ± ([Æ] ˜ Ù ² Æ)
-Û²EÝ =	ô µ Æ Ù Ú ‡ „ Š· ([Æ] ë ‡ ˜ Ú) ± ([Ù] ë „ ˜ Ú) ± (Š ˜ Æ ² Ù)
-			´ (‡ ë „ ë Š ˜ Ú)
-ÛCPÝ =	ô µ Æ Ù ‡· ([Æ] ë ‡ ˜ Ù) ´ (‡ ˜ Æ ´ Ù)
-ÛMPPÝ =	ô µ Æ Ù· [Æ ´ Ù; Æ] ˜ Ù
-ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
-ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
-Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
-Û¶EÝ =	ô µ ‡ P c x· (P x ˜ ‡) ´ (¶ x· P x ˜ ‡)
+ÛµI‰sÝ =	ô µ ‡ P· (µ x· ‡ ˜ Existent‰s x ± P x) ´ (‡ ˜ (µ‰s x· P x))
+ÛµE‰sÝ =	ô µ ‡ P c· (‡ ˜ Existent‰s c ± (µ‰s x· P x)) ´ (‡ ˜ P c)
+Û¶I‰sÝ =	ô µ ‡ P x· (‡ ˜ Existent‰s x ± P x) ´ (‡ ˜ (¶‰s x· P x))
+Û¶E‰sÝ =	ô µ P Q c· (µ x· [Existent‰s x ± P x] ˜ Q) ´ ([¶‰s x· P x] ˜ Q)
 =TEX
 
 \ignore{
 =SML
-val ˜_def = get_spec ¬$˜®;
+val µ‰s_def = get_spec ¬$µ‰s®;
+val ¶‰s_def = get_spec ¬$¶‰s®;
+val Existent‰s_def = get_spec ¬Existent‰s®;
 
-set_goal([], ¬µÆ· [Æ] ˜ Æ®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-val ASS = save_pop_thm "ASS";
+set_goal([], ¬µ ‡ P· (µx· (‡ ˜ Existent‰s x ± P x)) ´ (‡ ˜ µ‰s x· P x)®);
+a (rewrite_tac [˜_def, µ‰s_def, Existent‰s_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+val µI‰s = save_pop_thm "µI‰s";
 
-set_goal([], ¬µÆ Ù Ú ‡· ([Æ]ë ‡ ˜ Ù ± ³Ù) ´ (‡ ˜ ³Æ)®);
-a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val RAA = save_pop_thm "RAA";
+set_goal([], ¬µ ‡ P c· (‡ ˜ Existent‰s c ± µ‰s x· P x) ´ (‡ ˜ P c)®);
+a (rewrite_tac [˜_def, ¶‰s_def, µ‰s_def, Existent‰s_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN_TRY asm_rewrite_tac[]);
+val µE‰s = save_pop_thm "µE‰s";
 
-set_goal([], ¬µÆ· [³³Æ] ˜ Æ®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-val DN = save_pop_thm "DN";
-
-set_goal([], ¬µÆ Ù· [Æ; Ù] ˜ Æ ± Ù®);
-a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val ±I = save_pop_thm "±I";
-
-set_goal([], ¬µÆ Ù· ([Æ ± Ù] ˜ Æ) ± ([Æ ± Ù] ˜ Ù)®);
-a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val ±E = save_pop_thm "±E";
-
-set_goal([], ¬µÆ Ù· ([Æ] ˜ Æ ² Ù) ± ([Æ] ˜ Ù ² Æ)®);
-a (rewrite_tac [˜_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val ²I = save_pop_thm "²I";
-
-set_goal([], ¬µÆ Ù (Ú:BOOL) (‡:BOOL LIST) („:BOOL LIST) (Š:BOOL LIST)· ([Æ]ë ‡ ˜ Ú) ± ([Ù]ë „ ˜ Ú) ± (Š ˜ Æ ² Ù) ´ (‡ ë „ ë Š ˜ Ú)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-val ²E = save_pop_thm "²E";
-
-set_goal([], ¬µÆ Ù ‡· ([Æ]ë ‡ ˜ Ù) ´ (‡ ˜ Æ ´ Ù)®);
-a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val CP = save_pop_thm "CP";
-
-set_goal([], ¬µÆ Ù· ([Æ ´ Ù; Æ] ˜ Ù)®);
-a (rewrite_tac [˜_def, append_def, µ‰L_def, fold_def] THEN REPEAT strip_tac);
-val MPP = save_pop_thm "MPP";
-
-set_goal([], ¬µ ‡ P· (µx· (‡ ˜ P x)) ´ (‡ ˜ µx· P x)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-val µI = save_pop_thm "µI";
-
-set_goal([], ¬µ ‡ P c· (‡ ˜ µx· P x) ´ (‡ ˜ P c)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-val µE = save_pop_thm "µE";
-
-set_goal([], ¬µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ ¶x· P x)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
+set_goal([], ¬µ ‡ P x· (‡ ˜ Existent‰s x ± P x) ´ (‡ ˜ ¶‰s x· P x)®);
+a (rewrite_tac [˜_def, ¶‰s_def, Existent‰s_def] THEN REPEAT strip_tac);
 a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-val ¶I = save_pop_thm "¶I";
+val ¶I‰s = save_pop_thm "¶I‰s";
 
-set_goal([], ¬µ ‡ P c x· (P x ˜ ‡) ´ (¶x· P x ˜ ‡)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-a (asm_rewrite_tac[]);
-val ¶E = save_pop_thm "¶E";
+set_goal([], ¬µ P Q c· (µx· ([Existent‰s x ± P x] ˜ Q)) ´ ([¶‰s x· P x] ˜ Q)®);
+a (rewrite_tac [˜_def, ¶‰s_def, Existent‰s_def] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val ¶E‰s = save_pop_thm "¶E‰s";
 =TEX
 }%ignore
+
 
 An example of the effect of substitutions obtained by use of these theorems in C intended to mimic the rules of Q is as follows.
 
 Take ths simple case of $µE$, with the predicate
 =INLINEFT
-Ìx· ³ Flies ‰h x
+Ìx· ³ Flier ‰h x
 =TEX
  which we seek to instantiate to Pegasus.
 
 We can specialise $µE$ to this case like this:
+
 =SML
-val sve = list_µ_elim [¬[]:BOOL LIST®, ¬Ìx· ³ Flies ‰h x®, ¬Pegasus®] µE;
+val sves = list_µ_elim [¬[]:BOOL LIST®, ¬Ìx· ³ Flier ‰h x®, ¬Pegasus®] µE‰s;
 =TEX
 
 This gives the theorem:
 
 =GFT
-val sve =
-   ô ([] ˜ (µ x· (Ì x· ³ Flies ‰h x) x)) ´ ([] ˜ (Ì x· ³ Flies ‰h x) Pegasus) : THM
+val sves =	ô ([] ˜ Existent‰s Pegasus ± (µ‰s x· (Ì x· ³ Flier ‰h x) x))
+			´ ([] ˜ (Ì x· ³ Flier ‰h x) Pegasus) : THM
 =TEX
 
 in which there are two occurrences of the lambda expression in the places previously occupied by the variable $P$.
@@ -1317,13 +1327,14 @@ in which there are two occurrences of the lambda expression in the places previo
 The substitutions can the be effected by beta reduction which can be achieved by rewriting the theorem as follows:
 
 =SML
-rewrite_rule [] sve;
+rewrite_rule [] sves;
 =TEX
 
 Which yields a theorem justifying the required inference.
 
 =GFT
-val it = ô ([] ˜ (µ x· ³ Flies ‰h x)) ´ ([] ˜ ³ Flies ‰h Pegasus) : THM
+val it =	ô ([] ˜ Existent‰s Pegasus ± (µ‰s x· ³ Flier ‰h x))
+			´ ([] ˜ ³ Flier ‰h Pegasus) : THM
 =TEX
 
 All the above rules simply explicate the standard aspects of the logic of Q and C and do not reflect the specific additional features which Grice requires in connection with vacuous names.
@@ -1334,18 +1345,18 @@ The main risk for Grice is in the detail of his presentation, bearing in mind th
 
 \subsubsection{A}
 
-We have already defined the propositional function ``Exists'' which tells us whether a name designates.
+We have already defined the propositional function ``Existent'' which tells us whether a name designates.
 
 The following theorem indicates that the propositional function captures the intent of Grice's ``+exists'' notation.
 
 =GFT
-ÛE1Ý =	ô µ Æ Á· Æ ‰h Á ´ Exists Á
+ÛE1Ý =	ô µ Æ Á· Æ ‰h Á ´ Existent Á
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¬µÆ Á· Æ ‰h Á ´ Exists Á®);
-a (REPEAT µ_tac THEN rewrite_tac [Exists_def, get_spec ¬$‰h®]);
+set_goal([], ¬µÆ Á· Æ ‰h Á ´ Existent Á®);
+a (REPEAT µ_tac THEN rewrite_tac [Existent_def, get_spec ¬$‰h®]);
 val E1 = save_pop_thm "E1";
 =TEX
 }%ignore
@@ -1358,7 +1369,7 @@ In Grice \emph{E\_committal} is a relationship, here it is a property of proposi
 ¹HOLCONST
 Ü ÛE_committalÝ : ('a ­ BOOL) ­ BOOL
 ÷üüüüüü
-Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Exists Á
+Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Existent Á
 °
 
 The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
@@ -1421,20 +1432,16 @@ val E_6¶b = save_pop_thm "E_6¶b";
 }%ignore
 
 
-The definition we have already given for \emph{Exists} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
+The definition we have already given for \emph{Existent} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
 
-\subsubsection{B. ¶ Quantified Formulae}
+\subsubsection{B. Existentially Quantified Formulae}
 
 This has already been covered.
 
 Grice wishes to distinguish himself from Meinong, but his system allows quantification over non-existents, and he can therefore only distinguish himself from Meinong by distancing himself also from Quine's criteria of ontological committment.
 This he could easily do by adopting Carnap's distinction between internal and external questions, and denying that any metaphysical significance attaches to something being counted in the range of quantification.
 
-\section{Objections Considered}
-
-I will offer some discussion of Grice's problem here and then offer some of my own.
-
-\section{Identity}
+\subsection{Identity}
 
 HOL already has identity and this identity is good for System C.
 It HOL it is a curried propositional function of polymorphic type ”'a ­ 'a ­ BOOL®.
@@ -1484,9 +1491,9 @@ declare_infix (200, "=‰h");
 =TEX
 
 ¹HOLCONST
-Ü $Û=‰hÝ : 'a SC ­ 'a SC ­ BOOL
+Ü $Û=‰hÝ : SC ­ SC ­ BOOL
 ÷üüüüüü
-Ü µx y:'a SC· (x =‰h y) = (Uncurry $=) ‰h‰2 (x,y)
+Ü µx y:SC· (x =‰h y) = (Uncurry $=) ‰h‰2 (x,y)
 °
 
 We can now prove:
@@ -1500,14 +1507,14 @@ And must rest content with the qualified rule:
 
 =GFT
 Ûeq‰h_refl_thmÝ =
-	ô µ x· Exists ‰h x ¤ x =‰h x
+	ô µ x· Existent ‰h x ¤ x =‰h x
 =TEX
 
 The ``strictness'' of this equality is expressed by the theorem (which would have made a better definition):
 
 =GFT
 eq‰h_strict_thm =
-	ô µ x y· x =‰h y ¤ Exists ‰h x ± Exists ‰h y ± x = y
+	ô µ x y· x =‰h y ¤ Existent ‰h x ± Existent ‰h y ± x = y
 =TEX
 
 \ignore{
@@ -1518,12 +1525,12 @@ set_goal([], ¬³ Pegasus =‰h Pegasus®);
 a (rewrite_tac[eq‰h_def, ‰h‰2_def, Pegasus_def]);
 val Pegasus_eq_lemma2 = save_pop_thm "Pegasus_eq_lemma2";
 
-set_goal([], ¬µx· Exists ‰h x ¤ x =‰h x®);
-a (rewrite_tac[eq‰h_def, ‰h_def, ‰h‰2_def, Exists_def]);
+set_goal([], ¬µx· Existent ‰h x ¤ x =‰h x®);
+a (rewrite_tac[eq‰h_def, ‰h_def, ‰h‰2_def, Existent_def]);
 val eq‰h_refl_thm = save_pop_thm "eq‰h_refl_thm";
 
-set_goal([], ¬µx y· x =‰h y ¤ Exists ‰h x ± Exists ‰h y ± x = y®);
-a (rewrite_tac[eq‰h_def, ‰h_def, ‰h‰2_def, Exists_def, IsDen_def, IsCorr_def, Corr_def]);
+set_goal([], ¬µx y· x =‰h y ¤ Existent ‰h x ± Existent ‰h y ± x = y®);
+a (rewrite_tac[eq‰h_def, ‰h_def, ‰h‰2_def, Existent_def, IsDen_def, IsCorr_def, Corr_def]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (fc_tac [sum_clauses]);
 a (DROP_ASM_T ¬InL (OutL x) = x® ante_tac THEN asm_rewrite_tac[]);
@@ -1545,11 +1552,9 @@ The second is the presence of values for failing descriptions.
 
 The values for failing descriptions should not be in the range of quantification, so we do need to have special quantifiers in System S, it will then also be necessary to qualify the quantification to get a version of the second order definition which takes account of possibly distinct non-designating names.
 
-
-
 \ignore{
 =SML
-set_goal([], ¬³ µx y:'a SC· x = y ¤ (µP:'a ­ BOOL· P ‰h x ¤ P ‰h y)®);
+set_goal([], ¬³ µx y:SC· x = y ¤ (µP:'a ­ BOOL· P ‰h x ¤ P ‰h y)®);
 a (strip_tac);
 a (¶_tac ¬â® THEN strip_tac);
 a (¶_tac ¬InR (Åx·T)® THEN strip_tac);
@@ -1575,10 +1580,6 @@ a (SPEC_NTH_ASM_T 1 ¬Ìx· x = y® (strip_asm_tac o (rewrite_rule[])));
 val snd_order_eq_thm2 = save_pop_thm "snd_order_eq_thm2";
 =TEX
 }%ignore
-
-
-\section{System S}
-
 
 
 \section{Conclusions}
