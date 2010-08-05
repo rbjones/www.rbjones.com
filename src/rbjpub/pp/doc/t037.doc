@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADHdoc{$$Id: t037.doc,v 1.8 2010/07/25 16:03:33 rbj Exp $$}
+\def\rbjidtADHdoc{$$Id: t037.doc,v 1.9 2010/08/05 12:04:21 rbj Exp $$}
 
 I will endeavour to follow the structure of Grice's paper \emph{Vacuous names}\cite{griceVN, quineWO}.
 However, the method employed for the formal analysis, which is called ``shallow embedding'', is essentially semantic, and involves addressing semantic fundamentals before finding manageable syntactic presentations, and we therefore find it necessary to address key aspects of the semantics before considering the details of syntactic derivation.
@@ -31,7 +31,10 @@ Grice's Vacuous names may be seen in the first instance as a reaction against Ru
 
 \subsection{Preliminary Formalities}
 
-Just in case I need multiple incompatible accounts I have a ``top level'' theory under which all other gricean theories will be placed and in which common aspects can be placed.
+I consider two different approaches, both derived from Grice, to the problems discussed in \emph{Vacuous Names}.
+Much of the discussion concerns matters which are common to both, and this involves some formal material, which in order to avoid replication is provided first in a separate theory before matters specific to the two variants are entered into.
+
+Common material is in the theory `grice' whose listing may be found in appendix \ref{grice}.
 
 =SML
 open_theory "rbjmisc";
@@ -104,7 +107,16 @@ These correpond to disambiguations of the logical structure of the sentence eith
 \item[O5] There will be an extension of Q in which identity is represented.\footnote{No discussion here of whether identity is a predicate.}
 \end{itemize}
 
-\section{Scope}
+\section{Classical Logic using HOL}
+
+Grice tries to make his system as close as possible to ``classical logic'', basing his system on a first order predicate calculus presented as a natural deduction system based on a textbook by Mates \cite{matesEL}.
+
+In this presentation we work with a ``classical'' higher order logic (based on Church's formulation of the Simple Theory of Types\cite{church40}) in the form of a sequent calculus.
+In this section we replicate in this system theorems which show the closeness of the relationship between this classical logic and the one from which Grice departs.
+
+Grice disussess the problem of the scope of names before getting into the details of his classical logic, but since we here adopt a different manner of resolving this problem which depends upon special features of our ``classical logic'', the discussion of scope belongs here.
+
+\subsection{Scope}
 
 A part of the novelty and difficulty in system Q lies in its special provisions for controlling the ``scope'' of names.
 
@@ -236,7 +248,7 @@ These will be called System C and System S.
 
 Certain aspects of our presentation, particularly those which simply illustrate the correspondence bewteen the classical propositional logic in System Q and that in {\Product-HOL}, are common to System C and System S and are therefore treated first.
 
-\section{Propositional Logic}\label{PropRules}
+\subsection{Propositional Logic}\label{PropRules}
 
 The following material is common to Systems C and S and shows how these systems relate to the propositional logic in System Q.
 Since we are working with a semantic embedding rather than a syntactic meta-theory we cannot prove results about derivations and instead present proofs about the semantics which show that the required inference rules would be sound.
@@ -316,13 +328,130 @@ val MPP = save_pop_thm "MPP";
 =TEX
 }%ignore
 
+\subsection{Quantifier Inference-Rules}
+
+We now show the correspondence between the quantification rule in System Q with the standard quantifiers in HOL.
+Because of this correspondence we can use the standard HOL quantifiers in System C and get a good correspondence with System Q in this area.
+When we come to System S it will be necessary to redefine the quantifiers to obtain those qualifications on $µE$ and $¶I$ which are necessary to cope with Grice's ideas about failing descriptions.
+
+=GFT
+ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
+ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
+Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
+Û¶EÝ =	ô µ P Q· (µ x· [P x] ˜ Q) ´ ([¶ x· P x] ˜ Q)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µ ‡ P· (µx· (‡ ˜ P x)) ´ (‡ ˜ µx· P x)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+val µI = save_pop_thm "µI";
+
+set_goal([], ¬µ ‡ P c· (‡ ˜ µx· P x) ´ (‡ ˜ P c)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
+val µE = save_pop_thm "µE";
+
+set_goal([], ¬µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ ¶x· P x)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+val ¶I = save_pop_thm "¶I";
+
+set_goal([], ¬µ P Q· (µx· ([P x] ˜ Q)) ´ ([¶x· P x] ˜ Q)®);
+a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val ¶E = save_pop_thm "¶E";
+=TEX
+}%ignore
+
+\subsection{P Committal}
+
+The notion of E-committal is defined syntactically by Grice, and tells us which formulae in System Q are true only if some name has a designatum, i.e. to the existence of which named individuals our assertion of the formula would commit us.
+
+In HOL we can formalise this idea without resort to reasoning about syntax, furthermore, the main detail in the definition is independent of whether we are in System C or System S, and is therefore provided here.
+To achieve this we parameterise the definition of E-committal so that it can be specialised to the different ways of asserting existence in Systems C and S, the parameterised version being called \emph{P\_committal}.
+
+The formal criteria for \emph{E\_committal} then becomes provability in HOL (which is not in general decidable).
+
+In Grice \emph{E\_committal} is a relationship, here it is a parameterised property of propositional functions (the parameter being the relevant notion of existence).
+
+=SML
+declare_infix(100, "committal");
+=TEX
+
+¹HOLCONST
+Ü $ÛcommittalÝ : ('a ­ BOOL) ­ ('a ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µP Æ· P committal Æ ¤ µÁ· Æ Á ´ P Á
+°
+
+The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
+
+=GFT
+ÛP_2Ý =	ô µ P Æ· P committal Æ
+			´ P committal (ÌÁ· ³ ³ Æ Á)
+ÛP_3Ý =	ô µ P Æ Ù· P committal Æ ² P committal Ù
+			´ P committal (Ì Á· Æ Á ± Ù Á)
+ÛP_4Ý =	ô µ P Æ Ù· P committal Æ ± P committal Ù
+			´ P committal (Ì Á· Æ Á ² Ù Á)
+ÛP_5Ý =	ô µ P Æ Ù· P committal (Ì Á· ³ Æ Á) ± P committal Ù
+			´ P committal (Ì Á· Æ Á ´ Ù Á)
+ÛP_6µÝ =	ô µ P Æ· (¶ Â· P committal (Æ Â))
+			´ P committal (Ì Á· µ Â· Æ Â Á)
+=TEX
+
+I have a problem proving the existential element of (6), so this clause is in doubt.
+I think Grice should be asking for ``%
+=INLINEFT
+µÂ· Ù(Â/×)
+=TEX
+'' to be \emph{E\_committal} for Á (in system Q), which corresponds in systems C and S to the theorem:
+
+=GFT
+ÛP_6¶bÝ =	ô µ P Æ· (µ Â· P committal (Æ Â))
+			´ P committal (Ì Á· ¶ Â· Æ Â Á)
+=TEX
+
+(with P suitably instantiated).
+
+\ignore{
+=SML
+val committal_def = get_spec ¬$committal®;
+
+set_goal([], ¬µ P Æ· P committal Æ ´ P committal (ÌÁ· ³ ³ (Æ Á))®);
+a (REPEAT strip_tac THEN asm_rewrite_tac[È_axiom]);
+val P_2 = save_pop_thm "P_2";
+
+set_goal([], ¬µ P Æ Ù· P committal Æ ² P committal Ù ´ P committal (ÌÁ· Æ Á ± Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val P_3 = save_pop_thm "P_3";
+
+set_goal([], ¬µ P Æ Ù· P committal Æ ± P committal Ù ´ P committal (ÌÁ· Æ Á ² Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val P_4 = save_pop_thm "P_4";
+
+set_goal([], ¬µ P Æ Ù· P committal (ÌÁ· ³ (Æ Á)) ± P committal Ù ´ P committal (ÌÁ· Æ Á ´ Ù Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+val P_5 = save_pop_thm "P_5";
+
+set_goal([], ¬µ P Æ· (¶Â· P committal (Æ Â)) ´ P committal (ÌÁ· µÂ· (Æ Â) Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[committal_def] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¬Â® THEN asm_fc_tac[]);
+val P_6µ = save_pop_thm "P_6µ";
+
+set_goal([], ¬µ P Æ· (µÂ· P committal (Æ Â)) ´ P committal (ÌÁ· ¶Â· (Æ Â) Á)®);
+a (REPEAT µ_tac THEN rewrite_tac[committal_def] THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+val P_6¶b = save_pop_thm "P_6¶b";
+=TEX
+}%ignore
+
 \section{System C}
 
-A new theory is needed which I will call ``sysc'' which is created here:
+A new theory is needed which I will call ``griceC'' which is created here:
 
 =SML
 open_theory "grice";
-force_new_theory "gricec";
+force_new_theory "griceC";
 set_pc "rbjmisc";
 =TEX
 
@@ -524,46 +653,15 @@ val µ_lemma_1 = save_pop_thm "µ_lemma_1";
 
 \ignore{
 =SML
-force_new_pc "'gricec";
-merge_pcs ["'savedthm_cs_¶_proof"] "'gricec";
-set_merge_pcs ["rbjmisc", "'gricec"];
+force_new_pc "'griceC";
+merge_pcs ["'savedthm_cs_¶_proof"] "'griceC";
+set_merge_pcs ["rbjmisc", "'griceC"];
 =TEX
 }%ignore
 
 \subsection{Quantifier Inference-Rules}
 
-We now show the correspondence between the quantification rule in System Q with the standard quantifiers in HOL.
-Because of this correspondence we can use the standard HOL quantifiers in System C and get a good correspondence with System Q in this area.
-When we come to System S it will be necessary to redefine the quantifiers to obtain those qualifications on $µE$ and $¶I$ which are necessary to cope with Grice's ideas about failing descriptions.
-
-=GFT
-ÛµIÝ =		ô µ ‡ P· (µ x· ‡ ˜ P x) ´ (‡ ˜ (µ x· P x))
-ÛµEÝ =	ô µ ‡ P c· (‡ ˜ (µ x· P x)) ´ (‡ ˜ P c)
-Û¶IÝ =		ô µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ (¶ x· P x))
-Û¶EÝ =	ô µ P Q· (µ x· [P x] ˜ Q) ´ ([¶ x· P x] ˜ Q)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ ‡ P· (µx· (‡ ˜ P x)) ´ (‡ ˜ µx· P x)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-val µI = save_pop_thm "µI";
-
-set_goal([], ¬µ ‡ P c· (‡ ˜ µx· P x) ´ (‡ ˜ P c)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac THEN asm_fc_tac[] THEN asm_rewrite_tac[]);
-val µE = save_pop_thm "µE";
-
-set_goal([], ¬µ ‡ P x· (‡ ˜ P x) ´ (‡ ˜ ¶x· P x)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-val ¶I = save_pop_thm "¶I";
-
-set_goal([], ¬µ P Q· (µx· ([P x] ˜ Q)) ´ ([¶x· P x] ˜ Q)®);
-a (rewrite_tac [˜_def] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-val ¶E = save_pop_thm "¶E";
-=TEX
-}%ignore
+For System C
 
 An example of the effect of substitutions obtained by use of these theorems in C intended to mimic the rules of Q is as follows.
 
@@ -605,7 +703,7 @@ The main risk for Grice is in the detail of his presentation, bearing in mind th
 
 \subsection{Existence}
 
-\subsubsection{A}
+\subsubsection{A. (E Committal)}
 
 We have already defined the predicate ``Existent'' which tells us whether a name designates.
 
@@ -624,76 +722,9 @@ val E1 = save_pop_thm "E1";
 =TEX
 }%ignore
 
-In system C Grice's notion of \emph{E\_committal} seems to be definable.
-The formal criteria for \emph{E\_committal} then becomes provability in HOL (which is not decidable).
+\paragraph{E Committal}
 
-In Grice \emph{E\_committal} is a relationship, here it is a property of propositional functions.
-
-¹HOLCONST
-Ü ÛE_committalÝ : ('a ­ BOOL) ­ BOOL
-÷üüüüüü
-Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Existent Á
-°
-
-The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
-
-=GFT
-ÛE_2Ý =	ô µ Æ· E_committal Æ
-			´ E_committal (ÌÁ· ³ ³ Æ Á)
-ÛE_3Ý =	ô µ Æ Ù· E_committal Æ ² E_committal Ù
-			´ E_committal (Ì Á· Æ Á ± Ù Á)
-ÛE_4Ý =	ô µ Æ Ù· E_committal Æ ± E_committal Ù
-			´ E_committal (Ì Á· Æ Á ² Ù Á)
-ÛE_5Ý =	ô µ Æ Ù· E_committal (Ì Á· ³ Æ Á) ± E_committal Ù
-			´ E_committal (Ì Á· Æ Á ´ Ù Á)
-ÛE_6µÝ =	ô µ Æ· (¶ Â· E_committal (Æ Â))
-			´ E_committal (Ì Á· µ Â· Æ Â Á)
-=TEX
-
-I have a problem proving the existential element of (6), so this clause is in doubt.
-I think Grice should be asking for ``%
-=INLINEFT
-µÂ· Ù(Â/×)
-=TEX
-'' to be \emph{E\_committal} for Á (in system Q), which corresponds in system C to the theorem:
-
-=GFT
-ÛE_6¶bÝ =	ô µ Æ· (µ Â· E_committal (Æ Â))
-			´ E_committal (Ì Á· ¶ Â· Æ Â Á)
-=TEX
-
-\ignore{
-=SML
-val E_committal_def = get_spec ¬E_committal®;
-
-set_goal([], ¬µÆ· E_committal Æ ´ E_committal (ÌÁ· ³ ³ (Æ Á))®);
-a (REPEAT strip_tac THEN asm_rewrite_tac[È_axiom]);
-val E_2 = save_pop_thm "E_2";
-
-set_goal([], ¬µÆ Ù· E_committal Æ ² E_committal Ù ´ E_committal (ÌÁ· Æ Á ± Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_3 = save_pop_thm "E_3";
-
-set_goal([], ¬µÆ Ù· E_committal Æ ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ² Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_4 = save_pop_thm "E_4";
-
-set_goal([], ¬µÆ Ù· E_committal (ÌÁ· ³ (Æ Á)) ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ´ Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_5 = save_pop_thm "E_5";
-
-set_goal([], ¬µÆ· (¶Â· E_committal (Æ Â)) ´ E_committal (ÌÁ· µÂ· (Æ Â) Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬Â® THEN asm_fc_tac[]);
-val E_6µ = save_pop_thm "E_6µ";
-
-set_goal([], ¬µÆ· (µÂ· E_committal (Æ Â)) ´ E_committal (ÌÁ· ¶Â· (Æ Â) Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-val E_6¶b = save_pop_thm "E_6¶b";
-=TEX
-}%ignore
-
+Grice's notion of E committal corresponds in System C to the previously defined generic notion of committal instantiated to the propositional function \emph{Existent}.
 
 The definition we have already given for \emph{Existent} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
 
@@ -913,11 +944,11 @@ In addition a new subdomain is introduced which provides at least one (since we 
 The primary reason for recognising, in the semantics, denotations for failing descriptions, is so that we can arrange as Grice seems to require, that they do not fall into the range of the System C quantifiers.
 This in turn results in the qualification of the rules EG and UI.
 
-A new theory is needed which I will call ``grices'' which is created here:
+A new theory is needed which I will call ``griceS'' which is created here:
 
 =SML
 open_theory "grice";
-force_new_theory "grices";
+force_new_theory "griceS";
 set_pc "rbjmisc";
 =TEX
 
@@ -1343,7 +1374,7 @@ The main risk for Grice is in the detail of his presentation, bearing in mind th
 
 \subsection{Existence}
 
-\subsubsection{A}
+\subsubsection{A. (E Committal)}
 
 We have already defined the propositional function ``Existent'' which tells us whether a name designates.
 
@@ -1361,76 +1392,7 @@ val E1 = save_pop_thm "E1";
 =TEX
 }%ignore
 
-In system C Grice's notion of \emph{E\_committal} seems to be definable.
-The formal criteria for \emph{E\_committal} then becomes provability in HOL (which is not decidable).
-
-In Grice \emph{E\_committal} is a relationship, here it is a property of propositional functions.
-
-¹HOLCONST
-Ü ÛE_committalÝ : ('a ­ BOOL) ­ BOOL
-÷üüüüüü
-Ü µÆ· E_committal Æ ¤ µÁ· Æ Á ´ Existent Á
-°
-
-The following theorems correspond to clauses in Grice's definition of \emph{E\_committal}:
-
-=GFT
-ÛE_2Ý =	ô µ Æ· E_committal Æ
-			´ E_committal (ÌÁ· ³ ³ Æ Á)
-ÛE_3Ý =	ô µ Æ Ù· E_committal Æ ² E_committal Ù
-			´ E_committal (Ì Á· Æ Á ± Ù Á)
-ÛE_4Ý =	ô µ Æ Ù· E_committal Æ ± E_committal Ù
-			´ E_committal (Ì Á· Æ Á ² Ù Á)
-ÛE_5Ý =	ô µ Æ Ù· E_committal (Ì Á· ³ Æ Á) ± E_committal Ù
-			´ E_committal (Ì Á· Æ Á ´ Ù Á)
-ÛE_6µÝ =	ô µ Æ· (¶ Â· E_committal (Æ Â))
-			´ E_committal (Ì Á· µ Â· Æ Â Á)
-=TEX
-
-I have a problem proving the existential element of (6), so this clause is in doubt.
-I think Grice should be asking for ``%
-=INLINEFT
-µÂ· Ù(Â/×)
-=TEX
-'' to be \emph{E\_committal} for Á (in system Q), which corresponds in system C to the theorem:
-
-=GFT
-ÛE_6¶bÝ =	ô µ Æ· (µ Â· E_committal (Æ Â))
-			´ E_committal (Ì Á· ¶ Â· Æ Â Á)
-=TEX
-
-\ignore{
-=SML
-val E_committal_def = get_spec ¬E_committal®;
-
-set_goal([], ¬µÆ· E_committal Æ ´ E_committal (ÌÁ· ³ ³ (Æ Á))®);
-a (REPEAT strip_tac THEN asm_rewrite_tac[È_axiom]);
-val E_2 = save_pop_thm "E_2";
-
-set_goal([], ¬µÆ Ù· E_committal Æ ² E_committal Ù ´ E_committal (ÌÁ· Æ Á ± Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_3 = save_pop_thm "E_3";
-
-set_goal([], ¬µÆ Ù· E_committal Æ ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ² Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_4 = save_pop_thm "E_4";
-
-set_goal([], ¬µÆ Ù· E_committal (ÌÁ· ³ (Æ Á)) ± E_committal Ù ´ E_committal (ÌÁ· Æ Á ´ Ù Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
-val E_5 = save_pop_thm "E_5";
-
-set_goal([], ¬µÆ· (¶Â· E_committal (Æ Â)) ´ E_committal (ÌÁ· µÂ· (Æ Â) Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 1 ¬Â® THEN asm_fc_tac[]);
-val E_6µ = save_pop_thm "E_6µ";
-
-set_goal([], ¬µÆ· (µÂ· E_committal (Æ Â)) ´ E_committal (ÌÁ· ¶Â· (Æ Â) Á)®);
-a (REPEAT µ_tac THEN rewrite_tac[E_committal_def] THEN REPEAT strip_tac);
-a (asm_fc_tac[]);
-val E_6¶b = save_pop_thm "E_6¶b";
-=TEX
-}%ignore
-
+Once again, Grice's notion of \emph{E\_committal} is obtainable for System S by instantiation of our generic notion of \emph{committal} by the propositional function \emph{Existent}.
 
 The definition we have already given for \emph{Existent} is similar in character and identical in effect to Grices suggestions for \emph{+exists}.
 

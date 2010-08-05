@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.32 2010/07/20 18:57:23 rbj Exp $
+$Id: t006.doc,v 1.33 2010/08/05 12:04:21 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2010/07/20 18:57:23 $ $
+Last Changed $ $Date: 2010/08/05 12:04:21 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.32 2010/07/20 18:57:23 rbj Exp $ $
+$ $Id: t006.doc,v 1.33 2010/08/05 12:04:21 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -333,7 +333,6 @@ val FunImage_mono_thm = save_pop_thm "FunImage_mono_thm";
 =TEX
 }%ignore
 
-
 \subsection{Set Displays}
 
 The following are introduced to facilitate reasoning about sets of truth values below.
@@ -364,6 +363,39 @@ add_pc_thms "'rbjmisc" (map get_spec [] @ [singleton_subset_lemma, insert_twice_
 set_merge_pcs ["basic_hol1", "'sets_alg", "'¯", "'rbjmisc"];
 =TEX
 }%ignore
+
+=GFT
+_disp_´_thm =
+	ô µp d s· (µ e· e  Insert d s ´ p e) ¤ p d ± µ e· e  s ´ p e
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µp d s· (µe· e  Insert d s ´ p e) ¤ p d ± µe· e  s ´ p e®);
+a (REPEAT µ_tac THEN rewrite_tac [insert_def] THEN REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¬d®);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac []);
+val _disp_´_thm = save_pop_thm "_disp_´_thm";
+=TEX
+}%ignore
+
+A conversion to apply \_disp\_´\_thm (because we don't have higher order rewriting).
+
+=SML
+val Û_disp_´_convÝ:CONV = fn t =>
+	let val (e, body) = dest_µ t;
+	    val (lh, rh) = dest_´ body;
+	    val (_, [vare, ins]) = strip_app lh;
+	    val (_, [d, s]) = strip_app ins
+	    val p = mk_Ì (vare, rh);
+	    val equiv = conv_rule (LEFT_C(SIMPLE_BINDER_C(RIGHT_C Â_conv))) (list_µ_elim [p, d, s] _disp_´_thm)
+	in equiv
+	end handle _ => fail_conv t;
+
+val Û_disp_´_tacÝ = conv_tac (MAP_C _disp_´_conv);
+=TEX
 
 \subsection{NESET - A Type of Non-Empty Sets}
 
@@ -2152,788 +2184,6 @@ val RelPower_Refl_thm = save_pop_thm "RelPower_Refl_thm";
 =TEX
 }%ignore
 
-\section{Equivalence Relations}
-
-=SML
-declare_infix(230, "¦");
-declare_infix(230, "¦‰l");
-declare_infix(230, "¦‰r");
-=TEX
-
-It will be convenient to name an uncurried version of \emph{QuotientSet}:
-
-¹HOLCONST
-Ü ÛEquivClassesÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('a SET SET)
-÷üüüüüü
-Ü EquivClasses = Uncurry QuotientSet
-°
-
-=GFT
-ÛEquivClasses_thmÝ =
-   ô EquivClasses (X, $¦) = {A|¶ x· x  X ± A = EquivClass (X, $¦) x}
-
-ÛEquivClasses_thm1Ý =
-   ô µ r· EquivClasses r = {A|¶ x· x  Fst r ± A = EquivClass r x}
-=TEX
-\ignore{
-=SML
-push_pc "hol";
-
-val EquivClasses_def = get_spec ¬EquivClasses®;
-
-set_goal([], ¬µ(X, $¦)· EquivClasses (X, $¦) = {A|¶ x· x  X ± A = EquivClass (X, $¦) x}®);
-a (REPEAT strip_tac THEN rewrite_tac [quotient_set_def, EquivClasses_def]);
-val EquivClasses_thm = save_pop_thm "EquivClasses_thm";
-
-set_goal([], ¬µr· EquivClasses r = {A|¶ x· x  Fst r ± A = EquivClass r x}®);
-a (REPEAT µ_tac THEN split_pair_rewrite_tac [¬r®] [EquivClasses_thm]);
-a (rewrite_tac[]);
-val EquivClasses_thm1 = save_pop_thm "EquivClasses_thm1";
-=TEX
-}%ignore
-
-=GFT
-ÛEquivClasses_sub_thmÝ =
-   ô µ (D, $¦)· Equiv (D, $¦) ´ (µ l· l  EquivClasses (D, $¦) ´ l € D)
-
-ÛEquivClasses_sub_thm1Ý =
-   ô µ r· Equiv r ´ (µ l· l  EquivClasses r ´ l € Fst r)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ(D, $¦)· Equiv(D, $¦) ´ µl· l  EquivClasses (D, $¦) ´ l € D®);
-a (PC_T "hol1" (rewrite_tac [EquivClasses_thm, get_spec ¬EquivClass®] THEN REPEAT strip_tac));
-a (all_asm_fc_tac[]);
-val EquivClasses_sub_thm = save_pop_thm "EquivClasses_sub_thm";
-
-set_goal([], ¬µr· Equiv r ´ µl· l  EquivClasses r ´ l € Fst r®);
-a (REPEAT µ_tac THEN split_pair_rewrite_tac [¬r®][]);
-a (REPEAT strip_tac THEN all_asm_fc_tac [EquivClasses_sub_thm]);
-a (asm_rewrite_tac[]);
-val EquivClasses_sub_thm1 = save_pop_thm "EquivClasses_sub_thm1";
-=TEX
-}%ignore
-
-\subsection{Products of Equivalence Relations}\label{PER}
-
-I am providing an alternative way of lifting operators from some type to equivalence classes over the type.
-The treatment of dyadic operators, which in {\Product} have to be curried if they are to be used infix, is done by uncurrying and then lifting as if a monadic function over the cartesian product.
-
-This will lift to the product equivalence classes so we need a treatment of products of equivalence relations.
-
-=GFT
-ÛEquiv_RelProd_thmÝ =
-   ô µ (L, $¦‰l) (R, $¦‰r)·
-	Equiv (L, $¦‰l) ± Equiv (R, $¦‰r) ´ Equiv ((L, $¦‰l) RelProd (R, $¦‰r))
-=TEX
-
-\ignore{
-=SML
-push_pc "hol1";
-
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r) ´ Equiv ((L, $¦‰l) RelProd (R, $¦‰r))®);
-a (REPEAT strip_tac THEN fc_tac [equiv_def]);
-a (split_pair_rewrite_tac [¬(L, $¦‰l) RelProd (R, $¦‰r)®] [equiv_def]);
-a (rewrite_tac[] THEN REPEAT strip_tac);
-a (all_fc_tac [Refl_RelProd_thm]);
-a (all_fc_tac [Sym_RelProd_thm]);
-a (all_fc_tac [Trans_RelProd_thm]);
-val Equiv_RelProd_thm = save_pop_thm "Equiv_RelProd_thm";
-
-pop_pc();
-=TEX
-}%ignore
-
-\ignore{
-=IGN
-add_pc_thms "'rbjmisc" (map get_spec [] @ []);
-set_merge_pcs ["basic_hol", "'sets_alg", "'¯", "'rbjmisc"];
-=TEX
-}%ignore
-
-=GFT
-ÛEquivClass_RelProd_thmÝ =
-   ô µ (L, $¦‰l) (R, $¦‰r)· Equiv (L, $¦‰l) ± Equiv (R, $¦‰r)
-         ´ (µ xl xr yl yr· xl  L ± xr  R ± yl  L ± yr  R
-             ´ ((xl, xr)  EquivClass ((L, $¦‰l) RelProd (R, $¦‰r)) (yl, yr)
-               ¤ xl  EquivClass (L, $¦‰l) yl
-                 ± xr  EquivClass (R, $¦‰r) yr))
-=TEX
-=GFT
-ÛEquivClass_RelProd_thm1Ý =
-   ô µ (L, $¦‰l) (R, $¦‰r)· Equiv (L, $¦‰l) ± Equiv (R, $¦‰r)
-         ´ (µ l r· l  L ± r  R
-             ´ EquivClass ((L, $¦‰l) RelProd (R, $¦‰r)) (l, r)
-                = (EquivClass (L, $¦‰l) l ¸ EquivClass (R, $¦‰r) r))
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r) ´ µxl xr yl yr· yl  L ± yr  R ´ ((xl, xr)  EquivClass ((L, $¦‰l) RelProd (R, $¦‰r)) (yl, yr)
-	¤ xl  EquivClass (L, $¦‰l) yl ± xr  EquivClass (R, $¦‰r) yr)®);
-a (REPEAT µ_tac THEN strip_tac THEN rewrite_tac [RelProd_def, get_spec ¬EquivClass®] THEN REPEAT strip_tac
-	THEN asm_rewrite_tac [rel__in_clauses]);
-val EquivClass_RelProd_thm = save_pop_thm "EquivClass_RelProd_thm";
-
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r)
-	´ µl r· l  L ± r  R ´ EquivClass ((L, $¦‰l) RelProd (R, $¦‰r)) (l, r) = ((EquivClass (L, $¦‰l) l) ¸ (EquivClass (R, $¦‰r) r))®);
-a (REPEAT strip_tac
-	THEN rewrite_tac [sets_ext_clauses]
-	THEN strip_tac
-	THEN split_pair_rewrite_tac [¬x®] [rel__in_clauses]
-	THEN REPEAT strip_tac
-	THEN_TRY all_fc_tac [EquivClass_RelProd_thm]);
-a (all_ufc_¤_rewrite_tac [EquivClass_RelProd_thm] THEN contr_tac);
-val EquivClass_RelProd_thm1 = save_pop_thm "EquivClass_RelProd_thm1";
-=TEX
-}%ignore
-
-=GFT
-ÛEquivClasses_RelProd_thmÝ =
-   ô µ (L, $¦‰l) (R, $¦‰r)· Equiv (L, $¦‰l) ± Equiv (R, $¦‰r) ´ (µ l r·
-		(l ¸ r)  EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-		¤ l  EquivClasses (L, $¦‰l) ± r  EquivClasses (R, $¦‰r))
-=TEX
-=GFT
-ÛEquivClasses_RelProd_thm1Ý =
-   ô µ (L, $¦‰l) (R, $¦‰r)· Equiv (L, $¦‰l) ± Equiv (R, $¦‰r) ´ (µ x·
-		x  EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-             ¤ (¶ l r· x = (l ¸ r)
-                 ± l  EquivClasses (L, $¦‰l)
-                 ± r  EquivClasses (R, $¦‰r)))
-=TEX
-=GFT
-ÛEquivClasses_RelProd_thm2Ý =
-   ô µ (L, $¦‰l) (R, $¦‰r)· Equiv (L, $¦‰l) ± Equiv (R, $¦‰r)
-         ´ EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-           = EquivClasses (L, $¦‰l) ¸‰D EquivClasses (R, $¦‰r)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r) ´ µl r· (l ¸ r)  EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-	         ¤ l  EquivClasses (L, $¦‰l) ± r  EquivClasses (R, $¦‰r)®);
-a (split_pair_rewrite_tac [¬(L, $¦‰l) RelProd (R, $¦‰r)®][EquivClasses_thm] THEN REPEAT_N 9 strip_tac);
-a (rewrite_tac [_in_clauses]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [RelProd_projections_thm]);
-a (split_pair_rewrite_tac [¬x®][rel__in_clauses] THEN strip_tac);
-a (¶_tac ¬Fst x® THEN asm_rewrite_tac[]);
-a (all_fc_tac [equiv_class__thm]);
-a (DROP_NTH_ASM_T 5 ante_tac);
-a (split_pair_rewrite_tac [¬x®][]);
-a (ALL_UFC_T rewrite_tac [EquivClass_RelProd_thm1]);
-a (STRIP_T (asm_tac o eq_sym_rule) THEN all_fc_tac [cp_eq_thm1]);
-a (asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [RelProd_projections_thm]);
-a (split_pair_rewrite_tac [¬x®][rel__in_clauses] THEN strip_tac);
-a (¶_tac ¬Snd x® THEN asm_rewrite_tac[]);
-a (all_fc_tac [equiv_class__thm]);
-a (DROP_NTH_ASM_T 5 ante_tac);
-a (split_pair_rewrite_tac [¬x®][]);
-a (ALL_UFC_T rewrite_tac [EquivClass_RelProd_thm1]);
-a (STRIP_T (asm_tac o eq_sym_rule) THEN all_fc_tac [cp_eq_thm1]);
-a (asm_rewrite_tac[]);
-(* *** Goal "3" *** *)
-a (¶_tac ¬(x,x')® THEN asm_rewrite_tac[RelProd_projections_thm, rel__in_clauses]);
-a (ALL_FC_T rewrite_tac [EquivClass_RelProd_thm1]);
-val EquivClasses_RelProd_thm = save_pop_thm "EquivClasses_RelProd_thm";
-
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r) ´ µx· x  EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-	         ¤ ¶l r· x = (l ¸ r) ± l  EquivClasses (L, $¦‰l) ± r  EquivClasses (R, $¦‰r)®);
-a (split_pair_rewrite_tac [¬(L, $¦‰l) RelProd (R, $¦‰r)®][EquivClasses_thm] THEN REPEAT_N 9 strip_tac);
-a (rewrite_tac [_in_clauses]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac [RelProd_projections_thm]);
-a (split_pair_rewrite_tac [¬x'®][rel__in_clauses] THEN strip_tac);
-a (¶_tac ¬EquivClass (L, $¦‰l) (Fst x')® THEN ¶_tac ¬EquivClass (R, $¦‰r) (Snd x')® THEN asm_rewrite_tac[]);
-a (all_fc_tac [equiv_class__thm]);
-a (DROP_NTH_ASM_T 5 ante_tac);
-a (split_pair_rewrite_tac [¬x'®][]);
-a (ALL_UFC_T rewrite_tac [EquivClass_RelProd_thm1]);
-a (STRIP_T (asm_tac o eq_sym_rule) THEN all_fc_tac [cp_eq_thm1]);
-a (REPEAT strip_tac);
-(* *** Goal "1.1" *** *)
-a (¶_tac ¬Fst x'® THEN asm_rewrite_tac[]);
-(* *** Goal "1.2" *** *)
-a (¶_tac ¬Snd x'® THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (¶_tac ¬x', x''® THEN asm_rewrite_tac[RelProd_projections_thm]);
-a (rewrite_tac [rel__in_clauses] THEN REPEAT strip_tac);
-a (ALL_UFC_T rewrite_tac [EquivClass_RelProd_thm1]);
-val EquivClasses_RelProd_thm1 = save_pop_thm "EquivClasses_RelProd_thm1";
-
-set_goal([], ¬µ(L, $¦‰l) (R, $¦‰r)· Equiv(L, $¦‰l) ± Equiv(R, $¦‰r) ´ EquivClasses ((L, $¦‰l) RelProd (R, $¦‰r))
-	         = (EquivClasses (L, $¦‰l) ¸‰D EquivClasses (R, $¦‰r))®);
-a (REPEAT strip_tac THEN rewrite_tac [sets_ext_clauses, ¸‰D_ext_thm]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (all_fc_tac [EquivClasses_RelProd_thm1]);
-a (¶_tac ¬l® THEN ¶_tac ¬r® THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (all_ufc_¤_rewrite_tac [EquivClasses_RelProd_thm1]);
-a (¶_tac ¬leq® THEN ¶_tac ¬req® THEN asm_rewrite_tac[sets_ext_clauses]);
-val EquivClasses_RelProd_thm2 = save_pop_thm "EquivClasses_RelProd_thm2";
-=TEX
-}%ignore
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-val QuotientClasses_RelProd_thm2 = rewrite_rule [EquivClasses_def, RelProd_projections_thm] EquivClasses_RelProd_thm2;
-
-set_goal([])
-
-=SML
-pop_pc();
-=TEX
-}%ignore
-
-\subsection{Powers of Equivalence Relations}
-
-=GFT
-ÛRelPower_Equiv_thmÝ =
-   ô µ (D, $¦) is· Equiv (D, $¦) ´ Equiv (RelPower (D, $¦) is)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ(D, $¦) is· Equiv(D, $¦) ´ Equiv(RelPower (D, $¦) is)®);
-a (REPEAT µ_tac THEN split_pair_rewrite_tac [¬RelPower (D, $¦) is®] [equiv_def] THEN strip_tac);
-a (rewrite_tac [pair_clauses]);
-a (all_fc_tac [RelPower_Trans_thm, RelPower_Sym_thm, RelPower_Refl_thm]
-	THEN asm_rewrite_tac[]);
-val RelPower_Equiv_thm = save_pop_thm "RelPower_Equiv_thm";
-
-=IGN
-set_goal([], ¬µ(D, $¦) is· Equiv(D, $¦) ´ µf· (µi· i  is ´ f i  D) 
-	´ EquivClass (RelPower (D, $¦) is) f = {g | µi· i  is ´ g i  (EquivClass (D, $¦) (f i))}®);
-a (REPEAT µ_tac THEN rewrite_tac [RelPower_def]);
-=TEX
-}%ignore
-
-\subsection{Lifting Operators to Quotient Types}
-
-The conditions for a function to be liftable from a type to a quotient of that type are now expressed.
-This will be possible of the function ``respects'' the equivalence relations which determine the relevant quotient types.
-
-The definition give here differs from {\it Respects} in theory {\it equiv\_rel} in expressing conditions for lifting both on the domain and the codomain relative to possibly distinct equivalence relation, and therefore requires that if two elements of the domain are equivalent under one relationship then the results of the function on these two elements will be equivalent under the other relationship.
-
-=SML
-declare_infix(200, "Respects1");
-declare_infix(230, "¦‰d");
-declare_infix(230, "¦‰c");
-declare_infix(230, "¦‰e");
-declare_infix(230, "¦‰f");
-=TEX
-
-¹HOLCONST
-Ü Û$Respects1Ý : ('a ­ 'b) ­ (('a SET ¸ ('a ­ 'a ­ BOOL)) ¸ ('b SET ¸ ('b ­ 'b ­ BOOL))) ­ BOOL
-÷üüüüüü
-Ü µ f $¦‰c $¦‰d C D· (f Respects1 ((D, $¦‰d), (C, $¦‰c)))
-	¤ µx y·x  D ± y  D ± x ¦‰d y ´ f x  C ± f y  C ± f x ¦‰c f y
-°
-
-=GFT
-ÛRespects1_Respects_thmÝ =
-   ô µ f $¦‰d C D· f Respects1 ((D, $¦‰d), Universe, $=) ¤ (f Respects $¦‰d) D 
-
-ÛRespects1_Refines_thmÝ =
-   ô µ f $¦‰d =‰c $¦‰e =‰f D C·
-	f Respects1 ((D, $¦‰d), C, $¦‰c)
-           ± ($¦‰e Refines $¦‰d) D
-           ± ($¦‰c Refines $¦‰f) C
-         ´ f Respects1 ((D, $¦‰e), C, $¦‰f)
-=TEX
-=GFT
-Ûeq_Refines_thmÝ =
-   ô µ $¦‰d D· Equiv (D, $¦‰d) ´ ($= Refines $¦‰d) D
-
-Ûconstant_img_thm1Ý =
-   ô µ f A a c· a  A ± (µ x· x  A ´ f x = c)
-	´ (Å y· ¶ x· x  A ± y = f x) = c
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ f $¦‰d D· (f Respects1 ((D, $¦‰d), (Universe, $=))) ¤ (f Respects $¦‰d) D®);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬$Respects1®, ¬$Respects®]) THEN REPEAT strip_tac
-	THEN all_asm_ufc_tac[]);
-val Respects1_Respects_thm = save_pop_thm "Respects1_Respects_thm";
-
-set_goal([], ¬µ f $¦‰d $=‰c $¦‰e $=‰f D C· (f Respects1 ((D, $¦‰d), (C, $¦‰c))) ± ($¦‰e Refines $¦‰d) D ± ($¦‰c Refines $¦‰f) C
-	´ (f Respects1 ((D, $¦‰e), (C, $¦‰f)))®);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬$Respects1®, ¬$Refines®]) THEN REPEAT strip_tac
-	THEN all_asm_ufc_tac[] THEN REPEAT (all_asm_ufc_tac[]));
-val Respects1_Refines_thm = save_pop_thm "Respects1_Refines_thm";
-
-set_goal([], ¬µ $¦‰d D· Equiv (D, $¦‰d) ´ ($= Refines $¦‰d) D®);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬$Refines®, ¬$Equiv®, ¬$Refl®])
-	THEN REPEAT strip_tac
-	THEN REPEAT (all_asm_ufc_tac[])
-	THEN asm_rewrite_tac[]);
-val eq_Refines_thm = save_pop_thm "eq_Refines_thm";
-
-set_goal([], ¬
-	µf A a c·
-		a  A ± (µx·x  A ´ f x = c)
-	´	(Åy· ¶x· x  A ± y = f x) = c
-®);
-a(REPEAT strip_tac);
-a(Å_tac ¬Å y· ¶ x· x  A ± y = f x®);
-(* *** Goal "1" *** *)
-a(¶_tac¬c® THEN ¶_tac¬a® THEN REPEAT strip_tac);
-a (asm_fc_tac[] THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (LEMMA_T ¬c = f x® asm_rewrite_thm_tac);
-a (ASM_FC_T rewrite_tac []);
-val Ûconstant_img_thm1Ý = save_pop_thm "constant_img_thm1";
-=TEX
-}%ignore
-
-The following operator lifts a function over a pair of equivalence relations respected by the function.
-This definition allows that they domain and codomains are of different type, and will provide the basis for lifting monadic and dyadic operators in a single sorted theory.
-
-=SML
-declare_infix(200, "LiftOver");
-=TEX
-
-¹HOLCONST
-Ü Û$LiftOverÝ : ('a ­ 'b)
-Ü	­ (('a SET ¸ ('a ­ 'a ­ BOOL)) ¸ ('b SET ¸ ('b ­ 'b ­ BOOL)))
-Ü	­ ('a SET ­ 'b SET)
-÷üüüüüü
-Ü µ f (D, $¦‰d) (C, $¦‰c)· (f LiftOver ((D, $¦‰d), (C, $¦‰c)))
-Ü	= Ìx· Åy· ¶z· z  x ± y = EquivClass (C, $¦‰c) (f z)
-°
-
-=GFT
-ÛLiftOver_thmÝ =
-   ô µ f (D, $¦‰d) (C, $¦‰c) de ce·
-	     Equiv (D, $¦‰d)
-           ± Equiv (C, $¦‰c)
-           ± f Respects1 ((D, $¦‰d), C, $¦‰c)
-           ± de  D / $¦‰d
-           ± ce  C / $¦‰c
-         ´ ((f LiftOver ((D, $¦‰d), C, $¦‰c)) de = ce
-           ¤ (¶ d c· d  D
-               ± EquivClass (D, $¦‰d) d = de
-               ± EquivClass (C, $¦‰c) c = ce
-               ± c = f d))
-=TEX
-
-\ignore{
-=SML
-val Respects1_def= get_spec ¬$Respects1®;
-val LiftOver_def= get_spec ¬$LiftOver®;
-
-set_goal([], ¬
-	µf (D, $¦‰d) (C, $¦‰c) de ce·
-		Equiv(D, $¦‰d) ± Equiv(C, $¦‰c)
-	±	(f Respects1 ((D, $¦‰d), (C, $¦‰c)))
-	±	de  (D / $¦‰d) ± ce  (C / $¦‰c)
-	´	((f LiftOver ((D, $¦‰d), (C, $¦‰c))) de = ce
-		¤ ¶d c· d  D ± EquivClass (D, $¦‰d) d = de ± EquivClass (C, $¦‰c) c = ce
-			± c = f d)
-®);
-a(rewrite_tac[Respects1_def, LiftOver_def] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (all_fc_tac [list_µ_elim [¬D®,¬$¦‰d®] quotient_map_onto_thm]);
-a (¶_tac ¬x® THEN ¶_tac ¬f x® THEN_TRY asm_rewrite_tac[]);
-a (SYM_ASMS_T rewrite_tac);
-a (Å_tac ¬(Å y· ¶ z· z  de ± y = EquivClass (C, $¦‰c) (f z))®);
-(* *** Goal "1.1" *** *)
-a (lemma_tac ¬x  de® THEN1 (all_fc_tac [equiv_class__thm] THEN asm_rewrite_tac[]));
-a (¶_tac ¬EquivClass (C, $¦‰c) (f x)® THEN ¶_tac  ¬x® THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "1.2" *** *)
-a (asm_rewrite_tac[]);
-a (lemma_tac ¬z  D® THEN1 all_fc_tac [all_µ_intro quotient__thm]);
-a (lemma_tac ¬x ¦‰d z®);
-(* *** Goal "1.2.1" *** *)
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[get_spec ¬EquivClass®]);
-(* *** Goal "1.2.2" *** *)
-a (all_asm_fc_tac[]);
-a (all_ufc_¤_tac[equiv_class_eq_thm]);
-(* *** Goal "2" *** *)
-a (Å_tac ¬(Å y· ¶ z· z  de ± y = EquivClass (C, $¦‰c) (f z))®);
-(* *** Goal "2.1" *** *)
-a (¶_tac ¬EquivClass (C, $¦‰c) (f d)® THEN ¶_tac  ¬d® THEN_TRY asm_rewrite_tac[]);
-a (SYM_ASMS_T rewrite_tac);
-a (all_fc_tac[equiv_class__thm]);
-(* *** Goal "2.2" *** *)
-a (asm_rewrite_tac[]);
-a (lemma_tac ¬z  D® THEN1 all_fc_tac [all_µ_intro quotient__thm]);
-a (lemma_tac ¬d ¦‰d z®);
-(* *** Goal "2.2.1" *** *)
-a (DROP_NTH_ASM_T 3 ante_tac THEN SYM_ASMS_T rewrite_tac);
-a (rewrite_tac[get_spec ¬EquivClass®]);
-a (REPEAT strip_tac);
-(* *** Goal "2.2.2" *** *)
-a (all_asm_fc_tac[]);
-a (LEMMA_T ¬ce = EquivClass (C, $¦‰c) (f d)® rewrite_thm_tac THEN1 SYM_ASMS_T rewrite_tac);
-a (ALL_UFC_¤_T (rewrite_tac) [equiv_class_eq_thm]);
-a (all_fc_tac [equiv_def]);
-a (all_fc_tac [sym_def]);
-val LiftOver_thm = save_pop_thm "LiftOver_thm";
-=TEX
-}%ignore
-
-\subsection{Lifting Monadic Operators}
-
-=SML
-declare_infix(200, "MonOpRespects");
-=TEX
-
-¹HOLCONST
-Ü Û$MonOpRespectsÝ : ('a ­ 'a) ­ ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ f eq· f MonOpRespects eq ¤ f Respects1 (eq, eq)
-°
-
-=GFT
-ÛMonOpRespects_thmÝ =
-   ô µ f C $¦· f MonOpRespects (C, $¦) ¤ (µ x y· x  C ± y  C ± x ¦ y ´ f x  C ± f y  C ± f x ¦ f y)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ f C $¦· f MonOpRespects (C, $¦) ¤ µx y·x  C ± y  C ± x ¦ y ´ f x  C ± f y  C ± f x ¦ f y®);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$MonOpRespects®, get_spec ¬$Respects1®]);
-val MonOpRespects_thm = save_pop_thm "MonOpRespects_thm";
-=TEX
-}%ignore
-
-The following operator lifts a monadic operator over an equivalence relations respected by the operator.
-
-=SML
-declare_infix(210, "MonOpLift");
-=TEX
-
-¹HOLCONST
-Ü Û$MonOpLiftÝ : ('a ­ 'a)
-Ü	­ ('a SET ¸ ('a ­ 'a ­ BOOL))
-Ü	­ ('a SET ­ 'a SET)
-÷üüüüüü
-Ü µ f (D, $¦‰d)· f MonOpLift (D, $¦‰d) = f LiftOver ((D, $¦‰d), (D, $¦‰d))
-°
-=GFT
-ÛMonOpLift_thmÝ =
-   ô µ f (D, $¦‰d) de ce
-     · Equiv (D, $¦‰d)
-           ± f Respects1 ((D, $¦‰d), D, $¦‰d)
-           ± de  D / $¦‰d
-           ± ce  D / $¦‰d
-         ´ ((f MonOpLift (D, $¦‰d)) de = ce
-           ¤ (¶ d c· d  D
-               ± EquivClass (D, $¦‰d) d = de
-               ± EquivClass (D, $¦‰d) c = ce
-               ± c = f d))
-=TEX
-
-\ignore{
-=SML
-val MonOpRespects_def= get_spec ¬$MonOpRespects®;
-val MonOpLift_def= get_spec ¬$MonOpLift®;
-
-push_pc "hol";
-
-set_goal([], ¬
-	µf (D, $¦‰d) de ce·
-		Equiv(D, $¦‰d)
-	±	(f MonOpRespects (D, $¦‰d))
-	±	de  (D / $¦‰d) ± ce  (D / $¦‰d)
-	´	((f MonOpLift (D, $¦‰d)) de = ce
-		¤ ¶d c· d  D ± EquivClass (D, $¦‰d) d = de ± EquivClass (D, $¦‰d) c = ce
-			± c = f d)
-®);
-a(rewrite_tac[MonOpLift_def, MonOpRespects_def] THEN REPEAT_N 7 strip_tac);
-a (ALL_UFC_¤_T (rewrite_tac) [LiftOver_thm]);
-val MonOpLift_thm = save_pop_thm "MonOpLift_thm";
-=TEX
-}%ignore
-
-\subsection{Lifting Dyadic Operators}
-
-=SML
-declare_infix(200, "DyOpRespects");
-=TEX
-
-¹HOLCONST
-Ü Û$DyOpRespectsÝ : ('a ­ 'a ­ 'a) ­ ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ f eq· f DyOpRespects eq ¤ (Uncurry f) Respects1 (eq RelProd eq, eq)
-°
-
-=GFT
-ÛDyOpRespects_thmÝ =
-   ô µ f C $¦· f DyOpRespects (C, $¦)
-         ¤ (µ x1 y1 x2 y2· x1  C ± y1  C ± x2  C ± y2  C ± x1 ¦ x2 ± y1 ¦ y2
-             ´ f x1 y1  C ± f x2 y2  C ± f x1 y1 ¦ f x2 y2)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µ f C $¦· f DyOpRespects (C, $¦) ¤ µx1 y1 x2 y2· x1  C ± y1  C ± x2  C ± y2  C ± x1 ¦ x2 ± y1 ¦ y2 ´ f x1 y1  C ± f x2 y2  C ± f x1 y1 ¦ f x2 y2®);
-a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬$DyOpRespects®, get_spec ¬$Respects1®, get_spec ¬Uncurry®, get_spec ¬$RelProd®]);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (lemma_tac ¬(x1,y1)  (C ¸ C) ± (x2,y2)  (C ¸ C)® THEN1 asm_rewrite_tac[get_spec ¬$¸®]);
-a (LIST_SPEC_NTH_ASM_T 9 [¬x1,y1®, ¬x2,y2®] (strip_asm_tac o (rewrite_rule[])));
-(* *** Goal "2" *** *)
-a (lemma_tac ¬(x1,y1)  (C ¸ C) ± (x2,y2)  (C ¸ C)® THEN1 asm_rewrite_tac[get_spec ¬$¸®]);
-a (LIST_SPEC_NTH_ASM_T 9 [¬x1,y1®, ¬x2,y2®] (strip_asm_tac o (rewrite_rule[])));
-(* *** Goal "3" *** *)
-a (lemma_tac ¬(x1,y1)  (C ¸ C) ± (x2,y2)  (C ¸ C)® THEN1 asm_rewrite_tac[get_spec ¬$¸®]);
-a (LIST_SPEC_NTH_ASM_T 9 [¬x1,y1®, ¬x2,y2®] (strip_asm_tac o (rewrite_rule[])));
-(* *** Goal "4" *** *)
-a (all_asm_ufc_tac[]);
-(* *** Goal "5" *** *)
-a (all_asm_ufc_tac[]);
-(* *** Goal "6" *** *)
-a (all_asm_ufc_tac[]);
-val DyOpRespects_thm = save_pop_thm "DyOpRespects_thm";
-=TEX
-}%ignore
-
-The following operator lifts a dyadic operator over an equivalence relations respected by the operator.
-
-=SML
-declare_infix(210, "DyOpLift");
-=TEX
-
-¹HOLCONST
-Ü Û$DyOpLiftÝ : ('a ­ 'a ­ 'a)
-Ü	­ ('a SET ¸ ('a ­ 'a ­ BOOL))
-Ü	­ ('a SET ­ 'a SET ­ 'a SET)
-÷üüüüüü
-Ü µ f (D, $¦‰d)· f DyOpLift (D, $¦‰d)
-Ü	= Ìx y·((Uncurry f) LiftOver ((D, $¦‰d) RelProd (D, $¦‰d), (D, $¦‰d))) (x ¸ y)
-°
-
-=GFT
-ÛDyOpLift_thmÝ =
-   ô µ f (D, $¦‰d) l r c
-     · Equiv (D, $¦‰d)
-           ± f DyOpRespects (D, $¦‰d)
-           ± l  D / $¦‰d
-           ± r  D / $¦‰d
-           ± c  D / $¦‰d
-         ´ ((f DyOpLift (D, $¦‰d)) l r = c
-           ¤ (¶ le re ce
-           · le  D
-               ± re  D
-               ± EquivClass (D, $¦‰d) le = l
-               ± EquivClass (D, $¦‰d) re = r
-               ± EquivClass (D, $¦‰d) ce = c
-               ± ce = f le re))
-=TEX
-
-\ignore{
-=SML
-
-push_pc "hol";
-
-val DyOpRespects_def= get_spec ¬$DyOpRespects®;
-val DyOpLift_def= get_spec ¬$DyOpLift®;
-
-set_goal([], ¬
-	µf (D, $¦‰d) l r c·
-		Equiv(D, $¦‰d)
-	±	(f DyOpRespects (D, $¦‰d))
-	±	l  (D / $¦‰d) ± r  (D / $¦‰d) ± c  (D / $¦‰d)
-	´	((f DyOpLift (D, $¦‰d)) l r = c
-		¤ ¶le re ce· le  D ± re  D ± EquivClass (D, $¦‰d) le = l ± EquivClass (D, $¦‰d) re = r ± EquivClass (D, $¦‰d) ce = c
-			± ce = f le re)
-®);
-a (rewrite_tac[DyOpLift_def, DyOpRespects_def] THEN REPEAT_N 8 strip_tac);
-a (all_fc_tac [Equiv_RelProd_thm]);
-a (lemma_tac ¬¶(D2, eD2)· (D, $¦‰d) RelProd (D, $¦‰d) = (D2, eD2)® THEN1 (¶_tac ¬(D, $¦‰d) RelProd (D, $¦‰d)® THEN rewrite_tac[]));
-a (DROP_NTH_ASM_T 6 ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
-a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
-a (GET_NTH_ASM_T 3 (strip_asm_tac o (rewrite_rule [pair_clauses, RelProd_projections_thm]) o (eq_sym_rule)));
-a (lemma_tac ¬(l ¸ r)   EquivClasses (D2, eD2)®);
-(* *** Goal "1" *** *)
-a (SYM_ASMS_T rewrite_tac);
-a (all_ufc_¤_rewrite_tac [EquivClasses_RelProd_thm]);
-a (asm_rewrite_tac [EquivClasses_def]);
-(* *** Goal "2" *** *)
-a (POP_ASM_T (strip_asm_tac o (rewrite_rule [EquivClasses_def])));
-a (all_fc_tac [quotient_map_onto_thm]);
-a (ALL_UFC_¤_T (rewrite_tac) [LiftOver_thm]);
-a (REPEAT strip_tac);
-(* *** Goal "2.1" *** *)
-a (¶_tac ¬Fst d® THEN ¶_tac ¬Snd d® THEN ¶_tac ¬c'® THEN asm_rewrite_tac[]);
-a (DROP_ASM_T ¬d  D2® ante_tac THEN asm_rewrite_tac[]);
-a (split_pair_rewrite_tac [¬d®][rel__in_clauses]);
-a (strip_tac THEN asm_rewrite_tac[]);
-a (SYM_ASMS_T rewrite_tac);
-a (DROP_NTH_ASM_T 5 ante_tac);
-a (split_pair_rewrite_tac [¬d®] [eq_sym_rule (asm_rule  ¬(D, $¦‰d) RelProd (D, $¦‰d) = (D2, eD2)®)]);
-a (ALL_FC_T rewrite_tac [EquivClass_RelProd_thm1]);
-a (all_fc_tac [equiv_class__thm]);
-a (strip_tac);
-a (all_ufc_¤_tac [cp_eq_thm1]);
-a (contr_tac);
-(* *** Goal "2.2" *** *)
-a (¶_tac ¬le,re® THEN ¶_tac ¬ce® THEN rewrite_tac[]);
-a (rewrite_tac [asm_rule ¬D2 = (D ¸ D)®, rel__in_clauses]);
-a (REPEAT strip_tac);
-a (SYM_ASMS_T rewrite_tac);
-a (ALL_FC_T rewrite_tac [EquivClass_RelProd_thm1]);
-val DyOpLift_thm = save_pop_thm "DyOpLift_thm";
-=TEX
-}%ignore
-
-The following relation defines the relationship between a function which has been obtained by ``lifting'' a function over equvalence relations and the original.
-
-=SML
-declare_infix(200, "Lifts");
-=TEX
-
-¹HOLCONST
-Ü $ÛLiftsÝ : ('a SET ­ 'b SET)
-Ü		­	(('a SET ¸ ('a ­ 'a ­ BOOL))
-Ü			¸ ('a ­ 'b)
-Ü			¸ ('b SET ¸ ('b ­ 'b ­ BOOL)))
-Ü		­ BOOL
-÷üüüüüü
-Ü µ f D C ($¦‰d, g, $¦‰c)· f Lifts ((D, $¦‰d), g, (C, $¦‰c))
-Ü		¤ (µx y· x  (D / $¦‰d) ± y  x ´ g y  f x)
-°
-
-=GFT
-
-=TEX
-
-\ignore{
-=SML
-set_goal([], ¬µf D C $¦‰d $¦‰c· g Respects1 ((D, $¦‰d), (C, $¦‰c)) ´ ¶f· f Lifts ((D, $¦‰d), g, (C, $¦‰c))®);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬$Respects1®, ¬$Lifts®, ¬$QuotientSet®, ¬EquivClass®]) THEN REPEAT strip_tac);
-a (¶_tac ¬(Ìe· EquivClass (C, $¦‰c) (g e))›-®);
-a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬$Respects1®, ¬$Lifts®, ¬$QuotientSet®, ¬EquivClass®]) THEN REPEAT strip_tac);
-a (rewrite_tac (map get_spec [¬$›-®]));
-a (lemma_tac ¬¶w·{y|¶ x'· x'  x ± y = EquivClass (C, $¦‰c) (g x')} = {w}® THEN_TRY asm_rewrite_tac[get_spec ¬Contents®]);
-a (rewrite_tac (map get_spec [¬EquivClass®]));
-a (var_elim_asm_tac ¬x = {y|y  D ± x' ¦‰d y}®);
-a (all_asm_ufc_tac[]);
-a (rewrite_tac (map get_spec [¬Contents®]));
-=TEX
-}%ignore
-
-\section{Lattices (I)}
-
-The beginnings of a theory of lattices.
-This version was done before the work on Univesal Algebra, and will be discarded if the later version conformant with that theory is found satisfactory.
-
-=SML
-set_merge_pcs ["hol", "'rbjmisc"] ;
-=TEX
-
-\subsection{Signature and Defining Property}
-
-We will represent a lattice as a triple comprising a carrier set and two-argument join and meet functions.
-
-¹HOLLABPROD ÛLATÝüüüüüüüüüüüüüüü
-Ü	ÛCar‰LÝ			: 'a SET;
-Ü	ÛJoin‰LÝ			: 'a ­ 'a ­ 'a;
-Ü	ÛMeet‰LÝ		: 'a ­ 'a ­ 'a
-°üüüüüüüüüüüüüüüüüüüüüüüüüüüüü
-
-We will use L and M as variables for lattices and the following infixity declarations will be useful as names for the corresponding operations.
-
-=SML
-declare_infix (235, "²‰L");
-declare_infix (235, "²‰M");
-declare_infix (240, "±‰L");
-declare_infix (240, "±‰M");
-=TEX
-
-¹HOLCONST
-Ü ÛIsLatticeÝ : 'a LAT ­ BOOL
-÷üüüüüü
-Ü µ L·	IsLattice L ¤ µ C $²‰L $±‰L· MkLAT C $²‰L $±‰L = L ´ 
-Ü       (µx y· x  C ± y  C ´
-		x ²‰L y  C ± x ±‰L y  C
-	±	x ²‰L y = y ²‰L x ± x ±‰L y = y ±‰L x
-	±	x ±‰L (x ²‰L y) = x ± x ²‰L (x ±‰L y) = x
-        ± (µz· z  C
-		´	(x ²‰L y) ²‰L z = x ²‰L (y ²‰L z)
-		±	(x ±‰L y) ±‰L z = x ±‰L (y ±‰L z)))
-°
-
-\subsection{Elementary Theorems}
-
-=GFT
-Û±‰L_idempot_thmÝ =
-   ô µ L
-     · IsLattice L ´ (µ C $²‰L $±‰L· MkLAT C $²‰L $±‰L = L
-        ´ (µ x· x  C ´ x ±‰L x = x))
-
-Û±‰L_idempot_thmÝ =
-   ô µ L· IsLattice L ´ (µ C $²‰L $±‰L· MkLAT C $²‰L $±‰L = L
-	´ (µ x· x  C ´ x ²‰L x = x))
-=TEX
-
-\ignore{
-=SML
-val lattice_def = get_spec ¬IsLattice®;
-
-set_goal([], ¬µL· IsLattice L ´ µ C $²‰L $±‰L· MkLAT C $²‰L $±‰L = L ´
-	µx· x  C ´ x ±‰L x = x®);
-a (REPEAT strip_tac);
-a (lemma_tac ¬x ±‰L x  C® THEN1 all_ufc_tac [lattice_def]);
-a (lemma_tac ¬x ±‰L (x ²‰L x ±‰L x) = x® THEN1 all_ufc_tac [lattice_def]);
-a (lemma_tac ¬x ²‰L x ±‰L x = x® THEN1 all_ufc_tac [lattice_def]);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val ±‰L_idempot_thm = save_pop_thm "±‰L_idempot_thm";
-
-set_goal([], ¬µL· IsLattice L ´ µ C $²‰L $±‰L· MkLAT C $²‰L $±‰L = L ´
-	µx· x  C ´ x ²‰L x = x®);
-a (REPEAT_N 8 strip_tac);
-a (lemma_tac ¬x ²‰L x  C® THEN1 all_ufc_tac [lattice_def]);
-a (lemma_tac ¬x ²‰L (x ±‰L (x ²‰L x)) = x® THEN1 all_ufc_tac [lattice_def]);
-a (lemma_tac ¬x ±‰L (x ²‰L x) = x® THEN1 all_ufc_tac [lattice_def]);
-a (DROP_NTH_ASM_T 2 ante_tac THEN asm_rewrite_tac[]);
-val ²‰L_idempot_thm = save_pop_thm "²‰L_idempot_thm";
-
-=TEX
-}%ignore
-
-\subsection{Quotient Lattices}
-
-The quotient of a lattice with respect to some equivalence relation over its elements is defined as follows:
-
-¹HOLCONST
-Ü ÛQuotientLatticeÝ : 'a LAT ­ ('a ­ 'a ­ BOOL) ­ 'a SET LAT
-÷üüüüüü
-Ü µ L $¦‰d· QuotientLattice L $¦‰d =
-Ü	let D = (Car‰L L, $¦‰d)
-Ü	in let $²‰L = (Join‰L L) DyOpLift D and $±‰L = (Meet‰L L) DyOpLift D
-Ü	   in MkLAT (EquivClasses D) $²‰L $±‰L
-°
-
-=SML
-declare_alias ("/", ¬QuotientLattice®);
-=TEX
-
--GFT
-=TEX
-
-\ignore{
-=IGN
-val QuotientLattice_def = get_spec ¬QuotientLattice®;
-
-set_goal([], ¬µL $¦‰d· IsLattice L ± Equiv (Car‰L L, $¦‰d) ´ IsLattice (L / $¦‰d)®);
-a (REPEAT µ_tac THEN rewrite_tac [lattice_def, QuotientLattice_def, let_def] THEN REPEAT strip_tac);
-=TEX
-}%ignore
-
 \section{Group Theory}
 
 =SML
@@ -3268,10 +2518,17 @@ set_merge_pcs ["hol", "'rbjmisc"];
 }%ignore
 
 ¹HOLCONST
-Ü ÛIxCompIxÝ : ('a, 'b) IX ­ ('b, 'c) IX ­('a, 'c) IX
+Ü ÛIxCompIxÝ : ('a, 'b) IX ­ ('b, 'c) IX ­ ('a, 'c) IX
 ÷üüüüüüüüüüü
 Ü µix jx· IxCompIx ix jx = Ìx·
 Ü	if IsDefined (ix x) then jx (ValueOf (ix x)) else Undefined
+°
+
+¹HOLCONST
+Ü ÛIxCompÝ : ('a, 'b) IX ­ ('b ­ 'c) ­ ('a, 'c) IX
+÷üüüüüüüüüüü
+Ü µix j· IxComp ix j = Ìx·
+Ü	if IsDefined (ix x) then Value (j (ValueOf (ix x))) else Undefined
 °
 
 ¹HOLCONST
@@ -3320,8 +2577,83 @@ val Ã_IxVal_thm = save_pop_thm "Ã_IxVal_thm";
 =TEX
 }%ignore
 
+¹HOLCONST
+Ü ÛIxPackÝ : ('a ¸ 'b)LIST ­ ('a, 'b)IX
+÷üüüüüüüüüüü
+Ü         IxPack [] = (Ìis· Undefined)
+Ü ± µh t· IxPack (Cons h t) = Ìis·
+Ü		if Fst h = is then Value (Snd h) else IxPack t is
+°
+
+=GFT
+ÛIxDom_IxPack_disp_thmÝ =
+	ô IxDom (IxPack []) = {}
+	± (µ x y z· IxDom (IxPack (Cons (x, y) z)) = Insert x (IxDom (IxPack z)))
+
+ÛIxPack_lemma1Ý =
+	ô µ x y z· IxPack (Cons (x, y) z) x = Value y
+
+ÛIxPack_lemma2Ý =
+	ô µ w x y z· (x=w ¤ F) ´ IxPack (Cons (x, y) z) w = IxPack z w
+=TEX
+
+\ignore{
 =SML
+val IxPack_def = get_spec ¬IxPack®;
+
+set_goal([], ¬IxDom (IxPack []) = {}
+	± µx y z· IxDom (IxPack (Cons (x,y) z)) = Insert x (IxDom (IxPack z))®);
+a (rewrite_tac [IxDom_def, IxPack_def, sets_ext_clauses]);
+a (REPEAT µ_tac);
+a (cond_cases_tac ¬x = x'®);
+(* *** Goal "1" *** *)
+a (rewrite_tac [insert_def]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac THEN all_var_elim_asm_tac);
+val IxDom_IxPack_disp_thm = save_pop_thm "IxDom_IxPack_disp_thm";
+
+set_goal([], ¬µx y z· IxPack (Cons (x,y) z) x = Value y®);
+a (rewrite_tac [IxPack_def]);
+val IxPack_lemma1 = save_pop_thm "IxPack_lemma1";
+
+set_goal([], ¬µw x y z· (x=w ¤ F) ´ IxPack (Cons (x,y) z) w = IxPack z w®);
+a (rewrite_tac [IxPack_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val IxPack_lemma2 = save_pop_thm "IxPack_lemma2";
+=TEX
+}%ignore
+
+
+=SML
+fun IxPack_conv t =
+	let val (_, [c, w]) = strip_app t;
+            val (_, [xy, z]) = strip_app c;
+	    val (x, y) = dest_pair xy;
+	    val thm =  list_µ_elim [w,x,y,z] IxPack_lemma2;
+	    val eq = mk_eq (x,w);
+	    val prem = string_eq_conv eq
+	in  ´_elim thm prem
+	end handle _ => fail_conv t;
+=IGN
+IxPack_conv ¬IxPack (Cons ("3",y) z) "32"®;
+
+=SML
+set_rw_eqn_cxt ([(¬IxPack (Cons (x,y) z) w®, IxPack_conv)]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [singleton_subset_lemma, insert_twice_thm]) "'rbjmisc";
+add_rw_thms [NeSet_ne_thm] "'rbjmisc";
+add_rw_thms [NeSet_PeSet_thm, MemOf_memof_thm, PeSet_Insert_thm, MemOf_NeSet_unit_thm] "'rbjmisc";
+add_rw_thms (map get_spec [¬IsDefined®, ¬ValueOf®] @ [value_not_undefined_lemma, value_oneone_lemma]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [µ‰L_clauses, ¶‰L_clauses, µ‰L_thm, ¶‰L_thm, µ‰L_append_thm, ¶‰L_append_thm]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [RelProd_projections_thm]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [IsL_IsR_lemma]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [ixud_eq_iff_ixdom_eq_lemma, ixoverride_ixdom_lemma, ixoverride_ixud_lemma]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [IxDom_IxPack_disp_thm, IxPack_lemma1]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [combc_thm, bincomp_thm]) "'rbjmisc";
+
+add_pc_thms "'rbjmisc" (map get_spec [] @ [IxDom_IxPack_disp_thm, IxPack_lemma1]);
+set_merge_pcs ["hol", "'rbjmisc"];
+
 commit_pc "'rbjmisc";
+
 
 force_new_pc "ÛrbjmiscÝ";
 merge_pcs ["hol", "'rbjmisc"] "rbjmisc";
