@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.33 2010/08/05 12:04:21 rbj Exp $
+$Id: t006.doc,v 1.34 2010/08/06 09:00:54 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 \usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2010/08/05 12:04:21 $ $
+Last Changed $ $Date: 2010/08/06 09:00:54 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.33 2010/08/05 12:04:21 rbj Exp $ $
+$ $Id: t006.doc,v 1.34 2010/08/06 09:00:54 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -2518,18 +2518,54 @@ set_merge_pcs ["hol", "'rbjmisc"];
 }%ignore
 
 ¹HOLCONST
+Ü ÛIxCompÝ : ('a, 'b) IX ­ ('b ­ 'c) ­ ('a, 'c) IX
+÷üüüüüüüüüüü
+Ü µix j· IxComp ix j = Ìx·
+Ü	if IsDefined (ix x) then Value (j (ValueOf (ix x))) else Undefined
+°
+
+=GFT
+ÛIxDom_IxComp_thmÝ =
+	ô µ is f· IxDom (IxComp is f) = IxDom is
+=TEX
+
+\ignore{
+=SML
+val IxComp_def = get_spec ¬IxComp®;
+
+set_goal([], ¬µis f· IxDom (IxComp is f) = IxDom is®);
+a (rewrite_tac [IxDom_def, IxComp_def,sets_ext_clauses] THEN REPEAT µ_tac);
+a (cond_cases_tac ¬is x = Undefined®);
+val IxDom_IxComp_thm = save_pop_thm "IxDom_IxComp_thm";
+
+add_pc_thms "'rbjmisc" (map get_spec [] @ [IxDom_IxComp_thm]);
+set_merge_pcs ["hol", "'rbjmisc"];
+=TEX
+}%ignore
+
+
+¹HOLCONST
 Ü ÛIxCompIxÝ : ('a, 'b) IX ­ ('b, 'c) IX ­ ('a, 'c) IX
 ÷üüüüüüüüüüü
 Ü µix jx· IxCompIx ix jx = Ìx·
 Ü	if IsDefined (ix x) then jx (ValueOf (ix x)) else Undefined
 °
 
-¹HOLCONST
-Ü ÛIxCompÝ : ('a, 'b) IX ­ ('b ­ 'c) ­ ('a, 'c) IX
-÷üüüüüüüüüüü
-Ü µix j· IxComp ix j = Ìx·
-Ü	if IsDefined (ix x) then Value (j (ValueOf (ix x))) else Undefined
-°
+=GFT
+ÛIxDom_IxCompIx_thmÝ =
+	ô µ is1 is2· IxDom (IxCompIx is1 is2) € IxDom is1
+=TEX
+
+\ignore{
+=SML
+val IxCompIx_def = get_spec ¬IxCompIx®;
+
+set_goal([], ¬µis1 is2· IxDom (IxCompIx is1 is2) € IxDom is1®);
+a (rewrite_tac [IxDom_def, IxCompIx_def, sets_ext_clauses] THEN REPEAT µ_tac);
+a (cond_cases_tac ¬is1 x = Undefined®);
+val IxDom_IxCompIx_thm = save_pop_thm "IxDom_IxCompIx_thm";
+=TEX
+}%ignore
 
 ¹HOLCONST
 Ü ÛIxIncÝ : ('a, 'b) IX ­ ('a, 'b) IX ­ BOOL
@@ -2555,7 +2591,6 @@ declare_infix(200, "Ã");
 
 \ignore{
 =SML
-val IxCompIx_def = get_spec ¬IxCompIx®;
 val IxInc_def = get_spec ¬IxInc®;
 
 set_goal([], ¬µA B C:('a, 'b) IX· A Ã B ± B Ã C ´ A Ã C®);
@@ -2595,6 +2630,13 @@ val Ã_IxVal_thm = save_pop_thm "Ã_IxVal_thm";
 
 ÛIxPack_lemma2Ý =
 	ô µ w x y z· (x=w ¤ F) ´ IxPack (Cons (x, y) z) w = IxPack z w
+
+ÛIxComp_IxPack_lemmaÝ =
+	ô µ f h t· IxComp (IxPack (Cons h t)) f
+		= (Ì z· if z = Fst h then Value (f (Snd h)) else IxComp (IxPack t) f z)
+
+ÛIxComp_IxPack_thmÝ =
+	ô µ f l· IxComp (IxPack l) f = IxPack (Map (Ì (x, y)· (x, f y)) l)
 =TEX
 
 \ignore{
@@ -2610,7 +2652,7 @@ a (cond_cases_tac ¬x = x'®);
 a (rewrite_tac [insert_def]);
 (* *** Goal "2" *** *)
 a (REPEAT strip_tac THEN all_var_elim_asm_tac);
-val IxDom_IxPack_disp_thm = save_pop_thm "IxDom_IxPack_disp_thm";
+val IxDom_IxPack_disp_thm = pop_thm();
 
 set_goal([], ¬µx y z· IxPack (Cons (x,y) z) x = Value y®);
 a (rewrite_tac [IxPack_def]);
@@ -2619,6 +2661,27 @@ val IxPack_lemma1 = save_pop_thm "IxPack_lemma1";
 set_goal([], ¬µw x y z· (x=w ¤ F) ´ IxPack (Cons (x,y) z) w = IxPack z w®);
 a (rewrite_tac [IxPack_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
 val IxPack_lemma2 = save_pop_thm "IxPack_lemma2";
+
+set_goal([], ¬µf h t· IxComp (IxPack (Cons h t)) f = Ìz· if z = Fst h then Value (f (Snd h)) else IxComp (IxPack t) f z®);
+a (rewrite_tac [IxComp_def, IxPack_def, ext_thm]);
+a (REPEAT µ_tac);
+a (cond_cases_tac ¬x = Fst h®);
+a (LEMMA_T ¬³ Fst h = x® rewrite_thm_tac THEN1 (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac []));
+val IxComp_IxPack_lemma = save_pop_thm "IxComp_IxPack_lemma";
+
+set_goal([], ¬µf l· IxComp (IxPack l) f = IxPack (Map (Ì(x,y)· (x, f y)) l)®);
+a (REPEAT µ_tac);
+a (rewrite_tac [ext_thm]);
+a (REPEAT µ_tac);
+a (list_induction_tac ¬l®);
+(* *** Goal "1" *** *)
+a (rewrite_tac [IxComp_def, IxPack_def, map_def]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac [IxComp_IxPack_lemma]);
+a (rewrite_tac [IxComp_def, IxPack_def, map_def]);
+a (strip_tac);
+a (LEMMA_T ¬(Fst x' = x) = (x = Fst x')® rewrite_thm_tac THEN1 (REPEAT strip_tac THEN asm_rewrite_tac []));
+val IxComp_IxPack_thm = save_pop_thm "IxComp_IxPack_thm";
 =TEX
 }%ignore
 
@@ -2646,7 +2709,7 @@ add_rw_thms (map get_spec [] @ [µ‰L_clauses, ¶‰L_clauses, µ‰L_thm, ¶‰L_thm, µ‰L_
 add_rw_thms (map get_spec [] @ [RelProd_projections_thm]) "'rbjmisc";
 add_rw_thms (map get_spec [] @ [IsL_IsR_lemma]) "'rbjmisc";
 add_rw_thms (map get_spec [] @ [ixud_eq_iff_ixdom_eq_lemma, ixoverride_ixdom_lemma, ixoverride_ixud_lemma]) "'rbjmisc";
-add_rw_thms (map get_spec [] @ [IxDom_IxPack_disp_thm, IxPack_lemma1]) "'rbjmisc";
+add_rw_thms (map get_spec [] @ [IxDom_IxPack_disp_thm, IxPack_lemma1, IxDom_IxComp_thm]) "'rbjmisc";
 add_rw_thms (map get_spec [] @ [combc_thm, bincomp_thm]) "'rbjmisc";
 
 add_pc_thms "'rbjmisc" (map get_spec [] @ [IxDom_IxPack_disp_thm, IxPack_lemma1]);

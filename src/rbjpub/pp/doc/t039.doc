@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADJdoc{$$Id: t039.doc,v 1.4 2010/08/05 12:04:21 rbj Exp $$}
+\def\rbjidtADJdoc{$$Id: t039.doc,v 1.5 2010/08/06 09:00:54 rbj Exp $$}
 
 \section{Equivalence Relations}
 
@@ -1196,12 +1196,48 @@ The following function effects the lifing of an operator.
 
 The quotient operation can then be defined as follows:
 
-
 πHOLCONST
-‹ €AlgQuotient› : ('b)STRUCT  ≠ (('b)SET ∏ ('b ≠ 'b ≠ BOOL)) ≠ ('b SET) STRUCT
+‹ €QuotientAlg› : ('b)STRUCT  ≠ ('b ≠ 'b ≠ BOOL) ≠ ('b SET) STRUCT
 ˜¸¸¸¸¸¸
-‹ µ A r∑ AlgQuotient A r = MkSTRUCT ( (SCar A)) (IxComp (SOps A) (LiftUniOp r))
+‹ µ A r∑ QuotientAlg A r = MkSTRUCT (QuotientSet (SCar A) r) (IxComp (SOps A) (LiftUniOp (SCar A, r)))
 ∞
+
+If an equivalence relation respects the operators in an algebra, then the quotient group will be an homomorphic image of the original algebra.
+We now seek to simplify the necessary conditions on the equivalence relation.
+
+=GFT
+€QuotientAlg_Sig_lemma› =
+	Ù µ A r∑ Sig A √ Sig (QuotientAlg A r)
+
+€AlgHom_EquivClass_HomOps_lemma› =
+	Ù AlgHom (A, EquivClass (SCar A, r), QuotientAlg A r)
+		§ HomOps (A, EquivClass (SCar A, r), QuotientAlg A r)
+=TEX
+
+\ignore{
+=SML
+val LiftUniOp_def = get_spec ¨LiftUniOpÆ;
+val QuotientAlg_def = get_spec ¨QuotientAlgÆ;
+
+set_goal([], ¨µA r∑ Sig A √ Sig (QuotientAlg A r)Æ);
+a (rewrite_tac [QuotientAlg_def, IxComp_def]);
+a (split_pair_rewrite_tac [¨ValueOf (SOps A x)Æ] [LiftUniOp_def]);
+a (rewrite_tac [Sig_def, SOps_def, IxCompIx_def, IxInc_def, LiftUniOp_def]);
+a (REPEAT µ_tac);
+a (cond_cases_tac ¨SOps A x = UndefinedÆ);
+val QuotientAlg_Sig_lemma = save_pop_thm "QuotientAlg_Sig_lemma";
+
+set_goal([], ¨µA r∑ FunClosed (A, EquivClass (SCar A, r), QuotientAlg A r)Æ);
+a (rewrite_tac [QuotientAlg_def, FunClosed_def, SOps_def, get_spec ¨QuotientSetÆ]);
+a (REPEAT strip_tac);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[get_spec ¨EquivClassÆ]);
+val FunClosed_EquivClass_lemma = save_pop_thm "FunClosed_EquivClass_lemma";
+
+set_goal([], ¨µA r∑ AlgHom (A, EquivClass (SCar A, r), QuotientAlg A r) § HomOps (A, EquivClass (SCar A, r), QuotientAlg A r)Æ);
+a (rewrite_tac [AlgHom_def, QuotientAlg_Sig_lemma, FunClosed_EquivClass_lemma]);
+val AlgHom_EquivClass_HomOps_lemma = save_pop_thm "AlgHom_EquivClass_HomOps_lemma";
+=TEX
+}%ignore
 
 
 \subsection{Algebraic Equations}
@@ -1261,20 +1297,6 @@ Now we define closure under the above operators.
 ‹ µs n∑ Exprs s n = •{ps | ExprClosed s ps ± VExprs n Ä ps}
 ∞
 
-\ignore{
-
-\subsection{Quotient Algebras}
-
- πHOLCONST
-‹ €QuotientStruct› : ('b, 'a) STRUCT ≠ ('b ≠ 'b ≠ BOOL) ≠ ('b SET, 'a) ALG
- ˜¸¸¸¸¸¸
-‹ µ A $¶âd∑ QuotientStruct A $¶âd = 
-‹	let (C, ops) = ≈(C, ops)∑ (MkSTRUCT C ops = A)
-‹	in let D = (C, $¶âd)
-‹	in MkSTRUCT (EquivClasses D) (Map (Ãop∑ op MonOpLift D) mops) 
- ∞
-
-}%ignore
 
 
 \ignore{
@@ -1291,6 +1313,13 @@ commit_pc "unalg1";
 =TEX
 }%ignore
 
+=SML
+open_theory "unalg";
+force_new_theory "lattice";
+force_new_pc €"'lattice"›;
+merge_pcs ["'prove_∂_¥_conv", "'savedthm_cs_∂_proof"] "'lattice";
+set_merge_pcs ["unalg", "'lattice"];
+=TEX
 
 \section{Lattices (I)}
 
@@ -1433,13 +1462,6 @@ a (asm_rewrite_tac[]);
 
 \section{Lattices}
 
-=SML
-open_theory "unalg";
-force_new_theory "lattice";
-force_new_pc €"'lattice"›;
-merge_pcs ["'prove_∂_¥_conv", "'savedthm_cs_∂_proof"] "'lattice";
-set_merge_pcs ["unalg", "'lattice"];
-=TEX
 
 The beginnings of a theory of lattices.
 This version was done using Universal Algebra, the previous version will be discarded if this version conformant with the approach to universal algebra is found satisfactory.
@@ -1551,7 +1573,6 @@ Let us define a Lattice homomorphism as a homomorphism whose source is a lattice
 =SML
 val LatHom_def = get_spec ¨LatHomÆ;
 
-
 set_goal([], ¨µA f B g C∑ LatHom (A,f,B) ± AlgHom (B,g,C) ¥ LatHom (A, g o f, C)Æ);
 a (REPEAT µ_tac THEN rewrite_tac [LatHom_def] THEN REPEAT strip_tac THEN all_fc_tac [AlgHom_o_thm]);
 val LatHom_o_thm = save_pop_thm "LatHom_o_thm";
@@ -1565,20 +1586,29 @@ a (REPEAT ç_disp_¥_tac);
 a (rewrite_tac[HomOp_def, SOps_def]);
 a (REPEAT strip_tac THEN all_asm_fc_tac[]);
 val Latt_HomOps_lemma = save_pop_thm "Latt_HomOps_lemma";
-=IGN
-set_goal([], ¨µA f B∑ LatHom (A,f,B) § Sig A √ Sig B ± Sig A = LatSig ± FunClosed (A, f, B) ± HomOps (A, f, B)Æ);
-a (rewrite_tac [LatHom_def, AlgHom_def] THEN REPEAT strip_tac);
+=TEX
+}%ignore
 
-set_goal([], ¨µA f B∑ LatHom (A,f,B) § Sig A √ Sig B ± Sig A = LatSig ± FunClosed (A, f, B)
-	± (µ C $≤âL $±âL D $≤âM $±âM∑ MkLat C $≤âL $±âL √ A ± MkLat D $≤âM $±âM √ B
-		¥ µl r∑ l ç C ± r ç C ¥ f(l ≤âL r) = (f l) ≤âM (f r)
-			± f(l ±âL r) = (f l) ±âM (f r))Æ);
-a (REPEAT µ_tac THEN rewrite_tac [LatHom_def, LatSig_def, IsLat_def, AlgHom_def, FunClosed_def, HomOps_def, MkLat_def]);
-a (REPEAT strip_tac THEN_TRY all_asm_fc_tac[]);
-val LatHom_o_thm = save_pop_thm "LatHom_o_thm";
+\subsection{Quotient Lattices}
+
+A quotient lattice requires no special definition, it is simply a \emph{QuotientAlg} of a lattice.
+However, as in the case of the homomorphism, it is conventient to have the conditions expressed explicitly in terms of the lattice operations.
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µC $≤âL $±âL r∑ AlgHom (MkLat C $≤âL $±âL, EquivClass (C, r), QuotientAlg (MkLat C $≤âL $±âL) r)Æ);
+a (REPEAT µ_tac);
+a (LEMMA_T ¨(C, r) = (SCar(MkLat C $≤âL $±âL), r)Æ rewrite_thm_tac THEN1 rewrite_tac[MkLat_def, SOps_def]);
+a (rewrite_tac [AlgHom_EquivClass_HomOps_lemma, SOps_def, QuotientAlg_def, MkLat_def, IxComp_IxPack_thm]);
+a (rewrite_tac [map_def, rewrite_rule [MkLat_def] Latt_HomOps_lemma]);
+
 
 =TEX
 }%ignore
+
 
 \ignore{
 =SML
