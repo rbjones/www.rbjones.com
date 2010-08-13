@@ -1,9 +1,10 @@
 =IGN
-$Id: t010.doc,v 1.14 2010/08/08 15:50:44 rbj Exp $
+$Id: t010.doc,v 1.15 2010/08/13 10:57:22 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
-\usepackage{latexsym}
-\usepackage{ProofPower}
+%\usepackage{latexsym}
+%\usepackage{ProofPower}
+\usepackage{rbj}
 \ftlinepenalty=9999
 \tabstop=0.25in
 \usepackage{A4}
@@ -19,7 +20,7 @@ $Id: t010.doc,v 1.14 2010/08/08 15:50:44 rbj Exp $
 
 \title{Miscellaneous Tactics}
 \author{Roger Bishop Jones}
-\date{$ $Date: 2010/08/08 15:50:44 $ $}
+\date{$ $Date: 2010/08/13 10:57:22 $ $}
 
 \makeindex
 \usepackage[pdftex]{hyperref}
@@ -37,7 +38,7 @@ Several structures providing tactics, tacticals, etc. for theories, forward chai
 \href{http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 
-$ $Id: t010.doc,v 1.14 2010/08/08 15:50:44 rbj Exp $ $
+$ $Id: t010.doc,v 1.15 2010/08/13 10:57:22 rbj Exp $ $
 
 \bf Copyright \copyright\ : Roger Bishop Jones \\
 
@@ -217,6 +218,8 @@ val €Ø_top_anf_tac› = conv_tac (TOP_MAP_C Ø_anf_conv);
 =DOC
 val €COND_CASES_T› : TERM -> THM_TACTIC -> TACTIC;
 val €cond_cases_tac› : TERM -> TACTIC;
+val €less_cases_conv› : CONV;
+val €less_cases_rule› : THM -> THM;
 =DESCRIBE
 A version of {\it CASES\_T} for use in rewriting conditional goals.
 It does a case split assuming the term argument or its denial and then rewrites with that asssumption before applying the thm tactical argument.
@@ -236,6 +239,14 @@ a (cond_cases_tac ¨x = y ± y = zÆ);
 =GFT Definition
 fun €COND_CASES_T› x tt = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (tt y));
 fun €cond_cases_tac› x = COND_CASES_T x strip_asm_tac;
+local 
+fun less_suc_n_conv t =  
+	let val (_, [m,sn]) = strip_app t;
+	    val (_, [n,_]) = strip_app sn;
+	in list_µ_elim [m, n] less_plus1_thm
+	end;
+in val less_cases_conv = (RIGHT_C plus1_conv) THEN_C less_suc_n_conv THEN_TRY_C (RIGHT_C less_cases_conv)
+end;
 =TEX
 =ENDDOC
 
@@ -317,6 +328,15 @@ A case splitting tactic for conditional goals.
 =SML
 fun €COND_CASES_T› x tt = CASES_T x (fn y => TRY (rewrite_tac [y]) THEN (tt y));
 fun €cond_cases_tac› x = COND_CASES_T x strip_asm_tac;
+local 
+   fun less_suc_n_conv t =  
+	let val (_, [m,sn]) = strip_app t;
+	    val (_, [n,_]) = strip_app sn;
+	in list_µ_elim [m, n] less_plus1_thm
+	end;
+   in fun €less_cases_conv› t = ((RIGHT_C plus1_conv) THEN_C less_suc_n_conv THEN_TRY_C (RIGHT_C less_cases_conv)) t
+end;
+val €less_cases_rule› = conv_rule less_cases_conv;
 =TEX
 }%ignore
 
@@ -1033,14 +1053,12 @@ fun €savedthm_cs_∂_conv› x =
 	else (* eq_ *) refl_conv x;
 =TEX
 
-and here's the proof context containing it:
-
 
 Store the above in a proof context:
 
 =SML
 val _ = force_new_pc €"'prove_∂_¥_conv"›;
-val _ = set_cs_∂_convs [prove_∂_¥_conv] "'prove_∂_¥_conv";
+val _ = set_cs_∂_convs [prove_∂_¥_conv, ONCE_MAP_C (pure_once_rewrite_conv [let_def] THEN_C (MAP_C ¬_conv))] "'prove_∂_¥_conv";
 val _ = commit_pc "'prove_∂_¥_conv";
 =TEX
 

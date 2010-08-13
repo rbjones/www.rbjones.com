@@ -1,12 +1,13 @@
 =IGN
-$Id: t017.doc,v 1.4 2006/12/11 20:54:04 rbj01 Exp $
+$Id: t017.doc,v 1.5 2010/08/13 10:57:22 rbj Exp $
 open_theory "cat";
 set_merge_pcs["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_conv"];
 set_flag ("pp_use_alias", false);
 =TEX
 \documentclass[11pt,a4paper]{article}
-\usepackage{latexsym}
-\usepackage{ProofPower}
+%\usepackage{latexsym}
+%\usepackage{ProofPower}
+\usepackage{rbj}
 \ftlinepenalty=9999
 \tabstop=0.25in
 \usepackage{A4}
@@ -36,12 +37,12 @@ Formalisation of some of the concepts of category theory in {\ProductHOL}.
 
 Created 2006/04/09
 
-Last Changed $ $Date: 2006/12/11 20:54:04 $ $
+Last Changed $ $Date: 2010/08/13 10:57:22 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t017.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t017.pdf}
 
-$ $Id: t017.doc,v 1.4 2006/12/11 20:54:04 rbj01 Exp $ $
+$ $Id: t017.doc,v 1.5 2010/08/13 10:57:22 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -557,6 +558,7 @@ a (all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
 
 =TEX
 }%ignore
+
 \section{CATEGORIAL STRUCTURES}
 
 This doesn't belong here, and if it gets anywhere it will be moved elsewhere.
@@ -590,6 +592,84 @@ As in set theory we have some axioms which tell us what kind of things sets are,
 ‹       ± µobj:'a∑ obj ç Obj (Ucat fc) ¥ Cat (Catmap fc obj)
 ∞
 
+\section{Categories in Universal Algebra}
+
+In this section I hope to explore the development of category theory as an application of the Universal Algebra under development in \cite{rbjt039}.
+
+The motivations for this are not very strong.
+The greatest of these is my desire now to find a way to explore some possible philosophical applications of category theory.
+Why this should favour this particular approach is not obvious.
+However, I am working on the Universal Algebra and wanting to probe category theory, so doing the latter in the former makes some sense.
+
+Whether a category is an algebra is moot.
+It depends on what you mean by algebra.
+Universal algebra normally deals with systems in which there are only total first order operations over a single domain, extended by some theoretical computer scientists (most prominently Goguen) to many sorted algebras.
+Typically there is also a presumption that algebra is done in or with a first order equational logic (at least for some purposes, e.g. for the presentation of particular algebras).
+
+In Category theory one of the required operations, composition, is partial, and no particular logical institition is presumed.
+For these reasons Category theory may not be thought of as an algebra, but some of the results of our Universal Algebra may nevertheless be applicable, and crucially, the general manner of representing structures used in our Universal Algebra looks suitable for use in Category theory (a category being such a structure).
+
+I propose to begin by replaying some of the former material in a new theory using the Universalm Algebra.
+
+=SML
+open_theory "unalg";
+force_new_theory "uacat";
+force_new_pc €"'uacat"›;
+merge_pcs ["'prove_∂_¥_conv", "'savedthm_cs_∂_proof"] "'uacat";
+set_merge_pcs ["rbjmisc", "'uacat"];
+=TEX
+
+\subsection{Definition of Category}
+
+We model a category by its set of arrows.
+It is therefore a set (of arrows), together with:
+
+\begin{itemize}
+\item a partial associative operation over the arrows
+\item left and right operators which return the domain and codomain of each arrow
+\end{itemize}
+
+We will represent categories using objects of type \emph{STRUCT} having a suitable signature.
+The signature of a category is defined:
+
+πHOLCONST
+‹ €CatSig› : SIG
+˜¸¸¸¸¸¸
+‹ CatSig = IxPack [("ªâc" , 2); ("Leftâc" , 1); ("Rightâc" , 1)]
+∞
+
+=SML
+declare_infix (300, "ªâc");
+=TEX
+
+We need a convenient notation for categories and therefore define the following constructor:
+
+πHOLCONST
+‹ €MkCat› : 'a SET ≠ ('a ≠ 'a ≠ 'a) ≠ ('a ≠ 'a) ≠ ('a ≠ 'a) ≠ 'a STRUCT
+˜¸¸¸¸¸¸
+‹ µD $ªâc Leftâc Rightâc∑ MkCat D $ªâc Leftâc Rightâc =
+‹	MkSTRUCT D (IxPack [("ªâc" , pack2op $ªâc); ("Leftâc" , pack1op Leftâc); ("Rightâc" , pack1op Rightâc)])
+∞
+
+Before giving the definition of a category it will be convenient to define some auxiliary concepts.
+
+\ignore{
+=IGN
+set_goal([], ¨∂Obj∑ µD $ªâc Leftâc Rightâc a∑ let C = MkCat D $ªâc Leftâc Rightâc in a ç Obj C § a ç SCar C ± a = Leftâc aÆ);
+a (rewrite_tac [let_def]);
+a (prove_∂_tac);
+
+ (pure_once_rewrite_conv [let_def] THEN_C (MAP_C ¬_conv)) ¨let C = MkCat D $ªâc Leftâc Rightâc in a ç Obj C § a ç SCar C ± a = Leftâc aÆ;
+
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €Obj› :  'a STRUCT ≠ 'a SET
+˜¸¸¸¸¸¸
+‹ µD $ªâc Leftâc Rightâc a∑ let C = MkCat D $ªâc Leftâc Rightâc in a ç Obj C § a ç SCar C ± a = Leftâc a
+∞
+
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}
 \include{cat.th}
@@ -599,8 +679,3 @@ As in set theory we have some axioms which tell us what kind of things sets are,
 {\small\printindex}
 
 \end{document}
-=SML
-set_flag ("pp_use_alias", true);
-output_theory{out_file="cat.th.doc", theory="cat"};
-set_flag ("pp_use_alias", false);
-=TEX

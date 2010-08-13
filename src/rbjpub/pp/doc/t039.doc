@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADJdoc{$$Id: t039.doc,v 1.6 2010/08/08 15:50:44 rbj Exp $$}
+\def\rbjidtADJdoc{$$Id: t039.doc,v 1.7 2010/08/13 10:57:22 rbj Exp $$}
 
 \section{Equivalence Relations}
 
@@ -904,16 +904,139 @@ The second is to collect the operators into a name-indexed set (this is done by 
 °
 
 ¹HOLCONST
+Ü Ûunpack0opÝ : ((î ­ 'a) ­ 'a) ­ 'a
+÷üüüüüüüüüüü
+Ü µf· unpack0op f = f (Åx·T)
+°
+
+
+=GFT
+Ûunpack0op_lemmaÝ = ô µ c· unpack0op (Snd (pack0op c)) = c
+=TEX
+
+\ignore{
+=SML
+val pack0op_def = get_spec ¬pack0op®;
+val unpack0op_def = get_spec ¬unpack0op®;
+
+set_goal([], ¬µc· unpack0op (Snd(pack0op c)) = c®);
+a (rewrite_tac [pack0op_def, unpack0op_def]);
+val unpack0op_lemma = pop_thm();
+=TEX
+}%ignore
+
+¹HOLCONST
 Ü Ûpack1opÝ : ('a ­ 'a) ­ (î ¸ ((î ­ 'a) ­ 'a))
 ÷üüüüüüüüüüü
 Ü µf· pack1op f = (1, Ìis· f (is 0))
 °
 
 ¹HOLCONST
+Ü Ûunpack1opÝ : ((î ­ 'a) ­ 'a) ­ ('a ­ 'a)
+÷üüüüüüüüüüü
+Ü µf· unpack1op f = Ìx· f (Ìy· x)
+°
+
+=GFT
+Ûunpack1op_lemmaÝ = ô µ f· unpack1op (Snd (pack1op f)) = f
+=TEX
+
+\ignore{
+=SML
+val pack1op_def = get_spec ¬pack1op®;
+val unpack1op_def = get_spec ¬unpack1op®;
+
+set_goal([], ¬µf· unpack1op (Snd(pack1op f)) = f®);
+a (rewrite_tac [pack1op_def, unpack1op_def, ext_thm]);
+val unpack1op_lemma = pop_thm();
+=TEX
+}%ignore
+
+¹HOLCONST
 Ü Ûpack2opÝ : ('a ­ 'a ­ 'a) ­ (î ¸ ((î ­ 'a) ­ 'a))
 ÷üüüüüüüüüüü
 Ü µf· pack2op f = (2, Ìis· f (is 0) (is 1))
 °
+
+¹HOLCONST
+Ü Ûunpack2opÝ : ((î ­ 'a) ­ 'a) ­ ('a ­ 'a ­ 'a)
+÷üüüüüüüüüüü
+Ü µf· unpack2op f = Ìx y· f (Ìz· if z = 0 then x else y)
+°
+
+=GFT
+Ûunpack2op_lemmaÝ = ô µ f· unpack2op (Snd (pack2op f)) = f
+=TEX
+
+\ignore{
+=SML
+val pack2op_def = get_spec ¬pack2op®;
+val unpack2op_def = get_spec ¬unpack2op®;
+
+set_goal([], ¬µf· unpack2op (Snd(pack2op f)) = f®);
+a (rewrite_tac [pack2op_def, unpack2op_def, ext_thm]);
+val unpack2op_lemma = pop_thm();
+=TEX
+}%ignore
+
+It is intended that specific algebras are introduced by defining a constructor which takes a domain and a number of operators of various arities and packs them into an object of type \emph{STRUCT}.
+It will be convenient to unpack such structures using pattern matching on the kinds of expression which are used to constsruct them, but in order for the consistency such definitions to be automatically proven it is necessary to supply a theorem for each particular algebra in use of the general form:
+
+=GFT
+	µcf D o‰1 o‰2... o‰n· ¶f· f(MkAlg D o‰1 o‰2... o‰n) = cf D o‰1 o‰2... o‰n
+=TEX
+
+The witness for proving the existential can be presented in the form:
+
+=GFT
+	Ìs· cf (SCar s) (unpack?op (Oper s o‰1name)) (unpack?op (Oper s o‰2name)) ... (unpack?op (Oper s o‰nname))
+=TEX
+
+in which the `?' signs and the operator names are discovered from the definition of the constructor \emph{MkAlg}. 
+
+Because the operators have different types according to their arity this cannot be expressed as a general theorem, but it is possible to automate the construction an proof of the required theorem given the definition of the particular \emph{MkAlg} constructor, assuming that this packs up its arguments into a structure in a standard way.
+
+We next undertake the required automation.
+
+=IGN
+fun oprev f =
+	let val (n, t) = dest_const f
+	    val (_, [ot1, ot2]) = dest_ctype t
+	    val (_, [_, ot3]) = dest_ctype ot2
+	    val nt = list_mk_­_type [ot3, ot1]
+	    val nop = mk_const (implode((explode "un")@(explode n)), nt)
+        in nop
+	end;
+
+local fun opmap (l, r) =
+	let val cname = dest_string l
+	    val (pakfun, oper) = dest_app r
+	    val rtype = type_of r
+	    val (_, [_, ot]) = dest_ctype rtype
+	    val (ft, [_, tv]) = dest_ctype ot
+	    val opex = list_mk_app (mk_const ("Oper", inst_type [(tv, ”'a®)] ”'a STRUCT ­ STRING ­ ((î ­ 'a) ­ 'a)®),
+			[mk_var("s", inst_type [(tv, ”'a®)] ”'a STRUCT®), l])
+	    val res = list_mk_app (oprev pakfun, [opex])
+	in res
+	end
+in    fun make_existence_thm tm =
+	let val spec = get_spec tm;
+	    val (vars, body) = strip_binder "µ" (concl spec)
+	    val (_, [mkalg, mkstruct]) = strip_app body
+	    val (_, [d, pack]) = strip_app mkstruct
+	    val (_, [packop]) = strip_app pack
+	    val oplist = dest_list packop
+	    val newoplist = (map (opmap o dest_pair) oplist)
+	in (pack, packop, oplist, newoplist)
+	end;
+end;
+make_existence_thm ¬MkLat®;
+=IGN
+val tv = ”'b®;
+”'a®;
+get_spec ¬MkLat®;
+map dest_pair (dest_list ¬[("²‰L", pack2op j); ("±‰L", pack2op m)]®);
+=TEX
 
 =GFT
 Ûfst_packop_lemmaÝ =
@@ -934,9 +1057,6 @@ The second is to collect the operators into a name-indexed set (this is done by 
 \ignore{
 
 =SML
-val pack0op_def = get_spec ¬pack0op®;
-val pack1op_def = get_spec ¬pack1op®;
-val pack2op_def = get_spec ¬pack2op®;
 val UniOpLift_def = get_spec ¬UniOpLift®;
 
 set_goal([], ¬(µk· Fst (pack0op k) = 0)
@@ -993,7 +1113,7 @@ a (fc_tac [pc_rule1 "lin_arith" prove_rule[] ¬i < 2 ± ³ i = 0 ´ i=1 ² i=2®]
 	THEN all_var_elim_asm_tac);
 val UniOpLift_pack2op_lemma = save_pop_thm "UniOpLift_pack2op_lemma";
 
-add_pc_thms "'unalg" [fst_packop_lemma, UniOpLift_pack0op_lemma, UniOpLift_pack1op_lemma, UniOpLift_pack2op_lemma];
+add_pc_thms "'unalg" [unpack0op_lemma, unpack1op_lemma, unpack2op_lemma, fst_packop_lemma, UniOpLift_pack0op_lemma, UniOpLift_pack1op_lemma, UniOpLift_pack2op_lemma];
 set_merge_pcs ["rbjmisc", "'unalg"];
 =TEX
 }%ignore
@@ -1338,7 +1458,6 @@ Now we define closure under the above operators.
 °
 
 
-
 \ignore{
 =SML
 commit_pc "'unalg";
@@ -1353,6 +1472,12 @@ commit_pc "unalg1";
 =TEX
 }%ignore
 
+
+\section{Lattices (I)}
+
+The beginnings of a theory of lattices.
+This version was done before the work on Univesal Algebra, and will be discarded if the later version conformant with that theory is found satisfactory.
+
 =SML
 open_theory "unalg";
 force_new_theory "lattice";
@@ -1360,11 +1485,6 @@ force_new_pc Û"'lattice"Ý;
 merge_pcs ["'prove_¶_´_conv", "'savedthm_cs_¶_proof"] "'lattice";
 set_merge_pcs ["unalg", "'lattice"];
 =TEX
-
-\section{Lattices (I)}
-
-The beginnings of a theory of lattices.
-This version was done before the work on Univesal Algebra, and will be discarded if the later version conformant with that theory is found satisfactory.
 
 =SML
 set_merge_pcs ["hol", "'rbjmisc"] ;
@@ -1500,14 +1620,21 @@ a (asm_rewrite_tac[]);
 =TEX
 }%ignore
 
-\section{Lattices}
+\section{Lattices (II)}
 
-
-The beginnings of a theory of lattices.
+The beginnings of another theory of lattices.
 This version was done using Universal Algebra, the previous version will be discarded if this version conformant with the approach to universal algebra is found satisfactory.
 
 =SML
-set_merge_pcs ["unalg", "'lattice"] ;
+open_theory "unalg";
+force_new_theory "latt2";
+force_new_pc Û"'latt2"Ý;
+merge_pcs ["'prove_¶_´_conv", "'savedthm_cs_¶_proof"] "'latt2";
+set_merge_pcs ["unalg", "'latt2"];
+=TEX
+
+=SML
+set_merge_pcs ["unalg", "'latt2"] ;
 =TEX
 
 \subsection{Signature and Defining Property}
@@ -1522,12 +1649,6 @@ We will use the general structure type \emph{STRUCT} to represent lattice struct
 
 We will use L and M as variables for lattices and the following infixity declarations will be useful as names for the corresponding operations.
 
-¹HOLCONST
-Ü ÛMkLatÝ : 'a SET ­ ('a ­ 'a ­ 'a) ­ ('a ­ 'a ­ 'a) ­ ('a) STRUCT
-÷üüüüüü
-Ü µd j m· MkLat d j m = MkSTRUCT d (IxPack [("²‰L" , pack2op j); ("±‰L" , pack2op m)])
-°
-
 =SML
 declare_infix (235, "²‰L");
 declare_infix (235, "²‰M");
@@ -1535,6 +1656,11 @@ declare_infix (240, "±‰L");
 declare_infix (240, "±‰M");
 =TEX
 
+¹HOLCONST
+Ü ÛMkLatÝ : 'a SET ­ ('a ­ 'a ­ 'a) ­ ('a ­ 'a ­ 'a) ­ ('a) STRUCT
+÷üüüüüü
+Ü µ C $²‰L $±‰L· MkLat C $²‰L $±‰L = MkSTRUCT C (IxPack [("²‰L" , pack2op $²‰L); ("±‰L" , pack2op $±‰L)])
+°
 
 ¹HOLCONST
 Ü ÛIsLatÝ : ('a) STRUCT ­ BOOL
@@ -1547,6 +1673,50 @@ declare_infix (240, "±‰M");
         ± (µz· z  C
 		´	(x ²‰L y) ²‰L z = x ²‰L (y ²‰L z)
 		±	(x ±‰L y) ±‰L z = x ±‰L (y ±‰L z)))
+°
+
+\subsection{Recursion Theorem}
+
+This isn't really a recursion theorem because no recursion is involved, but it plays a similar role in facilitating consistency proofs of definitions in which pattern matching on constructions involving \emph{MkLat} is used.
+What is really needed here is simply to know that \emph{MkLat} is an injection, but the form of theorem required for use by the automatic consistency prover is dictated by the more difficult problem of primitive recursive definitions in which one needs also to know that the structure involved is well founded.
+Perhaps a theorem could be devised which takes us from the one to the other, but the proofs are trivial anyway so its not important.
+
+The definitions which you get by such pattern matching are total functions in which one only knows the values if the arguments are in the range of \emph{MkLat}, i.e. they are really partial functions which it is convenient to represent by total functions.
+
+=GFT
+ÛMkLat_recursion_lemmaÝ =
+	ô µ af· ¶ f· µ C $²‰L $±‰L· f (MkLat C $²‰L $±‰L) = af C $²‰L $±‰L
+=TEX
+
+\ignore{
+=SML
+val MkLat_def = get_spec ¬MkLat®;
+val IsLat_def = get_spec ¬IsLat®;
+val LatSig_def = get_spec ¬LatSig®;
+
+set_goal([], ¬µ af· ¶ f· µ C $²‰L $±‰L· f (MkLat C $²‰L $±‰L) = af C $²‰L $±‰L®);
+val _ = a (REPEAT strip_tac THEN rewrite_tac [MkLat_def]);
+val _ = a (¶_tac ¬Ìs· af (SCar s) (unpack2op (Oper s "²‰L")) (unpack2op(Oper s "±‰L"))®);
+val _ = a (rewrite_tac[SOps_def]);
+val MkLat_recursion_lemma = save_pop_thm "MkLat_recursion_lemma";
+=TEX
+}%ignore
+
+This gets plugged into proof context {\it 'latt2} for use in consistency proofs.
+
+=SML
+add_¶_cd_thms [MkLat_recursion_lemma] "'latt2";
+set_merge_pcs ["unalg", "'latt2"];
+=TEX
+
+\subsection{Lattice Ordering}
+
+Well try out the pattern matching definition by defining the ordering on a lattice.
+
+¹HOLCONST
+Ü ÛLeLatÝ : 'a STRUCT ­ 'a ­ 'a ­ BOOL
+÷üüüüüü
+Ü µC $²‰L $±‰L· LeLat (MkLat C $²‰L $±‰L) = Ìx y· x ²‰L y = y
 °
 
 \subsection{Elementary Theorems}
@@ -1563,10 +1733,6 @@ declare_infix (240, "±‰M");
 
 \ignore{
 =SML
-val MkLat_def = get_spec ¬MkLat®;
-val IsLat_def = get_spec ¬IsLat®;
-val LatSig_def = get_spec ¬LatSig®;
-
 set_goal([], ¬µL· IsLat L ´ µ C $²‰L $±‰L· StructInc (MkLat C $²‰L $±‰L) L ´
 	µx· x  C ´ x ±‰L x = x®);
 a (REPEAT strip_tac);
@@ -1652,15 +1818,15 @@ a (rewrite_tac [map_def, rewrite_rule [MkLat_def] Latt_HomOps_lemma]);
 
 \ignore{
 =SML
-commit_pc "'lattice";
+commit_pc "'latt2";
 
-force_new_pc "ÛlatticeÝ";
-merge_pcs ["unalg", "'lattice"] "lattice";
-commit_pc "lattice";
+force_new_pc "Ûlatt2Ý";
+merge_pcs ["unalg", "'latt2"] "latt2";
+commit_pc "latt2";
 
-force_new_pc "Ûlattice1Ý";
-merge_pcs ["unalg1", "'lattice"] "lattice1";
-commit_pc "lattice1";
+force_new_pc "Ûlatt21Ý";
+merge_pcs ["unalg1", "'latt2"] "latt21";
+commit_pc "latt21";
 =TEX
 }%ignore
 
