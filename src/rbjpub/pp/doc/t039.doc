@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADJdoc{$$Id: t039.doc,v 1.8 2010/08/17 12:52:11 rbj Exp $$}
+\def\rbjidtADJdoc{$$Id: t039.doc,v 1.9 2010/08/18 09:30:17 rbj Exp $$}
 
 \section{Equivalence Relations}
 
@@ -1023,7 +1023,7 @@ local
 	in res
 	end
 
-in fun make_existence_thm tm =
+in fun make_alg_¶_thm tm =
 	let val spec = get_spec tm;
 	    val (vars, body) = strip_binder "µ" (concl spec);
 	    val (_, [mkalge, mkstructe]) = strip_app body;
@@ -1041,18 +1041,23 @@ in fun make_existence_thm tm =
 	    val cfe = list_mk_app (varcf, d1::ops);
 	    val fe = mk_app (varf, mkalge);
 	    val eq1 = mk_eq (fe, cfe);
-	    val exists = mk_¶ (varf, eq1);
-	    val conjec = list_mk_µ (varcf::d1::ops, exists);
+	    val innerall = list_mk_µ (d1::ops, eq1);
+	    val exists = mk_¶ (varf, innerall);
+	    val conjec = mk_µ (varcf, exists);
 	    val scars = mk_app (mk_const("SCar", mk_­_type (mkstructetype, type_of d1)) , vars);
-	    val witness = mk_Ì (vars, list_mk_app (varcf, (scars::ops)));
+	    val witness = mk_Ì (vars, list_mk_app (varcf, (scars::newoplist)));
 	    val pat_thm = tac_proof(([], conjec),
-			REPEAT µ_tac THEN ¶_tac witness THEN rewrite_tac [get_spec ¬MkLat®, SOps_def]);
+			REPEAT µ_tac THEN ¶_tac witness THEN rewrite_tac [spec, SOps_def]);
 	    in pat_thm
 	end;
 end;
 
 =IGN
-make_existence_thm ¬MkLat®;
+set_goal([], conjec);
+a (REPEAT µ_tac);
+a (¶_tac witness THEN rewrite_tac [get_spec ¬MkLat®, SOps_def]);
+val spec = get_spec ¬MkLat®;
+make_alg_¶_thm ¬MkLat®;
 =TEX
 
 =GFT
@@ -1691,15 +1696,15 @@ declare_infix (240, "±‰M");
 \subsection{Pattern Matching}
 
 We now add the the existence proof context the theorem necessary to allow function definitions which pattern-match on patterns formed by \emph{MkLat}.
-The proof of the theorem is now automatic, from the specification of \emph{Mk_lat}.
+The proof of the theorem is now automatic, from the specification of \emph{MkLat}.
 
 =SML
-val MkLat_recursion_lemma = make_existence_thm ¬MkLat®;
+val MkLat_¶_lemma = make_alg_¶_thm ¬MkLat®;
 =TEX
 
 =GFT
-ÛMkLat_recursion_lemmaÝ =
-	ô µ cf C $²‰L $±‰L· ¶ f· f (MkLat C $²‰L $±‰L) = cf C $²‰L $±‰L
+ÛMkLat_¶_lemmaÝ =
+	ô µ cf· ¶ f· µ C $²‰L $±‰L· f (MkLat C $²‰L $±‰L) = cf C $²‰L $±‰L
 =TEX
 
 \ignore{
@@ -1713,7 +1718,7 @@ val LatSig_def = get_spec ¬LatSig®;
 This gets plugged into proof context {\it 'latt2} for use in consistency proofs.
 
 =SML
-add_¶_cd_thms [MkLat_recursion_lemma] "'latt2";
+add_¶_cd_thms [MkLat_¶_lemma] "'latt2";
 set_merge_pcs ["unalg", "'latt2"];
 =TEX
 
