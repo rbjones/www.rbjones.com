@@ -1,5 +1,5 @@
 =IGN
-$Id: t027.doc,v 1.4 2009/03/01 15:32:39 rbj Exp $
+$Id: t027.doc,v 1.5 2010/09/11 20:29:09 rbj Exp $
 open_theory "infos";
 
 set_flag ("pp_use_alias", true);
@@ -43,12 +43,12 @@ The abstract syntax and semantics of an infinitary first order set theory.
 
 Created: 2008/12/05
 
-Last Change $ $Date: 2009/03/01 15:32:39 $ $
+Last Change $ $Date: 2010/09/11 20:29:09 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t027.pdf}
 
-$ $Id: t027.doc,v 1.4 2009/03/01 15:32:39 rbj Exp $ $
+$ $Id: t027.doc,v 1.5 2010/09/11 20:29:09 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -119,12 +119,30 @@ As well as the constructors, discriminators and destructors are defined.
 
 \subsection{Constructors, Discriminators and Destructors}
 
+
 Preliminary to presenting the inductive definition of the required classes we define the nuts and bolts operations on the required syntactic entities (some of which will be used in the inductive definition).
 
-A constructor puts together some syntactic entity from its constituents, discriminators distinguist between the different kinds of entity and destructors take them apart.
+Note the terminology here.
 
-``Atomic'' formulae are just membership predicates.
-So its just an ordered pair of `terms' (and in our case that just means variable names)  tagged with a zero.
+\begin{description}
+\item[constructor]
+A function which constructs a complex structure in the abstract syntax from the immediate constituents of that structure.
+\item[discrimiator]
+A propositional function or predicate which tests for a particular class of entities in the abstract syntax.
+This will normally be that class of entities formed using some particular constructor.
+\item[descructor]
+A function which extracts from a complex entity of the abstract syntax one or more of the immediate constutuents from which it was constructed.
+\end{description}
+
+More concisely, a constructor puts together some syntactic entity from its constituents, discriminators distinguist between the different kinds of entity and destructors take them apart.
+
+This is a first order language in which the terms are just variables, and the variables can be arbitrary sets, allowing that there may be very large numbers of them.
+We therefore proceed directly to the syntax of formulae.
+
+``Atomic'' formulae are just membership predicates, of which the operands will always be variables.
+An atomic formula can therefore be represented in the abstract syntax by an ordered pair, tagged with a zero to distinguish it as am atomic formaula from other kinds of formulae.
+
+The constructor is:
 
 ¹HOLCONST
 Ü ÛMkAfİ : GS ¸ GS ­ GS
@@ -132,11 +150,15 @@ So its just an ordered pair of `terms' (and in our case that just means variable
 Ü µlr· MkAf lr = (Nat‰g 0) í‰g ((Fst lr) í‰g (Snd lr))
 °
 
+A discriminator is:
+
 ¹HOLCONST
 Ü ÛIsAfİ : GS ­ BOOL
 ÷üüüüüüüüüüü
 Ü    µt· IsAf t ¤ ¶lr· t = MkAf lr
 °
+
+And we supply two desctructors, the first returning the set in which membership is asserted:
 
 ¹HOLCONST
 Ü ÛAfSetİ : GS ­ GS
@@ -144,11 +166,15 @@ So its just an ordered pair of `terms' (and in our case that just means variable
 Ü  AfSet = Ìx· snd(snd x)
 °
 
+and the second returning the set which is alleged to be the member:
+
 ¹HOLCONST
 Ü ÛAfMemİ : GS ­ GS
 ÷üüüüüüüüüüü
 Ü  AfMem = Ìx· fst(snd x)
 °
+
+We have just one way of forming compound formulae, which should be thought of as a generalised infinitary scheffed stroke.
 
 ¹HOLCONST
 Ü ÛMkCfİ : GS ¸ GS ­ GS
@@ -156,11 +182,19 @@ So its just an ordered pair of `terms' (and in our case that just means variable
 Ü µvc· MkCf vc = (Nat‰g 1) í‰g ((Fst vc) í‰g (Snd vc))
 °
 
+The two components of a compound formula are, on the left a set of variables (of any cardinality) and on the right a set of subformulae (also of arbitrary cardinality).
+Semantically this compound formula should be thought of as an infinitary existentially generalised NOR, and will be true if under any assignment of values to the bound variables at least one of the constituent formulae comes out false.
+This is complicated somewhet in the formal semantics which follows by the adoption of a four truth values, which however is merely a device to facilitate finding two-valued fixed points in the semantics.
+
+The discriminator is:
+
 ¹HOLCONST
 Ü ÛIsCfİ : GS ­ BOOL
 ÷üüüüüüüüüüü
 Ü    µt· IsCf t ¤ ¶vc· t = MkCf vc
 °
+
+and the following two functions are the desctructors:
 
 ¹HOLCONST
 Ü ÛCfVarsİ : GS ­ GS
@@ -1191,17 +1225,18 @@ This function expects the results of evaluating these formulae as a set of truth
 That looks unbelievably simple doesn't it.
 
 When we generalise this to operate with four truth values, you should think of the truth values as sets of boolean truth values ordered by inclusion, i.e. with the empty set as ``bottom'' and the set of both truth values as ``top''.
-Then think of the required evaluation function as arising by mapping the boolean evaluator above over the set of choice sets formed from the set of sets of booleans.
+Then think of the required evaluation function as arising by mapping the boolean evaluator (\emph{EvalCf\_bool}) over the set of choice sets formed from the set of sets of booleans.
 
 ¹HOLCONST
 Ü ÛLiftEvalCf_boolİ : BOOL SET SET ­ BOOL SET
 ÷üüüüüüüüüüü
 Ü µresults· LiftEvalCf_bool results =
-	{v:BOOL | ¶w f· w = FunImage f results ± v = EvalCf_bool w
-		± µx· x  results ± (¶y· y  x) ´ (f x)  x}
+Ü	{v:BOOL | ¶w f· w = FunImage f results ± v = EvalCf_bool w
+Ü		± µx· x  results ± (¶y· y  x) ´ (f x)  x}
 °
 
-To get the required evaluator we need to modify this to work with type FTV instead of BOOL SET.
+To get the required evaluator we need to modify this to work with type FTV instead of BOOL SET%
+\footnote{I ask myself ``Why isn't FTV just BOOL SET?''}.
 
 The conversions are:
 
@@ -1211,7 +1246,7 @@ The conversions are:
 Ü µbs· BoolSet2FTV bs =
 Ü	if T  bs
 Ü	then if F  bs then fT else fTrue
-Ü	else if F  bs then fFalse	else fB
+Ü	else if F  bs then fFalse else fB
 °
 
 ¹HOLCONST
@@ -2112,7 +2147,7 @@ declare_infix(300, "¼‰f‰t‰3");
 =TEX
 
 ¹HOLCONST
-Ü Û$¼‰f‰t‰3İ : ('a ­ TTV) ­ ('a ­ TTV) ­ BOOL
+Ü $Û¼‰f‰t‰3İ : ('a ­ TTV) ­ ('a ­ TTV) ­ BOOL
 ÷üüüüüüüüüüü
 Ü $¼‰f‰t‰3 = Pw $¼‰t‰3
 °
@@ -2140,7 +2175,7 @@ declare_infix(300, "¼‰f‰t‰4");
 =TEX
 
 ¹HOLCONST
-Ü Û$¼‰f‰t‰4İ : ('a ­ FTV) ­ ('a ­ FTV) ­ BOOL
+Ü $Û¼‰f‰t‰4İ : ('a ­ FTV) ­ ('a ­ FTV) ­ BOOL
 ÷üüüüüüüüüüü
 Ü $¼‰f‰t‰4 = Pw $¼‰t‰4
 °
