@@ -1,0 +1,354 @@
+=IGN
+$Id: t040.doc,v 1.1 2010/09/13 11:07:51 rbj Exp $
+=TEX
+
+I explore here in a fairly abstract aspects of the theory of combining models of concrete components into larger systems.
+
+This is conceived of as the application of formal techniques to design automation, but is also an exploration of possible connections between this kind of problem and techniques for denotation semantics, and the use of semantic methods analogous to shallow embeddings in formal analysis.
+
+
+\subsection{Languages and Models}
+
+I will expand on these connections here a little, because some features of the methods adopted may be easier to understand for a reader who has some understanding of the route by which I came to these methods.
+
+We may consider formal analysis in general to consist in the development of \emph{theories}, of one kind or another, generally in a logical or mathematical sense of that term.
+There are two distinct ways of approaching such a task which can usefully be constrasted before we then fudge the contrast.
+These correspond informally to universalist and pluralistic conceptions of language, or the question whether to have one large and complex language in which everything can be done, or a large number of specialised languages to chose between according to the needs of the problem.
+Russell was in this sense a universality, and Carnap became a pluralist (after a brief period following Russell's iniversalism).
+The idea of developing a theory provides a kind of fudge between these two idioms, the placement of the fudge depending on how you develop the theory.
+
+In the case of a first order axiomatic theory, the mathematician or logician is supplied with a kit of parts (first order logic) with which to construct a special language in which a first order theory can be developed.
+To this kit the mathematician has to supply the details specific to his problem and he then gets `a' first order language in which to develop the particular theory he has in mind.
+The things he has to supply may be conveniently described as:
+
+\begin{itemize}
+\item A signature.
+\item A set of axioms.
+\end{itemize}
+
+The `signature' lists the names which the mathematician wishes to use in the theory, together with the kind of thing which they are names of (individuals, functions, predicates, relations).
+The axioms tell us what the mathematician requires of his subject matter as his starting point, and the mathematician will then be regarded as developing `the' theory of those structures having features corresponding to the names in the signature and satisfying all the axioms.
+
+That's a lightweight pluralism.
+You can get exactly the same theory working in the univesalistic context of first order set theory.
+This is a single first order language in which you define the kind of structures (things satisfying a signature) your theory is about, and then reason about them in first order set theory.
+In that universalist context you can also do things which you can't do as a first order pluralist without stepping up into the metalanguage, like comparing different structures of the kind you are reasoning about.
+
+Developing a subject in set theory is very like working in set theory as a metalanguage for first order logic.
+However, you can forget lots of aspects of the language (you don't have to do metatheory), and focus on the subject matter of the language.
+
+What we have here is, roughly parallel to the distinction between universalism and pluralism, a choice in how much machinery you invent for a new subject.
+You need to have some vocabulary for talking about the subject matter which will be particular to the subject.
+You might invent a new language so that not only are there special words, but there may be special notations which are not purely verbal.
+Alternatively, you can just stick with the new vocabulary and use it in some well established more or less universal context.
+The former involves a lot of extra work, for you not only have quite a complex task of designing a language, but you will also need to get tools, such as proof tools or compilers which can do the things you need to have done with the language, so it will be rare for this step to be taken.
+Universal languages also often include features which make it possible for you to get additional flexibility in what syntax to use for your theory without actually having to design a new language.
+For example, you might be able to chose the fixity of a function name (which controls whether the function goes before after or in between its arguments).
+
+There are other kinds of fudge which we can do, convenient compromises on the question whether to devise a new language for a new problem domain.
+
+One of these comes from semantics and may be associated with the idea of a ``shallow (semantic) embedding''.
+There is a particular way of organising the semantics of a language which is associated closely with a style of semantics called ``denotational semantics''.
+One feature of this kind of semantics is that they are \emph{compositional}, a term which refers to a principle which Frege put forward in his thinking about logic, viz that the meaning of some structure should be a function of the meanings of its constituents.
+The function in question will vary according to the kind of structure involved.
+These ways of `constructing' a syntactic complex from its parts may be call constructions, and when an abstract rendition of the syntax of a language is given they are the constuctors of the abstract syntax.
+
+A compositional semantics can be rendered parallel to the abstract syntax by supplying a semantic function corresponding to each constructor in the abstract syntax.
+Such a semantic function maps the meanings of the syntactic components of a complex to the meaning of the whole complex.
+When semantics is organised in this way we get a nice mathematical relationship between the syntax on the one hand, and the semantics on the other, as viewed through the respective constructors.
+The semantics becomes an algebraic homomorphism.
+
+If pluralistic semantics is thought of in this way, a means is provided for further systematic fudging of the distinction between universalism and pluralism.
+If you have such a semantics, and a universal context in which the semantic operators can be 
+
+
+
+
+\section{}
+
+In the first instance this is approached here by considering the case of electronic circuits, while keeping an eye open for possible generalisations beyond that domain.
+
+The initial purpose of this document is to explore some ideas on theoretical aspects of the design of hardware description languages intended for use in the larger context of co-design.
+The language may ultimately be an aspect of a more broadly scope language for co-design of concurrent systems intended to facilitate the development both of digital hardware and of software which together form some kind of system, but in this document only the underpinnings of a hardware description language are considered.
+
+Undertaking the semantics of the language first consists in considering what the language is intended to be about, coming up with general abstract mathematical models for the kinds of entities which the language talks about, and describing the kinds of operators over these entities which are expected to be expressed in the language.
+Eventually these abstract entities and the operations we define over them might form a part of a formal semantics for the hardware description language, in which case (supposing that the semantics is some kind of denotational semantics) the meanings of the constructs of the language will be defined in terms of the operations here considered.
+
+In the case of hardware description languages, we are concerned with the construction of complex electronic systems by connecting together a selection of smaller subsystems or components, and it is the distinctive nature of this composition by wiring together which occupies most of our energy here.
+
+We seek (at least initially) to do little more than give an account of wiring diagrams, because one of the issues to be addressed is the integration of diverse approaches to the treatment of other aspects of these systems.
+
+\section{Functional Models}
+
+The aim here is to probe the difficulty in obtaining a formal model of electronic hardware which is abstract end general enough to underpin the semantics of a fairly wide range of harware description languages.
+
+It is not based on a good knowledge of existing languages, and the probability of success is not high, but if initial exploration go well I may look a little closer at existing hardware description languages to see whether the theory provides an adequate for their semantics.
+
+\ignore{
+=SML
+open_theory "ordered_sets";
+force_new_theory "circuit";
+force_new_pc €"'circuit"›;
+merge_pcs ["'prove_∂_¥_conv", "'savedthm_cs_∂_proof"] "'circuit";
+set_merge_pcs ["rbjmisc", "'circuit"];
+=TEX
+}%ignore
+
+The idea I propose to explore is that a circuit be modelled by a function from a histories of values on input lines to values on output lines.
+The principle initial aim is to chose a type for representing such functions which is convenient for the description of putting together circuits in a manner analogous to a wiring diagram to form larger circuits and to prove a result about when such compositions of circuits yields a new circuit (ideally always).
+
+I begin therefore with some type abbreviations (later I might possibly substitute definitions of type constructors, if this seems likely to be advantageous).
+
+First we need a notion of signature for circuits, which tells us what the input and output ports are.
+
+In the following \emph{'a} is a type of tags, a list of which is the name of a port.
+The signature is a pair of sets of port names, input ports on the left, output ports on the right.
+
+=SML
+declare_type_abbrev ("€CIRCSIG›", ["'a"], î('a LIST SET ∏ 'a LIST SET)Æ);
+=TEX
+
+Next the type of a circuit:
+
+In the following the type variables are for:
+
+\begin{itemize}
+\item ['a] a type of tags
+\item ['b] a type of signal values
+\item ['c] a type of time values
+\end{itemize}
+
+Circuits are modelled by functions.
+The domain and codmain of the function consists of indexed sets of signals where signals are total functions over tune.
+The the indexes are names, which are lists of tags.
+
+Domains of the indexed sets in the domain and codomain of the function are the sets of input port names and output port names respectively.
+
+=SML
+declare_type_abbrev (€"CIRC"›, ["'a", "'b", "'c"],
+		î('a LIST, 'c ≠ 'b)IX ≠ ('a LIST, 'c ≠ 'b)IXÆ);
+=TEX
+
+When a circuit are connected by a wiring diagram it is natural to treat the connections in the wiring as equations between the signals at the points of connection.
+Together with equations which express the function of the connected circuits these give a system of equations which determines the behaviour of the resulting circuit.
+In the real world some behaviour will always result, but when we are working with mathematical models these models may involve idealisations which result in some of these systems of equations having no solution.
+An example of this would be if combinatory logic components were modelled as having no propagation delay and a circuit is constructed from such components.
+If the diagram contains no cylic paths then all will be well, but if cycles are present, as in the trivial case of wiring the output of a logical negation to its input, then there will be no solution to the resulting equations.
+
+There are two strategies which are admitted here for avoiding such contradictions.
+The first is the avoidance of cycles in the wiring diagram, the second is the avoidance of zero delay components.
+In either case it is important that the models of components and hence of circuits made from them, have outputs which do not anticipate future inputs.
+
+This leads me to define two similar properties, one for the case of components which might have zero delay, and one for the case that zero delays are excluded.
+We then anticipate a general result to the effect that diagrams made from no-zero-delay components (there must be a word for this) always yield circuits consistent with all the expected equations, whether or not the diagram is acyclic.
+
+For reasoning generally over partial orders I introduce the infix name $ºâp$ (to be used as a variable name):
+=SML
+declare_infix (210, "ºâp");
+=TEX
+
+In following definitions, the strictly version is relevant to circuits which may not react instantaneously to a change on the input, the other version applies to all circuits including those with zero-delay.
+
+πHOLCONST
+‹ €SimilarHistory› : ('c SET ∏ ('c ≠ 'c ≠ BOOL))
+‹		≠ ('a LIST, 'c ≠ 'b)IX ≠ ('a LIST, 'c ≠ 'b)IX ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µD $ºâp g h∑ SimilarHistory (D, $ºâp) g h § IxDom g = IxDom h ±
+‹	µt a∑ a ç IxDom g ¥
+‹		µu∑ u ç D ± u ºâp t ¥ ValueOf (g a) u = ValueOf (h a) u
+∞
+
+πHOLCONST
+‹ €Strict› : ('c ≠ 'c ≠ BOOL) ≠ ('c ≠ 'c ≠ BOOL)
+˜¸¸¸¸¸¸
+‹ µ$ºâp∑ Strict $ºâp = Ãx y∑ x ºâp y ± ≥ y ºâp x
+∞
+
+πHOLCONST
+‹ €StrictlySimilarH› : ('c SET ∏ ('c ≠ 'c ≠ BOOL))
+‹		≠ ('a LIST, 'c ≠ 'b)IX ≠ ('a LIST, 'c ≠ 'b)IX ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µD $ºâp g h∑ StrictlySimilarH (D, $ºâp) g h § SimilarHistory (D, Strict $ºâp) g h
+∞
+
+πHOLCONST
+‹ €Historical› : ('c SET ∏ ('c ≠ 'c ≠ BOOL)) ≠ ('a,'b,'c)CIRC ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µD $ºâp c∑ Historical (D, $ºâp) c § µg h∑ SimilarHistory (D, $ºâp) g h ¥ c g = c h
+∞
+
+πHOLCONST
+‹ €StrictlyHistorical› : ('c SET ∏ ('c ≠ 'c ≠ BOOL)) ≠ ('a,'b,'c)CIRC ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µD $ºâp c∑ StrictlyHistorical (D, $ºâp) c § µg h∑ StrictlySimilarH (D, $ºâp) g h ¥ c g = c h
+∞
+
+\section{Composition of Circuits}
+
+The method of composition is intended to provide a semantic analogue of wiring components together.
+
+There is a tenuous analogy with the ideal of the colimit of a diagram in a category, which might provide the basis of a further abstraction to a more general conception of how systems can be combined to yield more complex systems.
+The general scheme is that a diagram corresponds to a set of instructions for building a complex structure from components and may be thought of as abstract syntax in some appropriate language.
+The taking of the colimit of the diagram may then be seen as offering the semantics of the diagram.
+
+I do however attempt a separation of the instructions for assembly from the actual components to be used in the construction, and this I have not seen in the category theoretic notion of diagram, in which the specific objects to be assembled are mentioned, and the ways in which the assembly is constrained are rather limited (taking the arrows in a category theoretic diagram to be such constraints).
+So the analogy is weak, but a generalisation from circuit diagrams remains of interest, and it remains possibly that category theory might help with that%
+\footnote{I am looking for general perspectives on formal modelling and trying to understand whether or not category theory might be helpful in this.}%
+.
+
+The information necessary to the construction of a composite circuit is as follows:
+
+\begin{itemize}
+\item [(A)] A set of named occurrences of components circuits.
+\item [(B)] A set port names.
+\item [(D)] A set of connections.
+\end{itemize}
+
+
+Of these we may observe that the first may be thought of as the things to which the construction described by the diagram are applied, and confine our conception of the diagram to the manner of interconnection.
+Some aspects of (A) are needed for the diagram, details of the port configuration of each component.
+This information is a bit like a type for the component, and the notion of \emph{signature} may be thought of as a generalisation of the concept of \emph{type}, which we will employ for this purpose.
+
+The content of a diagram then becomes:
+
+\begin{itemize}
+\item [(A)] A signature for the circuit to be constructed.
+\item [(B)] An indexed set of signatures for the components to be used in the construction.
+\item [(D)] A set of connections.
+\end{itemize}
+
+We combine these items together into an object of the following labelled product type.
+The port names element is not explicit but can be recovered from the connections, as can the type of the ports, provided that certain well-formedness constraints are satisified.
+
+πHOLLABPROD €CDIAG›¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+‹	€CSig›		: ('a)CIRCSIG;
+‹	€CSigs›	: ('a, ('a)CIRCSIG)IX;
+‹	€CCons›	: ('a LIST ∏ 'a LIST) SET
+∞¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸¸
+
+The well-formedness conditions are as follows:
+
+\begin{enumerate}
+\item names which appear in the the signatures in \emph{CSigs} will be augmented by adding the component name in front and then may appear in one or more of the connections in \emph{CCons}.
+\item such names will only appear on the left of a connection if they are input ports names (on the relevant component circuit) and will only appear on the right if they are output port names
+\item other names appearing in \emph{CCons} are the names of ports on the circuit constructed by the diagram, and will only appear on one side of the connections, from which the type of port may be inferred.
+\item \emph{CCons} will be a many-one relationship (no input port is connected to more than one output port).
+\item all the input ports from CSigs will be in the domain of \emph{CCons}.
+\end{enumerate}
+
+πHOLCONST
+‹ €DiagNames› : (('a) CIRCSIG ≠ 'a LIST SET) ≠ ('a) CDIAG ≠ 'a LIST SET
+˜¸¸¸¸¸¸
+‹ µf cd∑ DiagNames f cd = ﬁ{is | ∂x∑ x ç IxDom (CSigs cd) ± is = {y | ∂z∑ z ç f (ValueOf (CSigs cd x)) ± y = Cons x z}}
+∞
+
+πHOLCONST
+‹ €WellFormedDiag› : ('a) CDIAG ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µcd∑ WellFormedDiag cd § ∂inps outps∑ DiagNames Fst cd Ä inps ± DiagNames Snd cd Ä outps
+‹				± Dom (CCons cd) = inps
+‹				± Ran (CCons cd) Ä outps
+‹				± (CCons cd) ç Functional
+∞
+
+To give the semantics of such a construction we treat the subsidiary circuits as imposing constraints on the possible values on the wires and output ports in the context of the input ports.
+It may be helpful to think of the wiring diagram as a sentence of first order logic in which each circuit is a relation between its signals on its ports.
+An interpretation of such a formula will be an assignment of values to the signal names.
+Each equation, either expressing the functionality of a component or the effect of a connection in the wiring, eliminates all those interpretations which do not comply with it.
+One hopes that the set of equations will have exactly one solution for each assignment of values to the input ports of the whole diagram.
+The functionality of the whole will then be the the relation between input and output values obtained by projecting onto the external ports.
+A general result should be obtainable for strictly historical components, provided that the time is well-founded.
+Diagrams using components modelled with continuous time are more difficult to prove consistent.
+
+The following definition expresses the conditions for a circuit to be a correct construction of a circuit from an indexed set of circuits following a particular wiring diagram.
+
+This is expressed by asserting the existence of a set of signals, one for each name in the signature of the diagram which satisfy all the equations in the signature of the diagram and match the functionality of the circuits being composed.
+
+πHOLCONST
+‹ €CircSat› : ('a) CIRCSIG ≠ ('a LIST, 'c ≠ 'b)IX  ≠ ('a, 'b, 'c) CIRC ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µcs ixs c∑ CircSat cs ixs c § (Snd cs) Ú ixs = c ((Fst cs) Ú ixs)
+∞
+
+πHOLCONST
+‹ €CircsSat› : ('a) CDIAG ≠ ('a LIST, 'c ≠ 'b)IX  ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µcd ixs ixc∑ CircsSat cd ixs ixc §
+‹	µn∑ n ç IxDom ixc ¥ CircSat (ValueOf(CSigs cd n)) ixs (ValueOf (ixc n))
+∞
+
+πHOLCONST
+‹ €EqSat› : ('a LIST, 'c ≠ 'b)IX ≠ 'a LIST ∏ 'a LIST ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µixs n m∑ EqSat ixs (n, m) § n ç IxDom ixs ± m ç IxDom ixs ± ixs n = ixs m
+∞
+
+πHOLCONST
+‹ €EqsSat› : ('a LIST, 'c ≠ 'b)IX ≠ ('a LIST ∏ 'a LIST)SET ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µixs nms∑ EqsSat ixs nms § µnm∑ nm ç nms ¥ EqSat ixs nm
+∞
+
+πHOLCONST
+‹ €DiagCircRel› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µcd isc c∑ DiagCircRel cd isc c § ∂six:('a LIST, 'c ≠ 'b)IX∑  
+‹	CircsSat cd six isc ± EqsSat six (CCons cd) ± CircSat (CSig cd) six c
+∞
+
+πHOLCONST
+‹ €Diag2Circ› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC
+˜¸¸¸¸¸¸
+‹ µd:('a) CDIAG; c∑ Diag2Circ d c = ≈x∑ DiagCircRel d c x
+∞
+
+The principle result we need specifies conditions under which a diagram yields a circuit satisfying DiagCircRel.
+This will be, certain conditions for well formedness of the diagram and that the constituent circuits are all strictly historical relative to a well-founded ordering on time.
+
+The proof of the required result will use a recursion theorem to the effect that a functor which respects some well-founded ordering has a fixed point.
+The first step in the proof is to define this functor.
+The function which we wish to obtain as a fixed point of this functor is obtained by a process which essentially involves obtaining the values of internal signals even though their values are then discarded.
+The recursion must therefore take place in defining a function which does not discard the internal values, which will be discarded only when we have the required fixed point of the more informative function.
+
+In the following definition the functor defined operates on circuits represented as if all internal wires were output ports.
+
+
+\ignore{
+
+ πHOLCONST
+‹ €DiagFunct› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC ≠ ('a, 'b, 'c) CIRC
+ ˜¸¸¸¸¸¸
+‹ µd:('a) CDIAG; sc c∑ DiagFunct d sc c = Ãips opn∑
+	if opn ç dom (CCons d)
+	then c opn
+	else Undefined 
+ ∞
+
+}%ignore
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¨µcd isc∑ WellFormedDiag cd
+			± (∂ord∑ well_founded ord ± µc∑ c ç IxDom isc ¥ StrictlyHistorical ord (ValueOf (isc c)))
+			¥ ∂c∑ DiagCircRel cd isc c
+Æ);
+a (REPEAT strip_tac);
+
+=TEX
+}%ignore
+
+\ignore{
+=SML
+commit_pc "'circuit";
+
+force_new_pc "€circuit›";
+merge_pcs ["rbjmisc", "'circuit"] "circuit";
+commit_pc "circuit";
+=TEX
+}%ignore
+
+\section{Conclusions}
+

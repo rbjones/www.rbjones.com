@@ -1,0 +1,1096 @@
+=IGN
+$Id: t041.doc,v 1.1 2010/09/13 11:07:51 rbj Exp $
+=TEX
+
+The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of a finitary illative lambda-calculus with a system of type assignments.
+
+The system of type assignments I am looking for has the following features:
+
+\begin{itemize}
+\item A universal type.
+\item Dependent product and sum (function and pair) types.
+\item A heirarchy of Universes, not all well-founded.
+\item A well founded part in which classical mathematics can be conducted in the normal way, and which admits arbitrarily risky axiomatic extensions analogous to (possibly even identical to) large cardinal axioms (with no greater risk here than in ZFC).
+\end{itemize}
+
+The difficult question with such a shopping list, is whether it can be consistently fulfilled, and the principal purpose of this document is to explore an idea about how to construct an interpretation which might allow the equiconsistency of the systems considered here with ZFC (plus large cardinals where appropriate) to be established.
+Having said that, the procedure is \emph{semantics first}, so I aim to construct the interpretation first, and then to derive a logical system of which it is an interpretation.
+This method guarantees that the resulting system is consistent relative to my set theory (which is `Galactic Set Theory' (GST\index{GST}), see \cite{rbjt023}).
+
+In the talk which follows about syntax and semantics there are two levels involved, that of the infinitary calculus (which is the interpretation constructed in GST) and that of the finitary calculus which will be based on it.
+From the point of view of our end objective, all aspects of the infinitary calculus are part of the semantics of that finitary language.
+
+\section{The Infinitary Interpretation}
+
+I call this infinitary because it is itself a kind of lambda calculus in which the syntax has large (inaccessible) cardinality.
+It isn't actually a deductive system, but it is a language, for which we have syntax and semantics, and we do have a notion of truth and can prove the truth of expressions of our infinitary language in the metalanguage (which is GST, a higher order set theory).
+
+The semantic intent explains the infinitary nature of the system considered, this is so that we have underlying our ultimate language (which will be a finitary untyped illative lambda-calculus with a system of type assignments) a basis for the development of exactly the same applicable mathematics as is more often considered in the context of ZFC or HOL.
+For this purpose there is intended to be, within the ontology, structures which mirror or mimic the hierarchy of well-founded sets, and particularly, full function spaces over well founded subtypes of the universe.
+
+The idea is to define a kind of syntactic interpretation for the lambda-calculus and to give a semantics to it.
+The application of functions is given its semantics by beta reduction, defining the result of an application as that obtained by a single step of beta-reduction.
+The illative combinator of choice is convertibility, by which we mean the transitive reflexive closure of various conversions (alpha, beta, case and convertibility).
+The tricky bit is to determine the semantics of this equivalence relation, since the formal definition follows the previous sentence in being recursive.
+This is done by treating it as a partial equivalence, giving the recursive definition in the form of a functor over partial approximations to convertibility, and then taking the least fixed point of this functor, and praying that there will be enough in there.
+
+An important departure from the method adopted for non-well-founded set theory in \cite{rbjt027} is the acceptance that the domain of discourse will be full of junk (including non-normalising terms), and that the application of a lambda-calculus based on this interpretation will depend on reasoning almost exlusively within the confines of well-behaved subdomains which are delimited by an appropriate system of type-assignment.
+This is intended to yield something which will look a bit like a typed lambda calculus with subtyping and a universal type (plus some other exotic features to make it at least as strong as ZFC) but which differs from it in a manner similar to the difference between the simply-typed lambda-calculus and a system of type assignments to the pure lambda-calculus.
+
+=IGN
+To ensure that we get all the well-founded sets we start with definability in an infinitary first order set theory ({\it infos}).
+Given any membership structure, i.e. a domain of discourse and a membership relation over that domain, each formula of {\it infos} with one free variable will define a subset of the domain of discourse (you may prefer to think of these as classes, since they will often have the same size as the domain).
+
+If we take as our domain of discourse the formulae of {\it infos} having a single free variable, then the semantics of {\it infos} gives rise to a functor which, given one membership relation over that domain will yield another membership relation.
+Over this domain the functor can have no fixed point, for we would have a formula for the Russell set.
+To obtain a set theory, we must omit some of these potential sets, i.e. we must consisider subsets as potential domains.
+Any subset together with a fixed point of the semantic functor will yeild an interpretation of set theory.
+
+It seems clear that some subsets of the formulae of {\it infos} do have fixed points under the semantics of {\it infos}.
+For example, a collection of formulae denoting all the well-founded sets, or those denoting well-founded sets or their complements.
+
+It is the purpose of this work to see whether models for rich non-well-founded set theories can be obtained in this way.
+The purpose is ultimately to provide a semantic basis for a kind of type theory suitable for ``formalised mathematics in the large'', in which ordinary mathematics is done primarily using well-founded sets and abstract mathematics often involves non-well-founded sets (theories generic over many types).
+
+=SML
+open_theory "misc2";
+force_new_theory "ÛlambdaÝ";
+force_new_pc Û"'lambda"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'lambda";
+set_merge_pcs ["misc21", "'lambda"];
+=TEX
+
+\subsection{Lsyntax}
+
+The syntax of infinitary first order set theory is to be encoded as sets in a higher order set theory.
+
+This is (in effect if not in appearance) an ``inductive datatype'' (albeit transfinite) so we should expect the usual kinds of theorems.
+
+Informally these should say:
+
+\begin{enumerate}
+\item Lsyntax is closed under the two constructors.
+\item The syntax constructors are injections and have disjoint ranges
+\item The ranges of the constructors partition the syntax. 
+\item Any syntactic property which is preserved by the constructors (i.e. is true of any construction if it is true of all its syntactic constituents) is true of everything in the syntax (this is an induction principle).
+\item A recursion theorem which supports definition of recursive functions over the syntax.
+\end{enumerate}
+
+As well as the constructors, discriminators and destructors are defined.
+
+\subsubsection{Constructors, Discriminators and Destructors}
+
+
+Preliminary to presenting the inductive definition of the required classes we define the nuts and bolts operations on the required syntactic entities (some of which will be used in the inductive definition).
+
+Note the terminology here.
+
+\begin{description}
+\item[constructor]
+A function which constructs a complex structure in the abstract syntax from the immediate constituents of that structure.
+\item[discrimiator]
+A propositional function or predicate which tests for a particular class of entities in the abstract syntax.
+This will normally be that class of entities formed using some particular constructor.
+\item[descructor]
+A function which extracts from a complex entity of the abstract syntax one or more of the immediate constutuents from which it was constructed.
+\end{description}
+
+More concisely, a constructor puts together some syntactic entity from its constituents, discriminators distinguist between the different kinds of entity and destructors take them apart.
+
+This is a rather odd kind of lambda-calculus in which the constructors are as follows:
+
+\begin{itemize}
+\item[Variables] An inaccessibly large number of variables are available.
+\item[Abstractions] Abstractions take place over arbitrarily large sets of variables.
+\item[Application] Functions are applied to sets of values indexed by variable names (beta reduction binds the values to the variables, if there is a match).
+\item[Constants] Of which probably only two will be used.
+\end{itemize}
+
+Of constants I anticipate a \emph{case} (infinitary conditional) combinator (which I think of as purely combinatorial and warrants being made into a constant only because it is infinitary) and \emph{equality} which an illative combinator (and hence not purely combinatorial).
+Equality is the epicenter of the innovation, insofar as giving meaning to it is the difficult part of our enterprise.
+It will be a binary partial relation which will include infinitary alpha and beta conversion, and also case conversion, and itself, hence a recursion which we resolve by allowing the relation to be partial and taking a least fixed point of a functor which defines the semantics of the infinitary lambda expressions in terms of the meaning of equality.
+
+True and false above are particular abstractions, to be defined.
+
+Case and Equivalence are both syntactically rendered as constants.
+There could be more, but I doubt that more will be needed.
+
+This syntax is now encoded in a classical well-founded set theory.
+
+The variables can be any set.
+The constructors tag the values they construct so that we can tell what they are supposed to be.
+Variables are tagged by zero.
+
+¹HOLCONST
+Ü ÛMkLvarÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µv· MkLvar v = (Nat‰g 0) í‰g v
+°
+
+A discriminator is:
+
+¹HOLCONST
+Ü ÛIsLvarÝ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsLvar t ¤ ¶v· t = MkLvar v
+°
+
+The following destructor function extracts the variable `name'.
+
+¹HOLCONST
+Ü ÛLvarNameÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LvarName = snd
+°
+
+An abstraction is built from a set which is the set of variable names, and another which is the body of the abstraction.
+
+¹HOLCONST
+Ü ÛMkLabsÝ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µvb· MkLabs vb = (Nat‰g 1) í‰g ((Fst vb) í‰g (Snd vb))
+°
+
+The discriminator is:
+
+¹HOLCONST
+Ü ÛIsLabsÝ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsLabs t ¤ ¶vb· t = MkLabs vb
+°
+
+and the following two functions are the desctructors:
+
+¹HOLCONST
+Ü ÛLabsVarsÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LabsVars = Ìx· fst(snd x)
+°
+
+¹HOLCONST
+Ü ÛLabsBodyÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LabsBody = Ìx· snd(snd x)
+°
+
+An infinitary application applies a term to an indexed family of terms.
+
+¹HOLCONST
+Ü ÛMkLappÝ : GS ¸ GS ­ GS
+÷üüüüüüüüüüü
+Ü µfa· MkLapp fa = (Nat‰g 2) í‰g ((Fst fa) í‰g (Snd fa))
+°
+
+The discriminator is:
+
+¹HOLCONST
+Ü ÛIsLappÝ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsLapp t ¤ ¶vb· t = MkLapp vb
+°
+
+and the following two functions are the desctructors:
+
+¹HOLCONST
+Ü ÛLappFunÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LappFun = Ìx· fst(snd x)
+°
+
+¹HOLCONST
+Ü ÛLappArgsÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LappArgs = Ìx· snd(snd x)
+°
+
+Finally constants.
+I only want one, but I might as well allow an arbitrary number of constants in case I change my mind.
+Any set will serve as a constant name.
+Most of them will just be junk.
+
+¹HOLCONST
+Ü ÛMkLconÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü µn· MkLcon n = (Nat‰g 3) í‰g n
+°
+A discriminator is:
+
+¹HOLCONST
+Ü ÛIsLconÝ : GS ­ BOOL
+÷üüüüüüüüüüü
+Ü    µt· IsLcon t ¤ ¶n· t = MkLcon n
+°
+
+The following destructor function extracts the variable `name'.
+
+¹HOLCONST
+Ü ÛLconNameÝ : GS ­ GS
+÷üüüüüüüüüüü
+Ü  LconName = snd
+°
+
+=GFT
+Ûlis_clausesÝ =
+   ô (µ x· IsLvar (MkLvar x))
+       ± (µ x· IsLabs (MkLabs x))
+       ± (µ x· IsLapp (MkLapp x))
+       ± (µ x· IsLcon (MkLcon x))
+       ± (µ x· ³ IsLvar (MkLabs x))
+       ± (µ x· ³ IsLvar (MkLapp x))
+       ± (µ x· ³ IsLvar (MkLcon x))
+       ± (µ x· ³ IsLabs (MkLvar x))
+       ± (µ x· ³ IsLabs (MkLapp x))
+       ± (µ x· ³ IsLabs (MkLcon x))
+       ± (µ x· ³ IsLapp (MkLvar x))
+       ± (µ x· ³ IsLapp (MkLabs x))
+       ± (µ x· ³ IsLapp (MkLcon x))
+       ± (µ x· ³ IsLcon (MkLvar x))
+       ± (µ x· ³ IsLcon (MkLapp x))
+       ± (µ x· ³ IsLcon (MkLabs x))
+=TEX
+=GFT
+Ûlsyn_proj_clausesÝ =
+    ô (µ n· LvarName (MkLvar n) = n)
+       ± (µ v b· LabsVars (MkLabs (v, b)) = v)
+       ± (µ v b· LabsBody (MkLabs (v, b)) = b)
+       ± (µ f a· LappFun (MkLapp (f, a)) = f)
+       ± (µ f a· LappArgs (MkLapp (f, a)) = a)
+       ± (µ n· LconName (MkLcon n) = n)
+=TEX
+=GFT
+Ûlsyn_con_inv_fc_clausesÝ =
+   ô µ p· (IsLvar p ´ MkLvar (LvarName p) = p)
+         ± (IsLabs p ´ MkLabs (LabsVars p, LabsBody p) = p)
+         ± (IsLapp p ´ MkLapp (LappFun p, ApArgs p) = p)
+         ± (IsLcon p ´ MkLcon (LconName p) = p)
+=TEX
+=GFT
+Ûlsyn_con_eq_clausesÝ =
+   ô (µp1 p2· (MkLvar p1 = MkLvar p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLabs p1 =  MkLabs p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLapp p1 =  MkLapp p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLcon p1 =  MkLcon p2 ¤ p1 = p2))
+=TEX
+=IGN
+Ûlsyn_con_neq_clausesÝ =
+   ô µ x y· ³ MkAf x = MkCf y
+=TEX
+=GFT
+Ûlis_fc_clauses1Ý =
+   ô µ x· (IsLvar x ´ (¶ n· x = MkLvar n))
+         ± (IsLabs x ´ (¶ vars body· x = MkLabs (vars, body)))
+         ± (IsLapp x ´ (¶ fun args· x = MkLapp (fun, args)))
+         ± (IsCf x ´ (¶ n· x = MkLcon n))
+=TEX
+=IGN
+Ûlis_not_casesÝ =
+   ô µ x· ³ IsAf x ² ³ IsCf x
+
+Ûlis_not_fc_clausesÝ =
+   ô (µ x· IsAf x ´ ³ IsCf x) ± (µ x· IsCf x ´ ³ IsAf x)
+=TEX
+
+\ignore{
+=IGN
+set_flag("subgoal_package_quiet", true);
+=SML
+set_goal([], ¬(µ x· IsLvar (MkLvar x))
+       ± (µ x· IsLabs (MkLabs x))
+       ± (µ x· IsLapp (MkLapp x))
+       ± (µ x· IsLcon (MkLcon x))
+       ± (µ x· ³ IsLvar (MkLabs x))
+       ± (µ x· ³ IsLvar (MkLapp x))
+       ± (µ x· ³ IsLvar (MkLcon x))
+       ± (µ x· ³ IsLabs (MkLvar x))
+       ± (µ x· ³ IsLabs (MkLapp x))
+       ± (µ x· ³ IsLabs (MkLcon x))
+       ± (µ x· ³ IsLapp (MkLvar x))
+       ± (µ x· ³ IsLapp (MkLabs x))
+       ± (µ x· ³ IsLapp (MkLcon x))
+       ± (µ x· ³ IsLcon (MkLvar x))
+       ± (µ x· ³ IsLcon (MkLapp x))
+       ± (µ x· ³ IsLcon (MkLabs x))
+	®);
+a (rewrite_tac [
+	get_spec ¬IsLvar®, get_spec ¬MkLvar®,
+	get_spec ¬IsLabs®, get_spec ¬MkLabs®,
+	get_spec ¬IsLapp®, get_spec ¬MkLapp®,
+	get_spec ¬IsLcon®, get_spec ¬MkLcon®]);
+a (REPEAT strip_tac);
+a (¶_tac ¬x® THEN rewrite_tac[]);
+a (¶_tac ¬x® THEN rewrite_tac[]);
+val lis_clauses = save_pop_thm "lis_clauses";
+
+set_goal([], ¬(µ n· LvarName (MkLvar n) = n)
+       ± (µ v b· LabsVars (MkLabs (v, b)) = v)
+       ± (µ v b· LabsBody (MkLabs (v, b)) = b)
+       ± (µ f a· LappFun (MkLapp (f, a)) = f)
+       ± (µ f a· LappArgs (MkLapp (f, a)) = a)
+       ± (µ n· LconName (MkLcon n) = n)®);
+a (rewrite_tac (map get_spec [
+	¬MkLvar®, ¬MkLabs®, ¬MkLapp®, ¬MkLcon®,
+	¬LvarName®, ¬LabsVars®, ¬LabsBody®, ¬LappFun®, ¬LappArgs®, ¬LconName®]));
+val lsyn_proj_clauses = save_pop_thm "lsyn_proj_clauses";
+
+set_goal([], ¬µ p· (IsLvar p ´ MkLvar (LvarName p) = p)
+         ± (IsLabs p ´ MkLabs (LabsVars p, LabsBody p) = p)
+         ± (IsLapp p ´ MkLapp (LappFun p, LappArgs p) = p)
+         ± (IsLcon p ´ MkLcon (LconName p) = p)®);
+a (rewrite_tac (map get_spec [
+	¬MkLvar®, ¬MkLabs®, ¬MkLapp®, ¬MkLcon®,
+	¬LvarName®, ¬LabsVars®, ¬LabsBody®, ¬LappFun®, ¬LappArgs®, ¬LconName®,
+	¬IsLvar®, ¬IsLabs®, ¬IsLapp®, ¬IsLcon®])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val lsyn_con_inv_fc_clauses = save_pop_thm "lsyn_con_inv_fc_clauses";
+
+set_goal([], ¬(µp1 p2· (MkLvar p1 = MkLvar p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLabs p1 =  MkLabs p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLapp p1 =  MkLapp p2 ¤ p1 = p2))
+	± (µp1 p2· (MkLcon p1 =  MkLcon p2 ¤ p1 = p2))®);
+a (REPEAT µ_tac THEN once_rewrite_tac [prove_rule [] ¬µp· p = (Fst p, Snd p)®]
+	THEN rewrite_tac (map get_spec [¬MkLvar®, ¬MkLabs®, ¬MkLapp®, ¬MkLcon®, ¬LvarName®, ¬LabsVars®,
+		¬LabsBody®, ¬LappFun®, ¬LappArgs®, ¬LconName®,
+		¬IsLvar®, ¬IsLabs®, ¬IsLapp®, ¬IsLcon®])
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val lsyn_con_eq_clauses = save_pop_thm "lsyn_con_eq_clauses";
+
+=IGN
+set_goal([], ¬µx y· ³ MkAf x = MkCf y®);
+a (rewrite_tac (map get_spec [¬MkAf®, ¬MkCf®]));
+val lsyn_con_neq_clauses = save_pop_thm "lsyn_con_neq_clauses";
+
+=SML
+add_pc_thms "'lambda" [ord_nat_thm, lis_clauses, lsyn_proj_clauses, lsyn_con_eq_clauses(*, lsyn_con_neq_clauses*)];
+set_merge_pcs ["misc21", "'lambda"];
+
+set_goal([], ¬µ x· (IsLvar x ´ (¶ n· x = MkLvar n))
+         ± (IsLabs x ´ (¶ vars body· x = MkLabs (vars, body)))
+         ± (IsLapp x ´ (¶ f args· x = MkLapp (f, args)))
+         ± (IsLcon x ´ (¶ n· x = MkLcon n))®);
+a (REPEAT µ_tac THEN rewrite_tac (map get_spec [¬MkLvar®, ¬MkLabs®, ¬MkLapp®, ¬MkLcon®, ¬LvarName®, ¬LabsVars®,
+		¬LabsBody®, ¬LappFun®, ¬LappArgs®, ¬LconName®,
+		¬IsLvar®, ¬IsLabs®, ¬IsLapp®, ¬IsLcon®]));
+a (REPEAT strip_tac);
+a (¶_tac ¬Fst vb® THEN ¶_tac ¬Snd vb® THEN asm_rewrite_tac[]);
+a (¶_tac ¬Fst vb® THEN ¶_tac ¬Snd vb® THEN asm_rewrite_tac[]);
+val lis_fc_clauses1 = save_pop_thm "lis_fc_clauses1";
+
+=IGN
+set_goal([], ¬µx· ³ IsAf x ² ³ IsCf x®);
+a (rewrite_tac (map get_spec [¬IsAf®, ¬IsCf®, ¬MkAf®, ¬MkCf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN PC_T1 "lin_arith" rewrite_tac[]);
+val lis_not_cases = save_pop_thm "lis_not_cases";
+
+set_goal ([], ¬
+	(µx· IsAf x ´ ³ IsCf x)
+±	(µx· IsCf x ´ ³ IsAf x)
+®);
+a (rewrite_tac (map get_spec [¬IsAf®, ¬IsCf®, ¬MkAf®, ¬MkCf®]));
+a (REPEAT strip_tac THEN asm_rewrite_tac[]
+	THEN contr_tac THEN FC_T (MAP_EVERY ante_tac) [natg_one_one_thm]
+	THEN PC_T1 "lin_arith" rewrite_tac[]);
+val lis_not_fc_clauses = save_pop_thm "lis_not_fc_clauses";
+=TEX
+}%ignore
+
+Some derived syntax:
+
+\subsubsection{The Inductive Definition of Lsyntax}
+
+This is accomplished by defining the required closure condition (closure under the above constructors for arguments of the right kind) and then taking the intersection of all sets which satisfy the closure condition.
+
+The closure condition is:
+
+¹HOLCONST
+Ü ÛLrepClosedÝ: GS SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ s· LrepClosed s ¤
+Ü	(µn· MkLvar n  s)
+Ü±	(µ vars body· body  s ´ MkLabs (vars, body)  s)
+Ü±	(µ f args· f  s ± X‰g (ran args) € s ´ MkLapp (f, args)  s)
+Ü±	(µn· MkLcon n  s)
+°
+
+The well-formed syntax is then the smallest set closed under these constructions.
+
+¹HOLCONST
+Ü ÛLsyntaxÝ : GS SET
+÷üüüüüüüüüüü
+Ü Lsyntax = ¥{x | LrepClosed x}
+°
+
+I have contrived to arrange the semantics which follows as a monotone function over a complete partial order, so that when I start to look for fixed points of the semantic functor (to give the equivalence relation for an intepretation of an illative lambda-calculus) I can look at the least and greatest fixed points, and either prove one of the total or otherwise employ them to find a total fixed point.
+
+\subsubsection{Closure}\label{Closure}
+
+=GFT
+Ûlrepclosed_lsyntax_lemmaÝ =
+	ô LrepClosed Lsyntax
+=TEX
+=GFT
+Ûlrepclosed_lsyntax_thmÝ =
+  ô	 (µ n· MkLvar n  Lsyntax)
+       ± (µ vars body· body  Lsyntax ´ MkLabs (vars, body)  Lsyntax)
+       ± (µ f args· f  Lsyntax ± (µ x· x  X‰g (ran args) ´ x  Lsyntax)
+           ´ MkLapp (f, args)  Lsyntax)
+       ± (µ n· MkLcon n  Lsyntax)
+=TEX
+=GFT
+Ûlrepclosed_lsyntax_thm2Ý =
+   ô (µ n· MkLvar n  Lsyntax)
+       ± (µ vars body· body  Lsyntax ´ MkLabs (vars, body)  Lsyntax)
+       ± (µ f args· (µ x· x ‰g ran args ´ x  Lsyntax) ´ MkLapp (f, args)  Lsyntax)
+       ± (µ n· MkLcon n  Lsyntax)
+=TEX
+=GFT
+Ûlrepclosed_lsyntax_lemma1Ý =
+	ô µ s· LrepClosed s ´ Lsyntax € s
+=TEX
+=GFT
+Ûlrepclosed_lsyntax_lemma2Ý =
+	ô µ p· LrepClosed {x|p x} ´ (µ x· x  Lsyntax ´ p x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬LrepClosed Lsyntax®);
+val _ = a (rewrite_tac (map get_spec [¬LrepClosed®])
+	THEN strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (rewrite_tac (map get_spec [¬LrepClosed®, ¬Lsyntax®])
+	THEN REPEAT strip_tac THEN asm_fc_tac [] THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+val _ = a (rewrite_tac (map get_spec [ ¬Lsyntax®])
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+(* *** Goal "2.1" *** *)
+val _ = a (fc_tac [get_spec ¬LrepClosed®]);
+val _ = a (all_asm_fc_tac[]);
+val _ = a (asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+val _ = a (fc_tac [get_spec ¬LrepClosed®]);
+val _ = a (lemma_tac ¬µ x· x  X‰g (ran args) ´ x  s®
+	THEN1 (REPEAT strip_tac THEN all_asm_fc_tac[]));
+val _ = a (all_asm_fc_tac[]);
+(* *** Goal "2.3" *** *)
+val _ = a (fc_tac [get_spec ¬LrepClosed®]);
+val _ = a (asm_rewrite_tac[]);
+val lrepclosed_lsyntax_lemma = pop_thm();
+
+val lrepclosed_lsyntax_thm = save_thm ("lrepclosed_lsyntax_thm",
+	rewrite_rule [get_spec ¬LrepClosed®] lrepclosed_lsyntax_lemma);
+
+val lrepclosed_lsyntax_thm2 = save_thm ("lrepclosed_lsyntax_thm2",
+	rewrite_rule [get_spec ¬X‰g®] lrepclosed_lsyntax_thm);
+
+local val _ = set_goal([], ¬µs· LrepClosed s ´ Lsyntax € s®);
+val _ = a (rewrite_tac [get_spec ¬Lsyntax®]
+	THEN prove_tac[]);
+in val lrepclosed_lsyntax_lemma1 = save_pop_thm "lrepclosed_lsyntax_lemma1";
+end;
+
+local val _ = set_goal([], ¬µp· LrepClosed {x | p x} ´ µx· x  Lsyntax ´ p x®);
+val _ = a (rewrite_tac [get_spec ¬Lsyntax®] THEN REPEAT strip_tac);
+val _ = a (asm_fc_tac[]);
+in val lrepclosed_lsyntax_lemma2 = save_pop_thm "lrepclosed_lsyntax_lemma2";
+end;
+=TEX
+}%ignore
+
+\subsubsection{Recursion and Induction Principles and Rules}\label{Induction}
+
+We need to be able to define functions by recursion over this syntax.
+To do that we need to prove that the syntax is well-founded.
+This is the case relative to the transitive closure of the membership relation, but to get a convenient basis for reasoning inductively over the syntax and for defining functions by recursion over the syntax it is best to define an ordering in terms of the syntactic constructors for the syntax.
+
+This could be done strictly over the well-formed syntactic constructs, but this would involve more complexity both in the definitions and in subsequent proofs than by defining it strictly in terms of the syntactic constructors whatever they are applied to.
+
+¹HOLCONST
+Ü ÛLscPrecÝ : GS REL
+÷üüüüüüüüüüü
+Ü µÁ Ç· LscPrec Á Ç ¤
+Ü		(¶vars· Ç = MkLabs (vars, Á))
+Ü	²	(¶f args· (Á ‰g ran args ² Á = f) ± Ç = MkLapp (f, args))
+°
+
+
+=GFT
+ÛLscPrec_tc__thmÝ =
+	ô µ x y· LscPrec x y ´ tc $‰g x y
+
+Ûwell_founded_LscPrec_thmÝ =
+	ô well_founded LscPrec
+=TEX
+
+\ignore{
+=SML
+local val _ = set_goal([], ¬µx y· LscPrec x y ´ tc $‰g x y®);
+val _ = a (rewrite_tac (map get_spec [¬LscPrec®, ¬MkLabs®, ¬MkLapp®]));
+val _ = a (REPEAT strip_tac THEN asm_rewrite_tac [í_tc_thm]);
+(* *** Goal "1" *** *)
+val _ = a (lemma_tac ¬tc $‰g x (vars í‰g x) ± tc $‰g (vars í‰g x) (Nat‰g 1 í‰g vars í‰g x)®
+	THEN1 rewrite_tac [í_tc_thm]);
+val _ = a (all_fc_tac [tc_incr_thm]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "2" *** *)
+val _ = a (fc_tac [tc_incr_thm]);
+val _ = a (lemma_tac ¬$‰g›+ x args® THEN1 fc_tac [tc_ran_thm]);
+val _ = a (fc_tac [get_spec ¬$‰g›+®]);
+val _ = a (lemma_tac ¬tc $‰g args (f í‰g args) ± tc $‰g (f í‰g args) (Nat‰g 2 í‰g f í‰g args)®
+	THEN1 rewrite_tac [í_tc_thm]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+(* *** Goal "3" *** *)
+val _ = a (lemma_tac ¬tc $‰g f (f í‰g args) ± tc $‰g (f í‰g args) (Nat‰g 2 í‰g f í‰g args)®
+	THEN1 rewrite_tac [í_tc_thm]);
+val _ = a (all_fc_tac [tran_tc_thm2]);
+in val LscPrec_tc__thm = pop_thm();
+end;
+
+local val _ = set_goal ([], ¬well_founded LscPrec®);
+val _ = a (rewrite_tac [get_spec ¬well_founded®]);
+val _ = a (REPEAT strip_tac);
+val _ = a (asm_tac (µ_elim ¬s® gs_cv_ind_thm));
+val _ = a (lemma_tac ¬µ x· (µ y· tc $‰g y x ´ s y) ´ s x®
+	THEN1 REPEAT strip_tac);
+(* *** Goal "1" *** *)
+val _ = a (lemma_tac ¬µ y· LscPrec y x ´ s y®
+	THEN1 (REPEAT strip_tac THEN all_fc_tac [LscPrec_tc__thm]
+		THEN asm_fc_tac []));
+val _ = a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+val _ = a (asm_fc_tac[]);
+val _ = a (asm_rewrite_tac[]);
+in val well_founded_LscPrec_thm =  save_pop_thm "well_founded_LscPrec_thm";
+end;
+=TEX
+}%ignore
+
+=GFT
+Ûwell_founded_tcLscPrec_thmÝ =
+	ô well_founded (tc LscPrec)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬well_founded (tc LscPrec)®);
+val _ = a (asm_tac well_founded_LscPrec_thm);
+val _ = a (fc_tac [wf_tc_wf_thm]);
+val well_founded_tcLscPrec_thm = save_pop_thm ("well_founded_tcLscPrec_thm");
+=TEX
+}%ignore
+
+=SML
+val ÛLSC_INDUCTION_TÝ = WF_INDUCTION_T well_founded_LscPrec_thm;
+val Ûlsc_induction_tacÝ = wf_induction_tac well_founded_LscPrec_thm;
+=TEX
+
+The set Lsyntax gives us the syntactically well-formed phrases of our language.
+It will be useful to have some predicates which incorporate well-formedness, which are defined here.
+
+=GFT
+Ûlsyntax_disj_thmÝ =
+   ô µ x· x  Lsyntax
+         ´ (¶ n· x = MkLvar n)
+           ² (¶ vars body· body  Lsyntax ± x = MkLabs (vars, body))
+           ² (¶ f args· f  Lsyntax
+               ± (µ y· y ‰g ran args ´ y  Lsyntax)
+               ± x = MkLapp (f, args))
+           ² (¶ n· x = MkLcon n)
+
+Ûlsyntax_cases_thmÝ =
+   ô µ x· x  Lsyntax ´ IsLvar x ² IsLabs x ² IsLapp x ² IsLcon x
+=TEX
+=GFT
+Ûlis_fc_clausesÝ =
+   ô µx·	x  Lsyntax
+´	(IsLvar x ´ ¶n· x = MkLvar n)
+±	(IsLabs x ´ ¶vars body· body  Lsyntax ± x = MkLabs (vars, body))
+±	(IsLapp x ´ ¶f args· f  Lsyntax ± (µy· y ‰g ran args ´ y  Lsyntax) ± x = MkLapp (f, args))
+±	(IsLcon x ´ ¶n· x = MkLcon n)
+=TEX
+=GFT
+ÛMkLvar__Lsyntax_lemmaÝ = ô µ n· MkLvar n  Lsyntax
+ÛMkLcon__Lsyntax_lemmaÝ = ô µ n· MkLcon n  Lsyntax 
+=TEX
+=GFT
+Û³š‰g_lemma1Ý =
+   ô (µ n· ³ MkLvar n = š‰g ± ³ MkLcon n = š‰g)
+       ± (µ x y· ³ MkLabs (x, y) = š‰g ± ³ MkLapp (x, y) = š‰g)
+
+Û³š‰g_lemma2Ý =
+   ô ³ IsLvar š‰g ± ³ IsLcon š‰g ± ³ IsLabs š‰g ± ³ IsLapp š‰g
+
+Û³š‰g__lsyntax_lemmaÝ =
+   ô ³ š‰g  Lsyntax
+
+Û³š‰g__lsyntax_lemma2Ý =
+   ô µ x· x  Lsyntax ´ ³ x = š‰g
+
+Û³š‰g__lsyntax_lemma3Ý =
+   ô µ V x· x  V ± V € Lsyntax ´ ³ x = š‰g
+=TEX
+
+\ignore{
+=SML
+local val _ = set_goal([], ¬µx·	x  Lsyntax
+´	(¶n· x = MkLvar n)
+  ²	(¶vars body· body  Lsyntax ± x = MkLabs (vars, body))
+  ²	(¶f args· f  Lsyntax ± (µy· y ‰g ran args ´ y  Lsyntax) ± x = MkLapp (f, args))
+  ²	(¶n· x = MkLcon n)
+®);
+val _ = a (contr_tac);
+val _ = a (lemma_tac ¬LrepClosed (Lsyntax \ {x})®
+	THEN1 (rewrite_tac [get_spec ¬LrepClosed®] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+val _ = a (asm_rewrite_tac [lrepclosed_lsyntax_thm]);
+(* *** Goal "2" *** *)
+val _ = a (conv_tac (ONCE_MAP_C eq_sym_conv) THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+val _ = a (all_fc_tac [lrepclosed_lsyntax_thm] THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+val _ = a (spec_nth_asm_tac 5 ¬vars®);
+val _ = a (spec_nth_asm_tac 1 ¬body®);
+val _ = a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "5" *** *)
+val _ = a (lemma_tac ¬µ x· x  X‰g (ran args) ´ x  Lsyntax®
+	THEN1 (REPEAT strip_tac THEN asm_fc_tac[]));
+val _ = a (all_fc_tac [lrepclosed_lsyntax_thm] THEN asm_rewrite_tac[]);
+(* *** Goal "6" *** *)
+val _ = a (spec_nth_asm_tac 5 ¬f®);
+val _ = a (spec_nth_asm_tac 1 ¬args® THEN1 asm_fc_tac[]);
+(* *** Goal "6.1" *** *)
+val _ = a (spec_nth_asm_tac 4 ¬y®);
+val _ = a (POP_ASM_T ante_tac THEN asm_rewrite_tac [get_spec ¬X‰g®]);
+(* *** Goal "6.2" *** *)
+val _ = a (swap_nth_asm_concl_tac 1 THEN asm_rewrite_tac[]);
+(* *** Goal "7" *** *)
+val _ = a (rewrite_tac [lrepclosed_lsyntax_thm]);
+(* *** Goal "8" *** *)
+val _ = a (spec_nth_asm_tac 1 ¬n®);
+val _ = a (conv_tac (ONCE_MAP_C eq_sym_conv));
+val _ = a (contr_tac);
+(* *** Goal "9" *** *)
+val _ = a (asm_tac lrepclosed_lsyntax_lemma1);
+val _ = a (spec_nth_asm_tac 1 ¬Lsyntax \ {x}®);
+val _ = a (spec_nth_asm_tac 1 ¬x®);
+in val lsyntax_disj_thm = save_pop_thm "lsyntax_disj_thm";
+end;
+
+local val _ = set_goal([], ¬µx· x  Lsyntax ´ IsLvar x ² IsLabs x ² IsLapp x ² IsLcon x®);
+val _ = a (REPEAT_N 2 strip_tac THEN fc_tac [lsyntax_disj_thm]
+	THEN asm_rewrite_tac[]);
+in val lsyntax_cases_thm = save_pop_thm "lsyntax_cases_thm";
+end;
+
+local val _ = set_goal([], ¬µx·	x  Lsyntax
+´	(IsLvar x ´ ¶n· x = MkLvar n)
+±	(IsLabs x ´ ¶vars body· body  Lsyntax ± x = MkLabs (vars, body))
+±	(IsLapp x ´ ¶f args· f  Lsyntax ± (µy· y ‰g ran args ´ y  Lsyntax) ± x = MkLapp (f, args))
+±	(IsLcon x ´ ¶n· x = MkLcon n)
+®);
+val _ = a (REPEAT_N 2 strip_tac);
+val _ = a (asm_tac (lsyntax_disj_thm));
+val _ = a (asm_fc_tac[] THEN asm_rewrite_tac [lis_clauses]);
+(* *** Goal "1" *** *)
+val _ = a (¶_tac ¬n® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+val _ = a (¶_tac ¬vars® THEN ¶_tac ¬body® THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+val _ = a (¶_tac ¬f® THEN ¶_tac ¬args® THEN asm_rewrite_tac[]);
+(* *** Goal "4" *** *)
+val _ = a (¶_tac ¬n® THEN asm_rewrite_tac[]);
+in val lis_fc_clauses = save_pop_thm "lis_fc_clauses";
+end;
+
+set_goal([], ¬µn· MkLvar n  Lsyntax®);
+a (rewrite_tac [get_spec ¬Lsyntax®, sets_ext_clauses, _in_clauses, get_spec ¬LrepClosed®]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val MkLvar__Lsyntax_lemma = save_pop_thm "MkLvar__Lsyntax_lemma";
+
+set_goal([], ¬µn· MkLcon n  Lsyntax®);
+a (rewrite_tac [get_spec ¬Lsyntax®, sets_ext_clauses, _in_clauses, get_spec ¬LrepClosed®]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[]);
+val MkLcon__Lsyntax_lemma = save_pop_thm "MkLcon__Lsyntax_lemma";
+
+set_goal([], ¬(µn· ³ MkLvar n = š‰g ± ³ MkLcon n = š‰g) ± µx y· ³ MkLabs (x,y) = š‰g ± ³ MkLapp (x,y) = š‰g®);
+a (rewrite_tac (map get_spec [¬MkLvar®, ¬MkLcon®, ¬MkLabs®, ¬MkLapp®]));
+val ³š‰g_lemma1 = save_pop_thm "³š‰g_lemma1";
+
+set_goal([], ¬³ IsLvar š‰g ± ³ IsLcon š‰g ± ³ IsLabs š‰g ± ³ IsLapp š‰g®);
+a (rewrite_tac (map get_spec [¬IsLvar®, ¬IsLcon®, ¬IsLabs®, ¬IsLapp®]));
+a (rewrite_tac (map get_spec [¬MkLvar®, ¬MkLcon®, ¬MkLabs®, ¬MkLapp®]));
+val ³š‰g_lemma2 = save_pop_thm "³š‰g_lemma2";
+
+set_goal([], ¬³ š‰g  Lsyntax®);
+a (contr_tac);
+a (fc_tac [lsyntax_cases_thm] THEN POP_ASM_T ante_tac THEN rewrite_tac[³š‰g_lemma2]);
+val ³š‰g__lsyntax_lemma = save_pop_thm "³š‰g__lsyntax_lemma";
+
+set_goal([], ¬µx· x  Lsyntax ´ ³ x = š‰g®);
+a (contr_tac THEN var_elim_nth_asm_tac 1
+	THEN POP_ASM_T ante_tac
+	THEN rewrite_tac [³š‰g__lsyntax_lemma]);
+val ³š‰g__lsyntax_lemma2 = save_pop_thm "³š‰g__lsyntax_lemma2";
+ 
+set_goal([], ¬µV x· x  V ± V € Lsyntax ´ ³ x = š‰g®);
+a (REPEAT strip_tac
+	THEN lemma_tac ¬x  Lsyntax® THEN1 PC_T1 "hol1" asm_prove_tac[]
+	THEN fc_tac [³š‰g__lsyntax_lemma2]);
+val ³š‰g__lsyntax_lemma3 = save_pop_thm "³š‰g__lsyntax_lemma3";
+
+add_pc_thms "'lambda" [lsyn_proj_clauses, ³š‰g__lsyntax_lemma, MkLvar__Lsyntax_lemma, MkLcon__Lsyntax_lemma, ³š‰g_lemma2, ³š‰g_lemma2];
+set_merge_pcs ["misc21", "'lambda"];
+=TEX
+}%ignore
+
+=GFT
+
+Ûlis_fc_clauses2Ý =
+   ô µ x· x  Lsyntax
+         ´ (IsLabs x ´ LabsBody x  Lsyntax)
+           ± (IsLapp x
+             ´ LappFun x  Lsyntax
+               ± (µ y· y ‰g ran (LappArgs x) ´ y  Lsyntax))
+
+Ûlsyn_comp_fc_clausesÝ =
+   ô (µ vars body· MkLabs (vars, body)  Lsyntax ´ body  Lsyntax)
+       ± (µ f args· MkLapp (f, args)  Lsyntax
+           ´ f  Lsyntax ± (µ y· y ‰g ran args ´ y  Lsyntax))
+
+Ûlscprec_fc_clausesÝ =
+   ô µ Á Ç vars fs· Ç = MkCf (vars, fs) ± Á ‰g fs ´ ScPrec Á Ç
+
+Ûlscprec_fc_clauses2Ý =
+   ô µ t· t  Lsyntax ´ IsCf t ´ (µ f· f ‰g CfForms t ´ ScPrec f t)
+=TEX
+
+\ignore{
+=SML
+local val _ = set_goal([], ¬µx· x  Lsyntax
+	´ (IsLabs x ´ (LabsBody x  Lsyntax))
+	±  (IsLapp x ´ LappFun x  Lsyntax ± (µy· y ‰g ran (LappArgs x) ´ y  Lsyntax))
+®);
+val _ = a (REPEAT strip_tac
+	THEN all_fc_tac [lis_fc_clauses]
+	THEN GET_NTH_ASM_T 1 (var_elim_asm_tac o concl)
+	THEN_TRY asm_rewrite_tac[]);
+val _ = a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
+in val lis_fc_clauses2 = save_pop_thm "lis_fc_clauses2";
+end;
+
+local val _ = set_goal([], ¬
+	(µvars body· MkLabs (vars, body)  Lsyntax ´ body  Lsyntax)
+	± (µf args· MkLapp (f, args)  Lsyntax ´ f  Lsyntax ± (µy· y ‰g ran args ´ y  Lsyntax))®);
+val _ = a (REPEAT strip_tac
+	THEN FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule []))) [lis_fc_clauses2]
+	THEN asm_fc_tac[]);
+in val lsyn_comp_fc_clauses = save_pop_thm "lsyn_comp_fc_clauses";
+end;
+
+local val _ = set_goal([], ¬µÇ·
+		(µvars body· Ç = MkLabs (vars, body) ´ LscPrec body Ç)
+	±	(µf args· Ç = MkLapp (f, args) ´ LscPrec f Ç ± µa· a ‰g ran args ´ LscPrec a Ç)
+®);
+val _ = a (rewrite_tac [get_spec ¬LscPrec®]);
+val _ = a (REPEAT µ_tac THEN strip_tac THEN strip_tac THEN REPEAT µ_tac THEN strip_tac
+	THEN asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+val _ = a (LEMMA_T ¬µx y· ³ MkLabs x = MkLapp y® rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¬MkLabs®, get_spec ¬MkLapp®, í‰g_eq_thm]);
+val _ = a (¶_tac ¬vars® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+val _ = a (LEMMA_T ¬µx y· ³ MkLapp x = MkLabs y® rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¬MkLabs®, get_spec ¬MkLapp®, í‰g_eq_thm]);
+val _ = a (REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+val _ = a (¶_tac ¬f® THEN ¶_tac ¬args® THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+val _ = a (¶_tac ¬f® THEN ¶_tac ¬args® THEN asm_rewrite_tac[]);
+in val lscprec_fc_clauses = save_pop_thm "lscprec_fc_clauses";
+end;
+
+=IGN
+local val _ = set_goal ([], ¬µt· t  Lsyntax ´ 
+	(IsCf t ´ µf· f ‰g CfForms t ´ ScPrec f t)®);
+val _ = a (REPEAT strip_tac
+	THEN all_fc_tac [lis_fc_clauses]
+	THEN DROP_NTH_ASM_T 3 ante_tac
+	THEN asm_rewrite_tac[]
+	THEN strip_tac
+	THEN all_fc_tac [lscprec_fc_clauses]
+	THEN POP_ASM_T ante_tac
+	THEN_TRY asm_rewrite_tac []);
+in val lscprec_fc_clauses2 = save_pop_thm "lscprec_fc_clauses2";
+end;
+
+set_goal ([], ¬µt· IsLabs t ´ µf· f ‰g CfForms t ´ ScPrec f t®);
+a (REPEAT strip_tac THEN rewrite_tac [get_spec ¬ScPrec®]);
+a (¶_tac ¬CfVars t® THEN ¶_tac ¬CfForms t® THEN asm_rewrite_tac[]);
+a (ALL_FC_T rewrite_tac [lsyn_con_inv_fc_clauses]);
+val lscprec_fc_clauses2 = save_pop_thm "lscprec_fc_clauses2";
+=TEX
+}%ignore
+
+Inductive proofs using the well-foundedness of ScPrec are fiddly.
+The following induction principle simplifies the proofs.
+
+=GFT
+Ûlsyn_induction_thmÝ =
+   ô µ p· (µ n· p (MkLvar n))
+           ± (µ vars body· body  Lsyntax ± p body ´ p (MkLabs (vars, body)))
+           ± (µ f args· f  Lsyntax ± p f ± (µ a· a ‰g ran args ´ a  Lsyntax ± p a)
+               ´ p (MkLapp (f, args)))
+           ± (µ n· p (MkLcon n))
+         ´ (µ x· x  Lsyntax ´ p x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µ p· (µ n· p (MkLvar n))
+	± (µ vars body· body  Lsyntax ± p body ´ p (MkLabs (vars, body)))
+	± (µ f args· f  Lsyntax ± p f ± (µa· a ‰g ran args ´ a  Lsyntax ± p a)
+		´ p (MkLapp (f, args)))
+	± (µ n· p (MkLcon n))
+	´ (µ x· x  Lsyntax ´ p x)®);
+a (REPEAT strip_tac);
+a (POP_ASM_T ante_tac THEN lsc_induction_tac ¬x® THEN strip_tac);
+a (fc_tac [lsyntax_cases_thm]);
+(* *** Goal "1" *** *)
+a (fc_tac [lis_fc_clauses] THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [lis_fc_clauses] THEN asm_rewrite_tac[]);
+a (lemma_tac ¬LscPrec body t® THEN1 asm_rewrite_tac[get_spec ¬LscPrec®]);
+(* *** Goal "2.1" *** *)
+val _ = a (LEMMA_T ¬µx y· ³ MkLabs x = MkLapp y® rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¬MkLabs®, get_spec ¬MkLapp®, í‰g_eq_thm]);
+a (¶_tac ¬vars® THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬tc LscPrec body t® THEN1 fc_tac[tc_incr_thm]);
+a (lemma_tac ¬p body® THEN1 all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (all_fc_tac [lis_fc_clauses] THEN asm_rewrite_tac[]);
+a (lemma_tac ¬LscPrec f t® THEN1 asm_rewrite_tac[get_spec ¬LscPrec®]);
+(* *** Goal "3.1" *** *)
+val _ = a (LEMMA_T ¬µx y· ³ MkLapp x = MkLabs y® rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¬MkLabs®, get_spec ¬MkLapp®, í‰g_eq_thm]);
+a (¶_tac ¬f® THEN ¶_tac ¬args® THEN asm_rewrite_tac[]);
+(* *** Goal "3.2" *** *)
+a (lemma_tac ¬µ a· a ‰g ran args ´ a  Lsyntax ± p a®
+	THEN1 (REPEAT strip_tac THEN1 asm_fc_tac[]));
+(* *** Goal "3.2.1" *** *)
+a (lemma_tac ¬a  Lsyntax® THEN1 (asm_fc_tac[]));
+a (lemma_tac ¬LscPrec a t® THEN1 asm_rewrite_tac[get_spec ¬LscPrec®]);
+(* *** Goal "3.2.1.1" *** *)
+val _ = a (LEMMA_T ¬µx y· ³ MkLapp x = MkLabs y® rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¬MkLabs®, get_spec ¬MkLapp®, í‰g_eq_thm]);
+a (¶_tac ¬f® THEN ¶_tac ¬args® THEN asm_rewrite_tac[]);
+(* *** Goal "3.2.1.2" *** *)
+a (all_asm_fc_tac[]);
+a (lemma_tac ¬tc LscPrec a t® THEN1 fc_tac[tc_incr_thm]);
+a (lemma_tac ¬p a® THEN1 all_asm_fc_tac[]);
+(* *** Goal "3.2.2" *** *)
+a (lemma_tac ¬tc LscPrec f t® THEN1 fc_tac[tc_incr_thm]);
+a (lemma_tac ¬p f® THEN1 all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+(* *** Goal "4" *** *)
+a (all_fc_tac [lis_fc_clauses] THEN asm_rewrite_tac[]);
+val lsyn_induction_thm = save_pop_thm "lsyn_induction_thm";
+=TEX
+}%ignore
+
+Using this induction principle an induction tactic is defined as follows:
+
+=SML
+fun Ûlambda_induction_tacÝ t (a,c) = (
+	let val l1 = mk_app (mk_Ì (t,c), t)
+	    and l2 = mk_app (mk_app (mk_const ("", ”GS ­ GS SET ­ BOOL®), t),
+					mk_const ("Lsyntax", ”GS SET®))
+	in  let val l3 = mk_µ (t, mk_´ (l2, l1))
+	in  LEMMA_T l1 (rewrite_thm_tac o rewrite_rule[])
+	THEN DROP_ASM_T l2 ante_tac
+	THEN LEMMA_T l3 (rewrite_thm_tac o rewrite_rule[])
+	THEN bc_tac [lsyn_induction_thm]
+	THEN rewrite_tac[]
+	THEN strip_tac
+	end end) (a,c);
+=TEX
+
+This tactic expects an argument $t$ of type $TERM$ which is a free variable of type $GS$ whose sole occurrence in the assumptions is in an assumption ¬‘t®  Lsyntax®, and results in two subgoals, one requiring a proof for atomic and the other for compound formulae (with the benefit of the induction hypothesis in the assumptions).
+
+\subsubsection{Recursion Theorem}\label{Recursion}
+
+The following recursion theorem supports definition by primitive recursion of functions over the syntax.
+This version does require (or allow) stipulation of a value for elements which are not part of the syntax (which is sometimes necessary).
+The function defined is total over the type GS, but its value is only known for members of {\it Lsyntax}
+\footnote{I did prove an incorrect version of this, but by the time I had spotted the error I also had discovered worse problems in my conception of the calculus which necessitate more radical changes and therefore made proving the correct recursion scheme nugatory.}
+.
+
+=GFT
+Ûlsc_recursion_lemmaÝ =
+   ô? µ vf lf af cf· ¶f· (µ n· f (MkLvar n) = vf n)
+           ± (µ vars body· f (MkLabs (vars, body)) = lf (f body) vars body)
+           ± (µ ff args· f (MkLapp (ff, args))
+               = af {v|¶w y· w í‰g y ‰g args ± v = (w, f y)} ff args)
+           ± (µ n· f (MkLcon n) = cf n)
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¬µvf lf af cf· ¶f·
+	  (µn· f (MkLvar n) = vf n)
+	± (µvars body· f (MkLabs (vars, body)) = lf (f body) vars body)
+	± (µff args· f (MkLapp (ff, args)) = af {v | ¶w y· w í‰g y ‰g args ± v = (w, f y)} ff args)
+	± (µn· f (MkLcon n) = cf n)®);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¬¶g· g = Ìf x·
+	if IsLvar x then vf (LvarName x)
+	else if IsLabs x then lf (f (LabsBody x)) (LabsVars x) (LabsBody x)
+	else if IsLapp x then af {v | ¶w y· w í‰g y ‰g (LappArgs x) ± v = (w, f y)} (LappFun x) (LappArgs x)
+	else if IsLcon x then cf (LconName x)
+	else cf š‰g®
+	THEN1 prove_¶_tac);
+val _ = a (lemma_tac ¬g respects LscPrec®
+	THEN1 (asm_rewrite_tac [get_spec ¬$respects®] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (cond_cases_tac ¬IsLvar x®);
+a (cond_cases_tac ¬IsLabs x®);
+(* *** Goal "1.1" *** *)
+a (LEMMA_T ¬g' (LabsBody x) = h (LabsBody x)® rewrite_thm_tac);
+a (LEMMA_T ¬tc LscPrec (LabsBody x) x® (fn x => asm_tac x THEN (ASM_FC_T rewrite_tac []))
+	THEN1 (LEMMA_T ¬LscPrec (LabsBody x) x® (fn x => asm_tac x THEN fc_tac [tc_incr_thm])
+			THEN1 rewrite_tac [get_spec ¬LscPrec®]));
+a (²_left_tac THEN ¶_tac ¬LabsVars x® THEN FC_T rewrite_tac [lsyn_con_inv_fc_clauses]);
+(* *** Goal "1.2" *** *)
+a (cond_cases_tac ¬IsLapp x®);
+a (LEMMA_T ¬{v|¶w y· w í‰g y ‰g (LappArgs x) ± Fst v = w ± Snd v = g' y}
+	= {v|¶w y· w í‰g y ‰g (LappArgs x) ± Fst v = w ± Snd v = h y}®
+	(rewrite_thm_tac));
+a (rewrite_tac [sets_ext_clauses] THEN strip_tac);
+
+a (LEMMA_T ¬(Ìy· y ‰g ran (LappArgs x) ± Fst x' = w ± Snd x' = g' y)
+	= (Ìy· y ‰g ran (LappArgs x) ± Fst x' = w ± Snd x' = h y)®
+	(rewrite_thm_tac o (app_fun_rule ¬$¶:(GS ­ BOOL) ­ BOOL®)));
+a (rewrite_tac[ext_thm] THEN strip_tac);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "1.2.1" *** *)
+a (LEMMA_T ¬tc LscPrec x'' x® (fn x => asm_tac x THEN ASM_FC_T rewrite_tac []));
+a (LEMMA_T ¬LscPrec x'' x® (fn x => asm_tac x THEN ASM_FC_T rewrite_tac [tc_incr_thm]));
+a (rewrite_tac [get_spec ¬LscPrec®]);
+a (²_right_tac);
+a (¶_tac ¬LappFun x® THEN ¶_tac ¬LappArgs x® THEN asm_rewrite_tac[] THEN FC_T rewrite_tac [lsyn_con_inv_fc_clauses]);
+(* *** Goal "1.2.2" *** *)
+a (LEMMA_T ¬tc LscPrec x'' x® (fn x => asm_tac x THEN ASM_FC_T rewrite_tac []));
+a (LEMMA_T ¬LscPrec x'' x® (fn x => asm_tac x THEN ASM_FC_T rewrite_tac [tc_incr_thm]));
+a (rewrite_tac [get_spec ¬LscPrec®]);
+a (²_right_tac);
+a (¶_tac ¬LappFun x® THEN ¶_tac ¬LappArgs x® THEN asm_rewrite_tac[] THEN FC_T rewrite_tac [lsyn_con_inv_fc_clauses]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬fix g®);
+a (asm_tac well_founded_LscPrec_thm);
+a (all_fc_tac [get_spec ¬fix®]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
+a (GET_NTH_ASM_T 1 (once_rewrite_thm_tac o map_eq_sym_rule));
+a (rewrite_tac[]);
+a (GET_NTH_ASM_T 1 (fn x => once_rewrite_thm_tac (once_rewrite_conv [map_eq_sym_rule x] ¬fix g body®)));
+a (rewrite_tac[]);
+a (REPEAT µ_tac THEN LEMMA_T ¬{v|¶ y· y ‰g ran args ± Fst v = w ± Snd v = fix g y}
+	= {v
+                   |¶ y
+                     · y ‰g ran args
+                         ± Fst v = w
+                         ± Snd v
+                           = (if IsLvar y
+                             then vf (LvarName y)
+                             else if IsLabs y
+                             then lf (fix g (LabsBody y)) (LabsVars y) (LabsBody y)
+                             else if IsLapp y
+                             then af {v|¶ y'· y' ‰g ran (LappArgs y) ± Fst v = w ± Snd v = fix g y'} (LappFun y) (LappArgs y)
+                             else if IsLcon y
+                             then cf (LconName y)
+                             else cf š‰g)}®
+	(rewrite_thm_tac));
+a (rewrite_tac [sets_ext_clauses]);
+a (strip_tac THEN LEMMA_T ¬(Ìy· y ‰g ran args ± Fst x = w ± Snd x = fix g y)
+	= (Ìy· y ‰g ran args
+                   ± Fst x = w
+                   ± Snd x
+                     = (if IsLvar y
+                       then vf (LvarName y)
+                       else if IsLabs y
+                       then lf (fix g (LabsBody y)) (LabsVars y) (LabsBody y)
+                       else if IsLapp y
+                       then af {v|¶ y'· y' ‰g ran (LappArgs y) ± Fst v = w ± Snd v = fix g y'} (LappFun y) (LappArgs y)
+                       else if IsLcon y
+                       then cf (LconName y)
+                       else cf š‰g))®
+	(rewrite_thm_tac o (app_fun_rule ¬$¶:(GS ­ BOOL) ­ BOOL®)));
+a (rewrite_tac[ext_thm] THEN strip_tac);
+a (GET_NTH_ASM_T 1 (fn x => once_rewrite_thm_tac (once_rewrite_conv [map_eq_sym_rule x] ¬fix g x'®)));
+a (rewrite_tac []);
+val lsc_recursion_lemma = save_pop_thm "lsc_recursion_lemma";
+=TEX
+}%ignore
+
+This is (when proven) plugged into proof context {\it 'lambda} for use in consistency proofs.
+
+=GFT
+add_¶_cd_thms [lsc_recursion_lemma] "'lambda";
+set_merge_pcs ["misc21", "'lambda"];
+=TEX
+
+Unfortunately, it doesn't seem to work, as may be seen in the theory listing where the following constant, \emph{FreeVars}, has not had its consistency proven.
+
+\subsubsection{Auxiliary Concepts}
+
+Its useful to be able to talk about the free variables in a formula so the definition is given here.
+
+The definition is by recursion over the structure of the syntax.
+
+¹HOLCONST
+Ü ÛFreeVarsÝ : GS ­ GS SET
+÷üüüüüüüüüüü
+Ü  (µn·	FreeVars (MkLvar n) = {n})
+Ü± (µvars body·	FreeVars (MkLabs (vars, body)) = (FreeVars body) \ (X‰g vars))
+Ü± (µf args·	FreeVars (MkLapp (f, args)) = (FreeVars f) À (Þ (FunImage‰g FreeVars (ran args))))
+Ü± (µn·		FreeVars (MkLcon n) = {})
+°
+
+\subsection{Proof Contexts}
+
+=SML
+(* add_pc_thms "'lambda" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma]; *)
+
+(* add_pc_thms "'lambda" [get_spec ¬Extension®, get_spec ¬Essence®]; *)
+commit_pc "'lambda";
+
+force_new_pc "ÛlambdaÝ";
+merge_pcs ["misc2", "'lambda"] "lambda";
+commit_pc "lambda";
+
+force_new_pc "Ûlambda1Ý";
+merge_pcs ["misc21", "'lambda"] "lambda1";
+commit_pc "lambda1";
+=TEX
+
+\section{The Finitary System}
+
+This is a marker for something in the future.
+It is possible that in the exploration of the semantic ideas I may have to sketch some things out here before coming here to consider this level more seriously.
+
+\subsection{The System of Type Assignment}
+
+
+
+
+=SML
+set_flag ("subgoal_package_quiet", false);
+=TEX
