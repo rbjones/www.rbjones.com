@@ -1,5 +1,5 @@
 =IGN
-$Id: t040.doc,v 1.1 2010/09/13 11:07:51 rbj Exp $
+$Id: t040.doc,v 1.2 2010/09/16 21:57:09 rbj Exp $
 =TEX
 
 I explore here in a fairly abstract aspects of the theory of combining models of concrete components into larger systems.
@@ -95,7 +95,7 @@ set_merge_pcs ["rbjmisc", "'circuit"];
 }%ignore
 
 The idea I propose to explore is that a circuit be modelled by a function from a histories of values on input lines to values on output lines.
-The principle initial aim is to chose a type for representing such functions which is convenient for the description of putting together circuits in a manner analogous to a wiring diagram to form larger circuits and to prove a result about when such compositions of circuits yields a new circuit (ideally always).
+The principal initial aim is to chose a type for representing such functions which is convenient for the description of putting together circuits in a manner analogous to a wiring diagram to form larger circuits and to prove a result about when such compositions of circuits yields a new circuit (ideally always).
 
 I begin therefore with some type abbreviations (later I might possibly substitute definitions of type constructors, if this seems likely to be advantageous).
 
@@ -204,7 +204,6 @@ The information necessary to the construction of a composite circuit is as follo
 \item [(D)] A set of connections.
 \end{itemize}
 
-
 Of these we may observe that the first may be thought of as the things to which the construction described by the diagram are applied, and confine our conception of the diagram to the manner of interconnection.
 Some aspects of (A) are needed for the diagram, details of the port configuration of each component.
 This information is a bit like a type for the component, and the notion of \emph{signature} may be thought of as a generalisation of the concept of \emph{type}, which we will employ for this purpose.
@@ -239,16 +238,18 @@ The well-formedness conditions are as follows:
 πHOLCONST
 ‹ €DiagNames› : (('a) CIRCSIG ≠ 'a LIST SET) ≠ ('a) CDIAG ≠ 'a LIST SET
 ˜¸¸¸¸¸¸
-‹ µf cd∑ DiagNames f cd = ﬁ{is | ∂x∑ x ç IxDom (CSigs cd) ± is = {y | ∂z∑ z ç f (ValueOf (CSigs cd x)) ± y = Cons x z}}
+‹ µf cd∑ DiagNames f cd = ﬁ{is | ∂x∑ x ç IxDom (CSigs cd)
+	± is = {y | ∂z∑ z ç f (ValueOf (CSigs cd x)) ± y = Cons x z}}
 ∞
 
 πHOLCONST
 ‹ €WellFormedDiag› : ('a) CDIAG ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µcd∑ WellFormedDiag cd § ∂inps outps∑ DiagNames Fst cd Ä inps ± DiagNames Snd cd Ä outps
-‹				± Dom (CCons cd) = inps
-‹				± Ran (CCons cd) Ä outps
-‹				± (CCons cd) ç Functional
+‹ µcd∑ WellFormedDiag cd § ∂inps outps∑ DiagNames Fst cd Ä inps
+‹		± DiagNames Snd cd Ä outps
+‹		± Dom (CCons cd) = inps
+‹		± Ran (CCons cd) Ä outps
+‹		± (CCons cd) ç Functional
 ∞
 
 To give the semantics of such a construction we treat the subsidiary circuits as imposing constraints on the possible values on the wires and output ports in the context of the input ports.
@@ -264,11 +265,17 @@ The following definition expresses the conditions for a circuit to be a correct 
 
 This is expressed by asserting the existence of a set of signals, one for each name in the signature of the diagram which satisfy all the equations in the signature of the diagram and match the functionality of the circuits being composed.
 
+The required satsifaction conditions are compounded as follows.
+
+First the condition for the collection of signals to satisfy a single circuit, which is that the output signals are obtainable from the input signals by application of the function representing the circuit.
+
 πHOLCONST
 ‹ €CircSat› : ('a) CIRCSIG ≠ ('a LIST, 'c ≠ 'b)IX  ≠ ('a, 'b, 'c) CIRC ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µcs ixs c∑ CircSat cs ixs c § (Snd cs) Ú ixs = c ((Fst cs) Ú ixs)
 ∞
+
+Then the condition for satisfaction of all the circuits, viz. that the conditions for satisfying each component circuit are all satisfied.
 
 πHOLCONST
 ‹ €CircsSat› : ('a) CDIAG ≠ ('a LIST, 'c ≠ 'b)IX  ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ BOOL
@@ -277,17 +284,24 @@ This is expressed by asserting the existence of a set of signals, one for each n
 ‹	µn∑ n ç IxDom ixc ¥ CircSat (ValueOf(CSigs cd n)) ixs (ValueOf (ixc n))
 ∞
 
+An equation arising from connection of two signals by a wire is satisfied, naturally, by the equality of the two signals connected.
+
 πHOLCONST
 ‹ €EqSat› : ('a LIST, 'c ≠ 'b)IX ≠ 'a LIST ∏ 'a LIST ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µixs n m∑ EqSat ixs (n, m) § n ç IxDom ixs ± m ç IxDom ixs ± ixs n = ixs m
 ∞
 
+The condition for satisfying all the wiring connections being that each connection is satisfied.
+
 πHOLCONST
 ‹ €EqsSat› : ('a LIST, 'c ≠ 'b)IX ≠ ('a LIST ∏ 'a LIST)SET ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µixs nms∑ EqsSat ixs nms § µnm∑ nm ç nms ¥ EqSat ixs nm
 ∞
+
+The following expresses the relationship between a circuit diagram, a collection of components which fit into that diagram, and the circuit which is obtained by composing those circuits in the manner prescribed by the diagram.
+The result will be a projection from the complete collection of signals to the subset which corrsponds to the signature of the resulting circuit.
 
 πHOLCONST
 ‹ €DiagCircRel› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC ≠ BOOL
@@ -296,13 +310,73 @@ This is expressed by asserting the existence of a set of signals, one for each n
 ‹	CircsSat cd six isc ± EqsSat six (CCons cd) ± CircSat (CSig cd) six c
 ∞
 
+We could define the construction using a choice function as follows:
+
 πHOLCONST
 ‹ €Diag2Circ› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC
 ˜¸¸¸¸¸¸
 ‹ µd:('a) CDIAG; c∑ Diag2Circ d c = ≈x∑ DiagCircRel d c x
 ∞
 
-The principle result we need specifies conditions under which a diagram yields a circuit satisfying DiagCircRel.
+But in order to make use of such a definition we would first have to show that the relationship is satisfiable, and in order to do that we will find it necessary to come up with a more constructive definition.
+
+In fact, more than one may be necessary.
+Two distinct cases may be envisaged.
+In the case that we have a well-founded ordering on time, relative to which our signals are strictly historical, then we may be able to obtain our result as a fixed point of a functor which respects that ordering.
+This however will not be the case if time is continuous, and some other conditions (perhaps continuity) will be necessary to establish the existence of a fixed point for the equations.
+
+\subsection{When Time is Well-Founded}
+
+We are looking for a functor fixed points of which are circuits satisfying \emph{DiagCircRel}, and an ordering on circuits, presumably derived from the ordering on time, which is respected by the functor.
+
+The functor will operate over the complete selection of signals, and a projection will be taken once the fixed point is obtained.
+
+We need the operands over which the functor operates to be themselved functions over time, so we convert an indexed set of traces to a single trace whose codomain is a type of indexed sets as follows:
+
+πHOLCONST
+‹ €tr22tr1› : (('a LIST, 'c ≠ 'b)IX) ≠ ('c ≠ ('a LIST, 'b)IX)
+˜¸¸¸¸¸¸
+‹ µt2∑ tr22tr1 t2 = Ãt n∑
+‹	if n ç IxDom t2
+‹	then Value (ValueOf (t2 n) t)
+‹	else Undefined
+∞
+
+πHOLCONST
+‹ €tr12tr2› : ('c ≠ ('a LIST, 'b)IX) ≠ (('a LIST, 'c ≠ 'b)IX)
+˜¸¸¸¸¸¸
+‹ µt1∑ tr12tr2 t1 = Ãn∑
+‹	if n ç IxDom (t1 (≈x∑T))
+‹	then Value Ãt∑ ValueOf (t1 t n)
+‹	else Undefined
+∞
+
+The following definition gives a parameterised functor.
+The parameters are:
+
+\begin{itemize}
+\item a diagram
+\item an indexed set of components suitable for composition according to the diagram
+\item a indexed set of input signals matching the input ports to the composite circuit
+\end{itemize}
+
+The functor then returned transforms traces in which the trace values are complete indexed sets of values, one for each signal in the compound circuit external and internal.
+This functor defines values of the output trace in terms of temporally preceding values of the input trace.
+Provided that the component circuits are strictly historical relative to the (possibly partial) ordering on time and that ordering is well-founded, then the recursion embodied in the functor will be well-founded and the functor will have a fixed point, so we can define the required composite circuit in terms of the fixed point of the functor. 
+
+πHOLCONST
+‹ €CompFunct› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ (('a LIST, 'c ≠ 'b)IX)
+‹			≠ ('c ≠ ('a LIST, 'b)IX) ≠ ('c ≠ ('a LIST, 'b)IX)
+˜¸¸¸¸¸¸
+‹ µcd:('a) CDIAG; c its tr∑ CompFunct cd c its tr = Ãt n∑
+‹	if n ç DiagNames Snd cd
+‹	then Value ≈x∑T		(* value computed by component *)
+‹	else	if n ç DiagNames Fst cd 
+‹		then Value ≈x∑T	(* value of connected output signal *)
+‹		else Undefined
+∞
+
+The principal result we need specifies conditions under which a diagram yields a circuit satisfying DiagCircRel.
 This will be, certain conditions for well formedness of the diagram and that the constituent circuits are all strictly historical relative to a well-founded ordering on time.
 
 The proof of the required result will use a recursion theorem to the effect that a functor which respects some well-founded ordering has a fixed point.
@@ -312,16 +386,15 @@ The recursion must therefore take place in defining a function which does not di
 
 In the following definition the functor defined operates on circuits represented as if all internal wires were output ports.
 
-
 \ignore{
 
  πHOLCONST
 ‹ €DiagFunct› : ('a) CDIAG ≠ ('a, ('a, 'b, 'c) CIRC)IX ≠ ('a, 'b, 'c) CIRC ≠ ('a, 'b, 'c) CIRC
  ˜¸¸¸¸¸¸
 ‹ µd:('a) CDIAG; sc c∑ DiagFunct d sc c = Ãips opn∑
-	if opn ç dom (CCons d)
-	then c opn
-	else Undefined 
+‹	if opn ç dom (CCons d)
+‹	then c opn
+‹	else Undefined 
  ∞
 
 }%ignore

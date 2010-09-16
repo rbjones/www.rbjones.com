@@ -1,5 +1,5 @@
 =IGN
-$Id: t010.doc,v 1.15 2010/08/13 10:57:22 rbj Exp $
+$Id: t010.doc,v 1.16 2010/09/16 21:57:09 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -20,7 +20,7 @@ $Id: t010.doc,v 1.15 2010/08/13 10:57:22 rbj Exp $
 
 \title{Miscellaneous Tactics}
 \author{Roger Bishop Jones}
-\date{$ $Date: 2010/08/13 10:57:22 $ $}
+\date{$ $Date: 2010/09/16 21:57:09 $ $}
 
 \makeindex
 \usepackage[pdftex]{hyperref}
@@ -38,7 +38,7 @@ Several structures providing tactics, tacticals, etc. for theories, forward chai
 \href{http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 
-$ $Id: t010.doc,v 1.15 2010/08/13 10:57:22 rbj Exp $ $
+$ $Id: t010.doc,v 1.16 2010/09/16 21:57:09 rbj Exp $ $
 
 \bf Copyright \copyright\ : Roger Bishop Jones \\
 
@@ -427,8 +427,8 @@ $check\_asm\_tac1$, $strip\_tac$, $strip\-\_asm\-\_conv$.
 val ÛAND_OR_TÝ : TACTIC * TACTIC -> TACTIC;
 val ÛAND_ORÝ : TACTIC * TACTIC -> TACTIC;
 =DESCRIBE
-$t1 THEN\_ORELSE\_T t2$ has the same effect as $((TRY t1) THEN t2) ORELSE t1$ but is faster.
-$THEN\_ORELSE$ is an alias for $THEN\_ORELSE\_T$.
+$t1\ AND\_OR\_T\ t2$ has the same effect as $((TRY\ t1)\ THEN\ t2) ORELSE t1$ but is faster.
+$AND\_OR$ is an alias for $AND\_OR\_T$.
 =SEEALSO
 $THEN$, $ORELSE$, $TRY$
 =ENDDOC
@@ -440,7 +440,7 @@ val Û±_THEN1Ý : (THM -> TACTIC) -> (THM -> TACTIC);
 Similar in effect to $±\_THEN$ but will fail only if both the conjuncts fail.
 
 A theorem tactical to apply a given theorem tactic to both conjuncts of 
-a theorem of the form $‡ ô t1 ± t2$.
+a theorem of the form $‡\ ô\ t1\ ±\ t2$.
 =GFT
 ±_THEN1 thmtac (‡ ô t1 ± t2) = thmtac (‡ ô t1) AND_OR thmtac (‡ ô t2)
 =TEX
@@ -473,7 +473,7 @@ $STRIP\_THM\_THEN$
 =ENDDOC
 
 =DOC
-val ÛSOME_TÝ : TACTIC list -> TACTIC;
+val ÛLIST_AND_OR_TÝ : TACTIC list -> TACTIC;
 =DESCRIBE
 $SOME\_T$ is similar to $EVERY\_T$ except that it fails only if all the tactics fail.
 
@@ -494,15 +494,15 @@ $EVERY\_T$
 =ENDDOC
 
 =DOC
-val ÛMAP_SOME_TÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
-val ÛMAP_SOMEÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
+val ÛMAP_LIST_AND_OR_TÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
+val ÛMAP_LIST_AND_ORÝ : ('a -> TACTIC) -> 'a list -> TACTIC;
 =DESCRIBE
-$MAP\_SOME\_T$ is the same as $MAP\_EVERY\_T$ except that it will fail only if no resulting application of a tactic succeeds.
+$MAP\_LIST\_AND\_OR\_T$ is the same as $MAP\_EVERY\_T$ except that it will fail only if no resulting application of a tactic succeeds.
 
-$MAP\_SOME\_T$ $mapf$ $alist$ maps $mapf$ over $alist$,
+$MAP\_LIST\_AND\_OR\_T$ $mapf$ $alist$ maps $mapf$ over $alist$,
 and then applies the resulting list of tactics to the goal
 in sequence (in the same manner as $SOME$, q.v.).
-$MAP\_SOME$ is an alias for $MAP\_SOME\_T$.
+$MAP\_LIST\_AND\_OR$ is an alias for $MAP\_LIST\_AND\_OR\_T$.
 =SEEALSO
 $MAP\_EVERY$
 =ENDDOC
@@ -592,22 +592,22 @@ val ÛSTRIP_THM_THEN1Ý : THM_TACTICAL = (fn ttac:THM_TACTIC =>
 );
 =TEX
 =SML
-fun ÛSOME_TÝ (tacs : TACTIC list) :  TACTIC = (fn gl =>
+fun ÛLIST_AND_OR_TÝ (tacs : TACTIC list) :  TACTIC = (fn gl =>
 	(fold (op AND_OR) tacs fail_tac) gl
 );
 =TEX
 =SML
-fun ÛMAP_SOME_TÝ (tacf : 'a -> TACTIC) (things : 'a list) : TACTIC = (
-	SOME_T (map tacf things)
+fun ÛMAP_LIST_AND_OR_TÝ (tacf : 'a -> TACTIC) (things : 'a list) : TACTIC = (
+	LIST_AND_OR_T (map tacf things)
 );
 =TEX
 =SML
-val ÛMAP_SOMEÝ : ('a -> TACTIC) -> 'a list -> TACTIC = MAP_SOME_T;
+val ÛMAP_LIST_AND_ORÝ : ('a -> TACTIC) -> 'a list -> TACTIC = MAP_LIST_AND_OR_T;
 =TEX
 
 =SML
 val Ûstrip_asm_tac1Ý = REPEAT_TTCL STRIP_THM_THEN1 check_asm_tac1;
-val Ûstrip_asms_tac1Ý = MAP_SOME strip_asm_tac1;
+val Ûstrip_asms_tac1Ý = MAP_LIST_AND_OR strip_asm_tac1;
 =TEX
 
 
@@ -1281,7 +1281,7 @@ fc_tac
 If the theorem argument comprises only implications
 which are to be used without canonicalisation, one might use:
 =INLINEFT
-UFC_T1 id_canon (MAP_SOME strip_asm_tac)
+UFC_T1 id_canon (MAP_LIST_AND_OR strip_asm_tac)
 =TEX
 .
 
