@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.37 2010/09/11 20:29:09 rbj Exp $
+$Id: t006.doc,v 1.38 2010/09/22 19:49:24 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2010/09/11 20:29:09 $ $
+Last Changed $ $Date: 2010/09/22 19:49:24 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.37 2010/09/11 20:29:09 rbj Exp $ $
+$ $Id: t006.doc,v 1.38 2010/09/22 19:49:24 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -511,6 +511,107 @@ add_pc_thms1 "'rbjmisc" [NeSet_ne_thm];
 add_pc_thms "'rbjmisc" [NeSet_PeSet_thm, MemOf_memof_thm, PeSet_Insert_thm, MemOf_NeSet_unit_thm];
 =TEX
 
+
+\subsection{Cantor's Theorem}
+
+Presumably there is a proof of this somewhere but here is another.
+
+The following is a record of a proof session with ProofPower in which the Cantor's theorem is proven.
+The logic is very close to that of Principia Mathematica\cite{russell10}, being based on Church's formulation\cite{church40} of the Simple Theory of Types (which is more or less equivalent to Russell's Theory of Types \cite{russell08} once the ramifications have been neutralised by the axiom of reducibility).
+
+The interactive proof tool effectively checks a formal proof which it has constructed behind the scenes following instructions from the user of the system, but does not display the full details of the proof (complete automation is the ideal, which we approach from afar).
+The user gives his instructions in a language called `Standard ML' (in the passages headed `SML') in which the `ML' stands for `Meta-Language', the sections marked `{\Product} output' show the output from the proof tool.
+The proof is conducted using a `goal package' (a bit of software written in SML) which supports a backward proof idiom in which the proof begins with the conjecture to be proven, and simplifies this conjecture by reverse application of rules until we reach axiomatic premises.
+Behind the scenes the proof tool verifies the existence of a forward proof from axioms to the desired theorem. 
+
+The proof is begun by stating the goal (conjecture) to be proven, which is that there does not exist a function from a type î'aÆ onto the type î'a SETÆ (in which $'a$ is a type variable).
+
+=SML
+set_goal([], ¨≥ ∂f:'a ≠ 'a SET∑ µs:'a SET∑ ∂e:'a∑ f e = sÆ);
+=TEX
+
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(* ?Ù *)  ¨≥ (∂ f∑ µ s∑ ∂ e∑ f e = s)Æ
+=TEX
+
+By the most routine transformations:
+
+=SML
+a (REPEAT strip_tac);
+=TEX
+
+we get (showing some intermediate steps):
+
+=GFT ProofPower output
+(* ?Ù *)  ¨µ f∑ ≥ (µ s∑ ∂ e∑ f e = s)Æ
+
+(* ?Ù *)  ¨≥ (µ s∑ ∂ e∑ f e = s)Æ
+
+(* ?Ù *)  ¨∂ s∑ ≥ (∂ e∑ f e = s)Æ
+=TEX
+
+Which is asking for a counterexample to the supposition that $f$ is a surjection.
+
+The required counterexample is supplied thus:
+
+=SML
+a (∂_tac ¨{x | ≥ x ç f x }Æ);
+=TEX
+
+and we then have to prove that it is indeed a counterexample:
+
+=GFT ProofPower output
+(* ?Ù *)  ¨≥ (∂ e∑ f e = {x|≥ x ç f x})Æ
+=TEX
+
+which again involves first some routine inferences:
+
+=SML
+a (REPEAT strip_tac);
+=TEX
+
+which goes:
+
+=GFT ProofPower output
+(* ?Ù *)  ¨µ e∑ ≥ f e = {x|≥ x ç f x}Æ
+
+(* ?Ù *)  ¨≥ f e = {x|≥ x ç f x}Æ
+=TEX
+
+To progress this proof we now must use extensionality of sets transforming the equation into an equivalence by rewriting.
+
+=SML
+a (rewrite_tac [sets_ext_clauses]);
+=TEX
+
+Which gives:
+
+=GFT ProofPower output
+(* ?Ù *)  ¨≥ (µ x∑ x ç f e § ≥ x ç f x)Æ
+=TEX
+
+which is too obvious for us to care how it is discharged!
+
+=SML
+a (prove_tac []);
+=TEX
+
+=GFT ProofPower output
+Tactic produced 0 subgoals:
+Current and main goal achieved
+=TEX
+
+We now have a theorem, which we can save in our theory:
+
+=SML
+val cantors_thm = save_pop_thm "cantors_thm";
+=TEX
+
+=GFT ProofPower output
+val cantors_thm = Ù ≥ (∂ f∑ µ s∑ ∂ e∑ f e = s) : THM
+=TEX
 
 \section{Type OPT}
 
