@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.9 2009/09/16 09:46:49 rbj Exp $
+$Id: t005.doc,v 1.10 2010/11/09 13:32:40 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -40,12 +40,12 @@ Fixed points, well founded relations and a recursion theorem.
 
 Created 2004/07/15
 
-Last Modified $ $Date: 2009/09/16 09:46:49 $ $
+Last Modified $ $Date: 2010/11/09 13:32:40 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 
-$ $Id: t005.doc,v 1.9 2009/09/16 09:46:49 rbj Exp $ $
+$ $Id: t005.doc,v 1.10 2010/11/09 13:32:40 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -259,6 +259,22 @@ This provides a form of induction with a stronger induction hypothesis.
 Naturally we would expect this to be proven inductively and the question is therefore what property to use in the inductive proof, the observation that the transitive closure of a relation is well-founded is not explicitly the ascription of a property to the field of the relation.
 The obvious method is to relativise the required result to the transitive closure of a set, giving a property of sets, and then to prove that this property is hereditary if the relation is well-founded.
 
+=GFT
+Ûtcwf_lemma1Ý =
+   ô µ s r· well_founded r
+         ´ (µ x· (µ y· tc r y x ´ (µ z· tc r z y ´ s z) ´ s y)
+             ´ (µ y· tc r y x ´ s y))
+
+Ûwf_lemmaÝ =
+   ô µ r· well_founded r ´ (µ s· (µ t· (µ u· r u t ´ s u) ´ s t) ´ (µ e· s e))
+
+Ûtcwf_lemma2Ý =
+   ô µ r· well_founded r
+         ´ (µ s· (µ t· (µ u· tc r u t ´ s u) ´ s t) ´ (µ e· s e))
+
+Ûwf_tc_wf_thmÝ = ô µ r· well_founded r ´ well_founded (tc r)
+=TEX
+
 \ignore{
 =SML
 set_goal([],¬µs r· well_founded r
@@ -297,6 +313,10 @@ val tcwf_lemma1 = save_pop_thm "tcwf_lemma1";
 
 \ignore{
 =SML
+set_goal([],¬µr· well_founded r ´ µs· (µt· (µu· r u t ´ s u) ´ s t) ´ (µe· s e)®);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬well_founded®]);
+val wf_lemma = save_pop_thm "wf_lemma";
+
 set_goal([],¬µr· well_founded r ´ µs· (µt· (µu· tc r u t ´ s u) ´ s t) ´ (µe· s e)®);
 a (REPEAT strip_tac THEN fc_tac [tcwf_lemma1]);
 a (spec_nth_asm_tac 2 ¬e®);
@@ -322,6 +342,11 @@ val wf_tc_wf_thm = save_pop_thm "wf_tc_wf_thm";
 =TEX
 }%\ignore
 Now we prove that if the transitive closure of a relation is well-founded then so must be the relation.
+
+=GFT
+Ûtc_wf_wf_thmÝ = ô µ r· well_founded (tc r) ´ well_founded r
+=TEX
+
 \ignore{
 =SML
 
@@ -354,8 +379,19 @@ val tc_wf_twf_thm = save_pop_thm "tc_wf_twf_thm";
 We here define a general tactic for performing induction using some well-founded relation.
 The following function (I think these things are called "THM-TACTICAL"s) must be given a theorem which asserts that some relation is well-founded, and then a THM-TACTIC (which determines what is done with the induction assumption), and then a term which is the variable to induct over, and will then facilitate an inductive proof of the current goal using that theorem.
 =SML
-fun ÛWF_INDUCTION_TÝ (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
- let	fun bad_thm thm = thm_fail "WF_INDUCTION_T" 29021 [thm];
+fun ÛWF_INDUCTION_T2Ý (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
+ let	fun bad_thm thm = thm_fail "WF_INDUCTION_T2" 29021 [thm];
+	val (wf, r) = (dest_app (concl thm))
+		handle Fail _ => bad_thm thm;
+	val sthm = µ_elim r wf_lemma
+		handle Fail _ => bad_thm thm;
+	val ithm = ´_elim sthm thm
+		handle Fail _ => bad_thm thm;
+ in GEN_INDUCTION_T ithm ttac
+ end;
+
+fun ÛWFCV_INDUCTION_TÝ (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
+ let	fun bad_thm thm = thm_fail "WFCV_INDUCTION_T" 29021 [thm];
 	val (wf, r) = (dest_app (concl thm))
 		handle Fail _ => bad_thm thm;
 	val sthm = µ_elim r tcwf_lemma2
@@ -370,12 +406,23 @@ And now we make a tactic out of that (basically by saying "strip the induction h
 
 =SML
 fun Ûwf_induction_tacÝ (thm : THM) : TERM -> TACTIC = (
-	let	val ttac = (WF_INDUCTION_T thm strip_asm_tac)
+	let	val ttac = (WF_INDUCTION_T2 thm strip_asm_tac)
 			handle ex => reraise ex "wf_induction_tac";
 	in
 	fn tm =>
 	let	val tac = (ttac tm) handle ex => reraise ex "wf_induction_tac";
 	in	fn gl => ((tac gl) handle ex => reraise ex "wf_induction_tac")
+	end
+	end
+);
+
+fun Ûwfcv_induction_tacÝ (thm : THM) : TERM -> TACTIC = (
+	let	val ttac = (WFCV_INDUCTION_T thm strip_asm_tac)
+			handle ex => reraise ex "wfcv_induction_tac";
+	in
+	fn tm =>
+	let	val tac = (ttac tm) handle ex => reraise ex "wfcv_induction_tac";
+	in	fn gl => ((tac gl) handle ex => reraise ex "wfcv_induction_tac")
 	end
 	end
 );
@@ -391,7 +438,7 @@ We think of a bottomless descending chain as a non-empty set (represented by a p
 =SML
 set_goal([], ¬µr· well_founded r ´ µx· ³¶p v· p v ± µy· p y ´ tc r y x ± ¶z· p z ± r z y®);
 a (strip_tac THEN strip_tac THEN strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a contr_tac;
 a (all_asm_fc_tac[]);
 a (spec_nth_asm_tac 6 ¬v®);
@@ -418,7 +465,7 @@ Now a shorter formulation of bottomless pits.
 set_goal([], ¬µr· well_founded r ´ ³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y®);
 a (contr_tac);
 a (lemma_tac ¬µx· ³ p x® THEN1 (strip_tac
-	THEN wf_induction_tac (asm_rule ¬well_founded r®) ¬x®));
+	THEN wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®));
 (* *** Goal "1" *** *)
 a (contr_tac
 	THEN REPEAT (all_asm_fc_tac[tc_incr_thm]));
@@ -765,7 +812,7 @@ val fixed_at_lemma3 = save_pop_thm "fixed_at_lemma3";
 set_goal ([],¬µf r· well_founded r ± f respects r
 	´ µx g h· fixed_below f r g x ± fixed_below f r h x ´ µz· tc r z x ´ h z = g z®);
 a (REPEAT_N 4 strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (REPEAT strip_tac);
 a (spec_nth_asm_tac 4 ¬z®);
 a (all_asm_fc_tac [fixed_below_lemma1]);
@@ -861,7 +908,7 @@ val fixed_below_lemma3 = save_pop_thm "fixed_below_lemma3";
 set_goal ([],¬µr f· well_founded r ± f respects r
 	´ µx· ¶g· fixed_below f r g x ®);
 a (REPEAT_N 4 strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (lemma_tac ¬µ u· tc r u t ´ (¶ g· fixed_at f r g u)®
 	THEN1 (REPEAT strip_tac
 	THEN all_asm_fc_tac[]
@@ -894,7 +941,7 @@ set_goal ([],¬µf r· well_founded r ± f respects r ´
 a (REPEAT strip_tac);
 a (lemma_tac ¬¶g· (Ì x· (Å h· fixed_at f r h x) x) = g® THEN1 prove_¶_tac);
 a (asm_rewrite_tac[]);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (rewrite_tac[get_spec ¬fixed_at®] THEN strip_tac);
 (* *** Goal "1" *** *)
 a (asm_fc_tac [list_µ_elim [¬f®, ¬r®] fixed_at_lemma3]);
@@ -1114,7 +1161,7 @@ The new theory {\it wf\_relp} is first created.
 
 =SML
 open_theory "hol";
-force_new_theory "wf_relp";
+force_new_theory "Ûwf_relpÝ";
 new_parent "tc";
 =TEX
 
@@ -1132,13 +1179,13 @@ set_merge_pcs ["hol", "'wf_relp"];
 Definition of well-founded and transitive-well-founded and proof that the transitive closure of a well-founded relation is transitive-well-founded.
 
 ¹HOLCONST
-Ü well_founded: ('a ­ 'a ­ BOOL) ­ BOOL
+Ü Ûwell_foundedÝ: ('a ­ 'a ­ BOOL) ­ BOOL
 ÷
 Ü µr· well_founded r ¤ µ s · (µ x · (µ y · r y x ´ s y) ´ s x) ´ µ x · s x
 °
 
 ¹HOLCONST
-Ü twfp: ('a ­ 'a ­ BOOL) ­ BOOL
+Ü ÛtwfpÝ: ('a ­ 'a ­ BOOL) ­ BOOL
 ÷
 Ü µr· twfp r ¤ well_founded r ± trans r
 °
@@ -1153,6 +1200,8 @@ The obvious method is to relativise the required result to the transitive closur
 	ô µs r· well_founded r
 		´ µx· (µy· tc r y x ´ (µz· tc r z y ´ s z) ´ s y)
 		´ (µy· tc r y x ´ s y)
+Ûwf_lemma2Ý =
+	ô µ r· well_founded r ´ (µ s· (µ t· (µ u· r u t ´ s u) ´ s t) ´ (µ e· s e))
 Ûtcwf_lemma2Ý =
 	ô µr· well_founded r
 		´ µs· (µt· (µu· tc r u t ´ s u) ´ s t)
@@ -1193,6 +1242,12 @@ a (spec_nth_asm_tac 6 ¬z'®);
 (* *** Goal "2.2" *** *)
 a (asm_fc_tac[]);
 val tcwf_lemma1 = save_pop_thm "tcwf_lemma1";
+=TEX
+
+=SML
+set_goal([],¬µr· well_founded r ´ µs· (µt· (µu· r u t ´ s u) ´ s t) ´ (µe· s e)®);
+a (REPEAT µ_tac THEN rewrite_tac [get_spec ¬well_founded®]);
+val wf_lemma2 = save_pop_thm "wf_lemma2";
 =TEX
 
 =SML
@@ -1258,8 +1313,20 @@ We here define a general tactic for performing induction using some well-founded
 The following function (I think these things are called ``THM-TACTICAL''s) must be given a theorem which asserts that some relation is well-founded, and then a THM-TACTIC (which determines what is done with the induction assumption), and then a term which is the variable to induct over, and will then facilitate an inductive proof of the current goal using that theorem.
 
 =SML
-fun WF_INDUCTION_T (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
+fun ÛWF_INDUCTION_TÝ (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
 (	let	fun bad_thm thm = thm_fail "WF_INDUCTION_T" 29021 [thm];
+		val (wf, r) = (dest_app (concl thm))
+			handle Fail _ => bad_thm thm;
+		val sthm = µ_elim r wf_lemma2
+			handle Fail _ => bad_thm thm;
+		val ithm = ´_elim sthm thm
+			handle Fail _ => bad_thm thm;
+	in GEN_INDUCTION_T ithm ttac
+	end
+);
+
+fun ÛWFCV_INDUCTION_TÝ (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
+(	let	fun bad_thm thm = thm_fail "WFCV_INDUCTION_T" 29021 [thm];
 		val (wf, r) = (dest_app (concl thm))
 			handle Fail _ => bad_thm thm;
 		val sthm = µ_elim r tcwf_lemma2
@@ -1274,13 +1341,24 @@ fun WF_INDUCTION_T (thm : THM) (ttac : THM -> TACTIC) : TERM -> TACTIC =
 And now we make a tactic out of that (basically by saying "strip the induction hypothesis into the assumptions").
 
 =SML
-fun wf_induction_tac (thm : THM) : TERM -> TACTIC = (
+fun Ûwf_induction_tacÝ (thm : THM) : TERM -> TACTIC = (
 	let	val ttac = (WF_INDUCTION_T thm strip_asm_tac)
 			handle ex => reraise ex "wf_induction_tac";
 	in
 	fn tm =>
 	let	val tac = (ttac tm) handle ex => reraise ex "wf_induction_tac";
 	in	fn gl => ((tac gl) handle ex => reraise ex "wf_induction_tac")
+	end
+	end
+);
+
+fun Ûwfcv_induction_tacÝ (thm : THM) : TERM -> TACTIC = (
+	let	val ttac = (WFCV_INDUCTION_T thm strip_asm_tac)
+			handle ex => reraise ex "wfcv_induction_tac";
+	in
+	fn tm =>
+	let	val tac = (ttac tm) handle ex => reraise ex "wfcv_induction_tac";
+	in	fn gl => ((tac gl) handle ex => reraise ex "wfcv_induction_tac")
 	end
 	end
 );
@@ -1303,7 +1381,7 @@ We think of a bottomless descending chain as a non-empty set (represented by a p
 set_goal([], ¬µr· well_founded r ´
 	µx· ³¶p v· p v ± µy· p y ´ tc r y x ± ¶z· p z ± r z y®);
 a (strip_tac THEN strip_tac THEN strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a contr_tac;
 a (all_asm_fc_tac[]);
 a (spec_nth_asm_tac 6 ¬v®);
@@ -1336,7 +1414,7 @@ Now a shorter formulation of bottomless pits.
 set_goal([], ¬µr· well_founded r ´ ³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y®);
 a (contr_tac);
 a (lemma_tac ¬µx· ³ p x® THEN1 (strip_tac
-	THEN wf_induction_tac (asm_rule ¬well_founded r®) ¬x®));
+	THEN wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®));
 (* *** Goal "1" *** *)
 a (contr_tac
 	THEN REPEAT (all_asm_fc_tac[tc_incr_thm]));
@@ -1410,7 +1488,7 @@ val wf_¤_nochain_thm = save_pop_thm "wf_¤_nochain_thm";
 Now with second order foundation.
 
 =GFT
-wf_induct_thm = 
+Ûwf_induct_thmÝ = 
 	ô (³¶p v· p v ± µy· p y ´ ¶z· p z ± r z y)
 		´ well_founded r
 =TEX
@@ -1536,7 +1614,7 @@ val nochain_min_thm2 = save_pop_thm "nochain_min_thm2";
 It follows that all non-empty collections of predecessors under a well-founded relation have minimal elements.
 
 =GFT
-wf_min_thm = 
+Ûwf_min_thmÝ = 
 	ô µr· well_founded r
 		´ µx· (¶y· r y x) ´ ¶z· r z x ± ³¶v· r v z ± r v x
 =TEX
@@ -1701,19 +1779,19 @@ declare_infix (240, "respects");
 =TEX
 
 ¹HOLCONST
-Ü $respects: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ BOOL
+Ü $ÛrespectsÝ: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ BOOL
 ÷üüüüüüüüüüüüü
 Ü µ f r · f respects r ¤ µg h x· (µy· (tc r) y x ´ g y = h y) ´ f g x = f h x
 °
 
 ¹HOLCONST
-Ü fixed_below: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
+Ü Ûfixed_belowÝ: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
 ÷üüüüüüüüüüüüü
 Ü µf r g x· fixed_below f r g x ¤ µy· tc r y x ´ f g y = g y
 °
 
 ¹HOLCONST
-Ü fixed_at: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
+Ü Ûfixed_atÝ: (('a ­ 'b) ­ ('a ­ 'b)) ­ ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ 'a ­ BOOL
 ÷üüüüüüüüüüüüü
 Ü µf r g x· fixed_at f r g x ¤ fixed_below f r g x ± f g x = g x
 °
@@ -1767,7 +1845,7 @@ val fixed_at_lemma3 = save_pop_thm "fixed_at_lemma3";
 set_goal ([],¬µf r· well_founded r ± f respects r
 	´ µx g h· fixed_below f r g x ± fixed_below f r h x ´ µz· tc r z x ´ h z = g z®);
 a (REPEAT_N 4 strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (REPEAT strip_tac);
 a (spec_nth_asm_tac 4 ¬z®);
 a (all_asm_fc_tac [fixed_below_lemma1]);
@@ -1847,7 +1925,7 @@ val fixed_below_lemma3 = save_pop_thm "fixed_below_lemma3";
 set_goal ([],¬µr f· well_founded r ± f respects r
 	´ µx· ¶g· fixed_below f r g x ®);
 a (REPEAT_N 4 strip_tac);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (lemma_tac ¬µ u· tc r u t ´ (¶ g· fixed_at f r g u)®
 	THEN1 (REPEAT strip_tac
 	THEN all_asm_fc_tac[]
@@ -1872,7 +1950,7 @@ set_goal ([],¬µf r· well_founded r ± f respects r ´
 a (REPEAT strip_tac);
 a (lemma_tac ¬¶g· (Ì x· (Å h· fixed_at f r h x) x) = g® THEN1 prove_¶_tac);
 a (asm_rewrite_tac[]);
-a (wf_induction_tac (asm_rule ¬well_founded r®) ¬x®);
+a (wfcv_induction_tac (asm_rule ¬well_founded r®) ¬x®);
 a (rewrite_tac[get_spec ¬fixed_at®] THEN strip_tac);
 (* *** Goal "1" *** *)
 a (asm_fc_tac [list_µ_elim [¬f®, ¬r®] fixed_at_lemma3]);
@@ -1932,7 +2010,7 @@ val _ = save_cs_¶_thm (pop_thm ());
 }%ignore
 
 ¹HOLCONST
-Ü fix: (('a ­ 'b) ­ ('a ­ 'b)) ­ 'a ­ 'b
+Ü ÛfixÝ: (('a ­ 'b) ­ ('a ­ 'b)) ­ 'a ­ 'b
 ÷
 Ü µf r· well_founded r ± f respects r ´ f (fix f) = fix f
 °
@@ -1944,7 +2022,7 @@ i.e. it maps the function over the predecessors of the element and returns the r
 It may therefore be used to rephrase primitive recursive definitions, and so the result which follows may be used to establish the existence of functions defined by primitive recursion.
 
 ¹HOLCONST
-Ü  relmap : ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ ('a ­ ('a ­ 'b ­ BOOL))
+Ü  ÛrelmapÝ : ('a ­ 'a ­ BOOL) ­ ('a ­ 'b) ­ ('a ­ ('a ­ 'b ­ BOOL))
 ÷üüüüüüüüüüüüüü
 Ü  µr f· relmap r f = Ìx y z· r y x ± z = f y
 °
