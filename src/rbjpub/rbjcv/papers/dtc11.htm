@@ -1,0 +1,1392 @@
+<HTML>
+<HEAD>
+<TITLE>Logical foundations and formal verification</TITLE>
+</HEAD>
+<BODY>
+<META name="keywords" content="RbJ FoundationS PrograM VerificatioN LogiC">
+<META name="description" content="
+This position paper presents an approach to the design and development
+of environments for the production of computer systems for which we
+require to have very high degrees of assurance of correctness.
+">
+<A HREF="index.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0 ALIGN=LEFT></A>
+<CENTER><H2>Logical foundations and formal verification</H2>
+<P><H4>R.B.Jones</H4>
+<P>
+Ref: DTC/RBJ/011 Issue: 2/3  Date: 15th July 1986
+<H3>Abstract</H3></CENTER>
+<P>
+This position paper presents an approach to the design and development
+of environments for the production of computer systems for which we
+require to have very high degrees of assurance of correctness.
+<P>
+The approach is shaped by particular concern for:
+<P>
+<TABLE>
+<TR VALIGN=TOP><TD>a)</TD>
+<TD>The soundness of the logical framework within which the
+     correctness of the implementations is to be established,
+</TD></TR>
+<TR VALIGN=TOP><TD>b)</TD>
+<TD>The inviolacy of the logical framework to errors on the part of
+     the user.
+</TD></TR>
+<TR VALIGN=TOP><TD>c)</TD>
+<TD>The means whereby the correctness of the implementation of the
+     environment may be assured.
+</TD></TR>
+</TABLE>
+<P>
+In consequence the following characterise the approach proposed:
+<P>
+<TABLE>
+<TR VALIGN=TOP><TD>i)</TD>
+<TD>The approach is "foundational' rather than axiomatic. By this we
+     mean that a single logical foundation is to be established during
+     system design, and that users are permitted only definitional
+     facilities which are guaranteed not to compromise the consistency
+     of the foundation.</TD>
+</TR>
+<TR VALIGN=TOP>
+<TD>ii)</TD>
+<TD>
+The foundation is supported by some philosophical examination of
+     the nature of logical truth, and by careful examination of the
+     intended domain of discourse (our "ontology") and the required
+     expressiveness of the logic.</TD></TR>
+<TR VALIGN=TOP><TD>iii)</TD>
+<TD>
+Both the foundation and its implementation are "reductionist".
+     This means that the foundation is constructed from the simplest
+     possible core, by the process of introducing new definitions, new
+     syntactic forms, and exploiting (proven) derived rules of
+     inference.  The implementation is similarly to be built from a
+     very small core in a carefully structured way.   This reductionism
+     is intended to provide maximal confidence in the consistency of
+     our formal system, and the correctness of its implementation. We
+     expect it to lead also to economies in implementation.</TD></TR>
+<TR VALIGN=TOP><TD>iv)</TD>
+<TD>
+The foundation is type-free. A type system is to be constructed
+     over the foundation for the purpose of providing transparent means
+     of specifying the properties of the entities in the domain of
+     discourse.  These objects remain type-free, in the sense that
+     self-application is permitted and polymorphic functions are "first
+     class" entities,</TD></TR>
+</TABLE>
+<P>
+Our philosophical position has an intuitionistic flavour. We take the
+(absolute) truths of logic to be those statements which correctly
+express the consequences of applying correctly some effective
+procedure.   We suppose the correctness of execution of the elementary
+steps of an effective procedure to be supportable only by an appeal to
+the intuition.     This philosophical position provides some of the
+motivation for reducing our formal system to the smallest possible
+core.  This ensures that our intuitions are relied upon no more than is
+inescapable.
+<P>
+Three levels of language are currently envisaged, each corresponding
+also to a system architecture, and a stage in development, The lowest
+level is illustrated by a formal system corresponding closely to pure
+combinatory logic.   The middle level is intended to be    an application
+independent type theory,      The types in this system     correspond to
+(partial) specifications and to recursively enumerable sets of terms
+which satisfy the specifications. At the third level       are the prime
+languages for system development including abstract        specification
+languages and implementation languages.    Where possible  specifications
+for implementations will be expressed in extensions to the programming
+language type system.      The semantics of all these languages is
+ultimately expressed in terms of our primitive logical foundation, and
+hence the development is axiomatic only in the core foundation system.
+<PRE>
+0.   CONTENTS
+
+1.   <A HREF="dtc111.htm">INTRODUCTION</A>
+
+2.   <A HREF="dtc112.htm">PHILOSOPHY AND ONTOLOGY</A>
+     2.1 Philosophical positions
+     2.2 Ontology
+     2.3 Logical Pluralism and Conventionalism
+     2.4 Neo-constructive Ontology
+
+3.   <A HREF="dtc113.htm">PRIMITIVE FORMALISATION</A>
+     3.1  Introduction
+     3.2  Syntax
+     3.3  Axioms
+     3.4  Inference Rules
+     3.5  Abstraction
+     3.6  Definitions for encodings
+     3.7  Recursion
+     3.8  Decoding and partial encodings
+     3.9  Remarks on the Primitive Formalism
+
+4.   <A HREF="dtc114.htm">TYPES AND SPECIFICATIONS</A>
+     4.1  Introduction
+     4.2  Recursive functions
+     4.3  Recursive sets
+     4.4  Recursively enumerable sets
+     4.5  Function spaces
+     4.6  Derived rules of inference
+     4.7  Types as values
+
+5.   <A HREF="dtc115.htm">APPLICATION LANGUAGES</A>
+
+6.   <A HREF="dtc116.htm">IMPLEMENTATION</A>
+
+7.   <A HREF="dtc117.htm">VERIFICATION</A>
+
+8.   <A HREF="dtc118.htm">CONCLUSIONS</A>
+
+9.   <A HREF="dtc119.htm">REFERENCES</A>
+</PRE>
+<P>
+1.   INTRODUCTION
+<P>
+This paper proposes an approach to the problem of building support
+environments for the development of very highly assured software. It
+does so, not from a pragmatic viewpoint, but from an idealist one. It
+represents an attempt to promote the convergence of computer science
+with constructive mathematics.
+<P>
+The ideas presented here are by no means fully worked out. They are
+presented as a basis for a programme of work, with a view to obtaining
+some feedback on the merits of the proposals.
+<P>
+The first four sections present our approach to logical foundations,
+and suggest how the most elementary logical basis might be built up by
+stages into sophisticated high level specification and implementation
+languages.
+<P>
+The first stage is philosophical, and consists in adopting an attitude
+about the nature of the mathematics of computing systems.   The most
+important and concrete result of this philosophical stage is an
+ontology - a statement identifying the entities which we take to be the
+subject matter of computer science and which will constitute the domain
+of discourse of the formal systems we develop.    Included in this stage
+is clarification of what sort of statements we wish to be able to make
+about the objects in our domain of discourse.
+<P>
+Having identified our ontology, we next construct a minimal formal
+language.  In this language we may make statements about objects in our
+domain of discourse, and we may undertake formal derivations which
+establish the truth of some of these statements,   In order that we may
+be able to obtain the highest degree of assurance of the correctness of
+our development environment, and in particular that we should be able
+to assure ourselves of the consistency of our formal systems and the
+correctness of their implementations, primary objectives in chasing
+this first level of formalisation are generality and simplicity.  It is
+intended to be easy to reason about rather than easy to reason in, and
+hence consists of the simplest possible sufficiently expressive formal
+system.  This system is type-free,
+<P>
+The third stage is the establishement of a more usable formal language
+in which the properties of entities may be specified and proven.  This
+is done by providing a new syntax for constructs expressible in the
+basic formal system, and by establishing derived inference rules which
+facilitate proofs.   The language in which specifications are expressed
+may be regarded as a type theory, The types in this theory are however
+purely a means of expressing specif ications.           They place no
+restrictions on term formation, and play no part in securing the
+consistency of the logic,   The "types" express properties of terms.    A
+term may have many properties, and hence many types, The objects in
+the domain of discourse might therefore better be described as
+polytypical than polymorphic.
+<P>
+The formal "type-theory" we propose to establish during the third phase
+is the mathematical foundation for a variety of (more or less problem
+oriented) development languages,, among which Ada might number.  These
+languages are addressed during our fourth phase.  Such languages would
+be established by specifying their syntax and providing a denotational
+semantics in the type-theory.  Along with programming languages such as
+Ada, specialised specification languages would be established, together
+with appropriate libraries of derived inference techniques.          The
+programmer is thereby provided with a formal language in which he may
+reason in as natural a way as possible about the properties of his
+programs,
+<P>
+In section 6 we give some indication of how we propose to implement a
+support environment for these languages. Our final section addresses
+the problem of verifying such an environment.
+<P>
+2.   PHILOSOPHY AND ONTOLOGY
+<P>
+2.1  Philosophical positions
+<P>
+Any formal foundation system for mathematics is necessarily connected
+more or less intimately with some philosophical position upon the
+nature of mathematics.
+<P>
+The three principal 'schools' of philosophy of mathematics in the
+twentieth century have been logicism, intuitionism, and formalism.
+<P>
+Logicism, of which Bertrand Russell was one of the principal
+proponents, is the thesis that the whole of mathematics is ultimately
+reducible to symbolic logic.  In "The Principles of Mathematics"
+[Rus03] (the manuscript of which was completed on the last day of the
+19th century),  Russell states that: "The fact that all Mathematics is
+Symbolic Logic is one of the greatest discoveries of our age; and when
+this fact has been established, the remainder of the principles of
+mathematics consists in the analysis of Symbolic Logic itself."
+<P>
+Intuitionism, a school of thought most prominently associated with
+Brouwer rejects classical mathematics in favour of the more spartan
+constructive mathematics.    According to Bishop [Bis67] an important
+element of the intuitionist position is that: "every mathematical
+statement ultimately expresses the fact that if we perform certain
+computations within the set of positive integers, we shall get certain
+results".   Intuitionists reject some of the principles of classical
+logic, notably the law of the excluded middle.
+<P>
+Formalism, a doctrine and a programme due to Hilbert, is characterised
+by the view that classical mathematics may be established by formal
+derivation from plausible axioms, provided that the consistency of the
+formal axiomatisation is established by "finitary" or "constructive"
+means.
+<P>
+Of these positions only the intuitionist position has survived intact
+to the present day, though it remains a position which the majority of
+working mathematicians find unacceptable.
+<P>
+The logicist position failed to be established primarily because two of
+the principles (axioms) necessary for the development of classical
+mathematics are difficult to establish as principles of logic.  Neither
+the axiom of infinity nor the axiom of choice can be convincingly shown
+to be logically necessary propositions.
+<P>
+The formalist programme was shown to be unachievable by Kurt Godel, he
+demonstrated that classical mathematics is not completely formalisable,
+and that no formalisation of arithmetic can be proven consistent by
+finitary means [God31].
+<P>
+2.2  Ontology
+<P>
+Associated with each of the philosophical positions outlined above are
+underlying ideas on the population of the universe of mathematics, on
+what, as far as mathematics is concerned, "exists".  Logicism and
+formalism share similar ontologies,, since they both aim to provide a
+foundation for "classical" mathematics.   They differ to some degree in
+the formal system in which mathematics is derived, and differ widely in
+how the formalisation is to be philosophically justified, but
+ontologically they are broadly similar.
+<P>
+The underlying ontology is that of a hierarchy of sets, built up in
+stages from a (possibly empty) collection of individuals.     Hatcher
+describes this in [Hat82] (speaking with reference to the Zermelo-
+Fraenkel axiomatisation of set theory) " ... the hierarchy of sets we
+envisage consists of all the sets we can obtain by starting with the
+null set and iterating, in the indicated manner, our power set and
+union operations any transfinite number of times."
+<P>
+This process rehabilitates Cantor's informal set theory, after
+Russell's paradox had shown Frege's formalisation of it to be
+inconsistent, by restricting abstraction so that no set can be formed
+until after the formation of all the sets which it contains, (this is
+not the same as requiring that a description of a set may not mention
+any sets not formed before it).      This may be restated as the
+requirement that the transitive closure of the membership relation is
+anti-reflexive (and hence its reflexive closure is a partial ordering
+on the universe of sets).      Though this last condition is not fully
+adhered to by all the formal foundation systems for classical
+mathematics, (Quine's New Foundations [Qui63] being one counter-
+example), one of its consequences, that functions may not be members of
+their own domains, is present in all classical foundation systems of
+which I am aware.
+<P>
+The intuition behind this ontological position is probably attributable
+to Bertrand Russell. The first attempt to articulate the idea is in
+[Rus03], and results from Russell's attempts to identify the logical
+errors which give rise to the paradoxes.  When the idea is elaborated
+in Russell's Theory of Types [Rus08], it is easily confused with the
+proscription of impredicative definitions, but seems still to be a part
+of the underlying intuition.  Although "first-order" axiomatisations of
+set theory began without such a clear commitment to a hierarchy
+[Zer08], in the later axiomatisations known now as ZF and NBG (see
+[Hat82]), the hierarchy is cleaned up by the inclusion of an axiom of
+regularity,
+<P>
+Russell's intuition cuts across the intuitions which are encouraged by
+an acquaintance with digital computers (for which he can hardly be
+blamed).   In considering the behaviour of computers it is perhaps more
+natural to consider types as ways of interpreting objects, We can
+consider an object stored in a computer memory, at one moment as a data
+value, and at the next as a program, rule or function,
+<P>
+In computing we can accept a single countable domain and interpret the
+members of this domain in terms of types.  There appears to be no clear
+intuitive reason to proscribe applying a rule to itself, and this is
+practically very useful.
+<P>
+The significance of the problem of self application of functions has
+been argued by Dana Scott in [Sco70] and elsewhere. The theoretical
+underpinning of denotational semantics has required and resulted in
+resolution of these difficulties within a classical framework.  This is
+done by slimming down function spaces until they are small enough to be
+isomorphic to the domains over which the functions range.  Self-
+application then requires a non-standard account of the result of
+applying a function to an argument,    (One which doesn't require a set
+directly or indirectly to be a member of itself, as proscribed by the
+axiom of regularity).
+<P>
+This solution carries rather too much baggage with it to be entirely
+satisfactory as a foundation system.   If we take it to be founded on a
+first order axiomatisation of set theory, then we have first implicitly
+accept the need for a hierarchy of types.  Next, by chosing "first-
+order" logic, we determine to do mathematics in just the first level of
+this hierarchy, the individuals,     Then we construct a set theoretic
+hierarchy within this domain of "individuals", and finally collapse
+this hierarchy by slimming down function spaces until they become
+homeomorphic with their domains.  Having twice accepted a system almost
+designed to prevent self-application, it is not surprising that some
+mathematical sophistication is required to construct yet again a type
+free notion of function application within this framework,
+<P>
+Even where the formalisation of classical mathematics is not required,
+as in the work of Martin-Lof [Mar75,82] in formalising constructive
+mathematics, and that of Constable in constructing formal systems for
+the verification of programs [Con80], constraining the ontology to be
+hierarchic seems to have proven necessary to avoid inconsistency.
+<P>
+We choose to start from the beginning with a type free system.  The
+difficulty here is in giving any "mathematical" respectability to the
+system.  The term "mathematical" is now so strongly associated with
+classical set theory, that an account of semantics which does not
+ultimately result in denotations in classical set theory is in danger
+of being considered not mathematical.
+<P>
+In constructing a foundation system, our ontological intuitions are
+crucial, and the indications  are that the richness of classical
+ontologies is incompatible with a natural account of self application.
+In determining on a foundation    we will first identify our domain of
+discourse, which we consider an   important step in ensuring consistency
+in the foundation,   Before we do this we will examine more closely the
+idea of logical truth, since this provides additional motivation for
+our selected ontology.
+<P>
+2.3  Logical pluralism and Conventionalism
+<P>
+Concern for single foundation systems has largely been displaced by a
+pluralistic attitude to foundations.   Logicians and Philosophers study
+different foundation systems on their technical merits without feeling
+bound to choose between them, Mathematicians are mostly able to work in
+a way that can reasonably be interpreted in any of the classical
+systems, and Computer Scientists feel free to adopt or invent any
+formal system which suits their purposes.
+<P>
+These pluralistic attitudes have a philosphical counterpart in the
+linguistic-conventionalist account of the status of logical principles.
+This principle states (roughly) that a logical truth is true in virtue
+of the meanings of the terms it contains, i.e. in virtue of accepted
+linguistic conventions.   Pluralism and conventionalism have in common
+that they seem to support the view that logical truths are not
+absolute, but are arbitrary.
+<P>
+If logical truth were entirely arbitraryg, then it would likely be of
+limited utility.    However, we know there to be, underlying the
+plurality of informal and formal logics, some common principles which
+we can claim to be absolute logical principles.
+<P>
+These principles are about conformance to rules.  Either informally or
+formally, we suggest, that the idea of logical truth depends upon
+proof, that in the essence of the idea of proof is the view that proofs
+are checkable, and that the method of checking proofs be effective.
+There may be doubt about whether a statement has a proof, but given a
+putative proof of a statement there must be an "effective procedure"
+for testing whether it is indeed a proof.
+<P>
+We now know many languages within which effective procedures may be
+described, (lambda calculus, combinatory logic, Turing machines,
+recursive functions, Post productions...) and the fact that these have
+been shown to be equivalent in expressive power gives us a basis for
+claiming that the notion of effective computability is an absolute one,
+It is from this that our notion of absolute logical truth derives.    The
+claim that a sentence is a theorem of a formal system is just the claim
+that a particular effectively computable partial function over
+sentences yields a token representative of "true" when evaluated on the
+given sentence.
+<P>
+The primitive formalism which we describe below, and hence the various
+languages which we construct from it, are capable of expressing and
+proving just those propositions which indicate the result of applying
+some effective procedure to some value,
+<P>
+2.4 Neo-constructive ontology
+<P>
+We now identify a domain of discourse and the properties we wish to
+express over this domain.
+<P>
+Since we are concerned to reason about the properties of computers and
+their programs we choose a more or less arbitrary denumerable domain,
+which we may consider as the collection of values storable in the
+memory of some ideal computing device, Functions are to be represented
+by conventions whereby the values in the domain may be interpreted as
+rules describing some computational procedure.  Properties or
+predicates are identified with partial computable functions over the
+values in the domain into some subdomain designated as representing the
+truth values.
+<P>
+As an example, we select as a domain of discourse the free combinatory
+algebra generated from the constants K and S under the binary operation
+of application.   By the use of an embedding of this domain into itself
+and a reduction process over the terms of the domain we are able to
+represent all partial computable functions over the domain using
+elements in the domain.
+<P>
+The reduction process is effected by the rules:
+<PRE>
+U                => U
+( (K u) v)       => U
+(((S U) v) W)    => ((U W)(v W))
+(U v)            => (X Y)                if u => x and v => y
+</PRE>
+Where U,V,W,X,Y are arbitrary values in our intended interpretation,
+and (u v) is the application of u to v.
+<P>
+=>* is defined as the transitive closure of =>.
+<P>
+Elements may be encoded into the domain using the rules shown below in
+section 3.6.
+<P>
+An element u of our domain is considered to satisfy the predicate
+represented by an element v if the application of v to the encoding of
+u, (which we write 'u') is reducible to K. i.e. if
+<PRE>
+                    (v 'u') =>* K
+</PRE>
+The true propositions, are those elements of our domain which are
+reducible to K under the above reduction system.
+<P>
+3.   PRIMITIVE FORMALISATION
+<P>
+3.1  Introduction
+<P>
+The primitive formal system is intended to be as simple as possible, so
+that we may have confidence in its consistency, and in the correctness
+of its implementation without either depending on proof in a less well
+founded formal system, or on proof within itself.
+<P>
+The opacity of the syntax and the inefficiency of the proof rules is
+acceptable at this level, both of these problems can be addressed
+without logical extension.
+<P>
+The key characteristics required at this stage are simplicity,
+consistency, expressiveness (with reference to what can be expressed,,
+not how it is expressed), and completeness.
+<P>
+3.2 Syntax
+<PRE>
+atom ::= "S" | "K"
+
+term ::= atom | "(" term term ")"
+
+Henceforth:
+a,b,c...        are metavariables ranging over atoms.
+x,y,t,u,v,w ... are metavariables ranging over terms.
+</PRE>
+3.3  Axioms
+<PRE>
+|- K
+</PRE>
+The "standard interpretations of the terms "S" and "K" are the
+individuals S and K. and the juxtaposition of two terms denotes the
+application of the denotation of the one to the other.  The algebra of
+terms is therefore isomorphic to our domain of interpretation. The
+axiom "|-K" indicates that "K" is our version of the proposition "True".
+<P>
+Theorems of the form (u 't') may be interpreted as assertions that the
+term t satisfies the predicate represented by the term u.
+<P>
+3.4  Inference Rules
+<P>
+We first define the postfix substitution operator [t/a]:
+<PRE>
+     a[t/a] = t
+     b[t/a] = b (provided b!=a)
+     (u v)[t/a] = (u[t/a] v[t/a])
+</PRE>
+our inference rules are then:
+<PRE>
+(K) t[u/a]               |- t[((K u)v)/a]
+(S) t[((u w)(v w))/a]    |- t[(((S u)v)w)/a]
+</PRE>
+These rules are the inverse of the reduction relationship which
+determines the truth of a proposition.  They therefore make theorems of
+just those terms whose denotation is reducible to K. and are therefore
+sound and complete.   Since neither of the inference rules permits the
+derivation of an atomic theorem, "S" is not a theorem and the system is consistent in the sense of Post.
+<P>
+3.5  Abstraction
+<P>
+In the following sections for illustrative purposes we make liberal use
+of informal syntactic abbreviations.  These are not a part of our
+primitive formal system, but we expect in due course to deal with such
+matters in fully formal ways.
+<P>
+The techniques we use for abbreviation fall into two main categories.
+Firstly we allow arbitrary sequences of letters to be used as the names
+of terms in our primitive system,    Such names are introduced by the
+notation:
+<PRE>
+m == U
+</PRE>
+Where m (or ml,m2...) ranges over names which have not previously been
+used on the left of a definition, and u is a term of our primitive
+system expressed either directly or using our conventions for
+abbreviation.   A name thus defined may then be used in all those places
+where the term on the right hand side of its def inition would otherwise
+have been permitted,
+<P>
+Our metavariables a,b... and t,u... will henceforth range over atoms
+and terms, and over abbreviations of atoms and terms.  m,ml,m2... will
+be used to range over previously undefined names, and n,nl,n2... over
+arbitrary names.
+<P>
+The second technique is the use of suggestive informally defined
+alternative syntax for important constructs, notably for abstraction
+and for recursive function definitions.
+<P>
+Other abbreviations include, dropping brackets (taking application as
+left associative), and using infix notation for some dyadic operations.
+<P>
+The identity function may be defined in terms of S and K:
+<PRE>
+I   ==          ((S K) K)
+</PRE>
+We introduce a new construct [n]t, This construct may be thought of as
+a lambda abstraction term, but is in fact an abbreviation for a
+combinator extensionally equivalent to the lambda term.  Within the
+term t, the name n loses any value for which it has previously been
+defined, and is eliminated by the following recursive definition which
+determines a combinator lacking occurrences of n.
+<P>
+We define [n]t inductively as follows:
+<PRE>
+[n]n            ==    I
+
+[n]b            ==    (K b)
+</PRE>
+provided n!=b
+<PRE>
+[n](u v)        ==    ((S [n]u) [n]v)
+
+[nl,n2]t        ==    [n1][n2]t
+</PRE>
+and in general
+<PRE>
+[nl,n2,...nn]t  ==    [nl][n2]...[nn]t
+</PRE>
+In definitions we may write:
+<PRE>
+m n == t
+</PRE>
+for
+<PRE>
+m == [n]t
+</PRE>
+or:
+<PRE>
+m nl n2 ...  nn == t
+</PRE>
+for
+<PRE>
+m == [nl,n2,... nn] t
+</PRE>
+3.6 Definitions for encodings
+<P>
+In this section we define an encoding of terms into normal terms, We
+use the notation 't' for the encoding of a term t.
+<P>
+We define True as the (curried) function which selects the first of two
+arguments.
+<PRE>
+True           ==     K
+</PRE>
+And False as the function which selects its second argument:
+<PRE>
+False X Y      ==     Y
+</PRE>
+we may now adopt a sugared syntax for conditional constructs:
+<PRE>
+If X Then Y Else Z == X Y Z
+</PRE>
+and use this to define a selection of truth functions:
+<PRE>
+X And Y       ==       If X Then Y    Else False
+X Or Y        ==       If X Then True Else Y
+X => y        ==       If X Then Y    Else True
+
+X <=> y       ==       (X => Y) And (Y => X)
+Not X         ==       If X Then False Else True
+</PRE>
+A pair constructor may be defined as function which takes any two
+values X and Y, and returns a function which X or Y depending on
+whether it is applied to True or False.
+<PRE>
+<X,Y> Z       ==       If Z Then X Else Y
+</PRE>
+The definition of the projection functions is then:
+<PRE>
+Fst X         ==       X True
+Snd X         ==       X False
+</PRE>
+We may now define our encoding of terms into terms.      This is done
+inductively.  The base step is the definition of the encoding for the
+atomic terms, the induction step is the definition of the encoding for
+an application in terms of the encodings of the constituent terms.
+<P>
+The base step is then:
+<PRE>
+'K'           ==      <True,True>
+
+'S'           ==      <True,False>
+</PRE>
+And the induction step:
+<PRE>
+Mk_app X Y    ==      <False,<X,Y>>
+</PRE>
+Mk_app (make application) makes the encoding of an application given
+the encodings of the constituent terms, We also adopt the special
+syntactic form:
+<PRE>
+'XY'          ==       Mk_app 'X' 'Y'
+</PRE>
+Functions may then be defined for analysing encoded terms, e,g,:
+<PRE>
+Is_app X      ==       Not (Fst X)
+</PRE>
+(Is_app tests whether X is the encoding of an application)
+<PRE>
+Fun X         ==       Fst (Snd X)
+</PRE>
+(Fun extracts the function part of an encoded application)
+<PRE>
+Arg X         ==       Snd (Snd X)
+</PRE>
+(Arg extracts the argument part of an encoded application)
+<P>
+An encoding is itself a term and may therefore be itself (re-)encoded,
+This allows double encodings such as "K" (='<True,True>'),    Note that
+the encoding of terms cannot be expessed as a term (due to the Church-
+Rosser property), but its restriction to the encoding of encodings can
+be expressed as a term (since all encodings are distinct normal terms
+which can be analysed using Is_app etc.).
+<P>
+3.7 Recursion
+<P>
+Now, in order to permit recursive definitions we introduce the fixed
+point operator.
+<PRE>
+Sap F == F F
+
+Y F == Sap [X]F(XX)
+</PRE>
+Note that Y F = [X]F(XX) ([X]F(XX)) = F ([X]F(XX) [X]F(XX)) = F (Y F)
+i.e. Y F is a fixed point of F.
+<P>
+Henceforth we will admit recursive definitions, writing:
+<PRE>
+m == t
+</PRE>
+instead of
+<PRE>
+m == Y [m]t
+</PRE>
+and
+<PRE>
+m nl n2 ... nn == t
+</PRE>
+for
+<PRE>
+m = Y [m,nl,n2 .... nn] t
+</PRE>
+etc,
+<P>
+3.8  Decoding and partial encoding
+<P>
+The decoding of encoded terms may now be defined as an example of a
+term representing a predicate over terms:
+<PRE>
+Decode X ==     if   Is_app X
+                Then (Decode (Fun X)) (Decode (Arg X))
+                Else If Snd X
+                     Then K
+                     Else S
+</PRE>
+A partial encoding algorithm, defined over the set {T,F} may be
+defined:
+<PRE>
+Encode X = If X Then 'T' Else 'F'
+</PRE>
+Using the full encoding a every recursively enumerable set of terms RET
+may be represented by some term REP_RET such that:
+<PRE>
+ for any term t,       |-REP_RET 't'
+                           iff t mem RET.
+</PRE>
+3.9 Remarks on the primitive formalism
+<P>
+The key characteristics idehtif ied in section 3.1 were simplicity,
+consistency, expressiveness and completeness.
+<P>
+The system is evidently simple.
+<P>
+Its consistency in the sense of Post is immediately evident.
+<P>
+For each recursively enumerable subset of our intended domain of
+interpretation there is a term which represents that set.  For each
+individual and recursively enumerable set of individuals there is a
+term which represents the proposition that the individual is a member
+of the set.
+<P>
+In any formal logic, the ground terms which can be proven to satisfy
+any given predicate defined in that logic, are recursively enumerable.
+There is therefore a formal sense in which our logic is as expressive
+as any formal logic can be.  For any arbitrary formal system (assuming
+a reasonable definition of "formal system") the property of formulae
+known as theoremhood is expressible in our primitive logic.  We
+therefore believe that the formalism is sufficiently expressive for our
+purposes, and constitutes a foundation system on which sufficiently
+rich theories can be constructed by the use of definitions only.
+<P>
+Finally, we can say that the system is complete in the following
+sense:   all the propositions expressible are provable iff true. We
+cannot express classical negation in the system,    i.e. there is no term
+which denotes the set of unprovable terms.   This reflects the fact that
+the complement of a recursively enumerable set is not in general
+recursively enumerable.
+<P>
+4.    TYPES AND SPECIFICATIONS
+<P>
+4.1   Introduction
+<P>
+By adding "syntactic sugar" and by building a library of definitions,
+our primitive language can be built up into a more sophisticated and
+usable one,   The process of building a functional programming language
+in this way is well understood (or rather, the inverse problem, of
+implementing  a functional language using combinators).     For details see
+[Tur79a,b],  In our case the process is complicated by the need to use
+combinators  for everything, whereas in implementations of functional
+languages combinators have been used only for passing parameters, and
+other environmental data.   Examples of the use of combinators for
+arithmetic may be found in [Cur72] or [Hin72].
+<P>
+In this section we consider what it is that we are to take for
+sets, predicates, types and specifications, and how these may be
+constructed in our primitive formal system.
+<P>
+In first approaching this problem the value of the distinction between
+predicates and types was not clear.
+<P>
+The argument against a distinction between types and predicates in this
+context is as follows.
+<P>
+In logic, a primary role of types has been to constrain ontological
+commitment in order to secure the consistency of a logic.     This has
+proved to be a simple and effective way of avoiding logical paradoxes.
+More recently radical divergence from this limited role has been
+adopted by extending the expressiveness of type systems and identifying
+types with propositions ([Mar75,82],[Con80]).
+<P>
+The use of type systems for securing consistency inhibits abstraction
+by guarding against the circularities inherent in polymorphism.  For
+this reason we have adopted a type-free logical core (which is
+nevertheless consistent).  In our view, whatever its technical merits,
+the identification of types with propositions is counter-intuitive, and
+a type system extended could not be more expressive than we would
+expect to be by the use of predicates in our logic.     It is therefore
+not clear what we could expect to express in our logic by introducing
+types, which could not be expressed without them,
+<P>
+We have in fact found (what we consider to be) sufficient reason for
+introducing types as distinct from predicates, even though in our logic
+both types   and predicates will correspond (in their own ways) to
+recursively  enumerable sets of terms.   The reason lies primarily in the
+opacity of   terms representing predicates in our formalism.   This
+renders much more difficult the definition of functions whose domain is
+intended to  be a type of types, and makes all reasoning about types,
+and hence the properties of functions very tedious.
+<P>
+We therefore propose to introduce a type system as an encoding of
+predicates in a form which more transparently represents the intended
+interpretation of the terms which are members of the type.       This is
+intended to provide the necessary transparency of the specifications
+expressed in our system.   It will also provide a means of expressing,
+proving and applying derived rules of inference.  We observe that,
+while "syntactic sugar" might be used to make specifications more
+transparent to the user, it is not sufficient to enable specifications
+to be data values upon which operations may (transparently) be
+performed.
+<P>
+It may therefore be noted that while strongly motivated by ideas
+closely related to intuitionism, our formal system, and our notion of
+'type' has very little in common with the presentation of intuitionism
+due to Martin-Lof. [Mar75,82]
+<P>
+Within our framework any number of independent type systems could be
+introduced without danger of inconsistency.         Each system would
+represent an alternative encoding of the recursively enumerable sets of
+combinatory terms.  In this way we propose to provide coherent support
+for the linguistic pluralism necessary to provide optimal application
+development productivity.
+<P>
+In our system however, one type system will have a particular priority
+in having been designed to express derived rules of inference, and in
+having its type of derived rules built into an additional rule of
+inference permitting the application of any rule which has been proven
+sound.
+<P>
+By a derived rule in this context we do not mean derived rule in the
+sense in which the term is used in LCF ([Gor79]) and its variants. In
+such languages a derived rule is a procedure written in the
+metalanguage ML,, (possibly using a library of "tactics" and
+"tacticals"), which computes a proof,   In such systems there is no way
+of shortening a proof, but there are powerful facilities for automatic
+generation of proofs.    In our system the primitive formalism is so
+primitive (more primitive than LCF), that proofs, even if automatically
+generated, would be too complex if genuine shortcuts were not
+available.
+<P>
+We therefore propose that any rule of inference which can be proven
+sound may be invoked to establish a theorem without the need to furnish
+a proof in the primitive system.   A similar feature has been included
+in the Boyer-Moore theorem prover, [Boy81].
+<P>
+4.2  Recursive functions
+<P>
+Having chosen an encoding of terms into terms with distinct normal
+forms (this is a necessary, but possibly not a sufficient condition) we
+can represent recursive functions over terms, by terms which when
+applied to the encoding of a term in the domain, reduce to the encoding
+of the image of that term in the codomain.
+<P>
+That this is not possible without such an encoding follows from the
+Church-Rosser theorem, which has the consequence that two terms with
+similar normal form have the same image under any third combinatory
+term.,  The encoding enables terms with the same normal form to be
+distinguished by mapping them onto terms with distinct normal forms,
+This encoding algorithm is not, (as noted in section 3.6). expressible
+as a term, though there is a term (described above) which effects a
+decode (modulo convertibility), and encoding over limited subsets of
+the terms is expressible (notably over (True,False} or over encodings).
+<P>
+In the following subsections we show how type systems may be
+established by defining various operations over partial recursive
+functions which we describe as "type constructors".   These are strictly
+the denotations of type constructors (unless we consider the special
+type-system with the identity function as a semantic mapping).  Our
+terminology is still sub judice.
+<P>
+4.3  Recursive sets
+<P>
+By choosing representatives for the boolean values "true" and "false",
+(e.g. those given in section 3). we may represent characteristic
+functions by terms which represent boolean valued total recursive
+functions.   These characteristic functions are the characteristic
+functions of recursive sets of terms.
+<P>
+Type constructors are easy to define over recursive sets,   For example
+the following constructors can easily be seen to be definable as terms.
+<P>
+The unit type constructor U such that:
+<P>
+U 't' is the characteristic function of {t}
+<P>
+for any term t, is just an algorithm for checking (intensional)
+equality of terms.
+<P>
+For each dyadic truth function there is a corresponding operation on
+recursive characteristic functions which can be simply constructed from
+the term representing a (possibly strict) implementation of the truth
+function (such as those in section 3.6), viz:
+<PRE>
+Union X Y Z         ==  (X Z) Or (Y Z)
+
+Intersection X Y Z  ==  (X Z) And (Y z)
+</PRE>
+Also:
+<PRE>
+Complement X Y      ==   Not (X Y)
+</PRE>
+Under these operations recursive sets form a boolean algebra.
+<P>
+Unfortunately, as soon as we wish to introduce sets which are not
+decidable (with characteristic functions which are not total), the ease
+of constructing operators over types disappears.        In the case of
+partial recursive functions non-strict logical operators are required,
+which can only be defined over encodings of characteristic functions.
+<P>
+4.4  Recursively enumerable sets
+<P>
+Partial characteristic functions are mappings which for any encoded
+term will yield either a termwhich reduces to the encoding of true, or
+of false, or a term which has no normal form.  Such functions may be
+regarded as representing partial predicates, which correspond to pairs
+of disjoint recursively enumerable sets.
+<P>
+These are effectively closed under all truth functional logical
+operations and hence all these operations are themselves representable
+as terms.
+<P>
+Since partial characteristic functions sometimes fail to terminate, and
+the logical operators defined in section 3.6 are strict in their first
+argument, the methods used in section 4.3 fail to give satisfactory
+implementations of operations over recursively enumerable sets.
+<P>
+Furthermore, logical operations which are strict in neither argument
+are not expressible directly as terms in pure combinatory logic.  More
+precisely, there is no term O such that for any pair of terms t,u:
+<PRE>
+|- O t u        iff |-t or |-u
+</PRE>
+We can express this function however if we use encodings of t and u.
+If t and u are available in an encoded form, then their non termination
+can be guarded against by emulating interleaved evaluation.   So there
+is a term Ore (representing Or over encodings) such that for any pair
+of terms t,u:
+<PRE>
+|- 't' Ore 'u'             iff |-t or |-u
+</PRE>
+Furthermore, Ore can be defined in such a way that:
+<PRE>
+|- Not ('t' Ore 'u')      iff |- Not 't' and |- Not 'u'
+</PRE>
+So that Ande (And over encodings) may be defined:
+<PRE>
+Ande X Y    == Not ((Mk_app 'Not' X) Ore (Mk_app 'Not' Y))
+</PRE>
+(giving: Ande 'X' 'Y' = Not ('Not X' Ore 'Not Y'))
+<P>
+By the use of encodings we can therefore express non-strict logical
+operations, with which well behaved operations over partial
+characteristic functions may be defined. (To do this we need a partial
+encoding function EncEnc, which can be defined over encoded terms.  The
+definition is omitted.)
+<PRE>
+(X Orp Y) Z   == (Mk app X (EncEnc Z)) Ore (Mk app Y (EncEnc Z))
+</PRE>
+(giving: ('X' Orp 'Y') 'Z' = 'X 'Z'' Ore 'Y 'Z''
+<PRE>
+(X Andp Y) Z  == (Mk_app X (EncEnc Z)) Ande (Mk_app Y (EncEnc Z))
+</PRE>
+(giving: ('X' Andp 'Y') 'Z' == 'X 'Z'' Ande  'X 'Z'')
+<P>
+Orp and Andp correspond to the operations of union and intersection of
+recursively enumerable sets.
+<PRE>
+Notp X Y          Not (X Y)
+</PRE>
+Notp provides a complement, but not a true complement.   The classical
+complement of a recursively enumerable set is not in general
+recursively enumerable.       The recursively enumerable set whose
+characteristic function is obtained by applying Notp to some
+characteristic function is not uniquely determined by the recursively
+enumerable set determined by the characteristic function.  An
+interpretation of Notp in terms of operations on sets can only be given
+if partial characteristic functions are taken to represent, not single
+recursively enumerable sets, but pairs of disjoint recursively
+enumerable sets.   In this case the logical operators correspond to set
+operations as follows:
+<PRE>
+&lt;al,a2&gt; Andp &lt;bl,b2&gt; =&gt; &lt;intersection of al and bl,union of a2 and b2&gt;
+
+&lt;al,a2&gt; Orp &lt;bl,b2&gt; =&gt; &lt;union of al and bl,intersection of a2 and b2&gt;
+
+Notp &lt;a,b&gt; =&gt; &lt;b,a&gt;
+</PRE>
+The logic thus obtained is not classical.   For example, the law of the
+excluded middle does not hold.
+<P>
+Nor is it intuitionistic, since:
+<PRE>
+      A = not not A
+</PRE>
+It is a three valued logic which, in its finite operations, corresponds
+to the three valued logic due to Kleene.
+<P>
+A merit of considering types as partial characteristic functions in
+this way, with complement defined, is that the total characteristic
+functions are also closed under these operations, and the restriction
+of these operations to total characteristic functions gives a true
+complement and a classical logic.
+<P>
+Other type constructors can be defined from these.
+<P>
+Using the pairing operation defined in section 3.6 we can def ine
+a product type constructor:
+<PRE>
+(X prod Y) Z ==      (Mk_app X (EncEnc (Mk_app 'Fst' Z))
+                         Andp (Mk_app Y (EncEnc (Mk_app 'Snd' Z))
+</PRE>
+(giving: ('X' prod 'Y') 'Z' = 'X '(Fst Z) Andp 'Y '(Snd Z)'')
+<P>
+And a dependent product type constructor:
+<PRE>
+(X dprod Y) Z ==     (Mk app X (EncEnc (Mk_app 'Fst' Z))
+                    Anip(Mk_app (Mk_app Y (Mk_app 'Fst' Z))
+                                  (EncEnc (Mk_app 'Snd' Z)))
+</PRE>
+where Y is a function which maps a value of type X onto a type,
+<P>
+The dependent product type constructor takes any type X, and a function
+which maps elements of type X to types, and delivers the type of pairs
+such that the type of the first component is X and the type of the
+second is determined by the value of the first component under Y,
+Dependent products types are important as candidate representatives of
+abstract data types.
+<P>
+The idea for dependent product constructors comes (to me) from Martin-
+Lof's ITT [Mar75,82], (where it is called "disjoint union of a family
+of types"), similar type constructors also occur (among other places)
+in PL/CV3 [Con80] and Pebble [Bur84], from which our terminology is
+derived.
+<P>
+4.5  Function spaces
+<P>
+The definition of function space constructors is more difficult.
+<P>
+We have so far been rather vague about which terms may be used as
+representatives of recursively enumerable sets.       This is possible
+because all the type constructors we have illustrated so far behave
+well even if all terms are taken to represent recursively enumerable
+sets, Every term can be interpreted as determining a recursively
+enumerable set of terms, and so we could take the "type of types" to be
+the universe (represented by the term (K K)).   When we come to
+constructing function spaces however, we have found no construction
+which is as insensitive to the representative chosen as is the case for
+the, previous constructors.
+<P>
+A key question, (but not one which affects the viability of our
+proposal) is whether the space (A->B) of (total) computable functions
+from a recursively enumerable domain A into recursively enumerable
+codomain B is in general recursively enumerable.   Similarly we would
+like to know whether dependent function spaces (which we write A-?>B)
+are recursively enumerable.   If these spaces are enumerable, and if the
+operation of forming a representative combinator for a (dependent)
+function space from representative of the domain and codomains is
+computable, then we need only to determine one of the combinators which
+represents this computation and we have the basis for a maximally
+expressive type system.
+<P>
+If the function spaces are not enumerable, or if the type constructors
+are not effective then we will have to settle for an approximation
+(from below,  ie. a subset) to these spaces for which effective
+constructors can be discovered.  We have not yet resolved this problem.
+<P>
+4.6.  Derived rules of inference
+<P>
+Once we have decided how to def ine function spaces we expect to be able
+to use the function space constructor in an extra inference rule which
+will legitimise the use of derived rules of inference.
+<P>
+Since
+<PRE>
+|- Decode 'Z' iff |-Z
+</PRE>
+"Decode" is the type of theorems.
+<P>
+Consequently, for any encoded type X,
+<PRE>
+|- Decode ('X' -> 'Decode') 'Y'
+</PRE>
+and
+<PRE>
+|- X 'Z'
+</PRE>
+implies
+<PRE>
+|- Y Z
+</PRE>
+i.e. if Y maps elements of X into theorems, and Z is in X, then Y Z is
+a theorem.   We therefore propose to add this one further rule of
+inference,  which, provided our definitions are carried through
+correctly, will add no further theorems but will permit shorter proofs.
+<P>
+We should then be able to establish type inference rules as derived
+rules of inference.
+<P>
+4.7  Types as values
+<P>
+If types are identified with encodings of terms which represent partial
+characteristic functions over encodings of terms, they are data values,
+However, the form of such types bears little relationship to the
+constructors which were used to construct the type, If we require to be
+able to examine the type of an object, and discover with ease whether
+or not it is a product (for example) then a more transparent
+representation of types is required.
+<P>
+Such representations may be defined and may be given a denotational
+semantics by furnishing a semantic mapping into our clumsy
+representation.  In particular, for any application language a type
+system may be devised specifically to express the types in that
+language, or to provide an extension of the programming language type
+system sufficiently rich to serve as a specification language,
+<P>
+5.   APPLICATION LANGUAGES
+<P>
+The expressiveness of our formal system is sufficient we believe to
+define the denotational semantics of application development languages.
+By providing a logically secure framework within which specialised type
+theories with matching derived inference rules may be established, we
+hope to enable a close fit between application languages and
+specification languages.   This may enable a development methodology in
+which specifications are evolved into implementations by stages which
+are supported by automatic verification.
+<P>
+6.   IMPLEMENTATION
+<P>
+We provide here a very brief outline of how we propose to implement a
+support environment using our foundation systems.
+<P>
+Combinators have been used in the implementation of functional
+programming languages [Tur79a,79b].   The algorithm for reducing
+combinators is also a proof tactic for theorems in our primitive logic.
+To prove a putative theorem in our logic, we simply evaluate it.  If it
+evaluates to K. then it is a theorem, and by reversing all the
+reductions we obtain a proof.
+<P>
+The system used by Turner differs from our sample primitive logic. It
+does not attempt to reduce all computation to pure combinatory
+reduction.   The combinators are used instead of more traditional
+methods of passing parameters by maintaining environments.  In addition
+to pure combinators, a combinator graph may include data values from
+primitive value sets, and primitive operators on such values.
+<P>
+Furthermore, Turner uses more complex combinators than ours.   His
+implementation would not otherwise be sufficiently efficient to be
+usable for any practical purpose.  Even with these combinators and
+primitive operations combinator implementations of functional languages
+may be two orders of magnitude less efficient than fully compiled
+imperative languages.
+<P>
+More recent work on the implementation of combinator reduction systems
+has shown that the efficiency of implementation can be considerably
+improved by compiling combinators into machine code [Joh84].  We
+propose to use combinator graph reduction as an implementation
+technique for a formal methods development environment (without
+prejudice to the target execution environment).
+<P>
+In order to achieve reasonable efficiency we will make some adjustments
+to the primitive combinators to permit an efficient mapping onto the
+memory of a von-Neumann computer, We will also make provision for the
+compilation of combinators of arbitrary complexity.  This provision
+will displace the use of built in data types and primitive operations.
+<P>
+We then have a machine which is attempting (and failing) to prove a
+theorem of our primitive logical formalism.  The theorem to be proven
+is a term (held in a persistent store) part of which is an unbounded
+structure representing all the data input to the machine (in the manner
+of a lazy list).
+<P>
+The remainder of the term consists of two main elements.   The first is
+a function which may be regarded either as representing the combined
+operating system and application development software of the machine or
+as a derived inference rule, The second may be regarded either as a
+functional database (as in [Nik85]) containing all the users data, or
+as a compound proposition expressing the content of the users
+"knowledge base".
+<P>
+The theorem which the machine is trying to prove is the application of
+the derived inference rule to the conjunction of the input data with
+the knowledge base.   The theorem proving strategy is essentially
+reduction of a term of pure combinatory logic to its normal form, (the
+theorems of our primitive logic are just those terms of pure
+combinatory logic which are reducible to K).
+<P>
+The hypothesis however has no normal form, and the reduction process
+results in the generation of an infinite term.    The head of this term
+at any stage in the reduction consists of all the outputs of the
+system, while the tail represents the knowledge base, the remainder of
+the input list (new facts), and the operating system (inference rule).
+All of these are are iteratively updated during the evaluation process,
+so that the changes to the knowledge base are the effects of the
+commands occurring in the input list, and the output at the head of the
+term grows as further information is presented to users.
+<P>
+The implementation of our formal system on this engine will in some
+respects resemble that of LCF and its variants, with the following
+modifications.
+<P>
+Firstly the primitive logic is type-free, and hence much simpler,
+Secondly, the same language will be in use both for metalanguage and
+object language, resulting in further economies.  Also, as previously
+noted, derived inference rules will be established after the manner of
+[Boy81], rather than as proof generation algorithms, this is essential
+to achieving tolerable efficiency in the proof facilities, We will
+support extensions to the abstract syntax to match the establishment of
+abstract data types, and will allow flexibilty of concrete syntax as in
+the Mule system [Nip85].
+<P>
+7.  VERIFICATION
+<P>
+There are well known and serious problems in verifying verification
+systems.
+<P>
+As a result of GiSdells work [God31], we know that a formal foundation
+system cannot usefully be used to verify itself.    We are therefore
+bound ultimately to accept a formal foundation system which has not
+itself been formally verified.
+<P>
+Our reductionist approach to foundations is intended in part as a
+rational response to this situation, We suggest-that confidence in our
+ultimate formal foundations will be maximised in the following ways:
+<OL>
+<LI>The formal system should be as simple as possible.
+<LI>The system should be transparent to our intuitions.
+<LI>Essentially the same foundation should be subjected to
+     theoretical scrutiny and practical exposure over a long
+     period of time.
+</OL>
+<P>
+Our confidence in the consistency of first order axiomatisations of set
+theory is largely based upon their having survived over a long period
+of time without having been found inconsistent.  We believe that the
+approach to foundations outlined in this paper satisfied points 1 and
+2.  We believe also that our formalism is sufficiently flexible to
+underpin a wide variety of more specialised formal systems and that
+this will increase its chances of receiving the exposure that will in
+due time contribute to confidence in its sufficiency and consistency.
+In fact we are essentially formalising recursive function theory, a
+subject which has now had some 50 years of scrutiny.
+<P>
+Our foundational reductionist approach results in the step from one
+logical level of the system to the next being achieved by definition
+rather than axiomatisation.  This converts problems of consistency into
+logically less severe problems of opacity.      This way of building on
+foundations is guaranteed not to compromise the consistency of the
+system, but if there are errors in the definitions then the concepts
+defined will not be the ones intended.
+<P>
+The implementation will be constructed in an analogous way.      We
+therefore expect to implement the core foundation system as a logically
+secure bootstrap.  This results in subsequent levels of development
+being logically guaranteed not to compromise the consistency or
+correctness of the implementation.
+<P>
+Implementation of higher levels of the system will also be provably
+correct against their specifications, but this only begins to be
+helpful once we have established specification languages which are
+significantly more perspicuous than our implementation languages.
+<P>
+8.    CONCLUSIONS
+<P>
+We have outlined an approach to logical foundations for the formal
+development of computer systems which we believe when fully developed
+will offer:
+<P>
+<TABLE>
+<TR VALIGN=TOP><TD>a)</TD>
+<TD>The highest possible levels of assurance of the correctness
+     of systems developed.</TD></TR>
+<TR VALIGN=TOP><TD>b)</TD>
+<TD>
+High levels of flexibility.</TD></TR>
+<TR VALIGN=TOP><TD>c)</TD>
+<TD>Economy of implementation.</TD></TR>
+</TABLE>
+<P>
+This foundation offers a particular advantage in the exploitation of
+abstraction, increasingly seen as an important tool for formal
+development.  We offer a foundation within which mathematical concepts,
+without qualifications relating to cardinality, have denotations.
+<P>
+Considerable further work is necessary before we can be wholly
+confident that this approach can be made to deliver what we believe it
+to offer.   It is inherent in our approach that once the definition of
+the formal systems has been carried through in a fully formal way, an
+inefficient implementation will be obtainable at trivial cost.
+Provided sufficient care is taken in design, we believe that tolerably
+efficient implementations will then be relatively inexpensive.
+<P>
+9.   REFERENCES
+<PRE>
+ [Atk85]   Atkinson, Malcolm P,; Morrison, Ronald: Types, Bindings and
+           Parameters in a Persistent Environment.  In: Persistent and
+           Data Types, Persistent Programming Research Report 16,
+           University of Glasgow, 1985
+
+ [Boy81]   Boyer, RS,; Moore, J,S,: Metafunctions: proving them correct
+           and using them efficiently as new proof procedures.  In "The
+           Correctness Problem in Computer Science" (R.S.Boyer and
+           J.S.Moore, eds.), Academic Press, New York 1981.
+
+ [Bur84]   Burstall, R.; Lampson, B.: A Kernel Language for Abstract
+           Data Types and Modules, Proc. Int. Symp. on Semantics of Data
+           Types, 1984.
+
+ [Con80]   Constable, R.L.: Programs and Types. Proceedings of the 21st
+           Annual Symposium on Foundations of Computer Science,
+           Syracuse, N.Y. 1980.
+
+ [Cur72]   Curry, H.B.; Hindley, J.R.; Seldin, J.P.: Combinatory Logic
+           Volume II.  North Holland Publishing Company, 1972.
+
+ [God31]   Godel, Kurt: On Completeness and Consistency. In [Hei67].
+
+ [Gor79]   Gordon, M.; Milner, R.; Wadsworth, C,: Edinburgh LCF.
+           Springer-Verlag, Lecture Notes in Computer Science, Vol. 78.
+
+ [Hat82]   Hatcher, William S,: The Logical Foundations of Mathematics.
+           Pergamon Press 1982.
+
+ [Hei67]   van Heijenoort, Jean: From Frege to Godel, a sourcebook in
+           Mathematical Logic, 1879-1931.
+           Harvard University Press, 1967.
+
+ [Hin72]   Hindley, J.R,; Lercher, B.; Seldin, J.P.: Introduction to
+           Combinatory Logic.  Cambridge University Press, 1972.
+
+ [Joh84]   Johnsson, Thomas: Efficient Compilation of Lazy Evaluation.
+           SIGPLAN Notices Vol.19, No. 6, June 1984.
+
+ [Lam80]   Lambek, J.: From lambda-calculus to Cartesian Closed
+           Categories.    In: To H,B.Curry: Essays on Combinatory Logic,
+           Lambda-calculus and Formalism.        Edited by J.P.Seldin and
+           J.R.Hindley. Academic Press 1980.
+
+ [Mar75]   Martin-Lof P,: An intuitionistic theory of types: predicative
+           part, In Logic Colloquium 173, pp 73-118, North Holland 1975.
+
+ [Mar82]   Martin-Lof, Per: Constructive Mathematics and Computer
+           Programming, In Logic, Methodology and Philosophy of Science,
+           VI (Proc. of the 6th Int.  Cong., Hanover, 1979).  North
+           Holland Publishing Company, Amsterdam (1982).
+
+ [Nik85]   Nikhil, R.S.:   Functional Databases, Functional Languages,
+           In: Persistent and Data Types, Persistent Programming
+           Research Report 16, University of Glasgow, 1985.
+
+ [Nip85]   Nipkow, T,N,:    Mule: Persistence and Types in an IPSE. In:
+           Persistent and Data Types, Persistent Programming Research
+           Report 16.  University of Glasgow, 1985.
+
+ [Qui63]   Quine, W,V,O,: Set Theory and its Logic. Harvard University
+           Press, 1963.
+
+ [Rus03]   Russell, B,: The Principles of Mathematics. George Allen &
+           Unwin Ltd., 1903.
+
+ [Rus08]   Russell, B,:    Mathematical Logic as based on the Theory of
+           Types.  American journal of Mathematics 30, 222-262.  Also in
+           [Hei67].
+
+ [Sco70]   Scott, Dana: Outline of a Mathematical Theory of Computation,
+           oxford University Computing Laboratory, PRG-2.  Nov 1970,
+
+ [Tur79a]  Turner, D.A.: Another Algorithm for Bracket Abstraction.
+           Journal of Symbolic Logic, Vol. 44, No. 2, June 1979.
+
+ [Tur79b]  Turner, D.A.: A new implementation technique for applicative
+           languages.  Software - Practice and Experience, Vol. 9. 31-49
+           (1979)
+
+ [Tur84]   Turner, D.A.: Functional programs as executable
+           specifications.   Phil. Trans. R. Soc. Lond. A 312, 363-388
+           (1984).
+</PRE>
+<HR>
+<CENTER>
+<A HREF="index.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../../rbj.htm">
+<IMG SRC="../../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A> dated 86/7/15 HTML 96/6/6 edited 96/6/7
+</CENTER></BODY>
+</HTML>
