@@ -1,8 +1,27 @@
 =IGN
-$Id: t041.doc,v 1.3 2010/11/21 10:06:32 rbj Exp $
+$Id: t041.doc,v 1.4 2010/11/30 13:48:35 rbj Exp $
 =TEX
 
-The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of one or more finitary illative lambda-calculi with a system of type assignments.
+The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of one or more finitary illative lambda-calculi with systems of type assignment.
+
+The work is conducted by conservative extension in the context of a higher order set theory established axiomatically in HOL, which I will refer to as HOL/GSU, or just GSU\cite{rbjt042}.
+The end result is intended to be a semantic embedding of an illative lambda-calculus into HOL/GSU.
+This end is to be realised in stages as follows:
+
+\begin{itemize}
+\item Establish an infinitary illative combinatory logic.
+\begin{itemize}
+\item Define the infinitary syntax by transfinite recursion in GSU.
+\item Define the semantics, by determining a partial equivalence relation and a notion of reducibility over the syntax.
+This involves taking a least fixed point of a recursive definition of the relation and proving a result analogous to the Church-Rosser theorem to establish coherence and non-triviality of the results.
+\end{itemize}
+\item Using this as a semantic domain, a new type is then introduced, which will be the domain over which the operations in the illative lambda-calculus will be defined. 
+The theory is then developed by defining further operations as necessary and proving result which establish the required type assignment and inference rules for the embedded calculus.
+\end{itemize}
+
+At this moment after many iterations the syntax of the infinitary system may now be stable, and I have begun work on the semantics, which remains at an early stage.
+
+\subsection{Type Assignments}
 
 The systems of type assignments I am interested in have the following features:
 
@@ -502,9 +521,9 @@ First two finitary pure combinators:
 Then the sole illative combinator, which is equality or equivalence.
 
 ¹HOLCONST
-Ü $Û˜‰cÝ : 'a GSU
+Ü $Ûé‰cÝ : 'a GSU
 ÷üüüüüüüüüüü
-Ü ˜‰c = MkCcon (Nat‰u 2)
+Ü é‰c = MkCcon (Nat‰u 2)
 °
 
 Various useful combinatorial expressions may now be named.
@@ -613,8 +632,8 @@ In the following definition the argument should be a sequence of combinators.
 
 Such combinators are irreducible and injective, and it is therefore possible in principle to extract the components, for which we supply the following projection combinator.
 
-The projection combinator takes two sequances, the first effectively determining an element of the second to be extracted.
-Normally this would be supplied with two sequences of equal length and the element to be extracted from the second would be the one which corresponds to the first element of the first sequence which reduces to `T', provided that all previous values reduce to `F' (otherwise no element is selected).
+The projection combinator takes two sequences, the first effectively determining an element of the second to be extracted.
+Normally this would be supplied with two sequences of equal length and the element to be extracted from the second would be the one which corresponds to the first element of the first sequence which reduces to `T', provided that all previous values reduce to `F' (otherwise no element is selected, i.e. no reduction is possible).
 
 ¹HOLCONST
 Ü $Û—‰cÝ : 'a GSU
@@ -622,12 +641,13 @@ Normally this would be supplied with two sequences of equal length and the eleme
 Ü —‰c = MkCcon (Nat‰u 4)
 °
 
-One may think of the first sequence supplied as an argument to $—‰c$ as an ordinal $Á$ and of $—‰c\ ‰c\ Á\ Â$ as selecting the $Á^{th}$ element of $Â$, but when we do eventually come to the theory of ordinals we will not use this representation.
+One may think of the first sequence supplied as an argument to $—‰c$ as an ordinal $Á$ and of $—‰c\ ‰c\ Á\ ‰c\ Â$ as selecting the $Á^{th}$ element of $Â$, but when we do eventually come to the theory of ordinals we will not use this representation.
 Furthermore note that this way of indicating the element to be selected is determined primarily because it is convenient for constructing infinitary `case' constructions, and hence for the definition of arbitrary functions.
 
 To achieve this effect we need one further infinitary combinator, a mapping combinator.
 
 This combinator expects its second argument to be a sequence, and maps its first argument over the elements of the sequence, returning a sequence which consists of the elements of the original sequence transformed by the function supplied as the first argument.
+Of course, the intended ``transformation'' will only take place as the combinators in the new sequence are themselves reduced, the reduction arising from this combinator is just to apply the function to each element giving a sequence of applications.
 
 ¹HOLCONST
 Ü $Û™‰cÝ : 'a GSU
@@ -637,30 +657,16 @@ This combinator expects its second argument to be a sequence, and maps its first
 
 These three combinators together may be used to define a function as a graph in the following way.
 Form two corresponding sequences, the first of values in the domain of the desired function, the second having at each position the value of the function at that point.
-The required function takes some value $x$, and maps $˜\ ‰c\ v$ over the first argument, and then uses that list to determine which value to select from the second list.
+The required function takes some value $x$, and maps $¬é ‰c\ v®$ over the first argument, and then uses that list to determine which value to select from the second list.
 
+An infinitary case combinator might therefore be obtained from these three combinators as follows.
 =GFT
-	Gfun‰c	= Ìd c x· — (™(˜ x)d) c
+	Gfun‰c	= Ìx y z· — ‰c (™ ‰c (é ‰c z) ‰c x) ‰c y
 =TEX
 
-It is not expected that this will ever be done, it is imoportant only that it could be done, and this is intended to ensure that we can do `classical' mathematics in pretty much the normal way within our target calculus, which will probably be demonstrated by reconstructing a strong set theory within it.
-
-\subsubsection{Proof Contexts}
-
-=SML
-(* add_pc_thms "'icomb" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma]; *)
-
-(* add_pc_thms "'icomb" [get_spec ¬Extension®, get_spec ¬Essence®]; *)
-commit_pc "'icomb";
-
-force_new_pc "ÛicombÝ";
-merge_pcs ["misc3", "'icomb"] "icomb";
-commit_pc "icomb";
-
-force_new_pc "Ûicomb1Ý";
-merge_pcs ["misc31", "'icomb"] "icomb1";
-commit_pc "icomb1";
-=TEX
+It is not expected that this will ever be done, it is important only that it \emph{could} be done (if only by some inaccessibly infinite deity), and this is intended to ensure that we can do `classical' mathematics in pretty much the normal way within our target calculus, which will probably be demonstrated by reconstructing a strong set theory within it.
+The ability to represent arbitrary functions of infinite domains (e.g. over the reals) by such means depends upon the axiom of choice, which we do have at our disposal.
+It is intended also that the target illative lambda calculus will benefit (or perhaps in some eyes be blighted by) a choice principle.
 
 \subsection{Semantics}
 
@@ -674,14 +680,14 @@ This functor is defined using a notion of direct conversion which captures the s
 
 The question of what are the primitive combinators must therefore now be addressed.
 
-My inclination is to work with four combinators, S, K, $˜$, and $—$, of which only the last (a case combinator) is infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
+My inclination is to work with four combinators, S, K, $é$, and $—$, of which only the last (a case combinator) is infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
 I toyed with the idea that S should be made infinitary, but have decided to see whether it works without.
 
 The rationale for this is that the infinitary aspect is of marginal significance, and may be thought of as supplying strength, but just as in the role of large cardinals in set theory, the strength is bound up with ontological plenitude.
-It should be like an afterthough, the main features of the system should arise in the finitary case from the first three combinators, and the principle innovation is in the approach to giving meaning to $˜$.
+It should be like an afterthough, the main features of the system should arise in the finitary case from the first three combinators, and the principle innovation is in the approach to giving meaning to $é$.
 
-The definitions of the pure combinators (among which I count $—$) are given as conversion rules, whose reflexive symmettric transitive closure give a first approximation to the meaning of $˜$.
-If we assume given some meaning for $˜$ and obtain from it a second version by combining it with the conversion rules for the other combinators, then we have a functor over possible meanings for $˜$, which can be defined so as to be monotone relative to some appropriate ordering.
+The definitions of the pure combinators (among which I count $—$) are given as conversion rules, whose reflexive symmettric transitive closure give a first approximation to the meaning of $é$.
+If we assume given some meaning for $é$ and obtain from it a second version by combining it with the conversion rules for the other combinators, then we have a functor over possible meanings for $é$, which can be defined so as to be monotone relative to some appropriate ordering.
 The least fixed point will then be used to determine the semantics of the infinitary combinatory logic.
 
 \subsubsection{Direct Conversions for the Pure Combinators}
@@ -714,7 +720,7 @@ The projection combinator is more complicated.
 		± s = —‰c ‰c (†‰c k) ‰c (†‰c m))
 ° 
 
-As is the infinitary map.
+As is the infinitary ``map''.
 
 ¹HOLCONST
 Ü Û™‰r‰e‰dÝ : 'a GSU ­ 'a GSU ­ BOOL
@@ -742,7 +748,7 @@ With the following for the infinitary combinators, which we will consider no fur
 ¹HOLCONST
 Ü ÛDiComRedÝ : 'a GSU ­ 'a GSU ­ BOOL
 ÷üüüüüüüüüüü
-Ü µs t· DiComRed s t ¤ —‰r‰e‰d s t  ² ™‰r‰e‰d s t 
+Ü µs t· DiComRed s t ¤ —‰r‰e‰d s t ² ™‰r‰e‰d s t 
 ° 
 
 Direct finitary combinatorial equivalence is then:
@@ -787,7 +793,7 @@ Here we define a closure operation on partial equivalence relations to add in th
  Ü µ$=‰p· EqAppClosure $=‰p = Ìx y· Lub $¼‰t‰4 {ftv | ¶t u v w· t =‰p v ± u =‰p w ± x = t ‰c u ± y = v ‰c w ±  ftv = f v w}
  ° 
 
- ¹HOLCONST
+ ¹HOLCONST+
  Ü ÛEqClosureÝ : ('a GSU, FTV) BR ­ ('a GSU, FTV) BR
  ÷üüüüüüüüüüü
  Ü µf· EqClosure f = Ìx y· Lub $¼‰t‰4 {ftv | ¶v w· ftv = f v w}
@@ -806,6 +812,21 @@ Here we define a closure operation on partial equivalence relations to add in th
 
 To get a least fixed point of \emph{EqFunctor} we need to identify an ordering relative to which it is monotone.
 
+=IGN
+(* add_pc_thms "'icomb" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma]; *)
+(* add_pc_thms "'icomb" [get_spec ¬Extension®, get_spec ¬Essence®]; *)
+=SML
+commit_pc "'icomb";
+
+force_new_pc "ÛicombÝ";
+merge_pcs ["misc3", "'icomb"] "icomb";
+commit_pc "icomb";
+
+force_new_pc "Ûicomb1Ý";
+merge_pcs ["misc31", "'icomb"] "icomb1";
+commit_pc "icomb1";
+=TEX
+
 
 \section{The Finitary System}
 
@@ -817,3 +838,5 @@ It is possible that in the exploration of the semantic ideas I may have to sketc
 =SML
 set_flag ("subgoal_package_quiet", false);
 =TEX
+
+
