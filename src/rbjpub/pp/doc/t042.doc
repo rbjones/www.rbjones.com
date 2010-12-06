@@ -1,5 +1,5 @@
 =IGN
-$Id: t042.doc,v 1.1 2010/11/21 10:06:31 rbj Exp $
+$Id: t042.doc,v 1.2 2010/12/06 13:30:43 rbj Exp $
 open_theory "'a GSU";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-ord", "'savedthm_cs_∂_proof"];
 set_merge_pcs ["hol", "'wf_relp", "'wf_recp", "'GSU1", "'savedthm_cs_∂_proof"];
@@ -41,12 +41,12 @@ This is a modification of the pure set theory GS to admit urelements.
 
 Created 2010/10/08
 
-Last Change $ $Date: 2010/11/21 10:06:31 $ $
+Last Change $ $Date: 2010/12/06 13:30:43 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 
-$ $Id: t042.doc,v 1.1 2010/11/21 10:06:31 rbj Exp $ $
+$ $Id: t042.doc,v 1.2 2010/12/06 13:30:43 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -292,6 +292,7 @@ declare_infix(200, "=âu");
 ∞
 
 =GFT
+€Xâu_thm› = Ù µ s t∑ s ç Xâu t = s çâu t
 €eqâu_refl_thm› = Ù µ s∑ s =âu s
 €eqâu_sym_thm› = Ù µ s t∑ s =âu t ¥ t =âu s
 €eqâu_trans_thm› = Ù µ s t u∑ s =âu t ± t =âu u ¥ t =âu u
@@ -302,6 +303,10 @@ declare_infix(200, "=âu");
 =SML
 val Xâu_def = get_spec ¨XâuÆ;
 val eqâu_def = get_spec ¨$=âuÆ;
+
+set_goal([], ¨µs t∑ s ç Xâu t § s çâu tÆ);
+a (REPEAT µ_tac THEN PC_T1 "hol1" rewrite_tac [eqâu_def, Xâu_def] THEN prove_tac[]);
+val Xâu_thm = save_pop_thm "Xâu_thm";
 
 set_goal([], ¨µs∑ s =âu sÆ);
 a (rewrite_tac [eqâu_def] THEN prove_tac[] THEN asm_rewrite_tac[]);
@@ -1420,7 +1425,8 @@ and the empty set is a member of every galaxy:
 €Setâu_öâu_thm› =	Ù Setâu öâu
 =TEX
 =GFT
-€öâu_thm› =				Ù µ s∑ ≥ s çâu öâu
+€öâu_thm› =	Ù µ s∑ ≥ s çâu öâu
+€Xöâu_thm› = Ù µ x∑ ≥ x ç Xâu öâu
 €memâu_not_empty_thm› =	Ù µ m n∑ m çâu n ¥ ≥ n = öâu
 €öâu_çâu_galaxyâu_thm› =	Ù µ x∑ galaxyâu x ¥ öâu çâu x
 €öâu_çâu_Gxâu_thm› =		Ù µ x∑ öâu çâu Gxâu x
@@ -1430,10 +1436,12 @@ and the empty set is a member of every galaxy:
 =SML
 val öâu_def = get_spec ¨öâuÆ;
 val öâu_thm = ±_right_elim öâu_def;
+val Xöâu_thm = prove_thm ("Xöâu_thm", ¨µx∑ ≥ x ç Xâu öâuÆ, PC_T1 "hol1" rewrite_tac[Xâu_def, öâu_thm]);
+
 val Setâu_öâu_thm = ±_left_elim öâu_def;
 
-add_rw_thms [öâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
-add_sc_thms [öâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
+add_rw_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
+add_sc_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
 set_merge_pcs ["basic_hol", "'gsu-ax"];
 
 set_goal([],¨µg:'a GSU∑ galaxyâu g ¥ öâu çâu gÆ);
@@ -4090,8 +4098,9 @@ Finalisation of a proof context.
 =SML
 add_pc_thms "'gsu-fun" ([
 	Fieldâu_öâu_thm,
-	Funâu_öâu_thm,
 	öâuçâuﬂâu_thm]);
+add_rw_thms [Funâu_öâu_thm] "'gsu-fun";
+add_sc_thms [Funâu_öâu_thm] "'gsu-fun";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-fun"];
 commit_pc "'gsu-fun";
 =TEX
@@ -5409,6 +5418,9 @@ In this section we define a proof context for ordinals.
 
 =SML
 add_pc_thms "'gsu-ord" ([]);
+add_sc_thms [Ordinalâu_öâu] "'gsu-ord";
+add_rw_thms [Ordinalâu_öâu] "'gsu-ord";
+
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-ord"];
 commit_pc "'gsu-ord";
 =TEX

@@ -5,7 +5,7 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.17 2010/04/19 16:29:44 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.18 2010/12/06 13:30:43 rbj Exp $$}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
 
@@ -1564,6 +1564,172 @@ val valid_sylls = [
 =TEX
 
 The theorems are also displayed in the theory listing in \thyref{syllog1}
+
+
+\subsection{The Reduction of the Syllogism to Propositional Logic}\label{RSPL}
+
+P.V. Spade in a thumbnail history of logic remarks that some later peripatetics attempted to show that stoic propositional logic was simply the syllogism in other clothes, and others that the two are in some sense equivalent.
+
+In this section I check an aspect of such possible equivalence by exhibiting a mapping from the syllogisms into the propositional logic under which the valid syllogisms alone (excluding those supposed to exhibit the existential fallacy) are mapped to propositional tautologies.
+It is not claimed that this mapping preserves meaning.
+
+It is a kind of reduction of the decision problem for the syllogism to the decision problem for truth functional tautologies, but only in a very informal sense, since there are only a small finite set of valid syllogisms and so the decision problem is trivial.
+For this reason syllogistic logic cannot be as expressive as a modern propositional logic, but conceivably might be closer to Stoic propositional logic.
+
+=SML
+open_theory "aristotle";
+force_new_theory "syllog1p";
+=TEX
+
+\ignore{
+=SML
+force_new_pc Û"'syllog1p"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'syllog1p";
+set_merge_pcs ["misc2", "'syllog1p"];
+=TEX
+}%ignore
+
+
+
+Under the proposed mapping terms of the syllogism are mapped to propositions.
+The term "Mortal" may be thought of as being mapped to the proposition "x is Mortal".
+
+Thus the Barbara syllogism:
+
+\begin{itemize}
+\item All As are Bs
+\item All Bs are Cs	
+\item =========
+\item All As are Cs
+\end{itemize}
+
+might be rendered:
+
+=INLINEFT
+(A ´ B ± B ´ C) ´ (A ´ C)
+=TEX
+
+However, since we are working here in a sequent calculus we can render the theorems closely to the original as:
+
+=GFT
+   [A ´ B,
+    B ´ C]
+  ô A ´ C
+=TEX
+
+
+=SML
+declare_type_abbrev("TERM", [], ”BOOL®);
+=TEX
+
+Here is a table desribing the proposed mapping:
+
+\begin{center}
+\begin{tabular}[]{ | l | l | l |}
+\hline
+Aristotle Predicat & Meaning & Propositional Analogue\\
+\hline
+¬A a B® & All A are B & ¬A ´ B® \\
+¬A e B® & All A are not B & ¬A ´ ³B® \\
+¬A i B® & An A is B & ¬³(B ´ ³A)®  \\
+¬A o B® & An A is not B & ¬³(A ´ B)®  \\
+\hline
+\end{tabular}
+\end{center}
+
+
+\subsubsection{Generating The Propositions}
+
+This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 propositional tautologies which are obtained from syllogisms by this naive transformation.
+
+The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog1p}, and this section can be safely skipped by anyone whose interest is purely philosophical.
+Normally this kind of material would be hidden, it is shown here to give an impression of the size of script necessary to automate this kind of task.
+
+Mostly this uses functionality devised in the previous section to achieve a slightly different set of theorems.
+
+The following functions take a string which is the name of a syllogism, extract the vowels which occur in it and convert them into the corresponding propositional formula to give a triple of propositions.
+
+The first translates letters into functions which construct formalae.
+=SML
+fun Ûbop_from_charÝ c =
+	let fun a x y = ¬‘x® ´ ‘y®®;
+	    fun e x y = ¬‘x® ´ ³ ‘y®®;
+	    fun i x y = ¬³ ‘e x y®®;
+	    fun u x y = ¬³ ‘a x y®®
+	in case c of "a" => a | "e" => e | "i" => i | "o" => u
+	end;
+=TEX
+
+The second maps this over a list of three characters for a single syllogism.
+
+=SML
+fun Ûboptrip_from_textÝ s =
+	let val [a, b, c] = (map bop_from_char o vowels_from_string) s;
+	in (a, b, c)
+	end;
+=TEX
+
+The following functions construct a "goal" corresponding to a syllogisms.
+A goal is a list of assumptions and a conclusion, the list of assumptions contains the premises of the syllogism.
+
+=SML
+fun Ûmk_bsyllÝ (a,b,c,d) (q1, q2, q3) =
+	([q1 a b, q2 c d], q3 (mk_var("¿", ”BOOL®)) (mk_var("P", ”BOOL®)));
+
+fun Ûmk_bsyllpÝ (s, n) =
+	mk_bsyll (nth (n-1) (figures ”BOOL®)) (boptrip_from_text s);
+=TEX
+
+which can then be mapped over the list of valid syllogisms (excluding those exhibiting the existential fallacy) thus:
+
+=GFT SML
+map mk_bsyllp syllogism_data1;
+=TEX
+
+giving the following list of "goals":
+
+=GFT
+val it =
+   [([¬M ´ P®, ¬¿ ´ M®], ¬¿ ´ P®),
+      ([¬M ´ ³ P®, ¬¿ ´ M®], ¬¿ ´ ³ P®),
+      ([¬M ´ P®, ¬³ (¿ ´ ³ M)®], ¬³ (¿ ´ ³ P)®),
+      ([¬M ´ ³ P®, ¬³ (¿ ´ ³ M)®], ¬³ (¿ ´ P)®),
+      ([¬P ´ ³ M®, ¬¿ ´ M®], ¬¿ ´ ³ P®),
+      ([¬P ´ M®, ¬¿ ´ ³ M®], ¬¿ ´ ³ P®),
+      ([¬P ´ ³ M®, ¬³ (¿ ´ ³ M)®], ¬³ (¿ ´ P)®),
+      ([¬P ´ M®, ¬³ (¿ ´ M)®], ¬³ (¿ ´ P)®),
+      ([¬³ (M ´ ³ P)®, ¬M ´ ¿®], ¬³ (¿ ´ ³ P)®),
+      ([¬M ´ P®, ¬³ (M ´ ³ ¿)®], ¬³ (¿ ´ ³ P)®),
+      ([¬³ (M ´ P)®, ¬M ´ ¿®], ¬³ (¿ ´ P)®),
+      ([¬M ´ ³ P®, ¬³ (M ´ ³ ¿)®], ¬³ (¿ ´ P)®),
+      ([¬P ´ M®, ¬M ´ ³ ¿®], ¬¿ ´ ³ P®),
+      ([¬³ (P ´ ³ M)®, ¬M ´ ¿®], ¬³ (¿ ´ ³ P)®),
+      ([¬P ´ ³ M®, ¬³ (M ´ ³ ¿)®], ¬³ (¿ ´ P)®)] : (TERM list * TERM) list
+=TEX
+
+The following code generates the goals for proving the above syllogisms from the previously defined data structure desribing the valid syllogisms, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
+
+=SML
+val Ûbsps1Ý = syll_prove_and_store mk_bsyllp "P";
+=TEX
+
+\subsubsection{Proving the Syllogisms}
+
+We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
+saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+
+=SML
+val Ûvalid_bsyllsÝ = map (bsps1 (REPEAT (POP_ASM_T ante_tac) THEN REPEAT strip_tac)) syllogism_data1;
+=TEX
+
+This is the resulting value.
+=GFT
+=TEX
+
+The theorems are also displayed in the theory listing in \thyref{syllog1p}
+
+Some words about the very limited signficance of this little exercise would be appropriate here.
+
 
 \subsection{The Syllogism with The Existential Fallacy}\label{SYLL}
 

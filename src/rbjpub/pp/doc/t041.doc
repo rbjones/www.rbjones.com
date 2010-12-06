@@ -1,5 +1,5 @@
 =IGN
-$Id: t041.doc,v 1.4 2010/11/30 13:48:35 rbj Exp $
+$Id: t041.doc,v 1.5 2010/12/06 13:30:43 rbj Exp $
 =TEX
 
 The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of one or more finitary illative lambda-calculi with systems of type assignment.
@@ -39,6 +39,35 @@ This method guarantees that the resulting system is consistent relative to my se
 In the talk which follows about syntax and semantics there are two levels involved, that of the infinitary calculus (which is the interpretation constructed in GSU) and that of the finitary calculus which will be based on it.
 From the point of view of our end objective, all aspects of the infinitary calculus are part of the semantics of that finitary language.
 
+\subsection{Consistency}
+
+A few more words about consistency may be in order.
+
+The approach here is to ensure consistency in the desired logic by working from semantics to proof rules.
+The logic determined by proof rules is bound to be consistent because the proof rules are either theorems proven about the chosen semantic domain or else derived rules implemented in our metalanguage for reasoning in the new language.
+This is a natural outcome of the method which consists in implemented the desired language as a shallow embedding in a higher-order set theory.
+
+In fact, all the action in this document precedes the semantic embedding, it is preliminary work on the semantic domain in which the embedding will take place.
+
+Adoption of this method does not in itself solve the consistency problem, the problem appears in the necessary semantic preliminaries for the embedding.
+To succeed it is necessary to understand how the consistency problem appears and have some idea of how it can be resolved.
+In this case, the consistency problem for an illative lambda-calculus is to be resolved by providing a syntactic model in an infinitary illative combinatory logic.
+The consistency problem re-appears in obtaining a satisfactory account of the infinitary combinatory system.
+The infinitary syntax only becomes a model when the illative combinator of equivalence is defined over it.
+The definition of this is recursive and is not well founded.
+It is probable that if there was a total solution then one could use this with a `liar' (Epimenides) -like construction to obtain a contradiction (or possibly one can get to Curries paradox even easier).
+It is not therefore to be expected that this combinator will be total.
+Allowing this equivalence to be partially defined, in particular taking it to be the least fixed point of the defining equations under an appropriate ordering, is what gets us out of the paradox and should yield a good semantics.
+This device is to be combined with steps intended to make this semantics as rich as a strong first order set theory (one in which inaccessible cardinals can be proven to exist).
+Whether this will also yield a system of type assignments along the lines desired remains to be seen.
+
+The equivalence relation is compounded from several components of which only one is `illative' and contentious.
+There is a question how to organise these separate components and how much to do prior to devising the functor of which the least fixed point gives the semantics of equivalence.
+There is a pragmatic reason for doing as much as possible beforehand.
+If we first define the equivalence arising from all the pure combinators (including the infinitary ones), and then create a new type using these equivalence classes, we have then maximised what we will be able to do with rewriting in our final model, for two terms which are equivalent in this sense will be equal in the new type.
+
+The final step will not yield an equivalence which can be incorporated into a new type definition. 
+
 \section{The Infinitary Interpretation}
 
 I have had quite a few (lost count) iterations in my conception of the syntax of the infinitary system which I use for the semantics of the target illative lambda-calculus.
@@ -71,7 +100,7 @@ open_theory "misc3";
 force_new_theory "€icomb›";
 force_new_pc €"'icomb"›;
 merge_pcs ["'savedthm_cs_∂_proof"] "'icomb";
-new_parent "GSU";
+new_parent "equiv";
 set_merge_pcs ["misc31", "'icomb"];
 =TEX
 
@@ -148,7 +177,8 @@ val _ = a (asm_ufc_tac[] THEN asm_rewrite_tac []);
 val crepclosed_csyntax_lemma = pop_thm();
 
 val crepclosed_csyntax_thm = save_thm ("crepclosed_csyntax_thm",
-	rewrite_rule [get_spec ¨CrepClosedÆ] crepclosed_csyntax_lemma);
+	pure_rewrite_rule [get_spec ¨CrepClosedÆ,
+		get_spec ¨$Ä:('a SET≠('a SET ≠BOOL))Æ] crepclosed_csyntax_lemma);
 
 val crepclosed_csyntax_thm2 = save_thm ("crepclosed_csyntax_thm2",
 	rewrite_rule [get_spec ¨XâuÆ] crepclosed_csyntax_thm);
@@ -503,6 +533,29 @@ This gives a combinator with an empty list of arguments.
 ‹ µn∑ MkCcon n = n Ìâu öâu
 ∞
 
+=GFT
+=TEX
+
+\ignore{
+=SML
+val MkCcon_def = get_spec ¨MkCconÆ;
+
+set_goal([], ¨µx:'a GSU∑ MkCcon x ç CsyntaxÆ);
+a (strip_tac);
+a (rewrite_tac [MkCcon_def]);
+a (lemma_tac ¨Funâu (öâu:'a GSU)
+         ± Ordinalâu (Domâu (öâu:'a GSU))
+         ± (µ x:'a GSU∑ x ç Xâu (Ranâu öâu) ¥ x ç Csyntax)Æ
+	THEN1 rewrite_tac[Ordinalâu_öâu]);
+a (all_fc_tac [crepclosed_csyntax_thm]);
+a (asm_rewrite_tac[]);
+val MkCcon_ç_Csyntax_thm = save_pop_thm "MkCcon_ç_Csyntax_thm";
+
+add_rw_thms [MkCcon_ç_Csyntax_thm] "'icomb";
+add_sc_thms [MkCcon_ç_Csyntax_thm] "'icomb";
+=TEX
+}%ignore
+
 Using which we name the primitive combinators.
 First two finitary pure combinators:
 
@@ -523,7 +576,7 @@ Then the sole illative combinator, which is equality or equivalence.
 πHOLCONST
 ‹ $€Èâc› : 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ Èâc = MkCcon (Natâu 2)
+‹ $Èâc = MkCcon (Natâu 2)
 ∞
 
 Various useful combinatorial expressions may now be named.
@@ -680,13 +733,14 @@ This functor is defined using a notion of direct conversion which captures the s
 
 The question of what are the primitive combinators must therefore now be addressed.
 
-My inclination is to work with four combinators, S, K, $È$, and $ó$, of which only the last (a case combinator) is infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
+My inclination is to work with five combinators, S, K, $È$, $ó$ (projection), and $ô$ (map), of which the last two are infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
 I toyed with the idea that S should be made infinitary, but have decided to see whether it works without.
+However, the map combinator delivers can be used to make an infinitary S, so it looks like S is redundant.
 
 The rationale for this is that the infinitary aspect is of marginal significance, and may be thought of as supplying strength, but just as in the role of large cardinals in set theory, the strength is bound up with ontological plenitude.
 It should be like an afterthough, the main features of the system should arise in the finitary case from the first three combinators, and the principle innovation is in the approach to giving meaning to $È$.
 
-The definitions of the pure combinators (among which I count $ó$) are given as conversion rules, whose reflexive symmettric transitive closure give a first approximation to the meaning of $È$.
+The definitions of the pure combinators (all except $È$) are given as conversion rules, whose reflexive symmetric transitive closure give a first approximation to the meaning of $È$.
 If we assume given some meaning for $È$ and obtain from it a second version by combining it with the conversion rules for the other combinators, then we have a functor over possible meanings for $È$, which can be defined so as to be monotone relative to some appropriate ordering.
 The least fixed point will then be used to determine the semantics of the infinitary combinatory logic.
 
@@ -751,13 +805,98 @@ With the following for the infinitary combinators, which we will consider no fur
 ‹ µs t∑ DiComRed s t § óârâeâd s t ≤ ôârâeâd s t 
 ∞ 
 
-Direct finitary combinatorial equivalence is then:
+πHOLCONST
+‹ €DbComRed› : 'a GSU ≠ 'a GSU ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µs t∑ DbComRed s t § Kred s t ≤ Sred s t ≤ óârâeâd s t ≤ ôârâeâd s t 
+∞ 
+
+\subsection{Reducibility}
+
+This is a closure property.
 
 πHOLCONST
-‹ €DComEq› : 'a GSU ≠ 'a GSU ≠ BOOL
+‹ €RedClosed› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µs t∑ DComEq s t § DComRed s t ≤ DComRed t s
+‹ µr∑ RedClosed r = µc i1 i2∑ c Ìâu i1 ç Csyntax ± c Ìâu i2 ç Csyntax
+	± Domâu i1 = Domâu i2 ± (µx∑ x çâu Domâu i1 ¥ r (i1 âc x) (i2 âc x))
+	¥ r (c Ìâu i1) (c Ìâu i2)
 ∞ 
+
+πHOLCONST
+‹ €RedClosure› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ ('a GSU ≠ 'a GSU ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µr∑ RedClosure r = Ãx y∑ µr1∑ RedClosed r1 ± (Csyntax, r) Ä (Csyntax, r1) ¥ r1 x y
+∞ 
+
+\subsection{Pure Equivalence}
+
+Pure infinitary combinatorial equivalence is then:
+
+πHOLCONST
+‹ €PIComEq› : 'a GSU SET ∏ ('a GSU ≠ 'a GSU ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ PIComEq = EquivClosure (Csyntax, RedClosure DbComRed)
+∞ 
+
+=GFT
+€Equiv_PIComEq_thm› = Ù Equiv PIComEq
+=TEX
+
+\ignore{
+=SML
+val PIComEq_def = get_spec ¨PIComEqÆ;
+
+set_goal([], ¨Equiv PIComEqÆ);
+a (rewrite_tac [PIComEq_def, Equiv_EquivClosure_thm]);
+val Equiv_PIComEq_thm = save_pop_thm "Equiv_PIComEq_thm";
+=TEX
+}%ignore
+
+We now define a set of equivalence classes which will form a new type of combinators.
+
+πHOLCONST
+‹ €PureInfComb› : 'a GSU SET ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ PureInfComb x § x ç QuotientSet Csyntax (Snd PIComEq)
+∞ 
+
+=GFT
+€PureInfComb_∂_lemma› =
+   Ù µ x∑ x ç Csyntax ¥ EquivClass PIComEq x ç PureInfComb
+€∂_PureInfComb_lemma› =
+   Ù ∂ x∑ x ç PureInfComb
+=TEX
+
+\ignore{
+=SML
+val PureInfComb_def = get_spec ¨PureInfCombÆ;
+
+set_goal([], ¨µx∑ x ç Csyntax ¥ PureInfComb(EquivClass PIComEq x)Æ);
+a (rewrite_tac [PureInfComb_def, PIComEq_def, get_spec ¨EquivClassÆ, get_spec ¨QuotientSetÆ]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[get_spec ¨EquivClassÆ, EquivClosure_def] THEN REPEAT strip_tac);
+val PureInfComb_∂_lemma = save_pop_thm "PureInfComb_∂_lemma";
+
+set_goal([], ¨∂x∑ PureInfComb xÆ);
+a (∂_tac ¨EquivClass PIComEq (MkCcon öâu)Æ);
+a (lemma_tac ¨MkCcon öâu ç CsyntaxÆ THEN1 rewrite_tac[MkCcon_ç_Csyntax_thm]);
+a (all_fc_tac [PureInfComb_∂_lemma]);
+val ∂_PureInfComb_lemma = pop_thm ();
+=TEX
+}%ignore
+
+\subsection{A Church-Rosser Theorem}
+
+At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
+Since this is probably hard I am exploring a bit more before digging in to the proof.
+
+\subsection{The Type of Infinitary Combinators}
+
+=SML
+new_type_defn (["IC"], "IC", ["'a"], ∂_PureInfComb_lemma);
+=TEX
+
 
 \section{Equivalence}
 
@@ -776,14 +915,11 @@ Then we take the least fixed point of this monotone functor, and this is used to
 
 \subsection{Equivalence Closure}
 
-Given some putative equivalence relationship over the combinators, certain other equivalences may follow.
-The most obvious are any which appear in the reflexive transitive closure of the first, if it is not already thus closed.
-Less obvious are certain equivalences which arise by substitution.
+Given a number of ``immediate'' reductions over the syntax of combinators, we wish to obtain the smallest equivalence relation over the combinators which includes these reductions and which also allows substitution of equivalent subterms.
+This is to be done not for the usual notion of relation, i.e. as a set of ordered pairs or a boolean valued function over a cartesian product, but for a notion of partial relation which may be represented either as a pair of relations (one for the pairs in and one for the pairs out) or as a four-valued function over the cartesian product (true, false, neither, both).
 
-Thus, if two combinators are equivalent, and are applied to equivalent combinators, then the results will be equal.
-Conversely, if two combinators applied to equivalent operands yield distinct results, then they must be distinct.
-
-Here we define a closure operation on partial equivalence relations to add in these desirable features.
+It is unclear at the outset in what order the one should do things.
+All of the required closure properties could be obtained as a side effect of the functor whose least fixed point we will use as the value of the equivalence relation, in which case the individual iterations of the function will not 
 
 
 =GFTSHOW
@@ -802,20 +938,20 @@ Here we define a closure operation on partial equivalence relations to add in th
 
 \subsection{The Equivalence Functor}
 
-πHOLCONST
-‹ €EqFunctor› : ('a GSU, FTV) BR ≠ ('a GSU, FTV) BR
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µf∑ EqFunctor f = Ãx y∑ Lub $ºâtâ4 {ftv | ∂v w∑ DComEq v x ± DComEq w y ± ftv = f v w}
-∞ 
+=GFTSHOW
+ πHOLCONST
+ ‹ €EqFunctor› : ('a GSU, FTV) BR ≠ ('a GSU, FTV) BR
+ ˜¸¸¸¸¸¸¸¸¸¸¸
+ ‹ µf∑ EqFunctor f = Ãx y∑ Lub $ºâtâ4 {ftv | ∂v w∑ DComEq v x ± DComEq w y ± ftv = f v w}
+ ∞ 
+=TEX
 
 \subsection{Monotonicity}
 
 To get a least fixed point of \emph{EqFunctor} we need to identify an ordering relative to which it is monotone.
 
-=IGN
-(* add_pc_thms "'icomb" [evalcf_ftv_ft_lemma, evalcf_ftv_fb_lemma]; *)
-(* add_pc_thms "'icomb" [get_spec ¨ExtensionÆ, get_spec ¨EssenceÆ]; *)
 =SML
+
 commit_pc "'icomb";
 
 force_new_pc "€icomb›";

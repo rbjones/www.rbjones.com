@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADJdoc{$$Id: t039.doc,v 1.10 2010/11/09 13:32:40 rbj Exp $$}
+\def\rbjidtADJdoc{$$Id: t039.doc,v 1.11 2010/12/06 13:30:43 rbj Exp $$}
 
 \section{Equivalence Relations}
 
@@ -669,6 +669,85 @@ The following function effects the lifting of an operator.
 Ü µ a op r· UniOpLift r (a, op) = (a, Ìf· (op LiftOver (RelPower r {x:î | x < a}, r))
 Ü							{g | µi· i < a ´ g i  f i})
 °
+
+
+
+\subsection{Equivalence Closure}
+
+We are concerned here with obtaining an equivalence relation by taking the closure of some other relationship.
+
+The presentation is slicker if we define inclusion for the kinds of relationship we are working with here.
+Since there is some junk in the representation of these relations its not immediately obvious which is the best way to define inclusion.
+
+¹HOLCONST
+Ü ÛRelInclÝ : (('b)SET ¸ ('b ­ 'b ­ BOOL)) ­ (('b)SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
+÷üüüüüüüüüüü
+Ü µA r1 B r2 · RelIncl (A, r1) (B, r2) ¤ µx y· x  A ± y  A ± r1 x y ´ x  B ± y  B ± r2 x y
+°
+
+=SML
+declare_alias ("€", ¬RelIncl®);
+=TEX
+
+The obvious way to do this is to take the intersection of the equivalence relationships which contain the given relationship, and for this purpose we need to prove that such an intersection will be an equivalence relation.
+
+=GFT
+ÛEquiv_Equiv_closure_thmÝ =
+   ô µ A r
+     · Equiv
+         (A,
+             (Ì x y
+               · µ $é‰d
+                 · Equiv (A, $é‰d) ± (µ v w· r v w ´ v é‰d w) ´ x é‰d y))
+=TEX
+
+\ignore{
+=SML
+val RelIncl_def = get_spec ¬RelIncl®;
+=IGN
+set_goal ([], ¬µ(A:'d SET) (r:'d ­ 'd ­ BOOL)· Equiv (A, Ìx y:'d· µ$é‰d· Equiv(A, $é‰d) ± (µv w:'d· r v w ´ v é‰d w) ´ x é‰d y)®);
+a (REPEAT strip_tac THEN rewrite_tac [equiv_def, refl_def, sym_def, trans_def] THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val Equiv_Equiv_closure_thm = save_pop_thm "Equiv_Equiv_closure_thm";
+=SML
+set_goal ([], ¬µ(A:'d SET) (r:'d ­ 'd ­ BOOL)· Equiv (A, Ìx y:'d· µ$é‰d· Equiv(A, $é‰d) ± ((A, r) € (A, $é‰d)) ´ x é‰d y)®);
+a (REPEAT strip_tac THEN rewrite_tac [equiv_def, refl_def, sym_def, trans_def, RelIncl_def] THEN REPEAT strip_tac
+	THEN REPEAT (all_asm_ufc_tac[]));
+val Equiv_Equiv_closure_thm = save_pop_thm "Equiv_Equiv_closure_thm";
+=TEX
+}%ignore
+
+We therefore define the equivalence closure of a relation thus:
+
+¹HOLCONST
+Ü ÛEquivClosureÝ : (('b)SET ¸ ('b ­ 'b ­ BOOL)) ­ (('b)SET ¸ ('b ­ 'b ­ BOOL))
+÷üüüüüüüüüüü
+Ü µA r·  EquivClosure (A, r) = (A, Ìx y· µ$é‰d· Equiv(A, $é‰d) ± (A, r) € (A, $é‰d) ´ x é‰d y)
+°
+
+The following are then immediate:
+
+=GFT
+ÛEquiv_EquivClosure_thmÝ = ô µ A r· Equiv (EquivClosure (A, r))
+ÛEquivClosure_MinEquiv_thmÝ =
+   ô µ A r $é‰d· Equiv (A, $é‰d) ± (A, r) € (A, $é‰d)
+	´ EquivClosure (A, r) € (A, $é‰d)
+=TEX
+
+\ignore{
+=SML
+val EquivClosure_def = get_spec ¬EquivClosure®;
+
+set_goal([], ¬µA r· Equiv(EquivClosure (A, r))®);
+a (rewrite_tac [EquivClosure_def, Equiv_Equiv_closure_thm]);
+val Equiv_EquivClosure_thm = save_pop_thm "Equiv_EquivClosure_thm";
+
+set_goal([], ¬µA r $é‰d· Equiv(A, $é‰d) ± (A, r) € (A, $é‰d) ´ EquivClosure (A, r) € (A, $é‰d)®);
+a (rewrite_tac [EquivClosure_def, Equiv_Equiv_closure_thm, RelIncl_def]
+	THEN REPEAT strip_tac THEN REPEAT (all_asm_ufc_tac[]));
+val EquivClosure_MinEquiv_thm = save_pop_thm "EquivClosure_MinEquiv_thm";
+=TEX
+}%ignore
 
 \section{Universal Algebra}
 
