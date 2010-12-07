@@ -5,7 +5,7 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.19 2010/12/06 13:36:00 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.20 2010/12/07 17:16:34 rbj Exp $$}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
 
@@ -1423,7 +1423,7 @@ The use of vowels for the predicators allows the valid cases to be named using n
 The first vowel tells you the kind of syllogism in the first premise, the second vowel that in the second premise, and the third vowel that in the conclusion.
 
 In the following table the names in square brackets are for syllogisms which exhibit the existential fallacy.
-Then names followed by exclamation marks are ``subalternate mood'', they do not appear in aristotle but are valid in the models here for which the existential fallacy holds
+The names followed by exclamation marks are ``subalternate mood'', they do not appear in aristotle but are valid in the models here for which the existential fallacy holds
 \footnote{This I got from Spade \cite{spade2002}.}.
 
 \begin{center}
@@ -1516,7 +1516,29 @@ val €syllogism_data1› =
 map mk_syllp1 syllogism_data1;
 =TEX
 
-The following code generates the goals for proving the above syllogisms from the data structure, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
+The following four syllogisms held to be valid by Aristotle exhibit the ``existential fallacy'' and are less straighforward to construe as sound.
+The appear to be valid only if the predicates involved are non-empty.
+
+=SML
+val €syllogism_data2› = 
+	[("Darapti", 3),	
+	("Felapton", 3),
+	("Bramantip", 4),
+	("Fesapo", 4)];
+=TEX
+
+Under the assumptions which seem necessary to consider those four syllogisms sound the following five further syllogisms are also sound, though not noted by Aristotle.
+
+=SML
+val €syllogism_data3› = 
+	[("Barbari", 1),
+	("Celaront", 1),
+	("Cesaro", 2),
+	("Camestrop", 2),
+	("Camenop", 4)];
+=TEX
+
+The following code generates the goals for proving syllogisms from the data structures, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
 
 =SML
 fun €syll_prove› msp suff tac (a,n) =
@@ -1566,15 +1588,19 @@ val valid_sylls = [
 The theorems are also displayed in the theory listing in \thyref{syllog1}
 
 
-\subsection{A Reduction of the Syllogism to Propositional Logic}\label{RSPL}
+\subsection{Reductions of the Syllogism}\label{RSPL}
 
-P.V. Spade in a thumbnail history of logic remarks that some later peripatetics attempted to show that stoic propositional logic was simply the syllogism in other clothes, and others that the two are in some sense equivalent.
+P.V. Spade, in a thumbnail history of logic \cite{spade2002} remarks that some later peripatetics attempted to show that stoic propositional logic was simply the syllogism in other clothes, and others that the two are in some sense equivalent.
 
-In this section I check an aspect of such possible equivalence by exhibiting a mapping from the syllogisms into the propositional logic under which the valid syllogisms alone (excluding those supposed to exhibit the existential fallacy) are mapped to propositional tautologies.
-It is not claimed that this mapping preserves meaning.
+A partial reduction to propositional logic via set theory is exhibited in this section.
+The reduction to set theory is semantically more plausible than the second step to proposional logic, and provides an account of the supposed existential fallacies, which are not accounted for by the propositional reduction.
 
-It is a kind of reduction of the decision problem for the syllogism to the decision problem for truth functional tautologies, but only in a very informal sense, since there are only a small finite set of valid syllogisms and so the decision problem is trivial.
+We obtain kind of reduction of the decision problem for the (non-existentially fallacious) syllogism to the decision problem for truth functional tautologies, but only in a very informal sense, since there are only a small finite set of valid syllogisms (though schemata) and so the decision problem is trivial.
 For this reason syllogistic logic cannot be as expressive as a modern propositional logic, but conceivably might be closer to Stoic propositional logic.
+
+The first step, to set theory is illustrated in the Wikpedia article on the syllogism, which gives Venn diagrams for all 24 "valid" syllogisms.
+
+Though it is convenient to think of this as a two stage reduction, in the following implementation the two different reducations are generated independently.
 
 =SML
 open_theory "aristotle";
@@ -1603,13 +1629,31 @@ Thus the Barbara syllogism:
 \item All As are Cs
 \end{itemize}
 
-might be rendered:
+might be rendered set theoretically as:
+
+=INLINEFT
+(A Ä B ± B Ä C) ¥ (A Ä C)
+=TEX
+
+where A, B and C are subsets of some universal set,
+or in the propositional calculus as:
 
 =INLINEFT
 (A ¥ B ± B ¥ C) ¥ (A ¥ C)
 =TEX
 
+where A, B and C are boolean values or propositions.
+
 However, since we are working here in a sequent calculus we can render the theorems closely to the original as:
+
+
+=GFT
+   [A Ä B,
+    B Ä C]
+  Ù A Ä C
+=TEX
+
+or
 
 =GFT
    [A ¥ B,
@@ -1617,22 +1661,34 @@ However, since we are working here in a sequent calculus we can render the theor
   Ù A ¥ C
 =TEX
 
+A set theoretic presentation of the existential fallacies can be obtained by assuming that the sets are not empty, but no similarly plausible account of these syllogisms is available in propositional logic.
+
+The following two definitions provide names for the types of the variables in the two cases.
 
 =SML
-declare_type_abbrev("TERM", [], îBOOLÆ);
+declare_type_abbrev("STERM", [], î'a SETÆ);
+declare_type_abbrev("PTERM", [], îBOOLÆ);
 =TEX
 
-Here is a table desribing the proposed mapping:
+Here is a table describing the proposed mappings:
 
 \begin{center}
-\begin{tabular}[]{ | l | l | l |}
+\begin{tabular}[]{ | l | l | c | c |}
 \hline
-Aristotle Predicat & Meaning & Propositional Analogue\\
+Aristotle & Meaning & Set Theory & Propositional Analogue\\
 \hline
-¨A a BÆ & All A are B & ¨A ¥ BÆ \\
-¨A e BÆ & All A are not B & ¨A ¥ ≥BÆ \\
-¨A i BÆ & An A is B & ¨≥(B ¥ ≥A)Æ  \\
-¨A o BÆ & An A is not B & ¨≥(A ¥ B)Æ  \\
+A a B & All A are B & A Ä B & A ¥ B \\
+A e B & All A are not B & 
+=INLINEFT
+AÄ~B
+=TEX
+ & A ¥ ≥B \\
+A i B & An A is B & 
+=INLINEFT
+≥(AÄ~B)
+=TEX
+ & ≥(A ¥ ≥B)  \\
+A o B & An A is not B & ≥(A Ä B) & ≥(A ¥ B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -1640,16 +1696,30 @@ Aristotle Predicat & Meaning & Propositional Analogue\\
 
 \subsubsection{Generating The Propositions}
 
-This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 propositional tautologies which are obtained from syllogisms by this naive transformation.
+This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 theorems of set theory and 15 propositional tautologies which are obtained from non-existential syllogisms by this naive transformation.
 
 The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog1p}, and this section can be safely skipped by anyone whose interest is purely philosophical.
-Normally this kind of material would be hidden, it is shown here to give an impression of the size of script necessary to automate this kind of task.
 
-Mostly this uses functionality devised in the previous section to achieve a slightly different set of theorems.
+Mostly this uses functionality devised in the previous section to achieve two slightly different sets of theorems.
 
 The following functions take a string which is the name of a syllogism, extract the vowels which occur in it and convert them into the corresponding propositional formula to give a triple of propositions.
 
 The first translates letters into functions which construct formalae.
+
+First the set theory version:
+
+=SML
+fun €sop_from_char› c =
+	let fun a x y = ¨ëxÆ Ä ëyÆÆ;
+	    fun e x y = ¨ëxÆ Ä ~ëyÆÆ;
+	    fun i x y = ¨≥ ëe x yÆÆ;
+	    fun u x y = ¨≥ ëa x yÆÆ
+	in case c of "a" => a | "e" => e | "i" => i | "o" => u
+	end;
+=TEX
+
+Then the propositional logic:
+
 =SML
 fun €bop_from_char› c =
 	let fun a x y = ¨ëxÆ ¥ ëyÆÆ;
@@ -1660,27 +1730,62 @@ fun €bop_from_char› c =
 	end;
 =TEX
 
-The second maps this over a list of three characters for a single syllogism.
+The second maps this over a list of three vowels extracted from the name of a single syllogism.
 
 =SML
+fun €soptrip_from_text› s =
+	let val [a, b, c] = (map sop_from_char o vowels_from_string) s;
+	in (a, b, c)
+	end;
+
 fun €boptrip_from_text› s =
 	let val [a, b, c] = (map bop_from_char o vowels_from_string) s;
 	in (a, b, c)
 	end;
 =TEX
 
-The following functions construct a "goal" corresponding to a syllogisms.
+The following functions constructs a "goal" (something to prove) corresponding to a syllogism.
 A goal is a list of assumptions and a conclusion, the list of assumptions contains the premises of the syllogism.
 
 =SML
+fun €mk_ssyll› (a,b,c,d) (q1, q2, q3) =
+	([q1 a b, q2 c d], q3 (mk_var("ø", îSTERMÆ)) (mk_var("P", îSTERMÆ)));
+
+fun €mk_ssyllp› (s, n) =
+	mk_ssyll (nth (n-1) (figures îSTERMÆ)) (soptrip_from_text s);
+
 fun €mk_bsyll› (a,b,c,d) (q1, q2, q3) =
-	([q1 a b, q2 c d], q3 (mk_var("ø", îBOOLÆ)) (mk_var("P", îBOOLÆ)));
+	([q1 a b, q2 c d], q3 (mk_var("ø", îPTERMÆ)) (mk_var("P", îPTERMÆ)));
 
 fun €mk_bsyllp› (s, n) =
-	mk_bsyll (nth (n-1) (figures îBOOLÆ)) (boptrip_from_text s);
+	mk_bsyll (nth (n-1) (figures îPTERMÆ)) (boptrip_from_text s);
 =TEX
 
 which can then be mapped over the list of valid syllogisms (excluding those exhibiting the existential fallacy) thus:
+
+=GFT SML
+map mk_ssyllp syllogism_data1;
+=TEX
+
+giving the following list of "goals":
+
+=GFT
+val it =
+   [  ([¨M Ä PÆ, ¨ø Ä MÆ], ¨ø Ä PÆ),
+      ([¨M Ä ~ PÆ, ¨ø Ä MÆ], ¨ø Ä ~ PÆ),
+      ([¨M Ä PÆ, ¨≥ ø Ä ~ MÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨M Ä ~ PÆ, ¨≥ ø Ä ~ MÆ], ¨≥ ø Ä PÆ),
+      ([¨P Ä ~ MÆ, ¨ø Ä MÆ], ¨ø Ä ~ PÆ),
+      ([¨P Ä MÆ, ¨ø Ä ~ MÆ], ¨ø Ä ~ PÆ),
+      ([¨P Ä ~ MÆ, ¨≥ ø Ä ~ MÆ], ¨≥ ø Ä PÆ),
+      ([¨P Ä MÆ, ¨≥ ø Ä MÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ M Ä ~ PÆ, ¨M Ä øÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨M Ä PÆ, ¨≥ M Ä ~ øÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨≥ M Ä PÆ, ¨M Ä øÆ], ¨≥ ø Ä PÆ),
+      ([¨M Ä ~ PÆ, ¨≥ M Ä ~ øÆ], ¨≥ ø Ä PÆ),
+      ([¨P Ä MÆ, ¨M Ä ~ øÆ], ¨ø Ä ~ PÆ),
+      ([¨≥ P Ä ~ MÆ, ¨M Ä øÆ], ¨≥ ø Ä ~ PÆ),
+=TEX
 
 =GFT SML
 map mk_bsyllp syllogism_data1;
@@ -1710,7 +1815,8 @@ val it =
 The following code generates the goals for proving the above syllogisms from the previously defined data structure desribing the valid syllogisms, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
 
 =SML
-val €bsps1› = syll_prove_and_store mk_bsyllp "";
+val €ssps1› = syll_prove_and_store mk_ssyllp "_s";
+val €bsps1› = syll_prove_and_store mk_bsyllp "_p";
 =TEX
 
 \subsubsection{Proving the Syllogisms}
@@ -1719,17 +1825,100 @@ We now apply this to the complete set of syllogisms which are valid and do not e
 saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
 
 =SML
-val €valid_bsylls› = map (bsps1 (REPEAT (POP_ASM_T ante_tac) THEN REPEAT strip_tac)) syllogism_data1;
+val €valid_ssylls› =
+	map (ssps1
+		(REPEAT (POP_ASM_T ante_tac)
+		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[]))
+	syllogism_data1;
+
+val €valid_bsylls› =
+	map (bsps1
+		(REPEAT (POP_ASM_T ante_tac)
+		THEN REPEAT strip_tac))
+	syllogism_data1;
 =TEX
 
 This is the resulting value.
 =GFT
+val valid_bsylls =
+   [("Barbara", M ¥ P, ø ¥ M Ù ø ¥ P),
+      ("Celarent", M ¥ ≥ P, ø ¥ M Ù ø ¥ ≥ P),
+      ("Darii", M ¥ P, ≥ (ø ¥ ≥ M) Ù ≥ (ø ¥ ≥ P)),
+      ("Ferio", M ¥ ≥ P, ≥ (ø ¥ ≥ M) Ù ≥ (ø ¥ P)),
+      ("Cesare", P ¥ ≥ M, ø ¥ M Ù ø ¥ ≥ P),
+      ("Camestres", P ¥ M, ø ¥ ≥ M Ù ø ¥ ≥ P),
+      ("Festino", P ¥ ≥ M, ≥ (ø ¥ ≥ M) Ù ≥ (ø ¥ P)),
+      ("Baroco", P ¥ M, ≥ (ø ¥ M) Ù ≥ (ø ¥ P)),
+      ("Disamis", ≥ (M ¥ ≥ P), M ¥ ø Ù ≥ (ø ¥ ≥ P)),
+      ("Datisi", M ¥ P, ≥ (M ¥ ≥ ø) Ù ≥ (ø ¥ ≥ P)),
+      ("Bocardo", ≥ (M ¥ P), M ¥ ø Ù ≥ (ø ¥ P)),
+      ("Ferison", M ¥ ≥ P, ≥ (M ¥ ≥ ø) Ù ≥ (ø ¥ P)),
+      ("Camenes", P ¥ M, M ¥ ≥ ø Ù ø ¥ ≥ P),
+      ("Dimaris", ≥ (P ¥ ≥ M), M ¥ ø Ù ≥ (ø ¥ ≥ P)),
+      ("Fresison", P ¥ ≥ M, ≥ (M ¥ ≥ ø) Ù ≥ (ø ¥ P))] : (string * THM) list
 =TEX
+
+.. which is a list of name/theorem pairs of the tautologies corresponding to each syllogism.
 
 The theorems are also displayed in the theory listing in \thyref{syllog1p}
 
-Some words about the very limited signficance of this little exercise would be appropriate here.
+We now adjust the set theoretic reduction to deliver propositions including a non-emptyness assumption and obtain proofs of the nine syllogisms which involve the ``existential fallacy''.
 
+=SML
+fun €mk_xssyll› (a,b,c,d) (q1, q2, q3) =
+	([¨≥ ({}:'a SET) ç {M; ø; P}Æ, q1 a b, q2 c d], q3 (mk_var("ø", îSTERMÆ)) (mk_var("P", îSTERMÆ)));
+
+fun €mk_xssyllp› (s, n) =
+	mk_xssyll (nth (n-1) (figures îSTERMÆ)) (soptrip_from_text s);
+=TEX
+
+which can then be mapped over the rest of the syllogisms thus:
+
+=GFT SML
+map mk_xssyllp (syllogism_data2 @ syllogism_data3);
+=TEX
+
+giving the following list of "goals":
+
+=GFT
+val it =
+   [  ([¨≥ {} ç {M; ø; P}Æ, ¨M Ä PÆ, ¨M Ä øÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨M Ä ~ PÆ, ¨M Ä øÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨P Ä MÆ, ¨M Ä øÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨P Ä ~ MÆ, ¨M Ä øÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨M Ä PÆ, ¨ø Ä MÆ], ¨≥ ø Ä ~ PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨M Ä ~ PÆ, ¨ø Ä MÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨P Ä ~ MÆ, ¨ø Ä MÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨P Ä MÆ, ¨ø Ä ~ MÆ], ¨≥ ø Ä PÆ),
+      ([¨≥ {} ç {M; ø; P}Æ, ¨P Ä MÆ, ¨M Ä ~ øÆ], ¨≥ ø Ä PÆ)]
+: (TERM list * TERM) list
+=TEX
+
+The following code generates the goals for proving the above syllogisms from the previously defined data structure desribing the valid syllogisms, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
+
+=SML
+val €xssps1› = syll_prove_and_store mk_xssyllp "_s";
+=TEX
+
+\subsubsection{Proving the Syllogisms}
+
+We now apply this to the complete set of syllogisms which are valid and do not exhibit the existential fallacy,
+saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+
+=SML
+val €valid_xssylls› =
+	map (xssps1
+		(REPEAT (POP_ASM_T ante_tac)
+		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[]))
+	(syllogism_data2 @ syllogism_data3);
+=IGN
+set_goal ([¨≥ ({}:'a SET) ç {M; ø; P}Æ, ¨M Ä (P:'a SET)Æ, ¨M Ä (ø:'a SET)Æ], ¨≥ ø Ä ~ (P:'a SET)Æ);
+a (REPEAT(POP_ASM_T ante_tac));
+a (PC_T1 "hol1" rewrite_tac[]);
+a (prove_tac[]);
+=TEX
+
+Some words about the very limited signficance of this little exercise would be appropriate here!
 
 \subsection{The Syllogism with The Existential Fallacy}\label{SYLL}
 
@@ -1893,23 +2082,10 @@ val eo_conv_thm = A e B Ù B o A : THM
 The valid syllogisms have been described in Section \ref{ValidSyllogisms}.
 
 The following valid syllogisms exhibit the existential fallacy and were not provable in the previous model.
+The first four were known to Aristotle, the next five were subsequently identified.
 
-=SML
-val €syllogism_data2› = 
-	[("Darapti", 3),	
-	("Felapton", 3),
-	("Bramantip", 4),
-	("Fesapo", 4)];
-
-val €syllogism_data3› = 
-	[("Barbari", 1),
-	("Celaront", 1),
-	("Cesaro", 2),
-	("Camestrop", 2),
-	("Camenop", 4)];
-=TEX
-
-All nineteen syllogisms supposed valid by Aristotle are true under this semantics and have been provenThe actual theorems are shown in the theory listing in \thyref{syllog2}.
+All twnety four syllogisms are true under this semantics and have been proven.
+The actual theorems are shown in the theory listing in \thyref{syllog2}.
 
 The metalanguage scripts prepared for the first model are mostly reusable for this model, with some different parameters which reflect the differences between the models.
 
