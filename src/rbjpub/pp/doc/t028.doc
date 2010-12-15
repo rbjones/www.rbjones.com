@@ -5,8 +5,16 @@ val _ =
 end;
 =TEX
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.22 2010/12/09 15:02:33 rbj Exp $$}
-\tiny[\rbjidtACIdoc]
+\ignore{
+=VDUMP t028i.tex
+Last Change $ $Date: 2010/12/15 07:01:59 $ $
+
+$ $Id: t028.doc,v 1.23 2010/12/15 07:01:59 rbj Exp $ $
+=TEX
+}%ignore
+
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.23 2010/12/15 07:01:59 rbj Exp $$}
+{\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
 
@@ -1178,14 +1186,14 @@ There are three most common approaches to the u-p syllogisms:
 \item Consider universal propositions to be, in effect, the conjunction of a universal and an existential quantification.
 \end{enumerate}
 
-Of these the last is perhaps the one most favoured today.
-However, the treatment here considers as yet only the first two, in the following stages:
+The possibilities have been addressed here as follows:
 
-\begin{itemize}
+\begin{enumerate}
 \item pure syllogism without u-p syllogisms (Section \ref{SWEF})
-\item full syllogism allowing u-p syllogisms (Section \ref{SYLL})
-\item modal syllogisms  (Section \ref{MODSYLL})
-\end{itemize}
+\item full syllogism by non-emptyness of terms (Section \ref{SYLLNE})
+\item full syllogism by existential import of universal assertions (Section \ref{SYLLEI})
+\item modal syllogisms (by non-emptyness) (Section \ref{MODSYLL})
+\end{enumerate}
 
 To this I have recently added a discussion of mappings of the syllogisms to set theory and propositional logic as a part of a discussion about whether syllogisms can be said to be tautological. 
 
@@ -1194,49 +1202,42 @@ The present treatment was based firstly on the wikipedia account of \href{http:/
 The main interest at present is the sequence of models which contributes to the formulation of an integrated model for the syllogism and the metaphysics in Section \ref{METAPHYSICSII}.
 It suffices perhaps in this context to know in which models the various syllogisms are provable, without delving into the details of proof, which are at present, sheer hackery.
 
-\subsection{Non U-P Syllogisms}\label{SWEF}
+\subsection{Generating the Syllogisms}
 
-The theory here is very simple, the presentation is complicated by the fact that the proofs have been completely automated by scripts in the metalanguage.
-These can be completely ignored by anyone who is willing to trust that \Product checks proofs correctly.
-In any case, the theorems proven are just the statements of the 15 valid forms of non-u-p syllogism.
-For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in \thyref{syllog1}.
+This following presentation of the forms of syllogism is based primarily on \href{http://en.wikipedia.org/wiki/Syllogism}{the one at wikipedia}.
 
-=SML
-open_theory "aristotle";
-force_new_theory "syllog1";
-=TEX
+In the following several different interpretations of the syllogism are formalised as shallow semantic embeddings in HOL.
+Part of the evaluation of these interpretations consists in demonstrating that certain syllogisms are sound relative to the particular versions of the semantics.
+This is done by constructing a conjecture in HOL which will be true if the syllogism is sound, and then proving that the conjecture is true (i.e. proving the corresponding theorem).
+This procedure does not amount to a proof of the soundness of the syllogisms relative to the semantics, but gives almost the same level of confidence.
+A standard soundness proof would require a `deep embedding', which would involve formalisation of the syntax of the syllogism and of the semantics as a relation between the syntax and the models.
+This would be considerably more arduous, and would not deliver comparably greater insights.
 
-\ignore{
-=SML
-force_new_pc Û"'syllog1"Ý;
-merge_pcs ["'savedthm_cs_¶_proof"] "'syllog1";
-set_merge_pcs ["misc2", "'syllog1"];
-=TEX
-}%ignore
+Before looking at alternative semantics for the syllogistic some machinery for generating syllogisms which will be used throughout is provided in this section.
 
-\subsubsection{The Subject Matter}
+Structurally a syllogism consists of two premises and a conclusion.
+The premises and conclusion are propositions, each of which is built from two terms in one of four ways.
+The different interpretations of the syllogism are obtained by chosing different types for the terms and different ways of constructing the propositions from the terms.
+For some purposes distinct ways of combining the propositions to form the completed syllogism will be necessary.
 
-Aristotle's syllogistic logic is concerned with inferences between judgements considered as predications.
-A predication in Aristotle affirms a {\it predicate} of some {\it subject}, but by contrast with more recent notions of predication the subject need not be an individual, the kinds of things which appear as predicates may also appear as subjects, and the relationship expressed seems closer to a modern eye to set inclusion than to what we now regard as predication.
-Since subject and predicate are for present purposes the same kind of thing, it is useful to have a name for that kind of thing, and I will use the name {\it property}.
+The information determining a particular interpretation will therefore be certain values in the metalanguage:
 
-There are four kinds of predication which we have here to account for, which we will do by offering definitions which provide a good model for syllogistic logic, i.e. one in which the syllogisms held to be true by Aristotle are in fact true.
-Before providing these definitions we must decide what kind of thing are the terms which are related by Aristotelian predication.
- 
-In HOL the most natural answer to this is ``boolean valued functions'' which are objects of type $”'a ­ BOOL®$ for some type of individuals which we can leave open by using the type variable $”'a®$.
-This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
-Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $”'a ­ BOOL®$ is the function $¬Ìx:'a· F®$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
+\begin{itemize}
+\item[mkAT] a function which converts a name to a term of that name (having type: $‘string -> TERM®$)
+\item[mkAP] a function which takes a propositional form and delivers a proposition constructor taking two terms and delivering a proposition (having type: $‘string -> (TERM * TERM) -> TERM®$)
+\item[mkAS] a function which takes a list of propositions (the premises) and a single proposition (the conclusion) and delivers a syllogism as a sequent goal (having type: $‘(TERM list * TERM) -> GOAL®$)
+\end{itemize}
 
-The following ``type abbreviation'' allows us to use {\it TERM} as an abbreviation for $”'a ­ BOOL®$.
+A choice about the semantics will be encapsulated as a record having these three components.
 
 =SML
-declare_type_abbrev("TERM", [], ”'a ­ BOOL®);
+type mapkit =
+	{mkAT:string -> TERM,
+	 mkAP:string -> (TERM * TERM) -> TERM,
+	 mkAS:(TERM list * TERM) -> GOAL};
 =TEX
 
-\subsubsection{Predication}
-
-There are four forms of predication which are normally presented as infix operators over predicates using the vowels ``a'', ``e'', ``i'', ``o''.
-``o'' is already in use so I'll use ``u'' instead.
+There are four forms of predication which are normally presented as infix operators over terms using the vowels ``a'', ``e'', ``i'', ``o''.
 
 These are to be construed as follows:
 
@@ -1253,170 +1254,7 @@ HOL term & Meaning\\
 \end{tabular}
 \end{center}
 
-``o'' is already in use for functional composition, so we will use ``u'' instead and then use an alias to permit us to write this as ``o'' (type inference will usually resolve any ambiguity).
-
-To render these in HOL we first declare the relevant letters as infix operators:
-
-=SML
-declare_infix (300, "a");
-declare_infix (300, "e");
-declare_infix (300, "i");
-declare_infix (300, "u");
-=TEX
-
-They predication operators are defined as follows:
-
-¹HOLCONST
-Ü $ÛaÝ : TERM ­ TERM ­ BOOL
-÷üüüüüü
-Ü µA B· A a B ¤ µx· A x ´ B x
-°
-
-¹HOLCONST
-Ü $ÛeÝ : TERM ­ TERM ­ BOOL
-÷üüüüüü
-Ü µA B· A e B ¤ µx· A x ´ ³ B x
-°
-
-¹HOLCONST
-Ü $ÛiÝ : TERM ­ TERM ­ BOOL
-÷üüüüüü
-Ü µA B· A i B ¤ ¶x· A x ± B x
-°
-
-¹HOLCONST
-Ü $ÛuÝ : TERM ­ TERM ­ BOOL
-÷üüüüüü
-Ü µA B· A u B ¤ ¶x· A x ± ³ B x
-°
-
-=SML
-declare_alias("o", ¬$u®);
-=TEX
-
-Note that as defined above these come in complementary pairs, $a$ being the negation of $o$ and $e$ of $i$.
-If we had negation we could manage with just two predication operators.
-
-\subsubsection{The Laws of Immediate Inference}
-
-Though in the source of this kind of ``literate script'' are to be found the scripts for generating and checking the proofs of all the theorems presente, it will not be my practice to expose these scripts in the printed version of the document.
-These scripts are not usually intelligible other than in that intimate man-machine dialogue which they mediate, and sufficient knowledge for most purposes of the structure of the proof will be found in the detailed lemmas proven (since the level of proof automation is modest).
-
-However, I will begin by exposing some of the scripts used for obtaining proofs of syllogisms in this model, to give the reader an impession of the level of complexity and kind of obscurity involved in this kind of formal work,
-I will not attempt sufficient explanation to make these scripts intelligible, they are best understood in the interactive environment, all the scripts are available for readers who want to run them.
-
-Most readers are expected to skip over the gory details, the philosophical points at stake do no depend on the details of the proofs.
-
-Before addressing the laws of immediate inference
-\footnote{in which I followed Strawson \cite{strawson52}, though I can now cite \href{file:///home/rbj/rbj/share/rbjones/www/rbjpub/philos/classics/aristotl/o3102c.htm}{Aristotle, Prior Analytic, Book 1, Part 2.}
-\cite{aristotleL325}}
-I devise a tactic for automating simple proofs in this domain.
-
-The following elementary tactic expands the goal by applying the definitions of the operators and then invokes a general tactic for the predicate calculus.
-A rule is also defined using that tactic for direct rather than interactive proof.
-
-=SML
-val Ûsyll_tacÝ =	asm_prove_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]);
-fun Ûsyll_ruleÝ g = tac_proof (g, syll_tac);	
-=TEX
-
-\paragraph{Simple Conversion}
-
-Using the above tactic thus:
-=SML
-val e_conv_thm = save_thm ("e_conv_thm", syll_rule([¬A e B®], ¬B e A®));
-val i_conv_thm = save_thm ("i_conv_thm", syll_rule([¬A i B®], ¬B i A®));
-=TEX
-
-
-The following two theorems are obtained.
-=GFT
-val e_conv_thm = A e B ô B e A : THM
-val i_conv_thm = A i B ô B i A : THM
-=TEX
-
-The following two theorems show that the other obvious conversions are false.
-
-\ignore{
-=SML
-set_goal([], ¬¶A B· A a B ± ³ B a A®);
-a (¶_tac ¬Ìx·F® THEN ¶_tac ¬Ìx·T® THEN syll_tac);
-val a_not_conv_thm = save_pop_thm "a_not_conv_thm";
-
-set_goal([], ¬¶A B:TERM· A o B ± ³ B o A®);
-a (¶_tac ¬Ìx·T® THEN ¶_tac ¬Ìx·F® THEN syll_tac);
-val o_not_conv_thm = save_pop_thm "o_not_conv_thm";
-=TEX
-}%ignore
-
-=GFT
-a_not_conv_thm = ô ¶ A B· A a B ± ³ B a A
-o_not_conv_thm = ô ¶ A B· A o B ± ³ B o A
-=TEX
-
-\paragraph{Conversion Per Accidens}
-
-These don't work here because they rely upon the u-p syllogisms.
-
-\paragraph{Obversion}
-
-For these we need to define an operation of complementation on predicates.
-
-¹HOLCONST
-Ü ÛComplementÝ : TERM ­ TERM
-÷üüüüüü
-Ü µA Á· (Complement A) Á ¤ ³ (A Á) 
-°
-
-We will use ``$~$'' as a shorthand for ``complement''.
-
-=SML
-declare_alias ("~", ¬Complement®);
-=TEX
-
-\ignore{
-=SML
-add_pc_thms "'syllog1" [get_spec ¬Complement®];
-set_merge_pcs ["misc2", "'syllog1"];
-=TEX
-}%ignore
-
-\ignore{
-=SML
-val ae_obv_thm = save_thm ("ae_obv_thm", syll_rule([¬A a B®], ¬A e ~B®));
-val ea_obv_thm = save_thm ("ea_obv_thm", syll_rule([¬A e B®], ¬A a ~B®));
-
-set_goal([¬A i B®], ¬A u ~B®);
-a (syll_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-val io_obv_thm = save_pop_thm "io_obv_thm";
-
-set_goal([¬A u B®], ¬A i ~B®);
-a (syll_tac);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
-val oi_obv_thm = save_pop_thm "oi_obv_thm";
-=TEX
-}%ignore
-
-=GFT
-ae_obv_thm = 	A a B ô A e ~ B
-ea_obv_thm = 	A e B ô A a ~ B
-io_obv_thm = 	A i B ô A o ~ B
-oi_obv_thm = 	A o B ô A i ~ B
-=TEX
-
-\paragraph{Contraposition and Inversion}
-
-
-\paragraph{The Square of Opposition}
-
-
-\subsubsection{The Valid Syllogisms}\label{ValidSyllogisms}
-
-The fifteen valid non-u-p syllogisms are true under this semantics and can be proven formally with ease.
-
-In this section we describe informally this subset of the valid syllogisms, in the next we provide scripts in our metalanguage which automates the construction and proof of the relevant syllogisms.
-This presentation is based on \href{http://en.wikipedia.org/wiki/Syllogism}{the one at wikipedia}.
+Though exactly what these mean remains controversial and is a principle point of variation in the interpretations presented here.
 
 Syllogisms come in four figures, according to the configuration of variables in the premises:
 
@@ -1430,6 +1268,37 @@ Syllogisms come in four figures, according to the configuration of variables in 
 \end{quote}
 
 Where S, P and M are the subject, predicate and middle term respectively. 
+
+
+The following function generates a list of four quadruples of HOL variables which correspond to the four figures of syllogisms.
+It is parameterised by the HOL type used for predicates to that it can be re-used when we change the representation type.
+
+=SML
+fun ÛfiguresÝ mkt = 
+	let val M = mkt "M"
+	    and P = mkt "P"
+	    and S = mkt "¿"
+	in [(M,P,S,M), (P,M,S,M), (M,P,M,S), (P,M,M,S)]
+	end;
+=TEX
+
+In most cases terms are mapped to variables of appropriate types for the chosen semantics.
+The following function when given a type will return a term constructor mapping term names to variables of that type.
+
+=SML
+fun ÛmkATvarÝ tt s = mk_var(s,tt);
+=TEX
+
+For these cases the list of figures with the relevant terms is obtained by this function:
+
+=SML
+fun ÛfigurestÝ tt = figures (mkATvar tt);
+=TEX
+
+and the following function when instantiated to some type will give the nth figure with terms as variables of that type.
+=SML
+fun ÛnthfigÝ tt n = nth n (figurest tt);
+=TEX
 
 These four figures are then repeated for each combination of the four types of premise in each of the premises and the conclusion.
 This gives $4 ¸ 4 ¸ 4 ¸ 4 = 256$ possibilities, of which 19 were held to be valid by Aristotle, four of them u-p syllogisms.
@@ -1456,55 +1325,9 @@ Celaront!	&	Camestrop! 	&	Ferison 	&	Camenop! \\
 \end{tabular}
 \end{center}
 
-\subsubsection{Generating Syllogisms}
+A syllogism may be identified either by the name in the above table (for the valid syllogisms), or by the three vowels, and the figure.
 
-This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 forms of non-u-p syllogism.
-The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog1}, and this section can be safely skipped by anyone whose interest is purely philosophical.
-Normally this kind of material would be hidden, it is shown here to give an impression of the size of script necessary to automate this kind of task.
-
-The following function generates a list of four quadruples of HOL variables which correspond to the four figures of syllogisms.
-It is parameterised by the HOL type used for predicates to that it can be re-used when we change the representation type.
-
-=SML
-fun ÛfiguresÝ pt = 
-	let val M = mk_var ("M", pt)
-	    and P = mk_var ("P", pt)
-	    and S = mk_var ("¿", pt)
-	in [(M,P,S,M), (P,M,S,M), (M,P,M,S), (P,M,M,S)]
-	end;
-=TEX
-
-The following functions take a string which is the name of a syllogism extract the vowels which occur in it and convert them into the corresponding predication operator to give a triple of operators.
-
-=SML
-fun Ûop_from_charÝ ot c = mk_const (if c = "o" then "u" else c, ot);
-
-fun Ûvowels_from_stringÝ s = filter (fn x => x mem (explode "aeiou")) (explode s);
-
-fun Ûoptrip_from_textÝ ot s =
-	let val [a, b, c] = (map (op_from_char ot) o vowels_from_string) s;
-	in (a, b, c)
-	end;
-=TEX
-
-The following functions construct a syllogism.
-
-=SML
-fun Ûmk_predÝ q s p = mk_app(mk_app (q, s), p);
-
-fun Ûmk_syllÝ vt (a,b,c,d) (q1, q2, q3) =
-	([mk_pred q1 a b, mk_pred q2 c d],
-		mk_pred q3 (mk_var("¿", vt)) (mk_var("P", vt)));
-
-fun Ûmk_reltÝ t = mk_ctype ("­", [t, mk_ctype ("­", [t, ”BOOL®])]);
-
-fun Ûmk_syllpÝ vt (s, n) =
-	mk_syll vt (nth (n-1) (figures vt)) (optrip_from_text (mk_relt vt) s);
-=TEX
-
-=SML
-val Ûmk_syllp1Ý = mk_syllp ”TERM®;
-=TEX
+The above table is captured by the following definitions in our metalanguage:
 
 We now define a data structure from which the valid syllogisms can be generated.
 With the model we are using only the 15 non-u-p syllogisms.
@@ -1531,8 +1354,9 @@ val Ûsyllogism_data1Ý =
 map mk_syllp1 syllogism_data1;
 =TEX
 
-The following four u-p syllogisms held to be valid by Aristotle are less straighforward to construe as sound.
-One way is to restrict the syllogism to non-empty terms and this is the only one we will consider here, though there are other ways of dealing with this problem.
+The rest of the table consists of ``universal-particular''\index{universal particular} syllogisms, i.e. syllogisms with universal premises but a particular conclusion.
+
+The following four u-p\index{u-p} syllogisms were held to be valid by Aristotle (the ones in square brackets in the table).
 
 =SML
 val Ûsyllogism_data2Ý = 
@@ -1542,7 +1366,7 @@ val Ûsyllogism_data2Ý =
 	("Fesapo", 4)];
 =TEX
 
-Under the assumption that terms are non-empty the following five further syllogisms are also sound, though not noted as such by Aristotle.
+The following five further syllogisms are also sound, though not noted as such by Aristotle (the ones followed by exclamation marks in the table).
 
 =SML
 val Ûsyllogism_data3Ý = 
@@ -1553,64 +1377,125 @@ val Ûsyllogism_data3Ý =
 	("Camenop", 4)];
 =TEX
 
-The following code generates the goals for proving syllogisms from the data structures, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
+We now assume available the triple of constructors mentioned above and define a function which converts syllogism identification in the form of a string of three vowels and a number in the range 1-4 into a syllogism.
+This is parameterised by a \emph{mapkit} so that we can use it to deliver several different interpretations of the syllogism.
 
 =SML
-fun Ûsyll_proveÝ msp suff tac (a,n) =
-	let val thm = tac_proof (msp (a,n), tac) handle _ => t_thm
-	in (concat [a, suff], thm)
-	end;
+fun Ûvowels_from_stringÝ s = filter (fn x => x mem (explode "aeiou")) (explode s);
 
-fun Ûsyll_prove_and_storeÝ msp suff tac (a,n) =
-	let val res = syll_prove msp suff tac (a,n);
-	    val _ = save_thm res
-	in res 
+fun ÛmkSyllÝ (sk:mapkit) (s, n) = 
+	let val [pa, pb, co] = vowels_from_string s
+	    val (a,b,c,d) = nth (n-1) (figures (#mkAT sk))
+	    val pl = [#mkAP sk pa (a,b), #mkAP sk pb (c,d)]
+	    val c = #mkAP sk co (#mkAT sk "¿", #mkAT sk "P")
+	in #mkAS sk (pl, c)
 	end;
-
-val Ûsps1Ý = syll_prove_and_store mk_syllp1 "";
 =TEX
 
-\subsubsection{Proving the Syllogisms}
-
-We now apply this to the complete set of non-u-p syllogisms,
-saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+We can then map this operation over the a list of syllogism data as follows:
 
 =SML
-val Ûvalid_syllsÝ = map (sps1 syll_tac) syllogism_data1;
+fun ÛmkGoalsÝ sk = map (fn (s,n) => (s, mkSyll sk (s, n)));
 =TEX
 
-This is the resulting value.
-=GFT
-val valid_sylls = [
-	("Barbara", M a P, ¿ a M ô ¿ a P),
-	("Celarent", M e P, ¿ a M ô ¿ e P),
-	("Darii", M a P, ¿ i M ô ¿ i P),
-	("Ferio", M e P, ¿ i M ô ¿ o P),
-	("Cesare", P e M, ¿ a M ô ¿ e P),
-	("Camestres", P a M, ¿ e M ô ¿ e P),
-	("Festino", P e M, ¿ i M ô ¿ o P),
-	("Baroco", P a M, ¿ o M ô ¿ o P),
-	("Disamis", M i P, M a ¿ ô ¿ i P),
-	("Datisi", M a P, M i ¿ ô ¿ i P),
-	("Bocardo", M o P, M a ¿ ô ¿ o P),
-	("Ferison", M e P, M i ¿ ô ¿ o P),
-	("Camenes", P a M, M e ¿ ô ¿ e P),
-	("Dimaris", P i M, M a ¿ ô ¿ i P),
-	("Fresison", P e M, M i ¿ ô ¿ o P)
-] : (string * THM) list
+If we further supply a proof tactic and a labelling suffix then we can prove a whole list of goals and store the results in the current theory.
+
+=SML
+fun ÛproveGoalsÝ tac suff = map 
+	(fn (s,g) =>
+		(s,
+		 save_thm (s^suff, tac_proof (g, tac))
+			handle _ => t_thm));
 =TEX
 
-The theorems are also displayed in the theory listing in \thyref{syllog1}
+=SML
+fun ÛproveSyllsÝ sk tac suff sd = proveGoals tac suff (mkGoals sk sd);
+=TEX
+
+The following functions take a string which is the name of a syllogism extract the vowels which occur in it and convert them into the corresponding predication operator to give a triple of operators.
+
+=SML
+fun Ûop_from_charÝ ot c = mk_const (if c = "o" then "u" else c, ot);
+
+fun Ûoptrip_from_textÝ ot s =
+	let val [a, b, c] = (map (op_from_char ot) o vowels_from_string) s;
+	in (a, b, c)
+	end;
+=TEX
+
+
+\paragraph{A Common Special Case}
+
+The most common pattern is that:
+
+\begin{itemize}
+\item Terms are mapped to variables of some type.
+\item Propositions are formed using infix operators {\it a, e, i, o}.
+\item Syllogisms are sequents, the premises in the assumptions.
+\end{itemize}
+
+The following constructs a mapkit for such cases when supplied with the type of the term variables, and the four proposition constructors.
+
+=SML
+fun ÛmkSimpMapkitÝ ty opl =
+	let val mkcop = fn s => snd (find (combine (explode "aeio") opl) (fn (n,v) => n = s))
+	in
+		{mkAT = fn s => mk_var(s, ty),
+		mkAP = fn s => fn (l,r) => mk_app(mk_app (mkcop s, l), r),
+		mkAS = fn x => x}
+	end;
+=TEX
 
 
 \subsection{Reductions of the Syllogism}\label{RSPL}
 
+This section is a kind of preliminary skirmish provoked by some discussions on \href{http://philo.at/cgi-bin/mailman/listinfo/phil-logic}{phil-logic} in which one or two specific questions are addressed.
+
+The question which provoked this section (are:
+
+\begin{itemize}
+\item Are the valid syllogisms tautologous?
+\end{itemize}
+
+This is complex because it depends on a view about the semantics of the syllogism and also upon what particular notion of tautology is in play.
+
+Two related questions come from remarks by P.V.Spade.
 P.V. Spade, in a thumbnail history of logic \cite{spade2002} remarks that some later peripatetics attempted to show that stoic propositional logic was simply the syllogism in other clothes, and others that the two are in some sense equivalent.
+
+\begin{itemize}
+\item Is there any sense in which the syllogism can be said to encompass Stoic propositional logic?
+\item Is there any sense in which the syllogism might be seen to be equivalent to Stoic propositional logic?
+\end{itemize}
+
+I have no knowledge of Stoic propositional logic, and this section is therefore concerned with the relationship between the syllogism and modern propositional logic, which I presume is a superset (probably but not necessarily proper) of Stoic propositional logic.
+
+I distinguish three notions of tautology (though this is not intended to be an exhaustive list) on which something can be said in this connection.
+
+\begin{itemize}
+\item[propositional] A valid sentence of the propositional calculus.
+\item[first order] A valid sentence of first order logic.
+\item[analytic] A sentence whose truth conditions assign truth to it in every situation or interpretation consistent with the meanings of the language in which it is expressed.
+\end{itemize}
+
+The connection between these is in the notions of truth function and truth condition.
+The first two are notions of truth functional tautology.
+In both languages the truth value of a sentence is a function of the truth values of the atomic sentences it contains, and a sentence is tautologous if that truth function is the one which always delivers the value ``true''.
+In the second of these two the notion of truth function is slightly more complex and some explanation may be necessary of how the quantifiers can be so construed.
+It may be noted however that it is a thesis of Wittgenstein's tractatus that logical truth in general is tautologous.
+In the last case the restriction to truth functions (i.e. functions which take truth values as arguments and deliver truth values as results) is dropped, allowing that the essential element is that the relevant part of the semantics can be rendered as \emph{truth conditions} in which the result is a truth value but the argument need not be, and that it is of the essence of the idea tautology to single out from truth functions in general those which always deliver the truth value `true'.
+
+In relation to these three notions of tautology, one thinks naturally of categorical propositions as involving quantification, and therefore, of syllogisms, if tautologous being so at best as first order validities, but in any case, if sound, as analytic.
+These intuitions do not support a connection between syllogisms and propositional tautologies.
+
+The connection we illustrate here is obtained via elementary set theory.
+The intuition behind this is that Aristotelian predication is analogous to set inclusion, taking terms to denote their extensions (and singular terms as denoting singleton sets), together with complementation and negation.
+This works execpt for the problematic univeral-particular syllogisms which infer particular conclusions from universal premises.
+A connection with propositional logic can be obtained from this, since the elementary set theory required for this interpretation is a boolean algebra, as is the propositional calculus.
 
 A partial reduction to propositional logic via set theory is exhibited in this section.
 The reduction to set theory is semantically more plausible than the second step to proposional logic, and provides an account of the u-p syllogisms, which are not accounted for by the propositional reduction.
 
-We obtain kind of reduction of the decision problem for the non-u-a syllogisms to the decision problem for truth functional tautologies, but only in a very informal sense, since there are only a small finite set of valid syllogisms (though schemata) and so the decision problem is trivial.
+We obtain kind of reduction of the decision problem for the non-u-p syllogisms to the decision problem for truth functional tautologies, but only in a very informal sense, since there are only a small finite set of valid syllogisms (though schemata) and so the decision problem is trivial.
 For this reason syllogistic logic cannot be as expressive as a modern propositional logic, but conceivably might be closer to Stoic propositional logic.
 
 The first step, to set theory is illustrated in the Wikpedia article on the syllogism, which gives Venn diagrams for all 24 ``valid'' syllogisms.
@@ -1619,14 +1504,14 @@ Though it is convenient to think of this as a two stage reduction, in the follow
 
 =SML
 open_theory "aristotle";
-force_new_theory "syllog1p";
+force_new_theory "syllog1";
 =TEX
 
 \ignore{
 =SML
-force_new_pc Û"'syllog1p"Ý;
-merge_pcs ["'savedthm_cs_¶_proof"] "'syllog1p";
-set_merge_pcs ["misc2", "'syllog1p"];
+force_new_pc Û"'syllog1"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'syllog1";
+set_merge_pcs ["misc2", "'syllog1"];
 =TEX
 }%ignore
 
@@ -1706,79 +1591,53 @@ A o B & An A is not B & ³(A € B) & ³(A ´ B) \\
 \end{tabular}
 \end{center}
 
+These mappings can be encapsulated as two `mapkits'.
+
+First the set theory mapping:
+
+=SML
+val st_mkAP = 
+	let	fun a (su, pr) = ¬‘su® € ‘pr®®
+		fun e (su, pr) = ¬‘su® € ~ ‘pr®®
+		fun i (su, pr) = ¬³ ‘su® € ~ ‘pr®®
+		fun u (su, pr) = ¬³ ‘su® € ‘pr®®
+	in fn s => case s of "a" => a | "e" => e | "i" => i | "o" => u
+	end;
+
+val st_mapkit:mapkit =
+	{	mkAT = fn s => mk_var(s, ”STERM®),
+		mkAP = st_mkAP,
+		mkAS = fn x => x};
+=TEX
+
+Then the propositional logic mapping:
+
+=SML
+val pl_mapkit:mapkit =
+	let fun a (su, pr) = ¬‘su® ´ ‘pr®®
+		fun e (su, pr) = ¬‘su® ´ ³ ‘pr®®
+		fun i (su, pr) = ¬³ (‘su® ´ ³ ‘pr®)®
+		fun u (su, pr) = ¬³( ‘su® ´ ‘pr®)®
+	in {	mkAT = fn s => mk_var(s, ”PTERM®),
+		mkAP = fn s => case s of
+			"a" => a
+		|	"e" => e 
+		|	"i" => i 
+		|	"o" => u,
+		mkAS = fn x => x}
+	end;
+=TEX
 
 \subsubsection{Generating The Propositions}
 
 This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 theorems of set theory and 15 propositional tautologies which are obtained from non-u-p syllogisms by this naive transformation.
 
-The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog1p}, and this section can be safely skipped by anyone whose interest is purely philosophical.
+The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog1}, and this section can be safely skipped by anyone whose interest is purely philosophical.
 
 Mostly this uses functionality devised in the previous section to achieve two slightly different sets of theorems.
 
 The following functions take a string which is the name of a syllogism, extract the vowels which occur in it and convert them into the corresponding propositional formula to give a triple of propositions.
 
-The first translates letters into functions which construct formalae.
-
-First the set theory version:
-
-=SML
-fun Ûsop_from_charÝ c =
-	let fun a x y = ¬‘x® € ‘y®®;
-	    fun e x y = ¬‘x® € ~‘y®®;
-	    fun i x y = ¬³ ‘e x y®®;
-	    fun u x y = ¬³ ‘a x y®®
-	in case c of "a" => a | "e" => e | "i" => i | "o" => u
-	end;
-=TEX
-
-Then the propositional logic:
-
-=SML
-fun Ûbop_from_charÝ c =
-	let fun a x y = ¬‘x® ´ ‘y®®;
-	    fun e x y = ¬‘x® ´ ³ ‘y®®;
-	    fun i x y = ¬³ ‘e x y®®;
-	    fun u x y = ¬³ ‘a x y®®
-	in case c of "a" => a | "e" => e | "i" => i | "o" => u
-	end;
-=TEX
-
-The second maps this over a list of three vowels extracted from the name of a single syllogism.
-
-=SML
-fun Ûsoptrip_from_textÝ s =
-	let val [a, b, c] = (map sop_from_char o vowels_from_string) s;
-	in (a, b, c)
-	end;
-
-fun Ûboptrip_from_textÝ s =
-	let val [a, b, c] = (map bop_from_char o vowels_from_string) s;
-	in (a, b, c)
-	end;
-=TEX
-
-The following functions constructs a ``goal'' (something to prove) corresponding to a syllogism.
-A goal is a list of assumptions and a conclusion, the list of assumptions contains the premises of the syllogism.
-
-=SML
-fun Ûmk_ssyllÝ (a,b,c,d) (q1, q2, q3) =
-	([q1 a b, q2 c d], q3 (mk_var("¿", ”STERM®)) (mk_var("P", ”STERM®)));
-
-fun Ûmk_ssyllpÝ (s, n) =
-	mk_ssyll (nth (n-1) (figures ”STERM®)) (soptrip_from_text s);
-
-fun Ûmk_bsyllÝ (a,b,c,d) (q1, q2, q3) =
-	([q1 a b, q2 c d], q3 (mk_var("¿", ”PTERM®)) (mk_var("P", ”PTERM®)));
-
-fun Ûmk_bsyllpÝ (s, n) =
-	mk_bsyll (nth (n-1) (figures ”PTERM®)) (boptrip_from_text s);
-=TEX
-
-which can then be mapped over the list of valid non-u-p syllogisms thus:
-
-=GFT SML
-map mk_ssyllp syllogism_data1;
-=TEX
 
 giving the following list of ``goals'':
 
@@ -1798,10 +1657,6 @@ val it =
       ([¬M € ~ P®, ¬³ M € ~ ¿®], ¬³ ¿ € P®),
       ([¬P € M®, ¬M € ~ ¿®], ¬¿ € ~ P®),
       ([¬³ P € ~ M®, ¬M € ¿®], ¬³ ¿ € ~ P®),
-=TEX
-
-=GFT SML
-map mk_bsyllp syllogism_data1;
 =TEX
 
 giving the following list of ``goals'':
@@ -1827,28 +1682,30 @@ val it =
 
 The following code generates the goals for proving the above syllogisms from the previously defined data structure desribing the valid syllogisms, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
 
-=SML
-val Ûssps1Ý = syll_prove_and_store mk_ssyllp "_s";
-val Ûbsps1Ý = syll_prove_and_store mk_bsyllp "_p";
-=TEX
-
 \subsubsection{Proving the Syllogisms}
 
 We now apply this to the complete set of non-u-p syllogisms,
 saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
 
 =SML
-val Ûvalid_ssyllsÝ =
-	map (ssps1
-		(REPEAT (POP_ASM_T ante_tac)
-		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[]))
-	syllogism_data1;
+val st_tac = REPEAT (POP_ASM_T ante_tac)
+		THEN PC_T1 "hol1" rewrite_tac []
+		THEN prove_tac[];
+=TEX
 
-val Ûvalid_bsyllsÝ =
-	map (bsps1
-		(REPEAT (POP_ASM_T ante_tac)
-		THEN REPEAT strip_tac))
-	syllogism_data1;
+=SML
+val pl_tac = REPEAT (POP_ASM_T ante_tac)
+		THEN REPEAT strip_tac;
+=TEX
+
+We now apply this to the complete set of non-u-p syllogisms,
+saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+
+Now we prove the two sets of theorems corresponding to the non-u-p syllogisms.
+
+=SML
+proveSylls st_mapkit st_tac "_s" syllogism_data1;
+proveSylls pl_mapkit pl_tac "_p" syllogism_data1;
 =TEX
 
 This is the resulting value.
@@ -1873,23 +1730,10 @@ val valid_bsylls =
 
 .. which is a list of name/theorem pairs of the tautologies corresponding to each syllogism.
 
-The theorems are also displayed in the theory listing in \thyref{syllog1p}
+The theorems are also displayed in the theory listing in \thyref{syllog1}
 
 We now adjust the set theoretic reduction to deliver u-p syllogisms by including a non-emptyness assumption and obtain proofs of the nine syllogisms valid u-p syllogisms.
 
-=SML
-fun Ûmk_xssyllÝ (a,b,c,d) (q1, q2, q3) =
-	([¬³ ({}:'a SET)  {M; ¿; P}®, q1 a b, q2 c d], q3 (mk_var("¿", ”STERM®)) (mk_var("P", ”STERM®)));
-
-fun Ûmk_xssyllpÝ (s, n) =
-	mk_xssyll (nth (n-1) (figures ”STERM®)) (soptrip_from_text s);
-=TEX
-
-which can then be mapped over the rest of the syllogisms thus:
-
-=GFT SML
-map mk_xssyllp (syllogism_data2 @ syllogism_data3);
-=TEX
 
 giving the following list of ``goals'':
 
@@ -1907,42 +1751,38 @@ val it =
 : (TERM list * TERM) list
 =TEX
 
+We now apply this to the non-u-p syllogisms,
+saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+
+
 The following code generates the goals for proving the above syllogisms from the previously defined data structure desribing the valid syllogisms, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
 
 =SML
-val Ûxssps1Ý = syll_prove_and_store mk_xssyllp "_s";
+val st2_mapkit:mapkit =
+	{	mkAT = fn s => mk_var(s, ”STERM®),
+		mkAP = st_mkAP,
+		mkAS = fn (ps, c) => (¬³ ({}:'a SET)  {M; ¿; P}®::ps, c)};
 =TEX
 
-\subsubsection{Proving the Syllogisms}
-
-We now apply this to the complete set of non-u-p syllogisms,
-saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
-
 =SML
-val Ûvalid_xssyllsÝ =
-	map (xssps1
-		(REPEAT (POP_ASM_T ante_tac)
-		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[]))
-	(syllogism_data2 @ syllogism_data3);
+val st2_tac = REPEAT (POP_ASM_T ante_tac)
+		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[];
+=TEX
+
 =IGN
-set_goal ([¬³ ({}:'a SET)  {M; ¿; P}®, ¬M € (P:'a SET)®, ¬M € (¿:'a SET)®], ¬³ ¿ € ~ (P:'a SET)®);
-a (REPEAT(POP_ASM_T ante_tac));
-a (PC_T1 "hol1" rewrite_tac[]);
-a (prove_tac[]);
+mkGoals st2_mapkit (syllogism_data2 @ syllogism_data3);
+map (fn x => (fst x, mkSyll st2_mapkit x) handle _ => (fst x, ([],¬T®))) (syllogism_data2 @ syllogism_data3);
+=SML
+proveSylls st2_mapkit st2_tac "_s" (syllogism_data2 @ syllogism_data3);
 =TEX
 
 Some words about the very limited signficance of this little exercise would be appropriate here!
 
-\subsection{The Complete Syllogism}\label{SYLL}
+\subsection{Non U-P Syllogisms}\label{SWEF}
 
-There is more than one way in which the semantics of the syllogism can be modified to make the inference from ``All As are Bs'' to ``Some As are Bs'' sound.
-One way would be to change the meaning of ``All''.
-This would interfere with the square of opposition by making opposites no longer contradictories.
-From this I tentatively infer that the exclusion of empty predicates is a better approach.
-\footnote{This seems to be endorsed by Robin Smith in the \href{http://plato.stanford.edu/entries/aristotle-logic/}{Stanford Encyclopaedia of Philosophy}.}
-
-We can then prove valid 24 forms of syllogism.
-
+The theory here is very simple, the presentation is complicated by the fact that the proofs have been completely automated by scripts in the metalanguage.
+These can be completely ignored by anyone who is willing to trust that {\Product} checks proofs correctly.
+In any case, the theorems proven are just the statements of the 15 valid forms of non-u-p syllogism.
 For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in \thyref{syllog2}.
 
 =SML
@@ -1955,6 +1795,292 @@ force_new_theory "syllog2";
 force_new_pc Û"'syllog2"Ý;
 merge_pcs ["'savedthm_cs_¶_proof"] "'syllog2";
 set_merge_pcs ["misc2", "'syllog2"];
+=TEX
+}%ignore
+
+\subsubsection{The Subject Matter}
+
+Aristotle's syllogistic logic is concerned with inferences between judgements considered as predications.
+A predication in Aristotle affirms a {\it predicate} of some {\it subject}, but by contrast with more recent notions of predication the subject need not be an individual, the kinds of things which appear as predicates may also appear as subjects, and the relationship expressed seems closer to a modern eye to set inclusion than to what we now regard as predication.
+Since subject and predicate are for present purposes the same kind of thing, it is useful to have a name for that kind of thing, and I will use the name {\it property}.
+
+There are four kinds of predication which we have here to account for, which we will do by offering definitions which provide a good model for syllogistic logic, i.e. one in which the syllogisms held to be true by Aristotle are in fact true.
+Before providing these definitions we must decide what kind of thing are the terms which are related by Aristotelian predication.
+ 
+In HOL the most natural answer to this is ``boolean valued functions'' which are objects of type $”'a ­ BOOL®$ for some type of individuals which we can leave open by using the type variable $”'a®$.
+This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
+Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $”'a ­ BOOL®$ is the function $¬Ìx:'a· F®$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
+
+The following ``type abbreviation'' allows us to use {\it TERM} as an abbreviation for $”'a ­ BOOL®$.
+
+=SML
+declare_type_abbrev("TERM", [], ”'a ­ BOOL®);
+=TEX
+
+\subsubsection{Predication}
+
+``o'' is already in use for functional composition, so we will use ``u'' instead and then use an alias to permit us to write this as ``o'' (type inference will usually resolve any ambiguity).
+
+To render these in HOL we first declare the relevant letters as infix operators:
+
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
+
+They predication operators are defined as follows:
+
+¹HOLCONST
+Ü $ÛaÝ : TERM ­ TERM ­ BOOL
+÷üüüüüü
+Ü µA B· A a B ¤ µx· A x ´ B x
+°
+
+¹HOLCONST
+Ü $ÛeÝ : TERM ­ TERM ­ BOOL
+÷üüüüüü
+Ü µA B· A e B ¤ µx· A x ´ ³ B x
+°
+
+¹HOLCONST
+Ü $ÛiÝ : TERM ­ TERM ­ BOOL
+÷üüüüüü
+Ü µA B· A i B ¤ ¶x· A x ± B x
+°
+
+¹HOLCONST
+Ü $ÛuÝ : TERM ­ TERM ­ BOOL
+÷üüüüüü
+Ü µA B· A u B ¤ ¶x· A x ± ³ B x
+°
+
+=SML
+declare_alias("o", ¬$u®);
+=TEX
+
+Note that as defined above these come in complementary pairs, $a$ being the negation of $o$ and $e$ of $i$.
+If we had negation we could manage with just two predication operators.
+
+\subsubsection{The Laws of Immediate Inference}
+
+Though in the source of this kind of ``literate script'' are to be found the scripts for generating and checking the proofs of all the theorems presente, it will not be my practice to expose these scripts in the printed version of the document.
+These scripts are not usually intelligible other than in that intimate man-machine dialogue which they mediate, and sufficient knowledge for most purposes of the structure of the proof will be found in the detailed lemmas proven (since the level of proof automation is modest).
+
+However, I will begin by exposing some of the scripts used for obtaining proofs of syllogisms in this model, to give the reader an impession of the level of complexity and kind of obscurity involved in this kind of formal work,
+I will not attempt sufficient explanation to make these scripts intelligible, they are best understood in the interactive environment, all the scripts are available for readers who want to run them.
+
+Most readers are expected to skip over the gory details, the philosophical points at stake do not depend on the details of the proofs.
+
+Before addressing the laws of immediate inference
+\footnote{in which I followed Strawson \cite{strawson52}, though I can now cite \href{file:///home/rbj/rbj/share/rbjones/www/rbjpub/philos/classics/aristotl/o3102c.htm}{Aristotle, Prior Analytic, Book 1, Part 2.}
+\cite{aristotleL325}}
+I devise a tactic for automating simple proofs in this domain.
+
+The following elementary tactic expands the goal by applying the definitions of the operators and then invokes a general tactic for the predicate calculus.
+A rule is also defined using that tactic for direct rather than interactive proof.
+
+=SML
+val Ûsyll_tacÝ = asm_prove_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]);
+fun Ûsyll_ruleÝ g = tac_proof (g, syll_tac);	
+=TEX
+
+\paragraph{Simple Conversion}
+
+Using the above tactic thus:
+
+=SML
+val e_conv_thm = save_thm ("e_conv_thm", syll_rule([¬A e B®], ¬B e A®));
+val i_conv_thm = save_thm ("i_conv_thm", syll_rule([¬A i B®], ¬B i A®));
+=TEX
+
+The following two theorems are obtained.
+=GFT
+val e_conv_thm = A e B ô B e A : THM
+val i_conv_thm = A i B ô B i A : THM
+=TEX
+
+The following two theorems show that the other obvious conversions are false.
+
+\ignore{
+=SML
+set_goal([], ¬¶A B· A a B ± ³ B a A®);
+a (¶_tac ¬Ìx·F® THEN ¶_tac ¬Ìx·T® THEN syll_tac);
+val a_not_conv_thm = save_pop_thm "a_not_conv_thm";
+
+set_goal([], ¬¶A B:TERM· A o B ± ³ B o A®);
+a (¶_tac ¬Ìx·T® THEN ¶_tac ¬Ìx·F® THEN syll_tac);
+val o_not_conv_thm = save_pop_thm "o_not_conv_thm";
+=TEX
+}%ignore
+
+=GFT
+a_not_conv_thm = ô ¶ A B· A a B ± ³ B a A
+o_not_conv_thm = ô ¶ A B· A o B ± ³ B o A
+=TEX
+
+\paragraph{Conversion Per Accidens}
+
+These don't work here because they rely upon the u-p syllogisms.
+
+\paragraph{Obversion}
+
+For these we need to define an operation of complementation on predicates.
+
+¹HOLCONST
+Ü ÛComplementÝ : TERM ­ TERM
+÷üüüüüü
+Ü µA Á· (Complement A) Á ¤ ³ (A Á) 
+°
+
+We will use ``\~'' as a shorthand for ``complement''.
+
+=SML
+declare_alias ("~", ¬Complement®);
+=TEX
+
+\ignore{
+=SML
+add_pc_thms "'syllog2" [get_spec ¬Complement®];
+set_merge_pcs ["misc2", "'syllog2"];
+=TEX
+}%ignore
+
+\ignore{
+=SML
+val ae_obv_thm = save_thm ("ae_obv_thm", syll_rule([¬A a B®], ¬A e ~B®));
+val ea_obv_thm = save_thm ("ea_obv_thm", syll_rule([¬A e B®], ¬A a ~B®));
+
+set_goal([¬A i B®], ¬A u ~B®);
+a (syll_tac);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+val io_obv_thm = save_pop_thm "io_obv_thm";
+
+set_goal([¬A u B®], ¬A i ~B®);
+a (syll_tac);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+val oi_obv_thm = save_pop_thm "oi_obv_thm";
+=TEX
+}%ignore
+
+=GFT
+ae_obv_thm = 	A a B ô A e ~ B
+ea_obv_thm = 	A e B ô A a ~ B
+io_obv_thm = 	A i B ô A o ~ B
+oi_obv_thm = 	A o B ô A i ~ B
+=TEX
+
+\paragraph{Contraposition and Inversion}
+
+\paragraph{The Square of Opposition}
+
+\subsubsection{The Valid Syllogisms}\label{ValidSyllogisms}
+
+The fifteen valid non-u-p syllogisms are true under this semantics and can be proven formally with ease.
+
+\subsubsection{Generating Syllogisms}
+
+This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 forms of non-u-p syllogism.
+The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog2}, and this section can be safely skipped by anyone whose interest is purely philosophical.
+Normally this kind of material would be hidden, it is shown here to give an impression of the size of script necessary to automate this kind of task.
+
+The following functions construct a syllogism.
+
+=IGN
+fun Ûmk_predÝ q s p = mk_app(mk_app (q, s), p);
+
+fun Ûmk_syllÝ vt (a,b,c,d) (q1, q2, q3) =
+	([mk_pred q1 a b, mk_pred q2 c d],
+		mk_pred q3 (mk_var("¿", vt)) (mk_var("P", vt)));
+
+fun Ûmk_reltÝ t = mk_ctype ("­", [t, mk_ctype ("­", [t, ”BOOL®])]);
+
+fun Ûmk_syllpÝ vt (s, n) =
+	mk_syll vt (nth (n-1) (figurest vt)) (optrip_from_text (mk_relt vt) s);
+=TEX
+
+=IGN
+val Ûmk_syllp1Ý = mk_syllp ”TERM®;
+=TEX
+
+
+The following code generates the goals for proving syllogisms from the data structures, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
+
+=IGN
+fun Ûsyll_proveÝ msp suff tac (a,n) =
+	let val thm = tac_proof (msp (a,n), tac) handle _ => t_thm
+	in (concat [a, suff], thm)
+	end;
+
+fun Ûsyll_prove_and_storeÝ msp suff tac (a,n) =
+	let val res = syll_prove msp suff tac (a,n);
+	    val _ = save_thm res
+	in res 
+	end;
+
+val Ûsps1Ý = syll_prove_and_store mk_syllp1 "";
+=TEX
+
+New way of doing it.
+
+First we make a \emph{mapkit}.
+
+=SML
+val s1mapkit:mapkit = mkSimpMapkit ”TERM® [¬$a®,¬$e®,¬$i®,¬$u®];
+=TEX
+
+Then we apply this in generating and proving the non u-p syllogisms.
+
+=SML
+proveGoals syll_tac "" (mkGoals s1mapkit syllogism_data1);
+=TEX
+
+This is the resulting value.
+=GFT
+val valid_sylls = [
+	("Barbara", M a P, ¿ a M ô ¿ a P),
+	("Celarent", M e P, ¿ a M ô ¿ e P),
+	("Darii", M a P, ¿ i M ô ¿ i P),
+	("Ferio", M e P, ¿ i M ô ¿ o P),
+	("Cesare", P e M, ¿ a M ô ¿ e P),
+	("Camestres", P a M, ¿ e M ô ¿ e P),
+	("Festino", P e M, ¿ i M ô ¿ o P),
+	("Baroco", P a M, ¿ o M ô ¿ o P),
+	("Disamis", M i P, M a ¿ ô ¿ i P),
+	("Datisi", M a P, M i ¿ ô ¿ i P),
+	("Bocardo", M o P, M a ¿ ô ¿ o P),
+	("Ferison", M e P, M i ¿ ô ¿ o P),
+	("Camenes", P a M, M e ¿ ô ¿ e P),
+	("Dimaris", P i M, M a ¿ ô ¿ i P),
+	("Fresison", P e M, M i ¿ ô ¿ o P)
+] : (string * THM) list
+=TEX
+
+The theorems are also displayed in the theory listing in \thyref{syllog2}
+
+\subsection{The Complete Syllogism (I)}\label{SYLLNE}
+
+There is more than one way in which the semantics of the syllogism can be modified to make the inference from ``All As are Bs'' to ``Some As are Bs'' sound.
+One way would be to change the meaning of ``All''.
+This would interfere with the square of opposition by making opposites no longer contradictories.
+From this I tentatively infer that the exclusion of empty predicates is a better approach.
+\footnote{This seems to be endorsed by Robin Smith in the \href{http://plato.stanford.edu/entries/aristotle-logic/}{Stanford Encyclopaedia of Philosophy}.}
+
+We can then prove valid 24 forms of syllogism.
+
+For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in \thyref{syllog3}.
+
+=SML
+open_theory "aristotle";
+force_new_theory "syllog3";
+=TEX
+
+\ignore{
+=SML
+force_new_pc Û"'syllog3"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'syllog3";
+set_merge_pcs ["misc2", "'syllog3"];
 =TEX
 }%ignore
 
@@ -2046,6 +2172,12 @@ The type $”PROP®$ is changed to $”TERM2®$ and the function $p$ is invoked before
 declare_alias("o", ¬$u®);
 =TEX
 
+With these defined we can now produce a `mapkit' for translating the syllogisms under this semantics.
+
+=SML
+val s2_mapkit:mapkit = mkSimpMapkit ”TERM2® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
+=TEX
+
 \subsubsection{Laws of Immediate Inference}
 
 The same tactic used for proof of the syllogisms in the previous model still works with this model (with the new definitions), but does not prove the u-p syllogisms.
@@ -2094,67 +2226,23 @@ val eo_conv_thm = A e B ô B o A : THM
 
 The valid syllogisms have been described in Section \ref{ValidSyllogisms}.
 
-All twnety four syllogisms are true under this semantics and have been proven.
-The actual theorems are shown in the theory listing in \thyref{syllog2}.
+All twenty four syllogisms are true under this semantics and have been proven.
+The actual theorems are shown in the theory listing in \thyref{syllog3}.
 
-The metalanguage scripts prepared for the first model are mostly reusable for this model, with some different parameters which reflect the differences between the models.
-
-The main requirement is to supply the type of the propositional functions in this model which is done as follows:
+To implement a mapping corresponding to the above semantics we must create a matching \emph{mapkit} as follows:
 
 =SML
-val Ûmk_syllp2Ý = mk_syllp ”TERM2®;
-=TEX
-
-This defines the fucntion {\it mk\_syllp2} whose type is shown:
-
-=GFT
-val mk_syllp2 = fn : string * int -> TERM list * TERM
-=TEX
-
-{\it mk\_syllp2} takes a pair consisting of a string which is the name of a syllogism and a number which is the number of the figure, and constructs the syllogism as a goal for proof.
-
-An example of its use is:
-
-=SML
-mk_syllp2 ("Barbara", 1);
-=TEX
-
-which yields:
-
-=GFT
-val it = ([¬M a P®, ¬¿ a M®], ¬¿ a P®) : TERM list * TERM
+val Ûmods_mapkitÝ:mapkit = mkSimpMapkit ”TERM2® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
 =TEX
 
 \subsubsection{Proving the Syllogisms}
 
-We now apply this to the complete set of u-p syllogisms,
-saving the results in the theory as well as binding them to (naming them as) the metalanguage value {\it valid\_sylls}.
+The resulting translation yields goals which look exactly like the previous versions but have the meanings defined in this context.
+They are proven and stored in the theory listing (see Appendix \ref{syllog3}) by the following:
 
 =SML
-val Ûsps2Ý = syll_prove_and_store mk_syllp2 "";
-val Ûvalid_sylls2Ý = map (sps2 syll_tac2)
-	(syllogism_data1 @ syllogism_data2 @ syllogism_data3);
+proveSylls mods_mapkit syll_tac2 "" (syllogism_data1 @ syllogism_data2 @ syllogism_data3);
 =TEX
-
-This is the resulting value.
-=GFT
-val valid_sylls2 =
-   [("Barbara", M a P, ¿ a M ô ¿ a P), ("Celarent", M e P, ¿ a M ô ¿ e P),
-      ("Darii", M a P, ¿ i M ô ¿ i P), ("Ferio", M e P, ¿ i M ô ¿ o P),
-      ("Cesare", P e M, ¿ a M ô ¿ e P), ("Camestres", P a M, ¿ e M ô ¿ e P),
-      ("Festino", P e M, ¿ i M ô ¿ o P), ("Baroco", P a M, ¿ o M ô ¿ o P),
-      ("Disamis", M i P, M a ¿ ô ¿ i P), ("Datisi", M a P, M i ¿ ô ¿ i P),
-      ("Bocardo", M o P, M a ¿ ô ¿ o P), ("Ferison", M e P, M i ¿ ô ¿ o P),
-      ("Camenes", P a M, M e ¿ ô ¿ e P), ("Dimaris", P i M, M a ¿ ô ¿ i P),
-      ("Fresison", P e M, M i ¿ ô ¿ o P), ("Darapti", M a P, M a ¿ ô ¿ i P),
-      ("Felapton", M e P, M a ¿ ô ¿ o P),
-      ("Bramantip", P a M, M a ¿ ô ¿ i P), ("Fesapo", P e M, M a ¿ ô ¿ o P),
-      ("Barbari", M a P, ¿ a M ô ¿ i P), ("Celaront", M e P, ¿ a M ô ¿ o P),
-      ("Cesaro", M e P, ¿ a M ô ¿ o P), ("Camestrop", P a M, ¿ e M ô ¿ o P),
-      ("Camenop", P a M, M e ¿ ô ¿ o P)] : (string * THM) list
-=TEX
-
-The theorems have aso been stored in the theory and are also displayed in the theory listing in \thyref{syllog2}
 
 \subsection{Modal Syllogisms}\label{MODSYLL}
 
@@ -2166,6 +2254,17 @@ This would give us three kinds of judgement, which assert a predication continge
 
 It is natural to consider the modal aspects in terms of possible worlds, and I will model it first in those terms (not knowing whether this will provide a good model of Aristotle's conception of modality).
 The propositional functions could then be modelled as functions from possible worlds to non-empty propositional functions.
+
+The following first attempt at a modal syllogism is poorly representative of Aristotle, since, it appears, considered two definitions of possibilty in terms of necessity, but based his work on modal syllogisms primarily on one which does not correspond to the modern usage which is implicit in the treatment given here.
+It is to be expected therefore that any examination of the results obtained here will differ from Aristotle's views substantially because of this different conception of necessity.
+In due course I will add another kind of modal judgement which will be closer to the one principally investigated by Aristotle.
+
+Aristotle's principle definition of `possibly P' was:
+\begin{quote}
+not necessarily P and not necessarily not P
+\end{quote}
+
+This corresponds more closely with the concept `contingent' or its modern counterpart, `synthetic' than with contemporary usage of `possible', though the contemporary rendering which corresponds to Aristotle's other notion of possibility is a pre-Kripkean one in which we assume a fixed set of possible worlds with modal operators quantifying over the whole.
 
 \ignore{
 One respect in which the treatment of the syllogism so far looks odd to the modern eye is the lack of consideration of constants.
@@ -2316,6 +2415,14 @@ Then the two modal judgement forms:
 Ü µs· © s ¤ µw· s w
 °
 
+Aristotle's other notion of possibility is:
+
+¹HOLCONST
+Ü Û¨‰aÝ : (W ­ BOOL) ­ BOOL
+÷üüüüüü
+Ü µs· ¨‰a s ¤ ³ (µw· s w) ± ³ (µw· ³ s w)
+°
+
 Finally the non-modal judgements also need a judgement forming constant.
 
 ¹HOLCONST
@@ -2323,6 +2430,24 @@ Finally the non-modal judgements also need a judgement forming constant.
 ÷üüüüüü
 Ü µs· ˜ s ¤ s actual_world
 °
+
+Special difficulties are raised by reasoning with $¨‰a$ and to help with these difficulties it is useful to have negation as a kind of propositional operator in this modal logic.
+
+=SML
+declare_prefix (350, "³‰m");
+=TEX
+
+¹HOLCONST
+Ü $Û³‰mÝ : (W ­ BOOL) ­ (W ­ BOOL)
+÷üüüüüü
+Ü µx· ³‰m x = Ìw· ³ (x w)
+°
+
+Though this constant is distinct from the non-modal negation, we might as well drop the subscript where no ambiguity arises.
+
+=SML
+declare_alias ("³", ¬$³‰m®);
+=TEX
 
 \subsubsection{Laws of Immediate Inference}
 
@@ -2344,14 +2469,34 @@ set_goal([¬˜X®], ¬¨X®);
 a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬©®, get_spec ¬¨®, get_spec ¬˜®]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (¶_tac ¬actual_world® THEN strip_tac);
-val ˜¨_thm_thm = save_pop_thm "˜¨_thm_thm";
+val ˜¨_thm = save_pop_thm "˜¨_thm";
+
+set_goal([¬¨‰a X®], ¬¨X®);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬©®, get_spec ¬¨®, get_spec ¬¨‰a®, get_spec ¬˜®]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬w'® THEN strip_tac);
+val ¨‰a¨_thm = save_pop_thm "¨‰a¨_thm";
+
+set_goal([¬¨‰a X®], ¬³©X®);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬©®, get_spec ¬¨®, get_spec ¬¨‰a®, get_spec ¬˜®]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬w® THEN strip_tac);
+val ¨‰a³©_thm = save_pop_thm "¨‰a³©_thm";
+
+set_goal([], ¬¨‰a X ¤ ¨‰a (³‰m X)®);
+a (rewrite_tac [get_spec ¬¨‰a®, get_spec ¬$³‰m®]
+	THEN prove_tac[]);
+val ¨‰a³‰m_thm = save_pop_thm "¨‰a³‰m_thm";
 =TEX
 }%ignore
 
 =GFT
-©¨_thm = 		© X ô ¨ X
+©¨_thm = 	© X ô ¨ X
 ©˜_thm = 	© X ô ˜ X
 ˜¨_thm = 	˜ X ô ¨ X
+¨‰a¨_thm =	¨‰a X ô ¨ X
+¨‰a³©_thm =	¨‰a X ô ³ © X
+¨‰a³‰m_thm =	ô ¨‰a X ¤ ¨‰a (³‰m X)
 =TEX
 
 \paragraph{Simple Conversion}
@@ -2398,6 +2543,43 @@ a (spec_nth_asm_tac 1 ¬w®);
 a (asm_fc_tac[]);
 val ¨i_conv_thm = save_pop_thm "¨i_conv_thm";
 
+set_goal([¬¨‰a (A e B)®], ¬¨‰a (B e A)®);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¬¨‰a®, ¬©®, ¬$e®])
+	THEN contr_tac);
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 1 ¬w':W®);
+a (asm_fc_tac[]);
+val ¨‰ae_conv_thm = save_pop_thm "¨‰ae_conv_thm";
+
+set_goal([¬¨‰a (A i B)®], ¬¨‰a (B i A)®);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¬¨‰a®, ¬$i®])
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¬w:W®);
+a (spec_nth_asm_tac 6 ¬x'®);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¬w':W®);
+a (spec_nth_asm_tac 1 ¬x®);
+val ¨‰ai_conv_thm = save_pop_thm "¨‰ai_conv_thm";
+
+set_goal([], ¬¨‰a (A a B) ¤ ¨‰a (A u B)®);
+a (rewrite_tac (map get_spec [¬¨‰a®, ¬©®, ¬$a®, ¬$u®])
+	THEN prove_tac[]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬w':W® THEN asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬w:W® THEN asm_prove_tac[]);
+val ¨‰ao_conv_thm = save_pop_thm "¨‰ao_conv_thm";
+
+set_goal([], ¬¨‰a (A e B) ¤ ¨‰a (A i B)®);
+a (rewrite_tac (map get_spec [¬¨‰a®, ¬©®, ¬$e®, ¬$i®])
+	THEN prove_tac[]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬w':W® THEN asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬w:W® THEN asm_prove_tac[]);
+val ¨‰ei_conv_thm = save_pop_thm "¨‰ei_conv_thm";
+
 set_goal([¬© (A e B)®], ¬¨(B e A)®);
 a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¬¨®, ¬©®, ¬$e®])
 	THEN contr_tac);
@@ -2420,6 +2602,10 @@ i_conv_thm = ˜ (A i B) ô ˜ (B i A)
 ©i_conv_thm = © (A i B) ô © (B i A)
 ¨e_conv_thm = ¨ (A e B) ô ¨ (B e A)
 ¨i_conv_thm = ¨ (A i B) ô ¨ (B i A)
+¨‰ae_conv_thm = ¨‰a (A e B) ô ¨‰a (B e A)
+¨‰ai_conv_thm = ¨‰a (A i B) ô ¨‰a (B i A)
+¨‰ao_conv_thm = ô ¨‰a (A a B) ¤ ¨‰a (A o B)
+¨‰ei_conv_thm = ô ¨‰a (A e B) ¤ ¨‰a (A i B)
 ©¨e_conv_thm = © (A e B) ô ¨ (B e A)
 ©˜e_conv_thm = © (A e B) ô ˜ (B e A)
 =TEX
@@ -2494,7 +2680,7 @@ fun Ûmk_modtÝ vt = mk_ctype ("­", [vt,
 	mk_ctype ("­", [vt, (mk_ctype ("­", [”W®, ”BOOL®]))])]);
 
 fun Ûmk_modsyllÝ vt (s, n) =
-	mk_syll vt (nth (n-1) (figures vt)) (optrip_from_text (mk_modt vt) s);
+	mk_syll vt (nth (n-1) (figurest vt)) (optrip_from_text (mk_modt vt) s);
 
 fun ÛmodgoalÝ (mo1, mo2, mo3) ([p1,p2], c) =
 	([mk_app (mo1, p1), mk_app (mo2, p2)], mk_app (mo3, c));
@@ -2580,13 +2766,13 @@ Taking any valid syllogism and applying modal operators using one of the pattern
 =SML
 val mod_gen_params =
 	[(¬©®, ¬©®, ¬©®),
-	(¬©®, ¬©®, ¬¨®),
-	(¬©®, ¬©®, ¬˜®),
-	(¬¨®, ¬©®, ¬¨®),
-	(¬©®, ¬¨®, ¬¨®),
-	(¬©®, ¬˜®, ¬˜®),
-	(¬˜®, ¬©®, ¬˜®),
-	(¬˜®, ¬˜®, ¬˜®)];
+	 (¬©®, ¬©®, ¬¨®),
+	 (¬©®, ¬©®, ¬˜®),
+	 (¬¨®, ¬©®, ¬¨®),
+	 (¬©®, ¬¨®, ¬¨®),
+	 (¬©®, ¬˜®, ¬˜®),
+	 (¬˜®, ¬©®, ¬˜®),
+	 (¬˜®, ¬˜®, ¬˜®)];
 =TEX
 
 \ignore{
@@ -2638,7 +2824,6 @@ The same tactic used for proof of the syllogisms in the previous model still wor
 
 To obtain proofs of these other syllogisms we need to make use of the lemma we proved about $p$, {\it p\_¶\_lemma}.
 This we do by instantiating it for each of the variables which appear in the syllogisms and supplying these for use in the proof.
-
 
 =SML
 val Ûmodsyll_G_tacÝ =
@@ -2699,13 +2884,15 @@ val it = 192 : int
 An important part of Aristotle's philosophy is his concept of demonstrative science.
 
 A proof is demonstrative if it proceeds from first principles and is deductively sound.
-Truths established in this way is necessary because the first principles must be essential and hence necessary and sound deduction preserves necessity.
+Truths established in this way are necessary because the first principles must be essential and hence necessary and sound deduction preserves necessity.
 
 If we understand Hume's ``intuitively certain'' as a reference to the criteria for Aristotle's first principles, and understand Hume as using the term `demonstrative' in the same sense as Aristotle, then it is plausible that Hume's ``truths of reason'' are the same as Aristotle's truths of demonstrative science.
 
-It is tempting to use the word demonstrative for these though in Aristotle and Hume the first principles do not count as demonstrable.
+It is tempting to use the word demonstrative for `truths of reason' though in Aristotle and Hume the first principles do not count as demonstrable.
+This follows modern logic in using concepts such as `theorem' and `valid sentence' which apply to logical axioms as well as results deduced from them. 
 It is tempting also to identify these concepts with the concept of analyticity.
 This last point is aided by the connection in Aristotle between essential truth (which must be posessed by the first principles) and definition, which seems close, and which distinguishes his accidental predications from essential predications.
+A weak point in this is the question of the first principles of the various sciences, and the doubts one can reasonably have about whether Aristotle's essential truth must be analytic.
 
 However, we now expect deductive systems to be incomplete, and hence that not all analytic propositions are provable.
 However, the incompleteness may arise from adopting a fixed set of first principles, rather from incompleteness of deduction.
@@ -3584,10 +3771,10 @@ fun Ûmk_izz_syllÝ vt (a, b, c, d) (f1, f2, f3) =
 		‘f3 (mk_var("¿", vt)) (mk_var("P", vt))®®;
 
 fun Ûmk_cop_syllpÝ cop (s, n) =
-	([], mk_izz_syll ”TERM® (nth (n-1) (figures ”TERM®)) (opfuntrip_from_text cop s));
+	([], mk_izz_syll ”TERM® (nth (n-1) (figurest ”TERM®)) (opfuntrip_from_text cop s));
 
 fun Ûmk_cop_syllp_ccÝ cc (s, n) =
-	([], mk_izz_syll ”TERM® (nth (n-1) (figures ”TERM®)) (opfuntrip_from_text_cc cc s));
+	([], mk_izz_syll ”TERM® (nth (n-1) (figurest ”TERM®)) (opfuntrip_from_text_cc cc s));
 
 fun Ûmk_izz_syllpÝ (s, n) = mk_cop_syllp ¬izz® (s, n);
 
