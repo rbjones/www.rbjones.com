@@ -7,13 +7,13 @@ end;
 
 \ignore{
 =VDUMP t028i.tex
-Last Change $ $Date: 2010/12/15 07:22:28 $ $
+Last Change $ $Date: 2010/12/16 20:10:15 $ $
 
-$ $Id: t028.doc,v 1.24 2010/12/15 07:22:28 rbj Exp $ $
+$ $Id: t028.doc,v 1.25 2010/12/16 20:10:15 rbj Exp $ $
 =TEX
 }%ignore
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.24 2010/12/15 07:22:28 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.25 2010/12/16 20:10:15 rbj Exp $$}
 {\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
@@ -1202,7 +1202,9 @@ The present treatment was based firstly on the wikipedia account of \href{http:/
 The main interest at present is the sequence of models which contributes to the formulation of an integrated model for the syllogism and the metaphysics in Section \ref{METAPHYSICSII}.
 It suffices perhaps in this context to know in which models the various syllogisms are provable, without delving into the details of proof, which are at present, sheer hackery.
 
-\subsection{Generating the Syllogisms}
+\subsection{Preliminaries}
+
+\subsubsection{Generating the Syllogisms}
 
 This following presentation of the forms of syllogism is based primarily on \href{http://en.wikipedia.org/wiki/Syllogism}{the one at wikipedia}.
 
@@ -1268,7 +1270,6 @@ Syllogisms come in four figures, according to the configuration of variables in 
 \end{quote}
 
 Where S, P and M are the subject, predicate and middle term respectively. 
-
 
 The following function generates a list of four quadruples of HOL variables which correspond to the four figures of syllogisms.
 It is parameterised by the HOL type used for predicates to that it can be re-used when we change the representation type.
@@ -1446,8 +1447,83 @@ fun €mkSimpMapkit› ty opl =
 	end;
 =TEX
 
+\subsubsection{The Square of Opposition}
 
-\subsection{Reductions of the Syllogism}\label{RSPL}
+\begin{tabular}{|c|c|c|}
+\hline
+A & contraries & E \\
+\hline
+subalternates & contradictories & subalternates \\
+\hline
+I & subcontraries & O \\
+\hline
+\end{tabular}
+
+The relationships between corners of the square of opposition have the following names:
+
+\begin{itemize}
+\item[contradictories] A and B are contradictories if $¨A § ≥BÆ$
+\item[contraries] A and B are contraries if they are not both true.
+\item[subcontraries] A and B are sub-contraries if they are not both false.
+\item[subalternates] B is subalternate to A if A implies B
+\end{itemize}
+
+
+The full set of relationships exhibited by the square is:
+
+\begin{itemize}
+\item[AO]contradictories
+\item[EI]contradictories
+\item[AE]contraries
+\item[IO]subcontraries
+\item[AI]subalternates
+\item[EO]subalternates
+\end{itemize}
+
+The goal conclusions for theorems expressing compliance are (details of syntax will vary between interpretations):
+
+=GFT SML
+val AO = ¨A a B § ≥ A o BÆ;
+val EI = ¨A e B § ≥ A i BÆ;
+val AE = ¨≥ (A a B ± A e B)Æ;
+val IO = ¨A i B ≤ A o BÆ;
+val AI = ¨A a B ¥ A i BÆ;
+val EO = ¨A e B ¥ A o BÆ;
+=TEX
+
+This provides a compact way of comparing different interpretations of the assertoric forms.
+
+The principal point of difference is in subalternation which fails when the quantifiers are interpreted in the modern sense and empty terms are admitted.
+One remedy for this defect might be to add existential import to the universal quantifier, but this by itself would cause the contradictories to fail.
+Another remedy is to add existential import to the universal and define the particular modes through the contradictories.
+
+
+\subsubsection{Some Definitions Common Several Interpretations}
+
+We will use the same names for the forms of assertions throughout and declare them here as infix.
+
+=SML
+open_theory "aristotle";
+=TEX
+
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
+
+There are several different types used for Aristotelian terms.
+Abbreviations for these types are collected here.
+
+=SML
+declare_type_abbrev("STERM", [], î'a SETÆ);
+declare_type_abbrev("PTERM", [], îBOOLÆ);
+declare_type_abbrev("TERM2", [], î'a ∏ ('a ≠ BOOL)Æ);
+declare_type_abbrev("TERM", [], î'a ≠ BOOLÆ);
+=TEX
+
+\subsection{Interpretation as Sets and as Propositions}\label{RSPL}
 
 This section is a kind of preliminary skirmish provoked by some discussions on \href{http://philo.at/cgi-bin/mailman/listinfo/phil-logic}{phil-logic} in which one or two specific questions are addressed.
 
@@ -1561,12 +1637,6 @@ or
 
 A set theoretic presentation of the u-p syllogisms can be obtained by assuming that the sets are not empty, but no similarly plausible account of these syllogisms is available in propositional logic.
 
-The following two definitions provide names for the types of the variables in the two cases.
-
-=SML
-declare_type_abbrev("STERM", [], î'a SETÆ);
-declare_type_abbrev("PTERM", [], îBOOLÆ);
-=TEX
 
 Here is a table describing the proposed mappings:
 
@@ -1769,21 +1839,14 @@ val st2_tac = REPEAT (POP_ASM_T ante_tac)
 		THEN PC_T1 "hol1" rewrite_tac [] THEN prove_tac[];
 =TEX
 
-=IGN
-mkGoals st2_mapkit (syllogism_data2 @ syllogism_data3);
-map (fn x => (fst x, mkSyll st2_mapkit x) handle _ => (fst x, ([],¨TÆ))) (syllogism_data2 @ syllogism_data3);
 =SML
 proveSylls st2_mapkit st2_tac "_s" (syllogism_data2 @ syllogism_data3);
 =TEX
 
 Some words about the very limited signficance of this little exercise would be appropriate here!
 
-\subsection{Non U-P Syllogisms}\label{SWEF}
+\subsection{Naive Interpretation in Predicate Calculus}\label{SWEF}
 
-The theory here is very simple, the presentation is complicated by the fact that the proofs have been completely automated by scripts in the metalanguage.
-These can be completely ignored by anyone who is willing to trust that {\Product} checks proofs correctly.
-In any case, the theorems proven are just the statements of the 15 valid forms of non-u-p syllogism.
-For the most concise statement of the results of the exercise, the reader should refer directly to the theory listing in \thyref{syllog2}.
 
 =SML
 open_theory "aristotle";
@@ -1811,26 +1874,11 @@ In HOL the most natural answer to this is ``boolean valued functions'' which are
 This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
 Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $î'a ≠ BOOLÆ$ is the function $¨Ãx:'a∑ FÆ$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
 
-The following ``type abbreviation'' allows us to use {\it TERM} as an abbreviation for $î'a ≠ BOOLÆ$.
-
-=SML
-declare_type_abbrev("TERM", [], î'a ≠ BOOLÆ);
-=TEX
-
 \subsubsection{Predication}
 
 ``o'' is already in use for functional composition, so we will use ``u'' instead and then use an alias to permit us to write this as ``o'' (type inference will usually resolve any ambiguity).
 
-To render these in HOL we first declare the relevant letters as infix operators:
-
-=SML
-declare_infix (300, "a");
-declare_infix (300, "e");
-declare_infix (300, "i");
-declare_infix (300, "u");
-=TEX
-
-They predication operators are defined as follows:
+The predication operators are defined as follows:
 
 πHOLCONST
 ‹ $€a› : TERM ≠ TERM ≠ BOOL
@@ -1926,7 +1974,7 @@ These don't work here because they rely upon the u-p syllogisms.
 
 \paragraph{Obversion}
 
-For these we need to define an operation of complementation on predicates.
+For these we need to define an operation of complementation on terms.
 
 πHOLCONST
 ‹ €Complement› : TERM ≠ TERM
@@ -1934,7 +1982,7 @@ For these we need to define an operation of complementation on predicates.
 ‹ µA ¡∑ (Complement A) ¡ § ≥ (A ¡) 
 ∞
 
-We will use ``\~'' as a shorthand for ``complement''.
+We will use ``\verb!~!'' as a shorthand for ``complement''.
 
 =SML
 declare_alias ("~", ¨ComplementÆ);
@@ -1973,56 +2021,54 @@ oi_obv_thm = 	A o B Ù A i ~ B
 
 \paragraph{Contraposition and Inversion}
 
-\paragraph{The Square of Opposition}
+\subsubsection{The Square of Opposition}
 
-\subsubsection{The Valid Syllogisms}\label{ValidSyllogisms}
+
+=GFT
+AO_thm = Ù A a B § ≥ A o B
+EI_thm = Ù A e B § ≥ A i B
+≥AE_thm = Ù ≥ (µ A B∑ ≥ (A a B ± A e B))
+≥IO_thm = Ù ≥ (µ A B∑ A i B ≤ A o B)
+≥AI_thm = Ù ≥ (µ A B∑ A a B ¥ A i B)
+≥EO_thm = Ù ≥ (µ A B∑ A e B ¥ A o B)
+=TEX
+
+\ignore{
+=SML
+val AO_thm = save_thm ("AO", syll_rule ([], ¨(A a B) § ≥ (A o B)Æ));
+val EI_thm = save_thm ("EI", syll_rule ([], ¨(A e B) § ≥ (A i B)Æ));
+
+set_goal ([], ¨≥ µA B ∑ ≥ (A a B ± A e B)Æ);
+a (syll_tac);
+a (∂_tac ¨Ãx∑FÆ THEN rewrite_tac[]);
+val ≥AE_thm = save_pop_thm "≥AE_thm";
+
+set_goal ([], ¨≥ µA B ∑ A i B ≤ A u BÆ);
+a (strip_tac);
+a (∂_tac ¨Ãx∑FÆ);
+a (rewrite_tac [get_spec ¨$iÆ, get_spec ¨$uÆ]);
+val ≥IU_thm = save_pop_thm "≥IU_thm";
+
+set_goal ([], ¨≥ µA B ∑ A a B ¥ A i BÆ);
+a (strip_tac);
+a (∂_tac ¨Ãx∑FÆ);
+a (rewrite_tac [get_spec ¨$iÆ, get_spec ¨$aÆ]);
+val ≥AI_thm = save_pop_thm "≥AI_thm";
+
+set_goal ([], ¨≥ µA B ∑ A e B ¥ A u BÆ);
+a (strip_tac);
+a (∂_tac ¨Ãx∑FÆ);
+a (rewrite_tac [get_spec ¨$eÆ, get_spec ¨$uÆ]);
+val ≥EO_thm = save_pop_thm "≥EO_thm";
+=TEX
+}%
+
+
+\subsubsection{The Syllogisms}\label{ValidSyllogisms}
 
 The fifteen valid non-u-p syllogisms are true under this semantics and can be proven formally with ease.
 
 \subsubsection{Generating Syllogisms}
-
-This section is mainly given over to short programs in our metalanguage the end effect of which is to secure the proof of the 15 forms of non-u-p syllogism.
-The results are visible in the ``theorems'' section of the theory listing in \thyref{syllog2}, and this section can be safely skipped by anyone whose interest is purely philosophical.
-Normally this kind of material would be hidden, it is shown here to give an impression of the size of script necessary to automate this kind of task.
-
-The following functions construct a syllogism.
-
-=IGN
-fun €mk_pred› q s p = mk_app(mk_app (q, s), p);
-
-fun €mk_syll› vt (a,b,c,d) (q1, q2, q3) =
-	([mk_pred q1 a b, mk_pred q2 c d],
-		mk_pred q3 (mk_var("ø", vt)) (mk_var("P", vt)));
-
-fun €mk_relt› t = mk_ctype ("≠", [t, mk_ctype ("≠", [t, îBOOLÆ])]);
-
-fun €mk_syllp› vt (s, n) =
-	mk_syll vt (nth (n-1) (figurest vt)) (optrip_from_text (mk_relt vt) s);
-=TEX
-
-=IGN
-val €mk_syllp1› = mk_syllp îTERMÆ;
-=TEX
-
-
-The following code generates the goals for proving syllogisms from the data structures, generates and checks formal proofs and saves the resulting theorems in the current theory (see end of document for theory listing). 
-
-=IGN
-fun €syll_prove› msp suff tac (a,n) =
-	let val thm = tac_proof (msp (a,n), tac) handle _ => t_thm
-	in (concat [a, suff], thm)
-	end;
-
-fun €syll_prove_and_store› msp suff tac (a,n) =
-	let val res = syll_prove msp suff tac (a,n);
-	    val _ = save_thm res
-	in res 
-	end;
-
-val €sps1› = syll_prove_and_store mk_syllp1 "";
-=TEX
-
-New way of doing it.
 
 First we make a \emph{mapkit}.
 
@@ -2059,11 +2105,12 @@ val valid_sylls = [
 
 The theorems are also displayed in the theory listing in \thyref{syllog2}
 
-\subsection{The Complete Syllogism (I)}\label{SYLLNE}
+
+\subsection{Interpretation with Non-Empty Terms}\label{SYLLNE}
 
 There is more than one way in which the semantics of the syllogism can be modified to make the inference from ``All As are Bs'' to ``Some As are Bs'' sound.
 One way would be to change the meaning of ``All''.
-This would interfere with the square of opposition by making opposites no longer contradictories.
+This would interfere with the square of opposition by making diagonal entries no longer contradictories.
 From this I tentatively infer that the exclusion of empty predicates is a better approach.
 \footnote{This seems to be endorsed by Robin Smith in the \href{http://plato.stanford.edu/entries/aristotle-logic/}{Stanford Encyclopaedia of Philosophy}.}
 
@@ -2093,11 +2140,6 @@ Instead of using a propositional function, which might be unsatisfiable, we use 
 The pair consists of one value, a value for which the predicate is true, and a propositional function.
 The predicate $(v, pf)$ is then to be considered true of some value $x$ {\it either} if $x$ is $v$ {\it or} if $pf$ is true of $x$. 
 
-This is the type abbreviation:
-
-=SML
-declare_type_abbrev("TERM2", [], î'a ∏ ('a ≠ BOOL)Æ);
-=TEX
 
 \subsubsection{Predication}
 
@@ -2130,15 +2172,6 @@ p_∂_lemma =
 This principle is what we need to prove the u-p syllogisms.
 
 We then proceed in a similar manner to the first model, using the function $p$ to convert the new kind of predicate into the old.
-
-We have a new theory which is not a child of the first theory, so we must redeclare the fixity of the predication operators:
-
-=SML
-declare_infix (300, "a");
-declare_infix (300, "e");
-declare_infix (300, "i");
-declare_infix (300, "u");
-=TEX
 
 They predication operators are then defined.
 Note that the differences are small and uniform.
@@ -2244,6 +2277,286 @@ They are proven and stored in the theory listing (see Appendix \ref{syllog3}) by
 proveSylls mods_mapkit syll_tac2 "" (syllogism_data1 @ syllogism_data2 @ syllogism_data3);
 =TEX
 
+\subsection{Interpreting with Existential Import in Universals}\label{IEIU}
+
+In this interpretation we allow empty predicates but define the universal so that it entails a particular, and define the particular to preserve the contradictions in the square of opposition.
+
+=SML
+open_theory "aristotle";
+force_new_theory "syllog4";
+=TEX
+
+\ignore{
+=SML
+force_new_pc €"'syllog4"›;
+merge_pcs ["'savedthm_cs_∂_proof"] "'syllog4";
+set_merge_pcs ["misc2", "'syllog4"];
+=TEX
+}%ignore
+
+\subsubsection{The Subject Matter}
+
+Aristotle's syllogistic logic is concerned with inferences between judgements considered as predications.
+A predication in Aristotle affirms a {\it predicate} of some {\it subject}, but by contrast with more recent notions of predication the subject need not be an individual, the kinds of things which appear as predicates may also appear as subjects, and the relationship expressed seems closer to a modern eye to set inclusion than to what we now regard as predication.
+Since subject and predicate are for present purposes the same kind of thing, it is useful to have a name for that kind of thing, and I will use the name {\it property}.
+
+There are four kinds of predication which we have here to account for, which we will do by offering definitions which provide a good model for syllogistic logic, i.e. one in which the syllogisms held to be true by Aristotle are in fact true.
+Before providing these definitions we must decide what kind of thing are the terms which are related by Aristotelian predication.
+ 
+In HOL the most natural answer to this is ``boolean valued functions'' which are objects of type $î'a ≠ BOOLÆ$ for some type of individuals which we can leave open by using the type variable $î'aÆ$.
+This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
+Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $î'a ≠ BOOLÆ$ is the function $¨Ãx:'a∑ FÆ$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
+
+
+\subsubsection{Predication}
+
+``o'' is already in use for functional composition, so we will use ``u'' instead and then use an alias to permit us to write this as ``o'' (type inference will usually resolve any ambiguity).
+
+To render these in HOL we first declare the relevant letters as infix operators:
+
+They predication operators are defined as follows:
+
+πHOLCONST
+‹ $€a› : TERM ≠ TERM ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B∑ A a B § (µx∑ A x ¥ B x) ± ∂x∑ A x
+∞
+
+πHOLCONST
+‹ $€e› : TERM ≠ TERM ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B∑ A e B § (µx∑ A x ¥ ≥ B x) ± ∂x∑ A x
+∞
+
+πHOLCONST
+‹ $€i› : TERM ≠ TERM ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B∑ A i B § (∂x∑ A x ± B x) ≤ ≥ (∂x∑ A x)
+∞
+
+πHOLCONST
+‹ $€u› : TERM ≠ TERM ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µA B∑ A u B § (∂x∑ A x ± ≥ B x) ≤ ≥ (∂x∑ A x)
+∞
+
+=SML
+declare_alias("o", ¨$uÆ);
+=TEX
+
+Note that as defined above these come in complementary pairs, $a$ being the negation of $o$ and $e$ of $i$.
+If we had negation we could manage with just two predication operators.
+
+\subsubsection{The Laws of Immediate Inference}
+
+Though in the source of this kind of ``literate script'' are to be found the scripts for generating and checking the proofs of all the theorems presente, it will not be my practice to expose these scripts in the printed version of the document.
+These scripts are not usually intelligible other than in that intimate man-machine dialogue which they mediate, and sufficient knowledge for most purposes of the structure of the proof will be found in the detailed lemmas proven (since the level of proof automation is modest).
+
+However, I will begin by exposing some of the scripts used for obtaining proofs of syllogisms in this model, to give the reader an impession of the level of complexity and kind of obscurity involved in this kind of formal work,
+I will not attempt sufficient explanation to make these scripts intelligible, they are best understood in the interactive environment, all the scripts are available for readers who want to run them.
+
+Most readers are expected to skip over the gory details, the philosophical points at stake do not depend on the details of the proofs.
+
+Before addressing the laws of immediate inference
+\footnote{in which I followed Strawson \cite{strawson52}, though I can now cite \href{file:///home/rbj/rbj/share/rbjones/www/rbjpub/philos/classics/aristotl/o3102c.htm}{Aristotle, Prior Analytic, Book 1, Part 2.}
+\cite{aristotleL325}}
+I devise a tactic for automating simple proofs in this domain.
+
+The following elementary tactic expands the goal by applying the definitions of the operators and then invokes a general tactic for the predicate calculus.
+A rule is also defined using that tactic for direct rather than interactive proof.
+
+=SML
+val €syll_tac3› = asm_prove_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]);
+fun €syll_rule3› g = tac_proof (g, syll_tac3);	
+=TEX
+
+\paragraph{Simple Conversion}
+
+These fail.
+
+=SML
+set_goal([], ¨≥ µA B∑ A e B ¥ B e AÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨Ãx∑ TÆ THEN rewrite_tac[] THEN strip_tac);
+a (∂_tac ¨Ãx∑ FÆ THEN rewrite_tac[] THEN strip_tac);
+val ≥e_conv_thm = save_pop_thm "≥e_conv_thm";
+
+set_goal([], ¨≥ µA B∑ A i B ¥ B i AÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]));
+a (REPEAT strip_tac);
+a (∂_tac ¨Ãx∑ FÆ THEN rewrite_tac[] THEN strip_tac);
+a (∂_tac ¨Ãx∑ TÆ THEN rewrite_tac[] THEN strip_tac);
+val ≥i_conv_thm = save_pop_thm "≥i_conv_thm";
+=TEX
+
+The following two theorems are obtained.
+=GFT
+≥e_conv_thm = Ù ≥ (µ A B∑ A e B ¥ B e A)
+≥i_conv_thm = Ù ≥ (µ A B∑ A i B ¥ B i A)
+=TEX
+
+The following two theorems show that the other obvious conversions are also false.
+Note that the theorems are not polymorphic, they are proven specifically for terms of type $Ó ≠ BOOL$.
+
+\ignore{
+=SML
+set_goal([], ¨∂A B:Ó ≠ BOOL∑ A a B ± ≥ B a AÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]));
+a (∂_tac ¨Ãx∑ x = 0Æ THEN ∂_tac ¨Ãx∑TÆ THEN prove_tac[]);
+a (∂_tac ¨1Æ THEN PC_T1 "lin_arith" prove_tac[]);
+val ≥a_conv_thm = save_pop_thm "≥a_conv_thm";
+
+set_goal([], ¨∂A B:Ó ≠ BOOL∑ A o B ± ≥ B o AÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]));
+a (∂_tac ¨Ãx∑TÆ THEN ∂_tac ¨Ãx∑ x = 0Æ THEN prove_tac[]);
+a (∂_tac ¨1Æ THEN PC_T1 "lin_arith" prove_tac[]);
+val ≥o_conv_thm = save_pop_thm "≥o_conv_thm";
+=TEX
+}%ignore
+
+=GFT
+≥a_conv_thm = Ù ∂ A B∑ A a B ± ≥ B a A
+≥o_conv_thm = Ù ∂ A B∑ A o B ± ≥ B o A
+=TEX
+
+\paragraph{Conversion Per Accidens}
+
+These come out OK.
+
+=SML
+val ai_conv_thm = save_thm ("ai_conv_thm", syll_rule3([¨A a BÆ], ¨B i AÆ));
+val eo_conv_thm = save_thm ("eo_conv_thm", syll_rule3([¨A e BÆ], ¨B u AÆ));
+=TEX
+
+=GFT
+val ai_conv_thm = A a B Ù B i A : THM
+val eo_conv_thm = A e B Ù B o A : THM
+=TEX
+
+\paragraph{Obversion}
+
+For these we need to define an operation of complementation on terms.
+
+πHOLCONST
+‹ €Complement› : TERM ≠ TERM
+˜¸¸¸¸¸¸
+‹ µA ¡∑ (Complement A) ¡ § ≥ (A ¡) 
+∞
+
+We will use ``\verb!~!'' as a shorthand for ``complement''.
+
+=SML
+declare_alias ("~", ¨ComplementÆ);
+=TEX
+
+\ignore{
+=SML
+add_pc_thms "'syllog4" [get_spec ¨ComplementÆ];
+set_merge_pcs ["misc2", "'syllog4"];
+=TEX
+}%ignore
+
+\ignore{
+=SML
+val ae_obv_thm = save_thm ("ae_obv_thm", syll_rule3([¨A a BÆ], ¨A e ~BÆ));
+val ea_obv_thm = save_thm ("ea_obv_thm", syll_rule3([¨A e BÆ], ¨A a ~BÆ));
+
+set_goal([¨A i BÆ], ¨A u ~BÆ);
+a (POP_ASM_T ante_tac THEN rewrite_tac(map get_spec [¨$aÆ, ¨$eÆ, ¨$iÆ, ¨$uÆ]));
+val io_obv_thm = save_pop_thm "io_obv_thm";
+
+set_goal([¨A u BÆ], ¨A i ~BÆ);
+a (syll_tac3);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+val oi_obv_thm = save_pop_thm "oi_obv_thm";
+=TEX
+}%ignore
+
+=GFT
+ae_obv_thm = 	A a B Ù A e ~ B
+ea_obv_thm = 	A e B Ù A a ~ B
+io_obv_thm = 	A i B Ù A o ~ B
+oi_obv_thm = 	A o B Ù A i ~ B
+=TEX
+
+\paragraph{Contraposition and Inversion}
+
+\subsubsection{The Square of Opposition}
+
+This is complete with this semantics.
+
+=GFT
+AO_thm = Ù A a B § ≥ A o B
+EI_thm = Ù A e B § ≥ A i B
+AE_thm = Ù ≥ (A a B ± A e B)
+IO_thm = Ù A i B ≤ A o B
+AI_thm = Ù A a B ¥ A i B
+EO_thm = Ù A e B ¥ A o B
+=TEX
+
+\ignore{
+=SML
+val AO_thm = save_thm ("AO", syll_rule3 ([], ¨(A a B) § ≥ (A o B)Æ));
+val EI_thm = save_thm ("EI", syll_rule3 ([], ¨(A e B) § ≥ (A i B)Æ));
+
+set_goal ([], ¨≥ (A a B ± A e B)Æ);
+a (syll_tac3);
+val AE_thm = save_pop_thm "AE_thm";
+
+set_goal ([], ¨A i B ≤ A u BÆ);
+a (syll_tac3);
+val IO_thm = save_pop_thm "IO_thm";
+
+set_goal ([], ¨A a B ¥ A i BÆ);
+a (syll_tac3);
+val AI_thm = save_pop_thm "AI_thm";
+
+set_goal ([], ¨A e B ¥ A u BÆ);
+a (syll_tac3);
+val EO_thm = save_pop_thm "EO_thm";
+=TEX
+}%
+
+
+\subsubsection{The Syllogisms}\label{ValidSyllogisms}
+
+First we make a \emph{mapkit}.
+
+=SML
+val s3mapkit:mapkit = mkSimpMapkit îTERMÆ [¨$aÆ,¨$eÆ,¨$iÆ,¨$uÆ];
+=TEX
+
+Then we apply this in generating and proving the non u-p syllogisms.
+
+=SML
+proveGoals syll_tac "" (mkGoals s3mapkit syllogism_data1);
+=TEX
+
+This is the resulting value.
+=GFT
+val valid_sylls = [
+	("Barbara", M a P, ø a M Ù ø a P),
+	("Celarent", M e P, ø a M Ù ø e P),
+	("Darii", M a P, ø i M Ù ø i P),
+	("Ferio", M e P, ø i M Ù ø o P),
+	("Cesare", P e M, ø a M Ù ø e P),
+	("Camestres", P a M, ø e M Ù ø e P),
+	("Festino", P e M, ø i M Ù ø o P),
+	("Baroco", P a M, ø o M Ù ø o P),
+	("Disamis", M i P, M a ø Ù ø i P),
+	("Datisi", M a P, M i ø Ù ø i P),
+	("Bocardo", M o P, M a ø Ù ø o P),
+	("Ferison", M e P, M i ø Ù ø o P),
+	("Camenes", P a M, M e ø Ù ø e P),
+	("Dimaris", P i M, M a ø Ù ø i P),
+	("Fresison", P e M, M i ø Ù ø o P)
+] : (string * THM) list
+=TEX
+
+The theorems are also displayed in the theory listing in \thyref{syllog4}
+
+
 \subsection{Modal Syllogisms}\label{MODSYLL}
 
 The language of syllogistic logic does not have operators over propositions.
@@ -2347,15 +2660,6 @@ p_∂_lemma =
 This principle is what we need to prove the u-p syllogisms.
 
 We then proceed in a similar manner to the other models, using the function $p$ to convert the new kind of predicate into the old.
-
-We have a new theory which is not a child of the first theory, so we must redeclare the fixity of the predication operators:
-
-=SML
-declare_infix (300, "a");
-declare_infix (300, "e");
-declare_infix (300, "i");
-declare_infix (300, "u");
-=TEX
 
 They predication operators are then defined.
 Note that the differences are small and uniform.
@@ -2549,7 +2853,7 @@ a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨®âaÆ, ¨©Æ, ¨$eÆ])
 a (asm_fc_tac[]);
 a (spec_nth_asm_tac 1 ¨w':WÆ);
 a (asm_fc_tac[]);
-val ®âae_conv_thm = save_pop_thm "®âae_conv_thm";
+val ®âa_e_conv_thm = save_pop_thm "®âa_e_conv_thm";
 
 set_goal([¨®âa (A i B)Æ], ¨®âa (B i A)Æ);
 a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [¨®âaÆ, ¨$iÆ])
@@ -2560,7 +2864,7 @@ a (spec_nth_asm_tac 6 ¨x'Æ);
 (* *** Goal "2" *** *)
 a (spec_nth_asm_tac 1 ¨w':WÆ);
 a (spec_nth_asm_tac 1 ¨xÆ);
-val ®âai_conv_thm = save_pop_thm "®âai_conv_thm";
+val ®âa_i_conv_thm = save_pop_thm "®âa_i_conv_thm";
 
 set_goal([], ¨®âa (A a B) § ®âa (A u B)Æ);
 a (rewrite_tac (map get_spec [¨®âaÆ, ¨©Æ, ¨$aÆ, ¨$uÆ])
@@ -2602,8 +2906,8 @@ i_conv_thm = ò (A i B) Ù ò (B i A)
 ©i_conv_thm = © (A i B) Ù © (B i A)
 ®e_conv_thm = ® (A e B) Ù ® (B e A)
 ®i_conv_thm = ® (A i B) Ù ® (B i A)
-®âae_conv_thm = ®âa (A e B) Ù ®âa (B e A)
-®âai_conv_thm = ®âa (A i B) Ù ®âa (B i A)
+®âa_e_conv_thm = ®âa (A e B) Ù ®âa (B e A)
+®âa_i_conv_thm = ®âa (A i B) Ù ®âa (B i A)
 ®âa_ao_conv_thm = Ù ®âa (A a B) § ®âa (A o B)
 ®âa_ei_conv_thm = Ù ®âa (A e B) § ®âa (A i B)
 ©®e_conv_thm = © (A e B) Ù ® (B e A)
@@ -3036,17 +3340,17 @@ The method used in my model of the modal syllogism in Section \ref{MODSYLL} will
 A term is therefore modelled as either a non-empty set of individual substances or a non-empty set of individual attributes.
 
 =SML
-declare_type_abbrev (€"TERM"›, [], î(CAT ∏ TAG NESET)Æ);
+declare_type_abbrev (€"MTERM"›, [], î(CAT ∏ TAG NESET)Æ);
 =TEX
 
 πHOLCONST
-‹ €mk_SubsTerm› : TAG  ≠ TERM
+‹ €mk_SubsTerm› : TAG  ≠ MTERM
 ˜¸¸¸¸¸¸
 ‹ µs∑ mk_SubsTerm s = (Category_of_Substance, NeSet s)
 ∞
 
 πHOLCONST
-‹ €mk_AttrTerm› : CAT ∏ TAG  ≠ TERM
+‹ €mk_AttrTerm› : CAT ∏ TAG  ≠ MTERM
 ˜¸¸¸¸¸¸
 ‹ µs∑ mk_AttrTerm s = (Fst s, NeSet (Snd s))
 ∞
@@ -3054,7 +3358,7 @@ declare_type_abbrev (€"TERM"›, [], î(CAT ∏ TAG NESET)Æ);
 It may be useful to have a name for the predicate encompassing all substance.
 
 πHOLCONST
-‹ €Substance› : TERM
+‹ €Substance› : MTERM
 ˜¸¸¸¸¸¸
 ‹ Substance = mk_SubsTerm Universe
 ∞
@@ -3071,10 +3375,10 @@ I will then treat the modal operators as operators over propositions, and introd
 The type of the primitive copulas is:
 
 =SML
-declare_type_abbrev("COPULA", [], îI ≠ TERM ≠ (W ≠ BOOL)Æ);
+declare_type_abbrev("COPULA", [], îI ≠ MTERM ≠ (W ≠ BOOL)Æ);
 =TEX
 
-The first parameter is an individual substance or attribute rather than a TERM, the quantifying operator will arrange for each of the relevant individuals or attributes to be supplied.
+The first parameter is an individual substance or attribute rather than a MTERM, the quantifying operator will arrange for each of the relevant individuals or attributes to be supplied.
 
 \paragraph{Propositions}
 
@@ -3100,29 +3404,29 @@ declare_postfix (100, "not");
 
 The following function is used by both quantifiers to check if something is in the range of quantification.
 
-Think of a TERM as denoting a set of individuals, this is a test for membership of that set.
+Think of a MTERM as denoting a set of individuals, this is a test for membership of that set.
 The complications are because substances and attributes have different types in this model.
 
 =SML
-declare_infix(300, "InTERM");
+declare_infix(300, "InMTERM");
 =TEX
 
 πHOLCONST
-‹ $€InTERM› : I ≠ TERM ≠ BOOL
+‹ $€InMTERM› : I ≠ MTERM ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µ c1t c2ts ∑ c1t InTERM c2ts § Fst c1t = Fst c2ts ± Snd c1t ç PeSet (Snd c2ts)
+‹ µ c1t c2ts ∑ c1t InMTERM c2ts § Fst c1t = Fst c2ts ± Snd c1t ç PeSet (Snd c2ts)
 ∞
 
 =GFT
 interm_∂_lemma =
-	Ù µ t∑ ∂ i∑ i InTERM t
+	Ù µ t∑ ∂ j∑ j InMTERM t
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µt∑ ∂i∑ i InTERM tÆ);
+set_goal([], ¨µt∑ ∂j∑ j InMTERM tÆ);
 a (strip_tac);
-a (∂_tac ¨(Fst t, MemOf (Snd t))Æ THEN rewrite_tac[get_spec ¨$InTERMÆ]);
+a (∂_tac ¨(Fst t, MemOf (Snd t))Æ THEN rewrite_tac[get_spec ¨$InMTERMÆ]);
 val interm_∂_lemma = save_pop_thm "interm_∂_lemma";
 =TEX
 }%ignore
@@ -3138,15 +3442,15 @@ declare_prefix(400, "Some");
 =TEX
 
 πHOLCONST
-‹ €All› : TERM ≠ (I ≠ TERM ≠ MPROP) ≠ TERM ≠ MPROP
+‹ €All› : MTERM ≠ (I ≠ MTERM ≠ MPROP) ≠ MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
-‹ µ s r p∑ All s r p = Ãw∑ µz∑ z InTERM s ¥ r z p w
+‹ µ s r p∑ All s r p = Ãw∑ µz∑ z InMTERM s ¥ r z p w
 ∞
 
 πHOLCONST
-‹ €Some› : TERM ≠ (I ≠ TERM ≠ MPROP) ≠ TERM ≠ MPROP
+‹ €Some› : MTERM ≠ (I ≠ MTERM ≠ MPROP) ≠ MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
-‹ µ s r p∑ Some s r p = Ãw∑ ∂z∑ z InTERM s ± r z p w
+‹ µ s r p∑ Some s r p = Ãw∑ ∂z∑ z InMTERM s ± r z p w
 ∞
 
 \paragraph{Predicators}
@@ -3155,21 +3459,21 @@ For essential predication it is necessary that the individual and the predicate 
 In effect. since the non-substantial individuals are tagged with their category, we need only deal separately with the distinction between substantial and non-substantial and the set inclusion will ensure a match in the non-substantial categories.
 
 πHOLCONST
-‹ €izz› : I ≠ TERM ≠ MPROP
+‹ €izz› : I ≠ MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
-‹ µ i t∑ izz i t = Ãw∑ i InTERM t
+‹ µ j t∑ izz j t = Ãw∑ j InMTERM t
 ∞
 
 For accidental predication the subject term must be substantial and the predicate may not be.
 We then need some member of the predicate to be attributable to the substance.
 
 πHOLCONST
-‹ €hazz› : I ≠ TERM ≠ MPROP
+‹ €hazz› : I ≠ MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µ c1t c2ts∑ hazz c1t c2ts = Ãw∑
 ‹	Fst c1t = Category_of_Substance
 ‹ ± 	≥ Fst c2ts = Category_of_Substance
-‹ ±	(∂a∑ a ç PeSet (Snd c2ts) ± (Snd c1t) ç w (OutR(Fst c2ts), a))
+‹ ±	(∂b∑ b ç PeSet (Snd c2ts) ± (Snd c1t) ç w (OutR(Fst c2ts), b))
 ∞
 
 =GFT
@@ -3180,7 +3484,7 @@ not_izz_and_hazz_lemma1 =
 \ignore{
 =SML
 set_goal([], ¨µpa t w∑ ≥ (izz pa t w ± hazz pa t w)Æ);
-a (rewrite_tac [get_spec ¨$izzÆ, get_spec ¨$hazzÆ, get_spec ¨$InTERMÆ]);
+a (rewrite_tac [get_spec ¨$izzÆ, get_spec ¨$hazzÆ, get_spec ¨$InMTERMÆ]);
 a (contr_tac);
 a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
 val not_izz_and_hazz_lemma1 = save_pop_thm "not_izz_and_hazz_lemma1";
@@ -3188,7 +3492,7 @@ val not_izz_and_hazz_lemma1 = save_pop_thm "not_izz_and_hazz_lemma1";
 }%ignore
 
 πHOLCONST
-‹ €are› : I ≠ TERM ≠ MPROP
+‹ €are› : I ≠ MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µ pa t∑ are pa t = Ãw∑ izz pa t w ≤ hazz pa t w	
 ∞
@@ -3222,12 +3526,12 @@ val are_izz_neq_hazz_lemma = save_pop_thm "are_izz_neq_hazz_lemma";
 =SML
 set_goal([], ¨µA B w ∑ (All A are B) w § (All A izz B w ≤ (All A hazz B) w)Æ);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¨areÆ, get_spec ¨AllÆ, get_spec ¨$InTERMÆ, ext_thm]);
+a (rewrite_tac [get_spec ¨areÆ, get_spec ¨AllÆ, get_spec ¨$InMTERMÆ, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$hazzÆ])));
 a (spec_nth_asm_tac 11 ¨z'Æ);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$izzÆ])));
-a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$InTERMÆ])));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$InMTERMÆ])));
 a (lemma_tac ¨Fst B = Fst AÆ THEN1 SYM_ASMS_T rewrite_tac);
 a (lemma_tac ¨Fst B = Category_of_SubstanceÆ THEN1 SYM_ASMS_T rewrite_tac);
 a (REPEAT_N 9 (POP_ASM_T discard_tac) THEN asm_rewrite_tac[]);
@@ -3235,13 +3539,13 @@ val All_are_izz_or_hazz_lemma = save_pop_thm "All_are_izz_or_hazz_lemma";
 
 set_goal([], ¨µA B w ∑ (Some A are B) w § (Some A izz B w ≤ (Some A hazz B) w)Æ);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¨areÆ, get_spec ¨SomeÆ, get_spec ¨$InTERMÆ, ext_thm]);
+a (rewrite_tac [get_spec ¨areÆ, get_spec ¨SomeÆ, get_spec ¨$InMTERMÆ, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 val Some_are_izz_or_hazz_lemma = save_pop_thm "Some_are_izz_or_hazz_lemma";
 
 set_goal([], ¨µA B w ∑ (All A (are not) B) w § (All A (izz not) B w ± (All A (hazz not) B) w)Æ);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¨areÆ, get_spec ¨AllÆ, get_spec ¨$InTERMÆ, get_spec ¨$notÆ, ext_thm]);
+a (rewrite_tac [get_spec ¨areÆ, get_spec ¨AllÆ, get_spec ¨$InMTERMÆ, get_spec ¨$notÆ, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 val All_are_not_lemma = save_pop_thm "All_are_not_lemma";
 =TEX
@@ -3337,7 +3641,7 @@ declare_binder "µâa";
 =TEX
 
 πHOLCONST
-‹ $€µâa› : (TERM ≠ MPROP) ≠ MPROP
+‹ $€µâa› : (MTERM ≠ MPROP) ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µmpf∑ $µâa mpf = Ãw∑ µt∑ mpf t w
 ∞
@@ -3350,7 +3654,7 @@ declare_binder "∂âa";
 =TEX
 
 πHOLCONST
-‹ $€∂âa› : (TERM ≠ MPROP) ≠ MPROP
+‹ $€∂âa› : (MTERM ≠ MPROP) ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µmpf∑ $∂âa mpf = Ãw∑ ∂t∑ mpf t w
 ∞
@@ -3459,7 +3763,7 @@ val izz_conv1 = save_pop_thm "izz_conv1";
 
 set_goal([], ¨[All B izz A] ê  Some A izz BÆ);
 a (rewrite_tac (map get_spec [¨$êÆ]));
-a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, get_spec ¨SomeÆ, get_spec ¨izzÆ, get_spec ¨$InTERMÆ]);
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, get_spec ¨SomeÆ, get_spec ¨izzÆ, get_spec ¨$InMTERMÆ]);
 a (REPEAT strip_tac);
 a (∂_tac ¨(Fst B, MemOf (Snd B))Æ THEN asm_rewrite_tac[]);
 a (SPEC_NTH_ASM_T 1 ¨(Fst B, MemOf (Snd B))Æ (rewrite_thm_tac o (rewrite_rule[])));
@@ -3467,7 +3771,7 @@ val izz_conv2 = save_pop_thm "izz_conv2";
 
 set_goal([], ¨[Some B izz A] ê  Some A izz BÆ);
 a (rewrite_tac (map get_spec [¨$êÆ]));
-a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨SomeÆ, get_spec ¨izzÆ, get_spec ¨$InTERMÆ]);
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨SomeÆ, get_spec ¨izzÆ, get_spec ¨$InMTERMÆ]);
 a (REPEAT strip_tac);
 a (∂_tac ¨zÆ THEN asm_rewrite_tac[]);
 a (SYM_ASMS_T rewrite_tac);
@@ -3501,7 +3805,7 @@ set_goal([], ¨≥ µA B∑ All B (hazz not) A = All A (hazz not) BÆ);
 a (strip_tac);
 a (∂_tac ¨(Category_of_Substance, ≈s:TAG NESET∑T)Æ THEN strip_tac);
 a (∂_tac ¨(InR (≈s:ACAT∑T), ≈s:TAG NESET∑T)Æ);
-a (rewrite_tac [ext_thm, get_spec ¨AllÆ, get_spec ¨hazzÆ, get_spec ¨$notÆ, get_spec ¨$InTERMÆ]);
+a (rewrite_tac [ext_thm, get_spec ¨AllÆ, get_spec ¨hazzÆ, get_spec ¨$notÆ, get_spec ¨$InMTERMÆ]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∂_tac ¨Ãw:ACAT∏TAG∑ UniverseÆ THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∂_tac ¨(Category_of_Substance, MemOf(≈ s∑ T))Æ THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
@@ -3512,7 +3816,7 @@ set_goal([], ¨≥ µA B∑ Some B hazz A = Some A hazz BÆ);
 a (strip_tac);
 a (∂_tac ¨(Category_of_Substance, ≈s:TAG NESET∑T)Æ THEN strip_tac);
 a (∂_tac ¨(InR (≈s:ACAT∑T), ≈s:TAG NESET∑T)Æ);
-a (rewrite_tac [ext_thm, get_spec ¨SomeÆ, get_spec ¨hazzÆ, get_spec ¨$InTERMÆ]);
+a (rewrite_tac [ext_thm, get_spec ¨SomeÆ, get_spec ¨hazzÆ, get_spec ¨$InMTERMÆ]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∂_tac ¨Ãw:ACAT∏TAG∑ UniverseÆ THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∂_tac ¨(Category_of_Substance, MemOf(≈ s∑ T))Æ THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
@@ -3521,7 +3825,7 @@ val not_some_hazz_lemma = save_pop_thm "not_some_hazz_lemma";
 
 set_goal([], ¨[All A hazz B] ê  Some A hazz BÆ);
 a (rewrite_tac (map get_spec [¨$êÆ]));
-a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, get_spec ¨SomeÆ, get_spec ¨hazzÆ, get_spec ¨$InTERMÆ]);
+a (strip_tac THEN rewrite_tac [get_spec ¨FoldÆ, get_spec ¨AllÆ, get_spec ¨SomeÆ, get_spec ¨hazzÆ, get_spec ¨$InMTERMÆ]);
 a (REPEAT strip_tac);
 a (∂_tac ¨(Fst A, MemOf (Snd A))Æ THEN asm_rewrite_tac[]);
 a (SPEC_NTH_ASM_T 1 ¨(Fst A, MemOf (Snd A))Æ (rewrite_thm_tac o (rewrite_rule[])));
@@ -3610,7 +3914,7 @@ a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ])
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
 	THEN strip_tac);
-a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InMTERMÆ] THEN strip_tac);
 a (lemma_tac ¨∂d∑ d ç PeSet (Snd A)Æ THEN1 rewrite_tac[]);
 a (∂_tac ¨(Fst A, d)Æ THEN asm_rewrite_tac[]);
 val ©_hazz_thm = save_pop_thm "©_hazz_thm";
@@ -3623,7 +3927,7 @@ val izz_©_thm = save_pop_thm "izz_©_thm";
 set_goal([], ¨[] ò ≥ © (All A hazz B)Æ);
 a (rewrite_tac  (map get_spec [¨$òÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ, ¨$≥âaÆ, ¨hazzÆ]));
 a (REPEAT strip_tac);
-a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InMTERMÆ] THEN strip_tac);
 a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
 val not_©_hazz_thm = save_pop_thm "not_©_hazz_thm";
 
@@ -3638,7 +3942,7 @@ a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ])
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¨©Æ, ¨AllÆ, ¨hazzÆ])
 	THEN strip_tac);
-a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InMTERMÆ] THEN strip_tac);
 a (lemma_tac ¨∂d∑ d ç PeSet (Snd A)Æ THEN1 rewrite_tac[]);
 a (∂_tac ¨(Fst A, d)Æ THEN asm_rewrite_tac[]);
 val ©_hazz_thm2 = save_pop_thm "©_hazz_thm2";
@@ -3651,7 +3955,7 @@ val izz_©_thm2 = save_pop_thm "izz_©_thm2";
 set_goal([], ¨[] ê ≥ © (All A hazz B)Æ);
 a (rewrite_tac  (map get_spec [¨$êÆ, ¨FoldÆ, ¨©Æ, ¨AllÆ, ¨izzÆ, ¨$≥âaÆ, ¨hazzÆ]));
 a (REPEAT strip_tac);
-a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InTERMÆ] THEN strip_tac);
+a (∂_tac ¨Ãw∑ {}Æ THEN rewrite_tac[get_spec ¨$InMTERMÆ] THEN strip_tac);
 a (∂_tac ¨(Fst A, MemOf(Snd A))Æ THEN rewrite_tac[]);
 val not_©_hazz_thm2 = save_pop_thm "not_©_hazz_thm2";
 =TEX
@@ -3771,10 +4075,10 @@ fun €mk_izz_syll› vt (a, b, c, d) (f1, f2, f3) =
 		ëf3 (mk_var("ø", vt)) (mk_var("P", vt))ÆÆ;
 
 fun €mk_cop_syllp› cop (s, n) =
-	([], mk_izz_syll îTERMÆ (nth (n-1) (figurest îTERMÆ)) (opfuntrip_from_text cop s));
+	([], mk_izz_syll îMTERMÆ (nth (n-1) (figurest îMTERMÆ)) (opfuntrip_from_text cop s));
 
 fun €mk_cop_syllp_cc› cc (s, n) =
-	([], mk_izz_syll îTERMÆ (nth (n-1) (figurest îTERMÆ)) (opfuntrip_from_text_cc cc s));
+	([], mk_izz_syll îMTERMÆ (nth (n-1) (figurest îMTERMÆ)) (opfuntrip_from_text_cc cc s));
 
 fun €mk_izz_syllp› (s, n) = mk_cop_syllp ¨izzÆ (s, n);
 
@@ -3783,12 +4087,12 @@ fun €mk_hazzizz_syllp› (s, n) = mk_cop_syllp_cc (¨hazzÆ, ¨izzÆ) (s, n);
 
 val €syll_izz_tac2› =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_∂_lemma))
-		[¨M:TERMÆ, ¨P:TERMÆ, ¨ø:TERMÆ, ¨A:TERMÆ, ¨B:TERMÆ])
+		[¨M:MTERMÆ, ¨P:MTERMÆ, ¨ø:MTERMÆ, ¨A:MTERMÆ, ¨B:MTERMÆ])
 	THEN asm_prove_tac (map get_spec [¨$êÆ, ¨AllÆ, ¨SomeÆ, ¨izzÆ, ¨$notÆ, ¨FoldÆ]);
 
 val €syll_izzhazz_tac› =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_∂_lemma))
-		[¨M:TERMÆ, ¨P:TERMÆ, ¨ø:TERMÆ, ¨A:TERMÆ, ¨B:TERMÆ])
+		[¨M:MTERMÆ, ¨P:MTERMÆ, ¨ø:MTERMÆ, ¨A:MTERMÆ, ¨B:MTERMÆ])
 	THEN rewrite_tac (map get_spec [¨$êÆ, ¨AllÆ, ¨SomeÆ, ¨izzÆ, ¨hazzÆ, ¨$notÆ, ¨FoldÆ])
 	THEN contr_tac;
 
@@ -3819,7 +4123,7 @@ a syll_izzhazz_tac;
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
 a (asm_fc_tac[]);
-a (DROP_NTH_ASM_T 12 (strip_asm_tac o (rewrite_rule [get_spec ¨$InTERMÆ])));
+a (DROP_NTH_ASM_T 12 (strip_asm_tac o (rewrite_rule [get_spec ¨$InMTERMÆ])));
 
 
 a (contr_tac THEN REPEAT_N 3 (asm_fc_tac[]));
@@ -3890,14 +4194,14 @@ val FP2 = save_pop_thm "FP2";
 
 val €syll_hizz_tac› =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_∂_lemma))
-		[¨M:TERMÆ, ¨P:TERMÆ, ¨ø:TERMÆ, ¨A:TERMÆ, ¨B:TERMÆ])
+		[¨M:MTERMÆ, ¨P:MTERMÆ, ¨ø:MTERMÆ, ¨A:MTERMÆ, ¨B:MTERMÆ])
 	THEN asm_prove_tac (map get_spec [¨$êÆ, ¨AllÆ, ¨SomeÆ, ¨izzÆ, ¨hazzÆ, ¨$notÆ, ¨$≥âaÆ, ¨FoldÆ]);
 
 
 set_goal([], ¨[All A hazz B] ê ≥ All A izz BÆ);
 a (syll_hizz_tac);
 a (asm_fc_tac[]);
-a (∂_tac ¨i'''Æ THEN asm_rewrite_tac[get_spec ¨$InTERMÆ]);
+a (∂_tac ¨j'''Æ THEN asm_rewrite_tac[get_spec ¨$InMTERMÆ]);
 a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
 val FP3 = save_pop_thm "FP3";
 
@@ -3908,15 +4212,15 @@ a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨AllÆ, ¨izzÆ, ¨hazzÆ]) THEN REPEAT s
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨$InTERMÆ])));
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨$InMTERMÆ])));
 a (asm_fc_tac[]);
-a (SPEC_NTH_ASM_T 5 ¨(Fst B, a)Æ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 5 ¨(Fst B, b)Æ (strip_asm_tac o (rewrite_rule[])));
 a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]);
 (* *** Goal "3" *** *)
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨$InTERMÆ])));
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¨$InMTERMÆ])));
 a (asm_fc_tac[]);
-a (SPEC_NTH_ASM_T 5 ¨(Fst B, a)Æ (strip_asm_tac o (rewrite_rule[])));
-a (∂_tac ¨aÆ THEN (SYM_ASMS_T rewrite_tac));
+a (SPEC_NTH_ASM_T 5 ¨(Fst B, b)Æ (strip_asm_tac o (rewrite_rule[])));
+a (∂_tac ¨bÆ THEN (SYM_ASMS_T rewrite_tac));
 val FP4a = save_pop_thm "FP4a";
 
 
@@ -3926,18 +4230,18 @@ a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨$§âaÆ, ¨$∂âaÆ, ¨$±âaÆ]) THEN REPEAT
 a (strip_tac THEN ∂_tac ¨BÆ THEN asm_rewrite_tac[all_µ_intro (rewrite_rule (map get_spec [¨$êÆ, ¨FoldÆ]) FP1)]);
 (* *** Goal "2" *** *)
 a (rewrite_tac (map get_spec [¨AllÆ, ¨izzÆ, ¨hazzÆ]) THEN strip_tac);
-a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$InTERMÆ])));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¨$InMTERMÆ])));
 a (REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
 a (asm_fc_tac[]);
 (* *** Goal "2.2" *** *)
 a (asm_fc_tac[]);
-a (SPEC_NTH_ASM_T 6 ¨(Fst t, a)Æ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 6 ¨(Fst t, b)Æ (strip_asm_tac o (rewrite_rule[])));
 a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]);
 (* *** Goal "2.3" *** *)
 a (asm_fc_tac[]);
-a (SPEC_NTH_ASM_T 6 ¨(Fst t, a)Æ (strip_asm_tac o (rewrite_rule[])));
-a (∂_tac ¨aÆ THEN (SYM_ASMS_T rewrite_tac));
+a (SPEC_NTH_ASM_T 6 ¨(Fst t, b)Æ (strip_asm_tac o (rewrite_rule[])));
+a (∂_tac ¨bÆ THEN (SYM_ASMS_T rewrite_tac));
 val FP4 = save_pop_thm "FP4";
 =TEX
 }%ignore
@@ -3948,9 +4252,9 @@ I possibly he might have intended that C be an individual.
 To prove that more interesting result I need to define ``individual''.
 
 πHOLCONST
-‹ €individual› : TERM ≠ BOOL
+‹ €individual› : MTERM ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µA∑ individual A § ∂a∑ Snd A = NeSet{a}
+‹ µA∑ individual A § ∂b∑ Snd A = NeSet{b}
 ∞
 
 Since the above is a regular predicate, we need something to convert an ordinary proposition into a modal proposition to use it in the context of modal syllogisms.
@@ -3985,18 +4289,18 @@ If we require A to be an individual we get a result:
 \ignore{
 =SML
 set_goal([], ¨[Mp(individual A)] ê (All A hazz B § ∂ C∑ Mp(individual C) ± (All A hazz C) ± (All C izz B))Æ);
-a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨$§âaÆ, ¨$∂âaÆ, ¨$±âaÆ, ¨MpÆ, ¨individualÆ, ¨hazzÆ, ¨izzÆ, ¨AllÆ, ¨$InTERMÆ]) 
+a (rewrite_tac (map get_spec [¨$êÆ, ¨FoldÆ, ¨$§âaÆ, ¨$∂âaÆ, ¨$±âaÆ, ¨MpÆ, ¨individualÆ, ¨hazzÆ, ¨izzÆ, ¨AllÆ, ¨$InMTERMÆ]) 
 	THEN REPEAT_N 5 strip_tac);
 (* *** Goal "1" *** *)
 a (SPEC_NTH_ASM_T 1 ¨(Fst A, MemOf (Snd A))Æ (strip_asm_tac o (rewrite_rule[])));
-a (∂_tac ¨(Fst B, NeSet {a'})Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨(Fst B, NeSet {b'})Æ THEN asm_rewrite_tac[]);
 a (strip_tac);
 (* *** Goal "1.1" *** *)
-a (∂_tac ¨a'Æ THEN rewrite_tac[]);
+a (∂_tac ¨b'Æ THEN rewrite_tac[]);
 (* *** Goal "1.2" *** *)
 a (REPEAT strip_tac);
 (* *** Goal "1.2.1" *** *)
-a (∂_tac ¨a'Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨b'Æ THEN asm_rewrite_tac[]);
 a (DROP_NTH_ASM_T 3 ante_tac THEN asm_rewrite_tac[]);
 (* *** Goal "1.2.2" *** *)
 a (asm_rewrite_tac[]);
@@ -4007,27 +4311,27 @@ a (ASM_FC_T (MAP_EVERY ante_tac) [] THEN asm_rewrite_tac[]
 	THEN contr_tac);
 (* *** Goal "2.2" *** *)
 a (asm_fc_tac[]);
-a (LEMMA_T ¨Fst(Fst t, a'') = Fst tÆ asm_tac THEN1 rewrite_tac[]);
-a (LEMMA_T ¨Snd(Fst t, a'') ç PeSet (Snd t)Æ asm_tac THEN1 rewrite_tac[asm_rule ¨a'' ç PeSet (Snd t)Æ]);
-a (spec_nth_asm_tac 9 ¨(Fst t, a'')Æ);
+a (LEMMA_T ¨Fst(Fst t, b'') = Fst tÆ asm_tac THEN1 rewrite_tac[]);
+a (LEMMA_T ¨Snd(Fst t, b'') ç PeSet (Snd t)Æ asm_tac THEN1 rewrite_tac[asm_rule ¨b'' ç PeSet (Snd t)Æ]);
+a (spec_nth_asm_tac 9 ¨(Fst t, b'')Æ);
 a (REPEAT_N 2 (POP_ASM_T ante_tac)
 	THEN rewrite_tac[]
 	THEN strip_tac);
 a (strip_tac THEN swap_nth_asm_concl_tac 6 THEN asm_rewrite_tac[]);
 (* *** Goal "2.3" *** *)
 a (asm_fc_tac[]);
-a (LEMMA_T ¨Fst(Fst t, a'') = Fst tÆ asm_tac THEN1 rewrite_tac[]);
-a (LEMMA_T ¨Snd(Fst t, a'') ç PeSet (Snd t)Æ asm_tac THEN1 rewrite_tac[asm_rule ¨a'' ç PeSet (Snd t)Æ]);
-a (spec_nth_asm_tac 9 ¨(Fst t, a'')Æ);
+a (LEMMA_T ¨Fst(Fst t, b'') = Fst tÆ asm_tac THEN1 rewrite_tac[]);
+a (LEMMA_T ¨Snd(Fst t, b'') ç PeSet (Snd t)Æ asm_tac THEN1 rewrite_tac[asm_rule ¨b'' ç PeSet (Snd t)Æ]);
+a (spec_nth_asm_tac 9 ¨(Fst t, b'')Æ);
 a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[] THEN STRIP_T (asm_tac o eq_sym_rule)
 	THEN strip_tac);
-a (∂_tac ¨a''Æ THEN asm_rewrite_tac []);
+a (∂_tac ¨b''Æ THEN asm_rewrite_tac []);
 val FP4c = save_pop_thm "FP4c";
 =TEX
 }%ignore
 
 πHOLCONST
-‹ €Individual› : TERM ≠ MPROP
+‹ €Individual› : MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µA∑ Individual A = © µâa B∑ All B izz A ¥âa All A izz B
 ∞
@@ -4064,8 +4368,8 @@ val individual_lemma1 = save_pop_thm "individual_lemma1";
 
 set_goal ([], ¨Individual A = Mp (individual A)Æ);
 a (rewrite_tac [individual_lemma1]);
-a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨izzÆ, ¨$InTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
-a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨AllÆ, ¨izzÆ, ¨$InTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
+a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨izzÆ, ¨$InMTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
+a (rewrite_tac (map get_spec [¨Mp Æ, ¨individualÆ, ¨AllÆ, ¨izzÆ, ¨$InMTERMÆ, ¨$¥âaÆ, ¨$µâaÆ]));
 a (rewrite_tac [ext_thm] THEN contr_tac);
 (* *** Goal "1" *** *)
 a (lemma_tac ¨∂b c∑ ≥ b = c ± b ç PeSet(Snd A) ± c ç PeSet(Snd A)Æ
@@ -4107,7 +4411,7 @@ val individual_lemma2 = save_pop_thm "individual_lemma2";
 Now we come to the Code definition of particular:
 
 πHOLCONST
-‹ €particular› : TERM ≠ MPROP
+‹ €particular› : MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µA∑ particular A = © µâa B∑ All B are A ¥âa All A izz B ±âa All B izz A
 ∞
@@ -4119,7 +4423,7 @@ However, this cannot be true of necessity unless A is substantial.
 Code might have used a similar device to define substantial:
 
 πHOLCONST
-‹ €substantial› : TERM ≠ MPROP
+‹ €substantial› : MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µA∑ substantial A = © µâa B∑ All B are A ¥âa All B izz A
 ∞
@@ -4131,7 +4435,7 @@ Again, Code's definition relies on the u-p syllogisms.
 Code's definition of universal is:
 
 πHOLCONST
-‹ €universal› : TERM ≠ MPROP
+‹ €universal› : MTERM ≠ MPROP
 ˜¸¸¸¸¸¸
 ‹ µA∑ universal A = ® ∂âa B∑ All B are A ±âa ≥âa (All A izz B ±âa All B izz A)
 ∞
