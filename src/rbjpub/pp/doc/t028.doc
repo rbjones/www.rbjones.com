@@ -7,13 +7,13 @@ end;
 
 \ignore{
 =VDUMP t028i.tex
-Last Change $ $Date: 2010/12/16 20:10:15 $ $
+Last Change $ $Date: 2010/12/16 22:34:40 $ $
 
-$ $Id: t028.doc,v 1.25 2010/12/16 20:10:15 rbj Exp $ $
+$ $Id: t028.doc,v 1.26 2010/12/16 22:34:40 rbj Exp $ $
 =TEX
 }%ignore
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.25 2010/12/16 20:10:15 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.26 2010/12/16 22:34:40 rbj Exp $$}
 {\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
@@ -2374,6 +2374,7 @@ fun Ûsyll_rule3Ý g = tac_proof (g, syll_tac3);
 
 These fail.
 
+\ignore{
 =SML
 set_goal([], ¬³ µA B· A e B ´ B e A®);
 a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
@@ -2389,6 +2390,7 @@ a (¶_tac ¬Ìx· F® THEN rewrite_tac[] THEN strip_tac);
 a (¶_tac ¬Ìx· T® THEN rewrite_tac[] THEN strip_tac);
 val ³i_conv_thm = save_pop_thm "³i_conv_thm";
 =TEX
+}%ignore
 
 The following two theorems are obtained.
 =GFT
@@ -2397,7 +2399,7 @@ The following two theorems are obtained.
 =TEX
 
 The following two theorems show that the other obvious conversions are also false.
-Note that the theorems are not polymorphic, they are proven specifically for terms of type $î ­ BOOL$.
+Note that the theorems are not polymorphic, they are proven specifically for terms of type $î ­ BOOL$ (though any type of more than one element would do).
 
 \ignore{
 =SML
@@ -2444,7 +2446,7 @@ For these we need to define an operation of complementation on terms.
 Ü µA Á· (Complement A) Á ¤ ³ (A Á) 
 °
 
-We will use ``\verb!~!'' as a shorthand for ``complement''.
+We will use ``\verb!~!'' as a shorthand for ``Complement''.
 
 =SML
 declare_alias ("~", ¬Complement®);
@@ -2497,8 +2499,8 @@ EO_thm = ô A e B ´ A o B
 
 \ignore{
 =SML
-val AO_thm = save_thm ("AO", syll_rule3 ([], ¬(A a B) ¤ ³ (A o B)®));
-val EI_thm = save_thm ("EI", syll_rule3 ([], ¬(A e B) ¤ ³ (A i B)®));
+val AO_thm = save_thm ("AO_thm", syll_rule3 ([], ¬(A a B) ¤ ³ (A o B)®));
+val EI_thm = save_thm ("EI_thm", syll_rule3 ([], ¬(A e B) ¤ ³ (A i B)®));
 
 set_goal ([], ¬³ (A a B ± A e B)®);
 a (syll_tac3);
@@ -2527,32 +2529,56 @@ First we make a \emph{mapkit}.
 val s3mapkit:mapkit = mkSimpMapkit ”TERM® [¬$a®,¬$e®,¬$i®,¬$u®];
 =TEX
 
-Then we apply this in generating and proving the non u-p syllogisms.
+Then we apply this in generating and proving the syllogisms.
 
 =SML
-proveGoals syll_tac "" (mkGoals s3mapkit syllogism_data1);
+proveGoals syll_tac3 "" (mkGoals s3mapkit syllogism_data1);
+proveGoals syll_tac3 "" (mkGoals s3mapkit syllogism_data2);
+proveGoals syll_tac3 "" (mkGoals s3mapkit syllogism_data3);
 =TEX
 
-This is the resulting value.
-=GFT
-val valid_sylls = [
-	("Barbara", M a P, ¿ a M ô ¿ a P),
-	("Celarent", M e P, ¿ a M ô ¿ e P),
-	("Darii", M a P, ¿ i M ô ¿ i P),
-	("Ferio", M e P, ¿ i M ô ¿ o P),
-	("Cesare", P e M, ¿ a M ô ¿ e P),
-	("Camestres", P a M, ¿ e M ô ¿ e P),
-	("Festino", P e M, ¿ i M ô ¿ o P),
-	("Baroco", P a M, ¿ o M ô ¿ o P),
-	("Disamis", M i P, M a ¿ ô ¿ i P),
-	("Datisi", M a P, M i ¿ ô ¿ i P),
-	("Bocardo", M o P, M a ¿ ô ¿ o P),
-	("Ferison", M e P, M i ¿ ô ¿ o P),
-	("Camenes", P a M, M e ¿ ô ¿ e P),
-	("Dimaris", P i M, M a ¿ ô ¿ i P),
-	("Fresison", P e M, M i ¿ ô ¿ o P)
-] : (string * THM) list
+\ignore{
+=SML
+set_goal([], ¬³ µP M ¿· P e M ± M i ¿ ´ ¿ o P®);
+a (REPEAT(POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$e®, ¬$i®, ¬$u®]));
+a contr_tac;
+a (LIST_SPEC_NTH_ASM_T 1 [¬Ìx· T®, ¬Ìx· F®, ¬Ìx· T®] ante_tac);
+a (rewrite_tac[]);
+val ³_Fresison = save_pop_thm "³_Fresison";
+
+set_goal([], ¬³ µP M ¿· P i M ± M a ¿ ´ ¿ i P®);
+a (REPEAT(POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$e®, ¬$i®, ¬$a®]));
+a contr_tac;
+a (LIST_SPEC_NTH_ASM_T 1 [¬Ìx· F®, ¬Ìx· T®, ¬Ìx· T®] ante_tac);
+a (rewrite_tac[]);
+val ³_Dimaris = save_pop_thm "³_Dimaris";
+
+set_goal([], ¬³ µP M ¿· P a M ± M e ¿ ´ ¿ e P®);
+a (REPEAT(POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$e®, ¬$a®]));
+a contr_tac;
+a (LIST_SPEC_NTH_ASM_T 1 [¬Ìx· T®, ¬Ìx· T®, ¬Ìx· F®] ante_tac);
+a (rewrite_tac[]);
+val ³_Camenes = save_pop_thm "³_Camenes";
 =TEX
+}%ignore
+
+Three of the 24 generally accepted syllogisms prove unsound under this semantics: Camenes, Dimaris and Fresison. 
+
+=GFT
+³_Fresison = ô ³ (µ P M ¿· P e M ± M i ¿ ´ ¿ o P)
+³_Dimaris = ô ³ (µ P M ¿· P i M ± M a ¿ ´ ¿ i P)
+³_Camenes = ô ³ (µ P M ¿· P a M ± M e ¿ ´ ¿ e P)
+=TEX
+
+for the record the counterexamples which disprove these syllogisms are all combinations of unversal (U) and empty (E) terms as follows.
+
+=GFT
+		P	M	S
+Fresison	U	E	U
+Dimaris	E	U	U
+Camenes	U	U	E
+=TEX
+
 
 The theorems are also displayed in the theory listing in \thyref{syllog4}
 
