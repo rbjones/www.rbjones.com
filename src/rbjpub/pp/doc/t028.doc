@@ -7,13 +7,13 @@ end;
 
 \ignore{
 =VDUMP t028i.tex
-Last Change $ $Date: 2010/12/16 22:34:40 $ $
+Last Change $ $Date: 2010/12/17 22:32:15 $ $
 
-$ $Id: t028.doc,v 1.26 2010/12/16 22:34:40 rbj Exp $ $
+$ $Id: t028.doc,v 1.27 2010/12/17 22:32:15 rbj Exp $ $
 =TEX
 }%ignore
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.26 2010/12/16 22:34:40 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.27 2010/12/17 22:32:15 rbj Exp $$}
 {\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
@@ -1176,7 +1176,7 @@ The semantics of the syllogism remains a matter of controversy in some respects.
 The majority of the syllogisms held to be valid by Aristotle would be valid if universal and particular propositions were translated as universal and existential quantification in a modern predicate logic.
 Four of the syllogisms held to be valid by Aristotle would not be sound under such an interpretation.
 These four are distinguished by having universal premises but a particular conclusion.
-I propose to call these the \emph{universal-particular}\cite{universal-particular} syllogisms, which I may abbreviate \emph{u-p}.
+I propose to call these the \emph{universal-particular}\index{universal-particular} syllogisms, which I may abbreviate \emph{u-p}.
 
 There are three most common approaches to the u-p syllogisms:
 
@@ -1191,7 +1191,7 @@ The possibilities have been addressed here as follows:
 \begin{enumerate}
 \item pure syllogism without u-p syllogisms (Section \ref{SWEF})
 \item full syllogism by non-emptyness of terms (Section \ref{SYLLNE})
-\item full syllogism by existential import of universal assertions (Section \ref{SYLLEI})
+\item full syllogism by existential import in universal assertions (Section \ref{IEIU})
 \item modal syllogisms (by non-emptyness) (Section \ref{MODSYLL})
 \end{enumerate}
 
@@ -1355,7 +1355,7 @@ val Ûsyllogism_data1İ =
 map mk_syllp1 syllogism_data1;
 =TEX
 
-The rest of the table consists of ``universal-particular''\index{universal particular} syllogisms, i.e. syllogisms with universal premises but a particular conclusion.
+The rest of the table consists of ``universal-particular''\index{universal-particular} syllogisms, i.e. syllogisms with universal premises but a particular conclusion.
 
 The following four u-p\index{u-p} syllogisms were held to be valid by Aristotle (the ones in square brackets in the table).
 
@@ -1496,32 +1496,6 @@ This provides a compact way of comparing different interpretations of the assert
 The principal point of difference is in subalternation which fails when the quantifiers are interpreted in the modern sense and empty terms are admitted.
 One remedy for this defect might be to add existential import to the universal quantifier, but this by itself would cause the contradictories to fail.
 Another remedy is to add existential import to the universal and define the particular modes through the contradictories.
-
-
-\subsubsection{Some Definitions Common Several Interpretations}
-
-We will use the same names for the forms of assertions throughout and declare them here as infix.
-
-=SML
-open_theory "aristotle";
-=TEX
-
-=SML
-declare_infix (300, "a");
-declare_infix (300, "e");
-declare_infix (300, "i");
-declare_infix (300, "u");
-=TEX
-
-There are several different types used for Aristotelian terms.
-Abbreviations for these types are collected here.
-
-=SML
-declare_type_abbrev("STERM", [], ”'a SET®);
-declare_type_abbrev("PTERM", [], ”BOOL®);
-declare_type_abbrev("TERM2", [], ”'a ¸ ('a ­ BOOL)®);
-declare_type_abbrev("TERM", [], ”'a ­ BOOL®);
-=TEX
 
 \subsection{Interpretation as Sets and as Propositions}\label{RSPL}
 
@@ -1674,8 +1648,10 @@ val st_mkAP =
 	in fn s => case s of "a" => a | "e" => e | "i" => i | "o" => u
 	end;
 
+declare_type_abbrev("TermS", [], ”'a SET®);
+
 val st_mapkit:mapkit =
-	{	mkAT = fn s => mk_var(s, ”STERM®),
+	{	mkAT = fn s => mk_var(s, ”TermS®),
 		mkAP = st_mkAP,
 		mkAS = fn x => x};
 =TEX
@@ -1683,12 +1659,14 @@ val st_mapkit:mapkit =
 Then the propositional logic mapping:
 
 =SML
+declare_type_abbrev("TermP", [], ”BOOL®);
+
 val pl_mapkit:mapkit =
 	let fun a (su, pr) = ¬‘su® ´ ‘pr®®
 		fun e (su, pr) = ¬‘su® ´ ³ ‘pr®®
 		fun i (su, pr) = ¬³ (‘su® ´ ³ ‘pr®)®
 		fun u (su, pr) = ¬³( ‘su® ´ ‘pr®)®
-	in {	mkAT = fn s => mk_var(s, ”PTERM®),
+	in {	mkAT = fn s => mk_var(s, ”TermP®),
 		mkAP = fn s => case s of
 			"a" => a
 		|	"e" => e 
@@ -1829,7 +1807,7 @@ The following code generates the goals for proving the above syllogisms from the
 
 =SML
 val st2_mapkit:mapkit =
-	{	mkAT = fn s => mk_var(s, ”STERM®),
+	{	mkAT = fn s => mk_var(s, ”TermS®),
 		mkAP = st_mkAP,
 		mkAS = fn (ps, c) => (¬³ ({}:'a SET)  {M; ¿; P}®::ps, c)};
 =TEX
@@ -1874,32 +1852,42 @@ In HOL the most natural answer to this is ``boolean valued functions'' which are
 This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
 Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $”'a ­ BOOL®$ is the function $¬Ìx:'a· F®$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
 
+=SML
+declare_type_abbrev("Term2", [], ”'a ­ BOOL®);
+=TEX
+
 \subsubsection{Predication}
 
 ``o'' is already in use for functional composition, so we will use ``u'' instead and then use an alias to permit us to write this as ``o'' (type inference will usually resolve any ambiguity).
 
 The predication operators are defined as follows:
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
 
 ¹HOLCONST
-Ü $Ûaİ : TERM ­ TERM ­ BOOL
+Ü $Ûaİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A a B ¤ µx· A x ´ B x
 °
 
 ¹HOLCONST
-Ü $Ûeİ : TERM ­ TERM ­ BOOL
+Ü $Ûeİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A e B ¤ µx· A x ´ ³ B x
 °
 
 ¹HOLCONST
-Ü $Ûiİ : TERM ­ TERM ­ BOOL
+Ü $Ûiİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A i B ¤ ¶x· A x ± B x
 °
 
 ¹HOLCONST
-Ü $Ûuİ : TERM ­ TERM ­ BOOL
+Ü $Ûuİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A u B ¤ ¶x· A x ± ³ B x
 °
@@ -1957,7 +1945,7 @@ set_goal([], ¬¶A B· A a B ± ³ B a A®);
 a (¶_tac ¬Ìx·F® THEN ¶_tac ¬Ìx·T® THEN syll_tac);
 val a_not_conv_thm = save_pop_thm "a_not_conv_thm";
 
-set_goal([], ¬¶A B:TERM· A o B ± ³ B o A®);
+set_goal([], ¬¶A B:Term2· A o B ± ³ B o A®);
 a (¶_tac ¬Ìx·T® THEN ¶_tac ¬Ìx·F® THEN syll_tac);
 val o_not_conv_thm = save_pop_thm "o_not_conv_thm";
 =TEX
@@ -1977,7 +1965,7 @@ These don't work here because they rely upon the u-p syllogisms.
 For these we need to define an operation of complementation on terms.
 
 ¹HOLCONST
-Ü ÛComplementİ : TERM ­ TERM
+Ü ÛComplementİ : Term2 ­ Term2
 ÷üüüüüü
 Ü µA Á· (Complement A) Á ¤ ³ (A Á) 
 °
@@ -2073,7 +2061,7 @@ The fifteen valid non-u-p syllogisms are true under this semantics and can be pr
 First we make a \emph{mapkit}.
 
 =SML
-val s1mapkit:mapkit = mkSimpMapkit ”TERM® [¬$a®,¬$e®,¬$i®,¬$u®];
+val s1mapkit:mapkit = mkSimpMapkit ”Term2® [¬$a®,¬$e®,¬$i®,¬$u®];
 =TEX
 
 Then we apply this in generating and proving the non u-p syllogisms.
@@ -2140,13 +2128,16 @@ Instead of using a propositional function, which might be unsatisfiable, we use 
 The pair consists of one value, a value for which the predicate is true, and a propositional function.
 The predicate $(v, pf)$ is then to be considered true of some value $x$ {\it either} if $x$ is $v$ {\it or} if $pf$ is true of $x$. 
 
+=SML
+declare_type_abbrev("Term3", [], ”'a ¸ ('a ­ BOOL)®);
+=TEX
 
 \subsubsection{Predication}
 
 To work with this new type for the predicates we define a function which will convert this kind of predicate into the old kind, as follows:
 
 ¹HOLCONST
-Ü Ûpİ : TERM2 ­ ('a ­ BOOL)
+Ü Ûpİ : Term3 ­ ('a ­ BOOL)
 ÷üüüüüü
 Ü µA· p A = Ìx· let (v,f) = A in x = v ² f x 
 °
@@ -2175,28 +2166,35 @@ We then proceed in a similar manner to the first model, using the function $p$ t
 
 They predication operators are then defined.
 Note that the differences are small and uniform.
-The type $”PROP®$ is changed to $”TERM2®$ and the function $p$ is invoked before applying a predicate.
+The type $”PROP®$ is changed to $”Term3®$ and the function $p$ is invoked before applying a predicate.
+
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
 
 ¹HOLCONST
-Ü $Ûaİ : TERM2 ­ TERM2 ­ BOOL
+Ü $Ûaİ : Term3 ­ Term3 ­ BOOL
 ÷üüüüüü
 Ü µA B· A a B ¤ µx· p A x ´ p B x
 °
 
 ¹HOLCONST
-Ü $Ûeİ : TERM2 ­ TERM2 ­ BOOL
+Ü $Ûeİ : Term3 ­ Term3 ­ BOOL
 ÷üüüüüü
 Ü µA B· A e B ¤ µx· p A x ´ ³ p B x
 °
 
 ¹HOLCONST
-Ü $Ûiİ : TERM2 ­ TERM2 ­ BOOL
+Ü $Ûiİ : Term3 ­ Term3 ­ BOOL
 ÷üüüüüü
 Ü µA B· A i B ¤ ¶x· p A x ± p B x
 °
 
 ¹HOLCONST
-Ü $Ûuİ : TERM2 ­ TERM2 ­ BOOL
+Ü $Ûuİ : Term3 ­ Term3 ­ BOOL
 ÷üüüüüü
 Ü µA B· A u B ¤ ¶x· p A x ± ³ p B x
 °
@@ -2208,7 +2206,7 @@ declare_alias("o", ¬$u®);
 With these defined we can now produce a `mapkit' for translating the syllogisms under this semantics.
 
 =SML
-val s2_mapkit:mapkit = mkSimpMapkit ”TERM2® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
+val s2_mapkit:mapkit = mkSimpMapkit ”Term3® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
 =TEX
 
 \subsubsection{Laws of Immediate Inference}
@@ -2221,7 +2219,7 @@ This we do by instantiating it for each of the variables which appear in the syl
 =SML
 val Ûsyll_tac2İ =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x p_¶_lemma))
-		[¬M:TERM2®, ¬P:TERM2®, ¬¿:TERM2®, ¬A:TERM2®, ¬B:TERM2®])
+		[¬M:Term3®, ¬P:Term3®, ¬¿:Term3®, ¬A:Term3®, ¬B:Term3®])
 	THEN asm_prove_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]);
 
 fun Ûsyll_rule2İ g = tac_proof(g, syll_tac2);
@@ -2265,7 +2263,7 @@ The actual theorems are shown in the theory listing in \thyref{syllog3}.
 To implement a mapping corresponding to the above semantics we must create a matching \emph{mapkit} as follows:
 
 =SML
-val Ûmods_mapkitİ:mapkit = mkSimpMapkit ”TERM2® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
+val Ûmods_mapkitİ:mapkit = mkSimpMapkit ”Term3® [¬$a®, ¬$e®, ¬$i®, ¬$u®];
 =TEX
 
 \subsubsection{Proving the Syllogisms}
@@ -2307,6 +2305,9 @@ In HOL the most natural answer to this is ``boolean valued functions'' which are
 This provides a simple model of Aristotle's non-u-p syllogistic reasoning.
 Four of the syllogisms which Aristotle considered valid fail under this conception of predicate, because among the objects of type $”'a ­ BOOL®$ is the function $¬Ìx:'a· F®$ which corresponds to a predicate with empty extension and does not admit inference from the universal to the existential (unless the universal is interpreted specially).
 
+=SML
+declare_type_abbrev("Term2", [], ”'a ­ BOOL®);
+=TEX
 
 \subsubsection{Predication}
 
@@ -2316,26 +2317,33 @@ To render these in HOL we first declare the relevant letters as infix operators:
 
 They predication operators are defined as follows:
 
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
+
 ¹HOLCONST
-Ü $Ûaİ : TERM ­ TERM ­ BOOL
+Ü $Ûaİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A a B ¤ (µx· A x ´ B x) ± ¶x· A x
 °
 
 ¹HOLCONST
-Ü $Ûeİ : TERM ­ TERM ­ BOOL
+Ü $Ûeİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A e B ¤ (µx· A x ´ ³ B x) ± ¶x· A x
 °
 
 ¹HOLCONST
-Ü $Ûiİ : TERM ­ TERM ­ BOOL
+Ü $Ûiİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A i B ¤ (¶x· A x ± B x) ² ³ (¶x· A x)
 °
 
 ¹HOLCONST
-Ü $Ûuİ : TERM ­ TERM ­ BOOL
+Ü $Ûuİ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
 Ü µA B· A u B ¤ (¶x· A x ± ³ B x) ² ³ (¶x· A x)
 °
@@ -2441,7 +2449,7 @@ val eo_conv_thm = A e B ô B o A : THM
 For these we need to define an operation of complementation on terms.
 
 ¹HOLCONST
-Ü ÛComplementİ : TERM ­ TERM
+Ü ÛComplementİ : Term2 ­ Term2
 ÷üüüüüü
 Ü µA Á· (Complement A) Á ¤ ³ (A Á) 
 °
@@ -2526,7 +2534,7 @@ val EO_thm = save_pop_thm "EO_thm";
 First we make a \emph{mapkit}.
 
 =SML
-val s3mapkit:mapkit = mkSimpMapkit ”TERM® [¬$a®,¬$e®,¬$i®,¬$u®];
+val s3mapkit:mapkit = mkSimpMapkit ”Term2® [¬$a®,¬$e®,¬$i®,¬$u®];
 =TEX
 
 Then we apply this in generating and proving the syllogisms.
@@ -2689,9 +2697,16 @@ We then proceed in a similar manner to the other models, using the function $p$ 
 
 They predication operators are then defined.
 Note that the differences are small and uniform.
-The type $”TERM2®$ is changed to $”MPROP®$ and the function $p$ is invoked before applying a predicate.
+The type $”Term3®$ is changed to $”MPROP®$ and the function $p$ is invoked before applying a predicate.
 
 Now we think of a predication as being a set of possible worlds, or BOOLean valued function over possible worlds.
+
+=SML
+declare_infix (300, "a");
+declare_infix (300, "e");
+declare_infix (300, "i");
+declare_infix (300, "u");
+=TEX
 
 ¹HOLCONST
 Ü $Ûaİ : MPROP ­ MPROP ­ W ­ BOOL
@@ -2822,8 +2837,8 @@ val ¨‰a³‰m_thm = save_pop_thm "¨‰a³‰m_thm";
 
 =GFT
 ©¨_thm = 	© X ô ¨ X
-©˜_thm = 	© X ô ˜ X
-˜¨_thm = 	˜ X ô ¨ X
+©˜_thm = 		© X ô ˜ X
+˜¨_thm = 		˜ X ô ¨ X
 ¨‰a¨_thm =	¨‰a X ô ¨ X
 ¨‰a³©_thm =	¨‰a X ô ³ © X
 ¨‰a³‰m_thm =	ô ¨‰a X ¤ ¨‰a (³‰m X)
@@ -3286,11 +3301,15 @@ These were left uninterpreted in the modal treatment of the syllogism, but now t
 What is accidental is the extension of individual attributes, and this gives our concept of possible world.
 
 It is convenient at this point to consider the question of extensionality.
-According to Grice/Codd/Speranza, essential predicates are extensional (%
+
+According to Grice/Codd/Speranza, essential predicates are extensional:
+
 =INLINEFT
-A izz B ± B izz A ´ A = B
+              A izz B ± B izz A ´ A = B
 =TEX
-), but I know no reason to suppose that accidental predication is, and it seems counter-intuitive that it should be.
+
+
+but I know no reason to suppose that accidental predication is, and it seems counter-intuitive that it should be.
 Consequently the modelling of an accidental predicate using a BOOLean valued function in HOL (in which functions are extensional) is inappropriate.
 So I will separate out the extension from the individual attribute.
 
@@ -3355,7 +3374,7 @@ Since the individuals are pairs it might be handy to have appropriately named pr
 °
 
 Finally the question of what subjects and predicates are can be determined.
-I will call them {\it TERM}s and they are either a set of particulars or a set of attributes.
+I will call them {\it TermM}s and they are either a set of particulars or a set of attributes.
 To allow for complementation I add a boolean component, which if true indicates a complement.
 
 The sets in this case must be non-empty if we are to retain the u-p syllogisms (in default of a different universal).
@@ -3366,17 +3385,17 @@ The method used in my model of the modal syllogism in Section \ref{MODSYLL} will
 A term is therefore modelled as either a non-empty set of individual substances or a non-empty set of individual attributes.
 
 =SML
-declare_type_abbrev (Û"MTERM"İ, [], ”(CAT ¸ TAG NESET)®);
+declare_type_abbrev (Û"TermM"İ, [], ”(CAT ¸ TAG NESET)®);
 =TEX
 
 ¹HOLCONST
-Ü Ûmk_SubsTermİ : TAG ğ ­ MTERM
+Ü Ûmk_SubsTermİ : TAG ğ ­ TermM
 ÷üüüüüü
 Ü µs· mk_SubsTerm s = (Category_of_Substance, NeSet s)
 °
 
 ¹HOLCONST
-Ü Ûmk_AttrTermİ : CAT ¸ TAG ğ ­ MTERM
+Ü Ûmk_AttrTermİ : CAT ¸ TAG ğ ­ TermM
 ÷üüüüüü
 Ü µs· mk_AttrTerm s = (Fst s, NeSet (Snd s))
 °
@@ -3384,7 +3403,7 @@ declare_type_abbrev (Û"MTERM"İ, [], ”(CAT ¸ TAG NESET)®);
 It may be useful to have a name for the predicate encompassing all substance.
 
 ¹HOLCONST
-Ü ÛSubstanceİ : MTERM
+Ü ÛSubstanceİ : TermM
 ÷üüüüüü
 Ü Substance = mk_SubsTerm Universe
 °
@@ -3401,10 +3420,10 @@ I will then treat the modal operators as operators over propositions, and introd
 The type of the primitive copulas is:
 
 =SML
-declare_type_abbrev("COPULA", [], ”I ­ MTERM ­ (W ­ BOOL)®);
+declare_type_abbrev("COPULA", [], ”I ­ TermM ­ (W ­ BOOL)®);
 =TEX
 
-The first parameter is an individual substance or attribute rather than a MTERM, the quantifying operator will arrange for each of the relevant individuals or attributes to be supplied.
+The first parameter is an individual substance or attribute rather than a TermM, the quantifying operator will arrange for each of the relevant individuals or attributes to be supplied.
 
 \paragraph{Propositions}
 
@@ -3430,29 +3449,29 @@ declare_postfix (100, "not");
 
 The following function is used by both quantifiers to check if something is in the range of quantification.
 
-Think of a MTERM as denoting a set of individuals, this is a test for membership of that set.
+Think of a TermM as denoting a set of individuals, this is a test for membership of that set.
 The complications are because substances and attributes have different types in this model.
 
 =SML
-declare_infix(300, "InMTERM");
+declare_infix(300, "InTermM");
 =TEX
 
 ¹HOLCONST
-Ü $ÛInMTERMİ : I ­ MTERM ­ BOOL
+Ü $ÛInTermMİ : I ­ TermM ­ BOOL
 ÷üüüüüü
-Ü µ c1t c2ts · c1t InMTERM c2ts ¤ Fst c1t = Fst c2ts ± Snd c1t  PeSet (Snd c2ts)
+Ü µ c1t c2ts · c1t InTermM c2ts ¤ Fst c1t = Fst c2ts ± Snd c1t  PeSet (Snd c2ts)
 °
 
 =GFT
 interm_¶_lemma =
-	ô µ t· ¶ j· j InMTERM t
+	ô µ t· ¶ j· j InTermM t
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¬µt· ¶j· j InMTERM t®);
+set_goal([], ¬µt· ¶j· j InTermM t®);
 a (strip_tac);
-a (¶_tac ¬(Fst t, MemOf (Snd t))® THEN rewrite_tac[get_spec ¬$InMTERM®]);
+a (¶_tac ¬(Fst t, MemOf (Snd t))® THEN rewrite_tac[get_spec ¬$InTermM®]);
 val interm_¶_lemma = save_pop_thm "interm_¶_lemma";
 =TEX
 }%ignore
@@ -3468,15 +3487,15 @@ declare_prefix(400, "Some");
 =TEX
 
 ¹HOLCONST
-Ü ÛAllİ : MTERM ­ (I ­ MTERM ­ MPROP) ­ MTERM ­ MPROP
+Ü ÛAllİ : TermM ­ (I ­ TermM ­ MPROP) ­ TermM ­ MPROP
 ÷üüüüüü
-Ü µ s r p· All s r p = Ìw· µz· z InMTERM s ´ r z p w
+Ü µ s r p· All s r p = Ìw· µz· z InTermM s ´ r z p w
 °
 
 ¹HOLCONST
-Ü ÛSomeİ : MTERM ­ (I ­ MTERM ­ MPROP) ­ MTERM ­ MPROP
+Ü ÛSomeİ : TermM ­ (I ­ TermM ­ MPROP) ­ TermM ­ MPROP
 ÷üüüüüü
-Ü µ s r p· Some s r p = Ìw· ¶z· z InMTERM s ± r z p w
+Ü µ s r p· Some s r p = Ìw· ¶z· z InTermM s ± r z p w
 °
 
 \paragraph{Predicators}
@@ -3485,16 +3504,16 @@ For essential predication it is necessary that the individual and the predicate 
 In effect. since the non-substantial individuals are tagged with their category, we need only deal separately with the distinction between substantial and non-substantial and the set inclusion will ensure a match in the non-substantial categories.
 
 ¹HOLCONST
-Ü Ûizzİ : I ­ MTERM ­ MPROP
+Ü Ûizzİ : I ­ TermM ­ MPROP
 ÷üüüüüü
-Ü µ j t· izz j t = Ìw· j InMTERM t
+Ü µ j t· izz j t = Ìw· j InTermM t
 °
 
 For accidental predication the subject term must be substantial and the predicate may not be.
 We then need some member of the predicate to be attributable to the substance.
 
 ¹HOLCONST
-Ü Ûhazzİ : I ­ MTERM ­ MPROP
+Ü Ûhazzİ : I ­ TermM ­ MPROP
 ÷üüüüüü
 Ü µ c1t c2ts· hazz c1t c2ts = Ìw·
 Ü	Fst c1t = Category_of_Substance
@@ -3510,7 +3529,7 @@ not_izz_and_hazz_lemma1 =
 \ignore{
 =SML
 set_goal([], ¬µpa t w· ³ (izz pa t w ± hazz pa t w)®);
-a (rewrite_tac [get_spec ¬$izz®, get_spec ¬$hazz®, get_spec ¬$InMTERM®]);
+a (rewrite_tac [get_spec ¬$izz®, get_spec ¬$hazz®, get_spec ¬$InTermM®]);
 a (contr_tac);
 a (DROP_NTH_ASM_T 4 ante_tac THEN asm_rewrite_tac[]);
 val not_izz_and_hazz_lemma1 = save_pop_thm "not_izz_and_hazz_lemma1";
@@ -3518,7 +3537,7 @@ val not_izz_and_hazz_lemma1 = save_pop_thm "not_izz_and_hazz_lemma1";
 }%ignore
 
 ¹HOLCONST
-Ü Ûareİ : I ­ MTERM ­ MPROP
+Ü Ûareİ : I ­ TermM ­ MPROP
 ÷üüüüüü
 Ü µ pa t· are pa t = Ìw· izz pa t w ² hazz pa t w	
 °
@@ -3552,12 +3571,12 @@ val are_izz_neq_hazz_lemma = save_pop_thm "are_izz_neq_hazz_lemma";
 =SML
 set_goal([], ¬µA B w · (All A are B) w ¤ (All A izz B w ² (All A hazz B) w)®);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¬are®, get_spec ¬All®, get_spec ¬$InMTERM®, ext_thm]);
+a (rewrite_tac [get_spec ¬are®, get_spec ¬All®, get_spec ¬$InTermM®, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$hazz®])));
 a (spec_nth_asm_tac 11 ¬z'®);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$izz®])));
-a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$InMTERM®])));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$InTermM®])));
 a (lemma_tac ¬Fst B = Fst A® THEN1 SYM_ASMS_T rewrite_tac);
 a (lemma_tac ¬Fst B = Category_of_Substance® THEN1 SYM_ASMS_T rewrite_tac);
 a (REPEAT_N 9 (POP_ASM_T discard_tac) THEN asm_rewrite_tac[]);
@@ -3565,13 +3584,13 @@ val All_are_izz_or_hazz_lemma = save_pop_thm "All_are_izz_or_hazz_lemma";
 
 set_goal([], ¬µA B w · (Some A are B) w ¤ (Some A izz B w ² (Some A hazz B) w)®);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¬are®, get_spec ¬Some®, get_spec ¬$InMTERM®, ext_thm]);
+a (rewrite_tac [get_spec ¬are®, get_spec ¬Some®, get_spec ¬$InTermM®, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 val Some_are_izz_or_hazz_lemma = save_pop_thm "Some_are_izz_or_hazz_lemma";
 
 set_goal([], ¬µA B w · (All A (are not) B) w ¤ (All A (izz not) B w ± (All A (hazz not) B) w)®);
 a (REPEAT µ_tac);
-a (rewrite_tac [get_spec ¬are®, get_spec ¬All®, get_spec ¬$InMTERM®, get_spec ¬$not®, ext_thm]);
+a (rewrite_tac [get_spec ¬are®, get_spec ¬All®, get_spec ¬$InTermM®, get_spec ¬$not®, ext_thm]);
 a (contr_tac THEN_TRY asm_rewrite_tac[] THEN_TRY all_asm_fc_tac[]);
 val All_are_not_lemma = save_pop_thm "All_are_not_lemma";
 =TEX
@@ -3667,7 +3686,7 @@ declare_binder "µ‰a";
 =TEX
 
 ¹HOLCONST
-Ü $Ûµ‰aİ : (MTERM ­ MPROP) ­ MPROP
+Ü $Ûµ‰aİ : (TermM ­ MPROP) ­ MPROP
 ÷üüüüüü
 Ü µmpf· $µ‰a mpf = Ìw· µt· mpf t w
 °
@@ -3680,7 +3699,7 @@ declare_binder "¶‰a";
 =TEX
 
 ¹HOLCONST
-Ü $Û¶‰aİ : (MTERM ­ MPROP) ­ MPROP
+Ü $Û¶‰aİ : (TermM ­ MPROP) ­ MPROP
 ÷üüüüüü
 Ü µmpf· $¶‰a mpf = Ìw· ¶t· mpf t w
 °
@@ -3789,7 +3808,7 @@ val izz_conv1 = save_pop_thm "izz_conv1";
 
 set_goal([], ¬[All B izz A]   Some A izz B®);
 a (rewrite_tac (map get_spec [¬$®]));
-a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬All®, get_spec ¬Some®, get_spec ¬izz®, get_spec ¬$InMTERM®]);
+a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬All®, get_spec ¬Some®, get_spec ¬izz®, get_spec ¬$InTermM®]);
 a (REPEAT strip_tac);
 a (¶_tac ¬(Fst B, MemOf (Snd B))® THEN asm_rewrite_tac[]);
 a (SPEC_NTH_ASM_T 1 ¬(Fst B, MemOf (Snd B))® (rewrite_thm_tac o (rewrite_rule[])));
@@ -3797,7 +3816,7 @@ val izz_conv2 = save_pop_thm "izz_conv2";
 
 set_goal([], ¬[Some B izz A]   Some A izz B®);
 a (rewrite_tac (map get_spec [¬$®]));
-a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬Some®, get_spec ¬izz®, get_spec ¬$InMTERM®]);
+a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬Some®, get_spec ¬izz®, get_spec ¬$InTermM®]);
 a (REPEAT strip_tac);
 a (¶_tac ¬z® THEN asm_rewrite_tac[]);
 a (SYM_ASMS_T rewrite_tac);
@@ -3831,7 +3850,7 @@ set_goal([], ¬³ µA B· All B (hazz not) A = All A (hazz not) B®);
 a (strip_tac);
 a (¶_tac ¬(Category_of_Substance, Ås:TAG NESET·T)® THEN strip_tac);
 a (¶_tac ¬(InR (Ås:ACAT·T), Ås:TAG NESET·T)®);
-a (rewrite_tac [ext_thm, get_spec ¬All®, get_spec ¬hazz®, get_spec ¬$not®, get_spec ¬$InMTERM®]);
+a (rewrite_tac [ext_thm, get_spec ¬All®, get_spec ¬hazz®, get_spec ¬$not®, get_spec ¬$InTermM®]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (¶_tac ¬Ìw:ACAT¸TAG· Universe® THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (¶_tac ¬(Category_of_Substance, MemOf(Å s· T))® THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
@@ -3842,7 +3861,7 @@ set_goal([], ¬³ µA B· Some B hazz A = Some A hazz B®);
 a (strip_tac);
 a (¶_tac ¬(Category_of_Substance, Ås:TAG NESET·T)® THEN strip_tac);
 a (¶_tac ¬(InR (Ås:ACAT·T), Ås:TAG NESET·T)®);
-a (rewrite_tac [ext_thm, get_spec ¬Some®, get_spec ¬hazz®, get_spec ¬$InMTERM®]);
+a (rewrite_tac [ext_thm, get_spec ¬Some®, get_spec ¬hazz®, get_spec ¬$InTermM®]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (¶_tac ¬Ìw:ACAT¸TAG· Universe® THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (¶_tac ¬(Category_of_Substance, MemOf(Å s· T))® THEN rewrite_tac [] THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
@@ -3851,7 +3870,7 @@ val not_some_hazz_lemma = save_pop_thm "not_some_hazz_lemma";
 
 set_goal([], ¬[All A hazz B]   Some A hazz B®);
 a (rewrite_tac (map get_spec [¬$®]));
-a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬All®, get_spec ¬Some®, get_spec ¬hazz®, get_spec ¬$InMTERM®]);
+a (strip_tac THEN rewrite_tac [get_spec ¬Fold®, get_spec ¬All®, get_spec ¬Some®, get_spec ¬hazz®, get_spec ¬$InTermM®]);
 a (REPEAT strip_tac);
 a (¶_tac ¬(Fst A, MemOf (Snd A))® THEN asm_rewrite_tac[]);
 a (SPEC_NTH_ASM_T 1 ¬(Fst A, MemOf (Snd A))® (rewrite_thm_tac o (rewrite_rule[])));
@@ -3940,7 +3959,7 @@ a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®])
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¬©®, ¬All®, ¬hazz®])
 	THEN strip_tac);
-a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InMTERM®] THEN strip_tac);
+a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTermM®] THEN strip_tac);
 a (lemma_tac ¬¶d· d  PeSet (Snd A)® THEN1 rewrite_tac[]);
 a (¶_tac ¬(Fst A, d)® THEN asm_rewrite_tac[]);
 val ©_hazz_thm = save_pop_thm "©_hazz_thm";
@@ -3953,7 +3972,7 @@ val izz_©_thm = save_pop_thm "izz_©_thm";
 set_goal([], ¬[] ˜ ³ © (All A hazz B)®);
 a (rewrite_tac  (map get_spec [¬$˜®, ¬Fold®, ¬©®, ¬All®, ¬izz®, ¬$³‰a®, ¬hazz®]));
 a (REPEAT strip_tac);
-a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InMTERM®] THEN strip_tac);
+a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTermM®] THEN strip_tac);
 a (¶_tac ¬(Fst A, MemOf(Snd A))® THEN rewrite_tac[]);
 val not_©_hazz_thm = save_pop_thm "not_©_hazz_thm";
 
@@ -3968,7 +3987,7 @@ a (rewrite_tac  (map get_spec [¬$®, ¬Fold®])
 a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac (map get_spec [¬©®, ¬All®, ¬hazz®])
 	THEN strip_tac);
-a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InMTERM®] THEN strip_tac);
+a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTermM®] THEN strip_tac);
 a (lemma_tac ¬¶d· d  PeSet (Snd A)® THEN1 rewrite_tac[]);
 a (¶_tac ¬(Fst A, d)® THEN asm_rewrite_tac[]);
 val ©_hazz_thm2 = save_pop_thm "©_hazz_thm2";
@@ -3981,7 +4000,7 @@ val izz_©_thm2 = save_pop_thm "izz_©_thm2";
 set_goal([], ¬[]  ³ © (All A hazz B)®);
 a (rewrite_tac  (map get_spec [¬$®, ¬Fold®, ¬©®, ¬All®, ¬izz®, ¬$³‰a®, ¬hazz®]));
 a (REPEAT strip_tac);
-a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InMTERM®] THEN strip_tac);
+a (¶_tac ¬Ìw· {}® THEN rewrite_tac[get_spec ¬$InTermM®] THEN strip_tac);
 a (¶_tac ¬(Fst A, MemOf(Snd A))® THEN rewrite_tac[]);
 val not_©_hazz_thm2 = save_pop_thm "not_©_hazz_thm2";
 =TEX
@@ -4101,10 +4120,10 @@ fun Ûmk_izz_syllİ vt (a, b, c, d) (f1, f2, f3) =
 		‘f3 (mk_var("¿", vt)) (mk_var("P", vt))®®;
 
 fun Ûmk_cop_syllpİ cop (s, n) =
-	([], mk_izz_syll ”MTERM® (nth (n-1) (figurest ”MTERM®)) (opfuntrip_from_text cop s));
+	([], mk_izz_syll ”TermM® (nth (n-1) (figurest ”TermM®)) (opfuntrip_from_text cop s));
 
 fun Ûmk_cop_syllp_ccİ cc (s, n) =
-	([], mk_izz_syll ”MTERM® (nth (n-1) (figurest ”MTERM®)) (opfuntrip_from_text_cc cc s));
+	([], mk_izz_syll ”TermM® (nth (n-1) (figurest ”TermM®)) (opfuntrip_from_text_cc cc s));
 
 fun Ûmk_izz_syllpİ (s, n) = mk_cop_syllp ¬izz® (s, n);
 
@@ -4113,12 +4132,12 @@ fun Ûmk_hazzizz_syllpİ (s, n) = mk_cop_syllp_cc (¬hazz®, ¬izz®) (s, n);
 
 val Ûsyll_izz_tac2İ =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_¶_lemma))
-		[¬M:MTERM®, ¬P:MTERM®, ¬¿:MTERM®, ¬A:MTERM®, ¬B:MTERM®])
+		[¬M:TermM®, ¬P:TermM®, ¬¿:TermM®, ¬A:TermM®, ¬B:TermM®])
 	THEN asm_prove_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬$not®, ¬Fold®]);
 
 val Ûsyll_izzhazz_tacİ =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_¶_lemma))
-		[¬M:MTERM®, ¬P:MTERM®, ¬¿:MTERM®, ¬A:MTERM®, ¬B:MTERM®])
+		[¬M:TermM®, ¬P:TermM®, ¬¿:TermM®, ¬A:TermM®, ¬B:TermM®])
 	THEN rewrite_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬hazz®, ¬$not®, ¬Fold®])
 	THEN contr_tac;
 
@@ -4149,7 +4168,7 @@ a syll_izzhazz_tac;
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
 a (asm_fc_tac[]);
-a (DROP_NTH_ASM_T 12 (strip_asm_tac o (rewrite_rule [get_spec ¬$InMTERM®])));
+a (DROP_NTH_ASM_T 12 (strip_asm_tac o (rewrite_rule [get_spec ¬$InTermM®])));
 
 
 a (contr_tac THEN REPEAT_N 3 (asm_fc_tac[]));
@@ -4220,14 +4239,14 @@ val FP2 = save_pop_thm "FP2";
 
 val Ûsyll_hizz_tacİ =
 	(MAP_EVERY (fn x => strip_asm_tac (µ_elim x interm_¶_lemma))
-		[¬M:MTERM®, ¬P:MTERM®, ¬¿:MTERM®, ¬A:MTERM®, ¬B:MTERM®])
+		[¬M:TermM®, ¬P:TermM®, ¬¿:TermM®, ¬A:TermM®, ¬B:TermM®])
 	THEN asm_prove_tac (map get_spec [¬$®, ¬All®, ¬Some®, ¬izz®, ¬hazz®, ¬$not®, ¬$³‰a®, ¬Fold®]);
 
 
 set_goal([], ¬[All A hazz B]  ³ All A izz B®);
 a (syll_hizz_tac);
 a (asm_fc_tac[]);
-a (¶_tac ¬j'''® THEN asm_rewrite_tac[get_spec ¬$InMTERM®]);
+a (¶_tac ¬j'''® THEN asm_rewrite_tac[get_spec ¬$InTermM®]);
 a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
 val FP3 = save_pop_thm "FP3";
 
@@ -4238,12 +4257,12 @@ a (rewrite_tac (map get_spec [¬$®, ¬Fold®, ¬All®, ¬izz®, ¬hazz®]) THEN REPEAT s
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¬$InMTERM®])));
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¬$InTermM®])));
 a (asm_fc_tac[]);
 a (SPEC_NTH_ASM_T 5 ¬(Fst B, b)® (strip_asm_tac o (rewrite_rule[])));
 a (swap_nth_asm_concl_tac 4 THEN asm_rewrite_tac[]);
 (* *** Goal "3" *** *)
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¬$InMTERM®])));
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [get_spec ¬$InTermM®])));
 a (asm_fc_tac[]);
 a (SPEC_NTH_ASM_T 5 ¬(Fst B, b)® (strip_asm_tac o (rewrite_rule[])));
 a (¶_tac ¬b® THEN (SYM_ASMS_T rewrite_tac));
@@ -4256,7 +4275,7 @@ a (rewrite_tac (map get_spec [¬$®, ¬Fold®, ¬$¤‰a®, ¬$¶‰a®, ¬$±‰a®]) THEN REPEAT
 a (strip_tac THEN ¶_tac ¬B® THEN asm_rewrite_tac[all_µ_intro (rewrite_rule (map get_spec [¬$®, ¬Fold®]) FP1)]);
 (* *** Goal "2" *** *)
 a (rewrite_tac (map get_spec [¬All®, ¬izz®, ¬hazz®]) THEN strip_tac);
-a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$InMTERM®])));
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ¬$InTermM®])));
 a (REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
 a (asm_fc_tac[]);
@@ -4278,7 +4297,7 @@ I possibly he might have intended that C be an individual.
 To prove that more interesting result I need to define ``individual''.
 
 ¹HOLCONST
-Ü Ûindividualİ : MTERM ­ BOOL
+Ü Ûindividualİ : TermM ­ BOOL
 ÷üüüüüü
 Ü µA· individual A ¤ ¶b· Snd A = NeSet{b}
 °
@@ -4315,7 +4334,7 @@ If we require A to be an individual we get a result:
 \ignore{
 =SML
 set_goal([], ¬[Mp(individual A)]  (All A hazz B ¤ ¶ C· Mp(individual C) ± (All A hazz C) ± (All C izz B))®);
-a (rewrite_tac (map get_spec [¬$®, ¬Fold®, ¬$¤‰a®, ¬$¶‰a®, ¬$±‰a®, ¬Mp®, ¬individual®, ¬hazz®, ¬izz®, ¬All®, ¬$InMTERM®]) 
+a (rewrite_tac (map get_spec [¬$®, ¬Fold®, ¬$¤‰a®, ¬$¶‰a®, ¬$±‰a®, ¬Mp®, ¬individual®, ¬hazz®, ¬izz®, ¬All®, ¬$InTermM®]) 
 	THEN REPEAT_N 5 strip_tac);
 (* *** Goal "1" *** *)
 a (SPEC_NTH_ASM_T 1 ¬(Fst A, MemOf (Snd A))® (strip_asm_tac o (rewrite_rule[])));
@@ -4357,7 +4376,7 @@ val FP4c = save_pop_thm "FP4c";
 }%ignore
 
 ¹HOLCONST
-Ü ÛIndividualİ : MTERM ­ MPROP
+Ü ÛIndividualİ : TermM ­ MPROP
 ÷üüüüüü
 Ü µA· Individual A = © µ‰a B· All B izz A ´‰a All A izz B
 °
@@ -4394,8 +4413,8 @@ val individual_lemma1 = save_pop_thm "individual_lemma1";
 
 set_goal ([], ¬Individual A = Mp (individual A)®);
 a (rewrite_tac [individual_lemma1]);
-a (rewrite_tac (map get_spec [¬Mp ®, ¬individual®, ¬izz®, ¬$InMTERM®, ¬$´‰a®, ¬$µ‰a®]));
-a (rewrite_tac (map get_spec [¬Mp ®, ¬individual®, ¬All®, ¬izz®, ¬$InMTERM®, ¬$´‰a®, ¬$µ‰a®]));
+a (rewrite_tac (map get_spec [¬Mp ®, ¬individual®, ¬izz®, ¬$InTermM®, ¬$´‰a®, ¬$µ‰a®]));
+a (rewrite_tac (map get_spec [¬Mp ®, ¬individual®, ¬All®, ¬izz®, ¬$InTermM®, ¬$´‰a®, ¬$µ‰a®]));
 a (rewrite_tac [ext_thm] THEN contr_tac);
 (* *** Goal "1" *** *)
 a (lemma_tac ¬¶b c· ³ b = c ± b  PeSet(Snd A) ± c  PeSet(Snd A)®
@@ -4437,7 +4456,7 @@ val individual_lemma2 = save_pop_thm "individual_lemma2";
 Now we come to the Code definition of particular:
 
 ¹HOLCONST
-Ü Ûparticularİ : MTERM ­ MPROP
+Ü Ûparticularİ : TermM ­ MPROP
 ÷üüüüüü
 Ü µA· particular A = © µ‰a B· All B are A ´‰a All A izz B ±‰a All B izz A
 °
@@ -4449,7 +4468,7 @@ However, this cannot be true of necessity unless A is substantial.
 Code might have used a similar device to define substantial:
 
 ¹HOLCONST
-Ü Ûsubstantialİ : MTERM ­ MPROP
+Ü Ûsubstantialİ : TermM ­ MPROP
 ÷üüüüüü
 Ü µA· substantial A = © µ‰a B· All B are A ´‰a All B izz A
 °
@@ -4461,7 +4480,7 @@ Again, Code's definition relies on the u-p syllogisms.
 Code's definition of universal is:
 
 ¹HOLCONST
-Ü Ûuniversalİ : MTERM ­ MPROP
+Ü Ûuniversalİ : TermM ­ MPROP
 ÷üüüüüü
 Ü µA· universal A = ¨ ¶‰a B· All B are A ±‰a ³‰a (All A izz B ±‰a All B izz A)
 °
