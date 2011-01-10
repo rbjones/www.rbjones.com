@@ -7,13 +7,13 @@ end;
 
 \ignore{
 =VDUMP t028i.tex
-Last Change $ $Date: 2011/01/02 20:54:45 $ $
+Last Change $ $Date: 2011/01/10 11:58:45 $ $
 
-$ $Id: t028.doc,v 1.28 2011/01/02 20:54:45 rbj Exp $ $
+$ $Id: t028.doc,v 1.29 2011/01/10 11:58:45 rbj Exp $ $
 =TEX
 }%ignore
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.28 2011/01/02 20:54:45 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.29 2011/01/10 11:58:45 rbj Exp $$}
 {\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
@@ -1172,6 +1172,7 @@ To explore the extent to which this might be possible, some models of syllogisti
 When we look at the syllogism with particular concern for the notion of predication involved, we find that the Grice's ``izz/hazz'' distinction (in Aristotle ``said of'' and ``in'') is not relevant.
 In this respect predication is simpler in the syllogism, but instead we have an orthogonal distinction into four kinds of predication according to whether the subject is universal or particular, and whether the predication is affirmative or negative, over which are later added the modal operators.
 
+
 The semantics of the syllogism remains a matter of controversy in some respects.
 The majority of the syllogisms held to be valid by Aristotle would be valid if universal and particular propositions were translated as universal and existential quantification in a modern predicate logic.
 Four of the syllogisms held to be valid by Aristotle would not be sound under such an interpretation.
@@ -1186,6 +1187,47 @@ There are three most common approaches to the u-p syllogisms:
 \item Consider universal propositions to be, in effect, the conjunction of a universal and an existential quantification.
 \end{enumerate}
 
+\subsection{Models and Their Significance}
+
+Three different methods of analysis are illustrated in a very simple way in application to the laws of direct inference and the assertoric (i.e. non-modal) syllogistic.
+
+These consisting in interpreting or modelling \emph{aspects} of Aristotelian logic using modern languages and tools.
+It is important to understand that the construction of an interpretation or a model says by itself nothing about Aristotelian logic until the author makes a claim about the relationship between the model and the thing modelled.
+It is never the intention that a model should be in all respects similar to the original.
+
+In producing these models I prepare the model first, with only a vaugue sense of what it might be good for, and then make certain comparisons, and describe the results.
+Thus the first two interpretations, which may be called translations or reductions, serve only to reduce the question of truth or provability in Aristotelian logic to that of truth or provability in some other notation.
+This they do incompletely the first interpretation fails to demonstrate a subset of the syllogisms.
+Its purpose is therefore primarily to show that the most naive interpretations of Aristotle's language fail to validate his reasoning, and thereby to cast serious doubt on such interpretations.
+
+The next set of models may also be understood in similar ways, but they can also be considered as attempts to capture the truth conditions of categorical assertions.
+The evaluation of these models is based again in the first instance on the correspondence between truth and provability between the model and the original.
+Only one of these models fails to show significant differences in these respects from Aristotle.
+It is therefore only in respect of the last of the models that we are motivated to enquire closer into the fidelity of the truth-conditional semantics which they exhibit.
+
+The claims made for the models are very limited, and the purposes of the models are:
+
+\begin{itemize}
+\item to exhibit certain methods and consider their merits
+\item to provide a basis for formal reasoning using a modern proof tool in a manner consistent with Aristotle's logic
+\item to provide a basis for an exploration of Aristotle's metaphyics using the same tools and methods
+\end{itemize}
+
+Three methods of modelling are used.
+These methods may be described as:
+
+\begin{itemize}
+\item translation
+\item shallow embedding
+\item deep embedding
+\end{itemize}
+
+In a translation syntax is not preserved, the aristotelian assertions are translated into some other form altogether.
+
+In an embedding of either depth, an attempt is made to preserve and work with the original syntax, though in practice there may be alterations to the syntax to enable the analysis to be undertaken using some preferred software for formal analysis.
+In this document the software is {\Product}.
+
+
 A series of mappings into HOL have been used to evaluate these possibility:
 
 \begin{enumerate}
@@ -1194,8 +1236,25 @@ A series of mappings into HOL have been used to evaluate these possibility:
 \item a naive predicate calculus interpretation (Section \ref{NIPC})
 \item predicate calculus with no empty terms (Section \ref{PCNET})
 \item existential import in universals (Section \ref{IEIU})
+\item reasoning about deep embeddings
 \item modal syllogisms (by non-emptyness) (Section \ref{MODSYLL})
 \end{enumerate}
+
+Of these the first two are simplistic translations.
+The categorical propositions are mapped to sentences in HOL which resemble set theory, or the predicate calculus and by this means is obtained a partial reduction of the decision problem for truth of syllogisms.
+
+The next three are `shallow embeddings'.
+This means that the established representation of categorical assertions in the AEIO form is retained as syntax, so no translation of syntax is involved.
+These are given meaning by defining a, e, i, and o to capture the truth conditions of the four forms.
+This involves in the first instance a choice of type for the term variables and then the definition of these forms as functions from two such values to the type BOOL.
+
+The interpretation is then evaluated by proving the soundness of various laws and syllogisms represented syntactically much as they are in the relevant literature.
+
+
+
+
+
+
 
 To facilitate comparison between the different interpretations the following list of `features' will be checked.
 These are the various rules which might or might not be valid.
@@ -1908,7 +1967,7 @@ val pl_tac = REPEAT (POP_ASM_T ante_tac)
 We now apply this to the non-u-p syllogisms, saving the results in the theory.
 
 =SML
-val valid_psylls = proveSylls pl_mapkit pl_tac "_p" syllogism_data1;
+val valid_psylls = proveSylls pl_mapkit pl_tac "" syllogism_data1;
 =TEX
 
 This is the resulting value.
@@ -2206,7 +2265,6 @@ val valid_sylls = [
 
 The theorems are also displayed in the theory listing in \thyref{syllog3}
 
-
 \subsection{Predicate Calculus Without Empty Terms}\label{PCNET}
 
 There is more than one way in which the semantics of the syllogism can be modified to make the inference from ``All As are Bs'' to ``Some As are Bs'' sound.
@@ -2445,7 +2503,13 @@ proveSylls mods_mapkit syll_tac2 "" (syllogism_data1 @ syllogism_data2 @ syllogi
 
 \subsection{Existential Import in Universals}\label{IEIU}
 
-In this interpretation we allow empty predicates but define the universal so that it entails a particular, and define the particular to preserve the contradictions in the square of opposition.
+A more complete description of this interpretation, which is taken from Strawson \cite{strawson52} though not endorsed by him, is that existential import in relation both to the subject and the complement of the predicate, is present in universals and is absent from particular assertions.
+This combination is though by Strawson to be unsatisfactory primarily I believe because of its poor correspondence with any plausible account of the ordinary usage of the terms involved, however it appears also to be in poor correspondence with Aristotle.
+The difficulties can be traced to Strawson's acceptance of all four obversions, which appear not to have been endorsed by Aristotle.
+These obversions lead to the equivalence of contrapositives, and create a symmetry between subject and predicate in consequence of which presuppositions or implications of non emptyness attach both to subject and predicate.
+
+My aim here is to confirm what Strawson says about this, which is that it satisfies all 14 laws and 28 syllogisms.
+He writes as if it were the only interpretation of this kind (i.e. not involving existential presuppositions rather than implications) which meet this requirement, on which I am sceptical but have not come to a definite conclusion.
 
 =SML
 open_theory "aristotle";
@@ -2495,25 +2559,25 @@ declare_infix (300, "u");
 ¹HOLCONST
 Ü $ÛaÝ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
-Ü µA B· A a B ¤ (µx· A x ´ B x) ± ¶x· A x
+Ü µA B· A a B ¤ (µx· A x ´ B x) ± (¶x· A x) ± (¶x· ³ B x)
 °
 
 ¹HOLCONST
 Ü $ÛeÝ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
-Ü µA B· A e B ¤ (µx· A x ´ ³ B x) ± ¶x· A x
+Ü µA B· A e B ¤ (µx· A x ´ ³ B x) ± (¶x· A x) ± (¶x· B x)
 °
 
 ¹HOLCONST
 Ü $ÛiÝ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
-Ü µA B· A i B ¤ (¶x· A x ± B x) ² ³ (¶x· A x)
+Ü µA B· A i B ¤ (¶x· A x ± B x) ² ³ (¶x· A x) ² ³ (¶x· B x)
 °
 
 ¹HOLCONST
 Ü $ÛuÝ : Term2 ­ Term2 ­ BOOL
 ÷üüüüüü
-Ü µA B· A u B ¤ (¶x· A x ± ³ B x) ² ³ (¶x· A x)
+Ü µA B· A u B ¤ (¶x· A x ± ³ B x) ² ³ (¶x· A x) ² ³ (¶x· ³ B x)
 °
 
 =SML
@@ -2548,30 +2612,15 @@ fun Ûsyll_rule3Ý g = tac_proof (g, syll_tac3);
 
 \paragraph{Simple Conversion}
 
-These fail.
-
-\ignore{
 =SML
-set_goal([], ¬³ µA B· A e B ´ B e A®);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
-a (REPEAT strip_tac);
-a (¶_tac ¬Ìx· T® THEN rewrite_tac[] THEN strip_tac);
-a (¶_tac ¬Ìx· F® THEN rewrite_tac[] THEN strip_tac);
-val ³e_conv_thm = save_pop_thm "³e_conv_thm";
-
-set_goal([], ¬³ µA B· A i B ´ B i A®);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
-a (REPEAT strip_tac);
-a (¶_tac ¬Ìx· F® THEN rewrite_tac[] THEN strip_tac);
-a (¶_tac ¬Ìx· T® THEN rewrite_tac[] THEN strip_tac);
-val ³i_conv_thm = save_pop_thm "³i_conv_thm";
+val e_conv_thm = save_thm("e_conv_thm", syll_rule3 ([¬A e B®], ¬B e A®));
+val i_conv_thm = save_thm("i_conv_thm", syll_rule3 ([¬A i B®], ¬B i A®));
 =TEX
-}%ignore
 
 The following two theorems are obtained.
 =GFT
-³e_conv_thm = ô ³ (µ A B· A e B ´ B e A)
-³i_conv_thm = ô ³ (µ A B· A i B ´ B i A)
+Ûe_conv_thmÝ =  A e B ô B e A
+Ûi_conv_thmÝ =  A i B ô B i A
 =TEX
 
 The following two theorems show that the other obvious conversions are also false.
@@ -2581,14 +2630,19 @@ Note that the theorems are not polymorphic, they are proven specifically for ter
 =SML
 set_goal([], ¬¶A B:î ­ BOOL· A a B ± ³ B a A®);
 a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
-a (¶_tac ¬Ìx· x = 0® THEN ¶_tac ¬Ìx·T® THEN prove_tac[]);
+a (¶_tac ¬Ìx· x = 0® THEN ¶_tac ¬Ìx· x = 0 ² x = 1® THEN prove_tac[]);
+a (¶_tac ¬2® THEN PC_T1 "lin_arith" prove_tac[]);
 a (¶_tac ¬1® THEN PC_T1 "lin_arith" prove_tac[]);
 val ³a_conv_thm = save_pop_thm "³a_conv_thm";
 
-set_goal([], ¬¶A B:î ­ BOOL· A o B ± ³ B o A®);
+set_goal([], ¬¶A B:î ­ BOOL· A u B ± ³ B u A®);
 a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
-a (¶_tac ¬Ìx·T® THEN ¶_tac ¬Ìx· x = 0® THEN prove_tac[]);
-a (¶_tac ¬1® THEN PC_T1 "lin_arith" prove_tac[]);
+a (¶_tac ¬Ìx· x = 0 ² x = 1® THEN ¶_tac ¬Ìx· x = 0® THEN prove_tac[]);
+a (SPEC_NTH_ASM_T 2 ¬1® ante_tac THEN rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (SPEC_NTH_ASM_T 2 ¬1® ante_tac THEN rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (¶_tac ¬2® THEN PC_T1 "lin_arith" prove_tac[]);
 val ³o_conv_thm = save_pop_thm "³o_conv_thm";
 =TEX
 }%ignore
@@ -2608,8 +2662,8 @@ val eo_conv_thm = save_thm ("eo_conv_thm", syll_rule3([¬A e B®], ¬B u A®));
 =TEX
 
 =GFT
-val ai_conv_thm = A a B ô B i A : THM
-val eo_conv_thm = A e B ô B o A : THM
+val Ûai_conv_thmÝ = A a B ô B i A : THM
+val Ûeo_conv_thmÝ = A e B ô B o A : THM
 =TEX
 
 \paragraph{Obversion}
@@ -2637,16 +2691,20 @@ set_merge_pcs ["misc2", "'syllog5"];
 
 \ignore{
 =SML
-val ae_obv_thm = save_thm ("ae_obv_thm", syll_rule3([¬A a B®], ¬A e ~B®));
-val ea_obv_thm = save_thm ("ea_obv_thm", syll_rule3([¬A e B®], ¬A a ~B®));
+set_goal([¬A a B®], ¬A e ~B®);
+a (POP_ASM_T ante_tac THEN rewrite_tac(map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
+val ae_obv_thm = save_pop_thm "ae_obv_thm";
+
+set_goal([¬A e B®], ¬A a ~B®);
+a (POP_ASM_T ante_tac THEN rewrite_tac(map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
+val ea_obv_thm = save_pop_thm "ea_obv_thm";
 
 set_goal([¬A i B®], ¬A u ~B®);
 a (POP_ASM_T ante_tac THEN rewrite_tac(map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
 val io_obv_thm = save_pop_thm "io_obv_thm";
 
 set_goal([¬A u B®], ¬A i ~B®);
-a (syll_tac3);
-a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (POP_ASM_T ante_tac THEN rewrite_tac(map get_spec [¬$a®, ¬$e®, ¬$i®, ¬$u®]));
 val oi_obv_thm = save_pop_thm "oi_obv_thm";
 =TEX
 }%ignore
@@ -2714,7 +2772,7 @@ proveGoals syll_tac3 "" (mkGoals s3mapkit syllogism_data3);
 =TEX
 
 \ignore{
-=SML
+=IGN
 set_goal([], ¬³ µP M ¿· P e M ± M i ¿ ´ ¿ o P®);
 a (REPEAT(POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [¬$e®, ¬$i®, ¬$u®]));
 a contr_tac;
@@ -2985,6 +3043,35 @@ proveGoals syll_tac6 "" (mkGoals s6mapkit syllogism_data3);
 =TEX
 
 The theorems are also displayed in the theory listing in \thyref{syllog6}
+
+\ignore{
+
+\subsection{Reasoning About Semantics}
+
+A shallow embedding is a relatively easy way of interpreting a language so as to get proof support for it using a tool like {\Product}.
+
+Insofar as there is any translation to be done, this is done in our metalanguage Standard ML, but the principle semantic content is rendered through the definition of the constants which correspond to the construtors of the target language, which is done in our object language, which is {\ProductHOL}.
+Our metalanguage is purely computational, we cannot prove theorems in the metalanguage.
+This means that a shallow embedding is good for reasoning \emph{in} the embedded language, but not good for reasoning \emph{about} it, i.e. not good for metatheory.
+
+If we want to be able to do metatheory, then we model more aspects of the language in our object language.
+This gives is a deep embedding (if you want to think in terms of embeddings at all rather than thinking in a more purely metatheoretic way).
+In a deep embedding, rather than representing the target language using HOL TERMs which have the same meaning and similar syntax, we chose a representation in HOL of the abstract syntax and define a semantic mapping in HOL, so that we are then able to reason in our object language HOL about the other object language which is the target of our investigation.
+
+If we are heading in this direction there is a further abstraction we can take.
+Instead of defining a specific semantic mapping, we can reason generally about the properties of such mappings.
+This is analogous to the manner in which Kripke models of modal logics are used.
+The semantics is then paramaterised by some accessibility relation over the possible worlds, and one can then establish relationships between the properties satisfied by the accessibilty relation and the theorems which are true in the modal logic (and hence the axioms necessary to provide a complete deductive system).
+
+The principle reason for doing this here, apart from illustrating methods, is so that when we come to treat modal syllogisms we can keep as much as possible of the modelling independent of which particular interpretation of the syllogisms is adopted, and the results will then be more likely to be applicable when the notion of the syllogism is complicated as we venture into metaphysics and distiguish, for example, between accidental and essential predication.
+
+\subsubection{Syntax}
+
+Categorical propositions have a simple structure.
+In the simplest presentation they consist of two term variables operated on by one of the operators A, E, I, O.
+A more elaborate presentation is desirable when we come to 
+
+}%ignore
 
 \subsection{Modal Syllogisms}\label{MODSYLL}
 

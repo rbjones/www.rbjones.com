@@ -1,7 +1,7 @@
 =VDUMP t040i.tex
-Last Change $ $Date: 2010/12/15 07:01:59 $ $
+Last Change $ $Date: 2011/01/10 11:58:45 $ $
 
-$ $Id: t040.doc,v 1.4 2010/12/15 07:01:59 rbj Exp $ $
+$ $Id: t040.doc,v 1.5 2011/01/10 11:58:45 rbj Exp $ $
 =TEX
 
 I explore here in a fairly abstract way aspects of the theory of combining models of concrete components into larger systems.
@@ -486,6 +486,196 @@ merge_pcs ["rbjmisc", "'circuit"] "circuit";
 commit_pc "circuit";
 =TEX
 }%ignore
+
+\section{Alloy}
+
+This section attempts an embedding of the Alloy relational calculus in HOL.
+
+\ignore{
+=SML
+open_theory "rbjmisc";
+force_new_theory "alloy";
+new_parent "fixp";
+force_new_pc Û"'alloy"İ;
+merge_pcs ["'prove_¶_´_conv", "'savedthm_cs_¶_proof"] "'alloy";
+set_merge_pcs ["rbjmisc", "'alloy"];
+=TEX
+}%ignore
+
+\subsection{Lightweight Semantics as Shallow Embedding}
+
+This is based on the semantics for Alloy given in Emina Torlak's thesis \cite{torlak2009} Figure 2-1.
+Since it is a `shallow semantic embedding' the semantics is not given as a map, we simply define operators corresponding to the constructions and try to arrange the syntax as closely as possibly so as to permit Alloy to be expressed in HOL.
+This could be a prelude to use of the relevant operations in giving a `deep' semantics, or to rendering some Alloy model in HOL, or to reasoning about Alloy in general or some model using HOL.
+
+=SML
+declare_type_abbrev("tuple", [], ”î LIST®);
+declare_type_abbrev("rel", [], ”tuple SET®);
+=TEX
+
+\subsubsection{Problem (P)}
+
+A problem is the conjunction of its relation bounds and formulae, which we can just spell out.
+The domain of discourse is just a set.
+We need to constrain the range of the variables in the specification to range over relations confined to this domain.
+
+\subsubsection{Restriction (T)}
+
+Can be expressed using the subset relation.
+
+\subsubsection{Formulae (F)}
+
+
+¹HOLCONST
+Ü Ûnoİ : rel ­ BOOL
+÷üüüüüü
+Ü µr· no r ¤ r = {}
+°
+
+¹HOLCONST
+Ü Ûloneİ : rel ­ BOOL
+÷üüüüüü
+Ü µr· lone r ¤ ¶x· r € {x}
+°
+
+¹HOLCONST
+Ü Ûoneİ : rel ­ BOOL
+÷üüüüüü
+Ü µr· one r ¤ ¶x· r = {x}
+°
+
+¹HOLCONST
+Ü Ûsomeİ : rel ­ BOOL
+÷üüüüüü
+Ü µr· some r ¤ ¶x· x  r
+°
+
+Subset, equality and the boolean operations are already suitably defined in HOL.
+We do not have suitable restricted quantifiers but the effect can be obtained by writing out in full using the normal HOL quantifiers.
+
+\subsubsection{Expressions (E)}
+
+Variables are rendered as HOL variables of type $rel$.
+
+Operations over expressions are operations over sets.
+Many of these are already defined in HOL, and may be aliased for the present context.
+
+=SML
+declare_prefix(50, "›~‰a");
+=TEX
+
+¹HOLCONST
+Ü $Û›~‰aİ : rel ­ rel
+÷üüüüüü
+Ü µp· (›~‰a p) = {x | ¶y z· x = [y;z] ± [z;y]  p} 
+°
+
+=SML
+declare_prefix(50, "^‰a");
+=TEX
+
+¹HOLCONST
+Ü $Û^‰aİ : rel ­ rel
+÷üüüüüü
+Ü µp· (^‰a p) = {x | ¶y z· x = [y;z] ± tc (Ìv w· [v;w]  p) z y} 
+°
+
+=SML
+declare_alias ("^", ¬$^‰a®);
+=TEX
+
+=SML
+declare_prefix(50, "›*");
+=TEX
+
+¹HOLCONST
+Ü $Û›*İ : rel ­ rel
+÷üüüüüü
+Ü µp· (›* p) = (^‰a p) À {x | ¶y· x = [y;y]} 
+°
+
+Union, intersection and difference of sets is already suitably defined.
+
+This brings us to the join operation.
+The definition here is not the same as the same in Emina Torlak's thesis \cite{torlak2009}, since I am guessing that she has made a small error.
+
+=SML
+declare_infix(310, ".‰a");
+=TEX
+
+¹HOLCONST
+Ü $Û.‰aİ : rel ­ rel ­ rel
+÷üüüüüü
+Ü µp q· p .‰a q = {x:tuple | ¶(u:tuple) v (w:tuple)· u@[v]  p ± [v]@w  q ± x = u@w} 
+°
+
+Product.
+
+=SML
+declare_alias (".", ¬$.‰a®);
+=TEX
+
+=SML
+declare_infix(310, "­‰a");
+=TEX
+
+¹HOLCONST
+Ü $Û­‰aİ : rel ­ rel ­ rel
+÷üüüüüü
+Ü µp q· p ­‰a q = {x:tuple | ¶(u:tuple) (w:tuple)· u  p ± w  q ± x = u@w} 
+°
+
+=SML
+declare_alias ("­", ¬$­‰a®);
+=TEX
+
+We will use `if .. then .. else ..' syntax for conditionals.
+
+HOL set comprehension will suffice for Alloy comprehension.
+
+\subsection{Sample Specification}
+
+This is the one from Emma Torlak's thesis \cite{torlak2009} Figure 4-1.
+
+It is presented as a predicate.
+
+\ignore{
+ ¹HOLCONST
+Ü ÛToyListİ : rel LIST ­ BOOL
+ ÷üüüüüü
+Ü µlist nil cons thing car cdr equivTo prefixes·
+	ToyList [list; nil; cons; thing; car; cdr; equivTo; prefixes] ¤
+
+	list = cons À nil
+  ±	no cons ¡ nil
+  ±	car € cons ­ thing
+  ±	(µa· a  conv ´ one ({a}.car))
+  ±	cdr € cons ­ list
+  ±	(µa· a  conv ´ one ({a}.cdr))
+ °
+}%ignore
+
+¹HOLCONST
+Ü ÛToyListİ : (rel ¸ rel ¸ rel ¸ rel ¸ rel ¸ rel ¸ rel ¸ rel) SET
+÷üüüüüü
+Ü ToyList = {(list, nil, cons, thing, car, cdr, equivTo, prefixes) |
+	list = cons À nil
+  ±	no (cons ¡ nil)
+  ±	car € (cons ­ thing)
+  ±	(µa· a  cons ´ one ({a}.car))
+  ±	cdr € (cons ­ list)
+  ±	(µa· a  cons ´ one ({a}.cdr))
+  ±	(µa· a  list ´ ¶e· e  nil ± e  {a}.(^‰a cdr))
+  ±	equivTo € (list ­ list)
+  ±	(µa b· a  list ± b  list ´ ({a} € ({b}.equivTo)
+		¤  ({a}.cdr) .‰a equivTo = ({b}.cdr) .‰a equivTo))
+  ±	prefixes € (list ­ list)
+  ±	(µe a· e  nil ± a  list ´ ({e} € {a}.prefixes))
+  ±	(µe a· e  nil ± a  cons ´ ³ ({a} € {e}.prefixes))
+  ±	(µa b· a  cons ± b  cons ´ ({a} € {b}.prefixes)
+		¤ {a}.‰a car = {b}.‰a car ± {a}.cdr € {b}.cdr.‰a prefixes)
+}
+°
 
 \section{Conclusions}
 
