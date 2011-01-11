@@ -7,13 +7,13 @@ end;
 
 \ignore{
 =VDUMP t028i.tex
-Last Change $ $Date: 2011/01/10 11:58:45 $ $
+Last Change $ $Date: 2011/01/11 16:22:27 $ $
 
-$ $Id: t028.doc,v 1.29 2011/01/10 11:58:45 rbj Exp $ $
+$ $Id: t028.doc,v 1.30 2011/01/11 16:22:27 rbj Exp $ $
 =TEX
 }%ignore
 
-\def\rbjidtACIdoc{$$Id: t028.doc,v 1.29 2011/01/10 11:58:45 rbj Exp $$}
+\def\rbjidtACIdoc{$$Id: t028.doc,v 1.30 2011/01/11 16:22:27 rbj Exp $$}
 {\tiny\rbjidtACIdoc}
 
 My purpose here is to use formal models to aid in understanding the philosophies of Plato\index{Plato} and Aristotle\index{Aristotle|bf}, both in relation to their contribution generally to the areas of interest, philosophical logic, semantics and metaphysics. and also more specifically in relation to the extent to which these philosophers laid the ground for the distinction which was later expressed in Hume's fork.
@@ -1358,7 +1358,7 @@ The following function generates a list of four quadruples of HOL variables whic
 It is parameterised by the HOL type used for predicates to that it can be re-used when we change the representation type.
 
 =SML
-fun €figures› mkt = 
+fun €figureS› mkt = 
 	let val M = mkt "M"
 	    and P = mkt "P"
 	    and S = mkt "ø"
@@ -1376,7 +1376,7 @@ fun €mkATvar› tt s = mk_var(s,tt);
 For these cases the list of figures with the relevant terms is obtained by this function:
 
 =SML
-fun €figurest› tt = figures (mkATvar tt);
+fun €figurest› tt = figureS (mkATvar tt);
 =TEX
 
 and the following function when instantiated to some type will give the nth figure with terms as variables of that type.
@@ -1469,7 +1469,7 @@ fun €vowels_from_string› s = filter (fn x => x mem (explode "aeiou")) (explode s
 
 fun €mkSyll› (sk:mapkit) (s, n) = 
 	let val [pa, pb, co] = vowels_from_string s
-	    val (a,b,c,d) = nth (n-1) (figures (#mkAT sk))
+	    val (a,b,c,d) = nth (n-1) (figureS (#mkAT sk))
 	    val pl = [#mkAP sk pa (a,b), #mkAP sk pb (c,d)]
 	    val c = #mkAP sk co (#mkAT sk "ø", #mkAT sk "P")
 	in #mkAS sk (pl, c)
@@ -3499,6 +3499,34 @@ The actual theorems proved are shown in the theory listing in \thyref{modsyllog}
 
 Because of the modal operators the generation of the syllogisms is more complicated.
 The generation functions are adapted to allow a single modal operator to be applied to each of the premises and the conclusion.
+
+
+
+=SML
+fun €mk_pred› q s p = mk_app(mk_app (q, s), p);
+
+fun €mk_syll› vt (a,b,c,d) (q1, q2, q3) =
+	([mk_pred q1 a b, mk_pred q2 c d],
+		mk_pred q3 (mk_var("ø", vt)) (mk_var("P", vt)));
+
+fun €mk_relt› t = mk_ctype ("≠", [t, mk_ctype ("≠", [t, îBOOLÆ])]);
+
+fun €mk_syllp› vt (s, n) =
+	mk_syll vt (nth (n-1) (figurest vt)) (optrip_from_text (mk_relt vt) s);
+=IGN
+val €mk_syllp1› = mk_syllp îTERMÆ;
+=SML
+fun €syll_prove› msp suff tac (a,n) =
+	let val thm = tac_proof (msp (a,n), tac) handle _ => t_thm
+	in (concat [a, suff], thm)
+	end;
+
+fun €syll_prove_and_store› msp suff tac (a,n) =
+	let val res = syll_prove msp suff tac (a,n);
+	    val _ = save_thm res
+	in res 
+	end;
+=TEX
 
 =SML
 fun €map_goal› f (st, t) = (map f st, f t);
