@@ -1,7 +1,7 @@
 =VDUMP t040i.tex
-Last Change $ $Date: 2011/01/11 16:22:27 $ $
+Last Change $ $Date: 2011/01/21 13:39:10 $ $
 
-$ $Id: t040.doc,v 1.8 2011/01/11 16:22:27 rbj Exp $ $
+$ $Id: t040.doc,v 1.9 2011/01/21 13:39:10 rbj Exp $ $
 =TEX
 
 I explore here in a fairly abstract way aspects of the theory of combining models of concrete components into larger systems.
@@ -513,6 +513,10 @@ declare_type_abbrev("tuple", [], îÓ LISTÆ);
 declare_type_abbrev("rel", [], îtuple SETÆ);
 =TEX
 
+The admission of LISTs in general as tuples may not be satisfactory since this includes the empty list which would be the 0-tuple.
+I don't know whether it is intended to admit or exclude 0-tuples, but I suspect that the effect is detrimental
+(i.e. that it delivers no important benefits but complicates the theory).
+
 \subsubsection{Problem (P)}
 
 A problem is the conjunction of its relation bounds and formulae, which we can just spell out.
@@ -524,7 +528,6 @@ We need to constrain the range of the variables in the specification to range ov
 Can be expressed using the subset relation.
 
 \subsubsection{Formulae (F)}
-
 
 πHOLCONST
 ‹ €no› : rel ≠ BOOL
@@ -615,22 +618,6 @@ Product.
 declare_alias (".", ¨$.âaÆ);
 =TEX
 
-\ignore{
-=IGN
-val joinâa_def = get_spec ¨$.âaÆ;
-set_goal([], ¨µf g h∑ f .âa g .âa h = (f .âa g) .âa hÆ);
-a (REPEAT µ_tac THEN rewrite_tac[joinâa_def, sets_ext_clauses]
-	THEN rename_tac [] THEN REPEAT strip_tac);
-a (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN ∂_tac ¨wÆ THEN asm_rewrite_tac[]);
-a (∂_tac ¨u'Æ THEN ∂_tac ¨v'Æ THEN ∂_tac ¨w'Æ THEN asm_rewrite_tac[]);
-
-a (spec_nth_asm_tac 1 ¨v'Æ);
-a (spec_nth_asm_tac 1 ¨w'Æ);
-a (spec_nth_asm_tac 1 ¨u'Æ);
-a (spec_nth_asm_tac 1 ¨vÆ);
-=TEX
-}%ignore
-
 =SML
 declare_infix(310, "≠âa");
 =TEX
@@ -649,41 +636,69 @@ We will use `if .. then .. else ..' syntax for conditionals.
 
 HOL set comprehension will suffice for Alloy comprehension.
 
+\subsection{Some Theorems}
+
+\ignore{
+
+This one won't go through with the empty tuples.
+
+=IGN
+val joinâa_def = get_spec ¨$.âaÆ;
+val ≠âa_def = get_spec ¨$≠âaÆ;
+stop;
+
+set_goal([], ¨µf g h i j k∑ g Ä (i ≠âa j) ± h Ä (j ≠âa k) ¥ f .âa g .âa h = (f .âa g) .âa hÆ);
+a (REPEAT µ_tac THEN rewrite_tac[joinâa_def, ≠âa_def, sets_ext_clauses]
+	THEN rename_tac [] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨uÆ THEN ∂_tac ¨vÆ THEN ∂_tac ¨wÆ THEN asm_rewrite_tac[]);
+a (∂_tac ¨u'Æ THEN ∂_tac ¨v'Æ THEN ∂_tac ¨w'Æ THEN asm_rewrite_tac[]);
+
+a (spec_nth_asm_tac 1 ¨v'Æ);
+a (spec_nth_asm_tac 1 ¨w'Æ);
+a (spec_nth_asm_tac 1 ¨u'Æ);
+a (spec_nth_asm_tac 1 ¨vÆ);
+=TEX
+}%ignore
+
 \subsection{Sample Specification}
 
 This is the one from Emma Torlak's thesis \cite{torlak2009} Figure 4-1.
 
-It is presented as a predicate.
+It is presented as a set.
 Note that in some places I have had to add subscript \emph{a} to disambiguate aliases.
 When printed in the theory listing (See Appendix \ref{alloy}).
-Note also that function application associates to the right.
+Note also that function application associates to the right (though it is in fact semantically more like relational composition and is associative so long as the things applied are functions).
 
 
 πHOLCONST
 ‹ €ToyList› : (rel ∏ rel ∏ rel ∏ rel ∏ rel ∏ rel ∏ rel ∏ rel) SET
 ˜¸¸¸¸¸¸
 ‹ ToyList = {(list, nil, cons, thing, car, cdr, equivTo, prefixes) |
-	list = cons ¿ nil
-  ±	no (cons ° nil)
-  ±	car Ä (cons ≠ thing)
-  ±	(µa∑ a ç cons ¥ one ({a}.car))
-  ±	cdr Ä (cons ≠ list)
-  ±	(µa∑ a ç cons ¥ one ({a}.cdr))
-  ±	(µa∑ a ç list ¥ ∂e∑ e ç nil ± e ç {a}.(^âa cdr))
-  ±	equivTo Ä (list ≠ list)
-  ±	(µa b∑ a ç list ± b ç list ¥
-		({a} Ä {b}.equivTo
-		§  {a}.âa car = {b}.âa car 
-			± {a}.âa cdr.equivTo = {b}.âa cdr.equivTo))
-  ±	prefixes Ä (list ≠ list)
-  ±	(µe a∑ e ç nil ± a ç list ¥ ({e} Ä {a}.prefixes))
-  ±	(µe a∑ e ç nil ± a ç cons ¥ ≥ ({a} Ä {e}.prefixes))
-  ±	(µa b∑ a ç cons ± b ç cons ¥
-		({a} Ä {b}.prefixes
-		§ {a}.âa car = {b}.âa car 
-			± {a}.cdr Ä {b}.cdr.âa prefixes))
-}
+‹	list = cons ¿ nil
+‹ ±	no (cons ° nil)
+‹ ±	car Ä (cons ≠ thing)
+‹ ±	(µa∑ a ç cons ¥ one ({a}.car))
+‹ ±	cdr Ä (cons ≠ list)
+‹ ±	(µa∑ a ç cons ¥ one ({a}.cdr))
+‹ ±	(µa∑ a ç list ¥ ∂e∑ e ç nil ± e ç {a}.(^âa cdr))
+‹ ±	equivTo Ä (list ≠ list)
+‹ ±	(µa b∑ a ç list ± b ç list ¥
+‹		({a} Ä {b}.equivTo
+‹		§  {a}.âa car = {b}.âa car 
+‹			± {a}.âa cdr.equivTo = {b}.âa cdr.equivTo))
+‹ ±	prefixes Ä (list ≠ list)
+‹ ±	(µe a∑ e ç nil ± a ç list ¥ ({e} Ä {a}.prefixes))
+‹ ±	(µe a∑ e ç nil ± a ç cons ¥ ≥ ({a} Ä {e}.prefixes))
+‹ ±	(µa b∑ a ç cons ± b ç cons ¥
+‹		({a} Ä {b}.prefixes
+‹		§ {a}.âa car = {b}.âa car 
+‹			± {a}.cdr Ä {b}.cdr.âa prefixes))
+‹}
 ∞
+
+To reason about this specification in HOL it would probably be most convenient first to demonstrate the consistency of the specification (the non-emptyness of the above set), and then to introduce new constants complying with the specifications and reason about these constants.
+
 
 \ignore{
 
