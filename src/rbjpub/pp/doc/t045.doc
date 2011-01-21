@@ -1,0 +1,1330 @@
+=TEX
+\ignore{
+=VDUMP t045i.tex
+Last Change $ $Date: 2011/01/21 15:11:37 $ $
+
+$ $Id: t045.doc,v 1.1 2011/01/21 15:11:37 rbj Exp $ $
+=TEX
+}%ignore
+
+\subsection{Motivations}
+
+The following material arose from a discussion on the \emph{hist-analytic} mailing list which involved the claim by Danny Frederick that the identity between Hesperus and Phosphorus is necessary if true.
+In this it was observed that substitution of descriptions into modal contexts is not sound.
+
+I have two quite specific technical aims which are:
+
+\begin{itemize}
+\item to exhibit a single notion of necessity relative to which a similar claim is provable or refutable according to the logical type of `Hesperus'.
+\item to show in this system that descriptions can be substituted into modal contexts.
+\end{itemize}
+
+I aim also to cast some light on the following concepts and the relationships between them:
+
+\begin{itemize}
+\item referential transparency and opacity
+\item extensionality and intensionality
+\item truth functionality
+\end{itemize}
+
+Furthermore, it should be admitted that there are methodological messages in my agenda.
+
+Of these the first is simply that the use of appropriate formal languages in the investigation of topics such as this can improve understanding.
+The second it that by contrast with devising special languages (such as modal logics) for investigating specific issues, the use of a general purpose formal language is more flexible, and is appropriate for the kind of discussion found, for example, in Quine's \emph{Reference and Modality} \cite{quineRM}.
+This message speaks against Carnap's abandonment of Russelian universalism in favour of a pluralism inspired by Hilbert.
+It is natural to move onward, as I intend for the discussion here, from the discussion of the meaning and logic of modalities into a consideration of metaphysics.
+Both for this purpose and for Carnap's purpose of aiding and abetting the formalisation of science, it may be questioned whether our formal languages need the modal vocabulary at all.
+I hope to close with some discussion of the advantages of dealing with physics and metaphysics formally using general purpose abstract formal systems without any fixed modal vocabulary.
+
+There is of course an extensive literature on these topics, with which I have limited acquaintance.
+The study of the modal concepts of goes back to antiquity at least as far as Aristotle's Organon.
+It has, with all other aspects of formal logic, been greatly advanced in modern times.
+
+Formal propositional modal logics were first studied by C.I.Lewis, initially motivated by objections to the use of material implication in \emph{Principia Mathematica}, and first publishing on the topic in his `A Survey of Symbolic Logic' of 1918\cite{lewisSSL}.
+The concepts of analyticity and necessity were later to become central to the philosophy of Rudolf Carnap\cite{carnap47}.
+Carnap became engaged in controversy with Quine, who was skeptical about the coherence of modal systems, particularly of quantification into modal contexts\cite{quineRM}.
+At the same time Ruth Barcan Marcus was publishing on first and second order systems of quantified modal logic.
+
+I refer specifically to Quine's `Reference and Modality' \cite{quineLPOV,quineRM}.
+
+\subsection{Some Methodological Preliminaries}
+
+My discussion of this topic will involve the use of a proof assistant called {\Product} competent to check formal specifications written in its own dialect of Higher Order Logic (essentially a polymorphically typed version of Church's formulation of the Simple Theory of Types\cite{church40}), and to assist in the construction and checking of fully formal proofs in this logical system.
+
+The most common way of using the methods of modern logic to investigate modal systems is to furnish a syntax, semantics and deductive system for some language involving modal operators and then to obtain various results about that system (starting with soundness and possibly completeness).
+
+In this example we proceed in a different manner, since the logic at our disposal is capable of defining all the required concepts.
+The procedure is to define necessitation as an operator over propositions and then to investigate the issues in a theory which is based on that definition.
+
+Our logic is organised as a sequent calculus, the theorems having a list of assumptions and a single conclusion each of which is a TERM of type BOOL, such terms serving in our logic the role more typically assigned to `formulae'.
+There are just two values of type BOOL which are called `T' and `F'.
+
+\section{Higher Order Logic}
+
+\subsection{Origins}
+
+Formal Higher Order Logics originate in Russell's Theory of Types \cite{russell08} which is a so-called \emph{ramified} type theory, the ramifications in which are obviated by the adoption of an axiom of reducibility.
+That the effect could be obtained more economically by omitting both the ramifications and the axiom of reducibility was quickly noted, and the resulting Simple Theory of Types was first codified in detail by Rudolf Carnap in his \emph{Abriss Der Logistik}\cite{carnap29}.
+
+Alonzo Church, for the purpose of answering the `enscheidungsproblem' distilled the essence of functional abstraction into the lambda-calculus, and subsequently investigated whether this calculus could be made the basis for a logical systems strong enough for mathematics.
+An attempt using a type-free lambda-calculus having foundered, Church put forward an elegant and economic formulation of the Simple Theory of Types \cite{church40} based on a simply-typed lambda-calculus.
+Later, Robin Milner (a computer scientist), for purposes connected with program verification using a logic for computable functions devised by Dana Scott (a set theorist), devised a polymorphic version of the simply typed lambda calculus (i.e. one in which type variables were permitted), and lead the development of LCF, an interactive proof assistant in which formal proofs in LCF could be constructed and checked using a functional programming language also benefitting from a polymorphic type system.
+
+The version of Higher Order Logic which is used in this document was then devised by Mike Gordon for the formal verification of digital hardware.
+It consists of Church's formulation of the Simple Theory of Types made polymorphic, augmented by principles of convervative extension and implemented following the LCF paradigm as a proof assistant.
+The present document was prepared using a subsequently developed proof assistant for that same logical system, again following the patterm set by LCF.
+
+\subsection{The HOL Language}
+
+For a fully detailed account of the {\ProductHOL} language see the {\Product} Description Manual\cite{ds/fmu/ied/usr005}.
+Tutorial material may be found in \cite{ds/fmu/ied/usr022,ds/fmu/ied/usr013}.
+The following is a very simplified and condensed account of the language which might possibly be sufficient for readers of this document.
+
+\subsubsection{Types}
+
+The types are defined inductively as follows.
+
+A type may be any of the following:
+
+\begin{itemize}
+\item a type-variable
+\item a type construction consisting of a type constructor applied to a (possibly empty) finite sequence of types
+\end{itemize}
+
+\subsubsection{Terms}
+
+Typed lambda terms consist of terms of the lambda-calculus annotated by types in the above type system.
+
+The terms are defined inductively as follows.
+
+A term may be any of the following:
+
+\begin{enumerate}
+\item a variable consisting of a name and a type
+\item a constant also consisting of a name and a type
+\item an application consisting of two terms, a function on the left and an argument on the right
+\item an abstraction consisting of a variable (name and type) and a body (a term). 
+\end{enumerate}
+
+Terms must be well-typed, and if well-typed will have a most general polymorphic simple type.
+The following rules must be observed.
+
+In an application the function must have a type of the form $”Á ­ Â®$ and the argument must have type $”Á®$.
+The application will then have type $”Â®$
+
+The type of an abstraction is formed from the type of the variable and the type of the body, and is the type of functions from the first to the second.
+It is written as a lambda abstraction.
+
+If $b$ has type $”Â®$ then the lambda abstraction $¬Ìx:Á· b®$ will have type $”Á­Â®$.
+
+In the concrete syntax of terms the presentation of applications is controlled by the use of fixity declarations which indicate whether the application of a variable or constant of a give name should be written prefix (with the function on the left of the argument), postfix (with the function on the right), or infix (with the function bewteen two arguments) and also permits a precedence to be assigned which controls how the parser inserts omitted brackets.
+Functions take only one argument which need not be enclosed in brackets, however, that argument might be a pair (or a pair of pairs) formed by the infix operator 
+=INLINEFT
+¬$,®
+=TEX
+, in which case it would normally be enclosed in brackets.
+As in this example, the lexical status of a function may be suspended by preceding it with a dollar sign, and this is necessary if the function is to be used as an argument to some other function.
+
+Type variables begin with a backquote $\verb!`!$.
+Variable and constant names may include special symbols.
+
+
+\subsubsection{Formulae and Sequents}
+
+A formula is a term of type ”BOOL®.
+The logical system is a Hilbert style sequent calculus.
+A sequent is a list of formulae (the assumptions) together with a single formula (the conclusion).
+A sequent which has not been proven is called a goal or a conjecture.
+Sequents which have been proven have a special ML type THM.
+Objects of this type can only be computed by computations which parallel the structure of the logical system with the effect that all objects of type THM are indeed theorems of the logic derivable in an appropriate context.
+The relevant kind of context is call a theory, and determines what definitions and/or non-logical axioms are in scope.
+Theories are organised into a heirarchy, each theory except "min" having at least one parent and inheriting all definitions and axioms from its ancestors.
+Proven theorems may be saved in a theory, in which case they will be listed with the theory.
+
+\subsection{The HOL Deductive System}
+
+HOL has a very small logical core which consists of 
+
+\subsubsection{Primitive Type Constructors and Constants}
+
+The primitive type constructors and constants are introduced in \href{http://www.rbjones.com/rbjpub/pp/min.html}{theory min}.
+
+There are three primitive type constructors.
+Two 0-ary constructors (type constants), a type of individuals $”IND®$ and a type of truth values $”BOOL®$, and a 2-ary constructor $­$ (function space) normally written infix (
+=INLINEFT
+”BOOL ­ BOOL®
+=TEX
+is the type of unary functions over type $”BOOL®$).
+
+There are just three primitive constants:
+
+\begin{centering}
+\hfil
+\begin{tabular}{l l l}
+$´$&$:BOOL­BOOL­BOOL$ & material implication\\
+$=$&$:'a­'a­BOOL$ & equality\\
+$Å$&$:('a­BOOL)­'a$ & the choice function\\
+\end{tabular}
+\hfil
+\end{centering}
+
+\subsubsection{Primitive Definitions}
+
+
+Certain definitions are required before the axioms of HOL can be stated.
+These define the logical connectives and quantifiers and the concepts of injection and surjection which are needed in the axiom of infinity and in defining new types.
+
+\begin{centering}
+\hfil
+\begin{tabular}{l l}
+T &	$:BOOL$\\
+$µ$ &	$:('a­BOOL)­BOOL$\\
+$¶$ &	$:('a­BOOL)­BOOL$\\
+F &	$:BOOL$\\
+$³$ &	$:BOOL­BOOL$\\
+$±$ &	$:BOOL­BOOL­BOOL$\\
+$²$ &	$:BOOL­BOOL­BOOL$\\
+OneOne & $:('a­'b)­BOOL$\\
+Onto &	$:('a­'b)­BOOL$\\
+TypeDefn & $:('b­BOOL)­('a­'b)­BOOL$\\
+\end{tabular}
+\hfil
+\end{centering}
+
+These definitions may be found in \href{http://www.rbjones.com/rbjpub/pp/log.html}{theory log}.
+
+
+\subsubsection{Axioms}
+
+There are five axioms.
+
+\begin{description}
+\item[$bool\_cases\_axiom$] asserts that T and F are the only values of type BOOL.
+\item[$´\_antisym\_axiom$] asserts that implication is antisymmetric.
+\item[$È\_axiom$] makes functions extensional.
+\item[$Å\_axiom$] is the axiom of choice.
+\item[$infinity\_axiom$] is the axiom of infinity.
+\end{description}
+
+These axioms may be found in \href{http://www.rbjones.com/rbjpub/pp/init.html}{theory init}.
+
+
+\subsubsection{Definitions and Other Extensions}
+
+There are three kinds of extension which are possible.
+Axioms, definitions and conservative extensions.
+
+An axiom is an assertion of a sequent without proof.
+These are always stored as such in the current theory when they are asserted so that the axioms used in deriving theorems can be determined.
+HOL is a powerful logical system sufficient for the development of a large part of mathematics using only definitions or conservative extensions over the primitive logical axioms.
+It is therefore rarely necessary to adopt new axioms, and it is the norm to proceed by definitions and conservative extensions.
+
+
+
+\section{Modal Reasoning in Higher Order Logic}
+
+\ignore{
+=SML
+open_theory "rbjmisc";
+force_new_theory "t045";
+force_new_pc Û"'t045"Ý;
+merge_pcs ["'prove_¶_´_conv", "'savedthm_cs_¶_proof"] "'t045";
+set_merge_pcs ["rbjmisc", "'t045"];
+=TEX
+}%ignore
+
+The logical operators available in our logic are operations over truth values (values of type BOOL).
+It is of course well known that the operations of the classical propositional logic are truth functional.
+
+Modal operators are not truth functional, and therefore must operate on propositions rather than their truth values.
+This does not prevent them from being rendered in an extensional logic such as HOL.
+The modal operators are said to be non-extensional or intensional from a point of view in which intension and extension are understood as similar to sense and reference.
+The sense of a formula is then considered to be the proposition it expresses, and the reference is the truth value of the proposition.
+An operator is extensional if it operates on the extension, the reference, the truth value, and intensional if it must be considered as operating on the intension, the sense.
+
+The meaning of extensional in relation to higher order logic is related but distinct.
+Our higher order logic is called extensional because it has functions in the domain of discourse and equality of functions is extensional, i.e. two functions are the same if they have the same extension.
+The extension in question is the graph of the function.
+Two functions are extensionally equal if they have the same domain and give the same result for every value in the domain.
+
+We introduce a new type of entities which are our `possible worlds'.
+
+=SML
+new_type("W", 0);
+=IGN
+val W_def = new_type_defn(["W"], "W", [], tac_proof(([],¬¶x:î·(Ìy:î·T)x®), ¶_tac ¬Åx:î·T® THEN rewrite_tac[] THEN strip_tac));
+
+set_goal([], ¬¶MkWorld:î­W· OneOne MkWorld®);
+a (strip_asm_tac W_def);
+a (fc_tac [type_lemmas_thm]);
+a (¶_tac ¬abs® THEN asm_rewrite_tac[get_spec ¬OneOne®]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[] THEN strip_tac);
+a (REPEAT µ_tac);
+
+a (LEMMA_T ¬x1 = rep(abs x1)® once_rewrite_thm_tac THEN1 asm_rewrite_tac[]);
+a (LEMMA_T ¬x2 = rep(abs x2)® once_rewrite_thm_tac THEN1 asm_rewrite_tac[]);
+
+a (REPEAT strip_tac);
+a (SYM_ASMS_T once_rewrite_tac);
+a (SPEC_NTH_ASM_T 2 ¬x1® ante_tac);
+a (rewrite_tac[]);
+a (strip_tac);
+a (once_asm_rewrite_tac[]);
+
+a (STRIP_T once_rewrite_thm_tac);
+
+ once_rewrite_thm_tac);
+set_flag("pp_show_HOL_types", false);
+=TEX
+
+In a modal context values may be rigid or flexible.
+Rigid values are the same in every possible world, flexible values vary across the possible worlds.
+Flexible values are therefore functions whose domain is the type of possible worlds, and we introduce a type abbreviation for these types.
+
+=SML
+declare_type_abbrev ("ÛFLEXÝ", ["'a"], ”W ­ 'a®);
+=TEX
+
+Propositions are then flexible booleans:
+
+=SML
+declare_type_abbrev ("ÛPROPÝ", [], ”BOOL FLEX®);
+=TEX
+
+Necessitation may be defined over this notion of proposition as follows:
+
+¹HOLCONST
+Ü Û©Ý : PROP ­ PROP
+÷üüüüüü
+Ü µs· © s = Ìw· µv· s v
+°
+
+Note that this is a propositional operator and therefore yields a proposition rather than a truth value.
+The proposition is a function over possible worlds (an assignment of a truth value in every possible world) but it is a constant valued function, it yields the same truth value in every possible world.
+
+When we assert a modal proposition we are asserting its truth not in all possible worlds but in the actual world.
+To do this we first introduce a name for this world, and then define a `form of judgement' which asserts truth in the actual world.
+
+For our present purposes we don't care what the actual world is, so the constant may be introduced as follows:
+
+¹HOLCONST
+Ü Ûactual_worldÝ : W
+÷üüüüüü
+Ü T
+°
+
+¹HOLCONST
+Ü $Û˜Ý : PROP ­ BOOL
+÷üüüüüü
+Ü µp· ˜ p ¤ p actual_world
+°
+
+=SML
+declare_prefix(5, "˜");
+=TEX
+
+\subsection{Lifting Logical Vocabulary}
+
+The logical constants available to us \emph{ab inito} are operators over truth values.
+To work with these modal notions we need to have similar operations defined over propositions.
+
+Logical operations, such as conjunction, are fixed across all possible worlds, but must operate on propositions which may not be fixed.
+It is therefore necessary to lift these operations to operate on propositions, propagating any contingency in their operands.
+This is done \emph{pointwise}, i.e. the value of the result of an operation in some possible world is obtained from the values of the operands in that possible world.
+A great deal of our desired vocabulary needs to be lifted in this rather mechanical way from operating over truth values to operating over propositions.
+
+Since we have a higher order logic at our disposal, the operation of lifting is definable for arbitrary values of a given type.
+To that end we define a number of operators which can be used to achieve this effect.
+
+=SML
+declare_postfix (400, "›ù");
+declare_postfix (400, "›ì");
+=TEX
+
+¹HOLCONST
+Ü $Û0›ùÝ : 'b ­ ('a ­ 'b)
+÷üüüüüü
+Ü µt:'b· 0›ù t = Ìx:'a· t
+°
+
+¹HOLCONST
+Ü $Û1›ùÝ : ('b ­ 'c) ­ (('a ­ 'b) ­ ('a ­ 'c))
+÷üüüüüü
+Ü µf· 1›ù f = Ìg· Ìx· f (g x)
+°
+
+¹HOLCONST
+Ü $Û2›ùÝ : ('b ­ 'c ­ 'd) ­ (('a ­ 'b) ­ ('a ­ 'c) ­ ('a ­ 'd))
+÷üüüüüü
+Ü µf· 2›ù f = Ìg h· Ìx· f (g x) (h x)
+°
+
+We can alias these all to the postfix superscript harpoon.
+
+\ignore{
+=SML
+val l_defs = list_±_intro (map get_spec [¬0›ù®, ¬1›ù®, ¬2›ù®]);
+=TEX
+}%ignore
+
+=SML
+declare_alias ("›ì", ¬0›ù®);
+declare_alias ("›ù", ¬1›ù®);
+declare_alias ("›ù", ¬2›ù®);
+=TEX
+
+and then use them to define a new set of propositional operators:
+
+¹HOLCONST
+Ü ÛT›ìÝ ÛF›ìÝ 			:PROP;
+Ü Û³›ùÝ				:PROP ­ PROP;
+Ü Û±›ùÝ Û²›ùÝ Û´›ùÝ Û¤›ùÝ		:PROP ­ PROP ­ PROP
+÷üüüüüü
+Ü	T›ì = T ›ì
+Ü ±	F›ì = F ›ì
+Ü ±	³›ù = ($³) ›ù
+Ü ±	±›ù = ($±) ›ù
+Ü ±	²›ù = ($²) ›ù
+Ü ±	´›ù = ($´) ›ù
+Ü ±	¤›ù = ($¤) ›ù
+°
+
+which we can then alias back to the undecorated names:
+
+=SML
+declare_alias("³", ¬³›ù®);
+declare_alias("±", ¬±›ù®);
+declare_alias("²", ¬²›ù®);
+declare_alias("´", ¬´›ù®);
+declare_alias("¤", ¬¤›ù®);
+=TEX
+
+In case we have to use the constant names we may as well have the fixities declared.
+
+=SML
+declare_prefix(50, "³›ù");
+declare_infix(40, "±›ù");
+declare_infix(30, "²›ù");
+declare_infix(20, "´›ù");
+declare_infix(10, "¤›ù");
+=TEX
+
+The following obvious theorem is useful in proving tautologies in this propositional language.
+It eliminates operators over propositions in favour of operators over truth values
+
+=GFT
+Ûmprop_clausesÝ =
+   ô µ w p q
+     · (T›ì w ¤ T)
+         ± (F›ì w ¤ F)
+         ± ((³ p) w ¤ ³ p w)
+         ± ((p ±›ù q) w ¤ p w ± q w)
+         ± ((p ²›ù q) w ¤ p w ² q w)
+         ± ((p ´›ù q) w ¤ p w ´ q w)
+         ± ((p ¤›ù q) w ¤ p w ¤ q w)
+=TEX
+
+\ignore{
+=IGN
+set_flag("pp_use_alias", false);
+=SML
+val ˜_def = get_spec ¬$˜®;
+
+set_goal([], ¬
+	µw p q· (T›ì w ¤ T)
+	±	(F›ì w ¤ F)
+	±	((³ p) w ¤ ³ (p w))
+	±	((p ± q) w ¤ p w ± q w)
+	±	((p ² q) w ¤ p w ² q w)
+	±	((p ´ q) w ¤ (p w ´ q w))
+	±	((p ¤ q) w ¤ (p w ¤ q w))
+	®);
+a (rewrite_tac[get_spec ¬T›ì®, l_defs ]);
+val mprop_clauses = save_pop_thm "mprop_clauses";
+
+add_pc_thms "'t045" [mprop_clauses];
+set_merge_pcs ["rbjmisc", "'t045"];
+=TEX
+}%ignore
+
+Now that we have negation over propositions we can define possibility in terms of necessity.
+
+¹HOLCONST
+Ü Û¨Ý : PROP ­ PROP
+÷üüüüüü
+Ü µs· ¨ s = ³ © (³ s)
+°
+
+¹HOLCONST
+Ü Û=›ùÝ	:'a FLEX ­ 'a FLEX ­ PROP
+÷üüüüüü
+Ü	=›ù = $= ›ù
+°
+
+=IGN
+declare_alias ("=", ¬=›ù®);
+=SML
+declare_infix (200, "=›ù");
+=TEX
+
+Because they bind variables, the quantifiers are themselves higher order operators and cannot be lifted in the same way.
+It is nevertheless straightforward.
+Note that because these definitions are given in a polymorphic higher-order logic, they define quantifiers of any finite order, not merely first-order quantifiers.
+The order of the type to which the type variable \emph{'a} is instantiated determines the order of the quantifier.
+
+¹HOLCONST
+Ü Ûµ›ùÝ	:('a FLEX ­ PROP) ­ PROP
+÷üüüüüü
+Ü	µ›ù = Ìf w· $µ (Ìx· f x w)
+°
+
+=SML
+declare_alias ("µ", ¬µ›ù®);
+declare_binder "µ›ù";
+=TEX
+
+¹HOLCONST
+Ü Û¶›ùÝ	:('a FLEX ­ PROP) ­ PROP
+÷üüüüüü
+Ü	¶›ù = Ìf· ³ $µ (Ìx· ³ f x)
+°
+
+=SML
+declare_alias ("¶", ¬¶›ù®);
+declare_binder "¶›ù";
+=TEX
+
+=GFT
+Û¨©›ù_thmÝ =
+   ô µ w p· (© p w ¤ (µ w2· p w2)) ± (¨ p w ¤ (¶ w2· p w2))
+ÛEq›ù_thmÝ = ô µ w x y· (x =›ù y) w ¤ x w = y w
+Ûµ¶›ù_thmÝ =
+   ô µ w p· ($µ p w ¤ (µ x· p x w)) ± ($¶ p w ¤ (¶ x· p x w))
+=TEX
+
+\ignore{
+=SML
+val Eq›ù_def = get_spec ¬$=›ù®;
+val ©_def = get_spec ¬$©®;
+val ¨_def = get_spec ¬$¨®;
+val µ›ù_def = get_spec ¬$µ›ù®;
+val ¶›ù_def = get_spec ¬$¶›ù®;
+
+set_goal([], ¬µ(w:W) p· (© p w ¤ µw2· p w2)
+		±	(¨ p w ¤ ¶w2· p w2)®);
+a (rewrite_tac [¨_def, ©_def, l_defs]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬v® THEN asm_rewrite_tac[]);
+val ¨©›ù_thm = save_pop_thm "¨©›ù_thm";
+
+set_goal([], ¬
+	µ(w:W) x (y:'a FLEX)· 
+		((x =›ù y) w ¤ x w = y w)
+	®);
+a (rewrite_tac [Eq›ù_def, l_defs]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+val Eq›ù_thm = save_pop_thm "Eq›ù_thm";
+
+set_goal([], ¬
+	µ(w:W) (p:'a FLEX ­ PROP)· 
+		($µ p w ¤ µx· p x w)
+	±	($¶ p w ¤ ¶x· p x w)
+	®);
+a (rewrite_tac [µ›ù_def, ¶›ù_def, l_defs]
+	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+a (¶_tac ¬x® THEN asm_rewrite_tac[]);
+val µ¶›ù_thm = save_pop_thm "µ¶›ù_thm";
+
+add_pc_thms "'t045" [¨©›ù_thm, Eq›ù_thm, µ¶›ù_thm];
+set_merge_pcs ["rbjmisc", "'t045"];
+=TEX
+}%ignore
+
+\subsection{Laws}
+
+The following results are now provable, demonstrating the consistency of the definitions with the semantics of the modal logic S5.
+
+First we have modus ponens and the axioms of the propositional logic lifted over type BOOL FLEX.
+
+=GFT
+Û˜mp_thmÝ = ˜ A, ˜ A ´ B ô ˜ B
+Û˜ax1_thmÝ = ô ˜ p ´ q ´ p
+Û˜ax2_thmÝ = ô ˜ (p ´ q ´ r) ´ (p ´ q) ´ p ´ r
+Û˜ax3_thmÝ = ô ˜ (³ p ´ ³ q) ´ q ´ p
+=TEX
+
+\ignore{
+=SML
+set_goal([¬˜ A®, ¬˜ A ´ B®], ¬˜ B®);
+a (REPEAT (POP_ASM_T ante_tac));
+a (rewrite_tac [get_spec ¬$˜®]);
+val ˜mp_thm = save_pop_thm "˜mp_thm";
+
+set_goal([], ¬˜ p ´ (q ´ p)®);
+a (rewrite_tac [get_spec ¬$˜®] THEN contr_tac);
+val ˜ax1_thm = save_pop_thm "˜ax1_thm";
+
+set_goal([], ¬˜ (p ´ q ´ r) ´ ((p ´ q) ´ (p ´ r))®);
+a (rewrite_tac [get_spec ¬$˜®] THEN contr_tac);
+val ˜ax2_thm = save_pop_thm "˜ax2_thm";
+
+set_goal([], ¬˜ (³ p ´ ³ q) ´ (q ´ p)®);
+a (rewrite_tac [get_spec ¬$˜®] THEN contr_tac);
+val ˜ax3_thm = save_pop_thm "˜ax3_thm";
+
+=IGN
+set_goal([], ¬˜ T›ì®);
+a (rewrite_tac [get_spec ¬$˜®]);
+val ˜_T_thm = save_pop_thm "˜_T_thm";
+
+set_goal([], ¬˜ A ± B ´ A®);
+a (rewrite_tac [get_spec ¬$˜®] THEN contr_tac);
+val ˜_ABA_thm = save_pop_thm "˜_ABA_thm";
+=TEX
+}%ignore
+
+Arbitrary propositional tautologies are therefore true under the definitions given.
+
+The necessitation rule talks about the deductive system, which we have not formalised, so we cannot express it.
+It should nevertheless be true of this system.
+
+Next we have the modal axioms.
+The following theorems correspond to the axioms of S5.
+
+=GFT
+Û˜distrib_thmÝ = ô ˜ © (A ´ B) ´ © A ´ © B
+Û˜M_thmÝ = ô ˜ © A ´ A
+Û˜4_thmÝ = ô ˜ © A ´ © (© A)
+Û˜5_thmÝ = ô ˜ ¨ A ´ © (¨ A)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬˜ ©(A ´ B) ´ © A ´ © B®);
+a (rewrite_tac [get_spec ¬$˜®] THEN prove_tac[]);
+val ˜distrib_thm = save_pop_thm "˜distrib_thm";
+
+set_goal([], ¬˜ (© A) ´ A®);
+a (rewrite_tac [get_spec ¬$˜®] THEN prove_tac[]);
+val ˜M_thm = save_pop_thm "˜M_thm";
+
+set_goal([], ¬˜ (© A) ´ (© (© A))®);
+a (rewrite_tac [get_spec ¬$˜®] THEN prove_tac[]);
+val ˜4_thm = save_pop_thm "˜4_thm";
+
+set_goal([], ¬˜ (¨ A) ´ (© (¨ A))®);
+a (rewrite_tac [get_spec ¬$˜®] THEN prove_tac[]);
+val ˜5_thm = save_pop_thm "˜5_thm";
+
+
+=TEX
+}%ignore
+
+\section{Quine's Reservations}
+
+With some formal machinery in hand we now come to consider some of the reservations expressed by Quine in his `Reference and Modality' \cite{quineRM}.
+This essay is a fusion of two earlier essays dating from 1943 and 1947, first published in 1953 substantially updated in 1961 and subject to a correction in 1980.
+It represents Quine's considered and mature opinions in 1961.
+
+The controversy arising from this paper was accompanied and followed by significant further advances in technical studies of modal logics, the highly influential semantic treatment of modal logics due to Kripke first appeared in the late 1950's, but seems to have had no impact on Quine's paper.
+The principal innovation in Kripke's work is the so called `frame semantics' in which the scope of modal quantifiers is constrained by an accessibility relation between frames.
+This is most significant in allowing these formal systems to be applied to modalities other than necessity, and will not be discussed in this essay.
+Kripke is also associated with the concept of rigidity (of designators) which we will touch upon.
+
+A central theme is the logical difficulties arising from referential opacity, particularly but not exclusively when this is engendered by modal concepts.
+The present methods are purely semantic, and enable us to cast light on the kinds of thing which might possibly be meant by the various difficult sentences considered by Quine, and to determine whether the sentences are true when understood in these ways.
+This is possible because we have an expressive higher order logic in which the relevant concepts can be formally defined together with a tool which checks specifications to ensure that they are well formed and that they represent conservative extensions over the previous theory.
+This means that the expressions we put forward have a definite meaning, however strange that might be.
+The tool also supports formal reasoning.
+It will aid and abet the construction of detailed formal proofs, will confirm the correctness of the proofs and make a definitive and reliable listing of the results obtained together with the definitions in the context of which they were derived (see Appendix \ref{t045}).
+
+Our method is exclusively semantic, and the examples which Quine considers involving mention of syntax will therefore not be considered.
+This also creates a distance between the considerations of modality here and those of Carnap, who took analyticity as the principle notion and sometimes defined necessity in terms of analyticity.
+If we take necessity as a property of semantic entities which we call propositions, then the it is less difficult to discover conditions under which substitution can take place even in referentially opaque contexts.
+
+\subsection{Singular Terms and Referential Opacity}
+
+Quine mentions first a general principle to which problems of opacity give rise to exceptions.
+
+This is the principle of \emph{substitutivity}\index{substitutivity}, which is that equal terms may be substituted \emph{salva-veritate}.
+To this principle he finds exceptions in quotations and in other contexts, but claims that the basis is solid, that whatever is true of something is true of anything equal to it.
+This second statement of the principle suggests a manner of resolution, which is that the procedure be limited to cases in which what is said is said of the person or thing referred to by the term rather than of the term itself.
+The term `purely referential' is introduced for those occurrences of a term which do nothing more than designate and which therefore can be replaced by any other method of referring (purely) to that same designatum.
+
+Some referentially opaque contexts:
+
+\begin{itemize}
+\item aware/unaware that
+\item believes that
+\item knows that
+\item doubts that
+\item says that
+\item is surprised that
+\item necessarily
+\item possibly
+
+\end{itemize}
+
+
+\begin{itemize}
+
+
+\item[(3)] Cicero = Tully
+
+Quine's central theme consists in identifying those circumstances in which an identity does not warrant a substitution.
+The possibility of there being different kinds of identity is less thoroughly considered.
+He does note the preference of Church for variables ranging over intensions, but raises objections to this which we will consider later.
+
+To confirm Quine's observations in our formal sandbox we have to chose exactly what meaning is to be given to the identity.
+There are two dimensions of choice which affect this.
+The first is how the names are to be construed.
+They can be construed as sense or reference, which will be reflected in our model by whether or not they have the FLEX type which we use for intensions, the signficance of which is that the reference may vary from one world to the next.
+If they are not intensions, then they must be what later came to be known as rigid designators, and substitution in some referentially opaque contexts will be acceptable.
+I say `some' here because it is not clear that in natural English the referentially opaque contexts all behave in the same manner in relation to substitutions.
+We are confining our attention to opaque contexts in which the opacity arises from the use of some propositional operator, such as a modal operator, or from the expression of a propositional attitude.
+Implicit in these terms is the idea that they all have in common that they concern propositions, and it is easy to assume that just one notion of proposition is required in the explanation of each of these contexts.
+This probably is not the case in natural English, and some of Quine's examples suffice to bring this out even though he does not use them for this purpose.
+
+It is not an issue for Quine because once he has established that a simple identity does not justify a substitution, he does not consider whether something stronger would.
+However, we find with our model that a necessary identity does justify the substitution.
+This is connected to the later doctrine that the necessity follows from the rigidity of the names, for an identity between rigid designators must be a necessary identity.
+Thus rigidy is a special case of the more general justification of necessary identity.
+But does this always allow substitution into opaque contexts.
+It does seem to do so for the modal contexts, but propositional attitudes may be less objective.
+Even if the identity between Cicero and Tully is necessary, we may not be free to infer from a belief about Cicero a belief about Tully.
+This is moot in the case that the believer does not know the identity.
+
+If there is a single objective notion of proposition at stake, and our model of propositions as FLEX values is good, then we can show that a necessary identity does legitimate substitution in opaque contexts.
+
+The formal development will stick with a single notion of proposition despite these considerations.
+
+Let us first introduce Cicero and Tully.
+
+\ignore{
+=IGN
+set_goal([], ¬¶Cicero Tully:IND FLEX· ³ Cicero = Tully ± ˜ Cicero =›ù Tully®);
+a (strip_asm_tac infinity_axiom);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ¬Onto®]);
+a (strip_tac);
+a (¶_tac ¬Ìz· if z = actual_world then y else f y®);
+a (¶_tac ¬Ìz· y®);
+a (rewrite_tac [ext_thm] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìz· y®);
+
+=TEX
+}%ignore
+
+The names are introduced as unspecified constants and we will reason from various assumptions about them.
+That we take names to be of type FLEX admits the possibility that a name might not name the same individual in every possible world.
+
+¹HOLCONST
+Ü ÛCiceroÝ ÛTullyÝ ÛCatalineÝ ÛPhillipÝ ÛTegucicalpaÝ ÛMexicoÝ ÛHondurasÝ: IND FLEX
+÷üüüüüü
+Ü T
+°
+
+¹HOLCONST
+Ü ÛCapital_ofÝ ÛLocation_ofÝ : IND FLEX ­ IND FLEX
+÷üüüüüü
+Ü T
+°
+
+Relations are maps from flexible individuals delivering propositions.
+
+¹HOLCONST
+Ü $ÛdenouncedÝ : IND FLEX ­ IND FLEX ­ PROP
+÷üüüüüü
+Ü T
+°
+
+=SML
+declare_infix(200,"denounced");
+=TEX
+
+We also introduce a type abbreviation for propositional attitudes.
+A propositional attitude is a function which takes some flex value and a proposition and returns a proposition (a BOOL FLEX).
+
+=SML
+declare_type_abbrev("PA", [], ”'a FLEX ­ PROP ­ PROP®);
+=TEX
+
+The following are propositional attitudes.
+
+¹HOLCONST
+Ü ÛunawareÝ ÛbelievesÝ: PA
+÷üüüüüü
+Ü T
+°
+
+=SML
+declare_infix(200, "unaware");
+declare_infix(200, "believes");
+=TEX
+
+Quine's illustrates the opacity in the context of propositional attitudes by observations which we may formalise as:
+
+\ignore{
+=SML
+set_goal([], ¬˜ Phillip unaware (Tully denounced Cataline) ± © (Tully =›ù Cicero)
+		´ Phillip unaware (Cicero denounced Cataline)
+®);
+a (rewrite_tac [˜_def]);
+a (REPEAT strip_tac);
+a (LEMMA_T ¬Cicero = Tully® asm_rewrite_thm_tac THEN1 asm_rewrite_tac [ext_thm]);
+val QT09a = save_pop_thm "QT09a";
+=TEX
+}%ignore
+
+
+\item[(9)] Phillip is unaware that Tully denounced Cataline (true)
+\item[(10)] Phillip believes that Tegucigalpa is in Mexico (true)
+\item[(10b)] Tegucigalpa is the capital of the Honduras (true)
+\item[(11)] Phillip is unaware that Cicero denounced Cataline (false)
+\item[(12)] Phillip believes that the capital of the Honduras is in Mexico (false)
+
+
+
+=GFT
+ÛQT15aÝ = ô ˜ © ((9 > 7) ›ì)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬˜ © ((9 > 7)›ì)®);
+a (rewrite_tac [˜_def, l_defs] THEN PC_T1 "lin_arith" rewrite_tac[]);
+val QT15a = save_pop_thm "QT15a";
+=TEX
+}%ignore
+
+=SML
+declare_infix(210, ">›ù");
+=TEX
+
+¹HOLCONST
+Ü $Û>›ùÝ :  î FLEX ­ î FLEX ­ PROP
+÷üüüüüü
+Ü µl r· l >›ù r = Ìw· l w > r w 
+°
+
+=GFT
+ÛQT15bÝ =
+	ô ˜ © (9 ›ì >›ù 7 ›ì)
+=TEX
+
+\ignore{
+=SML
+val gt›ù_def = get_spec ¬$>›ù®;
+
+set_goal([], ¬˜ © (9 ›ì >›ù 7 ›ì)®);
+a (rewrite_tac [˜_def, l_defs, gt›ù_def] THEN PC_T1 "lin_arith" rewrite_tac[]);
+val QT15b = save_pop_thm "QT15b";
+=TEX
+}%ignore
+
+\item[(15)] 9 is necessarily greater than 7 (true)
+
+
+\item[(16)] necessarily if there is life on the evening star there is life on the evening star (false)
+\item[(17)] the number of planets is possibly less than 7 (true)
+\item[(18)] the number of planets is necessarily greater than 7 (false)
+\item[(19)] necessarily if there is life on the evening star there is life on the morning star (false)
+\item[(20)] 9 is possibly less than 7 (false)
+\item[(24)] 9 = the number of planets (true)
+\item[(25)] the evening star = the morning star (true)
+\item[(29)] Something is such that Phillip is unaware that it denounced Catiline (nonesense)
+\end{itemize}
+
+For an example we introduce a FLEX value which it a collection of planets.
+We don't say what they are, we just give it the type $î FLEX$ which is that of a number which varies between possible worlds.
+
+=SML
+new_type ("BODIES", 0);
+=TEX
+
+
+¹HOLCONST
+Ü ÛPlanetsÝ ÛMoonsÝ:(BODIES SET)FLEX
+÷üüüüüü
+Ü	T
+°
+
+¹HOLCONST
+Ü Û¼›ùÝ: î FLEX ­ î FLEX ­ PROP
+÷üüüüüü
+Ü	¼›ù = $¼ ›ù
+°
+
+¹HOLCONST
+Ü ÛSize›ùÝ: ('a SET) FLEX ­ î FLEX
+÷üüüüüü
+Ü	Size›ù = Size ›ù
+°
+
+=SML
+declare_infix(210, "¼›ù");
+declare_alias ("¼", ¬$¼›ù®);
+declare_alias ("#", ¬Size›ù®);
+=TEX
+
+=GFT
+Û¼›ù_thmÝ = ô µ x y w· (x ¼ y) w ¤ x w ¼ y w 
+ÛSize›ù_thmÝ = ô µ s w· # s w = # (s w)
+=TEX
+
+
+=GFT
+ÛNumPlanets_thmÝ = ô ˜ (¶ x· © (# Planets ¼ x))
+=TEX
+
+\ignore{
+=SML
+val ¼›ù_def = get_spec ¬$¼›ù®;
+val Size›ù_def = get_spec ¬Size›ù®;
+
+set_goal([], ¬µx y w· (x ¼›ù y) w = x w ¼ y w®);
+a (rewrite_tac[¼›ù_def, l_defs]);
+val ¼›ù_thm = save_pop_thm "¼›ù_thm";
+
+set_goal([], ¬µs w· Size›ù s w = #(s w)®);
+a (rewrite_tac[Size›ù_def, l_defs]);
+val Size›ù_thm = save_pop_thm "Size›ù_thm";
+
+set_goal ([], ¬˜ ¶x· © ((Size›ù Planets) ¼ x)®);
+a (rewrite_tac [˜_def]);
+a (¶_tac ¬(Size›ù Planets)® THEN rewrite_tac[¼›ù_thm, Size›ù_thm]);
+val NumPlanets_thm = save_pop_thm "NumPlanets_thm";
+
+=TEX
+}%ignore
+
+
+\subsection{Quantification and Opacity}
+
+Quine now goes on to say that not only does substitution into opaque contexts fail, but also quantification.
+The discussion begins with existential generalisation, and the problem arises in seeking some \emph{entity} tp 
+
+\begin{itemize}
+\item[(30)] ¶x· (x is necessarily greater than 7) (nonesense)
+\item[(31)] ¶x· (necessarily if there is life on the evening star there is life on x) (nonesense)
+\item[(32)] x = $\sqrt{x}$ + $\sqrt{x}$ + $\sqrt{x}$ ½ $\sqrt{x}$ (entails x = 9)
+\item[(33)] there are exactly x planets (does not entail x = 9)
+\item[(34)] if there is life on the evening star, there is life on x (can only be necessary in relation to a particular description of x)
+\end{itemize}
+
+
+\subsection{Reconciling Quantification and Modality}
+
+
+=GFT
+Ûmodal_subst_thmÝ =
+	ô µ P· ˜ (µ x· µ y· © (x =›ù y) ´ (© (P x) ¤ © (P y)))
+Ûopaque_subst_thmÝ =
+	ô µ PoP· ˜ (µ x· µ y· © (x =›ù y) ´ (PoP (P x) ¤ PoP (P y)))
+Ûfixed_neceq_thmÝ =
+	ô µx y· x = y ´ (˜ © (x =›ù y))
+Ûfixed_neceq_thm2Ý =
+	ô ˜ (µ x· µ y· (x = y) ›ì ´ © (x =›ù y))
+=TEX
+
+
+\ignore{
+set_goal([], ¬µP· ˜ (µx y· © (x =›ù y) ´ (© (P x) ¤ © (P y)))®);
+a (rewrite_tac [˜_def] THEN REPEAT_N 4 strip_tac);
+a (LEMMA_T ¬x = x'® rewrite_thm_tac THEN1 asm_rewrite_tac [ext_thm]);
+val modal_subst_thm = save_pop_thm "modal_subst_thm";
+
+set_goal([], ¬µPoP:PROP­PROP· ˜ (µx y· © (x =›ù y) ´ (PoP (P x) ¤ PoP(P y)))®);
+a (rewrite_tac [˜_def] THEN REPEAT_N 4 strip_tac);
+a (LEMMA_T ¬x = x'® rewrite_thm_tac THEN1 asm_rewrite_tac [ext_thm]);
+val opaque_subst_thm = save_pop_thm "opaque_subst_thm";
+
+set_goal([], ¬(µx y· x = y ´ ˜ © (x =›ù y))®);
+a (rewrite_tac [˜_def] THEN REPEAT_N 4 strip_tac THEN asm_rewrite_tac[]);
+val fixed_neceq_thm = save_pop_thm "fixed_neceq_thm";
+
+set_goal([], ¬˜(µx y· (x = y)›ì ´ © (x =›ù y))®);
+a (rewrite_tac [˜_def, l_defs] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val fixed_neceq_thm2 = save_pop_thm "fixed_neceq_thm2";
+=TEX
+}%ignore
+
+
+\subsubsection{Intensions}
+
+Having discussed the problems Quine moves to something like analysis of the viable options for quantified modal logics, with a critique of some of the then recent attempts to effect the combination.
+
+In discussing the ideas of Carnap and Church to the effect that the problem of substitution into modal contexts should be addressed by quantifying over intensional rather than extensional values, Quine puts forward an argument which he seems to think rules this out.
+
+I shall look at some aspects of this in greater detail than might otherwise be necessary because it does provide an example of how formalisation exposes issues which may otherwise be overlooked.
+
+Before doing this, it may be noted that an argument along the lines given here should have been sufficient earlier for Quine to abandon his attempt to sanitise substitution into modal contexts by eliminating entities which have more than one synonymy class of referring expressions, for it is a demonstration that there could be no such entities.
+
+Quine secures the effect using a definite description operator to obtain from an arbitrary expression A an expression which refers to the same individual but is not `intensionally' the same as that individual.
+
+It is taken to be immediately apparent that the equation he offers is indeed true:
+
+=GFT
+(35)	A = Éx· p ± x = A	
+=TEX
+
+Even though \emph{p} is said to be contingently but not necessarily true.
+In a classical non-modal quantification this is indeed easily seen to be true.
+
+\begin{itemize}
+\item[(36)] necessarily (x = x)
+\item[(37)] ~ necessarily (p ± x = x)
+\item[(38)] µx y· x = y ´ necessarily x = y
+\end{itemize}
+
+In the course of his discussion Quine considers the proposal that variables quantified into a modal context should range over essences.
+Against that he cites the following:
+
+\ignore{
+=SML
+set_goal([], ¬¶É:('a ­ BOOL) ­ 'a· µx· É (Ìy:'a· y = x) = x®);
+a (¶_tac ¬Ì(p:'a ­ BOOL)· Åy· p y®);
+a (rewrite_tac[ext_thm] THEN REPEAT strip_tac);
+a (Å_tac ¬Å y· y = x®);
+a (¶_tac ¬x® THEN rewrite_tac[]);
+save_cs_¶_thm(pop_thm());
+=TEX
+}%ignore
+
+The following defines the non-modal definite description operator.
+
+¹HOLCONST
+Ü ÛÉÝ: ('a ­ BOOL) ­ 'a
+÷üüüüüü
+Ü µx· É(Ìy· y = x) = x 
+°
+
+=SML
+declare_binder("É");
+=TEX
+
+Using this definition we can prove:
+
+=GFT
+ÛQT35aÝ = ô p ´ A = (É x· p ± x = A)
+=TEX
+
+\ignore{
+=SML
+val É_def = get_spec ¬$É®;
+
+set_goal([], ¬p ´ A = Éx· p ± x = A®);
+a (strip_tac THEN asm_rewrite_tac[É_def]);
+val QT35a = save_pop_thm "QT35a";
+=TEX
+}%ignore
+
+This holds whatever kind of thing A is.
+But the similarity with (35) is superficial, for here `p' is of type BOOL, and cannot be contingently true, and so the identity on the right is also not contingently true.
+
+In order to express this in a way which makes the question of analyticity meaningful (which in our syntax-free treatment becomes the question of necessity) we must have `p' as a proposition rather than a truth value, and for this purpose we need a modal definite description which operates on a propositional function rather than a truth valued function.
+
+Such an operator may be defined thus:
+
+\ignore{
+=SML
+set_goal([], ¬¶É›ù›?:('a FLEX ­ PROP) ­ 'a FLEX· µx· É›ù›? (Ìy:'a FLEX· y =›ù x) = x®);
+a (¶_tac ¬Ì(p:'a FLEX ­ PROP)· Ìw· Åy· p (Ìv·y) w®);
+a (rewrite_tac[ext_thm] THEN REPEAT strip_tac);
+a (Å_tac ¬Å y· y = x x'®);
+a (¶_tac ¬x x'® THEN rewrite_tac[]);
+save_cs_¶_thm(pop_thm());
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛÉ›ù›?Ý: ('a FLEX ­ PROP) ­ 'a FLEX
+÷üüüüüü
+Ü µx· É›ù›? (Ìy· y =›ù x) = x
+°
+
+=SML
+declare_binder("É›ù›?");
+=TEX
+
+Using this definition the above result no longer obtains, since p now appears in a modal context.
+The best we can do is:
+
+=GFT
+ÛQT35bÝ = ô ˜ © p ´ A =›ù (É›ù›? x· p ± x =›ù A)
+=TEX
+
+\ignore{
+=SML
+val É›ù›q_def = get_spec ¬$É›ù›?®;
+
+set_goal([], ¬˜ (© p) ´ A =›ù É›ù›? x· p ± x =›ù A®);
+a (asm_rewrite_tac[˜_def] THEN strip_tac);
+a (lemma_tac ¬p = T›ì® THEN asm_rewrite_tac [ext_thm, l_defs]);
+a (lemma_tac ¬µx· (T›ì ± x =›ù A) = (x =›ù A)® THEN1 asm_rewrite_tac [ext_thm, l_defs]);
+a (lemma_tac ¬(Ìx· T›ì ± x =›ù A) = (Ìx· x =›ù A)® THEN1
+	(asm_rewrite_tac [ext_thm] THEN strip_tac THEN asm_rewrite_tac[]));
+a (asm_rewrite_tac[É›ù›q_def]);
+val QT35b = save_pop_thm "QT35b";
+=TEX
+}%ignore
+
+
+\ignore{
+=SML
+set_goal([], ¬¶É›ù:('a FLEX ­ PROP) ­ 'a FLEX· µp x w· (¶y· p y w) ± (µy· p y w ´ y w = x) ´ É›ù p w = x®);
+a (¶_tac ¬Ì(p:'a FLEX ­ PROP)· Ìw· Åx· (¶y· p y w) ± µy· p y w ´ y w = x®);
+a (rewrite_tac[ext_thm] THEN REPEAT strip_tac);
+a (Å_tac ¬Å x· (¶ y· p y w) ± (µ y· p y w ´ y w = x)®);
+(* *** Goal "1" *** *)
+a (¶_tac ¬x® THEN REPEAT strip_tac THEN asm_fc_tac[]);
+a (¶_tac ¬y® THEN strip_tac);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+a (SYM_ASMS_T rewrite_tac);
+save_cs_¶_thm(pop_thm());
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü ÛÉ›ùÝ: ('a FLEX ­ PROP) ­ 'a FLEX
+÷üüüüüü
+Ü µp x w· (¶y· p y w) ± (µy· p y w ´ y w = x) ´ É›ù p w = x
+°
+
+=SML
+declare_binder("É›ù");
+=TEX
+
+=GFT
+ÛQT35cÝ = ô ˜ p ´ A =›ù (É›ù x· p ± x =›ù A)
+=TEX
+
+\ignore{
+=SML
+val É›ù_def = get_spec ¬$É›ù®;
+
+set_goal([], ¬˜ p ´ A =›ù É›ù x· p ± x =›ù A®);
+a (asm_rewrite_tac[˜_def] THEN strip_tac);
+a (strip_asm_tac (list_µ_elim [¬Ìx· p ± x =›ù A®, ¬A actual_world®, ¬actual_world®] É›ù_def));
+(* *** Goal "1" *** *)
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 1 ¬A®);
+(* *** Goal "2" *** *)
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "3" *** *)
+a (asm_rewrite_tac[]);
+val QT35c = save_pop_thm "QT35c";
+=TEX
+}%ignore
+
+He concludes that a quantified modal logic must involve some kind of essentialism.
+I think the present treatment of modal logic, and various previous quantified modal logics subsequent to Quine's essay show that this conclusion is mistaken.
+
+Here are two results in our system which at least superficially correspond to conditions which Quine seems to think entail such an essentialism:
+
+=GFT
+ÛQT36Ý =
+	ô ˜ © (x =›ù x)
+
+ÛQT37aÝ = p = (Ì w· w = actual_world)
+	ô ˜ p ± (x =›ù x) ¤ (x =›ù x)
+
+ÛQT37bÝ = ³ w1 = actual_world, p = (Ì w· w = actual_world)
+	ô ˜ ³ © p ± x =›ù x
+=TEX
+
+The first theorem asserts the necessity of the reflexivity of identity.
+The second asserts a contingent identity between that principle and its conjunction with some arbitrary contingent truth.
+In the the theorem, we assume that there is at least one non-actual possible world, in order to show that the conjunction with a contingent truth does not yield a necessary truth.
+
+This does not however betray an essentialist element in our formal model.
+
+\ignore{
+=SML
+set_goal([], ¬˜ © (x =›ù x)®);
+a (rewrite_tac[˜_def]);
+val QT36 = save_pop_thm "QT36";
+
+set_goal([¬p = Ìw:W· w = actual_world®], ¬˜ p ± (x =›ù x) ¤ (x =›ù x)®);
+a (asm_rewrite_tac[˜_def]);
+val QT37a = save_pop_thm "QT37a";
+
+set_goal([¬³ w1 = actual_world®, ¬p = Ìw:W· w = actual_world®], ¬˜ ³ © p ± (x =›ù x)®);
+a (asm_rewrite_tac[˜_def] THEN strip_tac);
+a (¶_tac ¬w1® THEN asm_rewrite_tac[]);
+val QT37b = save_pop_thm "QT37b";
+=TEX
+}%ignore
+
+=GFT
+ÛQT28aÝ = ô µ x y· x = y ´ (˜ © (x ›ì =›ù y ›ì))
+ÛQT28bÝ = ô µ x y· x = y ´ (˜ © (x =›ù y))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¬µx y:'a· x = y ´ ˜ © (x ›ì =›ù y ›ì)®);
+a (REPEAT strip_tac THEN asm_rewrite_tac[Eq›ù_def, l_defs, ˜_def]);
+val QT28a = save_pop_thm "QT28a";
+
+set_goal([], ¬µx y· x = y ´ ˜ © (x =›ù y)®);
+a (REPEAT strip_tac THEN asm_rewrite_tac[Eq›ù_def, l_defs, ˜_def]);
+val QT28b = save_pop_thm "QT28b";
+
+
+=TEX
+}%ignore
+
+\subsection{Attributes}
+
+
+\section{Rigidity}
+
+The notion of rigid designator was introduced by Kripke.
+A designator is (weakly) rigid if it designates the same entity in any possibly world in which that entity exists.
+A designator is strongly rigid if the entity always exists.
+A designator is flaccid if it is not rigid.
+
+We now have enough definitions to express the usual laws corresponding to the axioms and rules of the modal system S5.
+
+¹HOLCONST
+Ü ÛRigidÝ:'a FLEX ­ PROP
+÷üüüüüü
+Ü µx·	Rigid x = Ìw· µv u· x v = x u 
+°
+
+=GFT
+Ûrigid_subst_thmÝ = ô ˜ (µ x· µ y· Rigid x ± (x = y) ›ì ´ © (P x ¤ P y))
+Ûrigid_subst_thm2Ý = ô (¶ w· ³ w = actual_world)
+       ´ ³ (µ P· ˜ (µ x· µ y· Rigid x ± x =›ù y ´ © (P x ¤ P y)))
+=TEX
+
+\ignore{
+=SML
+val Rigid_def = get_spec ¬Rigid®;
+set_goal([], ¬˜ (µ›ù x y· Rigid x ± (x = y)›ì ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, Rigid_def, get_spec ¬$›ì®] THEN REPEAT_N 3 strip_tac
+	THEN asm_rewrite_tac[]);
+val rigid_subst_thm = save_pop_thm "rigid_subst_thm";
+
+set_goal([], ¬(¶w:W· ³ w = actual_world) ´ ³ µP· ˜ (µx y:î FLEX· Rigid x ± (x =›ù y) ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, Rigid_def] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx: î FLEX· Ìw· x w > 2® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· 3® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· if v = actual_world then 3 else 1® THEN PC_T1 "lin_arith" rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬w® THEN PC_T1 "lin_arith" asm_rewrite_tac[] THEN strip_tac);
+val rigid_subst_thm2 = save_pop_thm "rigid_subst_thm2";
+=TEX
+}%ignore
+
+\section{Possibilism and Actualism}
+
+A contemporary debate appears to have risen from some of the technical choices involved in the construction of quantified modal logics.
+
+The specific issue which gives rise to (or at least, connects with) the debate is the question whether an interpretation of a quantified modal logic should have a single domain of discourse or separate domains for each possible world.
+
+The simplest arrangement is that existence does not vary from one possible world to the next, though the satisfiability of predicates may.
+The more complex arrangement is that existence is contingent.
+
+In our general setting we can speak of and quantify over specific or modal values, the specific values being like rigid designators in referring to the same individual in every possible world, the modal values on the other hand (like descriptions) might possibly refer to different values in different worlds.
+
+To allow the ontology to be contingent, we must make provision for a possible world to determine an ontology or domain of discourse.
+This pushes us in the direction of a free logic, so that's the way I will go.
+
+
+=SML
+val CTG_def = new_type_defn(["CTG"], "CTG", ["'a"],
+	tac_proof (([], ¬($¶:('a­BOOL)­BOOL)(Ìx· (Ìy·T)x)®), conv_tac (rewrite_conv[])));
+=TEX
+
+=GFT
+ÛCTG_defÝ = ô ¶ f· TypeDefn (Ì y· T) f
+=TEX
+
+¹HOLCONST
+Ü ÛContingentsÝ: 'a CTG SET FLEX
+÷üüüüüü
+Ü T
+°
+
+We need to be able to quantify over the contingents.
+
+¹HOLCONST
+Ü Ûµ‰cÝ: (('a CTG + ONE)FLEX ­ PROP) ­ PROP
+÷üüüüüü
+Ü µp· µ‰c p = Ìw· µfc:('a CTG + ONE)FLEX· IsR (fc w) ² OutL (fc w)  Contingents w ´ p fc w
+°
+
+We can now give an improved formal account of rigidity.
+
+
+¹HOLCONST
+Ü ÛRigid‰cÝ: ('a CTG + ONE)FLEX ­ PROP
+÷üüüüüü
+Ü µx·	Rigid‰c x = Ìw· ¶y· µv·
+Ü		if y  Contingents v then x v = InL y else x v = InR One
+°
+
+\ignore{
+=SML
+val Rigid‰c_def = get_spec ¬Rigid‰c®;
+set_goal([], ¬˜ (µ›ù x y· Rigid x ± (x = y)›ì ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, Rigid_def, get_spec ¬$›ì®] THEN REPEAT_N 3 strip_tac
+	THEN asm_rewrite_tac[]);
+val rigid‰c_subst_thm = save_pop_thm "rigid‰c_subst_thm";
+
+=IGN
+set_goal([], ¬(¶w:W· ³ w = actual_world) ´ ³ µP· ˜ (µx y:î FLEX· Rigid x ± (x =›ù y) ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, Rigid_def] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx: î FLEX· Ìw· x w > 2® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· 3® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· if v = actual_world then 3 else 1® THEN PC_T1 "lin_arith" rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬w® THEN PC_T1 "lin_arith" asm_rewrite_tac[] THEN strip_tac);
+val rigid_subst_thm2 = save_pop_thm "rigid_subst_thm2";
+=TEX
+}%ignore
+
+
+¹HOLCONST
+Ü ÛStronglyRigid‰cÝ: ('a CTG + ONE)FLEX ­ PROP
+÷üüüüüü
+Ü µx·	StronglyRigid‰c x = Ìw· ¶y· µv· x v = InL y
+°
+
+\ignore{
+=IGN
+val StronglyRigid‰c_def = get_spec ¬StronglyRigid‰c®;
+set_goal([], ¬˜ (µ›ù x y· StronglyRigid‰c x ± (x = y)›ì ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, StronglyRigid‰c_def, get_spec ¬$›ì®] THEN REPEAT_N 3 strip_tac
+	THEN asm_rewrite_tac[]);
+val rigid‰c_subst_thm = save_pop_thm "rigid‰c_subst_thm";
+=IGN
+set_goal([], ¬(¶w:W· ³ w = actual_world) ´ ³ µP· ˜ (µx y:(î CTG+ONE) FLEX· StronglyRigid‰c x ± (x =›ù y) ´ © (P x ¤ P y))®);
+a (rewrite_tac [˜_def, StronglyRigid‰c_def] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx:(î CTG+ONE) FLEX· Ìw· x w > 2® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· 3® THEN rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬Ìv:W· if v = actual_world then 3 else 1® THEN PC_T1 "lin_arith" rewrite_tac[] THEN strip_tac);
+a (¶_tac ¬w® THEN PC_T1 "lin_arith" asm_rewrite_tac[] THEN strip_tac);
+val rigid_subst_thm2 = save_pop_thm "rigid_subst_thm2";
+=TEX
+}%ignore
+
+\section{Temporal Considerations}
+
+\section{The Formalisation of Science}
+
+\section{Some Kinds of Metaphysics and Their Formalisation}
+
+
+\ignore{
+=SML
+commit_pc "'t045";
+
+force_new_pc "Ût045Ý";
+merge_pcs ["rbjmisc", "'t045"] "t045";
+commit_pc "t045";
+set_flag("pp_use_alias", true);
+=TEX
+}%ignore
+
