@@ -1,6 +1,6 @@
 #####################################################################
 #
-#	$Id: rbj.mkf,v 1.89 2011/01/21 13:39:11 rbj Exp $
+#	$Id: rbj.mkf,v 1.90 2011/01/28 13:19:29 rbj Exp $
 #
 #	makefile for Roger's things
 #
@@ -105,7 +105,7 @@ PDFFILES=$(PDFFILES1) $(PDFFILES2)
 
 # packing list for a source release (target src)
 PACKINGLIST= $(SMLDOCS) $(ATEXS) $(ZTEXS) $(OTHERDOCS) rbj.bib rbj.mkf rbj.sty \
-	     rbjfmu.bst rbjpp.ist ProofPower.sty docpdf texpdf texindex2tex LICENSE 
+	     rbjfmu.bst rbjpp.ist ProofPower.sty docpdf texpdf texindex2tex LICENSE list_na.sml
 # t000abs
 
 DISTPACKINGLIST=$(PACKINGLIST) README.txt
@@ -171,22 +171,32 @@ HTHS= alloy.th ariscat.th gccon.th \
       membership.th memfunct.th metaci.th metapi.th misc1.th misc2.th misc3.th modsyllog.th \
       nf_h.th nfu_s.th nfu_f.th ordered_sets.th poly-sets.th pre_func.th \
       rbjmisc.th sfp.th sr.th sra.th src.th syllog1.th syllog2.th syllog3.th syllog4.th syllog5.th syllog6.th syllmetap.th \
-      t001a.th t001b.th t002a.th t045.th tc.th tract01.th U_orders.th unalg.th unalgII.th \
+      t001a.th t001b.th t002a.th t045.th t045q.th t045k.th t045w.th tc.th tract01.th U_orders.th unalg.th unalgII.th \
       wfrel.th wf_relp.th wf_recp.th \
       X-Logic-Auth.th X-Logic-1.th X-Logic-2.th
+
+HTHNAS = t045.thna t045q.thna t045k.thna t045w.thna
 
 ZTHS=
 THEORIES=$(HTHS) $(ZTHS)
 
 HTHDOCS=$(HTHS:.th=.th.doc)
+HTHNADOCS=$(HTHNAS:.thna=.thna.doc)
 ZTHDOCS=$(ZTHS:.th=.th.doc)
 
 THDOCS=$(HTHDOCS) $(ZTHDOCS)
 THTEXS=$(THEORIES:.th=.th.tex)
+THNATEXS=$(HTHNAS:.thna=.thna.tex)
 
 $(THTEXS): %.tex: %.doc
 	   doctex $*
 	   @sed -i -e "/THE THEORY/s/THE THEORY/The Theory/" $*.tex
+	   @sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
+#	   @sed -i -e "/\\+\t/s/\t/       /g" $*.tex
+
+$(THNATEXS): %.tex: %.doc
+	   doctex $*
+	   @sed -i -e "/THE THEORY/s/THE THEORY\(.*\)/The Theory\1 (no aliases)/" $*.tex
 	   @sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 #	   @sed -i -e "/\\+\t/s/\t/       /g" $*.tex
 
@@ -336,9 +346,9 @@ unalgII.th.doc: t044.ldd
 
 t044.pdf: unalgII.th.tex
 
-t045.th.doc: t045.ldd
+t045.th.doc t045.thna.doc t045q.th.doc t045q.thna.doc t045k.th.doc t045k.thna.doc t045w.th.doc t045w.thna.doc: t045.ldd
 
-t045.pdf: t045.th.tex
+t045.pdf: t045.th.tex t045q.th.tex t045k.th.tex t045w.th.tex t045.thna.tex t045q.thna.tex t045k.thna.tex t045w.thna.tex
 
 ######################################################################
 #
@@ -475,6 +485,12 @@ $(HTHDOCS): %.th.doc:
 	@rm -f $@ $*.err 2>/dev/null
 	@echo "Listing hol theory: " $*
 	@hol_list -d $(HOLDBNAME) $* >$*.err
+	@mv $*.err $@
+
+$(HTHNADOCS): %.thna.doc: list_na.sml
+	@rm -f $@ $*.err 2>/dev/null
+	@echo "Listing (without aliases) hol theory: " $*
+	@hol_list -d $(HOLDBNAME) -i list_na.sml $* >$*.err
 	@mv $*.err $@
 
 $(ZTHDOCS): %.th.doc:
