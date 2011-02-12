@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADIdoc{$$Id: t038.doc,v 1.2 2011/01/28 13:19:29 rbj Exp $$}
+\def\rbjidtADIdoc{$$Id: t038.doc,v 1.3 2011/02/12 09:14:19 rbj Exp $$}
 
 The following presentation of Higher Order Logic is undertaken using the interactive proof assistant {\Product}.
 The first part of the presentation (Sections \ref{ST}-\ref{STT}) closely follows Church's paper \cite{church40}, and the remainder accounts for the subsequent developments which are relevant to an understanding of documents produced using {\Product}.
@@ -20,8 +20,8 @@ It is therefore written with the aim of making it possible for some philosophers
 \subsection{Abstract and Concrete Syntax}
 
 When Church wrote his paper \emph{Abstract} syntax had not been invented.
-I first came across this idea when I came to denotation semantics, an approach to the semantics of programming languages concocted by a computer scientics (Strachey) and a set theorist (Scott) collaborating at Oxford.
-It is of enormous benefit when working in the design of complex programming languages, simplifying the task by separating out the details and difficulties of the concrete presentation of the language from the underlying abstract structure both of syntax and of semantics.
+I first came across this idea when I came to `denotation semantics', an approach to the semantics of programming languages concocted by a computer scientics (Strachey) and a set theorist (Scott) collaborating at Oxford.
+It is beneficial when working in the design of complex programming languages, simplifying the task by separating out the details and difficulties of the concrete presentation of the language from the underlying abstract structure both of syntax and of semantics.
 
 In presenting Higher Order Logic here, the emphasis is on the underlying abstract structures.
 Where examples are given, of necessity they must be presented using some concrete syntax, and this will be the concrete syntax adopted in {\Product-HOL}.
@@ -117,13 +117,143 @@ Typically this might be done as follows:
 f(x) = x + x*x
 =TEX
 
-
-
-
-
-
-
 \section{Church's Simple Theory of Types}\label{STT}
+
+=SML
+infix ­;
+datatype Type = … | i | op ­ of Type * Type;
+=IGN
+… ­ i;
+=TEX
+
+=SML
+fun	print_Type … = "…"
+|	print_Type i = "i"
+|	print_Type (f ­ a) = concat [if f = … orelse f = i then print_Type f else concat ["(", print_Type f, ")"], "­", print_Type a]
+;
+=TEX
+
+=IGN
+fun def_const consts (h::t) = find consts (fn c => fst(dest_const c) = h)
+		handle _ => def_const consts t; 
+
+fun def_consts consts (h::t) = (((h, get_spec (def_const consts h))
+			:: (def_consts consts t)) handle _ => def_consts consts t)
+|   def_consts consts [] = [];
+
+fun get_specs thy = def_consts (get_consts thy) (map fst (get_defns thy));
+
+get_specs "¯";
+get_consts "î";
+get_defns "î";
+map fst (get_defns "one");
+=TEX
+
+
+
+=SML
+infix ›ë;
+fun a ›ë 0 = a |
+    a ›ë n =	let val a' = a  ›ë (n - 1)
+		in (a' ­ a') ­ (a' ­ a')
+		end;
+
+infix ‰a;
+datatype Term =	V of string * Type
+		| C of string * Type
+		| op ‰a of Term * Term
+		| Ì of string * Type * Term;
+=TEX
+=SML
+fun	atomic_Term (V (s, t)) = true
+|	atomic_Term (C (s, t)) = true
+|	atomic_Term x = false;
+
+fun print_Term (V (s, t)) = concat["(", s, ":", print_Type t, ")"]
+|	print_Term (C (s, t)) = concat["(", s, "::", print_Type t, ")"]
+|	print_Term (f ‰a a) = concat[
+		print_Term f,
+		if atomic_Term a then print_Term a else concat["(", print_Term a, ")"]]
+|	print_Term (Ì (s, ty, tm)) = concat ["Ì", s, ":", print_Type ty, print_Term tm];
+
+=TEX
+
+=SML
+infix 8 ‰a;
+=IGN
+datatype Term = op ‰v of string * Type
+	| op ‰c of string * Type
+	| op ‰a of Term * Term	
+	| Ì of string * Type * Term;
+=SML
+exception Ill_typed_term of string;
+
+fun typ_of (V(s, t)) = t
+|   typ_of (C(s, t)) = t
+|   typ_of (Ì (s,ty,te)) = ty ­ (typ_of te)
+|   typ_of (f ‰a a) = let val (tfd ­ tfc) = typ_of f
+		     and ta = typ_of a
+	 	     in	if tfd = ta
+			then tfc
+			else raise Ill_typed_term (concat[
+				"function:", print_Term f, " :", print_Type (tfd ­ tfc), " ",
+				"argument:", print_Term a, " :", print_Type (ta)])
+		     end;
+
+typ_of ((C ("a", i ­ …)) ‰a (V ("a", i)));
+=TEX
+
+=SML
+fun ~ A = C("N", (… ­ …)) ‰a A;
+infix ²;
+fun A ² B = C("A", … ­ … ­ …) ‰a A ‰a B;
+infix ±;
+fun A ± B = ~(~ A ² ~ B);
+infix ä;
+fun A ä B = (~ A ² B);
+infix é;
+fun A é B = (A ä B) ± (B ä A);
+fun µ A = C("", ((typ_of A) ­ …)) ‰a A;
+fun ¶ A = ~ (µ (~ A));
+fun É A = let val ta = typ_of A
+	in C("É", ta ­ …) ‰a A
+	end;
+infix Q;
+fun A Q B =
+	let	val ft = (typ_of A) ­ …;
+		val f = V("f", ft)
+	in µ (Ì("f", ft, f ‰a A ä f ‰a B))
+	end;
+infix ½;
+fun A ½ B = ~ (A Q B);
+fun I‰t a = Ì("x", a, V ("x", a));
+fun I A = (I‰t (typ_of A)) ‰a A;
+fun K‰t a1 a2 = Ì("x", a1, Ì("y", a2, V ("x", a1)));
+fun K A B = K‰t (typ_of A) (typ_of B) ‰a A ‰a B;
+fun Z‰t a = Ì("f", a ­ a, I‰t a);
+fun Nat‰t a n = Ì("f", a ­ a, Ì("x", a, fun_pow n (fn t => V("f", a ­ a) ‰a t) (V("x", a))));
+fun Suc‰t a = 
+	let val f = V("f", a ­ a);
+	    val n = V("n", a ›ë 1);
+	    val x = V("x", a)
+	in Ì("n", a ›ë 1, Ì("f", a ­ a, Ì("x", a, (f ‰a (n ‰a f ‰a x)))))
+	end; 
+fun Suc A = (Suc‰t (typ_of A)) ‰a A;
+fun N‰t a = Ì("n", a ›ë 1,
+	µ (Ì("f", ((a ›ë 1) ­ …),
+	  (V ("f", (a ›ë 1) ­ …) ‰a (Z‰t a))
+	  ä (µ	(Ì("x", a ›ë 1,
+		  (V("f", (a ›ë 1) ­ …) ‰a (V("x", a ›ë 1)))
+		  ä (V("f", (a ›ë 1) ­ …) ‰a Suc(V("x", a ›ë 1)))
+		) )
+	  ä (V("f", (a ›ë 1) ­ …) ‰a (V("n", a ›ë 1))
+	    )
+	))));
+=IGN
+typ_of (Suc("x" ‰v (i ›ë 1)));
+typ_of ((N‰t i));
+=TEX
+
 
 \section{Higher Order Logic}\label{HOL}
 
