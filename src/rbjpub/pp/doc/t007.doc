@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.28 2010/07/07 15:21:04 rbj Exp $
+$Id: t007.doc,v 1.29 2011/02/16 15:03:45 rbj Exp $
 open_theory "fixp";
 set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2010/07/07 15:21:04 $ $
+Last Change $ $Date: 2011/02/16 15:03:45 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.28 2010/07/07 15:21:04 rbj Exp $ $
+$ $Id: t007.doc,v 1.29 2011/02/16 15:03:45 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -1998,12 +1998,12 @@ a (fc_tac [get_spec ¨IncreasingÆ]
 a (FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[]))) [rpo_fc_clauses]);
 a (all_asm_fc_tac[]);
 (* *** Goal "2.1.3" *** *)
-a (fc_tac [get_spec ¨IsLubÆ]);
+a (EXTEND_PC_T1 "'mmp1" fc_tac [get_spec ¨IsLubÆ]);
 a (GET_NTH_ASM_T 1 ante_tac THEN rewrite_tac [get_spec ¨IsUbÆ]
 	THEN strip_tac
-	THEN asm_fc_tac[]);
-a (fc_tac [get_spec ¨IncreasingÆ]
-	THEN all_asm_fc_tac[]);
+	THEN EXTEND_PC_T1 "'mmp1"  asm_fc_tac[]);
+a (EXTEND_PC_T1 "'mmp1" fc_tac [get_spec ¨IncreasingÆ]
+	THEN EXTEND_PC_T1 "'mmp1" all_asm_fc_tac[]);
 a (DROP_NTH_ASM_T 2 ante_tac THEN SYM_ASMS_T rewrite_tac);
 (* *** Goal "2.2" *** *)
 a (GET_NTH_ASM_T 4 ante_tac THEN rewrite_tac [get_spec ¨IsLubÆ]);
@@ -2204,12 +2204,14 @@ a (REPEAT strip_tac
 	THEN all_fc_tac [ccrpo_fixp_lemma7]);
 a (all_fc_tac[get_spec ¨FChainClosedÆ]);
 a (PC_T1 "hol1" rewrite_tac [] THEN REPEAT strip_tac
-	THEN all_fc_tac [get_spec ¨FClosedÆ]);
+	THEN EXTEND_PC_T1 "'mmp1" all_fc_tac [get_spec ¨FClosedÆ]);
+(* *** Goal "1" *** *)
 a (lemma_tac ¨S (f, X, $ºâv) x Ä FChain f (X, $ºâv)Æ
 	THEN1 (rewrite_tac [get_spec ¨SÆ]
 		THEN PC_T "hol1" (REPEAT strip_tac)));
 a (all_fc_tac [fchain_lemma2]
 	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
 a (POP_ASM_T ante_tac
 	THEN rewrite_tac [get_spec ¨SÆ]
 		THEN PC_T "hol1" (REPEAT strip_tac));
@@ -2983,6 +2985,7 @@ At the least we also need a suitable cases theorem:
 
 \ignore{
 =SML
+push_extend_pc "'mmp1";
 set_goal([], ¨µr f∑ CcRpoU r ± Increasing r r f ¥ µx∑ x ç FChainU f r
 	¥ (∂y∑ y ç FChainU f r ± x = f y)
 	≤ x = Lub r {z | z ç FChainU f r ± r z x ± ≥ r x z}Æ);
@@ -3001,10 +3004,9 @@ a (all_fc_tac [ccrpou_lub_lemma]);
 a (POP_ASM_T ante_tac THEN (GET_NTH_ASM_T 2 (rewrite_thm_tac o eq_sym_rule))
 	THEN contr_tac);
 a (fc_tac [get_spec ¨IsLubÆ]);
-a (lemma_tac ¨≥ r x lÆ
-	THEN1 (contr_tac
-		THEN all_fc_tac [ccrpou_fc_clauses]
-		THEN var_elim_asm_tac ¨x = lÆ));
+a (lemma_tac ¨≥ r x lÆ	THEN1 (contr_tac
+	THEN all_fc_tac [ccrpou_fc_clauses]
+	THEN var_elim_asm_tac ¨x = lÆ));
 a (all_fc_tac [ccrpou_fchainu_lemma2b]);
 a (lemma_tac ¨≥ r x (f l)Æ
 	THEN1 (spec_nth_asm_tac 12 ¨lÆ
@@ -3086,6 +3088,7 @@ a (lemma_tac ¨r x l'Æ
 		THEN1 spec_nth_asm_tac 1 ¨xÆ));
 a (all_fc_tac [ccrpou_fc_clauses]);
 val fchainu_cases_lemma2 = save_pop_thm "fchainu_cases_lemma2";
+pop_pc();
 =TEX
 }%ignore
 
@@ -3604,6 +3607,8 @@ a (fc_tac [get_spec ¨IncreasingÆ]);
 a (asm_fc_tac[]);
 val coccrpo_fixp_lemma1 = pop_thm ();
 
+push_extend_pc "'mmp1";
+
 set_goal([], ¨µX r f∑ Increasing r r f ± Rpo (Universe, r) ± FCoChainClosed f (X, r)
 	¥ ChainCoComplete ({x | x ç FCoChain f (X,r) ± (r (f x) x ≤ x = (f x))}, r)Æ);
 a (rewrite_tac [get_spec ¨ChainCoCompleteÆ]
@@ -3707,6 +3712,8 @@ a (DROP_NTH_ASM_T 5 ante_tac THEN SYM_ASMS_T once_rewrite_tac);
 a (rewrite_tac[]);
 a (contr_tac);
 val coccrpo_fixp_lemma4 = save_pop_thm "coccrpo_fixp_lemma4";
+
+pop_pc();
 =TEX
 }%ignore
 
