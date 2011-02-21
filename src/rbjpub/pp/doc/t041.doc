@@ -1,5 +1,5 @@
 =IGN
-$Id: t041.doc,v 1.6 2011/02/20 16:11:49 rbj Exp $
+$Id: t041.doc,v 1.7 2011/02/21 12:02:40 rbj Exp $
 =TEX
 
 The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of one or more finitary illative lambda-calculi with systems of type assignment.
@@ -726,12 +726,18 @@ It is intended also that the target illative lambda calculus will benefit (or pe
 \subsection{Semantics}
 
 The semantics is defined as a partial equivalence relation over the abstract syntax.
-The partial equivalence relation is represented by a disjoint pair of relations, the first an equivalence relation which corresponds to convertibility.
-The second relation may be though of as being knowable distinctness.
-Of course this isn't an equivalence relation.
-You may think of this alternatively as a three-truth-valued equivalence, in which the usual equivalence rules apply to the truths, but if it isn't true it may not be false.
+The partial equivalence relation is represented by a disjoint pair of relations, a positive part and a negative part.
 
-This is obtained as the least fixed point of a monotone operator over these partial equivalence relations.
+The positive part is an equivalence relation which corresponds to convertibility.
+
+The negative part is an approximation to distinctness.
+This part is ultimately discarded, but plays a role in the definition of the positive part, because the an application of an equivalence combinator reduces to $F‰c$ only if the two arguments are related under this negative part of the partial equivalence relation.
+Of course, the negative part itself is not an equivalence relation.
+
+You may think of this partial equivalence relation alternatively as represented by a three-valued equivalence relation, the pairs which map to true correspond to the pairs in the positive part of the relation, and those which map to false correspond to those in the negative part.
+The requirement that this is an equivalence relation is simply the usual conditions (reflexive, symmetric and transitive),  on the positive part.
+
+This partial equivalence relation is obtained as the least fixed point of a monotone operator over these partial equivalence relations.
 The ordering over these is the conjunction of the orderings under inclusion of the two component relations.
 
 The functor is defined in two parts, the positive part and the negative part.
@@ -756,6 +762,10 @@ Firstly a fixed part under which all constants are known to be distinct.
 
 Secondly we infer that two combinatorial expressions are distinct if when applied to equal arguments they yield distinct results.
 To obtain such results you need to have both positive and negative results, so this part has to be defined as a function over a partial equivalence relation.
+
+I now see that the negative part is derivable from the positive part, in which it is incorporated as reductions of equations to $F‰c$.
+Its not obvious whether it is better to extract the information in that way or to maintain it separately as I first set out to do.
+I will hedge my bets a bit until I get a stronger sense of which is the best way to go.
 
 \subsubsection{The Combinators}
 
@@ -839,50 +849,26 @@ With the following for the infinitary combinators, which we will consider no fur
 Ü µs t· DbComRed s t ¤ Kred s t ² Sred s t ² —‰r‰e‰d s t ² ™‰r‰e‰d s t 
 ° 
 
-\subsubsection{Illative Reduction}
+\subsubsection{Extraction of Negative Part}
 
-Reduction for the illative combinator $é‰c$ is intended to encapsulate reducibility as a whole.
-We could define such a notion here in terms of closure of the reducibility relation for the pure combinators, but this would fall short of the entire reducibility relation by not recognising the reductions it introduces.
-The definition needs to be recursive, reducibility needs to be defined in terms of itself.
+Since the negative part of the partial equivalence relation (and the positive part for that matter) is encoded in the positive part through reductions of equations, it is possible to recover it from the positive part.
 
-Such a recursive definition can be realised by taking a fixed point of a functor which defines reducibility given some supposed definition of reducibility.
-
-In constructing such a functor we need to specify the reductions which take place on applications of the equality combinator, which will be done using the supplied equivalence relation.
-This will be a partial relation in the form of two disjoint relations, one positive and one negative.
-If the positive relation holds over the arguments the equation reduces to $T‰c$ if the negative relation holds the equation reduces to $F‰c$.
+This is how it is done:
 
 ¹HOLCONST
-Ü Ûé‰r‰e‰dİ : ('a GSU ­ 'a GSU ­ BOOL) ¸ ('a GSU ­ 'a GSU ­ BOOL)
-Ü		­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛNpİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
 ÷üüüüüüüüüüü
-Ü µs t· é‰r‰e‰d (s, t) = Ìx y·
-		¶l m· x = (($é‰c ‰c l) ‰c m)
-			± (  s x y ± y = T‰c
-			   ² t x y ± y = F‰c)
+Ü µr· Np r = Ìx y· r (($é‰c ‰c x) ‰c y) F‰c
 °
+\subsubsection{Equality}
 
-\subsubsection{Reducibility}
+We now consider the question, when can we know that two combinators are equal or not equal.
 
-This is a closure property.
+The first obvious principle is that if two combinators are convertible then they are equal.
+However, we cannot adopt the converse principle, that two combinators which are not convertible are distinct, because the equality conditions feed into the conversion rules through the equality combinator.
+So we have to have some definite criteria for distinctness which we are confident will not include any combinator pairs which might ever be found to be convertible.
 
-¹HOLCONST
-Ü ÛRedClosedİ : ('a GSU ­ 'a GSU ­ BOOL) ­ BOOL
-÷üüüüüüüüüüü
-Ü µr· RedClosed r = µc i1 i2· c í‰u i1  Csyntax ± c í‰u i2  Csyntax
-Ü	± Dom‰u i1 = Dom‰u i2 ± (µx· x ‰u Dom‰u i1 ´ r (i1 ‰c x) (i2 ‰c x))
-Ü	´ r (c í‰u i1) (c í‰u i2)
-° 
-
-¹HOLCONST
-Ü ÛRedClosureİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
-÷üüüüüüüüüüü
-Ü µr· RedClosure r = Ìx y· µr1· RedClosed r1 ± (Csyntax, r) € (Csyntax, r1) ´ r1 x y
-° 
-
-\subsubsection{Inequality}
-
-We now consider the question, when can we know that two combinators are not equal.
-There are two parts to this.
+There are three parts to these criteria for distinctness.
 
 The first part is that all the constants are to be considered distinct.
 This is consistent with the reduction rules for those constants to which we assign a definite meaning.
@@ -890,9 +876,9 @@ This is consistent with the reduction rules for those constants to which we assi
 This provides an initial value for the inequality relation.
 
 ¹HOLCONST
-Ü ÛIneq0İ : ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛIneq0İ : 'a GSU ­ 'a GSU ­ BOOL
 ÷üüüüüüüüüüü
-Ü Ineq0 = Ìx y·	if ¶v w· x = MkCcon v ± y = MkCcon w ± ³ v = w then T else F	
+Ü Ineq0 = Ìx y·	¶v w· x = MkCcon v ± y = MkCcon w ± ³ v = w	
 ° 
 
 The second part is that if two combinators when applied to equal lists of arguments reduce to combinators which are known to be distinct, then they are themselves distinct.
@@ -914,11 +900,61 @@ We need a closure operation which will take a notion of inequality and add to it
 °
 
 ¹HOLCONST
-Ü ÛIneqStepİ : ('a GSU ­ 'a GSU ­ BOOL) ¸ ('a GSU ­ 'a GSU ­ BOOL)
-Ü		­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛIneqStepİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
 ÷üüüüüüüüüüü
-Ü µeq neq· IneqStep (eq, neq) = Ìx y· neq x y ² ¶v w· EqSeq eq v w ± neq (x ‰c v) (y ‰c w)
+Ü µeq· IneqStep eq = Ìx y· Np eq x y ² ¶v w· EqSeq eq v w ± Np eq (x ‰c v) (y ‰c w)
 °
+
+\subsubsection{Illative Reduction}
+
+Reduction for the illative combinator $é‰c$ is intended to encapsulate reducibility as a whole.
+We could define such a notion here in terms of closure of the reducibility relation for the pure combinators, but this would fall short of the entire reducibility relation by not recognising the reductions it introduces.
+The definition needs to be recursive, reducibility needs to be defined in terms of itself.
+
+Such a recursive definition can be realised by taking a fixed point of a functor which defines reducibility given some supposed definition of reducibility.
+
+In constructing such a functor we need to specify the reductions which take place on applications of the equality combinator, which will be done using the supplied equivalence relation.
+This will be a partial relation in the form of two disjoint relations, one positive and one negative.
+If the positive relation holds over the arguments the equation reduces to $T‰c$ if the negative relation holds the equation reduces to $F‰c$.
+
+¹HOLCONST
+Ü Ûé‰r‰e‰dİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+÷üüüüüüüüüüü
+Ü µeq· é‰r‰e‰d eq = Ìx y·
+Ü		¶l m· x = (($é‰c ‰c l) ‰c m)
+Ü			± (EqStep eq x y ± y = T‰c ² IneqStep eq x y ± y = F‰c)
+°
+
+\subsubsection{Closure}
+
+There must be a name for this.
+
+I have two versions, not sure yet which to use.
+
+¹HOLCONST
+Ü ÛRedClosed1İ : ('a GSU ­ 'a GSU ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µr· RedClosed1 r = µc i1 i2· c í‰u i1  Csyntax ± c í‰u i2  Csyntax
+Ü	± Dom‰u i1 = Dom‰u i2 ± (µx· x ‰u Dom‰u i1 ´ r (i1 ‰c x) (i2 ‰c x))
+Ü	´ r (c í‰u i1) (c í‰u i2)
+° 
+
+¹HOLCONST
+Ü ÛRedClosed2İ : ('a GSU ­ 'a GSU ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µr· RedClosed2 r = µc d e f g h· c í‰u e  Csyntax ± d í‰u f  Csyntax
+Ü	± r (c í‰u e) (d í‰u f) ± EqSeq r g h 
+Ü	´ r (c í‰u e @‰u g) (c í‰u f @‰u h)
+° 
+
+I'll use them both pro-tem.
+
+¹HOLCONST
+Ü ÛRedClosureİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+÷üüüüüüüüüüü
+Ü µr· RedClosure r = Ìx y· µr1· RedClosed1 r1 ± RedClosed2 r1 ± (Csyntax, r) € (Csyntax, r1)
+			´ r1 x y
+° 
 
 \subsubsection{Functor Constructor}
 
