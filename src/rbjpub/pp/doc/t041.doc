@@ -1,6 +1,11 @@
-=IGN
-$Id: t041.doc,v 1.7 2011/02/21 12:02:40 rbj Exp $
 =TEX
+\ignore{
+=VDUMP t041i.tex
+Last Change $ $Date: 2011/02/22 15:01:47 $ $
+
+$ $Id: t041.doc,v 1.8 2011/02/22 15:01:47 rbj Exp $ $
+=TEX
+}%ignore
 
 The idea is to obtain an exotic model for illative lambda-calculi by methods analogous to those employed for set theory in \cite{rbjt027}, and then to use that as a semantic foundation for the definition of one or more finitary illative lambda-calculi with systems of type assignment.
 
@@ -902,7 +907,7 @@ We need a closure operation which will take a notion of inequality and add to it
 ¹HOLCONST
 Ü ÛIneqStepİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
 ÷üüüüüüüüüüü
-Ü µeq· IneqStep eq = Ìx y· Np eq x y ² ¶v w· EqSeq eq v w ± Np eq (x ‰c v) (y ‰c w)
+Ü µeq· IneqStep eq = Ìx y· Ineq0 x y ² Np eq x y ² ¶v w· EqSeq eq v w ± Np eq (x ‰c v) (y ‰c w)
 °
 
 \subsubsection{Illative Reduction}
@@ -952,23 +957,38 @@ I'll use them both pro-tem.
 ¹HOLCONST
 Ü ÛRedClosureİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
 ÷üüüüüüüüüüü
-Ü µr· RedClosure r = Ìx y· µr1· RedClosed1 r1 ± RedClosed2 r1 ± (Csyntax, r) € (Csyntax, r1)
-			´ r1 x y
+Ü µr· RedClosure r = Snd (EquivClosure
+	(Csyntax, Ìx y· µr1· RedClosed1 r1 ± RedClosed2 r1 ± (Csyntax, r) € (Csyntax, r1)
+			´ r1 x y))
 ° 
 
-\subsubsection{Functor Constructor}
+\subsubsection{The Semantic Functor}
 
 The functor with which we define equivalence must a monotone functor over partial equivalence relations.
 It requires, or rather consists of a positive and a negative closure operator, each of which has access to the partial equivalence relation and delivers one half of the resulting partial equivalence relation.
 
-\subsubsection{Pure Equivalence}
+¹HOLCONST
+Ü ÛILamFunctİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+÷üüüüüüüüüüü
+Ü µr· ILamFunct r = RedClosure (é‰r‰e‰d r)
+° 
+
+To take a fixed point we define a version of this as an operator over sets.
+
+¹HOLCONST
+Ü ÛILamFunctSİ : ('a GSU ¸ 'a GSU)SET ­ ('a GSU ¸ 'a GSU)SET
+÷üüüüüüüüüüü
+Ü µs· ILamFunctS s = {x | ILamFunct(Ìx y· (x,y)  s) (Fst x)(Snd x)}
+° 
+
+\subsubsection{Equivalence}
 
 Pure infinitary combinatorial equivalence is then:
 
 ¹HOLCONST
 Ü ÛPIComEqİ : 'a GSU SET ¸ ('a GSU ­ 'a GSU ­ BOOL)
 ÷üüüüüüüüüüü
-Ü PIComEq = EquivClosure (Csyntax, RedClosure DbComRed)
+Ü PIComEq = EquivClosure(Csyntax, Ìx y· (x,y)  Lfp ILamFunctS)
 ° 
 
 =GFT
@@ -977,6 +997,9 @@ Pure infinitary combinatorial equivalence is then:
 
 \ignore{
 =SML
+val RedClosure_def = get_spec ¬RedClosure®;
+val ILamFunct_def = get_spec ¬ILamFunct®;
+val ILamFunctS_def = get_spec ¬ILamFunctS®;
 val PIComEq_def = get_spec ¬PIComEq®;
 
 set_goal([], ¬Equiv PIComEq®);
@@ -1018,24 +1041,125 @@ val ¶_PureInfComb_lemma = pop_thm ();
 =TEX
 }%ignore
 
-\subsection{A Church-Rosser Theorem}
-
-At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
-Since this is probably hard I am exploring a bit more before digging in to the proof.
-
-\subsection{The Type of Infinitary Combinators}
-
-=SML
-new_type_defn (["IC"], "IC", ["'a"], ¶_PureInfComb_lemma);
-=TEX
-
-
 \subsection{Monotonicity}
 
 To get a least fixed point of \emph{EqFunctor} we need to identify an ordering relative to which it is monotone.
 
-=SML
+\subsection{Consistency}
 
+At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
+Since this is probably hard I am exploring a bit more before digging in to the proof.
+
+
+\section{Primitives of Illative Lambda Calculus}
+
+In this section we define the primitive notions of the Illative Lambda Calculus in terms of the underlying model of terms as equivalence classes of combinators (represented as sets in GSU).
+
+In the next section the Illative Lambda Calculus will then be developed in a separate theory abstracted away from the underlying model.
+
+At this point it is not clear what the primitives should be, so this is exploratory material.
+
+\subsection{The Type of Lambda-Terms}
+
+=SML
+val LT_def = new_type_defn (["LT"], "LT", ["'a"], ¶_PureInfComb_lemma);
+=TEX
+
+
+
+We will have a new theory for the finitary system, which I will try to confine to results in the finitary system.
+The definitions and proofs will involve materials in the underlying theory, which may well be quite substantial.
+These materials are supplied here, before we start the new theory.
+
+First we need to define functions to take us between the new abstract entities and their representatives as equivalence classes of combinators.
+
+\ignore{
+=SML
+set_goal([], ¬¶abs_LT rep_LT· (µ a:'a LT· abs_LT (rep_LT a) = a)
+Ü	± (µ r:'a GSU SET· PureInfComb r ¤ rep_LT (abs_LT r) = r)
+Ü	± OneOne rep_LT®);
+a (strip_asm_tac (simple_´_match_mp_rule1 type_lemmas_thm2 LT_def));
+a (¶_tac ¬abs® THEN ¶_tac ¬rep® THEN asm_rewrite_tac[]);
+save_cs_¶_thm (pop_thm ());
+=TEX
+}%ignore
+
+¹HOLCONST
+Ü Ûabs_LTİ : 'a GSU SET ­ 'a LT;
+Ü Ûrep_LTİ : 'a LT ­ 'a GSU SET
+÷üüüüüüüüüüü
+Ü 	  (µ a· abs_LT (rep_LT a) = a)
+Ü	± (µ r· PureInfComb r ¤ rep_LT (abs_LT r) = r)
+Ü	± OneOne rep_LT
+° 
+
+\subsection{Judgements}
+
+A proposition is an object of type \emph{LT}.
+There is just one true proposition, which is the equivalence class containing $T‰c$.
+We will call this $T‰Ì$.
+To assert a proposition is to identify it with $T‰Ì$.
+
+Something like a sequent calculus might be best.
+
+=SML
+declare_infix  (0, "˜");
+=TEX
+
+¹HOLCONST
+Ü $Û˜İ : 'a LT LIST ­ 'a LT ­ BOOL
+÷üüüüüüüüüüü
+Ü µpl (p:'a LT)· (pl ˜ p) ¤ µ‰L (Map (Ìp· T‰c  (rep_LT p)) pl) ´ T‰c  (rep_LT p)
+° 
+
+\subsection{Primitive Combinators}
+
+¹HOLCONST
+Ü ÛLift2_Ìİ : 'a GSU ­ 'a LT 
+÷üüüüüüüüüüü
+Ü µc· Lift2_Ì c = abs_LT (EquivClass PIComEq c)
+° 
+
+The combinators S, K and $é$ are required, the others may not be made visible directly.
+
+¹HOLCONST
+Ü ÛS‰Ìİ : 'a LT 
+÷üüüüüüüüüüü
+Ü S‰Ì = Lift2_Ì S‰c
+° 
+
+¹HOLCONST
+Ü ÛK‰Ìİ : 'a LT 
+÷üüüüüüüüüüü
+Ü K‰Ì = Lift2_Ì K‰c
+° 
+
+¹HOLCONST
+Ü Ûé‰Ìİ : 'a LT 
+÷üüüüüüüüüüü
+Ü é‰Ì = Lift2_Ì $é‰c
+° 
+
+
+\subsection{Application and Abstraction}
+
+To reason about this we are going to need to show that choice of representative does not matter.
+
+=SML
+declare_infix (250, "‰Ì");
+=TEX
+
+¹HOLCONST
+Ü $Û‰Ìİ : 'a LT ­ 'a LT ­ 'a LT
+÷üüüüüüüüüüü
+Ü µf a· f ‰Ì a = Lift2_Ì ((Åx· x  rep_LT f) ‰c (Åx· x  rep_LT a))
+° 
+
+=GFT
+=TEX
+
+
+=SML
 commit_pc "'icomb";
 
 force_new_pc "Ûicombİ";
@@ -1047,11 +1171,25 @@ merge_pcs ["misc31", "'icomb"] "icomb1";
 commit_pc "icomb1";
 =TEX
 
+\section{Illatory Lambda-Calculus}
 
-\section{The Finitary System}
+=SML
+open_theory "icomb";
+force_new_theory "Ûilambİ";
+force_new_pc Û"'ilamb"İ;
+merge_pcs ["'savedthm_cs_¶_proof"] "'ilamb";
+new_parent "equiv";
+set_merge_pcs ["icomb", "'ilamb"];
+=TEX
 
-This is a marker for something in the future.
-It is possible that in the exploration of the semantic ideas I may have to sketch some things out here before coming here to consider this level more seriously.
+
+\ignore{
+=SML
+set_goal([], ¬[] ˜ T‰Ì®);
+
+
+=TEX
+}%ignore
 
 \subsection{The System of Type Assignment}
 
