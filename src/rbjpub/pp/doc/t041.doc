@@ -1,9 +1,9 @@
 =TEX
 \ignore{
 =VDUMP t041i.tex
-Last Change $ $Date: 2011/03/03 22:01:10 $ $
+Last Change $ $Date: 2011/03/11 21:43:51 $ $
 
-$ $Id: t041.doc,v 1.9 2011/03/03 22:01:10 rbj Exp $ $
+$ $Id: t041.doc,v 1.10 2011/03/11 21:43:51 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -50,7 +50,7 @@ A few more words about consistency may be in order.
 
 The approach here is to ensure consistency in the desired logic by working from semantics to proof rules.
 The logic determined by proof rules is bound to be consistent because the proof rules are either theorems proven about the chosen semantic domain or else derived rules implemented in our metalanguage for reasoning in the new language.
-This is a natural outcome of the method which consists in implemented the desired language as a shallow embedding in a higher-order set theory.
+This is a natural outcome of the method which consists in implementing the desired language using a `shallow embedding' in a higher-order set theory.
 
 Adoption of this method does not in itself solve the consistency problem, the problem appears in the necessary semantic preliminaries for the embedding.
 To succeed it is necessary to understand how the consistency problem appears and have some idea of how it can be resolved.
@@ -66,6 +66,10 @@ Whether this will also support a system of type assignments along the lines desi
 
 The equivalence relation is compounded from several components of which only one is `illative' and contentious (though the two combinators which handle infinitely many arguments may also be thought contentious!).
 There is a question how to organise these separate components and how much to do prior to devising the functor of which the least fixed point gives the semantics of equivalence.
+
+The proposed method, thus outlined, requires no further fundamental innovations to deliver a model, though there will be many opportunities to get details wrong.
+There is however, no guarantee that the resulting system will support the kind of type-assignment system which I have in mind, this is highly speculative.
+The greatest difficulty is in the complexity of the formal derivations required, which may prove beyond me.
 
 \section{The Infinitary Interpretation}
 
@@ -109,7 +113,7 @@ The syntax of an infinitary illative combinatory logic is to be encoded as sets 
 
 Since I will probably have to prove something like the Church-Rosser theorem and the syntax can be made very simple, this will be a bare bones treatment of the syntax, by contrast with my previous similar enterprise for non-well-founded set theory in \cite{rbjt027}.
 
-There will be just one constructor, which is the ordered pair constructor constrained to operate on sequences of combinators.
+There will be just one constructor, which is the ordered pair constructor constrained to apply a single constant name to sequences of combinators of any cardinality.
 We can therefore go immediately to specification of the required closure condition for the syntax.
 
 The closure condition is:
@@ -121,17 +125,13 @@ The closure condition is:
 ‹	(µc i∑ Funâu i ± Ordinalâu (Domâu i) ± Xâu (Ranâu i) Ä s ¥ c Ìâu i ç s)
 ∞
 
-The well-formed syntax is then the smallest set closed under these constructions.
+The well-formed syntax is then the smallest set which is \emph{CrepClosed}.
 
 πHOLCONST
 ‹ €Csyntax› : 'a GSU SET
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ Csyntax = •{x | CrepClosed x}
 ∞
-
-I have contrived to arrange the semantics which follows as a monotone function over a complete partial order, so that when I start to look for fixed points of the semantic functor (to give the equivalence relation for an interpretation of an illative lambda-calculus) I can look at the least and greatest fixed points, and either prove one of them total or otherwise employ them to find a total fixed point.
-
-\subsubsection{Closure}\label{Closure}
 
 =GFT
 €crepclosed_csyntax_lemma› =
@@ -144,7 +144,8 @@ I have contrived to arrange the semantics which follows as a monotone function o
 		± (µ x∑ x ç Xâu (Ranâu i) ¥ x ç Csyntax)
          ¥ c Ìâu i ç Csyntax
 =TEX
-=GFT
+
+=IGN
 €crepclosed_csyntax_thm2› =
    Ù µ c i∑ Funâu i
 		± Ordinalâu (Domâu i)
@@ -267,13 +268,12 @@ val well_founded_tcCscPrec_thm = save_pop_thm ("well_founded_tcCscPrec_thm");
 =TEX
 }%ignore
 
+Using the well-foundedness theorems we can define tactics for inductive proofs.
+
 =SML
 val €CSC_INDUCTION_T› = WFCV_INDUCTION_T well_founded_CscPrec_thm;
 val €csc_induction_tac› = wfcv_induction_tac well_founded_CscPrec_thm;
 =TEX
-
-The set Csyntax gives us the syntactically well-formed phrases of our language.
-It will be useful to have some predicates which incorporate well-formedness, which are defined here.
 
 =GFT
 €csc_fc_thm› =
@@ -349,7 +349,8 @@ set_merge_pcs ["misc31", "'icomb"];
 
 =GFT
 €csc_fc_thm2› =
-   Ù µc i∑ c Ìâu i ç Csyntax ¥ Funâu i ± Ordinalâu (Domâu i) ± (µ x∑ x çâu (Ranâu i) ¥ x ç Csyntax)
+   Ù µc i∑ c Ìâu i ç Csyntax ¥ Funâu i ± Ordinalâu (Domâu i)
+				± (µ x∑ x çâu (Ranâu i) ¥ x ç Csyntax)
 
 €cscprec_fc_thm› =
    Ù µ c i x∑ x çâu Ranâu i ¥ CscPrec x (c Ìâu i)
@@ -419,13 +420,24 @@ fun €icomb_induction_tac› t (a,c) = (
 	end end) (a,c);
 =TEX
 
-This tactic expects an argument $t$ of type $TERM$ which is a free variable of type $'a GSU$ whose sole occurrence in the assumptions is in an assumption ¨ëtÆ ç CsyntaxÆ, and results in two subgoals, one requiring a proof for atomic and the other for compound formulae (with the benefit of the induction hypothesis in the assumptions).
+This tactic expects an argument $t$ of type $TERM$ which is a free variable of type $î('a)GSUÆ$ whose sole occurrence in the assumptions is in an assumption $¨ëtÆ ç CsyntaxÆ$, and results in a single subgoal.
+The conclusion of the subgoal is as in the original except that free occurrences of $¨tÆ$ have been replaced by $¨c Ìâu iÆ$.
+The assumption 
+=INLINEFT
+¨ëtÆçCsyntaxÆ
+=TEX
+ is replaced by three new assumptions asserting that $¨iÆ$ is a function, that its domain is an ordinal, and that everything in its range is a member of \emph{Csyntax} for which the property expressed in the conclusion holds.
 
-\subsubsection{Recursion Theorem}\label{Recursion}
+=IGN
+open_theory "icomb";
+set_pc "icomb";
+set_goal([¨t:('a GSU) ç CsyntaxÆ, ¨q:BOOLÆ], ¨p:('a GSU≠BOOL) tÆ);
+a (icomb_induction_tac ¨tÆ);
+drop_main_goal();
+=TEX
 
-The following recursion theorem supports definition by primitive recursion of functions over the syntax.
 
-The following function provides domain restriction of a function over 'a GSU.
+The following function provides domain restriction of a function over $î'a\ GSUÆ$.
 Since this is an operation on total functions, the effect is achieved by delivering a function which returns the same value for all arguments outside the restricted domain.
 The purpose is to constrain recursion to be well founded, so the possibility of returning a function completely unconstrained in what it does off the restricted domain does not suffice (we would not be able to prove that the domain restriction had done anything at all).
 
@@ -441,7 +453,7 @@ declare_infix(310, "Úâuâe");
 ∞
 
 
-A recursion lemma suitable for consistency proofs of primitive recursive definitions over our syntax can now be proven:
+A recursion lemma suitable for consistency proofs of primitive recursive definitions over our syntax can now be proven, this supports definition by primitive recursion of functions over the syntax.
 
 =GFT
 €csc_recursion_lemma› =
@@ -496,19 +508,19 @@ add_∂_cd_thms [csc_recursion_lemma] "'icomb";
 set_merge_pcs ["misc31", "'icomb"];
 =TEX
 
-\subsubsection{Auxiliary Concepts}
-
 This is just to test the recursion theorem.
 
 πHOLCONST
 ‹ €CscRank› : 'a GSU ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µc i∑ CscRank (c Ìâu i) =  ﬁâu (Imagepâu Sucâu ((Imagepâu ((Ranâu i) Úâuâe CscRank)) (Ranâu i)))
+‹ µc i∑ CscRank (c Ìâu i) =
+	ﬁâu (Imagepâu Sucâu ((Imagepâu ((Ranâu i) Úâuâe CscRank)) (Ranâu i)))
 ∞
 
-\subsubsection{Derived Syntax}
+\subsubsection{Finitary Constant Combinators}
 
-Our syntax does not include the standard finitary application.
+Our syntax does not include the standard finitary application, to do this you have to append the argument to the sequence of arguments already present on the function.
+It's handy to define a function in HOL which does this operation (i.e. which constructs the required combinatory term).
 For this we will use an infix bare subscript $c$.
 
 =SML
@@ -519,12 +531,12 @@ declare_infix (350, "âc");
 ‹ $€âc› : 'a GSU ≠ 'a GSU ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µf a∑ f âc a = let fc = Fstâu f
-		and fa = Sndâu f
-		in fc Ìâu (fa @âu (Unitâu (öâu Ìâu a)))
+‹		and fa = Sndâu f
+‹		in fc Ìâu (fa @âu (Unitâu (öâu Ìâu a)))
 ∞
 
 We also define a function corresponding to a constant constructor.
-This gives a combinator with an empty list of arguments.
+This requires the constant `name' as argument and returns a combinator with that name at the head and an empty list of arguments.
 
 πHOLCONST
 ‹ $€MkCcon› : 'a GSU ≠ 'a GSU
@@ -558,6 +570,9 @@ set_merge_pcs ["misc31", "'icomb"];
 }%ignore
 
 Using which we name the primitive combinators.
+
+We use an initial segment of the natural numbers as the names of combinators in the infinitary object langauge, but we give more intuitive names in our metalanguage (HOL) for the resulting combinatory term. 
+
 First two finitary pure combinators:
 
 πHOLCONST
@@ -662,7 +677,7 @@ It is not clear how this could be obtained as iterators.
 It is probable that arithmetic will be arrived at in a manner more similar to that adopted in a well-founded set theory.
 Such a set theory could be derived within the target illative lambda-calculus as a theory of characteristic functions, provided that we have a sufficiency of such functions, which the infinitary combinators are intended to ensure.
 
-\subsection{Infinitary Combinators}
+\subsubsection{Infinitary Combinators}
 
 The idea is to get a system which is ontologically equivalent to the standard interpretations of well-founded set theory with large cardinal axioms.
 By equivalent here I mean something like mutually interpretable, but the interpretations at stake here are correspondences between the ontologies, not interpretability of theories.
@@ -675,8 +690,6 @@ It is not entirely straightforward to do this.
 The present proposal is to use three infinitary combinators.
 
 First an inert combinator which is used to construct lists or sequences.
-
-In the following definition the argument should be a sequence of combinators.
 
 πHOLCONST
 ‹ $€Üâc› : 'a GSU ≠ 'a GSU
@@ -711,7 +724,8 @@ Of course, the intended ``transformation'' will only take place as the combinato
 
 These three combinators together may be used to define a function as a graph in the following way.
 Form two corresponding sequences, the first of values in the domain of the desired function, the second having at each position the value of the function at that point.
-The required function takes some value $x$, and maps $¨È âc\ vÆ$ over the first argument, and then uses that list to determine which value to select from the second list.
+The required function takes some value $¨xÆ$, and maps $¨È âc\ xÆ$ over the first argument, and then uses that list to determine which value to select from the second list.
+The effect of the mapping operation is to create a sequence in which every element is the truth value of the claim that it is equal to the argument $¨xÆ$, which, provided that all terms normalise will be the a representation of the position in the list of the argument, which can then be used to select the required value from the other sequence.
 
 An infinitary case combinator might therefore be obtained from these three combinators as follows.
 
@@ -724,29 +738,38 @@ The ability to represent arbitrary functions of infinite domains (e.g. over the 
 It is intended also that the target illative lambda calculus will benefit (or perhaps in some eyes be blighted by) a choice principle.
 
 =GFT
-€MkCcons_ç_Csyntax_clauses› = Ù Sâc ç Csyntax ± Kâc ç Csyntax ± Sâc ç Csyntax ± $Èâc ç Csyntax ± Tâc ç Csyntax
+€MkCcons_ç_Csyntax_clauses› = Ù Sâc ç Csyntax
+       ± Kâc ç Csyntax
+       ± $Èâc ç Csyntax
+       ± Tâc ç Csyntax
+       ± óâc ç Csyntax
+       ± ôâc ç Csyntax
 =TEX
 
 \ignore{
 =SML
 val Sâc_def = get_spec ¨SâcÆ;
 val Kâc_def = get_spec ¨KâcÆ;
+val Iâc_def = get_spec ¨IâcÆ;
 val Èâc_def = get_spec ¨$ÈâcÆ;
 val Tâc_def = get_spec ¨TâcÆ;
+val Fâc_def = get_spec ¨FâcÆ;
+val Üâc_def = get_spec ¨ÜâcÆ;
+val óâc_def = get_spec ¨óâcÆ;
+val ôâc_def = get_spec ¨ôâcÆ;
 =IGN
-val âc_def = get_spec ¨$âcÆ;
-val âc_def = get_spec ¨$âcÆ;
 val âc_def = get_spec ¨$âcÆ;
 =SML
 set_goal([], ¨Sâc ç Csyntax
 	± Kâc ç Csyntax
-	± Sâc ç Csyntax
 	± $Èâc ç Csyntax
 	± Tâc ç Csyntax
+	± óâc ç Csyntax
+	± ôâc ç Csyntax
 (*	± âc ç Csyntax
 	± âc ç Csyntax
 *)Æ);
-a (rewrite_tac[Sâc_def, Kâc_def, Èâc_def, Tâc_def, MkCcon_ç_Csyntax_thm]);
+a (rewrite_tac[Sâc_def, Kâc_def, Èâc_def, Tâc_def, óâc_def, ôâc_def, MkCcon_ç_Csyntax_thm]);
 val MkCcons_ç_Csyntax_clauses = pop_thm ();
 
 add_rw_thms [MkCcons_ç_Csyntax_clauses] "'icomb";
@@ -758,26 +781,48 @@ set_merge_pcs ["misc31", "'icomb"];
 
 \subsection{Semantics}
 
-The semantics is defined as a partial equivalence relation over the abstract syntax.
-The partial equivalence relation is represented by a disjoint pair of relations, a positive part and a negative part.
+The following semantics is a first crude cut.
+Conceivably it might be `correct' but certainly it is not very nicely structured.
+A good structure is only likely to emerge as I get a handle on the proofs I need to do with it.
 
-The positive part is an equivalence relation which corresponds to convertibility.
+The semantics which follows must be in effect a monotone functor, so that we can obtain a least fixed point.
+In my previous attempts for a non-well-founded set theory I used truth functions to a suitably ordered four-valued set of truth values, but in this case a simpler approach seems possible, in which we use a functor over standard bi-valent relations, ordered by inclusion (of the set of ordered pairs of which the relation is the characteristic function).
+The relation in question is that of \emph{convertibility}.
 
-The negative part is an approximation to distinctness.
-This part is ultimately discarded, but plays a role in the definition of the positive part, because the an application of an equivalence combinator reduces to $Fâc$ only if the two arguments are related under this negative part of the partial equivalence relation.
-Of course, the negative part itself is not an equivalence relation.
+To understand how this works it is best to think of it in other terms, as a \emph{partial} equivalence relation.
+A \emph{partial} equivalence relation is one for which some pairs are equivalent and some pairs are not equivalent, and the status of others is unknown.
+The relation we work will be the positive part of this partial equivalence relation.
+However, it will contain coded within it also the negative part.
 
-You may think of this partial equivalence relation alternatively as represented by a three-valued equivalence relation, the pairs which map to true correspond to the pairs in the positive part of the relation, and those which map to false correspond to those in the negative part.
+This encoding occurs through the conversions for applications of the equivalence combinator.
+The equivalence combinator is intended to be the relation of convertibility, but for reasons connected with the paradoxes it cannot be total.
+This is because the notion of convertibility at stake involves the conversions for equivalence expressions, and so the dependency is recursive.
+Defining convertibility as the least fixed point of our functor gives is recursive definition which will fail to be well-founded for some pairs of combinators.
+For these pairs, equivalence will not reduce, and it will therefore be a partial equivalence relation.
+
+The functor is defined in two parts, respectively for the positive and the negative parts of the convertibility relation.
+The two are then put together.
+
+The positive part is an equivalence relation which ultimately corresponds exactly to convertibility.
+
+The negative part is an approximation to distinctness, but there will be some pairs of terms which are not convertible which never appear in the negative part (possibly because if they did, they would then appear also in the positive part engendering contradiction, this is what we would expect to happen with the assertion that the Russell set is a member of itself, if it comes out true, then it will also come out false).
+
+The negative part plays a role in the definition of the positive part, because the an application of an equivalence combinator reduces to $Fâc$ only if the two arguments are related under this negative part of the partial equivalence relation.
+
+Of course, the negative part is not itself an equivalence relation.
 The requirement that this is an equivalence relation is simply the usual conditions (reflexive, symmetric and transitive),  on the positive part.
+We also require that the two parts don't disagree!
 
-This partial equivalence relation is obtained as the least fixed point of a monotone operator over these partial equivalence relations.
-The ordering over these is the conjunction of the orderings under inclusion of the two component relations.
+We consider the definition in two parts, the positive part and the negative part.
 
-The functor is defined in two parts, the positive part and the negative part.
+The positive part of the functor is a functor which takes a convertibility relation, closes it up under all the direct conversions for combinators other than the equivalence combinator.
+The negative part then computes a set of inequalities from this convertibility relation.
+The postive and negative parts are then incorporated into the relation as conversions of equations.
 
 \paragraph{positive part}
 
 The positive part is defined in three stages.
+
 First \emph{direct reduction} is defined for the \emph{Pure} combinators \index{combinator!pure}.
 These are combined into a closure operator which obtains from any relation the smallest equivalence relation closed under direct reduction subject to a rule of extensionality (equivalent functions applied to equivalent arguments give equivalent combinators).
 In this context the pure combinators are those for which direct reduction is definable independently of the other combinators.
@@ -802,17 +847,13 @@ I will hedge my bets a bit until I get a stronger sense of which is the best way
 
 \subsubsection{The Combinators}
 
-The question of what are the primitive combinators must therefore now be addressed.
+We have five combinatory constants, S, K, $È$ (convertability), $ó$ (projection), and $ô$ (map), of which the last two are infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
 
-My inclination is to work with five combinators, S, K, $È$, $ó$ (projection), and $ô$ (map), of which the last two are infinitary, the first three being much the same as you would expect in a finitary illative combinatory logic in which the illative primitive is equality.
-I toyed with the idea that S should be made infinitary, but have decided to see whether it works without.
-The map combinator can be used to make an infinitary S, so it looks like S is redundant.
-
-The rationale for this is that the infinitary aspect is of marginal significance, and may be thought of as supplying strength, but just as in the role of large cardinals in set theory, the strength is bound up with ontological plenitude.
+The rationale for this is that the infinitary aspect is of marginal significance, and may be thought of as supplying strength, just as in the role of large cardinals in set theory, the strength is bound up with ontological plenitude.
 It should be like an afterthough, the main features of the system should arise in the finitary case from the first three combinators, and the principle innovation is in the approach to giving meaning to $È$.
 
 The definitions of the pure combinators (all except $È$) are given as conversion rules, whose reflexive symmetric transitive closure give a first approximation to the meaning of $È$.
-If we assume given some meaning for $È$ and obtain from it a second version by combining it with the conversion rules for the other combinators, then we have a functor over possible meanings for $È$, which can be defined so as to be monotone relative to some appropriate ordering.
+If we assume given some meaning for $È$ and obtain from it a second version by combining it with the conversion rules for the other combinators, then we have a functor over possible meanings for $È$, which will be monotone.
 The least fixed point will then be used to determine the semantics of the infinitary combinatory logic.
 
 \subsubsection{Direct Conversions for the Pure Combinators}
@@ -884,7 +925,7 @@ With the following for the infinitary combinators, which we will consider no fur
 
 \subsubsection{Extraction of Negative Part}
 
-Since the negative part of the partial equivalence relation (and the positive part for that matter) is encoded in the positive part through reductions of equations, it is possible to recover it from the positive part.
+Since the negative part of the partial equivalence relation (and the positive part for that matter) is encoded in the positive part through reductions of equivalences, it is possible to recover it from the positive part.
 
 This is how it is done:
 
@@ -893,12 +934,15 @@ This is how it is done:
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µr∑ Np r = Ãx y∑ r (($Èâc âc x) âc y) Fâc
 ∞
+
+This just says that two terms are distinct if the equivalence between them converts to $Fâc$.
+
 \subsubsection{Equality}
 
 We now consider the question, when can we know that two combinators are equal or not equal.
 
 The first obvious principle is that if two combinators are convertible then they are equal.
-However, we cannot adopt the converse principle, that two combinators which are not convertible are distinct, because the equality conditions feed into the conversion rules through the equality combinator.
+We cannot adopt the converse principle, that two combinators which are not convertible are distinct, because the equality conditions feed into the conversion rules through the equality combinator.
 So we have to have some definite criteria for distinctness which we are confident will not include any combinator pairs which might ever be found to be convertible.
 
 There are three parts to these criteria for distinctness.
@@ -926,16 +970,10 @@ We need a closure operation which will take a notion of inequality and add to it
 ∞
 
 πHOLCONST
-‹ €EqStep› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ ('a GSU ≠ 'a GSU ≠ BOOL)
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µeq∑ EqStep eq = Ãv w∑ ∂c i1 i2∑ c Ìâu i1 ç Csyntax ± c Ìâu i2 ç Csyntax
-‹	± Domâu i1 = Domâu i2 ± (µx∑ x çâu Domâu i1 ¥ eq (i1 âc x) (i2 âc x))
-∞
-
-πHOLCONST
 ‹ €IneqStep› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ ('a GSU ≠ 'a GSU ≠ BOOL)
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µeq∑ IneqStep eq = Ãx y∑ Ineq0 x y ≤ Np eq x y ≤ ∂v w∑ EqSeq eq v w ± Np eq (x âc v) (y âc w)
+‹ µeq∑ IneqStep eq = Ãx y∑ Ineq0 x y ≤ Np eq x y
+‹			≤ ∂v w∑ EqSeq eq v w ± Np eq (x âc v) (y âc w)
 ∞
 
 \subsubsection{Illative Reduction}
@@ -951,10 +989,16 @@ This will be a partial relation in the form of two disjoint relations, one posit
 If the positive relation holds over the arguments the equation reduces to $Tâc$ if the negative relation holds the equation reduces to $Fâc$.
 
 πHOLCONST
+‹ €EqStep› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ ('a GSU ≠ 'a GSU ≠ BOOL)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µeq∑ EqStep eq = Ãv w∑ ∂c i1 i2∑ c Ìâu i1 ç Csyntax ± c Ìâu i2 ç Csyntax
+‹	± Domâu i1 = Domâu i2 ± (µx∑ x çâu Domâu i1 ¥ eq (i1 âc x) (i2 âc x))
+∞
+
+πHOLCONST
 ‹ €Èârâeâd› : ('a GSU ≠ 'a GSU ≠ BOOL) ≠ ('a GSU ≠ 'a GSU ≠ BOOL)
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µeq∑ Èârâeâd eq = Ãx y∑
-‹		∂l m∑ x = (($Èâc âc l) âc m)
+‹ µeq∑ Èârâeâd eq = Ãx y∑ ∂l m∑ x = (($Èâc âc l) âc m)
 ‹			± (EqStep eq x y ± y = Tâc ≤ IneqStep eq x y ± y = Fâc)
 ∞
 
@@ -1086,15 +1130,10 @@ val ∂_PureInfComb_lemma = pop_thm ();
 =TEX
 }%ignore
 
-\subsection{Monotonicity}
-
-To get a least fixed point of \emph{EqFunctor} we need to identify an ordering relative to which it is monotone.
-
 \subsection{Consistency}
 
 At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
 Since this is probably hard I am exploring a bit more before digging in to the proof.
-
 
 \section{Primitives of Illative Lambda Calculus}
 
@@ -1143,7 +1182,8 @@ save_cs_∂_thm (pop_thm ());
 =GFT
 €LT_clauses› = Ù (µ a∑ abs_LT (rep_LT a) = a) ± (µ a b∑ rep_LT a = rep_LT b § a = b)
 €LT_fc_thm1› = Ù µ r∑ PureInfComb r ¥ rep_LT (abs_LT r) = r
-€LT_fc_thm2› = Ù µ x y∑ PureInfComb x ± PureInfComb y ¥ (abs_LT x = abs_LT y § x = y)
+€LT_fc_thm2› = Ù µ x y∑ PureInfComb x ± PureInfComb y
+			¥ (abs_LT x = abs_LT y § x = y)
 =TEX
 
 \ignore{
