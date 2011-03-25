@@ -1,9 +1,9 @@
 =TEX
 \ignore{
 =VDUMP t046i.tex
-Last Change $ $Date: 2011/03/11 21:44:45 $ $
+Last Change $ $Date: 2011/03/25 15:08:27 $ $
 
-$ $Id: t046.doc,v 1.1 2011/03/11 21:44:45 rbj Exp $ $
+$ $Id: t046.doc,v 1.2 2011/03/25 15:08:27 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -120,6 +120,11 @@ We are now in a position to define various notions which Linnebo uses.
 
 The principle of plural comprehension is that the extension of any formula is a plurality.
 Linnebo does elsewhere require that pluralities be non-empty, but he does not incorporate this requirement into his principle of plural comprehension.
+The following definition differs from Linnebo's, as our proceeding does generally, in being formulated in HOL rather than in some first order language.
+So here we have a single principle which quantifies over properties, where Linnebo has a first order axiom scheme.
+
+Note also that here {\it P\_Comp} is not an axiom.
+It is the name of a boolean constant, which we will use as a hypothesis (on the left of sequents) in the following result. 
 
 πHOLCONST
 ‹ €P_Comp›: BOOL
@@ -130,11 +135,11 @@ Linnebo does elsewhere require that pluralities be non-empty, but he does not in
 Linnebo then derives a contradiction, corresponding to which we have the theorem:
 
 =GFT
-COLLAPSE_contradiction_thm =
+€COLLAPSE_contradiction_thm› =
 	COLLAPSE, P_Comp Ù F
 =TEX
 
-Proofs will not be shown.
+Proofs will not be shown, they are all straightforward.
 
 \ignore{
 =SML
@@ -154,7 +159,7 @@ val COLLAPSE_contradiction_thm = save_pop_thm "COLLAPSE_contradiction_thm";
 =TEX
 }%ignore
 
-Linnebo observes that this is normally taken as a refutation of COLLAPSE, but proposes to resolve the contradition by some other means.
+Linnebo observes that this is normally taken as a refutation of COLLAPSE, but proposes to resolve the contradiction by some other means.
 
 To do this he needs to carefully scrutinise all the assumptions which participate in the derivation of the contradiction.
 Doing the proof formally gives us a strong basis for considering this matter, for it is clearer what the logical context of the proof is.
@@ -258,7 +263,7 @@ save_cs_∂_thm (pop_thm());
 ‹ €Poss_Worlds›: (S SET) SET
 ˜¸¸¸¸¸¸
 ‹	(∂x∑ x ç Poss_Worlds)
-  ±	µx y∑ x ç Poss_Worlds ± y ç Poss_Worlds ¥ x ¿ y ç Poss_Worlds
+‹  ±	µx y∑ x ç Poss_Worlds ± y ç Poss_Worlds ¥ x ¿ y ç Poss_Worlds
 ∞
 
 We could then define the relevant notion of accessibility between these possible worlds, but since this is set inclusion (or its converse) which is already defined we will use that directly (A is accessible from B if A is a stage subsequent to B and hence $¨B Ä AÆ$).
@@ -267,20 +272,20 @@ The expression of modal claims in our logic requires a recasting of all the logi
 The definitions extant in HOL treat propositions as values of type $îBOOLÆ$, but in the modal logic they will have to be considered as values of type $îS SET ≠ BOOLÆ$, i.e. a BOOLean valued function over the relevant possibilities, which in this case are stages in the iterative cumulation of sets.
 
 =SML
-declare_type_abbrev("PROPâpâl", [], îS SET ≠ BOOLÆ);
+declare_type_abbrev("PROPâm", [], îS SET ≠ BOOLÆ);
 =TEX
 
 
 The modal operators are defined as follows:
 
 πHOLCONST
-‹ €©âpâl› : PROPâpâl ≠ PROPâpâl
+‹ €©âpâl› : PROPâm ≠ PROPâm
 ˜¸¸¸¸¸¸
 ‹ µs∑ ©âpâl s = Ãw∑ µv∑ w Ä v ¥ s v
 ∞
 
 πHOLCONST
-‹ €®âpâl› : PROPâpâl ≠ PROPâpâl
+‹ €®âpâl› : PROPâm ≠ PROPâm
 ˜¸¸¸¸¸¸
 ‹ µs∑ ®âpâl s = ≥ ©âpâl (≥ s)
 ∞
@@ -296,7 +301,7 @@ Since modal propositions are not of type $îBOOLÆ$ we need a way of asserting the
 Though `truth' simpliciter in a modal logic should perhaps be construed as truth in ``this world'', this is not relevant in the present context, and so we assert truth at some arbitrary stage of the iterative process using a choice function.
 
 πHOLCONST
-‹ $€òâpâl› : PROPâpâl ≠ BOOL
+‹ $€òâpâl› : PROPâm ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µp∑ òâpâl p § p (≈w∑T)
 ∞
@@ -397,65 +402,121 @@ val Câpâl_thm = save_pop_thm "Câpâl_thm";
 =TEX
 }%ignore
 
+The quantifiers, or at least those over sets, are now expected to be modally sensitive, and the quantify over a particular stage in the formation of the cumulative hierarchy.
+
 πHOLCONST
-‹ €µâpâl›:(S ≠ PROPâpâl) ≠ PROPâpâl
+‹ €µâmâs›:(S ≠ PROPâm) ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹  µf∑ µâpâl f = Ãs∑ µx∑ x ç s ¥ f x s
+‹  µf∑ µâmâs f = Ãs∑ µx∑ x ç s ¥ f x s
 ∞
 
 =SML
-declare_alias ("µ", ¨µâpâlÆ);
-declare_binder "µâpâl";
+declare_alias ("µ", ¨µâmâsÆ);
+declare_binder "µâmâs";
 =TEX
 
 πHOLCONST
-‹ €∂âpâl›:(S ≠ PROPâpâl) ≠ PROPâpâl
+‹ €∂âmâs›:(S ≠ PROPâm) ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹  µf:S ≠ PROPâpâl∑ ∂âpâl f = Ãs:S SET∑ ∂x:S∑ x ç s ± f x s
+‹  µf:S ≠ PROPâm∑ ∂âmâs f = Ãs:S SET∑ ∂x:S∑ x ç s ± f x s
 ∞
 
 =SML
-declare_alias ("∂", ¨∂âpâlÆ);
-declare_binder "∂âpâl";
+declare_alias ("∂", ¨∂âmâsÆ);
+declare_binder "∂âmâs";
 =TEX
 
 =GFT
-€∂âpâl_thm› = Ù µ f s∑ $∂ f s § (∂ x∑ x ç s ± f x s)
-€µâpâl_thm› = Ù µ f s∑ $µ f s § (µ x∑ x ç s ¥ f x s)
+€∂âmâs_thm› = Ù µ f s∑ $∂ f s § (∂ x∑ x ç s ± f x s)
+€µâmâs_thm› = Ù µ f s∑ $µ f s § (µ x∑ x ç s ¥ f x s)
 =TEX
 
 \ignore{
 =SML
-val µâpâl_def = get_spec ¨$µâpâlÆ;
-set_goal([], ¨µf s∑ $µâpâl f s = µx∑ x ç s ¥ f x sÆ);
-a (REPEAT µ_tac THEN rewrite_tac [µâpâl_def]);
-val µâpâl_thm = save_pop_thm "µâpâl_thm";
+val µâmâs_def = get_spec ¨$µâmâsÆ;
+set_goal([], ¨µf s∑ $µâmâs f s = µx∑ x ç s ¥ f x sÆ);
+a (REPEAT µ_tac THEN rewrite_tac [µâmâs_def]);
+val µâmâs_thm = save_pop_thm "µâmâs_thm";
 
-val ∂âpâl_def = get_spec ¨$∂âpâlÆ;
-set_goal([], ¨µf s∑ $∂âpâl f s = ∂x∑ x ç s ± f x sÆ);
-a (REPEAT µ_tac THEN rewrite_tac [∂âpâl_def]);
-val ∂âpâl_thm = save_pop_thm "∂âpâl_thm";
+val ∂âmâs_def = get_spec ¨$∂âmâsÆ;
+set_goal([], ¨µf s∑ $∂âmâs f s = ∂x∑ x ç s ± f x sÆ);
+a (REPEAT µ_tac THEN rewrite_tac [∂âmâs_def]);
+val ∂âmâs_thm = save_pop_thm "∂âmâs_thm";
 
-add_pc_thms "'t046b" [µâpâl_thm, ∂âpâl_thm];
+add_pc_thms "'t046b" [µâmâs_thm, ∂âmâs_thm];
 set_merge_pcs ["t045", "'t046b"];
 =TEX
 }%ignore
 
+We need new quantifiers to quantify over pluralities in a modal context.
+Since quantifiers are needed also for concepts to use in the comprehension principle we make this kind of quantification (which ignores the stage apart from passing it on) polymorphic.
+
+πHOLCONST
+‹ €µâmâp›:('a ≠ PROPâm) ≠ PROPâm
+˜¸¸¸¸¸¸
+‹  µf∑ µâmâp f = Ãs∑ µx:'a∑ f x s
+∞
+
+If we alias this to the unsubscripted quantifer then most quantifiers would be ambiguous, so we won't do that.
 
 =IGN
-€BFâpâl_thm› =	Ù òâpâl ® (∂ x∑ A) ¥ (∂ x∑ ® A)
+declare_alias ("µ", ¨µâmâpÆ);
+=SML
+declare_binder "µâmâp";
+=TEX
+
+πHOLCONST
+‹ €∂âmâp›:('a ≠ PROPâm) ≠ PROPâm
+˜¸¸¸¸¸¸
+‹  µf∑ ∂âmâp f = Ãs∑ ∂x:'a∑ f x s
+∞
+
+=SML
+declare_alias ("∂", ¨$∂âmâp:(S PL ≠ PROPâm) ≠ PROPâmÆ);
+=SML
+declare_binder "∂âmâp";
+=TEX
+
 =GFT
-€CBFâpâl_thm› =	Ù òâpâl (∂ x∑ ® A) ¥ ® (∂ x∑ A)
+€∂âmâp_thm› = Ù µ f s∑ $∂âmâp f s § (∂ x∑ f x s)
+€µâmâp_thm› = Ù µ f s∑ $µâmâp f s § (µ x∑ f x s)
+=TEX
+
+\ignore{
+=SML
+val µâmâp_def = get_spec ¨$µâmâpÆ;
+set_goal([], ¨µf s∑ $µâmâp f s = µx∑ f x sÆ);
+a (REPEAT µ_tac THEN rewrite_tac [µâmâp_def]);
+val µâmâp_thm = save_pop_thm "µâmâp_thm";
+
+val ∂âmâp_def = get_spec ¨$∂âmâpÆ;
+set_goal([], ¨µf s∑ $∂âmâp f s = ∂x∑ f x sÆ);
+a (REPEAT µ_tac THEN rewrite_tac [∂âmâp_def]);
+val ∂âmâp_thm = save_pop_thm "∂âmâp_thm";
+
+add_pc_thms "'t046b" [µâmâp_thm, ∂âmâp_thm];
+set_merge_pcs ["t045", "'t046b"];
+=TEX
+}%ignore
+
+We are now able to demonstrate the `converse Barcan' formula.
+The Barcan formula itself fails, because it infers from possible existence to actual existence which would only be possible if no stage actually added any extra sets.
+
+=IGN
+€BFâpâl_thm› =	Ù òâpâl ® (∂ x∑ A x) ¥ (∂âmâs x∑ ® A x)
+=GFT
+€CBFâpâl_thm› =	Ù òâpâl (∂ x∑ ® A x) ¥ ® (∂âmâs x∑ A x)
 =TEX
 
 \ignore{
 =IGN
 stop;
-set_goal([], ¨òâpâl (® ((∂x∑ A x))) ¥ ((∂x∑ (® (A x))))Æ);
+set_goal([], ¨òâpâl (® ((∂ x∑ A x))) ¥ ((∂ x∑ (® (A x))))Æ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
 val BFâpâl_thm = save_pop_thm "BFâpâl_thm";
+
 =SML
-set_goal([], ¨òâpâl ((∂x∑ (® (A x)))) ¥ (® ((∂x∑ A x)))Æ);
+set_goal([], ¨òâpâl ((∂ x:S∑ (® (A x)))) ¥ (® ((∂ x:S∑ A x)))Æ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
 a (∂_tac ¨s2Æ THEN asm_rewrite_tac[]);
 a (∂_tac ¨xÆ THEN PC_T1 "hol1" asm_prove_tac[]);
@@ -463,26 +524,171 @@ val CBFâpâl_thm = save_pop_thm "CBFâpâl_thm";
 =TEX
 }%ignore
 
+The notion of plurality has not really changed as we moved to a modal set theory, but our notion of proposition has changed and so we need to replicate the definitions of the plural operations to deliver the right kinds of proposition.
 
+We didn't actually have a `definition' of plural membership, just a constant about which we made assumptions as needed.
+Here we lift that constant to deliver a modal proposition which does the same thing at every stage.
+This reflects the rigidity of the values we quantify over, both sets an plurals.
 
-We can now state the principle of restricted plural comprehension:
+We need a similar constant at a different type.
 
-πHOLCONST
-‹ €RP_Comp›: BOOL
-˜¸¸¸¸¸¸
-‹ RP_Comp § µ∆∑ ∂xx:S PL∑ µu:S∑ u ûâp xx § ∆ u
-∞
-
-Linnebo then derives a contradiction, corresponding to which we have the theorem:
-
-=GFT
-COLLAPSE_contradiction_thm =
-	COLLAPSE, P_Comp Ù F
+=SML
+declare_infix(240, "ûâmâp");
 =TEX
 
+πHOLCONST
+‹ $€ûâmâp›: 'a ≠ ('a) PL ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µx yy s∑ (x ûâmâp yy) s § x ûâp yy
+∞
+
+=SML
+declare_alias("û", ¨$ûâmâpÆ);
+=TEX
+
+The modal set membership does need to take account of the stage parameter.
+
+=SML
+declare_infix(240, "çâmâp");
+=TEX
+
+πHOLCONST
+‹ $€çâmâp›: S ≠ S ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µx y s∑ (x çâmâp y) s § y ç s ± x çâs y
+∞
+
+=SML
+declare_alias("ç", ¨$çâmâpÆ);
+=TEX
+
+We now restate the two contradictory principles using modal language (i.e. using quantifiers suitable for use in modal contexts, but not modal operators).
+
+πHOLCONST
+‹ €FORMâm›: S PL ∏ S ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µxx y∑ FORMâm(xx, y) = µ u∑ u ûâmâp xx § u çâmâp y
+∞
+
+=GFT
+€FORMâm_thm› = Ù µ xx y s∑ FORMâm (xx, y) s § (µ x∑ x ç s ¥ ((x û xx) s § (x ç y) s))
+=TEX
+
+\ignore{
+=SML
+val FORMâm_def = get_spec ¨$FORMâmÆ;
+
+set_goal([], ¨µxx y s∑ FORMâm(xx, y) s § µx∑ x ç s ¥ ((x û xx) s § (x ç y) s)Æ);
+a (rewrite_tac[FORMâm_def]);
+val FORMâm_thm = pop_thm ();
+
+(* add_pc_thms "'t046b" [get_spec ¨$ûâmâpÆ, get_spec ¨$çâmâpÆ, FORMâm_thm]; *)
+add_pc_thms "'t046b" [get_spec ¨$ûâmâpÆ, get_spec ¨$çâmâpÆ, FORMâm_thm];
+set_merge_pcs ["t045", "'t046b"];
+=TEX
+}%ignore
 
 
+πHOLCONST
+‹ €COLLAPSEâm›: BOOL
+˜¸¸¸¸¸¸
+‹ COLLAPSEâm § òâpâl µâmâp xx:S PL∑ ∂ y:S∑ FORMâm(xx, y)
+∞
 
+
+We can now state the principle of plural comprehension:
+
+πHOLCONST
+‹ €P_Compâm›: BOOL
+˜¸¸¸¸¸¸
+‹ P_Compâm § òâpâl µâmâp ∆∑ ∂âmâp xx:S PL∑ µ u:S∑ u ûâmâp xx § ∆ u
+∞
+
+Since there are no modal operators, these principles speak only of the stage which is in context globally, of which we know nothing, except what the principles tell is (if they are assumed).
+
+These two principles, under this new interpretation, remain contradictory:
+
+=GFT
+€COLLAPSE_contradiction_thm2› =
+	COLLAPSEâm, P_Compâm Ù F
+=TEX
+
+It is accidental in the previous version of this that the domain of sets is a type and hence cannot be empty.
+In this version the domain of sets is a class (or may best be thought of as a class, it has type îS SETÆ in which S is the type of sets for present purposes, and SET is similar to the higher type in second order logic).
+We therefore can only establish its non-emptyness here using the two principles at hand, and it is therefore fortuitous that the principle of plural comprehension does not insist that plurals are non-empty.
+If it did the two principles as formalised above would not be contradicatory.
+
+\ignore{
+=SML
+val òâpâl_def = get_spec ¨$òâpâlÆ;
+val COLLAPSEâm_def = get_spec ¨COLLAPSEâmÆ;
+val P_Compâm_def = get_spec ¨P_CompâmÆ;
+
+set_goal([¨COLLAPSEâmÆ, ¨P_CompâmÆ], ¨FÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [òâpâl_def, COLLAPSEâm_def, P_Compâm_def]
+	THEN contr_tac);
+a (SPEC_NTH_ASM_T 2 ¨Ãx:S∑ Ãs:S SET∑FÆ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 5 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 5 ¨x''Æ (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 3 ¨x'''Æ);
+a (spec_nth_asm_tac 3 ¨x'''Æ);
+a (spec_nth_asm_tac 3 ¨x'''Æ);
+val COLLAPSE_contradiction_thm2 = save_pop_thm "COLLAPSE_contradiction_thm2";
+=TEX
+}%ignore
+
+We now define the two properly modalised versions of plural comprehension and collapse (as give by Linnebo).
+
+πHOLCONST
+‹ €COLLAPSEõ®›: BOOL
+˜¸¸¸¸¸¸
+‹ COLLAPSEõ® § òâpâl ©µâmâp xx∑ ®∂âmâs y∑ FORMâm(xx, y)
+∞
+
+πHOLCONST
+‹ €P_Compõ®›: BOOL
+˜¸¸¸¸¸¸
+‹ P_Compõ® § òâpâl µâmâp ∆∑ ®∂ xx∑ ©µâmâs u∑ u ûâmâp xx § ∆ u
+∞
+
+Once again the, a contradiction is derivable from these two principles.
+
+=GFT
+€COLLAPSE_contradiction_thm3› = COLLAPSEõ®, P_Compõ® Ù F
+=TEX
+
+\ignore{
+=SML
+val COLLAPSEõ®_def = get_spec ¨COLLAPSEõ®Æ;
+val P_Compõ®_def = get_spec ¨P_Compõ®Æ;
+
+set_goal([¨COLLAPSEõ®Æ, ¨P_Compõ®Æ], ¨FÆ);
+a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [òâpâl_def, COLLAPSEõ®_def, P_Compõ®_def]
+	THEN contr_tac);
+a (SPEC_NTH_ASM_T 2 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
+a (asm_fc_tac[]);
+a (SPEC_NTH_ASM_T 1 ¨xÆ (strip_asm_tac o (rewrite_rule[])));
+a (spec_nth_asm_tac 5 ¨s2'Æ);
+a (spec_nth_asm_tac 2 ¨x'Æ);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ¨x'Æ);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 3 ¨x'Æ);
+val COLLAPSE_contradiction_thm3 = save_pop_thm "COLLAPSE_contradiction_thm3";
+=TEX
+}%ignore
+
+Strangely, though taking this contradiction as establishing the need to weaken plural comprehension, he does not offer a weakened version which is compatible with \emph{COLLAPSE}.
+One obvious `solution' is simply to restrict plural comprehension to some stage in the formation of sets, thus in effect downgrading it to separation.
+
+πHOLCONST
+‹ €P_Compâwõ®›: BOOL
+˜¸¸¸¸¸¸
+‹ P_Compâwõ® § òâpâl µâmâp ∆∑ ®∂ xx∑ µâmâs u∑ u ûâmâp xx § ∆ u
+∞
+
+I don't have the means in the present context to establish the consistency of this weakened comprehension with \emph{COLLAPSE} thought that does seem intuitively plausible.
 
 \ignore{
 =SML
