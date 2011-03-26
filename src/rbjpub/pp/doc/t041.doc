@@ -1,9 +1,9 @@
 =TEX
 \ignore{
 =VDUMP t041i.tex
-Last Change $ $Date: 2011/03/11 21:43:51 $ $
+Last Change $ $Date: 2011/03/26 17:17:58 $ $
 
-$ $Id: t041.doc,v 1.10 2011/03/11 21:43:51 rbj Exp $ $
+$ $Id: t041.doc,v 1.11 2011/03/26 17:17:58 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -54,12 +54,18 @@ This is a natural outcome of the method which consists in implementing the desir
 
 Adoption of this method does not in itself solve the consistency problem, the problem appears in the necessary semantic preliminaries for the embedding.
 To succeed it is necessary to understand how the consistency problem appears and have some idea of how it can be resolved.
+
 In this case, the consistency problem for an illative lambda-calculus is to be resolved by providing a syntactic model in an infinitary illative combinatory logic.
-The consistency problem re-appears in obtaining a satisfactory account of the infinitary combinatory system.
+The problem is then to obtain a satisfactory account of the infinitary combinatory system.
 The infinitary syntax only becomes a model when the illative combinator of equivalence is defined over it.
 The definition of this is recursive and is not well-founded.
 It is probable that if there was a total solution then one could use this with a `liar' (Epimenides) -like construction to obtain a contradiction (or possibly one can get to Curry's paradox even easier).
 It is not therefore to be expected that this combinator will be total.
+A total equality combinator would reduce to T or F (suitably chose combinators) when applied to any two combinatory terms, according to whether the two terms are convertible.
+A partial equality combinator will not always reduce, there will be some pairs of terms for which one cannot have a definite view as to their convertibility.
+One reason for this might be that if no reduction of the equation were possible then they would not be convertible, but once the reduction of the equation to F is added it then becomes possible to convert the two terms.
+Such a pair of terms could be constructed corresponding to the liar paradox, and making the equality combinator partial protects against the derivation of contradiction in that way, by allowing that the liar sentence be neither true nor false.
+
 Allowing this equivalence to be partially defined, in particular taking it to be the least fixed point of the defining equations under an appropriate ordering, is what gets us out of the paradox and should yield a good semantics.
 This device is to be combined with steps intended to make this semantics as rich as a strong first order set theory (one in which inaccessible cardinals can be proven to exist).
 Whether this will also support a system of type assignments along the lines desired remains to be seen.
@@ -1134,6 +1140,435 @@ val ¶_PureInfComb_lemma = pop_thm ();
 
 At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
 Since this is probably hard I am exploring a bit more before digging in to the proof.
+My plan at present is to proceed as follows:
+
+\begin{enumerate}
+\item Prove a Church Rosser system for pure combinators.
+\begin{enumerate}
+\item Prove that Church Rosser as a property of relations is preserved by transitive closure.
+\item Prove that sets of disjoint direct combinatory reductions are Church Rosser.
+\end{enumerate}
+\item Extend the proof (if necessary) to the infinitary map combinator.
+\item Extend the proof to the infinitary projection combinator.
+\item Extend the proof to partial Equivalence combinators.
+\end{enumerate}
+
+Exactly how many of these ``extensions'' will prove necessary is moot.
+This depends on exactly how the condition on the reductions are formulated, 
+
+
+¹HOLCONST
+Ü ÛChurchRosserÝ : ('a ­ 'a ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µr· ChurchRosser r ¤ µw x y· r w x ± r w y ´ ¶z· r x z ± r y z
+° 
+
+¹HOLCONST
+Ü ÛCrUbÝ : ('a ­ 'a ­ BOOL) ­ ('a ­ 'a ­ 'a)
+÷üüüüüüüüüüü
+Ü µr· CrUb r = Ìx y· Åz· r x z ± r y z
+° 
+
+¹HOLCONST
+Ü ÛCrRectangleÝ : ('a ­ 'a ­ BOOL) ­ (î ­ 'a) ¸ (î ­ 'a) ­ (î ­ î ­ 'a)
+÷üüüüüüüüüüü
+Ü µr f g x y·
+	CrRectangle r (f, g) 0 y  = f y
+    ±	CrRectangle r (f, g) (x+1) 0  = g (x+1)
+    ±	CrRectangle r (f, g) (x+1) (y+1)  = CrUb r (CrRectangle r (f, g) x (y+1)) (CrRectangle r (f, g) (x+1) y)
+° 
+
+
+=GFT
+ÛCrUb_thmÝ = ô µ r· ChurchRosser r ´ (µ x y z· r x y ± r x z ´ r y (CrUb r y z) ± r z (CrUb r y z))
+=TEX
+
+\ignore{
+=SML
+val ChurchRosser_def = get_spec ¬ChurchRosser®;
+val CrUb_def = get_spec ¬CrUb®;
+val CrRectangle_def = get_spec ¬CrRectangle®;
+
+set_goal([], ¬µr· ChurchRosser r ´ µx y z· r x y ± r x z ´ r y (CrUb r y z) ± r z (CrUb r y z)®);
+a (µ_tac THEN rewrite_tac[ChurchRosser_def, CrUb_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (Å_tac ¬Å z'· r y z' ± r z z'®);
+a (all_asm_fc_tac[]);
+a (¶_tac ¬z''® THEN contr_tac);
+(* *** Goal "2" *** *)
+a (Å_tac ¬Å z'· r y z' ± r z z'®);
+a (all_asm_fc_tac[]);
+a (¶_tac ¬z''® THEN contr_tac);
+val CrUb_thm = save_pop_thm "CrUb_thm";
+
+set_goal([], ¬µr u v w x y· tc r u v ± tc r u w ´ CrRectangle r (f, g) x y ®);
+
+=IGN
+set_goal([], ¬µr· ChurchRosser (rtc r) ´ ChurchRosser (tc r)®);
+a (µ_tac THEN rewrite_tac [ChurchRosser_def, rtc_def]
+	THEN REPEAT strip_tac);
+a (LEMMA_T ¬(w = x ² tc r w x) ± (w = y ² tc r w y)® asm_tac THEN1 asm_rewrite_tac[]);
+a (LIST_SPEC_NTH_ASM_T 4 [¬w®, ¬x®, ¬y®] ((STRIP_THM_THEN THEN_TTCL STRIP_THM_THEN) check_asm_tac));
+a (POP_ASM_T strip_asm_tac);
+a (all_asm_fc_tac[]);
+
+set_goal([], ¬µr· ChurchRosser r ´ ChurchRosser (tc r)®);
+a (strip_tac THEN rewrite_tac[ChurchRosser_def] THEN REPEAT strip_tac);
+(* a (cases_tac ¬r w x® THEN cases_tac ¬r w y®); *)
+a (lemma_tac ¬¶ub· µx y· (¶w· r w x ± r w y) ´ r x (ub x y) ± r y (ub x y)®);
+(* *** Goal "1" *** *)
+a (prove_¶_tac THEN REPEAT strip_tac);
+a (rewrite_tac[prove_rule [] ¬µx y· x ´ y ¤ ³x ² y®]);
+a (conv_tac (MAP_C simple_¶_²_conv));
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (¶_tac ¬z''® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [tc_decomp_thm2]);
+a (lemma_tac ¬¶crr· µx y·
+	crr 0 y  = f' y
+    ±	crr (x+1) 0  = f (x+1)
+    ±	crr (x+1) (y+1)  = ub (crr x (y+1)) (crr (x+1) y)
+® THEN prove_¶_tac);
+a (¶_tac ¬crr n' n® THEN asm_rewrite_tac[]);
+a (lemma_tac ¬µx y· x < n ± y < n' ´ tc r (f (x+1)) (crr (x+1) (y+1)) ± tc r (f' (y+1)) (crr (x+1) (y+1))®
+	THEN REPEAT µ_tac);
+(* *** Goal "2.1" *** *)
+a (induction_tac ¬x'®);
+(* *** Goal "2.1.1" *** *)
+a (induction_tac ¬y'®);
+(* *** Goal "2.1.1.1" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+a (lemma_tac ¬r (f 1) (ub (f' 1) (f 1)) ± r (f' 1) (ub (f' 1) (f 1))®);
+(* *** Goal "2.1.1.1.1" *** *)
+a (LEMMA_T ¬¶ w· r w (f 1) ± r w (f' 1)® asm_tac THEN1 ¶_tac ¬f 0® THEN strip_tac);
+(* *** Goal "2.1.1.1.1.1" *** *)
+a (SPEC_NTH_ASM_T 7 ¬0® ante_tac THEN rewrite_tac[asm_rule ¬0 < n®]);
+(* *** Goal "2.1.1.1.1.2" *** *)
+a (LEMMA_T ¬r (f' 0) (f' 1)® ante_tac);
+a (SPEC_NTH_ASM_T 4 ¬0® ante_tac THEN rewrite_tac[asm_rule ¬0 < n'®]);
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2.1.1.1.1.3" *** *)
+a (POP_ASM_T strip_asm_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2.1.1.1.1.4" *** *)
+a (POP_ASM_T strip_asm_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2.1.1.1.2" *** *)
+a (fc_tac [tc_incr_thm] THEN REPEAT strip_tac);
+(* *** Goal "2.1.1.2" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.1.1.3" *** *)
+a (PC_T1 "lin_arith" asm_prove_tac[]);
+(* *** Goal "2.1.1.4" *** *)
+a (strip_tac THEN asm_rewrite_tac[]);
+
+
+
+set_goal([], ¬µr· ChurchRosser r ´ ChurchRosser (tc r)®);
+a (strip_tac THEN rewrite_tac[ChurchRosser_def] THEN REPEAT strip_tac);
+(* a (cases_tac ¬r w x® THEN cases_tac ¬r w y®); *)
+a (lemma_tac ¬¶ub· µx y· (¶w· r w x ± r w y) ´ r x (ub x y) ± r y (ub x y)®);
+(* *** Goal "1" *** *)
+a (prove_¶_tac THEN REPEAT strip_tac);
+a (rewrite_tac[prove_rule [] ¬µx y· x ´ y ¤ ³x ² y®]);
+a (conv_tac (MAP_C simple_¶_²_conv));
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+a (¶_tac ¬z''® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [tc_decomp_thm2]);
+a (lemma_tac ¬¶h· µfn v t·
+	 h fn v 0 = v
+	± h fn v (t+1) = ub (fn (t+1)) (h fn v t)® THEN prove_¶_tac);
+a (lemma_tac ¬¶g· µs:î·
+	 g 0 = f
+	± g (s+1) = h (g s) (f' (s+1))® THEN prove_¶_tac);
+a (lemma_tac ¬µs t:î· t+1 ¼ n' ´ s+1 ¼ n 
+	´ r (g s t) (g s (t+1))
+	± r (g s t) (g (s+1) t)® THEN REPEAT µ_tac);
+(* *** Goal "2.1" *** *)
+a (induction_tac ¬t® THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2.1.1" *** *)
+a (induction_tac ¬s® THEN asm_rewrite_tac[]);
+(* *** Goal "2.1.1.1" *** *)
+a (REPEAT strip_tac);
+a (cond_cases_tac ¬¶x· s = x+1®);
+a (asm_rewrite_tac[]);
+=IGN
+
+a (¶_tac ¬g n' n® THEN asm_rewrite_tac[]); 
+
+a (lemma_tac ¬µs t· s + 1 ¼ n ± t + 1 ¼ n'
+	´ r (g s t) (g (s+1) t)
+	± r (g s t) (g s (t+1))
+	± r (g (s+1) t) (g (s+1) (t+1))
+	± r (g s (t+1)) (g (s+1) (t+1))®);
+a (REPEAT µ_tac);
+
+a (lemma_tac ¬µs t:î· s + 1 ¼ n ± t + 1 ¼ n'
+	´ g 0 0 = f 0
+	± g 0 (t+1) = f (t+1)
+	± g (s+1) 0 = f'(s+1)
+	± g (s+1) (t+1) = ub (g (s+1) t) (g s (t+1))®);
+
+
+a (lemma_tac ¬¶g· µs t· s + 1 ¼ n ± t + 1 ¼ n'
+	´ r (g s t) (g (s+1) t)
+	± r (g s t) (g s (t+1))
+	± r (g (s+1) t) (g (s+1) (t+1))
+	± r (g s (t+1)) (g (s+1) (t+1))®);
+a (prove_¶_tac);
+
+
+(* *** Goal "2.1" *** *)
+a (LEMMA_T ¬¶nn:î· nn = n + n'® (STRIP_THM_THEN ante_tac) THEN1 prove_¶_tac);
+a (induction_tac ¬nn®);
+(* *** Goal "2.1.1" *** *)
+a (strip_tac THEN fc_tac [pc_rule1 "lin_arith" prove_rule [] ¬0 = n + n' ´ n = 0 ± n' = 0®]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.1.2" *** *)
+
+
+=IGN
+a (lemma_tac ¬µs· s + 1 ¼ n ´ µt· t + 1 ¼ n' ´ ¶u· tc r (f (s+1)) u ± tc r (f' (t+1)) u®);
+(* *** Goal "2.1" *** *)
+a (strip_tac);
+a (induction_tac ¬s®);
+(* *** Goal "2.1.1" *** *)
+a (rewrite_tac[]);
+a (strip_tac THEN strip_tac);
+a (induction_tac ¬t®);
+(* *** Goal "2.1.1.1" *** *)
+a (rewrite_tac[]);
+a (strip_tac);
+a (lemma_tac ¬r w (f 1) ± r w (f' 1)®);
+(* *** Goal "2.1.1.1.1" *** *)
+a (lemma_tac ¬0 < n ± 0 < n'® THEN1 (asm_rewrite_tac [less_def]));
+a (ASM_FC_T (MAP_EVERY (asm_tac o (rewrite_rule[]))) [] THEN strip_tac);
+a (rewrite_tac[asm_rule ¬w = f 0®] THEN strip_tac);
+a (rewrite_tac[asm_rule ¬w = f' 0®] THEN strip_tac);
+(* *** Goal "2.1.1.1.2" *** *)
+a (all_asm_fc_tac[]);
+a (¶_tac ¬z'® THEN FC_T rewrite_tac [tc_incr_thm]);
+(* *** Goal "2.1.1.2" *** *)
+a (strip_tac THEN swap_nth_asm_concl_tac 2);
+a (PC_T1 "lin_arith" asm_prove_tac[]);
+(* *** Goal "2.1.1.3" *** *)
+a (strip_tac);
+
+a (SYM_ASMS_T rewrite_tac);
+a (¶_tac ¬x® THEN strip_tac);
+(* *** Goal "2.1.1.2" *** *)
+a (strip_tac);
+
+=TEX
+}%ignore
+
+
+\ignore{
+
+\subsubsection{Proof Strategy}
+
+The strategy is, first prove a \emph{Church/Rosser} theorem for the pure part of the infinitary combinatory logic, i.e. the bit without the equivalence combinator reductions.
+Then do the rest, which we won't think about yet (much).
+
+A Church/Rosser theorem was first proved for the $Ì$-calculus by Church and Rosser\cite{churchCLC}.
+The result we require here should be simpler to produce because we have only a combinatory logic.
+However, the adoption of an infinitary system naturally complicates matters, though possibly not greatly.
+
+
+The following proof strategem new, so far as I am aware.
+The need to completely formalise the proof forces one to be more definite about certain things, which at first glance may seem to impose additional difficulties, but ultimately may assist in finding a nice proof.
+
+The required result is rather like a commutativity result for combinatory reduction, like saying that the order of reduction is not very significant.
+To state exactly what that means in this context is not so straightforward as it is to state the commutativity of addition in arithmetic.
+The result obtains not because of any peculiarities of the specific reductions under consideration, but simply because they are combinatory, or some such relatively simple characteristic which they share.
+It would hold if they were purely combinatory, as S and K are, but we also have combinators which are not quite so pure, the projection combinator and the equivalence combinator, for these being `nearly pure combinators' in some sense to be defined, will have to suffice.
+The respect in which the map and projection combinators deviate from being purely combinatory is that they are not entirely careless as to their arguments.
+A pure combinator, in the sense in which S and K and anything composed from them is a pure combinator, apply irrespective of the values of their arguments, just so long as there are enough of them, and they deliver results in which their arguments are replicated whole (or not replicated at all) without being in any way modified.
+The projection combinator is fussy about the value of its first argument, which serves to stipulate an element of its second arguments which is to be extracted.
+The map combinator is not fussy about the values of its arguments, but it mangles the first rather than merely replicating it.
+The feature which saves these is that they nevertheless `respect reducibility', but unfortunately that is a difficult characteristic to define in this context and so some simpler sufficient condition for their admissibility is desirable.
+Perhaps that they are sensitive only to a part of their argumenst which is in normal form, and something else about how the map combinator forms its result.
+
+\ignore{
+Purely combinatory means that the operations which are effected by the reductions don't actually change the operands at all, they just arrange the operands into a new structure, and the values of the operands have no effect on the transformation.
+Each operand is either kept or replicated whole, or is discarded entirely, and none of them is inspected in any way.
+}%ignore
+
+The relevance to the Church Rosser theorem is that performing reductions on operands will have very limited effects on the permissible reductions of the whole, the same reductions will be possible and the only effect is on the copies of that operand in the resulting structure.
+
+With the projection combinator, an initial segment of the operands must normalise before reduction can take place, and the reduction is sensitive to the value of the selector.
+The sensitivity is therefore safe, insofar as the relevant values cannot possibly change if the reduction is deferred.
+We could therefore stipulate that a reduction has a pattern (or more than one) which is a combinatory structure in which the only parts which are not variables are normal terms.
+However, the notion of normal term depends upon all the reductions so this is not an easy thing to include in the criteria, perhaps it would be better just to allow $T$ and $F$.
+That would be OK for the projection combinator, but not for equivalence.
+
+Equivalence does not reduce without inspecting the operands, and does not look for $T$ or $F$, or for normality.
+Its saving grace is that if while reduction is deferred one of two identical operands is reduced, then it will be possible to reduce the other to make the two operands equal again and effect the reduction of the equality at a later date.
+
+In order to be able to express the precise sense in which these reductions commute, it is necessary to say what a reduction \emph{is}, what it operates \emph{on} and what it \emph{does} in manner which makes it possible to talk about effecting the same reduction either before or after some other transformations.
+This means that we have to include sufficient information when undertaking a transformation to know how to apply the same reduction either before or after.
+The most important element of this is keeping track of what is sometimes called `residuals', i.e. keeping track of what happens to combinators of interest when they are moved about by some reduction.
+
+This is achieved using a system of coordinates.
+A coordinate determines a place in a combinatory and a constituent combinator which occurs within the first combinator.
+When a reduction takes place, it does so by reduction of an occurrence which may be identified by such a coordinate.
+Every constituent of the combinator which is being reduced may then appear in zero, one, or more than one place in the result of the reduction.
+The effect of a reduction on the location of the constituent combinators may be recorded as a map from locations (as coordinates) to sets of locations.
+If coordinates are relative then this map can be rendered using relative coordinates.
+
+}%ignore
+
+\subsubsection{Representation of Reductions}
+
+The natural choice for our calculus, both for absolute and for relative coordinates, is a sequence (of arbitrary cardinality) or ordinals.
+This is such a simple notion that one is immediately tempted to go back and start again using certain maps over sequences of ordinals to represent the combinators.
+Without prejudice to whether this should be done, it seems likely to be a good idea to use this representation for combinatory terms in the proof, which will then be straightforward to transfer back to the present representation.
+
+We need representative for the following kinds of entity:
+
+\begin{itemize}
+\item Terms and Coordinates
+\item Reduction Patterns and applicability
+\item Reduction effects or transformations
+\end{itemize}
+
+In this calculus, give a suitable notion of coordinate, a combinatory term is determined completely by a map from coordinates to constant names (or possibly variables, for metatheoretic purposes).
+A reduction pattern is a combinatory term containing some variables (and subject possibly to other constraints), and its applicability is determined by a simple matching algorithm.
+The local effect of a reduction is a new term and a residual map, which maps each argument number in the original pattern to the set of relative coordinates at which it appears in the result of the transformation.
+From the local effect of a reduction, we obtain its global affect, which is the application to a subterm of some larger combinatory term, and the conversion of the residual map from local to global coordinates.
+
+The representation I propose is a map from coordinates to combinator names or variables (I'm not sure whether I need the variables yet, but we'll have them in just in case).
+A combinator is just a value of type $”'a GSU®$, for the variables ordinal's of type $”'a GSU®$ will do.
+To code the alternative we enclose a combinator name in two singleton sets so that it cannot be mistaken for an ordinal.
+
+So a `combinator map' may be defined as follows.
+
+\begin{enumerate}
+\item it is a function
+\item values in the domain of the function are sequences of ordinals
+\item all initial segments of values in the domain are also in the domain
+\item if some sequence of ordinals y is in the domain and x is some other sequence of ordinalys which has the same length as y and at every point is not greater than y, then it also is in the domain.
+\end{enumerate}
+
+¹HOLCONST
+Ü Ûis_cmapÝ : 'a GSU ­ BOOL
+÷üüüüüüüüüüü
+Ü µm· is_cmap m ¤ Fun‰u m
+Ü ± (µx· x ‰u Dom‰u m ´ Seq‰u x ± µy· y ‰u Ran‰u x ´ Ordinal‰u y)
+Ü ± (µx y· y ‰u Dom‰u m ± Dom‰u x €‰u Dom‰u y ´ x ‰u Dom‰u m)
+Ü ± (µx y· y ‰u Dom‰u m ± Dom‰u x = Dom‰u y ± (µz· z ‰u Dom‰u x ´ x ‰u z €‰u y ‰u z)
+Ü		´ x ‰u Dom‰u m)
+° 
+
+\subsubsection{The Reduction Graph}
+
+This is a fresh start, in the exposition.
+Only after I have written it will I know what to do with the preceeding material.
+
+The idea is that a combinatory term together with a set of reduction rules determines a directed graph with labelled nodes and arcs.
+The nodes and the arcs are labelled by distinct ordinals, together with certain other information.
+
+The other information on a node is a combinatory term.
+The node labelled zero is special and the combinatory term is the starting point for the reductions represented by the graph.
+A location is a position in one of the combinatory terms which appear on nodes of the graph.
+It consists of the number of the node and a coordinate within that term.
+A location map is a map which assignes to each term affected by a reduction the new locations.
+
+The arcs are \emph{direct reductions}, the nodes are combinatory terms together with certain other information.
+A direct reduction consists of a direct reduction \emph{rule} and a location.
+The other information on the nodes is a location map, which shows where constituents of `earlier' terms appear in the present term, these are sometimes called `residuals'.
+
+\subsection{Coordinate Set Equivalence}
+
+This is a third attempt.
+It has been too early to write about this, because most of the action is taking place in my head, and the evolution of ideas continually invalidates anything I may previously have written.
+
+In this version coordinates play a larger role so I begin with discussing coordinates.
+
+\subsubsection{Coordinates}
+
+To refer to specific parts of an infinitary combinatory term we use coordinate systems.
+Because of the infinitary nature, a set of coordinates is a sequence of ordinals.
+I think that because of the way the combinatory terms are organised this will always be a finite sequence of ordinals, though the ordinals will not in general be finite.
+(This reflects the well-foundedness of these terms, there could only be infinite sequences if there were infinite descending membership chains in the underlying set theoretic representation, the infinitary nature appears, as it were, horizontally.).
+
+A sequence of ordinals may be used to refer to parts of combinatory terms in any of the following ways:
+
+\begin{enumerate}
+\item In its primary significance the coordinates refer to a sub-term which is the whole of or a part of the term within which the coordinate system is being used.
+The empty sequence refers to the whole term.
+Give a term $t$ referred to by some coordinates $c$, the coordinates of the $\alpha{_th}$ element in its argument list consist of the sequence obtained by appending $\alpha$ to $c$.
+
+\item The coordinates may also be used to refer to a combinatory constant, which would be the one at the head of the sub-term which is referred to by the coordinates.
+
+\item Coordinates may be use to refer to an application, bearing in mind that in this system the correspondence between subterms and applications is broken.
+In this case you take the sub-term which is referred to by the coordinates, and the application in question is that of which the sub-term is the argument.
+Bear in mind that an infinitary combinatory term is in the sense of application used here, a possibly infinite sequence of applications.
+
+\end{enumerate}
+
+\subsubsection{Residuals and Node Formation}
+
+In order to be able to talk about effecting the same reduction under differing circumstances (different points in some sequence of reductions), we need a way of describing a reduction which is independent of the details which vary.
+The signficant changes are changes in location of the redex, taking into account that it may be replicated or eliminated.
+
+The replicas of some term after a reduction of sequence of reductions are called its residuals.
+
+If we identify a reduction by the location of its redex, then to be able to talk about the same reduction being applied before and after some other sequence of reductions it is necessary to treat a redex before some sequence of reductions as equivalent to the complete set of its residuals after the reductions.
+We are therefore looking for an equivalence relation between sets of sets of coordinate sets.
+That's not quite right, the coordinate sets
+
+
+
+
+
+\subsubsection{Reductions}
+
+Given a combinatory term and a set of reduction rules, a reduction, which is a sequence of applications of the rules, could be represented by a (possibly transfinite) sequence of coordinate sequences, if the rules are deterministic (which our will be).
+This will not suffice for an approach to the Church-Rosser theorem based on a conception of reduction which is commutative, because the principle way in which `the same' reduction might differ when its application is deferred is in the coordinates at which the reduction is applied.
+
+
+\subsubsection{Combinatory Direct Reductions}
+
+We now define the effects of the primitive pure combinators in two ways.
+The first is as a transformation on a term represented as a \emph{cmap}.
+The second is as a residual map, which shows the new locations of the subterms of a redex.
+
+The following function assumes that the argument $cmap$ is a $K$ redex, i.e. that its head is K and its argument list has a length greater than 1.
+
+¹HOLCONST
+Ü ÛK_cmapÝ : 'a GSU ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µm:('a)GSU· K_cmap m = (Ì‰u cs·
+Ü	let h = Head‰u cs
+Ü	and x = m ‰u Unit‰u (š‰u í‰u š‰u)
+Ü	in	m ‰u 
+Ü			(if (Nat‰u 2) ¼‰u h
+Ü			then	let h2 =	if natural_number‰u h
+Ü						then h --‰u (Nat‰u 1)
+Ü						else h
+Ü				in SeqCons‰u h2 (Tail‰u cs)
+Ü			else	if h = Nat‰u 1
+Ü				then Tail‰u cs
+Ü			 	else cs)) (Gx‰u m)
+° 
+
+¹HOLCONST
+Ü ÛK_rmapÝ : 'a GSU ­ 'a GSU ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µm· K_rmap m = Ì cs·
+Ü	let h = Head‰u cs
+Ü	and x = m ‰u Unit‰u (š‰u í‰u š‰u)
+Ü	in	(if (Nat‰u 2) ¼‰u h
+Ü		then	let h2 =	if natural_number‰u h
+Ü					then h --‰u (Nat‰u 1)
+Ü					else h
+Ü			in SeqCons‰u h2 (Tail‰u cs)
+Ü		else	if h = Nat‰u 1
+Ü			then Tail‰u cs
+Ü		 	else cs)
+° 
 
 \section{Primitives of Illative Lambda Calculus}
 
