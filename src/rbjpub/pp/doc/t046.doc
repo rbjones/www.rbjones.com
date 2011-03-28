@@ -1,37 +1,65 @@
 =TEX
 \ignore{
 =VDUMP t046i.tex
-Last Change $ $Date: 2011/03/26 19:46:06 $ $
+Last Change $ $Date: 2011/03/28 21:18:50 $ $
 
-$ $Id: t046.doc,v 1.3 2011/03/26 19:46:06 rbj Exp $ $
+$ $Id: t046.doc,v 1.4 2011/03/28 21:18:50 rbj Exp $ $
 =TEX
 }%ignore
 
-In this document I work over formally some of the recent work of {\O}ystein Linnebo concerning plurals and set theory.
-I began working through a draft of \cite{linneboPS} but found some further detail on the relevant modal logic in \cite{linneboBCT}.
+Three logical systems are explored in combination in this document.
+They are:
+
+\begin{itemize}
+\item The logic of pluralities.
+\item Set theory.
+\item Modal operators.
+\end{itemize}
+
+At this stage the document is little more than a partial formalisation materials from Linnebo's paper.
 
 \section{Methods}
 
-The consideration in one discussion of three different logical idioms is suggestive of a pluralistic outlook.
-We do so however by using a single logical system, a Higher Order Logic based on Church's formulation of the Simple Theory of Types\cite{church40}.
-This provides a sufficiently strong logical context in which we could do a conventional metatheoretic treatment of the three systems and their various combinations.
-
-The formal treatment is however, strictly formal, and is prepared with the assistance of an interactive theorem proving tool, which assists by syntax checking,  and type-checking specifications, by confirming that these specifications are conservative over the initial logical system, by facilitating the construction of detailed formal proofs and mechanically checking their correctness.
+The following formal analysis is conducted in a single logical system, a Higher Order Logic based on Church's formulation of the Simple Theory of Types\cite{church40}.
+The formal treatment is prepared with the assistance of an interactive theorem proving tool.
+This tool assists by syntax checking and type-checking specifications, by confirming that these specifications are conservative over the initial logical system, by facilitating the construction of detailed formal proofs and mechanically checking their correctness.
+The tool also prepares listings of the resulting theories, which may be found in appendices \ref{t046a} and \ref{t046b} and facilitates the preparation of documents including the formal materials.
 
 There is some additional complexity in undertaking strictly formal work in this manner, which is not entirely eliminated by the use of software support.
 Feasibility depends on careful choice of methods (and problems) to keep complexity within bounds.
-In the kind of exploratory investigation at hand, one way of simplifying is to avoid reasoning about syntax.
+In the kind of exploratory investigation at hand, one simplification is to avoid reasoning about syntax.
 This may be done by constructing interpretations of the target systems and reasoning about these interpretations in HOL.
-These theorems in which in the syntax of HOL (which is in some degree extendable) expresses claims in these interpretations which correspond to the rules, axioms and theorems of the logic under investigation, can be proven to establish the soundness of the logic under the interpretation.
+These theorems in which in the syntax of HOL (which is in some degree extendable) is used to express claims which correspond to the rules, axioms and theorems of the logical system or systems under investigation.
+When proven they give good grounds for belief in the soundness of the logic under consideration, even though we have avoided formal treatment of its syntax.
 
-There is a technical term, from computer science for this manner of supporting a logical system, which is \emph{shallow embedding}.
+This approach to reasoning in some logic of interest using a tool supporting a different logical system, is sometimes called \emph{shallow embedding} (by contrast with \emph{deep embedding} in which both syntax and semantics and the relationship between them are formally treated, supporting full formalisation of the metatheory.
 An extended discussion of these methods is not within our present scope, but I will try to include a certain amount of further explanation as the document proceeds in the hope of making the technical detail as intelligible as practicable.
+
+\subsection{Dependencies}
+
+For a complete understanding of the details of the formal materials in this document it would strictly be necessary to refer to the definition of the language in which the specifications are written (\ProductHOL) and to the listings of the various theories in the context of which these theories have been developed.
+I hope that the material will be intelligible to a reasonable degree without studying all this material, many readers will already be familiar with Church's formulation of the Simple Theory of Types \cite{church40} and will be familiar with the meanings of the usual logical connectives in that context.
+
+\pagebreak
+
+For the full detail the following documents may be consulted.
+
+\begin{enumerate}
+\item Church's formulation of STT: \cite{church40}.
+\item The {\ProductHOL} language: informal description \cite{ds/fmu/ied/usr005}
+\item The {\ProductHOL} language: formal specification \cite{ds/fmu/ied/spc001}
+\item {\ProductHOL} theory listings: \cite{lemma1/hol/usr029} or \href{http://rbjones.com/rbjpub/pp/pptheories.html}{in HTML at RBJones.com}%
+\footnote{http://rbjones.com/rbjpub/pp/pptheories.html}.
+\item Other theories at RBJones.com: rbjmisc \cite{rbjt006}, t045 \cite{rbjt045}.
+\item Complete documentation for {\Product} can be obtained from \href{http://www.lemma-one.com/ProofPower/doc/doc.html}{the {\Product} web pages}%
+\footnote{http://www.lemma-one.com/ProofPower/doc/doc.html}.
+\end{enumerate}
 
 \section{Plural Quantification}
 
-Since quantification in HOL is \emph{typed}, and the quantifiers therefore range over the elements of any chosen type, to interpret plural quantification we need a type of plurals, or better, a \emph{type-constructor} which given any type will construct the type of plurals the values of which are taken from the first type. 
+Since quantification in HOL is \emph{typed}, and the quantifiers therefore range over the elements of any chosen type, to interpret plural quantification we need a type of plurals, or better, a \emph{type-constructor}, which, given any type, will construct the type of plurals of values of its argument type. 
 
-We therefore define in HOL just such a type constructor, and the polymorphic relationship `\emph{is one of}' ($û$) between arbitrary values and plurals, and then exhibit the correspondence thus obtained with the usual laws of plural quantification, before considering the application of plural quantification to set theory.
+We therefore introduce in HOL just such a type constructor, and the polymorphic relationship `\emph{is one of}' ($û$) between arbitrary values and plurals.
 
 =SML
 open_theory "rbjmisc";
@@ -50,41 +78,22 @@ set_flag ("pp_use_alias", true);
 \subsection{A Plurals Type-Constructor}
 
 In order to be able to quantify over plurals, we introduce a new type constructor.
-This is a way of addressing a new subject matter in our Higher Order Logic.
 
-A new type is introduced to model the intended subject matter (for example, some new system of numbers), and the theory is then expressed by defining various operators over this new type and proving theorems involving quantification over this type.
-Conservative extensions are usually preferred, since this method guards against risk of compromising the consistency of the logic.
+This can be done axiomatically, or conservatively (using definitions rather than arbitrary axioms).
+A conservative extension is normally preferred, but this requires a full understanding of the requirements since once the type has been defined no further modifications can be made.
+In this case we adopt a kind of compromise.
 
-The following type constructor, when applied to some type delivers a type of plurals.
-Plurals are essentially non-empty extensions, and will be represented by sets.
-This does not mean that they \emph{are} sets.
-It just means that they are in one-one correspondence with certain sets.
-
-This could be done axiomatically, but there is then a risk of compromising the consistency of the logic.
-It can be done by conservative extension, which is safe from this risk, and that is how we have done it here.
-However, there is a certain amount of detailed machinery involved in achieving this which we will not show here since it adds nothing to the analysis.
-Instead we display the resulting theorems, which we might otherwise have introduced as new axioms.
-
-We will explore the logic of plurals without settling the question of which non-empty extensions of any particular type do form plurals.
+We explore the logic of plurals without settling the question of which non-empty extensions of any particular type do form plurals.
 This will be achieved by introducing a loosely defined constant to determine this question, and then proving hypothetical results in the theory of plurals dependent on hypotheses about the properties of this constant, i.e. dependent upon various assumptions about which extensions are plurals.
 
 I introduce a 1-ary type constructor for plurals.
-Sometimes Linnebo talks as if plurals can be formed from absolutely everything, sometimes he talks about the possibility of second order plurals.
-In the first case we would have to model with a 0-ary type for plurals, in the second as a 1-ary type constructor.
-I have opted for the latter.
+It is not clear to me from Linnebo's paper whether this is the correct way to model his intentions.
+Sometimes Linnebo talks as if plurals can be formed from absolutely everything, but if plurals exist, if we can quantify over plurals, then absolutely everything would include the plurals, and I see no sign in Linnebo that he intends this.
+Instead we have a new type $S$ which may include both urelements and sets, and a type-constructor $'a\ PL$ which is the type of plurals of values of type $'a$.
+It is not impossible that the plurals are also elements of $S$, but the type system prevents us from asking the question.
 
-There is a similar problem arising for sets.
 We do have quite a variety of kinds of set already available, but here we must start from scratch again.
 It is clear that Linnebo is thinking in terms of a well-founded set theory with urelements.
-We can model this either using a 0-ary type constructor, or a 1-ary type constructor in which the set are sets just of the type of the parameter (i.e. the type $î('a)SÆ$ is the type of sets of elements of type 'a), or as a 1-ary type constructor in which the parameter is the type of the urelements but the type constructed contains a full heirarchy of sets formed by iteration of set formation starting with the urelements.
-These latter two are distinguished by the type of the membership relation, which is respectively $î'a ≠ 'a S ≠ BOOLÆ$ and $î'a S ≠ 'a S ≠ BOOLÆ$.
-
-So far as I can see, the 0-ary constructor is closest to the way Linnebo is thinking.
-We may think of this as a type of absolutely everything.
-The plurals, if they really exist would also be in this type, but the type discipline prevents us from asking the question whether the type $îS PLÆ$ is a subset of the type $îSÆ$.
-The point of plurals seems to be that they have `ontological innocence', i.e. that they don't actually exist.
-If so they would not appear in $S$.
-As a neo-Carnapian, this is too subtle for me, and if I were a Quinean I should be unable to offer to reason formally (at least in HOL) since to be mentioned at all they must fall in the range of our quantifiers.
 
 The type constructors are introduced thus:
 
@@ -93,7 +102,7 @@ new_type("€PL›", 1);
 new_type("€S›", 0);
 =TEX
 
-We then introduce some primitive constants for these types.
+We then introduce some primitive constants for these types, without giving definitions.
 
 =SML
 new_const("€ûâp›", î'a ≠ ('a) PL ≠ BOOLÆ);
@@ -124,7 +133,7 @@ The following definition differs from Linnebo's, as our proceeding does generall
 So here we have a single principle which quantifies over properties, where Linnebo has a first order axiom scheme.
 
 Note also that here {\it P\_Comp} is not an axiom.
-It is the name of a boolean constant, which we will use as a hypothesis (on the left of sequents) in the following result. 
+It is the name of a boolean constant, which we will use as a hypothesis (on the left of sequents) in some of the theorems which we prove later. 
 
 πHOLCONST
 ‹ €P_Comp›: BOOL
@@ -161,22 +170,21 @@ val COLLAPSE_contradiction_thm = save_pop_thm "COLLAPSE_contradiction_thm";
 
 Linnebo observes that this is normally taken as a refutation of COLLAPSE, but proposes to resolve the contradiction by some other means.
 
-To do this he needs to carefully scrutinise all the assumptions which participate in the derivation of the contradiction.
+To do this he needs to scrutinise carefully all the assumptions which participate in the derivation of the contradiction.
 Doing the proof formally gives us a strong basis for considering this matter, for it is clearer what the logical context of the proof is.
 
-This has involved some assumptions about the types of pluralities and sets which are not explicit in Linnebo.
-We have also formulated a second order principle of plural abstraction, whereas Linnebo's is an axiom schema in some unspecified logical system.
+This has involved some assumptions about the types of pluralities and sets which are not explicit in Linnebo (who is not working in a context in which these questions arise).
+We have also formulated a second order principle of plural abstraction, whereas Linnebo's is an axiom scheme.
 
 Apart from considering \emph{P\_Comp} as a suspect, Linnebo considers that he has assumed that one can quantify over absolutely everything, and questions this assumption.
 This is implicit in our formalisation if we interpret S as \emph{absolutely everything}, though it is not apparent that the proof depends on this.
 
-Linnebo approaches a distinction between COLLAPSE and full comprehension by referring to the concept used in comprehension as intensional, by contrast with the extensional nature of the plurality used to determine a set in COLLAPSE.
+Linnebo approaches a distinction between COLLAPSE and full comprehension by referring to the concept used in comprehension as \emph{intensional}, by contrast with the extensional nature of the plurality used to determine a set in COLLAPSE.
 This doesn't work very well here, because COLLAPSE is formulated using an extensional notion of concept (a propositional function in an extensional higher order logic), and still suffices to derive the contradiction.
-The point Linnebo is driving at is that comprehension does not give a properly interative process of building the population of sets, because a set introduced at some point in an imagined interative process has one extension before we add it, but once added becomes a candidate for self membership, and the extension may therefore change.
+The point Linnebo is driving at is that comprehension does not give a properly iterative process of building the universe of sets, because a set introduced at some point in an imagined iterative process has one extension before we add it, but once added it (and other new sets) become candidates for membership in that same set, so the extension may therefore change.
 He seems here to be wanting to treat the pluralities as rigid designators of extensions, even if they are defined by plural comprehension, so that the question of whether a set introduced by COLLAPSE is a member of itself does not arise.
 However, this perspective is not a legitimate interpretation of the theory as we have formulated it here.
-If we want our type S to be a result of some iterative process, we will have to do something different to achieve that effect.
-
+If we want our universe to be the result of some iterative process, we need a new approach to the formal modelling.
 
 \ignore{
 =SML
@@ -229,22 +237,24 @@ set_flag ("pp_use_alias", true);
 
 We now come to Linnebo's proposals for obtaining a consistent system incorporating COLLAPSE.
 
-This is bases upon an idea by Yablo that determinacy of the pool of candidates is a pre-requisite for the determinacy of a set determined by some condition $∆$ (this is good in the present context because it replaces the idea that the problem is with intensionality of the condition, which doesn't work well in our present context).
+This is based upon an idea by Yablo that determinacy of the pool of candidates is a pre-requisite for the determinacy of a set determined by some condition $∆$ (this is good in the present context because it replaces the idea that the problem is with \emph{intensionality} of the condition, which doesn't work well in our present context).
 
 This translates into the requirement that the condition determines a set only if it is applied at a specific stage in an iterative process of forming the universe of sets, and the resulting set appears at the next stage.
-The extension of the set will then correspond to those elements prior to the determination of the set which satisfy the condition, not all elements in the completed universe which satisfy the condition, and hence the set itself is not a candidate for membership.
+The extension of the set will then correspond to those elements prior to the determination of the set which satisfy the condition.
+Not every elements of the complete universe (not \emph{absolutely everything}) is a candidate, and in particular the set itself is not a candidate for membership.
 We may say parenthetically, that what Linnebo has done here is something like adopting separation instead of comprehension.
 Note however, that Linnebo does not embrace the idea that the heirarchy of sets ever can be completed (and nor do I).
 In the present context, interpretations of our theory will assign some set to the type $S$, which will (when we consider further constraints below) correspond to some stage in the formation at which this interminable process is arbitrarily brought to a halt.
-The results we obtain relate not the completion, nor to any particular stage short of completion, but to some unspecified stage short of completion, and hence to all unspecified stages (subject to some constraints) short of completion.
+The results we obtain relate not to the completion, nor to any particular stage short of completion, but to some unspecified stage short of completion, and hence to all unspecified stages (subject to some constraints) short of completion.
 
 Linnebo proposes to spell out the idea using modal vocabulary to talk about stages.
 This is rather different to and more subtle than the initial result of our formalisation as relating to arbitrary stages, and so I now examine how such a modal notation can be used.
 
 In this modal notion, a \emph{possible world} is a stage in the formation of the "universe" $S$.
-Let us ignore the fact that $S$ itself cannot be the whole for the present and imagine that it does.
-Such a stage will be a subset of the type S, and thefore will in our logical system be a value of type $S SET$.
+Let us ignore the fact that $S$ itself cannot be the whole, for the present, and imagine that it does.
+Such a stage will be a subset of the type S, and thefore will in our logical system be a value of type $S\ SET$.
 The collection of possible worlds will then be a set of such sets.
+We will call them \emph{Stages}.
 
 We introduce this as a loosely defined constant.
 The only constraint we apply to it is to ensure that this is a non-empty directed set (though it may be necessary to beef this up later).
@@ -252,36 +262,60 @@ The only constraint we apply to it is to ensure that this is a non-empty directe
 
 \ignore{
 =SML
-set_goal([], ¨∂Poss_Worlds:(S SET) SET∑ (∂x∑ x ç Poss_Worlds) ± µx y∑ x ç Poss_Worlds ± y ç Poss_Worlds ¥ x ¿ y ç Poss_WorldsÆ);
-a (∂_tac ¨{x:S SET |T}Æ THEN REPEAT strip_tac);
-a (∂_tac ¨≈x:S SET∑TÆ THEN rewrite_tac[]);
+set_goal([], ¨∂Stages:(S SET) SET∑ (∂x∑ x ç Stages) ± µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç StagesÆ);
+a (∂_tac ¨{x:S SET | T}Æ THEN REPEAT strip_tac);
+a (∂_tac ¨ThisStage:S SETÆ THEN rewrite_tac[]);
 save_cs_∂_thm (pop_thm());
 =TEX
 }%ignore
 
 πHOLCONST
-‹ €Poss_Worlds›: (S SET) SET
+‹ €Stages›: (S SET) SET
 ˜¸¸¸¸¸¸
-‹	(∂x∑ x ç Poss_Worlds)
-‹  ±	µx y∑ x ç Poss_Worlds ± y ç Poss_Worlds ¥ x ¿ y ç Poss_Worlds
+‹	(∂x∑ x ç Stages)
+‹  ±	µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç Stages
 ∞
 
-We could then define the relevant notion of accessibility between these possible worlds, but since this is set inclusion (or its converse) which is already defined we will use that directly (A is accessible from B if A is a stage subsequent to B and hence $¨B Ä AÆ$).
+We note here the elementary consequence of directedness that every member of a stage is reachable from any stage.
+
+=GFT
+€Stages_fc_thm› = Ù µ x y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç Stages
+€set_reachability_thm› = Ù µ s1 s2 x∑ s1 ç Stages ± s2 ç Stages ± x ç s2
+		¥ (∂ s3∑ s3 ç Stages ± x ç s3 ± s1 Ä s3)
+=TEX
+
+\ignore{
+=SML
+val Stages_def = get_spec ¨StagesÆ;
+
+set_goal([], ¨µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç StagesÆ);
+a (rewrite_tac [Stages_def]);
+val Stages_fc_thm = save_pop_thm "Stages_fc_thm";
+
+set_goal([], ¨µ(s1:S SET) (s2:S SET) x∑ s1 ç Stages ± s2 ç Stages ± x ç s2 ¥ ∂s3:S SET∑ s3 ç Stages ± x ç s3 ± s1 Ä s3Æ);
+a (REPEAT strip_tac);
+a (all_fc_tac [Stages_fc_thm]);
+a (∂_tac ¨s1 ¿ s2Æ THEN PC_T1 "hol1" prove_tac[]); 
+val set_reachability_thm = save_pop_thm "set_reachability_thm";
+=TEX
+}%ignore
+
+
+We could then define the relevant notion of accessibility between these stages, but since this is set inclusion (or its converse) which is already defined we will use that directly (A is accessible from B if A is a stage subsequent to B and hence $¨B\ Ä\ AÆ$).
 
 The expression of modal claims in our logic requires a recasting of all the logical vocabulary.
-The definitions extant in HOL treat propositions as values of type $îBOOLÆ$, but in the modal logic they will have to be considered as values of type $îS SET ≠ BOOLÆ$, i.e. a BOOLean valued function over the relevant possibilities, which in this case are stages in the iterative cumulation of sets.
+The definitions extant in HOL treat propositions as values of type $îBOOLÆ$, but in the modal logic they will have to be considered as values of type $îS\ SET\ ≠\ BOOLÆ$, i.e. a BOOLean valued function over the relevant possibilities, which in this case are stages in the iterative cumulation of sets.
 
 =SML
 declare_type_abbrev("PROPâm", [], îS SET ≠ BOOLÆ);
 =TEX
-
 
 The modal operators are defined as follows:
 
 πHOLCONST
 ‹ €©âpâl› : PROPâm ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹ µs∑ ©âpâl s = Ãw∑ µv∑ w Ä v ¥ s v
+‹ µs∑ ©âpâl s = Ãw∑ µv∑ v ç Stages ± w Ä v ¥ s v
 ∞
 
 πHOLCONST
@@ -295,15 +329,36 @@ So that we need not use the subscript $âpâl$ unless ambiguity might otherwise ar
 =SML
 declare_alias("©", ¨©âpâlÆ);
 declare_alias("®", ¨®âpâlÆ);
+=IGN
+declare_prefix(5, "®");
+declare_prefix(5, "®âpâl");
+declare_prefix(5, "©");
+declare_prefix(5, "©âpâl");
 =TEX
 
 Since modal propositions are not of type $îBOOLÆ$ we need a way of asserting them, for which we use the symbol $ò$, which should be read as asserting `truth'.
 Though `truth' simpliciter in a modal logic should perhaps be construed as truth in ``this world'', this is not relevant in the present context, and so we assert truth at some arbitrary stage of the iterative process using a choice function.
 
+\ignore{
+=SML
+set_goal([], ¨∂ThisStage∑ ThisStage ç StagesÆ);
+a (strip_asm_tac (get_spec ¨StagesÆ));
+a (∂_tac ¨xÆ THEN strip_tac);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
+
+
+πHOLCONST
+‹ $€ThisStage› : S SET
+˜¸¸¸¸¸¸
+‹ ThisStage ç Stages
+∞
+
 πHOLCONST
 ‹ $€òâpâl› : PROPâm ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µp∑ òâpâl p § p (≈w∑T)
+‹ µp∑ òâpâl p § p ThisStage
 ∞
 
 =SML
@@ -318,11 +373,12 @@ declare_prefix(5, "òâpâl");
 
 \ignore{
 =SML
+val ThisStage_def = get_spec ¨ThisStageÆ;
 val ©âpâl_def = get_spec ¨$©âpâlÆ;
 val ®âpâl_def = get_spec ¨$®âpâlÆ;
 
-set_goal([], ¨µ(s:S SET) p∑ (©âpâl p s § µs2∑ s Ä s2 ¥  p s2)
-		±	(®âpâl p s § ∂s2∑ s Ä s2 ±  p s2)Æ);
+set_goal([], ¨µ(s:S SET) p∑ ((©âpâl p) s § µs2∑ s2 ç Stages ± s Ä s2 ¥  p s2)
+		±	((®âpâl p) s § ∂s2∑ s2 ç Stages ± s Ä s2 ±  p s2)Æ);
 a (rewrite_tac [®âpâl_def, ©âpâl_def, l_defs]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
@@ -332,6 +388,8 @@ a (∂_tac ¨s2Æ THEN asm_rewrite_tac[]);
 val ®©âpâl_thm = save_pop_thm "®©âpâl_thm";
 
 add_pc_thms "'t046b" [®©âpâl_thm];
+add_rw_thms [get_spec ¨ThisStageÆ] "'t046b";
+add_sc_thms [get_spec ¨ThisStageÆ] "'t046b";
 set_merge_pcs ["t045", "'t046b"];
 =TEX
 }%ignore
@@ -357,23 +415,25 @@ We can now \emph{prove} as theorems the propositions which would normally be tak
 \ignore{
 =SML
 set_goal([], ¨òâpâl ©(A ¥ B) ¥ © A ¥ © BÆ);
-a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
+a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN REPEAT strip_tac THEN REPEAT (all_asm_fc_tac[]));
 val distribâpâl_thm = save_pop_thm "distribâpâl_thm";
 
 set_goal([], ¨òâpâl (© A) ¥ ® AÆ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
-a (∂_tac ¨≈ w∑ TÆ);
-a (spec_nth_asm_tac 1 ¨≈ w:S SET∑ TÆ THEN REPEAT strip_tac);
+a (∂_tac ¨ThisStageÆ);
+a (spec_nth_asm_tac 1 ¨ThisStageÆ THEN REPEAT strip_tac);
+a (asm_prove_tac[]);
 val Dâpâl_thm = save_pop_thm "Dâpâl_thm";
 
 set_goal([], ¨òâpâl (© A) ¥ AÆ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
-a (spec_nth_asm_tac 1 ¨≈ w:S SET∑ TÆ THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 1 ¨ThisStageÆ THEN REPEAT strip_tac);
+a (asm_prove_tac[]);
 val Mâpâl_thm = save_pop_thm "Mâpâl_thm";
 
 set_goal([], ¨òâpâl (© A) ¥ (© (© A))Æ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
-a (lemma_tac ¨(≈ w∑ T) Ä s2'Æ THEN1 all_asm_fc_tac [Ä_trans_thm]);
+a (lemma_tac ¨ThisStage Ä s2'Æ THEN1 all_asm_fc_tac [Ä_trans_thm]);
 a (all_asm_fc_tac[]);
 val A4âpâl_thm = save_pop_thm "A4âpâl_thm";
 
@@ -397,6 +457,7 @@ val C4âpâl_thm = save_pop_thm "C4âpâl_thm";
 set_goal([], ¨òâpâl (® (© A)) ¥ (© (® A))Æ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
 a (lemma_tac ¨s2 Ä s2 ¿ s2' ± s2' Ä s2 ¿ s2'Æ THEN1 PC_T1 "hol1" prove_tac[]);
+a (all_fc_tac [Stages_fc_thm]);
 a (∂_tac ¨s2 ¿ s2'Æ THEN asm_fc_tac [] THEN REPEAT strip_tac);
 val Câpâl_thm = save_pop_thm "Câpâl_thm";
 =TEX
@@ -546,7 +607,9 @@ declare_infix(240, "ûâmâp");
 declare_alias("û", ¨$ûâmâpÆ);
 =TEX
 
-The modal set membership does need to take account of the stage parameter.
+On my first pass I defined the modal set membership taking into account of the stage parameter so that it is false if the value of the variable does not exist.
+Later, seeing Linnebo's appendix in which he affirms the necessity of true membership claims this was thrown into doubt.
+It turns out that the definition of membership in which membership is false if the set does not appear in the current stage is compatible with the necessity of true membership statements but not with the necessity of false ones, which Linnebo requires, so I have revised the definition accordingly.
 
 =SML
 declare_infix(240, "çâmâp");
@@ -555,7 +618,7 @@ declare_infix(240, "çâmâp");
 πHOLCONST
 ‹ $€çâmâp›: S ≠ S ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹ µx y s∑ (x çâmâp y) s § y ç s ± x çâs y
+‹ µx y s∑ (x çâmâp y) s § x çâs y
 ∞
 
 =SML
@@ -614,7 +677,7 @@ These two principles, under this new interpretation, remain contradictory:
 =TEX
 
 It is accidental in the previous version of this that the domain of sets is a type and hence cannot be empty.
-In this version the domain of sets is a class (or may best be thought of as a class, it has type îS SETÆ in which S is the type of sets for present purposes, and SET is similar to the higher type in second order logic).
+In this version the domain of sets is a class (or may best be thought of as a class, it has type îS\ SETÆ in which S is the type of sets for present purposes, and SET is similar to the higher type in second order logic).
 We can therefore establish its non-emptyness here only by using the two principles at hand, and it is fortuitous that the principle of plural comprehension does not insist that plurals are non-empty.
 If it did the two principles as formalised above would not be contradicatory.
 
@@ -667,9 +730,9 @@ set_goal([¨COLLAPSEõ®Æ, ¨P_Compõ®Æ], ¨FÆ);
 a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [òâpâl_def, COLLAPSEõ®_def, P_Compõ®_def]
 	THEN contr_tac);
 a (SPEC_NTH_ASM_T 2 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
-a (asm_fc_tac[]);
+a (all_asm_fc_tac[]);
 a (SPEC_NTH_ASM_T 1 ¨xÆ (strip_asm_tac o (rewrite_rule[])));
-a (spec_nth_asm_tac 5 ¨s2'Æ);
+a (spec_nth_asm_tac 6 ¨s2'Æ);
 a (spec_nth_asm_tac 2 ¨x'Æ);
 (* *** Goal "1" *** *)
 a (spec_nth_asm_tac 3 ¨x'Æ);
@@ -689,6 +752,212 @@ One obvious `solution' is simply to restrict plural comprehension to some stage 
 ∞
 
 I don't have the means in the present context to establish the consistency of this weakened comprehension with \emph{COLLAPSE} thought that does seem intuitively plausible.
+
+\section{Logical Properties of the Modalised Quantifiers}
+
+This section addresses the material under the above heading in Linnebo's Appendix.
+Some of this material has already emerged as a result of our method of introducing the modal vocabulary, but the main theses of this appendix are metatheoretic and explicitly syntactic in character.
+Since we do not have here a formalisation of the syntax of the system, these theses cannot be formalised.
+We could formalise the syntax in order to be able to state them, but the cost of doing so would probably not justify the return.
+Instead we prove a variety of purely semantic claims which are closely related to the results given by Linnebo.
+
+I believe that Linnebo's prohibition of instantiation of plural quantifiers with constants is unnecessary in our treatment.
+He seems by this means to wish to prohibit instantiation of plural quantifiers with concepts such as \emph{ordinal}, since it is not necessarily the case that the entire extension of a concept will correspond to a plural, once P-Comp has been weakened as necessary for it to be compatible with COLLAPSE.
+
+In our treatment, the HOL type system supplies the necessary constraint.
+We could instantiate with plural constants, if we had any (and we could have some).
+But we cannot instantiate with a concept, because concepts do not have the same \emph{type} as plurals.
+
+The next matter considered by Linnebo is the correspondence of his system with the modal logic S4.2, which we have already shown and arises from the definition we have give for the \emph{Stage}s, which are our ``possible worlds''.
+
+Then we come to the necessity of equality and membership assertions and their negations, three of which Linnebo asserts as axioms.
+
+First we must define equality, inequality and non-membership suitable for use in these modal contexts, i.e. which deliver a modal proposition rather than a BOOL value.
+
+=SML
+declare_infix(240, "=âmâp");
+declare_infix(240, "Ωâmâp");
+declare_infix(240, "éâmâp");
+=TEX
+
+πHOLCONST
+‹ $€=âmâp›: S ≠ S ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µx y s∑ (x =âmâp y) s § x = y
+∞
+
+πHOLCONST
+‹ $€Ωâmâp›: S ≠ S ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µx y∑ x Ωâmâp y = ≥ x =âmâp y
+∞
+
+πHOLCONST
+‹ $€éâmâp›: S ≠ S ≠ PROPâm
+˜¸¸¸¸¸¸
+‹ µx y∑ x éâmâp y = ≥ x çâmâp y
+∞
+
+The four required results (of which the last three are asserted by Linnebo as axioms) may then be proven, resulting in the following theorems:
+
+=GFT
+€eqçâmâp_©_thm› = 	Ù ò x =âmâp y ¥ © (x =âmâp y)
+€Ωçâmâp_©_thm› = 	Ù ò x Ωâmâp y ¥ © (x Ωâmâp y)
+€çâmâp_©_thm› =		Ù ò x çâmâp y ¥ © (x çâmâp y)
+€éâmâp_©_thm› =		Ù ò x éâmâp y ¥ © (x éâmâp y)
+=TEX
+
+\ignore{
+=SML
+val eqâmâp_def = get_spec ¨$=âmâpÆ;
+val Ωâmâp_def = get_spec ¨$ΩâmâpÆ;
+val çâmâp_def = get_spec ¨$çâmâpÆ;
+val éâmâp_def = get_spec ¨$éâmâpÆ;
+
+set_goal([], ¨òâpâl x =âmâp y ¥ © (x =âmâp y)Æ);
+a (rewrite_tac[òâpâl_def, eqâmâp_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val eqçâmâp_©_thm = save_pop_thm "eqâmâp_©_thm";
+
+set_goal([], ¨òâpâl x Ωâmâp y ¥ © (x Ωâmâp y)Æ);
+a (rewrite_tac[òâpâl_def, Ωâmâp_def, eqâmâp_def] THEN REPEAT strip_tac);
+val Ωâmâp_©_thm = save_pop_thm "Ωâmâp_©_thm";
+
+set_goal([], ¨òâpâl x çâmâp y ¥ © (x çâmâp y)Æ);
+a (rewrite_tac[òâpâl_def, çâmâp_def, sets_ext_clauses] THEN REPEAT strip_tac);
+val çâmâp_©_thm = save_pop_thm "çâmâp_©_thm";
+
+set_goal([], ¨òâpâl x éâmâp y ¥ © (x éâmâp y)Æ);
+a (rewrite_tac[òâpâl_def, éâmâp_def, çâmâp_def] THEN REPEAT strip_tac);
+val éâmâp_©_thm = save_pop_thm "éâmâp_©_thm";
+
+set_goal([], ¨òâpâl ® (x =âmâp y) ¥ © (x =âmâp y)Æ);
+a (rewrite_tac[òâpâl_def, eqâmâp_def] THEN REPEAT strip_tac);
+val ®©éâmâp_©_thm = save_pop_thm "®©éâmâp_©_thm";
+=TEX
+}%ignore
+
+Now we consider Linnebo's \emph{Lemma1}.
+This is needed by Linnebo to prove his \emph{Theorem 1}, instead of which we will attempt to demonstrate a corresponding purely semantic claim, so we will not need \emph{Lemnma 1} as it is given by Linnebo.
+However, by way of checking that our definitions are consistent with Linnebo's system the following results, corresponding to steps in Linnebo's proof, have been proven.
+
+=GFT
+€®©eqâmâp_thm› =
+	Ù ò ® (x =âmâp y) ¥ © (x =âmâp y)
+
+€®©çâmâp_thm› =
+	Ù ò ® (x ç y) ¥ © (x ç y)
+
+€®©≥_thm› = ò ® ∆ ¥ © ∆
+	Ù ò ® (≥ ∆) ¥ © (≥ ∆)
+
+€®©±_thm› = ò ® ∆ ¥ © ∆, ò ® Ÿ ¥ © Ÿ
+	Ù ò ® (∆ ± Ÿ) ¥ © (∆ ± Ÿ)
+
+€®©®∂âmâ_thm› = µ x∑ ò ® (Ÿ x) ¥ © (Ÿ x)
+	Ù ò ® (∂âmâp x∑ Ÿ x) ¥ © (® (∂âmâp x∑ Ÿ x))
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨òâpâl ® (x =âmâp y) ¥ © (x =âmâp y)Æ);
+a (rewrite_tac[òâpâl_def, eqâmâp_def] THEN REPEAT strip_tac);
+val ®©eqâmâp_thm = save_pop_thm "®©eqâmâp_thm";
+
+set_goal([], ¨òâpâl ® (x çâmâp y) ¥ © (x çâmâp y)Æ);
+a (rewrite_tac[òâpâl_def, çâmâp_def] THEN REPEAT strip_tac);
+val ®©çâmâp_thm = save_pop_thm "®©çâmâp_thm";
+
+set_goal([¨òâpâl ® ∆ ¥ © ∆Æ], ¨òâpâl ® (≥ ∆) ¥ © (≥ ∆)Æ);
+a (POP_ASM_T ante_tac THEN rewrite_tac[òâpâl_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 6 ¨s2'Æ);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val ®©≥_thm = save_pop_thm "®©≥_thm";
+
+set_goal([¨òâpâl ® ∆ ¥ © ∆Æ, ¨òâpâl ® Ÿ ¥ © ŸÆ], ¨òâpâl ® (∆ ± Ÿ) ¥ © (∆ ± Ÿ)Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[òâpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val ®©±_thm = save_pop_thm "®©±_thm";
+
+set_goal([¨µx∑ òâpâl ® (Ÿ x) ¥ © (Ÿ x)Æ], ¨òâpâl ®(∂âmâp x∑ (Ÿ x)) ¥ ©(®∂âmâp x∑ (Ÿ x))Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+a (spec_nth_asm_tac 8 ¨xÆ);
+(* *** Goal "1" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+a (∂_tac ¨s2'Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
+val ®©®∂âmâ_thm = save_pop_thm "®©®∂âmâ_thm";
+=TEX
+}%ignore
+
+Linnebo's \emph{Theorem 1} is to the effect that the modalised quantifiers are equivalent to the normal non modal quantification over sets.
+Since this means that they quantify over all the sets in all the stages this can be stated directly rather than as a result about provability of translations.
+
+The following theorem comes close to that result:
+
+=GFT
+€®∂âmâp_lemma1› = Ù µ ∆∑ (ò ® (∂ x∑ ∆ x))
+		§ (∂ s x∑ s ç Stages ± ThisStage Ä s ± x ç s ± ∆ x s)
+=TEX
+
+It falls short by requiring that $∆\ x$ be true at some stage which is reachable from \emph{ThisStage}.
+This would not be an issue if we required that all stages are reachable from \emph{ThisStage}, which is what one might reasonably expect.
+
+This theorem is of greater scope than Linnebo's \emph{Theorem 1}, since we have no constraint on what $∆$ may be, whereas \emph{Theorem 1} is concerned only with the modal translations of formulae of non-modal first order set theory.
+Since for that set of propositions \emph{Lemma 1} shows that they are necessary if true, and hence there will always be a stage which is reachable from \emph{ThisStage} at which $∂ x∑ ∆ x$ if there is any stage at which it holds.
+
+So our formally obtained results come very close to Linnebo's \emph{Theorem 1} if not quite as close as we might like.
+To get a more exact semantic correspondent to Linnebo's \emph{Theorem 1} it would be necessary to define the set of modal propositions which are the meanings of the set of formula obtainable by modalisation of sentences of first order set theory.
+
+\ignore{
+=SML
+set_goal([], ¨µ∆∑ (òâpâl ® (∂âmâs x∑ ∆ x)) § ∂(s:S SET) (x:S)∑ s ç Stages ± ThisStage Ä s ± x ç s ± ∆ x sÆ);
+a (rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "1" *** *)
+a (∂_tac ¨s2Æ THEN ∂_tac ¨xÆ THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (∂_tac ¨sÆ THEN REPEAT strip_tac);
+a (∂_tac ¨xÆ THEN REPEAT strip_tac);
+val ®∂âmâp_lemma1 = save_pop_thm "®∂âmâp_lemma1";
+
+=IGN
+set_goal([], ¨µ∆∑ (òâpâl ® (∂âmâs x∑ ∆ x))Æ);
+a (rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+
+set_goal([], ¨µ∆∑ (òâpâl ® (∂âmâs x∑ ∆ x)) § ∂s x∑ s ç Stages ± x ç s ± ∆ x sÆ);
+a (rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "1" *** *)
+a (∂_tac ¨s2Æ THEN ∂_tac ¨xÆ THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (strip_asm_tac ThisStage_def);
+a (all_fc_tac [set_reachability_thm]);
+a (∂_tac ¨s3Æ THEN REPEAT strip_tac);
+a (all_fc_tac []);
+a (∂_tac ¨xÆ THEN REPEAT strip_tac);
+val ®∂âmâp_lemma1 = save_pop_thm "®∂âmâp_lemma1";
+
+set_goal([], ¨µ∆∑ (òâpâl ® (∂âmâp x∑ ∆ x)) § ∂(s:S SET) (x:S)∑ s ç Stages ± ThisStage Ä s ± ∆ x sÆ);
+a (rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+a (∂_tac ¨s2Æ THEN ∂_tac ¨xÆ THEN REPEAT strip_tac);
+a (∂_tac ¨sÆ THEN REPEAT strip_tac);
+a (∂_tac ¨xÆ THEN REPEAT strip_tac);
+val ®∂âmâp_lemma1 = save_pop_thm "®∂âmâp_lemma1";
+
+set_goal([], ¨µ∆∑ (® (∂âmâp x∑ ∆ x)) = Ãs∑ ∂x∑ x ç ﬁ Stages ± ∆ x sÆ);
+a (rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def, ext_thm] THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+
+=TEX
+}%ignore
+
 
 \ignore{
 =SML
@@ -710,12 +979,12 @@ force_new_pc "€t046b1›";
 merge_pcs ["rbjmisc1", "'t046b"] "t046b1";
 commit_pc "t046b1";
 =TEX
-}%ignore
 
 
 =SML
 set_flag ("subgoal_package_quiet", false);
 set_flag ("pp_use_alias", true);
 =TEX
+}%ignore
 
 
