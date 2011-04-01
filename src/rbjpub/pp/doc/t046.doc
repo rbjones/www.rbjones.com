@@ -1,9 +1,9 @@
 =TEX
 \ignore{
 =VDUMP t046i.tex
-Last Change $ $Date: 2011/03/28 21:18:50 $ $
+Last Change $ $Date: 2011/04/01 12:28:01 $ $
 
-$ $Id: t046.doc,v 1.4 2011/03/28 21:18:50 rbj Exp $ $
+$ $Id: t046.doc,v 1.5 2011/04/01 12:28:01 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -262,9 +262,10 @@ The only constraint we apply to it is to ensure that this is a non-empty directe
 
 \ignore{
 =SML
-set_goal([], ¨∂Stages:(S SET) SET∑ (∂x∑ x ç Stages) ± µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç StagesÆ);
+set_goal([], ¨∂Stages:(S SET) SET∑ (∂x∑ x ç Stages) ± µx y∑ x ç Stages ± y ç Stages ¥ ∂z∑ z ç Stages ± x Ä z ± y Ä zÆ);
 a (∂_tac ¨{x:S SET | T}Æ THEN REPEAT strip_tac);
 a (∂_tac ¨ThisStage:S SETÆ THEN rewrite_tac[]);
+a (∂_tac ¨x ¿ yÆ THEN PC_T1 "hol1" prove_tac[]);
 save_cs_∂_thm (pop_thm());
 =TEX
 }%ignore
@@ -273,13 +274,13 @@ save_cs_∂_thm (pop_thm());
 ‹ €Stages›: (S SET) SET
 ˜¸¸¸¸¸¸
 ‹	(∂x∑ x ç Stages)
-‹  ±	µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç Stages
+‹  ±	µx y∑ x ç Stages ± y ç Stages ¥ ∂z∑ z ç Stages ± x Ä z ± y Ä z
 ∞
 
 We note here the elementary consequence of directedness that every member of a stage is reachable from any stage.
 
 =GFT
-€Stages_fc_thm› = Ù µ x y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç Stages
+€Stages_fc_thm› = Ù µ x y∑ x ç Stages ± y ç Stages ¥ ∂z∑ z ç Stages ± x Ä z ± y Ä z
 €set_reachability_thm› = Ù µ s1 s2 x∑ s1 ç Stages ± s2 ç Stages ± x ç s2
 		¥ (∂ s3∑ s3 ç Stages ± x ç s3 ± s1 Ä s3)
 =TEX
@@ -288,14 +289,15 @@ We note here the elementary consequence of directedness that every member of a s
 =SML
 val Stages_def = get_spec ¨StagesÆ;
 
-set_goal([], ¨µx y∑ x ç Stages ± y ç Stages ¥ x ¿ y ç StagesÆ);
+set_goal([], ¨µx y∑ x ç Stages ± y ç Stages ¥ ∂z∑ z ç Stages ± x Ä z ± y Ä zÆ);
 a (rewrite_tac [Stages_def]);
 val Stages_fc_thm = save_pop_thm "Stages_fc_thm";
 
 set_goal([], ¨µ(s1:S SET) (s2:S SET) x∑ s1 ç Stages ± s2 ç Stages ± x ç s2 ¥ ∂s3:S SET∑ s3 ç Stages ± x ç s3 ± s1 Ä s3Æ);
 a (REPEAT strip_tac);
 a (all_fc_tac [Stages_fc_thm]);
-a (∂_tac ¨s1 ¿ s2Æ THEN PC_T1 "hol1" prove_tac[]); 
+a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
+a (PC_T1 "hol1" asm_prove_tac[]); 
 val set_reachability_thm = save_pop_thm "set_reachability_thm";
 =TEX
 }%ignore
@@ -456,9 +458,8 @@ val C4âpâl_thm = save_pop_thm "C4âpâl_thm";
 
 set_goal([], ¨òâpâl (® (© A)) ¥ (© (® A))Æ);
 a (rewrite_tac [get_spec ¨$òâpâlÆ] THEN prove_tac[]);
-a (lemma_tac ¨s2 Ä s2 ¿ s2' ± s2' Ä s2 ¿ s2'Æ THEN1 PC_T1 "hol1" prove_tac[]);
 a (all_fc_tac [Stages_fc_thm]);
-a (∂_tac ¨s2 ¿ s2'Æ THEN asm_fc_tac [] THEN REPEAT strip_tac);
+a (∂_tac ¨z'Æ THEN asm_fc_tac [] THEN REPEAT strip_tac);
 val Câpâl_thm = save_pop_thm "Câpâl_thm";
 =TEX
 }%ignore
@@ -513,9 +514,9 @@ We need new quantifiers to quantify over pluralities in a modal context.
 Since quantifiers are needed also for concepts to use in the comprehension principle we make this kind of quantification (which ignores the stage apart from passing it on) polymorphic.
 
 πHOLCONST
-‹ €µâmâp›:('a ≠ PROPâm) ≠ PROPâm
+‹ €µâmâp›:(S PL ≠ PROPâm) ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹  µf∑ µâmâp f = Ãs∑ µx:'a∑ f x s
+‹  µf∑ µâmâp f = Ãs∑ µxx∑ (µz∑ z ûâp xx ¥ z ç s) ¥ f xx s
 ∞
 
 If we alias this to the unsubscripted quantifer then most quantifiers would be ambiguous, so we won't do that.
@@ -527,9 +528,9 @@ declare_binder "µâmâp";
 =TEX
 
 πHOLCONST
-‹ €∂âmâp›:('a ≠ PROPâm) ≠ PROPâm
+‹ €∂âmâp›:(S PL ≠ PROPâm) ≠ PROPâm
 ˜¸¸¸¸¸¸
-‹  µf∑ ∂âmâp f = Ãs∑ ∂x:'a∑ f x s
+‹  µf∑ ∂âmâp f = Ãs∑ ∂xx:S PL∑ (µz∑ z ûâp xx ¥ z ç s) ± f xx s
 ∞
 
 =SML
@@ -539,19 +540,19 @@ declare_binder "∂âmâp";
 =TEX
 
 =GFT
-€∂âmâp_thm› = Ù µ f s∑ $∂âmâp f s § (∂ x∑ f x s)
-€µâmâp_thm› = Ù µ f s∑ $µâmâp f s § (µ x∑ f x s)
+€∂âmâp_thm› = Ù µ f s∑ $∂âmâp f s § (∂ xx∑ (µz∑ z ûâp xx ¥ z ç s) ± f xx s)
+€µâmâp_thm› = Ù µ f s∑ $µâmâp f s § (µ xx∑ (µz∑ z ûâp xx ¥ z ç s) ¥ f xx s)
 =TEX
 
 \ignore{
 =SML
 val µâmâp_def = get_spec ¨$µâmâpÆ;
-set_goal([], ¨µf s∑ $µâmâp f s = µx∑ f x sÆ);
+set_goal([], ¨µf s∑ $µâmâp f s = µxx∑ (µz∑ z ûâp xx ¥ z ç s) ¥ f xx sÆ);
 a (REPEAT µ_tac THEN rewrite_tac [µâmâp_def]);
 val µâmâp_thm = save_pop_thm "µâmâp_thm";
 
 val ∂âmâp_def = get_spec ¨$∂âmâpÆ;
-set_goal([], ¨µf s∑ $∂âmâp f s = ∂x∑ f x sÆ);
+set_goal([], ¨µf s∑ $∂âmâp f s = ∂xx∑ (µz∑ z ûâp xx ¥ z ç s) ± f xx sÆ);
 a (REPEAT µ_tac THEN rewrite_tac [∂âmâp_def]);
 val ∂âmâp_thm = save_pop_thm "∂âmâp_thm";
 
@@ -664,7 +665,7 @@ We can now state the principle of plural comprehension:
 πHOLCONST
 ‹ €P_Compâm›: BOOL
 ˜¸¸¸¸¸¸
-‹ P_Compâm § òâpâl µâmâp ∆∑ ∂âmâp xx:S PL∑ µ u:S∑ u ûâmâp xx § ∆ u
+‹ P_Compâm § µ∆∑ òâpâl ∂âmâp xx:S PL∑ µ u:S∑ u ûâmâp xx § ∆ u
 ∞
 
 Since there are no modal operators, these principles speak only of the stage which is in context globally, of which we know nothing, except what the principles tell is (if they are assumed).
@@ -691,12 +692,17 @@ set_goal([¨COLLAPSEâmÆ, ¨P_CompâmÆ], ¨FÆ);
 a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [òâpâl_def, COLLAPSEâm_def, P_Compâm_def]
 	THEN contr_tac);
 a (SPEC_NTH_ASM_T 2 ¨Ãx:S∑ Ãs:S SET∑FÆ (strip_asm_tac o (rewrite_rule[])));
-a (SPEC_NTH_ASM_T 2 ¨xÆ (strip_asm_tac o (rewrite_rule[])));
-a (SPEC_NTH_ASM_T 5 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
-a (SPEC_NTH_ASM_T 5 ¨x''Æ (strip_asm_tac o (rewrite_rule[])));
-a (spec_nth_asm_tac 3 ¨x'''Æ);
-a (spec_nth_asm_tac 3 ¨x'''Æ);
-a (spec_nth_asm_tac 3 ¨x'''Æ);
+a (SPEC_NTH_ASM_T 4 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
+a (SPEC_NTH_ASM_T 5 ¨xx'Æ (strip_asm_tac o (rewrite_rule[])));
+(* *** Goal "1" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 5 ¨xÆ);
+a (spec_nth_asm_tac 2 ¨xÆ);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 6 ¨xÆ);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 6 ¨xÆ);
 val COLLAPSE_contradiction_thm2 = save_pop_thm "COLLAPSE_contradiction_thm2";
 =TEX
 }%ignore
@@ -712,7 +718,7 @@ We now define the two properly modalised versions of plural comprehension and co
 πHOLCONST
 ‹ €P_Compõ®›: BOOL
 ˜¸¸¸¸¸¸
-‹ P_Compõ® § òâpâl µâmâp ∆∑ ®∂ xx∑ ©µâmâs u∑ u ûâmâp xx § ∆ u
+‹ P_Compõ® § µ∆∑ òâpâl ®∂ xx∑ ©µâmâs u∑ u ûâmâp xx § ∆ u
 ∞
 
 Once again the, a contradiction is derivable from these two principles.
@@ -730,25 +736,26 @@ set_goal([¨COLLAPSEõ®Æ, ¨P_Compõ®Æ], ¨FÆ);
 a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [òâpâl_def, COLLAPSEõ®_def, P_Compõ®_def]
 	THEN contr_tac);
 a (SPEC_NTH_ASM_T 2 ¨Ãx:S∑ ≥ x çâmâp xÆ (strip_asm_tac o (rewrite_rule[])));
-a (all_asm_fc_tac[]);
-a (SPEC_NTH_ASM_T 1 ¨xÆ (strip_asm_tac o (rewrite_rule[])));
-a (spec_nth_asm_tac 6 ¨s2'Æ);
-a (spec_nth_asm_tac 2 ¨x'Æ);
+a (ALL_ASM_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[])))[]);
+a (spec_nth_asm_tac 1 ¨xÆ);
 (* *** Goal "1" *** *)
-a (spec_nth_asm_tac 3 ¨x'Æ);
+a (spec_nth_asm_tac 7 ¨s2'Æ);
+a (spec_nth_asm_tac 1 ¨xÆ);
 (* *** Goal "2" *** *)
-a (spec_nth_asm_tac 3 ¨x'Æ);
+a (spec_nth_asm_tac 7 ¨s2'Æ);
+a (spec_nth_asm_tac 1 ¨xÆ);
 val COLLAPSE_contradiction_thm3 = save_pop_thm "COLLAPSE_contradiction_thm3";
 =TEX
 }%ignore
 
 Strangely, though taking this contradiction as establishing the need to weaken plural comprehension, he does not offer a weakened version which is compatible with \emph{COLLAPSE}.
+
 One obvious `solution' is simply to restrict plural comprehension to some stage in the formation of sets, thus in effect downgrading it to separation.
 
 πHOLCONST
 ‹ €P_Compâwõ®›: BOOL
 ˜¸¸¸¸¸¸
-‹ P_Compâwõ® § òâpâl µâmâp ∆∑ ®∂ xx∑ µâmâs u∑ u ûâmâp xx § ∆ u
+‹ P_Compâwõ® § µ∆∑ òâpâl ®∂ xx∑ µâmâs u∑ u ûâmâp xx § ∆ u
 ∞
 
 I don't have the means in the present context to establish the consistency of this weakened comprehension with \emph{COLLAPSE} thought that does seem intuitively plausible.
@@ -793,7 +800,7 @@ declare_infix(240, "éâmâp");
 ∞
 
 πHOLCONST
-‹ $€éâmâp›: S ≠ S ≠ PROPâm
+‹ $éâmâp: S ≠ S ≠ PROPâm
 ˜¸¸¸¸¸¸
 ‹ µx y∑ x éâmâp y = ≥ x çâmâp y
 ∞
@@ -804,7 +811,7 @@ The four required results (of which the last three are asserted by Linnebo as ax
 €eqçâmâp_©_thm› = 	Ù ò x =âmâp y ¥ © (x =âmâp y)
 €Ωçâmâp_©_thm› = 	Ù ò x Ωâmâp y ¥ © (x Ωâmâp y)
 €çâmâp_©_thm› =		Ù ò x çâmâp y ¥ © (x çâmâp y)
-€éâmâp_©_thm› =		Ù ò x éâmâp y ¥ © (x éâmâp y)
+éâmâp_©_thm =		Ù ò x éâmâp y ¥ © (x éâmâp y)
 =TEX
 
 \ignore{
@@ -853,8 +860,8 @@ However, by way of checking that our definitions are consistent with Linnebo's s
 €®©±_thm› = ò ® ∆ ¥ © ∆, ò ® Ÿ ¥ © Ÿ
 	Ù ò ® (∆ ± Ÿ) ¥ © (∆ ± Ÿ)
 
-€®©®∂âmâ_thm› = µ x∑ ò ® (Ÿ x) ¥ © (Ÿ x)
-	Ù ò ® (∂âmâp x∑ Ÿ x) ¥ © (® (∂âmâp x∑ Ÿ x))
+€®©®∂âmâp_thm› = µ xx∑ ò ® (Ÿ xx) ¥ © (Ÿ xx)
+	Ù ò ® (∂ xx∑ Ÿ xx) ¥ © (® (∂ xx∑ Ÿ xx))
 =TEX
 
 \ignore{
@@ -880,17 +887,17 @@ a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[òâpâl_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 val ®©±_thm = save_pop_thm "®©±_thm";
 
-set_goal([¨µx∑ òâpâl ® (Ÿ x) ¥ © (Ÿ x)Æ], ¨òâpâl ®(∂âmâp x∑ (Ÿ x)) ¥ ©(®∂âmâp x∑ (Ÿ x))Æ);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac
-	THEN asm_fc_tac[]);
-a (spec_nth_asm_tac 8 ¨xÆ);
+set_goal([¨µxx:S PL∑ òâpâl ® (Ÿ xx) ¥ © (Ÿ xx)Æ], ¨òâpâl ®(∂âmâp xx∑ (Ÿ xx)) ¥ ©(®∂âmâp xx∑ (Ÿ xx))Æ);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[òâpâl_def, ©âpâl_def, ®âpâl_def] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 7 ¨xxÆ);
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
-a (asm_fc_tac[]);
-a (∂_tac ¨s2'Æ THEN asm_rewrite_tac[]);
-a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
-val ®©®∂âmâ_thm = save_pop_thm "®©®∂âmâ_thm";
+a (all_asm_fc_tac[Stages_fc_thm]);
+a (∂_tac ¨z'Æ THEN asm_rewrite_tac[]);
+a (∂_tac ¨xxÆ);
+a (lemma_tac ¨ThisStage Ä z'Æ THEN PC_T1 "hol1" asm_prove_tac[]);
+val ®©®∂âmâp_thm = save_pop_thm "®©®∂âmâp_thm";
 =TEX
 }%ignore
 
@@ -911,7 +918,7 @@ This theorem is of greater scope than Linnebo's \emph{Theorem 1}, since we have 
 Since for that set of propositions \emph{Lemma 1} shows that they are necessary if true, and hence there will always be a stage which is reachable from \emph{ThisStage} at which $∂ x∑ ∆ x$ if there is any stage at which it holds.
 
 So our formally obtained results come very close to Linnebo's \emph{Theorem 1} if not quite as close as we might like.
-To get a more exact semantic correspondent to Linnebo's \emph{Theorem 1} it would be necessary to define the set of modal propositions which are the meanings of the set of formula obtainable by modalisation of sentences of first order set theory.
+To get a more exact semantic correspondent to Linnebo's \emph{Theorem 1} it would be necessary to define the set of modal propositions which are the meanings of the set of formulae obtainable by modalisation of sentences of first order set theory.
 
 \ignore{
 =SML
