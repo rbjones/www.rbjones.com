@@ -1,5 +1,5 @@
 =TEX
-\def\rbjidtADIdoc{$$Id: t038.doc,v 1.3 2011/02/12 09:14:19 rbj Exp $$}
+\def\rbjidtADIdoc{$$Id: t038.doc,v 1.4 2011/04/25 19:51:22 rbj Exp $$}
 
 The following presentation of Higher Order Logic is undertaken using the interactive proof assistant {\Product}.
 The first part of the presentation (Sections \ref{ST}-\ref{STT}) closely follows Church's paper \cite{church40}, and the remainder accounts for the subsequent developments which are relevant to an understanding of documents produced using {\Product}.
@@ -132,6 +132,10 @@ fun	print_Type … = "…"
 |	print_Type (f ­ a) = concat [if f = … orelse f = i then print_Type f else concat ["(", print_Type f, ")"], "­", print_Type a]
 ;
 =TEX
+=IGN
+print_Type (… ­ i);
+
+=TEX
 
 =IGN
 fun def_const consts (h::t) = find consts (fn c => fst(dest_const c) = h)
@@ -148,8 +152,6 @@ get_consts "î";
 get_defns "î";
 map fst (get_defns "one");
 =TEX
-
-
 
 =SML
 infix ›ë;
@@ -175,7 +177,6 @@ fun print_Term (V (s, t)) = concat["(", s, ":", print_Type t, ")"]
 		print_Term f,
 		if atomic_Term a then print_Term a else concat["(", print_Term a, ")"]]
 |	print_Term (Ì (s, ty, tm)) = concat ["Ì", s, ":", print_Type ty, print_Term tm];
-
 =TEX
 
 =SML
@@ -195,9 +196,9 @@ fun typ_of (V(s, t)) = t
 		     and ta = typ_of a
 	 	     in	if tfd = ta
 			then tfc
-			else raise Ill_typed_term (concat[
+			else raise Ill_typed_term (translate_for_output ((concat[
 				"function:", print_Term f, " :", print_Type (tfd ­ tfc), " ",
-				"argument:", print_Term a, " :", print_Type (ta)])
+				"argument:", print_Term a, " :", print_Type (ta)])))
 		     end;
 
 typ_of ((C ("a", i ­ …)) ‰a (V ("a", i)));
@@ -236,7 +237,7 @@ fun Suc‰t a =
 	let val f = V("f", a ­ a);
 	    val n = V("n", a ›ë 1);
 	    val x = V("x", a)
-	in Ì("n", a ›ë 1, Ì("f", a ­ a, Ì("x", a, (f ‰a (n ‰a f ‰a x)))))
+	in Ì("n", a ›ë 1, Ì("f", a ­ a, Ì("x", a, (f ‰a ((n ‰a f) ‰a x)))))
 	end; 
 fun Suc A = (Suc‰t (typ_of A)) ‰a A;
 fun N‰t a = Ì("n", a ›ë 1,
@@ -250,14 +251,265 @@ fun N‰t a = Ì("n", a ›ë 1,
 	    )
 	))));
 =IGN
-typ_of (Suc("x" ‰v (i ›ë 1)));
+typ_of (Suc(V ("x", (i ›ë 1))));
 typ_of ((N‰t i));
+"\173";
+print_Type (i ›ë 2);
+print_Term (Suc(V ("x", (i ›ë 1))));
+typ_of(V ("x", (i ›ë 1)));
 =TEX
 
 
-\section{Higher Order Logic}\label{HOL}
+\section{HOL}\label{HOL}
 
-\section{HOL}
+\subsection{Origins}
+
+Formal Higher Order Logics originate in Russell's Theory of Types \cite{russell08} which is a so-called \emph{ramified} type theory, the ramifications in which are obviated by the adoption of an axiom of reducibility.
+That the effect could be obtained more economically by omitting both the ramifications and the axiom of reducibility was quickly noted, and the resulting Simple Theory of Types was first codified in detail by Rudolf Carnap in his \emph{Abriss Der Logistik}\cite{carnap29}.
+
+Alonzo Church, for the purpose of answering the `enscheidungsproblem' distilled the essence of functional abstraction into the lambda-calculus, and subsequently investigated whether this calculus could be made the basis for a logical systems strong enough for mathematics.
+An attempt using a type-free lambda-calculus having foundered, Church put forward an elegant and economic formulation of the Simple Theory of Types \cite{church40} based on a simply-typed lambda-calculus.
+Later, Robin Milner (a computer scientist), for purposes connected with program verification using a logic for computable functions devised by Dana Scott (a set theorist), devised a polymorphic version of the simply typed lambda calculus (i.e. one in which type variables were permitted), and lead the development of LCF, an interactive proof assistant in which formal proofs in LCF could be constructed and checked using a functional programming language also benefitting from a polymorphic type system.
+
+The version of Higher Order Logic which is used in this document was then devised by Mike Gordon for the formal verification of digital hardware.
+It consists of Church's formulation of the Simple Theory of Types made polymorphic, augmented by principles of convervative extension and implemented following the LCF paradigm as a proof assistant.
+The present document was prepared using a subsequently developed proof assistant for that same logical system, again following the patterm set by LCF.
+
+\subsection{The HOL Language}
+
+For a fully detailed account of the {\ProductHOL} language see the {\Product} Description Manual\cite{ds/fmu/ied/usr005}.
+Tutorial material may be found in \cite{ds/fmu/ied/usr022,ds/fmu/ied/usr013}.
+The following is a very simplified and condensed account of the language which might possibly be sufficient for readers of this document.
+
+\subsubsection{Types}
+
+The types are defined inductively as follows.
+
+A type may be any of the following:
+
+\begin{itemize}
+\item a type-variable
+\item a type construction consisting of a type constructor applied to a (possibly empty) finite sequence of types
+\end{itemize}
+
+\subsubsection{Terms}
+
+Typed lambda terms consist of terms of the lambda-calculus annotated by types in the above type system.
+
+The terms are defined inductively as follows.
+
+A term may be any of the following:
+
+\begin{enumerate}
+\item a variable consisting of a name and a type
+\item a constant also consisting of a name and a type
+\item an application consisting of two terms, a function on the left and an argument on the right
+\item an abstraction consisting of a variable (name and type) and a body (a term). 
+\end{enumerate}
+
+Terms must be well-typed, and if well-typed will have a most general polymorphic simple type.
+The following rules must be observed.
+
+In an application the function must have a type of the form $”Á ­ Â®$ and the argument must have type $”Á®$.
+The application will then have type $”Â®$
+
+The type of an abstraction is formed from the type of the variable and the type of the body, and is the type of functions from the first to the second.
+It is written as a lambda abstraction.
+
+If $b$ has type $”Â®$ then the lambda abstraction $¬Ìx:Á· b®$ will have type $”Á­Â®$.
+
+In the concrete syntax of terms the presentation of applications is controlled by the use of fixity declarations which indicate whether the application of a variable or constant of a give name should be written prefix (with the function on the left of the argument), postfix (with the function on the right), or infix (with the function bewteen two arguments) and also permits a precedence to be assigned which controls how the parser inserts omitted brackets.
+Functions take only one argument which need not be enclosed in brackets, however, that argument might be a pair (or a pair of pairs) formed by the infix operator 
+=INLINEFT
+¬$,®
+=TEX
+, in which case it would normally be enclosed in brackets.
+As in this example, the lexical status of a function may be suspended by preceding it with a dollar sign, and this is necessary if the function is to be used as an argument to some other function.
+
+Type variables begin with a backquote $\verb!`!$.
+Variable and constant names may include special symbols.
+
+
+\subsubsection{Formulae and Sequents}
+
+A formula is a term of type ”BOOL®.
+
+The logical system is a Hilbert style sequent calculus.
+A sequent is a list of formulae (the assumptions) together with a single formula (the conclusion).
+A sequent which has not been proven is called a goal or a conjecture.
+Sequents which have been proven have a special ML type THM.
+Objects of this type can only be computed by computations which parallel the structure of the logical system with the effect that all objects of type THM are indeed theorems of the logic derivable in an appropriate context.
+The relevant kind of context is call a theory, and determines what definitions and/or non-logical axioms are in scope.
+Theories are organised into a heirarchy, each theory except "min" having at least one parent and inheriting all definitions and axioms from its ancestors.
+Proven theorems may be saved in a theory, in which case they will be listed with the theory.
+
+\subsubsection{Primitive Type Constructors and Constants}
+
+The primitive type constructors and constants are introduced in \href{http://www.rbjones.com/rbjpub/pp/min.html}{theory min}.
+
+There are three primitive type constructors.
+Two 0-ary constructors (type constants), a type of individuals $”IND®$ and a type of truth values $”BOOL®$, and a 2-ary constructor $­$ (function space) normally written infix (
+=INLINEFT
+”BOOL ­ BOOL®
+=TEX
+is the type of unary functions over type $”BOOL®$).
+
+There are just three primitive constants:
+
+\begin{centering}
+\hfil
+\begin{tabular}{l l l}
+$´$&$:BOOL­BOOL­BOOL$ & material implication\\
+$=$&$:'a­'a­BOOL$ & equality\\
+$Å$&$:('a­BOOL)­'a$ & the choice function\\
+\end{tabular}
+\hfil
+\end{centering}
+
+\subsubsection{Primitive Definitions}
+
+Certain definitions are required before the axioms of HOL can be stated.
+These define the logical connectives and quantifiers and the concepts of injection and surjection which are needed in the axiom of infinity and in defining new types.
+
+\begin{centering}
+\hfil
+\begin{tabular}{l l}
+T &	$:BOOL$\\
+$µ$ &	$:('a­BOOL)­BOOL$\\
+$¶$ &	$:('a­BOOL)­BOOL$\\
+F &	$:BOOL$\\
+$³$ &	$:BOOL­BOOL$\\
+$±$ &	$:BOOL­BOOL­BOOL$\\
+$²$ &	$:BOOL­BOOL­BOOL$\\
+OneOne & $:('a­'b)­BOOL$\\
+Onto &	$:('a­'b)­BOOL$\\
+TypeDefn & $:('b­BOOL)­('a­'b)­BOOL$\\
+\end{tabular}
+\hfil
+\end{centering}
+
+These definitions may be found in \href{http://www.rbjones.com/rbjpub/pp/log.html}{theory log}.
+
+\subsubsection{Fixity and Sugar}
+
+In order to make HOL terms more readable, certain special syntactic forms are accepted by the parser which are closer to normal mathenatical notation than would otherwise be acceptable.
+Full details of the accepted concrete syntax are shown in the {\Product} Description Manual \cite{ds/fmu/ied/usr005}
+
+\hfil
+\begin{tabular}{l l p{3in}}
+& {\bf Sugared} & {\bf Unsweetened} \\
+binders &
+=INLINEFT
+µx· x+x
+=TEX
+&
+=INLINEFT
+$µ (Ìx· x+x)
+=TEX
+\\
+paired abstractions &
+=INLINEFT
+Ì(x, y)· x
+=TEX
+&
+=INLINEFT
+Uncurry (Ìx y· x)
+=TEX
+\\
+let clauses &
+=INLINEFT
+let a = 4 in a * a
+=TEX
+&
+=INLINEFT
+Let (Ìa· a * a) 4
+=TEX
+\\
+if clauses &
+=INLINEFT
+if a = 4 then 0 else a * a
+=TEX
+&
+=INLINEFT
+Cond (a = 4) 0 (a * a)
+=TEX
+\\
+set displays &
+=INLINEFT
+{1;2;3}
+=TEX
+&
+=INLINEFT
+Insert 1 (Insert 2 (Insert 3 {}))
+=TEX
+\\
+set comprehension &
+=INLINEFT
+{x | x ¼ 34}
+=TEX
+&
+=INLINEFT
+SetComp (Ìx· x ¼ 34)
+=TEX
+\\
+list displays &
+=INLINEFT
+[1;2;3]
+=TEX
+&
+=INLINEFT
+Cons 1 (Cons 2 (Cons 3 []))
+=TEX
+\\
+\end{tabular}
+\hfil
+
+\subsection{The HOL Deductive System}
+
+\subsubsection{Axioms}
+
+There are five axioms.
+
+
+\hfil
+\begin{tabular}{l l}
+$bool\_cases\_axiom$ & asserts that T and F are the only values of type BOOL.\\
+$´\_antisym\_axiom$ & asserts that implication is antisymmetric.\\
+$È\_axiom$ & makes functions extensional.\\
+$Å\_axiom$ & is the axiom of choice.\\
+$infinity\_axiom$ & is the axiom of infinity.\\
+\end{tabular}
+\hfil
+
+These axioms may be found in \href{http://www.rbjones.com/rbjpub/pp/init.html}{theory init}.
+
+\subsubsection{Rules of Inference}
+
+There are six primitive rules of inference in Church's STT:
+
+\begin{itemize}
+\item[I] Alpha conversion.
+\item[II] Beta contraction.
+\item[III] Beta expansion.
+\item[IV] Substitution for free variables
+\item[V] Modus Ponens
+\item[VI] Universal Generalisation
+\end{itemize}
+
+Our system also needs a rule permitting the instantiation of type variables.
+
+\subsubsection{Definitions and Other Extensions}
+
+There are three kinds of extension which are possible.
+Axioms, definitions and conservative extensions.
+
+An axiom is an assertion of a sequent without proof.
+These are always stored as such in the current theory when they are asserted so that the axioms used in deriving theorems can be determined.
+HOL is a powerful logical system sufficient for the development of a large part of mathematics using only definitions or conservative extensions over the primitive logical axioms.
+It is therefore rarely necessary to adopt new axioms, and it is the norm to proceed by definitions and conservative extensions.
+
+
+
 
 \section{ProofPower}
 
