@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.13 2011/03/26 17:17:58 rbj Exp $
+$Id: t005.doc,v 1.14 2011/10/25 09:10:46 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -40,12 +40,12 @@ Fixed points, well founded relations and a recursion theorem.
 
 Created 2004/07/15
 
-Last Modified $ $Date: 2011/03/26 17:17:58 $ $
+Last Modified $ $Date: 2011/10/25 09:10:46 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 
-$ $Id: t005.doc,v 1.13 2011/03/26 17:17:58 rbj Exp $ $
+$ $Id: t005.doc,v 1.14 2011/10/25 09:10:46 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -128,6 +128,11 @@ set_pc "hol";
 Ûtc_decomp_thm2Ý =
    	ô µ r x y· tc r x y
 	´ (¶ f n· x = f 0 ± y = f n ± (µ m· m < n ´ r (f m) (f (m + 1))))
+
+Ûtc_decomp_thm3Ý =
+   ô µ r x y· tc r x y ´ (¶ f n· x = f 0 ± y = f (n + 1)
+				± (µ m· m ¼ n ´ r (f m) (f (m + 1))))
+
 Ûtc_mono_thmÝ = 
 	ô µ r1 r2· (µ x y· r1 x y ´ r2 x y)
 		´ (µ x y· tc r1 x y ´ tc r2 x y)
@@ -265,6 +270,36 @@ a (asm_rewrite_tac[]);
 (* *** Goal "2.3" *** *)
 a (POP_ASM_T ante_tac THEN rewrite_tac[] THEN strip_tac);
 val tc_decomp_thm2 = save_pop_thm "tc_decomp_thm2";
+
+set_goal([], ¬µ r x y· tc r x y ´ ¶f n· x = f 0 ± y = f (n+1)
+	± (µm· m ¼ n ´ r (f m) (f (m+1)))®);
+a (REPEAT strip_tac);
+a (fc_tac [tc_decomp_thm]);
+(* *** Goal "1" *** *)
+a (¶_tac ¬Ìz· if z = 0 then x else y®
+	THEN ¶_tac ¬0®
+	THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [tc_decomp_thm2]);
+a (¶_tac ¬Ìv· if v ¼ n' then f' v else y®
+	THEN ¶_tac ¬n'®
+	THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN asm_rewrite_tac[]);
+a (cond_cases_tac ¬m + 1 ¼ n'®);
+(* *** Goal "2.1" *** *)
+a (lemma_tac ¬m < n'®
+	THEN1 (PC_T1 "lin_arith" prove_tac [asm_rule ¬m + 1 ¼ n'®]));
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬m = n'® THEN1 (PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬³ m + 1 ¼ n'®,
+	asm_rule ¬m ¼ n'®]));
+a (var_elim_asm_tac ¬m = n'®);
+a (DROP_ASM_T  ¬r z y® ante_tac
+	THEN asm_rewrite_tac[]);
+val tc_decomp_thm3 = save_pop_thm "tc_decomp_thm3";
+
 
 set_goal([],¬µ r1 r2· (µ x y· r1 x y ´ r2 x y)
 	´ (µ x y· tc r1 x y ´ tc r2 x y)®);

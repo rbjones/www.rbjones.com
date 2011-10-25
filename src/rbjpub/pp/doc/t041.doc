@@ -3,9 +3,9 @@
 =VDUMP t041i.tex
 \hypersetup{pdfkeywords=RogerBishopJones}
 
-Last Change $ $Date: 2011/03/26 19:46:06 $ $
+Last Change $ $Date: 2011/10/25 09:10:46 $ $
 
-$ $Id: t041.doc,v 1.12 2011/03/26 19:46:06 rbj Exp $ $
+$ $Id: t041.doc,v 1.13 2011/10/25 09:10:46 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -448,7 +448,7 @@ drop_main_goal();
 The following function provides domain restriction of a function over $”'a\ GSU®$.
 Since this is an operation on total functions, the effect is achieved by delivering a function which returns the same value for all arguments outside the restricted domain.
 The purpose is to constrain recursion to be well founded, so the possibility of returning a function completely unconstrained in what it does off the restricted domain does not suffice (we would not be able to prove that the domain restriction had done anything at all).
-
+The domain is a set, but the constraint is to its transitive closure.
 
 =SML
 declare_infix(310, "ò‰u‰e");
@@ -457,15 +457,14 @@ declare_infix(310, "ò‰u‰e");
 ¹HOLCONST
 Ü $Ûò‰u‰eİ : 'a GSU ­ ('a GSU ­ 'b) ­ ('a GSU ­ 'b)
 ÷üüüüüüüüüüü
-Ü µs f· s ò‰u‰e f = Ìt· if t ‰u s then f t else Åx·T
+Ü µs f· s ò‰u‰e f = Ìt· if t ‰u›+ s then f t else Åx·T
 °
-
 
 A recursion lemma suitable for consistency proofs of primitive recursive definitions over our syntax can now be proven, this supports definition by primitive recursion of functions over the syntax.
 
 =GFT
 Ûcsc_recursion_lemmaİ =
-   ô µaf· ¶f· µc i· f (c í‰u i) = af ((Ran‰u ò‰u‰e i) f) c i
+   ô µaf· ¶f· µc i· f (c í‰u i) = af (i ò‰u‰e f) c i
 =TEX
 
 
@@ -474,7 +473,69 @@ A recursion lemma suitable for consistency proofs of primitive recursive definit
 val ò‰u‰e_def = get_spec ¬$ò‰u‰e®;
 
 set_goal([], ¬µ(af:('a GSU ­ 'b) ­ 'a GSU ­ 'a GSU ­ 'b)· ¶(f:'a GSU ­ 'b)·
-	µc i· f (c í‰u i) = af ((Ran‰u i) ò‰u‰e f) c i®);
+	µc i· f (c í‰u i) = af (i ò‰u‰e f) c i®);
+val _ = a (REPEAT strip_tac);
+val _ = a (lemma_tac ¬¶g:((('a)GSU­'b)­('a)GSU­'b)·
+	g = Ìf x· if (¶c i· x = c í‰u i) 
+		then af ((Snd‰u x) ò‰u‰e f) (Fst‰u x) (Snd‰u x)
+		else Åx·T®
+	THEN1 prove_¶_tac);
+val _ = a (lemma_tac ¬g respects $‰u›+®
+	THEN1 (asm_rewrite_tac [get_spec ¬$respects®] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (cond_cases_tac ¬¶ c i· x = c í‰u i®);
+a (LEMMA_T ¬Snd‰u x ò‰u‰e g' = Snd‰u x ò‰u‰e h® rewrite_thm_tac);
+a (rewrite_tac [ò‰u‰e_def] THEN strip_tac);
+a (cond_cases_tac ¬x' ‰u›+ Snd‰u x®);
+a (spec_nth_asm_tac 3 ¬x'® THEN_TRY asm_rewrite_tac[]);
+a (lemma_tac ¬Snd‰u x ‰u›+ x® THEN1 asm_rewrite_tac[tc‰u_í‰u_right_thm]);
+a (all_fc_tac [tc‰u_trans_thm]);
+a (all_fc_tac [tc_incr_thm]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬fix g®);
+a (asm_tac gsu_wftc_thm2);
+a (all_fc_tac [get_spec ¬fix®]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
+a (GET_NTH_ASM_T 1 (once_rewrite_thm_tac o map_eq_sym_rule));
+a (rewrite_tac[] THEN REPEAT strip_tac);
+a (cond_cases_tac ¬¶ c' i'· c = c' ± i = i'®);
+a (spec_nth_asm_tac 1 ¬c®);
+a (spec_nth_asm_tac 1 ¬i®);
+val csc_recursion_lemma = save_pop_thm "csc_recursion_lemma";
+=TEX
+}%ignore
+
+This is (when proven) plugged into proof context {\it 'icomb} for use in consistency proofs.
+
+=SML
+add_¶_cd_thms [csc_recursion_lemma] "'icomb";
+set_merge_pcs ["misc31", "'icomb"];
+=TEX
+
+This is just to test the recursion theorem.
+
+¹HOLCONST
+Ü ÛCscRankİ : 'a GSU ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µc i· CscRank (c í‰u i) =
+	Ş‰u (Imagep‰u Suc‰u ((Imagep‰u (i ò‰u‰e CscRank)) (Ran‰u i)))
+°
+
+That one is not general enough.
+Lets try:
+
+=GFT
+Ûcsc_recursion_lemmaİ =
+   ô µaf· ¶f· µc i· f (c í‰u i) = af ((Ran‰u ò‰u‰e i) f) c i
+=TEX
+
+
+\ignore{
+=IGN
+val ò‰u‰e_def = get_spec ¬$ò‰u‰e®;
+
+set_goal([], ¬µ(af:('a GSU ­ 'b) ­ 'a GSU ­ 'a GSU ­ 'b)· ¶(f:'a GSU ­ 'b)·
+	µc i· f (c í‰u i) = af f c i®);
 val _ = a (REPEAT strip_tac);
 val _ = a (lemma_tac ¬¶g:((('a)GSU­'b)­('a)GSU­'b)·
 	g = Ìf x· if (¶c i· x = c í‰u i) 
@@ -509,21 +570,6 @@ val csc_recursion_lemma = save_pop_thm "csc_recursion_lemma";
 =TEX
 }%ignore
 
-This is (when proven) plugged into proof context {\it 'icomb} for use in consistency proofs.
-
-=SML
-add_¶_cd_thms [csc_recursion_lemma] "'icomb";
-set_merge_pcs ["misc31", "'icomb"];
-=TEX
-
-This is just to test the recursion theorem.
-
-¹HOLCONST
-Ü ÛCscRankİ : 'a GSU ­ 'a GSU
-÷üüüüüüüüüüü
-Ü µc i· CscRank (c í‰u i) =
-	Ş‰u (Imagep‰u Suc‰u ((Imagep‰u ((Ran‰u i) ò‰u‰e CscRank)) (Ran‰u i)))
-°
 
 \subsubsection{Finitary Constant Combinators}
 
@@ -868,14 +914,19 @@ The least fixed point will then be used to determine the semantics of the infini
 
 These are defined as relations over \emph{Csyntax}.
 
+=SML
+declare_type_abbrev("RED", ["'a"], ”'a GSU ­ 'a GSU ­ BOOL®);
+=TEX
+
+
 ¹HOLCONST
-Ü ÛKredİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛKredİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· Kred s t ¤ ¶x y· s = (K‰c ‰c x) ‰c y ± t = x
 °
 
 ¹HOLCONST
-Ü ÛSredİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛSredİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· Sred s t ¤ ¶x y z· s = ((S‰c ‰c x) ‰c y) ‰c z ± t = (x ‰c z) ‰c (y ‰c z)
 °
@@ -883,7 +934,7 @@ These are defined as relations over \emph{Csyntax}.
 The projection combinator is more complicated.
 
 ¹HOLCONST
-Ü Û—‰r‰e‰dİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü Û—‰r‰e‰dİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· —‰r‰e‰d s t ¤ (¶k l m n· Dom‰u k = Dom‰u m
 		± Ordinal‰u (Dom‰u k) ± Ran‰u k = Unit‰u F‰c
@@ -897,7 +948,7 @@ The projection combinator is more complicated.
 As is the infinitary ``map''.
 
 ¹HOLCONST
-Ü Û™‰r‰e‰dİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü Û™‰r‰e‰dİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· ™‰r‰e‰d s t ¤ ¶f l m· Dom‰u l = Dom‰u m
 Ü		± Ordinal‰u (Dom‰u l)
@@ -912,7 +963,7 @@ Because the infinitary combinators are so much more complex than the finitary co
 The finitary combinators yield this notion of reducibility:
 
 ¹HOLCONST
-Ü ÛDComRedİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛDComRedİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· DComRed s t ¤ Kred s t ² Sred s t
 ° 
@@ -920,13 +971,13 @@ The finitary combinators yield this notion of reducibility:
 With the following for the infinitary combinators, which we will consider no further until we have demonstrated the viability of our method using only the finitary combinators.
 
 ¹HOLCONST
-Ü ÛDiComRedİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛDiComRedİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· DiComRed s t ¤ —‰r‰e‰d s t ² ™‰r‰e‰d s t 
 ° 
 
 ¹HOLCONST
-Ü ÛDbComRedİ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛDbComRedİ : 'a RED
 ÷üüüüüüüüüüü
 Ü µs t· DbComRed s t ¤ Kred s t ² Sred s t ² —‰r‰e‰d s t ² ™‰r‰e‰d s t 
 ° 
@@ -938,7 +989,7 @@ Since the negative part of the partial equivalence relation (and the positive pa
 This is how it is done:
 
 ¹HOLCONST
-Ü ÛNpİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛNpİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µr· Np r = Ìx y· r (($é‰c ‰c x) ‰c y) F‰c
 °
@@ -961,7 +1012,7 @@ This is consistent with the reduction rules for those constants to which we assi
 This provides an initial value for the inequality relation.
 
 ¹HOLCONST
-Ü ÛIneq0İ : 'a GSU ­ 'a GSU ­ BOOL
+Ü ÛIneq0İ : 'a RED
 ÷üüüüüüüüüüü
 Ü Ineq0 = Ìx y·	¶v w· x = MkCcon v ± y = MkCcon w ± ³ v = w	
 ° 
@@ -971,14 +1022,14 @@ The second part is that if two combinators when applied to equal lists of argume
 We need a closure operation which will take a notion of inequality and add to it any further inequalities which are immediately apparent from that inequality relation using the second rule just cited.
 
 ¹HOLCONST
-Ü ÛEqSeqİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛEqSeqİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µeq· EqSeq eq = Ìv w· Fun‰u v ± Fun‰u w ±  Dom‰u v = Dom‰u w ± Ordinal‰u (Dom‰u v)
 Ü		± µx· x ‰u Dom‰u v ´ eq (v ‰u x) (w ‰u x)
 °
 
 ¹HOLCONST
-Ü ÛIneqStepİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛIneqStepİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µeq· IneqStep eq = Ìx y· Ineq0 x y ² Np eq x y
 Ü			² ¶v w· EqSeq eq v w ± Np eq (x ‰c v) (y ‰c w)
@@ -997,14 +1048,14 @@ This will be a partial relation in the form of two disjoint relations, one posit
 If the positive relation holds over the arguments the equation reduces to $T‰c$ if the negative relation holds the equation reduces to $F‰c$.
 
 ¹HOLCONST
-Ü ÛEqStepİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛEqStepİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µeq· EqStep eq = Ìv w· ¶c i1 i2· c í‰u i1  Csyntax ± c í‰u i2  Csyntax
 Ü	± Dom‰u i1 = Dom‰u i2 ± (µx· x ‰u Dom‰u i1 ´ eq (i1 ‰c x) (i2 ‰c x))
 °
 
 ¹HOLCONST
-Ü Ûé‰r‰e‰dİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü Ûé‰r‰e‰dİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µeq· é‰r‰e‰d eq = Ìx y· ¶l m· x = (($é‰c ‰c l) ‰c m)
 Ü			± (EqStep eq x y ± y = T‰c ² IneqStep eq x y ± y = F‰c)
@@ -1017,7 +1068,7 @@ There must be a name for this.
 I have two versions, not sure yet which to use.
 
 ¹HOLCONST
-Ü ÛRedClosed1İ : ('a GSU ­ 'a GSU ­ BOOL) ­ BOOL
+Ü ÛRedClosed1İ : ('a RED) ­ BOOL
 ÷üüüüüüüüüüü
 Ü µr· RedClosed1 r = µc i1 i2· c í‰u i1  Csyntax ± c í‰u i2  Csyntax
 Ü	± Dom‰u i1 = Dom‰u i2 ± (µx· x ‰u Dom‰u i1 ´ r (i1 ‰c x) (i2 ‰c x))
@@ -1025,7 +1076,7 @@ I have two versions, not sure yet which to use.
 ° 
 
 ¹HOLCONST
-Ü ÛRedClosed2İ : ('a GSU ­ 'a GSU ­ BOOL) ­ BOOL
+Ü ÛRedClosed2İ : ('a RED) ­ BOOL
 ÷üüüüüüüüüüü
 Ü µr· RedClosed2 r = µc d e f g h· c í‰u e  Csyntax ± d í‰u f  Csyntax
 Ü	± r (c í‰u e) (d í‰u f) ± EqSeq r g h 
@@ -1035,7 +1086,7 @@ I have two versions, not sure yet which to use.
 I'll use them both pro-tem.
 
 ¹HOLCONST
-Ü ÛRedClosureİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛRedClosureİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µr· RedClosure r = Snd (EquivClosure
 	(Csyntax, Ìx y· µr1· RedClosed1 r1 ± RedClosed2 r1 ± (Csyntax, r) € (Csyntax, r1)
@@ -1048,7 +1099,7 @@ The functor with which we define equivalence must a monotone functor over partia
 It requires, or rather consists of a positive and a negative closure operator, each of which has access to the partial equivalence relation and delivers one half of the resulting partial equivalence relation.
 
 ¹HOLCONST
-Ü ÛILamFunctİ : ('a GSU ­ 'a GSU ­ BOOL) ­ ('a GSU ­ 'a GSU ­ BOOL)
+Ü ÛILamFunctİ : ('a RED) ­ ('a RED)
 ÷üüüüüüüüüüü
 Ü µr· ILamFunct r = RedClosure (é‰r‰e‰d r)
 ° 
@@ -1142,22 +1193,10 @@ val ¶_PureInfComb_lemma = pop_thm ();
 
 At this point it is desirable to prove something like the Church-Rosser theorem for this system, so that we know that not all combinators are equivalent.
 Since this is probably hard I am exploring a bit more before digging in to the proof.
-My plan at present is to proceed as follows:
 
-\begin{enumerate}
-\item Prove a Church Rosser system for pure combinators.
-\begin{enumerate}
-\item Prove that Church Rosser as a property of relations is preserved by transitive closure.
-\item Prove that sets of disjoint direct combinatory reductions are Church Rosser.
-\end{enumerate}
-\item Extend the proof (if necessary) to the infinitary map combinator.
-\item Extend the proof to the infinitary projection combinator.
-\item Extend the proof to partial Equivalence combinators.
-\end{enumerate}
-
-Exactly how many of these ``extensions'' will prove necessary is moot.
-This depends on exactly how the condition on the reductions are formulated, 
-
+The most doubtful part of the enterprise is not the infinitary combinators.
+It is the illative combinators.
+So its probably worth working through the handling of the illative combinator in a system with no infinitary combinators, and adding in the infinitary combinators (whose purpose is just to add strength), when the treatment of the illative combinator has been proven in the simpler context.
 
 ¹HOLCONST
 Ü ÛChurchRosserİ : ('a ­ 'a ­ BOOL) ­ BOOL
@@ -1165,29 +1204,40 @@ This depends on exactly how the condition on the reductions are formulated,
 Ü µr· ChurchRosser r ¤ µw x y· r w x ± r w y ´ ¶z· r x z ± r y z
 ° 
 
-¹HOLCONST
+=IGN
+ ¹HOLCONST
 Ü ÛCrUbİ : ('a ­ 'a ­ BOOL) ­ ('a ­ 'a ­ 'a)
-÷üüüüüüüüüüü
+ ÷üüüüüüüüüüü
 Ü µr· CrUb r = Ìx y· Åz· r x z ± r y z
-° 
+ ° 
 
-¹HOLCONST
+ ¹HOLCONST
 Ü ÛCrRectangleİ : ('a ­ 'a ­ BOOL) ­ (î ­ 'a) ¸ (î ­ 'a) ­ (î ­ î ­ 'a)
-÷üüüüüüüüüüü
+ ÷üüüüüüüüüüü
 Ü µr f g x y·
 	CrRectangle r (f, g) 0 y  = f y
     ±	CrRectangle r (f, g) (x+1) 0  = g (x+1)
     ±	CrRectangle r (f, g) (x+1) (y+1)  = CrUb r (CrRectangle r (f, g) x (y+1)) (CrRectangle r (f, g) (x+1) y)
-° 
+ ° 
 
+=IGN
+ÛCrUb_thmİ = ô µ r· ChurchRosser r
+	´ (µ x y z· r x y ± r x z ´ r y (CrUb r y z) ± r z (CrUb r y z))
+=TEX
+
+I approach the Church-Rosser proofs (loosely) following a method I took from Barendegt (which he attributes to W. Tait and Per Martin-L{\ouml}f).
+This consists in proving that the transitive closure of a Church-Rosser relation is Church-Rosser, and then finding a Church-Rosser relation whose transitive closure is the desired relation.
+
+The first theorem is:
 
 =GFT
-ÛCrUb_thmİ = ô µ r· ChurchRosser r ´ (µ x y z· r x y ± r x z ´ r y (CrUb r y z) ± r z (CrUb r y z))
+ÛCrTc_thmİ = ô µ r· ChurchRosser r ´ ChurchRosser (tc r)
 =TEX
 
 \ignore{
 =SML
 val ChurchRosser_def = get_spec ¬ChurchRosser®;
+=IGN
 val CrUb_def = get_spec ¬CrUb®;
 val CrRectangle_def = get_spec ¬CrRectangle®;
 
@@ -1203,170 +1253,503 @@ a (all_asm_fc_tac[]);
 a (¶_tac ¬z''® THEN contr_tac);
 val CrUb_thm = save_pop_thm "CrUb_thm";
 
-set_goal([], ¬µr u v w x y· tc r u v ± tc r u w ´ CrRectangle r (f, g) x y ®);
-
-=IGN
-set_goal([], ¬µr· ChurchRosser (rtc r) ´ ChurchRosser (tc r)®);
-a (µ_tac THEN rewrite_tac [ChurchRosser_def, rtc_def]
-	THEN REPEAT strip_tac);
-a (LEMMA_T ¬(w = x ² tc r w x) ± (w = y ² tc r w y)® asm_tac THEN1 asm_rewrite_tac[]);
-a (LIST_SPEC_NTH_ASM_T 4 [¬w®, ¬x®, ¬y®] ((STRIP_THM_THEN THEN_TTCL STRIP_THM_THEN) check_asm_tac));
-a (POP_ASM_T strip_asm_tac);
-a (all_asm_fc_tac[]);
-
+=SML
 set_goal([], ¬µr· ChurchRosser r ´ ChurchRosser (tc r)®);
 a (strip_tac THEN rewrite_tac[ChurchRosser_def] THEN REPEAT strip_tac);
 (* a (cases_tac ¬r w x® THEN cases_tac ¬r w y®); *)
-a (lemma_tac ¬¶ub· µx y· (¶w· r w x ± r w y) ´ r x (ub x y) ± r y (ub x y)®);
+a (all_fc_tac [tc_decomp_thm3]);
+a (lemma_tac ¬¶ub· µx y· (¶w· r w x ± r w y) ´ r x (ub x y) ± r y (ub x y)
+	± ub y x = ub x y®);
 (* *** Goal "1" *** *)
-a (prove_¶_tac THEN REPEAT strip_tac);
-a (rewrite_tac[prove_rule [] ¬µx y· x ´ y ¤ ³x ² y®]);
-a (conv_tac (MAP_C simple_¶_²_conv));
-a (REPEAT strip_tac);
+a (¶_tac ¬Ìv w:'a· Åu:'a· r v u ± r w u® THEN rewrite_tac[]);
+a (REPEAT µ_tac THEN strip_tac);
+a (Å_tac ¬Å u· r x' u ± r y' u®);
+(* *** Goal "1.1" *** *)
 a (all_asm_fc_tac[]);
-a (¶_tac ¬z''® THEN asm_rewrite_tac[]);
+a (¶_tac ¬z'® THEN contr_tac);
+(* *** Goal "1.2" *** *)
+a (all_asm_fc_tac[] THEN asm_rewrite_tac[]);
+a (rewrite_tac [prove_rule [] ¬µu· r y' u ± r x' u ¤ r x' u ± r y' u® ]);
 (* *** Goal "2" *** *)
-a (all_fc_tac [tc_decomp_thm2]);
+(* to get round an error in the first version with minimal impact
+   I now change the usage of n and n' *)
+a (rename_tac [(¬n®, "no"), (¬n'®, "no'")]);
+a (lemma_tac ¬¶n n'· n = no+1 ± n' = no'+1® THEN1 prove_¶_tac);
 a (lemma_tac ¬¶crr· µx y·
 	crr 0 y  = f' y
     ±	crr (x+1) 0  = f (x+1)
-    ±	crr (x+1) (y+1)  = ub (crr x (y+1)) (crr (x+1) y)
-® THEN prove_¶_tac);
-a (¶_tac ¬crr n' n® THEN asm_rewrite_tac[]);
-a (lemma_tac ¬µx y· x < n ± y < n' ´ tc r (f (x+1)) (crr (x+1) (y+1)) ± tc r (f' (y+1)) (crr (x+1) (y+1))®
-	THEN REPEAT µ_tac);
+    ±	crr (x+1) (y+1)  = ub (crr x (y+1)) (crr (x+1) y)® THEN prove_¶_tac);
+a (lemma_tac ¬µxpy· xpy + 1 < n + n' ´ µx y· x < n ± y < n' ± x + y = xpy
+	´ r (crr x (y + 1)) (crr (x + 1) (y + 1))
+		± r (crr (x + 1) y) (crr (x + 1) (y + 1))®
+	THEN1 µ_tac);
 (* *** Goal "2.1" *** *)
-a (induction_tac ¬x'®);
+a (induction_tac ¬xpy®);
 (* *** Goal "2.1.1" *** *)
-a (induction_tac ¬y'®);
+a (rewrite_tac[] THEN (REPEAT_N 4 strip_tac) THEN asm_rewrite_tac[]);
+a (LEMMA_T ¬crr(0+1) 0 = f 1® (rewrite_thm_tac o (rewrite_rule[]))
+	THEN1 asm_rewrite_tac[]);
+a (lemma_tac ¬r w (f 1) ± r w (f' 1)® THEN strip_tac);
 (* *** Goal "2.1.1.1" *** *)
-a (strip_tac THEN asm_rewrite_tac[]);
-a (lemma_tac ¬r (f 1) (ub (f' 1) (f 1)) ± r (f' 1) (ub (f' 1) (f 1))®);
-(* *** Goal "2.1.1.1.1" *** *)
-a (LEMMA_T ¬¶ w· r w (f 1) ± r w (f' 1)® asm_tac THEN1 ¶_tac ¬f 0® THEN strip_tac);
-(* *** Goal "2.1.1.1.1.1" *** *)
-a (SPEC_NTH_ASM_T 7 ¬0® ante_tac THEN rewrite_tac[asm_rule ¬0 < n®]);
-(* *** Goal "2.1.1.1.1.2" *** *)
-a (LEMMA_T ¬r (f' 0) (f' 1)® ante_tac);
-a (SPEC_NTH_ASM_T 4 ¬0® ante_tac THEN rewrite_tac[asm_rule ¬0 < n'®]);
-a (SYM_ASMS_T rewrite_tac);
-(* *** Goal "2.1.1.1.1.3" *** *)
-a (POP_ASM_T strip_asm_tac THEN all_asm_fc_tac[]);
-(* *** Goal "2.1.1.1.1.4" *** *)
-a (POP_ASM_T strip_asm_tac THEN all_asm_fc_tac[]);
-(* *** Goal "2.1.1.1.2" *** *)
-a (fc_tac [tc_incr_thm] THEN REPEAT strip_tac);
+a (rewrite_tac[asm_rule ¬w = f 0®]);
+a (spec_nth_asm_tac 13 ¬0®);
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
 (* *** Goal "2.1.1.2" *** *)
-a (asm_rewrite_tac[]);
+a (rewrite_tac[asm_rule ¬w = f' 0®]);
+a (spec_nth_asm_tac 10 ¬0®);
+a (POP_ASM_T ante_tac THEN rewrite_tac[]);
 (* *** Goal "2.1.1.3" *** *)
-a (PC_T1 "lin_arith" asm_prove_tac[]);
+a (all_asm_fc_tac[]);
 (* *** Goal "2.1.1.4" *** *)
-a (strip_tac THEN asm_rewrite_tac[]);
-
-
-
-set_goal([], ¬µr· ChurchRosser r ´ ChurchRosser (tc r)®);
-a (strip_tac THEN rewrite_tac[ChurchRosser_def] THEN REPEAT strip_tac);
-(* a (cases_tac ¬r w x® THEN cases_tac ¬r w y®); *)
-a (lemma_tac ¬¶ub· µx y· (¶w· r w x ± r w y) ´ r x (ub x y) ± r y (ub x y)®);
-(* *** Goal "1" *** *)
-a (prove_¶_tac THEN REPEAT strip_tac);
-a (rewrite_tac[prove_rule [] ¬µx y· x ´ y ¤ ³x ² y®]);
-a (conv_tac (MAP_C simple_¶_²_conv));
-a (REPEAT strip_tac);
 a (all_asm_fc_tac[]);
-a (¶_tac ¬z''® THEN asm_rewrite_tac[]);
-(* *** Goal "2" *** *)
-a (all_fc_tac [tc_decomp_thm2]);
-a (lemma_tac ¬¶h· µfn v t·
-	 h fn v 0 = v
-	± h fn v (t+1) = ub (fn (t+1)) (h fn v t)® THEN prove_¶_tac);
-a (lemma_tac ¬¶g· µs:î·
-	 g 0 = f
-	± g (s+1) = h (g s) (f' (s+1))® THEN prove_¶_tac);
-a (lemma_tac ¬µs t:î· t+1 ¼ n' ´ s+1 ¼ n 
-	´ r (g s t) (g s (t+1))
-	± r (g s t) (g (s+1) t)® THEN REPEAT µ_tac);
-(* *** Goal "2.1" *** *)
-a (induction_tac ¬t® THEN_TRY asm_rewrite_tac[]);
-(* *** Goal "2.1.1" *** *)
-a (induction_tac ¬s® THEN asm_rewrite_tac[]);
-(* *** Goal "2.1.1.1" *** *)
-a (REPEAT strip_tac);
-a (cond_cases_tac ¬¶x· s = x+1®);
-a (asm_rewrite_tac[]);
-=IGN
-
-a (¶_tac ¬g n' n® THEN asm_rewrite_tac[]); 
-
-a (lemma_tac ¬µs t· s + 1 ¼ n ± t + 1 ¼ n'
-	´ r (g s t) (g (s+1) t)
-	± r (g s t) (g s (t+1))
-	± r (g (s+1) t) (g (s+1) (t+1))
-	± r (g s (t+1)) (g (s+1) (t+1))®);
-a (REPEAT µ_tac);
-
-a (lemma_tac ¬µs t:î· s + 1 ¼ n ± t + 1 ¼ n'
-	´ g 0 0 = f 0
-	± g 0 (t+1) = f (t+1)
-	± g (s+1) 0 = f'(s+1)
-	± g (s+1) (t+1) = ub (g (s+1) t) (g s (t+1))®);
-
-
-a (lemma_tac ¬¶g· µs t· s + 1 ¼ n ± t + 1 ¼ n'
-	´ r (g s t) (g (s+1) t)
-	± r (g s t) (g s (t+1))
-	± r (g (s+1) t) (g (s+1) (t+1))
-	± r (g s (t+1)) (g (s+1) (t+1))®);
-a (prove_¶_tac);
-
-
-(* *** Goal "2.1" *** *)
-a (LEMMA_T ¬¶nn:î· nn = n + n'® (STRIP_THM_THEN ante_tac) THEN1 prove_¶_tac);
-a (induction_tac ¬nn®);
-(* *** Goal "2.1.1" *** *)
-a (strip_tac THEN fc_tac [pc_rule1 "lin_arith" prove_rule [] ¬0 = n + n' ´ n = 0 ± n' = 0®]);
-a (asm_rewrite_tac[]);
 (* *** Goal "2.1.2" *** *)
-
-
-=IGN
-a (lemma_tac ¬µs· s + 1 ¼ n ´ µt· t + 1 ¼ n' ´ ¶u· tc r (f (s+1)) u ± tc r (f' (t+1)) u®);
-(* *** Goal "2.1" *** *)
+a (REPEAT_N 4 strip_tac);
+a (lemma_tac ¬xpy + 1 < n + n'®
+	THEN1 (PC_T1 "lin_arith" prove_tac [asm_rule ¬(xpy + 1) + 1 < n + n'®]));
+(* *** Goal "2.1.3" *** *)
+a (REPEAT_N 4 strip_tac);
+a (cond_cases_tac ¬x'=0 ² y'=0®);
+(* *** Goal "2.1.3.1" *** *)
+a (var_elim_asm_tac ¬x' = 0®);
+a (POP_ASM_T (asm_tac o (rewrite_rule[])));
+a (lemma_tac ¬xpy <n'® THEN1 PC_T1 "lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¬0 + xpy = xpy® asm_tac THEN1 rewrite_tac[]);
+a (list_spec_nth_asm_tac 7 [¬0®, ¬xpy®]);
+a (lemma_tac ¬xpy + 1 ¼ no'® THEN1 PC_T1 "lin_arith" prove_tac[
+	asm_rule ¬y' = xpy + 1®,
+	asm_rule ¬y' < n'®,
+	asm_rule ¬n' = no' + 1®]);
+a (spec_nth_asm_tac 15 ¬xpy+1®);
+a (POP_ASM_T ante_tac);
+a (LEMMA_T ¬f' (xpy + 1) = crr 0 (xpy + 1)® rewrite_thm_tac
+	THEN1 asm_rewrite_tac[]);
+a (LEMMA_T ¬f' ((xpy + 1) + 1) = crr 0 (y' +1)® rewrite_thm_tac
+	THEN1 asm_rewrite_tac[]);
 a (strip_tac);
-a (induction_tac ¬s®);
-(* *** Goal "2.1.1" *** *)
-a (rewrite_tac[]);
-a (strip_tac THEN strip_tac);
-a (induction_tac ¬t®);
-(* *** Goal "2.1.1.1" *** *)
-a (rewrite_tac[]);
+a (list_spec_nth_asm_tac 15 [¬crr (0 + 1) (xpy + 1)®, ¬crr 0 (y' + 1)®]);
+(* *** Goal "2.1.3.1.1" *** *)
+a (spec_nth_asm_tac 1 ¬crr 0 (xpy + 1)®);
+(* *** Goal "2.1.3.1.2" *** *)
+a (lemma_tac ¬crr 1 (y' + 1) = ub (crr (0 + 1) (xpy + 1)) (crr 0 (y' + 1))®);
+(* *** Goal "2.1.3.1.2.1" *** *)
+a (GET_NTH_ASM_T 1 (rewrite_thm_tac o eq_sym_rule));
+a (once_rewrite_tac[prove_rule [] ¬crr 1 (y' + 1)= crr(0+1)(y' + 1)®]);
+a (pure_asm_rewrite_tac[]);
+a (LEMMA_T ¬crr 1 (xpy + 1) = ub (f' (xpy + 1)) (crr (0 + 1) xpy)® rewrite_thm_tac);
+a (pure_rewrite_tac [prove_rule [] ¬crr 1 = crr (0+1)®]);
+a (pure_asm_rewrite_tac[]);
 a (strip_tac);
-a (lemma_tac ¬r w (f 1) ± r w (f' 1)®);
-(* *** Goal "2.1.1.1.1" *** *)
-a (lemma_tac ¬0 < n ± 0 < n'® THEN1 (asm_rewrite_tac [less_def]));
-a (ASM_FC_T (MAP_EVERY (asm_tac o (rewrite_rule[]))) [] THEN strip_tac);
-a (rewrite_tac[asm_rule ¬w = f 0®] THEN strip_tac);
-a (rewrite_tac[asm_rule ¬w = f' 0®] THEN strip_tac);
-(* *** Goal "2.1.1.1.2" *** *)
+(* *** Goal "2.1.3.1.2.2" *** *)
+a (GET_NTH_ASM_T 1 rewrite_thm_tac);
+a (GET_NTH_ASM_T 3 (rewrite_thm_tac o (rewrite_rule[])));
+a (DROP_NTH_ASM_T 4 ante_tac); 
+a (rewrite_tac[asm_rule ¬y' = xpy + 1®]);
+(* *** Goal "2.1.3.2" *** *)
+a (var_elim_asm_tac ¬y' = 0®);
+a (POP_ASM_T (asm_tac o (rewrite_rule[])));
+a (lemma_tac ¬xpy < n® THEN1 PC_T1 "lin_arith" asm_prove_tac[]);
+a (LEMMA_T ¬xpy + 0 = xpy® asm_tac THEN1 rewrite_tac[]);
+a (list_spec_nth_asm_tac 7 [¬xpy®, ¬0®]);
+a (lemma_tac ¬xpy +1 ¼ no ® THEN1 PC_T1 "lin_arith" prove_tac[
+	asm_rule ¬x' = xpy + 1®,
+	asm_rule ¬x' < n®,
+	asm_rule ¬n = no + 1®]);
+a (spec_nth_asm_tac 18 ¬xpy+1®);
+a (POP_ASM_T ante_tac);
+a (LEMMA_T ¬f (xpy + 1) = crr (xpy + 1) 0® rewrite_thm_tac
+	THEN1 asm_rewrite_tac[]);
+a (LEMMA_T ¬f ((xpy + 1) + 1) = crr (x' + 1) 0® rewrite_thm_tac
+	THEN1 asm_rewrite_tac[]);
+a (strip_tac);
+a (list_spec_nth_asm_tac 15 [¬crr (xpy + 1) (0 + 1)®, ¬crr (x' + 1) 0®]);
+(* *** Goal "2.1.3.2.1" *** *)
+a (spec_nth_asm_tac 1 ¬crr (xpy + 1) 0®);
+(* *** Goal "2.1.3.2.2" *** *)
+a (lemma_tac ¬crr (x' + 1) 1 = ub (crr (xpy + 1) (0 + 1)) (crr (x' + 1) 0)®);
+(* *** Goal "2.1.3.2.2.1" *** *)
+a (once_rewrite_tac[prove_rule [] ¬crr (x' + 1) 1 = crr (x' + 1) (0+1)®]);
+a (GET_NTH_ASM_T 15 (fn crrdef =>
+	rewrite_tac [rewrite_conv [crrdef] ¬crr (x' + 1) (0 + 1)®]));
+a (pure_asm_rewrite_tac[]);
+a (strip_tac);
+(* *** Goal "2.1.3.2.2.2" *** *)
+a (GET_NTH_ASM_T 1 rewrite_thm_tac);
+a (GET_NTH_ASM_T 3 (rewrite_thm_tac o (rewrite_rule[])));
+a (DROP_NTH_ASM_T 4 ante_tac); 
+a (rewrite_tac[asm_rule ¬x' = xpy + 1®]);
+(* *** Goal "2.1.3.3" *** *)
+a (strip_asm_tac (µ_elim ¬x'® î_cases_thm));
+a (strip_asm_tac (µ_elim ¬y'® î_cases_thm));
+a (lemma_tac ¬i < n® THEN1 PC_T1 "lin_arith" asm_prove_tac[]); 
+a (lemma_tac ¬i' < n'® THEN1 PC_T1 "lin_arith" asm_prove_tac[]); 
+a (lemma_tac ¬i + y' = xpy® THEN1 PC_T1 "lin_arith" asm_prove_tac[]); 
+a (lemma_tac ¬x' + i' = xpy® THEN1 PC_T1 "lin_arith" asm_prove_tac[]); 
+a (list_spec_nth_asm_tac 13 [¬i®, ¬y'®]);
+a (list_spec_nth_asm_tac 15 [¬x'®, ¬i'®]);
+a (DROP_NTH_ASM_T 4 discard_tac THEN DROP_NTH_ASM_T 1 discard_tac);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (rewrite_tac[eq_sym_rule (asm_rule ¬x' = i + 1®),
+		eq_sym_rule (asm_rule ¬y' = i' + 1®)]);
+a (REPEAT_N 2 strip_tac);
+a (list_spec_nth_asm_tac 19 [¬crr x' (y'+1)®, ¬crr (x'+1) y'®]);
+(* *** Goal "2.1.3.3.1" *** *)
+a (spec_nth_asm_tac 1 ¬crr x' y'®);
+(* *** Goal "2.1.3.3.2" *** *)
+a (LEMMA_T ¬crr (x' + 1) (y' + 1) = ub (crr x' (y' + 1)) (crr (x' + 1) y')® (fn x => rewrite_thm_tac x THEN LIST_GET_NTH_ASM_T [2,3] rewrite_tac));
+a (GET_NTH_ASM_T 19 rewrite_thm_tac);
+(* a (asm_rewrite_tac[]); *)
+(* *** Goal "2.2" *** *)
+a (lemma_tac ¬µxpy· xpy + 1 < n + n' ´ µx y· x < n ± y < n' ± x + y ¼ xpy ´
+	 tc r (f' (y+1)) (crr (x + 1) (y + 1)) ± tc r (f (x + 1)) (crr (x + 1) (y + 1))®);
+(* *** Goal "2.2.1" *** *)
+a (strip_tac);
+a (induction_tac ¬xpy®);
+(* *** Goal "2.2.1.1" *** base case *)
+a (rewrite_tac[] THEN (REPEAT_N 4 strip_tac) THEN asm_rewrite_tac[]);
+a (LEMMA_T ¬crr(0+1) 0 = f 1® (rewrite_thm_tac o (rewrite_rule[]))
+	THEN1 asm_rewrite_tac[]);
+a (lemma_tac ¬r (f 0) (f 1) ± r (f 0) (f' 1)®);
+(* *** Goal "2.2.1.1.1" *** *)
+a (LEMMA_T ¬r (f 0) (f' 1) ¤ r (f' 0) (f' 1)® rewrite_thm_tac
+	THEN1 (SYM_ASMS_T rewrite_tac));
+a (LEMMA_T ¬0 ¼ no® asm_tac THEN1 (PC_T1 "lin_arith" asm_prove_tac[]));
+a (LEMMA_T ¬0 ¼ no'® asm_tac THEN1 (PC_T1 "lin_arith" asm_prove_tac[]));
+a (ALL_ASM_FC_T (MAP_EVERY (asm_tac o (rewrite_rule[]))) []);
+a (contr_tac);
+(* *** Goal "2.2.1.1.2" *** *)
+a (list_spec_nth_asm_tac 12 [¬f' 1®, ¬f 1®]);
+(* *** Goal "2.2.1.1.2.1" *** *)
 a (all_asm_fc_tac[]);
-a (¶_tac ¬z'® THEN FC_T rewrite_tac [tc_incr_thm]);
-(* *** Goal "2.1.1.2" *** *)
-a (strip_tac THEN swap_nth_asm_concl_tac 2);
-a (PC_T1 "lin_arith" asm_prove_tac[]);
-(* *** Goal "2.1.1.3" *** *)
-a (strip_tac);
-
-a (SYM_ASMS_T rewrite_tac);
-a (¶_tac ¬x® THEN strip_tac);
-(* *** Goal "2.1.1.2" *** *)
-a (strip_tac);
-
+(* *** Goal "2.2.1.1.2.2" *** *)
+a (all_fc_tac[tc_incr_thm] THEN contr_tac);
+(* *** Goal "2.2.1.2" *** step case condition *)
+a (REPEAT_N 4 strip_tac);
+a (strip_asm_tac (pc_rule1 "lin_arith" prove_rule[]
+	¬(xpy + 1) + 1 < n + n' ´ xpy + 1 < n + n'®));
+(* *** Goal "2.2.1.3" *** step_case proper *)
+a (REPEAT_N 4 strip_tac);
+a (cond_cases_tac ¬x' + y' < xpy + 1®);
+(* *** Goal "2.2.1.3.1" *** *)
+a (lemma_tac ¬x' + y' ¼ xpy®
+	THEN1 PC_T1 "lin_arith" prove_tac [asm_rule ¬x' + y' < xpy + 1®]);
+a (list_spec_nth_asm_tac 7 [¬x'®, ¬y'®] THEN contr_tac);
+(* *** Goal "2.2.1.3.2" *** *)
+a (lemma_tac ¬x' + y' = xpy + 1® THEN1 PC_T1 "lin_arith" prove_tac 
+		[asm_rule ¬³ x' + y' < xpy + 1®,
+		asm_rule ¬x' + y' ¼ xpy + 1®]);
+a (cond_cases_tac ¬x'=0 ² y'=0®);
+(* *** Goal "2.2.1.3.2.1" *** *)
+a (lemma_tac ¬³ y' = 0® THEN1 PC_T1 "lin_arith" prove_tac 
+		[asm_rule ¬x' + y' = xpy + 1®,
+		asm_rule ¬x' = 0®]);
+a (strip_asm_tac (µ_elim ¬y'® î_cases_thm));
+a (lemma_tac ¬i < n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬y' < n'®, asm_rule ¬y' = i+1®]);
+a (lemma_tac ¬x'+i ¼ xpy® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' + y' ¼ xpy + 1®, asm_rule ¬y' = i+1®]);
+a (list_spec_nth_asm_tac 12 [¬x'®, ¬i®]);
+a (lemma_tac ¬(x'+y')+1 < n+n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' < n®, asm_rule ¬y' < n'®]);
+a (spec_nth_asm_tac 16 ¬x'+y'®);
+a (list_spec_nth_asm_tac 1 [¬x'®, ¬y'®]);
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr x' (y' + 1)®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr (x' + 1) y'®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (DROP_NTH_ASM_T 7 ante_tac);
+a (DROP_NTH_ASM_T 7 ante_tac);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (GET_ASM_T ¬y' = i + 1® (rewrite_thm_tac o eq_sym_rule));
+a (REPEAT ´_tac);
+a (all_fc_tac[tran_tc_thm2]);
+a (REPEAT strip_tac);
+a (var_elim_asm_tac ¬x' = 0®);
+a (DROP_NTH_ASM_T 6 ante_tac);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.1.3.2.2" *** *)
+a (lemma_tac ¬³ x' = 0® THEN1 PC_T1 "lin_arith" prove_tac 
+		[asm_rule ¬x' + y' = xpy + 1®,
+		asm_rule ¬y' = 0®]);
+a (strip_asm_tac (µ_elim ¬x'® î_cases_thm));
+a (lemma_tac ¬i < n® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' < n®, asm_rule ¬x' = i+1®]);
+a (lemma_tac ¬i + y' ¼ xpy® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' + y' ¼ xpy + 1®, asm_rule ¬x' = i+1®]);
+a (list_spec_nth_asm_tac 12 [¬i®, ¬y'®]);
+a (lemma_tac ¬(x'+y')+1 < n+n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' < n®, asm_rule ¬y' < n'®]);
+a (spec_nth_asm_tac 16 ¬x'+y'®);
+a (list_spec_nth_asm_tac 1 [¬x'®, ¬y'®]);
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr x' (y' + 1)®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr (x' + 1) y'®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (DROP_NTH_ASM_T 7 ante_tac);
+a (DROP_NTH_ASM_T 7 ante_tac);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (GET_ASM_T ¬x' = i + 1® (rewrite_thm_tac o eq_sym_rule));
+a (REPEAT ´_tac);
+a (all_fc_tac[tran_tc_thm2]);
+a (REPEAT strip_tac);
+a (var_elim_asm_tac ¬y' = 0®);
+a (DROP_NTH_ASM_T 5 ante_tac);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.2.1.3.2.3" *** *)
+a (strip_asm_tac (µ_elim ¬x'® î_cases_thm));
+a (strip_asm_tac (µ_elim ¬y'® î_cases_thm));
+a (lemma_tac ¬i < n® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' < n®, asm_rule ¬x' = i+1®]);
+a (lemma_tac ¬i' < n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬y' < n'®, asm_rule ¬y' = i'+1®]);
+a (lemma_tac ¬i + y' ¼ xpy® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' + y' ¼ xpy + 1®, asm_rule ¬x' = i+1®]);
+a (lemma_tac ¬x' + i' ¼ xpy® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' + y' ¼ xpy + 1®, asm_rule ¬y' = i'+1®]);
+a (list_spec_nth_asm_tac 15 [¬i®, ¬y'®]);
+a (list_spec_nth_asm_tac 17 [¬x'®, ¬i'®]);
+a (lemma_tac ¬(x'+y')+1 < n+n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬x' < n®, asm_rule ¬y' < n'®]);
+a (spec_nth_asm_tac 21 ¬x'+y'®);
+a (list_spec_nth_asm_tac 1 [¬x'®, ¬y'®]);
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr x' (y' + 1)®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (strip_asm_tac(
+	list_µ_elim [¬r®, ¬crr (x' + 1) y'®, ¬crr (x' + 1) (y' + 1)®]
+	tc_incr_thm));
+a (REPEAT_N 4 (DROP_NTH_ASM_T 7 ante_tac));
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (GET_ASM_T ¬x' = i + 1® (rewrite_thm_tac o eq_sym_rule));
+a (GET_ASM_T ¬y' = i' + 1® (rewrite_thm_tac o eq_sym_rule));
+a (REPEAT ´_tac);
+a (all_fc_tac[tran_tc_thm2]);
+a (REPEAT strip_tac);
+(* *** Goal "2.2.2" *** *)
+a (¶_tac ¬crr n n'®);
+a (lemma_tac ¬(no + no') + 1 < n + n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬n = no + 1®,
+	asm_rule ¬n' = no' + 1®]);
+a (spec_nth_asm_tac 2 ¬no + no'®);
+a (lemma_tac ¬no < n® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬n = no + 1®]);
+a (lemma_tac ¬no' < n'® THEN1 PC_T1 "lin_arith" prove_tac
+	[asm_rule ¬n' = no' + 1®]);
+a (list_spec_nth_asm_tac 3 [¬no®, ¬no'®]);
+a (REPEAT_N 2 (POP_ASM_T ante_tac));
+a (asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+val CrTc_thm = save_pop_thm "CrTc_thm";
 =TEX
 }%ignore
 
+Typically a relation of direct reduction (or its reflexive closure) will not be Church-Rosser.
+This is because a reduction may replicate some other redex, and therefore to reduce that redex after the reduction will require more than one reduction.
+To get a Church-Rosser relation I need to allow all these `residuals' to be reduced in one step.
+
+I therefore define an operator which takes a relation of direct reduction and makes from it a parallel reduction relation which is more likely to be Church-Rosser.
+The idea is that any set of redexes in the term can be reduced in a single step, but that no redex which was not in that original term can be reduced in that step.
+
+There are two ways of defining this relationship.
+
+The first (which is the kind of approach used in Barendregt) is to define it as undertaking a single depth-first scan of the term reducing any of the redexes.
+
+The second is to devise a representation of a set of redexes and to define the reduction parameterised by such a set of redexes.
+The desired relation is then obtained by existentially quantifying over sets of redexes.
+
+This latter form is probably needed anyway in order to do the Church-Rosser proof, I might have to prove it is equivalent to the first form at some point.
+
+Redexes in a combinatorial term can be identified by coordinates, finite sequences of (not-necessarily finite) ordinals suffice.
+We do need to insist that the coordinates are coordinates of redexes.
+
+I define first the operation of extracting from a combinator the substructure identified by a set of coordinates.
+I use the type LIST for finite sequences, even though I could use values of type 'a GSU (sets).
+When it comes to selecting a subterm, a term is an ordered pair of which the second element is a sequence of terms (the first is a constant name).
+The sequence is a function whose domain is an ordinal, so we just apply the term to the index.
+
+¹HOLCONST
+Ü ÛSubTermİ : 'a GSU LIST ­ 'a GSU ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µh t tl·	SubTerm [] t = t
+Ü 	±	SubTerm (Cons h tl) t = SubTerm tl ((Snd‰u t) ‰u h)
+° 
+
+Since this function is total I also need a test so I know whether a coordinate list  does actually point to a subterm.
+This test assumes that its second argument is a combinatory term, and tests whether the coordinate list points to a subterm.
+
+¹HOLCONST
+Ü Ûis_SubTermİ : 'a GSU LIST ­ 'a GSU ­ BOOL
+÷üüüüüüüüüüü
+Ü µh t tl·	(is_SubTerm [] t ¤ T)
+Ü 	±	(is_SubTerm (Cons h tl) t ¤
+Ü			h ‰u Dom‰u (Snd‰u t) ± is_SubTerm tl ((Snd‰u t) ‰u h))
+° 
+
+=GFT
+ÛSubTerm_in_Csyntax_lemmaİ =
+   ô µ t· t  Csyntax ´ (µ cs· is_SubTerm cs t ´ SubTerm cs t  Csyntax)
+=TEX
 
 \ignore{
+=SML
+val SubTerm_def = get_spec ¬SubTerm®;
+val is_SubTerm_def = get_spec ¬is_SubTerm®;
+
+set_goal([], ¬µt· t  Csyntax ´ µcs· is_SubTerm cs t
+		´ (SubTerm cs t)  Csyntax®);
+a (µ_tac THEN strip_tac);
+a (icomb_induction_tac ¬t®);
+a (µ_tac);
+a (strip_asm_tac (µ_elim ¬cs® list_cases_thm)
+	THEN_TRY asm_rewrite_tac[is_SubTerm_def, SubTerm_def]);
+(* *** Goal "1" *** *)
+a (lemma_tac ¬µ x· x  X‰u (Ran‰u i) ´ x  Csyntax®
+	THEN1 (rewrite_tac [X‰u_def] THEN REPEAT strip_tac THEN all_asm_fc_tac[]));
+a (fc_tac [crepclosed_csyntax_thm]);
+a (all_asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac);
+a (all_fc_tac [app_in_Ran_thm]);
+a (all_asm_fc_tac[]);
+val SubTerm_in_Csyntax_lemma = save_pop_thm "SubTerm_in_Csyntax_lemma";
+=TEX
+}%ignore
+
+This isn't quite a sufficient check.
+It is important that nothing is accepted as a redex unless it really is one, particularly not if it might be turned into one by some other reduction (this is because we don't want the description of the reductions required to give different results after some other reduction than before), so the best thing is to use the direct reduction relation to test whether the identified subterms are redexes, i.e. we just check whether the subterm is in the domain of the relationship.
+
+The parameters here are:
+\begin{itemize}
+\item[r] the direct reduction relation
+\item[t] the combinatory term
+\item[css] a set of coordinate lists
+\end{itemize}
+and the value is true if all the identified subterms are in the domain of the reduction relation.
+
+¹HOLCONST
+Ü Ûis_redex_setİ : 'a RED ­ 'a GSU ­ ('a GSU LIST)SET ­ BOOL
+÷üüüüüüüüüüü
+Ü µ(r:'a RED) t css· is_redex_set r t css ¤
+Ü	µcs· cs  css ´ is_SubTerm cs t ± (¶y· r (SubTerm cs t) y)
+° 
+
+We now need to define the effects of applying some such set of reductions.
+There are two effects of interest.
+The first of course is the resulting term.
+
+The second is a residual map, which tells us how to find all the instances in the new term of subterms in the old term.
+To compute the residual map we assume that a residual map is available for the direct reduction relation, and use that in computing the residual map function for the derived multiple reduction relation.
+
+The best way to compute the new term is with an evaluation which corresponds to normal order reduction.
+This ensures that redexes for reduction are are not replicated until they have been reduced.
+
+The definition is of course inductive over the structure of the combinatory terms.
+At each stage in the recursion the set of coordinate sequences is filtered by selecting only those which point within the selected subterm and chopping the head of those sequences.
+The reduction of the term takes place after the reduction of its subterms.
+We assume that the second parameter is a syntaactically valid combinatory term and that the set of coordinate sequences passes the $is\_redex\_set$ test.
+
+¹HOLCONST
+Ü Ûcss_restrictİ : ('a GSU LIST)SET ­ 'a GSU ­ ('a GSU LIST)SET
+÷üüüüüüüüüüü
+Ü µcss (t:'a GSU)· css_restrict css t =
+Ü	{v: 'a GSU LIST | Cons t v  css}
+°
+
+\ignore{
+=IGN
+set_goal([], ¬¶par_reduce:'a RED ­ ('a GSU LIST)SET ­ 'a GSU ­ 'a GSU·
+	µ(r:'a RED) css c (ts:'a GSU)· par_reduce r css (c í‰u ts) =
+Ü	let newts =
+	Imagep‰u (Ìop· Fst‰u op í‰u par_reduce r
+		   {v: 'a GSU LIST | Cons (Fst‰u op) v  css}
+		   (Snd‰u op)) ts
+	in c í‰u newts®);
+a (LEMMA_T ¬¶prf: 'a RED ­ ((('a GSU LIST)SET ¸ 'a GSU) ­ 'a GSU)
+		­ ((('a GSU LIST)SET ¸ 'a GSU) ­ 'a GSU)·
+	prf = Ìr:'a RED· Ìf:(('a GSU LIST)SET ¸ 'a GSU) ­ 'a GSU·
+	Ì(css, p)·
+	  let newts = Imagep‰u
+			(Ìop· Fst‰u op í‰u pr r
+		   		({v: 'a GSU LIST | Cons (Fst‰u op) v  css},
+		   		(Snd‰u op)))
+			(Snd‰u p)
+	  in (Fst‰u p) í‰u newts® strip_asm_tac
+	THEN1 prove_¶_tac);
+a (LEMMA_T ¬¶g· µr· g r = fix(prf r)® (STRIP_THM_THEN asm_tac) THEN1 prove_¶_tac);
+a (asm_tac (´_elim (µ_elim ¬$‰u®
+	(inst_type_rule [(”'a GSU LIST SET ¸ 'a GSU®,”'a®),
+			(”'a GSU®,”'b®)]
+		wf_derived_order_thm)) gsu_wf_thm1));
+a (lemma_tac ¬µr:'a RED· (prf r) respects (DerivedOrder Snd $‰u)®
+	THEN1 rewrite_tac[get_spec ¬$respects®, get_spec ¬DerivedOrder®]
+		THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¬Snd:'a GSU LIST SET ¸ 'a GSU ­ 'a GSU®);
+a (lemma_tac ¬µr· ¶g· prf r g = g® THEN1 strip_tac);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 2 ¬r®);
+a (all_fc_tac [fixp_thm1]);
+i ò‰u‰e a (¶_tac ¬g'® THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (¶_tac ¬Ìr css· g r® THEN asm_rewrite_tac[]);
+get_spec ¬fix®;
+
+
+a (rewrite_tac[]);
+
+
+stop;
+=TEX
+
+}%ignore
+
+¹HOLCONST
+Ü Ûpar_reduceİ : 'a RED ­ 'a GSU ­ ('a GSU LIST)SET ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µ(r:'a RED) c (ts:'a GSU)· par_reduce r (c í‰u ts) = Ìcss· 
+Ü	let newts =
+	Imagep‰u (Ìop· Fst‰u op í‰u (ts ò‰u‰e par_reduce r)
+		   (Snd‰u op) {v: 'a GSU LIST | Cons (Fst‰u op) v  css}) ts
+	in c í‰u newts
+° 
+
+Not sure what this one is for!
+To be deleted unless I find it is useful.
+It returns the set of combinator names which occur in a combinatory term.
+
+¹HOLCONST
+Ü Ûparr_reduceİ : 'a RED ­ 'a GSU ­ 'a GSU SET
+÷üüüüüüüüüüü
+Ü µ(r:'a RED) c (ts:'a GSU)· parr_reduce r (c í‰u ts) =
+Ü	{c} À Ş{v | ¶w· w ‰u Ran‰u ts ± v = (ts ò‰u‰e parr_reduce r) w}
+° 
+
+We need to be able to compute residual maps which show where to find the residuals of each redex after a (parallel) reduction.
+It is probably easier just to map the movement of all combinations irrespective of whether they are redexes.
+I think functions from coordinate sets to coordinate sets will probably do the trick.
+We suppose that the direct reductions are specified both as a relation and as a residual map.
+We can then compute a residual map for a parallel reduction by composing these maps in a manner which corresponds to the depth first traversal which defines the parallel reduction derived from some direct reducibility relation.
+
+We then prove for each direct reduction a commutativity result, which says that performing some reduction before that direct reduction is equivalent to applying that reduction to each of the residuals after the direct reduction.
+Next I prove that combining direct reductions preserves this property, and finally that lifting to parallel reduction gives a similar commutativity for the resulting parallel reduction.
+
+From this to the diamond property should be straightforward, which then applies to the transitive closure which is close to the desired reduction relation.
+This approach gives Church-Rosser for all by the equivalence combinator.
+
+I then define a functor which takes a value for a direct equivalence reduction
+satisfying the relevant commutativity property, and yields a Church-Rosser reduction relation incorporating the other combinators, and a new notion of equivalence hopefully also commutative.
+The functor will be monotone, and its least fixed point will be the final reduction relation, which will be a limit of Church-Rosser relations.
+So then I need to prove that the functor some relevant continuity property so that its least fixed point is also Church-Rosser.
+
+
+
+
 
 \subsubsection{Proof Strategy}
 
@@ -1378,24 +1761,21 @@ The result we require here should be simpler to produce because we have only a c
 However, the adoption of an infinitary system naturally complicates matters, though possibly not greatly.
 
 
-The following proof strategem new, so far as I am aware.
+The following proof strategem is new, so far as I am aware.
 The need to completely formalise the proof forces one to be more definite about certain things, which at first glance may seem to impose additional difficulties, but ultimately may assist in finding a nice proof.
 
 The required result is rather like a commutativity result for combinatory reduction, like saying that the order of reduction is not very significant.
 To state exactly what that means in this context is not so straightforward as it is to state the commutativity of addition in arithmetic.
 The result obtains not because of any peculiarities of the specific reductions under consideration, but simply because they are combinatory, or some such relatively simple characteristic which they share.
-It would hold if they were purely combinatory, as S and K are, but we also have combinators which are not quite so pure, the projection combinator and the equivalence combinator, for these being `nearly pure combinators' in some sense to be defined, will have to suffice.
+It would hold if they were purely combinatory, as S and K are, but we also have combinators which are not quite so pure, the projection combinator and the equivalence combinator.
+For these, being `nearly pure combinators' in some sense to be defined, will have to suffice.
+
 The respect in which the map and projection combinators deviate from being purely combinatory is that they are not entirely careless as to their arguments.
 A pure combinator, in the sense in which S and K and anything composed from them is a pure combinator, apply irrespective of the values of their arguments, just so long as there are enough of them, and they deliver results in which their arguments are replicated whole (or not replicated at all) without being in any way modified.
 The projection combinator is fussy about the value of its first argument, which serves to stipulate an element of its second arguments which is to be extracted.
 The map combinator is not fussy about the values of its arguments, but it mangles the first rather than merely replicating it.
 The feature which saves these is that they nevertheless `respect reducibility', but unfortunately that is a difficult characteristic to define in this context and so some simpler sufficient condition for their admissibility is desirable.
 Perhaps that they are sensitive only to a part of their argumenst which is in normal form, and something else about how the map combinator forms its result.
-
-\ignore{
-Purely combinatory means that the operations which are effected by the reductions don't actually change the operands at all, they just arrange the operands into a new structure, and the values of the operands have no effect on the transformation.
-Each operand is either kept or replicated whole, or is discarded entirely, and none of them is inspected in any way.
-}%ignore
 
 The relevance to the Church Rosser theorem is that performing reductions on operands will have very limited effects on the permissible reductions of the whole, the same reductions will be possible and the only effect is on the copies of that operand in the resulting structure.
 
@@ -1406,24 +1786,22 @@ However, the notion of normal term depends upon all the reductions so this is no
 That would be OK for the projection combinator, but not for equivalence.
 
 Equivalence does not reduce without inspecting the operands, and does not look for $T$ or $F$, or for normality.
-Its saving grace is that if while reduction is deferred one of two identical operands is reduced, then it will be possible to reduce the other to make the two operands equal again and effect the reduction of the equality at a later date.
+Its saving grace is that if, while reduction is deferred, one of two identical operands is reduced, then it will be possible to reduce the other to make the two operands equal again and effect the reduction of the equality at a later date.
 
 In order to be able to express the precise sense in which these reductions commute, it is necessary to say what a reduction \emph{is}, what it operates \emph{on} and what it \emph{does} in manner which makes it possible to talk about effecting the same reduction either before or after some other transformations.
 This means that we have to include sufficient information when undertaking a transformation to know how to apply the same reduction either before or after.
-The most important element of this is keeping track of what is sometimes called `residuals', i.e. keeping track of what happens to combinators of interest when they are moved about by some reduction.
+The most important element of this is keeping track of so called `residuals', i.e. keeping track of what happens to redexes of interest when they are moved about by some reduction.
 
 This is achieved using a system of coordinates.
-A coordinate determines a place in a combinatory and a constituent combinator which occurs within the first combinator.
+A coordinate determines a place in a combinatory term and a constituent combinator which occurs within the first combinator.
 When a reduction takes place, it does so by reduction of an occurrence which may be identified by such a coordinate.
 Every constituent of the combinator which is being reduced may then appear in zero, one, or more than one place in the result of the reduction.
 The effect of a reduction on the location of the constituent combinators may be recorded as a map from locations (as coordinates) to sets of locations.
 If coordinates are relative then this map can be rendered using relative coordinates.
 
-}%ignore
-
 \subsubsection{Representation of Reductions}
 
-The natural choice for our calculus, both for absolute and for relative coordinates, is a sequence (of arbitrary cardinality) or ordinals.
+The natural choice for our calculus, both for absolute and for relative coordinates, is a sequence of ordinals.
 This is such a simple notion that one is immediately tempted to go back and start again using certain maps over sequences of ordinals to represent the combinators.
 Without prejudice to whether this should be done, it seems likely to be a good idea to use this representation for combinatory terms in the proof, which will then be straightforward to transfer back to the present representation.
 
@@ -1441,7 +1819,7 @@ The local effect of a reduction is a new term and a residual map, which maps eac
 From the local effect of a reduction, we obtain its global affect, which is the application to a subterm of some larger combinatory term, and the conversion of the residual map from local to global coordinates.
 
 The representation I propose is a map from coordinates to combinator names or variables (I'm not sure whether I need the variables yet, but we'll have them in just in case).
-A combinator is just a value of type $”'a GSU®$, for the variables ordinal's of type $”'a GSU®$ will do.
+A combinator is just a value of type $”'a GSU®$, for the variables ordinals of type $”'a GSU®$ will do.
 To code the alternative we enclose a combinator name in two singleton sets so that it cannot be mistaken for an ordinal.
 
 So a `combinator map' may be defined as follows.
@@ -1493,7 +1871,7 @@ In this version coordinates play a larger role so I begin with discussing coordi
 To refer to specific parts of an infinitary combinatory term we use coordinate systems.
 Because of the infinitary nature, a set of coordinates is a sequence of ordinals.
 I think that because of the way the combinatory terms are organised this will always be a finite sequence of ordinals, though the ordinals will not in general be finite.
-(This reflects the well-foundedness of these terms, there could only be infinite sequences if there were infinite descending membership chains in the underlying set theoretic representation, the infinitary nature appears, as it were, horizontally.).
+(This reflects the well-foundedness of these terms, there could only be infinite sequences if there were infinite descending membership chains in the underlying set theoretic representation, the infinitary nature appears, as it were, horizontally.)
 
 A sequence of ordinals may be used to refer to parts of combinatory terms in any of the following ways:
 
@@ -1521,15 +1899,10 @@ If we identify a reduction by the location of its redex, then to be able to talk
 We are therefore looking for an equivalence relation between sets of sets of coordinate sets.
 That's not quite right, the coordinate sets
 
-
-
-
-
 \subsubsection{Reductions}
 
 Given a combinatory term and a set of reduction rules, a reduction, which is a sequence of applications of the rules, could be represented by a (possibly transfinite) sequence of coordinate sequences, if the rules are deterministic (which our will be).
 This will not suffice for an approach to the Church-Rosser theorem based on a conception of reduction which is commutative, because the principle way in which `the same' reduction might differ when its application is deferred is in the coordinates at which the reduction is applied.
-
 
 \subsubsection{Combinatory Direct Reductions}
 

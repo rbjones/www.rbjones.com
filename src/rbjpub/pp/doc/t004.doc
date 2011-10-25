@@ -1,5 +1,5 @@
 =IGN
-$Id: t004.doc,v 1.18 2009/10/15 19:46:58 rbj Exp $
+$Id: t004.doc,v 1.19 2011/10/25 09:10:46 rbj Exp $
 open_theory "membership";
 set_merge_pcs ["hol1", "'savedthm_cs_∂_proof"];
 =TEX
@@ -37,12 +37,12 @@ A queer way of doing set theory in HOL (together with some queer reasons for doi
 
 Created 2004/07/15
 
-Last Change $ $Date: 2009/10/15 19:46:58 $ $
+Last Change $ $Date: 2011/10/25 09:10:46 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t004.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t004.pdf}
 
-$ $Id: t004.doc,v 1.18 2009/10/15 19:46:58 rbj Exp $ $
+$ $Id: t004.doc,v 1.19 2011/10/25 09:10:46 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -547,14 +547,44 @@ For this we need to be able to talk about the stages.
 ‹ €homomorph›: ('a MS ∏ ('b MS)) ≠ ('a ≠ 'b) ≠ BOOL
 ˜¸¸¸¸¸¸
 ‹ µ (X, $çâa):'a MS; (Y, $çâb):'b MS; f:'a ≠ 'b∑
-‹	homomorph ((X, $çâa), (Y, $çâb)) f §  µs t:'a∑ s çâa t ¥ (f s) çâb (f t)
+‹	homomorph ((X, $çâa), (Y, $çâb)) f §  µs t:'a∑ s ç X ± t ç X ± s çâa t
+‹						¥ (f s) ç Y ± (f t) ç Y ± (f s) çâb (f t)
 ∞
 
+An embedding is not just an injective homomorphism:
+
 πHOLCONST
-‹ €embedding›: ('a MS ∏ 'b MS) ≠ ('a ≠ 'b) ≠ BOOL
+‹ €embedding›: ('a MS ∏ ('b MS)) ≠ ('a ≠ 'b) ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µ msa msb f∑ embedding (msa, msb) f § 
-‹	homomorph (msa, msb) f ± OneOne f
+‹ µ (X, $çâa):'a MS; (Y, $çâb):'b MS; f:'a ≠ 'b∑
+‹	embedding ((X, $çâa), (Y, $çâb)) f §  OneOne f
+		± µs t:'a∑ s ç X ± t ç X ¥ (f s) ç Y ± (f t) ç Y ± (s çâa t § (f s) çâb (f t))
+∞
+
+A substructure is something which embeds in the above sense.
+
+=SML
+declare_infix (300, "substructure_of");
+=TEX
+
+πHOLCONST
+‹ $€substructure_of›: ('a MS) ≠ ('a MS) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $çâa) (Y, $çâb)∑
+‹	 (X, $çâa) substructure_of (Y, $çâb) § X Ä Y ± µs t:'a∑ s ç X ± t ç X ¥ (s çâa t § s çâb t)
+∞
+
+Since the sets in a substructure need not have the same extension as those in the extension, we have a stronger notion here which corresponds to inclusion between transitive models in preserving the extension of the original sets.
+
+=SML
+declare_infix (300, "xsubstr");
+=TEX
+
+πHOLCONST
+‹ $€xsubstr›: ('a MS) ≠ ('a MS) ≠ BOOL
+˜¸¸¸¸¸¸
+‹ µ (X, $çâa) (Y, $çâb)∑
+‹	(X, $çâa) xsubstr (Y, $çâb) § X Ä Y ± µs t∑ t ç X ± s ç Y ¥ (s çâa t § s çâb t)
 ∞
 
 =SML
@@ -813,6 +843,11 @@ The following relation tells us when something in the domain of a relationship s
 The use of {\it standard} here follows its use in the context of higher order logic, in which a standard model is one in which the power sets are complete.
 In set theory this comes down to the idea that the standard models are the {\it V}(¡) for some ordinal ¡.
 
+\footnote{
+There is a weaker notion of standard in set theory which originates I believe in the theory of forcing.
+This effectively enforces only well-foundedness, a standard model as defined by Cohn is just a transitive set.
+}%footnote
+
 We therefore define the relationship {\it V} between ordinals and standard models of rank ¡.
 The relationship is defined by transfinite recursion, and we therefore need to use a suitable recursion theorem to establish its consistency.
 
@@ -825,7 +860,44 @@ The definition informally is:
 
 The universe of rank ¡ is the union of the power sets of the universes of all smaller ranks.
 
-To formalise this we need to get it in the right shape for our recursion theorem, which comes from \cite{rbjt009} and is shown here for information:
+or:
+
+=GFT
+	V ¡ = {x | ∂¬ < ¡∑ x Ä V ¬}
+=TEX
+
+To formalise this we need to a functor over which this is a fixed point.
+
+πHOLCONST
+‹ €Vf›: (('b ≠ 'b ≠ BOOL) ∏ 'a MS ≠ 'a) ≠ (('b ≠ 'b ≠ BOOL) ∏ 'a MS ≠ 'a)
+˜¸¸¸¸¸¸
+‹ µf∑ Vf f =  Ã($<<, ms)∑ 
+‹	let (öâm, Pairâm, $¿âm, ﬁâm, âm, $˘âm, $®©) = MS_ops ms
+‹	in Co ms {z	| z ç Fst ms
+		  	± ∂v∑ (Ex ms z) Ä (Ex ms (f ((Ãx y∑ x << y ± y << v), ms)))}
+∞
+
+=GFT
+=TEX
+
+Using a recursion theorem we derive from this the condition necessary to justify the following definition of V:
+
+\ignore{
+=IGN
+set_goal([], ¨µ((X : 'a SET), ($<< : 'a ≠ 'a ≠ BOOL))∑ FuncRespects Vf (Universe, Ã(x,y) (v,w)∑ ∂z∑ (µp q∑ x p q § v p q ± v q z))Æ);
+
+
+set_goal([], ¨∂V∑ µ($<< : 'a ≠ 'a ≠ BOOL) ms∑ WellFounded (Universe, $<<)
+	¥ V ms $<< =
+		let (öâm, Pairâm, $¿âm, ﬁâm, âm, $˘âm, $®©) = MS_ops ms
+		in Co ms {z	| z ç Fst ms
+		  	± ∂v∑ (Ex ms z) Ä (Ex ms (V ms (Ãx y∑ x << y ± y << v)))}
+Æ);
+a (∂_tac ¨VfÆ THEN rewrite_tac[]);
+=TEX
+}%ignore
+
+
 
 =GFT
 recursion_theorem =

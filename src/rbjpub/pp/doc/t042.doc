@@ -1,5 +1,5 @@
 =IGN
-$Id: t042.doc,v 1.4 2011/03/25 15:08:27 rbj Exp $
+$Id: t042.doc,v 1.5 2011/10/25 09:10:46 rbj Exp $
 open_theory "'a GSU";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-ord", "'savedthm_cs_∂_proof"];
 set_merge_pcs ["hol", "'wf_relp", "'wf_recp", "'GSU1", "'savedthm_cs_∂_proof"];
@@ -41,12 +41,12 @@ This is a modification of the pure set theory GS to admit urelements.
 
 Created 2010/10/08
 
-Last Change $ $Date: 2011/03/25 15:08:27 $ $
+Last Change $ $Date: 2011/10/25 09:10:46 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 
-$ $Id: t042.doc,v 1.4 2011/03/25 15:08:27 rbj Exp $ $
+$ $Id: t042.doc,v 1.5 2011/10/25 09:10:46 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -344,7 +344,8 @@ val €gsu_wf_axiom› = new_axiom (["gsu_wf_axiom"], ¨UWellFounded $çâuÆ);
 
 =GFT
 €gsu_wf_thm1› =		Ù well_founded $çâu
-€gsu_wf_min_thm› =	Ù µ x∑ (∂ y∑ y çâu x) ¥ (∂ z∑ z çâu x ± ≥ (∂ v∑ v çâu z ± v çâu x))
+€gsu_wf_min_thm› =		Ù µ x∑ (∂ y∑ y çâu x)
+					¥ (∂ z∑ z çâu x ± ≥ (∂ v∑ v çâu z ± v çâu x))
 €gsu_wftc_thm› =		Ù well_founded (tc $çâu)
 =TEX
 
@@ -417,7 +418,7 @@ val tcçâu_trans_thm = save_pop_thm "tcçâu_trans_thm";
 =TEX
 }%ignore
 
-The resulting induction principle (sometimes called Neotherian induction) is useful.
+The resulting induction principle (sometimes called Noetherian induction?) is useful.
 
 =GFT
 €gsu_wf_ind_thm› =	Ù µ p∑ (µ x∑ (µ y∑ y çâu x ¥ p y) ¥ p x) ¥ (µ x∑ p x)
@@ -523,6 +524,50 @@ a (strip_tac THEN asm_rewrite_tac[]);
 val wf_ul3 = save_pop_thm "wf_ul3";
 =TEX
 }%ignore
+
+
+\ignore{
+=SML
+set_goal([], ¨µ(af:('a GSU ≠ 'b) ≠ 'a GSU ≠ 'b)∑ ∂(f:'a GSU ≠ 'b)∑
+	µs∑ f s = af ((Ãf x∑ if x çâuõ+ s then f x else ≈y∑T)f) sÆ);
+a (rewrite_tac[] THEN REPEAT strip_tac);
+a (lemma_tac ¨∂g∑ g = Ãf∑ Ãs∑ af (Ãx∑ if x çâuõ+ s then f x else ≈y∑T) sÆ
+	THEN1 prove_∂_tac );
+a (lemma_tac ¨g respects $çâuÆ THEN1
+	(asm_rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨(Ã x'∑ if x' çâuõ+ x then g' x' else ≈ y∑ T)
+	= (Ã x'∑ if x' çâuõ+ x then h x' else ≈ y∑ T)Æ rewrite_thm_tac);
+a (rewrite_tac [ext_thm]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 ¨x'Æ THEN_TRY asm_rewrite_tac[]);
+a (POP_ASM_T ante_tac);
+a (LEMMA_T ¨tc $çâu x' x § x' çâuõ+ xÆ rewrite_thm_tac
+	THEN1 rewrite_tac[get_spec ¨$çâuõ+Æ]);
+a (STRIP_T rewrite_thm_tac);
+(* *** Goal "2" *** *)
+a (∂_tac ¨fix gÆ);
+a (asm_tac gsu_wf_thm1);
+a (fc_tac [get_spec ¨fixÆ]);
+a (all_asm_fc_tac[]);
+a (strip_tac);
+a (rewrite_tac[once_rewrite_conv
+	[(eq_sym_rule o asm_rule) ¨g (fix g) = fix gÆ] ¨fix g sÆ]);
+a (GET_NTH_ASM_T 5 rewrite_thm_tac);
+val çâuõp_recursion_lemma = save_pop_thm "çâuõp_recursion_lemma";
+=TEX
+}%ignore
+
+=IGN
+stop;
+
+evaluate_∂_cd_thm çâuõp_recursion_lemma;
+
+stop;
+
+add_∂_cd_thms [çâuõp_recursion_lemma] "'gsu-ax";
+set_merge_pcs ["basic_hol", "'gsu-ax"];
+=TEX
 
 \subsection{The Ontology Axiom}
 
@@ -1494,7 +1539,7 @@ set_merge_pcs ["basic_hol", "'gsu-ax"];
 
 \subsection{Functional Replacement}
 
-The more convenient form of replacement which takes a function rather than a relation (and hence needs no "ManyOne" caveat) is introduced here.
+The more convenient form of replacement which takes a function rather than a relation (and hence needs no ``ManyOne'' caveat) is introduced here.
 
 \subsubsection{Introduction}
 
@@ -2114,6 +2159,8 @@ a (∂_tac ¨xÆ THEN asm_rewrite_tac[]);
 val not_x_çâu_x_thm = save_pop_thm "not_x_çâu_x_thm";
 =TEX
 }%ignore
+
+
 
 \subsection{Galaxy Closure Clauses}
 
@@ -2761,9 +2808,9 @@ val tcçâu_Domâu_thm = save_pop_thm "tcçâu_Domâu_thm";
 
 \ignore{
 =SML
-val Ranâuâu_def = get_spec ¨RanâuÆ;
+val Ranâu_def = get_spec ¨RanâuÆ;
 
-val SetâuRanâu_thm = prove_thm ("SetâuRanâu_thm", ¨µs∑ Setâu (Ranâu s)Æ, rewrite_tac [Ranâuâu_def]);
+val SetâuRanâu_thm = prove_thm ("SetâuRanâu_thm", ¨µs∑ Setâu (Ranâu s)Æ, rewrite_tac [Ranâu_def]);
 
 add_rw_thms [SetâuRanâu_thm] "'gsu-fun";
 add_sc_thms [SetâuRanâu_thm] "'gsu-fun";
@@ -3541,6 +3588,8 @@ val Domâu_oâu_thm2 = save_pop_thm "Domâu_oâu_thm2";
 =TEX
 }%ignore
 
+
+
 \subsubsection{Partial Function Space}
 
 This is the set of all partial functions (i.e. many one mappings) over some domain and codomain.
@@ -3684,7 +3733,7 @@ In this section we define function application and show that functions are exten
 \subsubsection{Application}
 
 Application by juxtaposition cannot be overloaded and is used for application of HOL functions.
-Application of functional sets is therefore defined as an infix operator whose name is the empty name Subscripted by "g".
+Application of functional sets is therefore defined as an infix operator whose name is the empty name Subscripted by ``u''.
 
 =SML
 declare_infix (250,"âu");
@@ -3791,7 +3840,22 @@ val oâu_âu_thm = save_pop_thm "oâu_âu_thm";
 =TEX
 }%ignore
 
-\subsubsection{The "Type" of an Application (1)}
+=GFT
+app_in_Ran_thm = Ù µ x i∑ Funâu i ± x çâu Domâu i ¥ i âu x çâu Ranâu i
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx i∑ Funâu i ± x çâu Domâu i ¥ i âu x çâu Ranâu iÆ);
+a (REPEAT strip_tac);
+a (all_fc_tac [app_thm3]);
+a (rewrite_tac[Ranâu_thm]);
+a (∂_tac ¨xÆ THEN strip_tac);
+val app_in_Ran_thm = save_pop_thm "app_in_Ran_thm";
+=TEX
+}%ignore
+
+\subsubsection{The ``Type'' of an Application (1)}
 
 The following theorem states that the result of applying a partial function to a value in its domain is a value in its codomain.
 
@@ -3810,7 +3874,7 @@ a (POP_ASM_T ante_tac THEN asm_rewrite_tac []);
 val âuçâu_thm = save_pop_thm "âuçâu_thm";
 =TEX
 
-\subsubsection{The "Type" of an Application (2)}
+\subsubsection{The ``Type'' of an Application (2)}
 
 The following theorem states that the result of applying a total function to a value in its domain is a value in its codomain.
 
@@ -5152,7 +5216,7 @@ We define the rank of a set.
 \subsubsection{The Consistency Proof}
 
 Before introducing the definition of rank we undertake the proof necessary to establish that the definition is conservative.
-The key lemma in this proof is the proof that the relevant functional "respects" the membership relation.
+The key lemma in this proof is the proof that the relevant functional ``respects'' the membership relation.
 
 =GFT
 €respectâu_lemma› =
@@ -5190,7 +5254,7 @@ val respectâu_lemma = pop_thm();
 =TEX
 }%ignore
 
-Armed with that lemma we can now prove that the function which we will call "rank" exists.
+Armed with that lemma we can now prove that the function which we will call ``rank'' exists.
 
 \ignore{
 =SML
@@ -5211,6 +5275,12 @@ val _ = save_cs_∂_thm (pop_thm());
 ˜
   µx∑ Rankâu x = ﬁâu (Imagepâu (Sucâu o Rankâu) x)
 ∞
+
+\subsection{Recursion Theorem}
+
+
+
+
 
 \subsection{Ordinal Arithmetic}
 
