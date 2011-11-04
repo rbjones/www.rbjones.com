@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.25 2010/11/09 13:32:40 rbj Exp $
+# $Id: rules.mk,v 1.26 2011/11/04 16:38:43 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -269,7 +269,7 @@ install: build $(THISINSTALL) $(SUBINSTALLS)
 
 # Qualified rules
 
-$(XMLT005S) $(XMLT005): %.xmlt: %.xml
+$(XMLT005S) $(XMLT005) $(XMLT006) $(XMLT007) $(XMLT008) $(XMLT008S): %.xmlt: %.xml
 	addftl <$<  | xxml2xml >$*.xmlt
 
 $(HTML005f): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame012.xsl \
@@ -296,8 +296,8 @@ $(HTM005i) $(HTMTHLSi): %-i.htm : %.htm
 
 $(HTM005m) $(HTMTHLSm): %-m.htm : %.htm
 
-$(XMLT006) $(XMLT007) $(XMLT008): %.xmlt: %.xml
-	addftl <$<  | xxml2xml >$*.xmlt
+#$(XMLT006) $(XMLT007) $(XMLT008): %.xmlt: %.xml
+#	addftl <$<  | xxml2xml >$*.xmlt
 
 $(HTML006): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl IndexFrame.xsl MainFrame.xsl pp-symbol.ent ppft.xsl \
 	X-Logic.xsl sitespecific.xsl
@@ -313,6 +313,10 @@ $(HTML007i) $(HTML007m): $(HTML007f)
 $(HTML008): %.html: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
+
+$(HTM008f): %.htm: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
+	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
+		dir=$(RELWEBDIR)/ name=$* suffix=htm imagedir=rbjgifs 
 
 $(ISAPDFO): %.pdf: %.ldd
 	cp $*/$@ .
