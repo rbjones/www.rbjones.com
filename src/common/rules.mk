@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.26 2011/11/04 16:38:43 rbj Exp $
+# $Id: rules.mk,v 1.27 2012/02/14 20:44:22 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -187,6 +187,17 @@ $(TEXPDF): %.pdf : %.tex
 	          -e 's/"|hyperpage/|hyperpage/g' \
 	    | makeindex -i -o $*.ind
 	-sed -i -e 's/delimiter 026E30F/Backslash/' $*.ind
+	-bibtex $*
+	@pdflatex $*
+	@pdflatex $*
+
+$(TEXPDF2): %.pdf : %.tex
+	@echo "TEXPDF2"
+	@pdflatex $*
+	@touch $*.ind
+	perl -n -e 'if (/\\indexentry{!/) {while (/([^"])([@!|])/) {s/([^"])([@!|])/$1"$2/g}; s/indexentry{"!/indexentry{/; s/"\|hyperpage/\|hyperpage/}; print;' < $*.idx \
+	| makeindex -i -s rbjpp.ist -o $*.ind
+	sed -i -e 's/\\delimiter /\\delimiter "/' $*.ind
 	-bibtex $*
 	@pdflatex $*
 	@pdflatex $*
