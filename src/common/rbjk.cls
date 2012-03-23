@@ -144,7 +144,7 @@
 \ProcessOptions % including options for modules
 
 
-\IfFileExists{amssymb.sty}{\RequirePackage[psamsfonts]{amssymb}%
+\IfFileExists{amssymb.sty}{\RequirePackage{amssymb}%
     \global\font\smallmsa=msam7
     \gdef\Register{$^{\mbox{\smallmsa\char114}}$~}}{}
 \IfFileExists{wasysym.sty}{\RequirePackage{wasysym}}{%
