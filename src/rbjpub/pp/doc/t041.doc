@@ -3,9 +3,9 @@
 =VDUMP t041i.tex
 \hypersetup{pdfkeywords=RogerBishopJones}
 
-Last Change $ $Date: 2012/03/23 15:41:40 $ $
+Last Change $ $Date: 2012/04/25 18:44:36 $ $
 
-$ $Id: t041.doc,v 1.14 2012/03/23 15:41:40 rbj Exp $ $
+$ $Id: t041.doc,v 1.15 2012/04/25 18:44:36 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -1633,15 +1633,15 @@ The parameters here are:
 \begin{itemize}
 \item[r] the direct reduction relation
 \item[t] the combinatory term
-\item[css] a set of coordinate lists
+\item[cls] a set of coordinate lists
 \end{itemize}
 and the value is true if all the identified subterms are in the domain of the reduction relation.
 
 ¹HOLCONST
 Ü Ûis_redex_setİ : 'a RED ­ 'a GSU ­ ('a GSU LIST)SET ­ BOOL
 ÷üüüüüüüüüüü
-Ü µ(r:'a RED) t css· is_redex_set r t css ¤
-Ü	µcs· cs  css ´ is_SubTerm cs t ± (¶y· r (SubTerm cs t) y)
+Ü µ(r:'a RED) t cls· is_redex_set r t cls ¤
+Ü	µcs· cs  cls ´ is_SubTerm cs t ± (¶y· r (SubTerm cs t) y)
 ° 
 
 We now need to define the effects of applying some such set of reductions.
@@ -1662,11 +1662,10 @@ We assume that the second parameter is a syntactically valid combinatory term an
 The following function restricts a set of coordinates to the relative coordinates of subterms of a give top-level sub-term, identified by its coordinate.
 
 ¹HOLCONST
-Ü Ûcss_restrictİ : ('a GSU LIST)SET ­ 'a GSU ­ ('a GSU LIST)SET
+Ü Ûcls_restrictİ : ('a GSU LIST)SET ­ 'a GSU ­ ('a GSU LIST)SET
 ÷üüüüüüüüüüü
-Ü µcss (t:'a GSU)· css_restrict css t = {v: 'a GSU LIST | Cons t v  css}
+Ü µcls (t:'a GSU)· cls_restrict cls t = {v: 'a GSU LIST | Cons t v  cls}
 °
-
 
 We need direct reduction to be deterministic, i.e. to be a many-one relation.
 Assuming that it is we can use the following function to perform a reduction.
@@ -1676,32 +1675,65 @@ Assuming that it is we can use the following function to perform a reduction.
 Ü Ûreduceİ : 'a RED ­ 'a GSU ­ 'a GSU
 ÷üüüüüüüüüüü
 Ü µ(r:'a RED) (t:'a GSU)· reduce r t =
-	Ånt· r t nt ² ((³ ¶nt2· r t nt2) ± nt = t) 
+Ü	Ånt· r t nt ² ((³ ¶nt2· r t nt2) ± nt = t) 
 ° 
 
+We want to map certain operations over terms to be applied at certain locations specified by coordinates.
+Some general combinators might be the best way to achieve this.
+
+We need to obtain from a parallel reduction not only the resulting term but also a map which tells us the location of any residuals.
+The function to be mapped over the term must therefore not simply be a function over combinators, but a function which transforms a combinator and delivers a residual map (which is a kind of map over coordinate lists).
+
+The type of such a function is therefore:
+
+=SML
+declare_type_abbrev ("CT", ["'a"], ”'a GSU ­ ('a GSU ¸ ('a GSU LIST ­ 'a GSU LIST))®);
+=TEX
+
+We could build into the mapping function the means of composing the resulting coordinate transformers obtained in the traversal, but it is better to supply that as a parameter.
+The type of such a parameter would be:
+
+=SML
+declare_type_abbrev ("CC", ["'a"], ”('a GSU ¸ ('a GSU LIST ­ 'a GSU LIST)) LIST
+			­ 'a GSU LIST ¸ ('a GSU LIST ­ 'a GSU LIST)®);
+=TEX
+
+¹HOLCONST
+Ü Ûdepth_map_auxİ : ('a GSU ­ 'a GSU) ­ 'a GSU ­ ('a GSU LIST)SET ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µf c ts· depth_map_aux f (c í‰u ts) = Ìcls· 
+Ü	let newts =
+Ü	Imagep‰u (Ìop· Fst‰u op í‰u (ts ò‰u‰e depth_map_aux f)
+Ü		   (Snd‰u op) (cls_restrict cls (Fst‰u op))) ts
+Ü	in if []  cls then f (c í‰u newts) else c í‰u newts
+° 
+
+=IGN
+ ¹HOLCONST
+Ü Ûdepth_map_aux2İ : ('a CT ¸ 'a CC) ­ 'a GSU ­ ('a GSU LIST)SET
+Ü			­ 'a GSU ¸ ('a GSU LIST ­ 'a GSU LIST)
+ ÷üüüüüüüüüüü
+Ü µct cc c ts· depth_map_aux2 (ct, cc) (c í‰u ts) = Ìcls· 
+Ü	let newts =
+Ü	Imagep‰u (Ìop· Fst‰u op í‰u (ts ò‰u‰e depth_map_aux2 (ct, cc))
+Ü		   (Snd‰u op) (cls_restrict cls (Fst‰u op))) ts
+Ü	in (if []  cls then ct (c í‰u (Map Fst newts)) else c í‰u (Map Fst newts),
+Ü		cc (Map Snd newts))
+ ° 
+=TEX
+¹HOLCONST
+Ü Ûdepth_mapİ : ('a GSU ­ 'a GSU) ­ ('a GSU LIST)SET ­ 'a GSU ­ 'a GSU
+÷üüüüüüüüüüü
+Ü µf cls t· depth_map f cls t = depth_map_aux f t cls
+° 
 
 This function defines the term which results from a parallel reduction.
 
-
 ¹HOLCONST
-Ü Ûpar_reduceİ : 'a RED ­ 'a GSU ­ ('a GSU LIST)SET ­ 'a GSU
+Ü Ûpar_reduceİ : 'a RED ­ ('a GSU LIST)SET ­ 'a GSU ­ 'a GSU
 ÷üüüüüüüüüüü
-Ü µ(r:'a RED) c (ts:'a GSU)· par_reduce r (c í‰u ts) = Ìcss· 
-Ü	let newts =
-	Imagep‰u (Ìop· Fst‰u op í‰u (ts ò‰u‰e par_reduce r)
-		   (Snd‰u op) (css_restrict css (Fst‰u op))) ts
-	in if []  css then reduce r (c í‰u newts) else c í‰u newts
-° 
-
-Not sure what this one is for!
-To be deleted unless I find it is useful.
-It returns the set of combinator names which occur in a combinatory term.
-
-¹HOLCONST
-Ü Ûparr_reduceİ : 'a RED ­ 'a GSU ­ 'a GSU SET
-÷üüüüüüüüüüü
-Ü µ(r:'a RED) c (ts:'a GSU)· parr_reduce r (c í‰u ts) =
-Ü	{c} À Ş{v | ¶w· w ‰u Ran‰u ts ± v = (ts ò‰u‰e parr_reduce r) w}
+Ü µr c ts cls· par_reduce r cls (c í‰u ts) =
+Ü	depth_map (reduce r) cls (c í‰u ts)
 ° 
 
 We need to be able to compute residual maps which show where to find the residuals of each redex after a (parallel) reduction.
@@ -1709,6 +1741,8 @@ It is probably easier just to map the movement of all combinations irrespective 
 I think functions from coordinate sets to coordinate sets will probably do the trick.
 We suppose that the direct reductions are specified both as a relation and as a residual map.
 We can then compute a residual map for a parallel reduction by composing these maps in a manner which corresponds to the depth first traversal which defines the parallel reduction derived from some direct reducibility relation.
+
+
 
 We then prove for each direct reduction a commutativity result, which says that performing some reduction before that direct reduction is equivalent to applying that reduction to each of the residuals after the direct reduction.
 Next I prove that combining direct reductions preserves this property, and finally that lifting to parallel reduction gives a similar commutativity for the resulting parallel reduction.

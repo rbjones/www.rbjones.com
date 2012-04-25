@@ -1,0 +1,326 @@
+
+
+
+=TEX
+\ignore{
+=VDUMP t049i.tex
+Last Change $ $Date: 2012/04/25 18:44:36 $ $
+
+$ $Id: t049.doc,v 1.1 2012/04/25 18:44:36 rbj Exp $ $
+=TEX
+}%ignore
+
+The point of the document in the first instance is to illustrate how an axiomatic approach to Euclid might most naturally be progressed using one of the HOL LCF style proof tools.
+The one used here is \Product but a similar approach could be adopted in any.
+
+The main difficulty in using such an approach in high school teaching of Euclid is in the proofs, and I have made no attempt here to do proofs in a manner which would be intelligible to such students.
+There is a fundamental difficulty in presenting detailed formal proofs in an in intelligible way, since they are typically just too large.
+To illustrate the point I have included some statistics in appendix \label{STATS}.
+Some of the inferences registering in the stats relate to automatic theorem proving undertaken while checking the consistency of constant specifications, they do not all relate to the proofs of the listed theorems.
+The proof scripts which are run to generate and check the proofs are considerably shorter, but are not intelligible as proofs.
+
+
+\section{Euclid's Elements}
+
+\cite{euclidELI}
+
+
+\section{Axiomatic Approach}
+
+The subsections of this section correspond roughly to sections in Hilbert \cite{hilbertFG}.
+
+=SML
+open_theory "rbjmisc";
+force_new_theory "Ût049aÝ";
+=TEX
+
+\ignore{
+=SML
+force_new_pc Û"'t049a"Ý;
+merge_pcs ["'savedthm_cs_¶_proof"] "'t049a";
+set_merge_pcs ["rbjmisc", "'t049a"];
+set_flag ("pp_use_alias", true);
+set_flag ("profiling", true);
+init_stats();
+=TEX
+}%ignore
+
+\subsection{The Elements}
+
+First we introduce some primitive ``collections'' for which we use types.
+
+=SML
+new_type("ÛPOINTÝ", 0);
+new_type("ÛLINEÝ", 0);
+new_type("ÛPLANEÝ", 0);
+=TEX
+
+Hilbert is not explicit about which concepts are primitive, we have to mine these from the axioms.
+I have brought the introduction of these together here since we have to mention the constants before we use them in axioms.
+The list here encompasses only those concepts used in the axioms which follow.
+
+Since Hilbert does not explicitly state what is primitive there is some lattitude in the choice of primitives.
+For example, it is not clear whether one should take the relationship between points and planes as primitive or that between lines and planes.
+I have taken the former as primitive since it is used first.
+
+=SML
+new_const ("ÛonÝ", ”POINT ­ LINE ­ BOOL®);
+declare_infix(300, "on");
+new_const ("Ûin‰pÝ", ”POINT ­ PLANE ­ BOOL®);
+declare_infix(300, "in‰p");
+=TEX
+
+\subsection{Axioms of Connection}
+
+Two distinct point determine a unique line.
+
+=SML
+val ÛI1Ý = new_axiom(["I1"], ¬
+	µ A B a b· ³ A = B ± A on a ± B on a ± A on b ± B on b
+		´ a = b ®);
+=TEX
+
+This justifies Hilbert's use of the notation ``AB'' for the line containing the points ``A'' and ``B''.
+We have to chose a more slightly different notation and define a constant for the purpose.
+
+=SML
+declare_infix(600, "ª‰l");
+=TEX
+
+¹HOLCONST
+Ü $Ûª‰lÝ: POINT ­ POINT ­ LINE
+÷üüüüüüüüü
+Ü µA B· A ª‰l B = Åa· A on a ± B on a
+°
+
+To use this definition we need the following theorem:
+
+=GFT
+Ûª‰l_thmÝ = ô µ a A B· ³ A = B ± A on a ± B on a ´ A ª‰l B = a
+=TEX
+
+The following proof script obtains the result.
+
+=SML
+val ª‰l_def = get_spec ¬$ª‰l®;
+
+set_goal([], ¬µa A B· ³ A = B ± A on a ± B on a ´ A ª‰l B = a®);
+a (rewrite_tac[ª‰l_def]);
+a (REPEAT strip_tac);
+a (Å_tac ¬Å a· A on a ± B on a®);
+(* *** Goal "1" *** *)
+a (¶_tac ¬a® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [I1]);
+val ª‰l_thm = save_pop_thm "ª‰l_thm";
+=TEX
+
+
+Any two distinct points on a line determine that line.
+
+=SML
+val ÛI2Ý = new_axiom(["I2"], ¬
+	µ a A B· ³ A = B ± A on a ± B on a
+		´ A ª‰l B = a ®);
+=TEX
+
+Any three non-colinear points determine a plane.
+
+=SML
+val ÛI3Ý = new_axiom(["I3"], ¬
+	µ A B C Á Â · ³ (¶a· A on a ± B on a ± C on a)
+		± A in‰p Á ± B in‰p Á ± C in‰p Á
+		± A in‰p Â ± B in‰p Â ± C in‰p Â
+		´ Á = Â®);
+=TEX
+
+We now need a notation for the plane determined by three non-colinear points.
+
+¹HOLCONST
+Ü Û„‰pÝ: POINT ¸ POINT ¸ POINT ­ PLANE
+÷üüüüüüüüü
+Ü µA B C· „‰p (A, B, C) = ÅÁ· A in‰p Á ± B in‰p Á ± C in‰p Á
+°
+
+To use this definition the following result is required:
+
+=GFT
+Û„‰p_thmÝ = ô µÁ A B C· ³ (¶a· A on a ± B on a ± C on a)
+		± A in‰p Á ± B in‰p Á ± C in‰p Á
+		´ „‰p (A, B, C) = Á
+=TEX
+
+=SML
+val Û„‰p_defÝ = get_spec ¬„‰p®;
+
+set_goal([], ¬µÁ A B C· ³ (¶a· A on a ± B on a ± C on a)
+			± A in‰p Á ± B in‰p Á ± C in‰p Á
+		´ „‰p (A, B, C) = Á®);
+a (REPEAT strip_tac THEN rewrite_tac[„‰p_def]);
+a (Å_tac ¬Å Á· A in‰p Á ± B in‰p Á ± C in‰p Á®);
+(* *** Goal "1" *** *)
+a (¶_tac ¬Á® THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [I3]);
+val „‰p_thm = save_pop_thm "„‰p_thm";
+=TEX
+
+Any three non-colinear points in a plane determine that plane.
+
+=SML
+val ÛI4Ý = new_axiom(["I4"], ¬µ A B C Á· ³ (¶a· A on a ± B on a ± C on a)
+		± A in‰p Á ± B in‰p Á ± C in‰p Á
+		´ „‰p (A, B, C) = Á®);
+=TEX
+
+If two points of a line lie in a plane then every point in the line is in the plane.
+
+=SML
+val ÛI5Ý = new_axiom(["I5"], ¬
+	µ A B a Á· ³ A = B ± A on a ± B on a ± A in‰p Á ± B in‰p Á
+		´ µC· C on a ´ C in‰p Á®);
+=TEX
+
+We can now define the relationship between lines and planes.
+
+=SML
+declare_infix(300, "in‰l");
+=TEX
+
+¹HOLCONST
+Ü $Ûin‰lÝ: LINE ­ PLANE ­ BOOL
+÷üüüüüüüüü
+Ü µa Á· a in‰l Á ¤ ¶A· A on a ± A in‰p Á
+°
+
+If two planes have one point in common, then they have another in common.
+
+
+=SML
+val ÛI6Ý = new_axiom(["I6"], ¬µÁ Â A· A in‰p Á ± A in‰p Â
+			´ ¶B· ³ A = B ± B in‰p Á ± B in‰p Â®);
+=TEX
+On every straight line there are at least two points, on every plain at least three non-co-linear points and "in space" at least four points not in a plain.
+
+=SML
+val ÛI7Ý = new_axiom(["I7"], ¬(µa· ¶ x y· x on a ± y on a ± ³ x = y)
+	±	(µÁ· ¶ A B C· A in‰p Á ± B in‰p Á ± C in‰p Á
+			± ³ ¶a· A on a ± B on a ± C on a)
+	±	(¶A B C D· ³ ¶Á· A in‰p Á ± B in‰p Á ± C in‰p Á ± D in‰p Á)
+®);
+=TEX
+
+I do not assert that the points are distinct since that is provable using earlier axioms.
+
+=IGN
+new_axiom([""], ¬®);
+=TEX
+
+\subsubsection{Theorems}
+
+
+=GFT
+Theorem_1a = ô µ a b· ³ a = b
+	´ ³ (¶ A B· ³ A = B ± A on a ± B on a ± A on b ± B on b)
+=TEX
+
+
+=SML
+set_goal([], ¬µa b· ³ a=b ´ ³ ¶A B· ³ A=B ± A on a ± B on a ± A on b ± B on b®);
+a (contr_tac);
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(*  6 *)  ¬³ a = b®
+(*  5 *)  ¬³ A = B®
+(*  4 *)  ¬A on a®
+(*  3 *)  ¬B on a®
+(*  2 *)  ¬A on b®
+(*  1 *)  ¬B on b®
+
+(* ?ô *)  ¬F®
+=SML
+a (all_fc_tac [I1]);
+=GFT ProofPower output
+Tactic produced 0 subgoals:
+Current and main goal achieved
+=SML
+val Theorem_1a = save_pop_thm "Theorem_1a";
+=TEX
+
+=SML
+set_goal([], ¬µÁ Â· (¶A· A in‰p Á ± A in‰p Â) ´ ¶a· a in‰l Á ± a in‰l Â®);
+a (REPEAT strip_tac);
+=GFT ProofPower output
+(* *** Goal "" *** *)
+
+(*  2 *)  ¬A in‰p Á®
+(*  1 *)  ¬A in‰p Â®
+
+(* ?ô *)  ¬¶ a· a in‰l Á ± a in‰l Â®
+=SML
+a (strip_asm_tac (list_µ_elim [¬Á®, ¬Â®, ¬A®] I6));
+=GFT
+(* *** Goal "" *** *)
+
+(*  5 *)  ¬A in‰p Á®
+(*  4 *)  ¬A in‰p Â®
+(*  3 *)  ¬³ A = B®
+(*  2 *)  ¬B in‰p Á®
+(*  1 *)  ¬B in‰p Â®
+
+(* ?ô *)  ¬¶ a· a in‰l Á ± a in‰l Â®
+=SML
+a (¶_tac ¬A ª‰l B®);
+=GFT
+(* *** Goal "" *** *)
+
+(*  5 *)  ¬A in‰p Á®
+(*  4 *)  ¬A in‰p Â®
+(*  3 *)  ¬³ A = B®
+(*  2 *)  ¬B in‰p Á®
+(*  1 *)  ¬B in‰p Â®
+
+(* ?ô *)  ¬A ª‰l B in‰l Á ± A ª‰l B in‰l Â®
+
+=IGN ProofPower output
+Tactic produced 0 subgoals:
+Current and main goal achieved
+val it = (): unit
+=IGN
+val Theorem_1b = save_pop_thm "Theorem_1b";
+=TEX
+
+\ignore{
+=SML
+add_pc_thms "'t049a" [];
+set_merge_pcs ["rbjmisc", "'t049a"];
+=TEX
+}%ignore
+
+
+\ignore{
+=IGN
+pc_rule1 "lin_arith" prove_rule [] ¬2+2=4®;
+=SML
+commit_pc "'t049a";
+
+force_new_pc "Ût049aÝ";
+merge_pcs ["rbjmisc", "'t049a"] "t049a";
+commit_pc "t049a";
+
+=IGN
+force_new_pc "Ût049a1Ý";
+merge_pcs ["rbjmisc1", "'t049a"] "t049a1";
+commit_pc "t049a1";
+=TEX
+
+
+=SML
+set_flag ("subgoal_package_quiet", false);
+set_flag ("pp_use_alias", true);
+output_stats ("t049.stats.doc");
+set_flag ("profiling", false);
+=TEX
+}%ignore
+
