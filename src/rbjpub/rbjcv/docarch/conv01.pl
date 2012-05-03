@@ -1,3 +1,5 @@
+# $Id: conv01.pl,v 1.2 2012/05/03 20:44:06 rbj Exp $
+# For converting .txt files of roff source into HTM files
 $created="5/7/95";
 $updated="6/7/95";
 $file=$ARGV[0];
@@ -39,12 +41,13 @@ elsif   (/^\.AI/){$AI = <INPUT>; chop($AI);
 elsif   (/^\.AB/){print OUTPUT "<CENTER><H3>Abstract</H3>\n";
                 &copytodot;
                 print OUTPUT "</CENTER>\n<P>\n";}
+elsif   (/^\.IP/){print OUTPUT "<P>\n";}
+elsif   (/^\.LP/){print OUTPUT "<P>\n";}
 elsif   (/^\.NH \d*/){$NH = $1; $HL=2+$1; print "$HL\n"; $HDNG=<INPUT>;
                 chop($HDNG);
                 print OUTPUT "<CENTER><H$HL>$HDNG</H$HL></CENTER>\n";}
 elsif   (/^\.NH/){$HDNG=<INPUT>; chop($HDNG);
                 print OUTPUT "<CENTER><H2>$HDNG</H2></CENTER>\n";}
-elsif   (/^\.LP/){print OUTPUT "<P>\n";}
 elsif   (/^\.RS/){&doRS;}
 elsif   (/^\./){}
 else    {print OUTPUT;};
