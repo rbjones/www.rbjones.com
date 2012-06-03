@@ -1,0 +1,914 @@
+=TEX
+\showboxbreadth=999 \showboxdepth=999
+\documentstyle[hol1,FM,HOL]{article}
+\pagestyle{FM}
+\setcounter{section}{-1}
+\FMtitle{Reflexive Semantic Domains for VDM-SL}
+\FMidentity{DBC/RBJ/082}
+\FMissue{0.1}
+\FMclass{}
+\FMdate{\today}
+\FMauthor{Roger Bishop Jones}
+\FMstatus{Draft}
+\FMtype{}
+\FMauthority{}
+\FMsummary{A construction within HOL of a reflexive domain suitable for
+the semantics of VDM-SL}
+\FMdistribution{}
+
+\begin{document}
+\makeFMfrontpage
+\section{Document control}
+\subsection{Contents list}
+\tableofcontents
+\subsection{Document cross references}
+\begin{thebibliography}{99}
+
+\bibitem{FCM}
+  {\em Foundations of Constructive Mathematics}, Michael J. Beeson,
+Springer-Verlag 1985, ISBN 3-540-12173-0
+\bibitem{ART}
+  {\em Algebraic Recursion Theory}, L.L.Ivanov, ISBN 0-470-20725-6
+
+\end{thebibliography}
+
+\subsection{Changes history}  % to get section number `0.3'
+
+First version.
+
+\subsection{Changes forecast}
+
+Under development, highly incomplete, totally volatile.
+
+\subsection{Abbreviations and notation}
+\begin{tabular}{ll}
+HOL & Higher Order Logic\\
+PAC & PArtial Characteristic function\\
+PCA & Partial Combinatory Algebra\\
+VDM & Vienna Development Language\\
+VDM-SL & VDM Specification Language\\
+\end{tabular}
+\section{INTRODUCTION}
+
+We develop in this paper alternative semantic domains for VDM-SL.
+
+The domains are constructed in the following stages:
+
+\begin{enumerate}
+\item [a]
+A Partial Combinatory Albebra is constructed by defining an (effective)
+encoding of the partial computable functions over natural numbers into
+the natural numbers.
+\item [b]
+Truth and falsity are defined as properties of the natural numbers.
+\item [c]
+Each natural number {\em pac} is associated with the partial
+characteristic function of a set of natural numbers by consideration
+of the truth or falsity of the number obtained on applying {\em pac}
+to natural numbers under the PCA.
+This gives a model for a reflexive intensional theory of PACs.
+\item [d]
+The PAC theory is converted to a TYPE theory, where a TYPE is a
+partition of a PAC of numbers.
+\end{enumerate}
+
+\section{THE PCA}
+
+For a definition of a PCA, the reader may consult \cite{FCM}
+Chapter VI, but this should not be necessary to follow our account.
+
+The PCA is constructed by defining a numeric encoding of the partial
+recursive functions.
+
+\subsection{Partial Recursive Functions}
+
+We begin therefore by defining the partial recursive functions over
+natural numbers.
+
+These form a subset of the partial functions over the natural numbers
+which are definable from a given set of partial functions using a fixed
+set of operators over partial functions.
+
+The following is adapted from \cite{ART}, Chapter 2, the main difference
+in our presentation being the addition of one extra operation over the
+partial recursive functions.
+The extra operation is redundant (I hope!) but simplifies the 
+subsequent development.
+
+\begin{HOL}
+new_theory(`refl082`);;
+new_parent(`refl083`);;
+load_theorems(`refl083`);;
+load_definitions(`refl083`);;
+let pfunn = ":ÜãÜãbool";;
+loadf`TAUT`;;
+let PARITY_TAC2 =
+	CONV_TAC (TOP_DEPTH_CONV num_CONV)
+	THEN PURE_REWRITE_TAC[PARITY_CLAUSES2]
+	THEN TAUT_TAC;;
+\end{HOL}
+The following may be used to resume work on the theory.
+\begin{HOLdisp}
+extend_theory(`refl082`);;
+new_parent(`refl083`);;
+load_theorems(`refl082`);;
+load_definitions(`refl082`);;
+load_theorems(`refl083`);;
+let pfunn = ":ÜãÜãbool";;
+loadf`TAUT`;;
+let PARITY_TAC2 =
+	CONV_TAC (TOP_DEPTH_CONV num_CONV)
+	THEN PURE_REWRITE_TAC[PARITY_CLAUSES2]
+	THEN TAUT_TAC;;
+\end{HOLdisp}
+We represent a partial function as a (curried) binary relation over the
+natural numbers.
+It must of course be single valued.
+
+The partial recursive functions are generated from certain particular
+partial functions by five operators over partial functions.
+The initial functions are:
+\begin{enumerate}
+\item [l] (left projection)
+\item [r] (right projection)
+\item [i] (identity function)
+\item [c0] (constant zero)
+\item [s] (successor function)
+\end{enumerate}
+\subsubsection{pairing}
+First we define a pairing operation and its inverses and prove its
+properties.
+This is done by defining a successor function over pairs of natural
+numbers as follows.
+\begin{HOL}
+let pair_suc = new_definition (`pair_suc`,"
+	(pair_suc:(ÜâÜ)ã(ÜâÜ)) pr =
+		   let lft  = FST pr
+ 		in let rht  = SND pr
+ 		in (lft=0) => (SUC rht, 0) | (PRE lft, SUC rht)
+");;
+\end{HOL}
+This successor function induces a linear ordering on pairs
+of natural numbers which is defined next.
+\begin{HOL}
+let pair_lt = new_infix_definition(`pair_lt`,"
+	(pair_lt:(ÜâÜ)ã(ÜâÜ)ãbool) lp rp =
+		(FST lp + SND lp) < (FST rp + SND rp)
+	Å	(((FST lp + SND lp) = (FST rp + SND rp))
+		Ä (SND lp < SND rp))
+");;
+\end{HOL}
+We prove that this relation is not reflexive:
+\begin{HOL}
+set_goal([],"É x y:ÜâÜé x pair_lt y ä å (x=y)");;
+e (TAUT_REWRITE_TAC "a ä å b = b ä åa");;
+e (REWRITE_TAC [pair_lt] THEN REPEAT GEN_TAC
+	THEN STRIP_TAC THEN ASM_REWRITE_TAC[LESS_REFL]);;
+let PAIR_LT1 = save_top_thm `PAIR_LT1`;;
+\end{HOL}
+And that it is transitive.
+\begin{HOL}
+set_goal([],"É x y z:ÜâÜé x pair_lt y Ä y pair_lt z
+			ä x pair_lt z ");;
+e (REWRITE_TAC [pair_lt] THEN REPEAT STRIP_TAC
+	THEN IMP_RES_TAC LESS_TRANS THEN ASM_REWRITE_TAC[]);;
+e DISJ1_TAC;;
+e (REWRITE_TAC[SYM (ASSUMP "(FST y) + (SND y) = (FST z) + (SND z)");
+	(ASSUMP "((FST x) + (SND x)) < ((FST y) + (SND y))")]);;
+let pair_lt_TRANS = save_top_thm `pair_lt_TRANS`;;
+\end{HOL}
+Now we define a map from the natural numbers yielding pairs of natural
+numbers.
+This is in fact an isomorphism and this will be proven.
+\begin{HOL}
+let dest_pair = new_prim_rec_definition(`dest_pair`,"
+  ((dest_pair:Üã(ÜâÜ)) 0 = (0,0)) Ä
+  (Éx:Üé dest_pair (SUC x) = pair_suc (dest_pair x))
+");;
+\end{HOL}
+The inverse of this is the pairing function:
+\begin{HOL}
+let pair_DEF = new_definition(`pair_DEF`,
+   "(pair:(ÜâÜ)ãÜ) y = áxé y = dest_pair x");;
+\end{HOL}
+Once the isomorphism has been established it will be more convenient
+in general to use the left and right projections from the pairs:
+\begin{HOL}
+let left_DEF = new_definition(`left_DEF`,
+  "(left:ÜãÜ) x = FST (dest_pair x)");;
+let right_DEF = new_definition(`right_DEF`,
+  "(right:ÜãÜ) x = SND (dest_pair x)");;
+\end{HOL}
+We now begin the proof that we have a bijection.
+
+\begin{HOL}
+set_goal([],"(0,0) pair_lt (pair_suc (0,0))");;
+e (REWRITE_TAC[pair_lt;pair_suc;ADD_CLAUSES;LET_DEF] THEN BETA_TAC);;
+e (REWRITE_TAC[ADD_CLAUSES;LESS_SUC_REFL]);;
+let ZZ_PAIR_LT_SUC_ZZ = save_top_thm `ZZ_PAIR_LT_SUC_ZZ`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éx:numé (dest_pair x) pair_lt (dest_pair (SUC x))");;
+e (GEN_TAC THEN REWRITE_TAC[dest_pair; pair_lt; pair_suc; LET_DEF]
+	THEN BETA_TAC);;
+e (ASM_CASES_TAC "FST(dest_pair x) = 0" THEN ASM_REWRITE_TAC[]);;
+e (REWRITE_TAC[ADD_CLAUSES; LESS_SUC_REFL]);;
+e DISJ2_TAC;;
+lemma "Énéå(n=0)ä Ñmé (n=SUC m)";;
+  e (TAUT_REWRITE_TAC "åaäb = a Å b");;
+  e (REWRITE_TAC [Ü_CASES]);;
+e (RES_THEN STRIP_ASSUME_TAC);;
+e (ASM_REWRITE_TAC[PRE; ADD_CLAUSES; LESS_SUC_REFL]);;
+let DPX_LT_DPSX = save_top_thm `DPX_LT_DPSX`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éx yé x < SUC y Ä å x < y ä (x = y)");;
+e (REPEAT GEN_TAC);;
+e (MP_TAC (SPECL ["x:num";"y:num"] LESS_THM));;
+e TAUT_TAC;;
+let LESS_LEMMA3 = save_top_thm `LESS_LEMMA3`;;
+\end{HOL}
+The key lemma in the proof states that the relation induced
+by "<" under `dest_pair' `is pair_lt'.
+\begin{HOL}
+set_goal([],"Éy x:numé x < y
+	ä (dest_pair x) pair_lt (dest_pair y)");;
+e INDUCT_TAC;;
+% 2 subgoals %
+% 1 %
+e (REWRITE_TAC[NOT_LESS_0]);;
+% 2 %
+e (GEN_TAC THEN ASM_CASES_TAC "x<y");;
+% 2 subgoals %
+  % 1 %
+  e (RES_TAC THEN REPEAT STRIP_TAC THEN REWRITE_TAC[] );;
+  e (ASSUME_TAC (SPEC "y:num" DPX_LT_DPSX));;
+  e (IMP_RES_TAC pair_lt_TRANS);;
+  % 2 %
+  e STRIP_TAC;;
+  e (IMP_RES_TAC LESS_LEMMA3);;
+  e (ASM_REWRITE_TAC[DPX_LT_DPSX]);;
+let LT_IMP_PLT = save_top_thm `LT_IMP_PLT`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éxéå(x pair_lt x)");;
+e (REWRITE_TAC[pair_lt; LESS_REFL]);;
+let NOT_PLT_REFL = save_top_thm `NOT_PLT_REFL`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éx yé x pair_lt y ä å(x=y)");;
+e (   REPEAT GEN_TAC THEN TAUT_REWRITE_TAC "a ä åb = b ä åa"
+	THEN STRIP_TAC
+	THEN ASM_REWRITE_TAC [NOT_PLT_REFL]);;
+let X_PLT_Y_IMP_X_NE_Y = save_top_thm `X_PLT_Y_IMP_X_NE_Y`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éx yé å(x=y) ä (x<y) Å (y<x)");;
+e (GEN_TAC THEN GEN_TAC
+	THEN MP_TAC (SPECL ["x:num";"y:num"] LESS_CASES_IMP));;
+e TAUT_TAC;;
+let NEQ_IMP_OLTO = save_top_thm `NEQ_IMP_OLTO`;;
+\end{HOL}
+\begin{HOL}
+set_goal([],"ONE_ONE dest_pair");;
+e (REWRITE_TAC [definition `bool` `ONE_ONE_DEF`]);;
+e (TAUT_REWRITE_TAC "a ä b = åb ä åa" THEN REPEAT STRIP_TAC
+	THEN IMP_RES_TAC NEQ_IMP_OLTO);;
+e (IMP_RES_TAC LT_IMP_PLT);;
+e (IMP_RES_THEN MP_TAC X_PLT_Y_IMP_X_NE_Y);;
+e (ASM_REWRITE_TAC[]);;
+e (IMP_RES_TAC LT_IMP_PLT);;
+e (IMP_RES_THEN MP_TAC X_PLT_Y_IMP_X_NE_Y);;
+e (ASM_REWRITE_TAC[]);;
+let OO_DEST_PAIR = save_top_thm `OO_DEST_PAIR`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Év wé(0 = v + w) ä (v = 0) Ä (w = 0)");;
+    e (REPEAT GEN_TAC);;
+    e (DISCH_THEN (ASSUME_TAC o SYM));;
+    e (DEF_RES_TAC ADD_EQ_0 THEN ASM_REWRITE_TAC[]);;
+let Z_EQ_ADD = save_top_thm `Z_EQ_ADD`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éy w vé (y = v + w) ä Ñxé ((v,w) = dest_pair x)");;
+e INDUCT_TAC;;
+% 2 subgoals %
+  % 1 %
+  e (REPEAT STRIP_TAC THEN IMP_RES_TAC Z_EQ_ADD);;
+  e (EXISTS_TAC "0");;
+  e (REWRITE_TAC[dest_pair;PAIR_EQ]);;
+  e (UNDISCH_TAC "0 = v + w");;
+  e (ASM_REWRITE_TAC[]);;
+  % 2 %
+  e INDUCT_TAC;;
+  % 2 subgoals %
+    % 1 %
+    e (REPEAT STRIP_TAC);;
+    lemma "y = 0 + PRE v";;
+      e (REWRITE_TAC [SYM
+		(REWRITE_RULE[ADD_CLAUSES](ASSUMP "SUC y = v + 0"))]);;
+      e (REWRITE_TAC[ADD_CLAUSES; PRE]);;
+    e (RES_THEN STRIP_ASSUME_TAC);;
+    e (EXISTS_TAC "SUC x");;
+    e (REWRITE_TAC[dest_pair; pair_suc; LET_DEF;
+		SYM (ASSUMP "0,PRE v = dest_pair x"); ADD_CLAUSES; PAIR_EQ]
+	THEN BETA_TAC
+	THEN REWRITE_TAC[PAIR_EQ;
+		SYM (REWRITE_RULE [ADD_CLAUSES] (ASSUMP "SUC y = v + 0"));
+		PRE]);;
+    % 2 %
+    e (let [a;b;c;d] = CONJUNCTS ADD_CLAUSES
+       in (REWRITE_TAC[d; SYM c]));;
+    e (REPEAT STRIP_TAC);;
+    e (RES_THEN STRIP_ASSUME_TAC);;
+    e (EXISTS_TAC "SUC x");;
+    e (REWRITE_TAC[dest_pair; pair_suc; LET_DEF;
+		SYM (ASSUMP "SUC v,w = dest_pair x"); ADD_CLAUSES; PAIR_EQ]
+	THEN BETA_TAC
+	THEN REWRITE_TAC[PAIR_EQ;
+		SYM (REWRITE_RULE [ADD_CLAUSES] (ASSUMP "SUC y = (SUC v) + w"));
+		PRE; NOT_SUC]);;
+let dest_pair_ONE_ONE_lemma = save_top_thm `dest_pair_ONE_ONE_lemma`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Év wé Ñxé v,w = dest_pair x");;
+e (REPEAT STRIP_TAC);;
+lemma_proof "Ñyé y = v + w" [EXISTS_TAC "v+w" THEN REWRITE_TAC[]];;
+e (IMP_RES_TAC dest_pair_ONE_ONE_lemma);;
+let dest_pair_onto = save_top_thm `dest_pair_onto`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éyé Ñxé y = dest_pair x");;
+e (REPEAT STRIP_TAC);;
+e (STRIP_ASSUME_TAC (SPECL ["FST (y:Ü â Ü)";"SND (y:Ü â Ü)"]
+				dest_pair_onto));;
+e (EXISTS_TAC "x:num");;
+e (UNDISCH_TAC "FST y,SND y = dest_pair x"
+	THEN REWRITE_TAC [PAIR]);;
+let dest_pair_onto2 = save_top_thm `dest_pair_onto2`;;
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"ONTO dest_pair");;
+e (REWRITE_TAC[definition `bool` `ONTO_DEF`; dest_pair_onto2]);;
+let dest_pair_ONTO = save_top_thm `dest_pair_ONTO`;;
+\end{HOL}
+
+
+\begin{HOL}
+set_goal([],"(Éxé pair (dest_pair x) = x)
+		Ä (Éyé dest_pair (pair y) = y)");;
+e (REWRITE_TAC [pair_DEF]);;
+e (REPEAT STRIP_TAC);;
+e (ASSUME_TAC (SYM (REWRITE_RULE []
+		(BETA_RULE (SPECL ["çx'é dest_pair x = dest_pair x'";"x:Ü"]
+		(INST_TYPE [":Ü",":*"]SELECT_AX))))));;
+e (IMP_RES_TAC (REWRITE_RULE[definition `bool` `ONE_ONE_DEF`] OO_DEST_PAIR));;
+e (ASM_REWRITE_TAC[]);;
+e (STRIP_ASSUME_TAC (SPEC_ALL dest_pair_onto2));;
+e (IMP_RES_THEN (STRIP_ASSUME_TAC o SYM)
+	((BETA_RULE (SPECL ["çx:Üé y = dest_pair x";"x:Ü"]
+		(INST_TYPE [":Ü",":*"]SELECT_AX)))));;
+let pair_dest_pair = save_top_thm `pair_dest_pair`;;
+\end{HOL}
+
+
+\begin{HOL}
+set_goal([],"Éx yé
+		(left (pair (x, y)) = x)
+	Ä	(right (pair (x, y)) = y)
+	Ä	(pair (left x, right x) = x)
+");;
+e (REWRITE_TAC[left_DEF; right_DEF; pair_dest_pair]);;
+let left_right_pair = save_top_thm `left_right_pair`;;
+\end{HOL}
+
+\begin{HOL}
+\end{HOL}
+
+
+\begin{HOL}
+\end{HOL}
+
+\begin{HOL}
+set_goal([],"Éyé å(0 = SUC y)");;
+expand STRIP_TAC;;
+lemma_proof "0 < SUC y" [REWRITE_TAC [LESS_0]];;
+expand (IMP_RES_TAC LESS_NOT_EQ);;
+let ZERO_NOT_SUC = save_top_thm(`ZERO_NOT_SUC`);;
+\end{HOL}
+\begin{HOL}
+set_goal([],"Éxé (x=0) = Éyé å(x = SUC y)");;
+expand (GEN_TAC THEN STRIP_ASSUME_TAC (SPEC "x:num" (num_CASES))
+	THEN ASM_REWRITE_TAC
+	[SPEC "n:num" ZERO_NOT_SUC;
+	(SPECL ["SUC n";"0"](INST_TYPE [":num",":*"]EQ_SYM_EQ))]);;
+expand (CONV_TAC (DEPTH_CONV NOT_FORALL_CONV));;
+expand (EXISTS_TAC "n:num" THEN REWRITE_TAC[]);;
+let EQ_ZERO_EQ_ALL_NOT_SUC = save_top_thm (`EQ_ZERO_EQ_ALL_NOT_SUC`);;
+\end{HOL}
+\begin{HOL}
+set_goal([],"Éxé (x=0) = å(Ñyé x = SUC y)");;
+expand (CONV_TAC (DEPTH_CONV NOT_EXISTS_CONV) THEN REWRITE_TAC [EQ_ZERO_EQ_ALL_NOT_SUC]);;
+let EQ_ZERO_EQ_NOT_EX_SUC = save_top_thm (`EQ_ZERO_EQ_NOT_EX_SUC`);;
+\end{HOL}
+with definitions:
+\begin{HOL}
+new_definition(`cpair_DEF`,"cpair x y = pair (x,y)");;
+new_definition(`l_DEF`,
+   "l:^pfunn = çz xéÑyé z = cpair x y");;
+new_definition(`r_DEF`,
+   "r:^pfunn = çz yéÑxé z = cpair x y");;
+new_definition(`i_DEF`,
+   "i:^pfunn = çz yéz = y");;
+new_definition(`c0_DEF`,   
+   "c0:^pfunn = çx yéy = 0");;
+new_definition(`s_DEF`,
+   "s:^pfunn = çx yéy = x+1");;
+\end{HOL}
+The operators are:
+\begin{enumerate}
+\item [rco] (composition)
+\item [Pi] (function product)
+\item [Pr] (primitive recursion)
+\item [Ln] (least n)
+\item [U] (union)
+\end{enumerate}
+Union is redundant but handy.
+They are defined:
+\begin{HOL}
+new_infix_definition(`rco_DEF`,"($rco:^pfunnã^pfunnã^pfunn) f g
+  = çx zéÑyéf x y Ä g y z");;
+
+new_definition(`Pi_DEF`,"(Pi:^pfunnã^pfunnã^pfunn) f g
+  = çx yé Ñu vé (y = cpair u v) Ä
+      f x u Ä g x v");;
+
+new_prim_rec_definition(`aPr_DEF`,"
+	(É(f:^pfunn)(g:^pfunn)(ls:Ü)é
+	(aPr 0 f g ls = ((át:Üéf ls t), Ñt:Üéf ls t)))
+	Ä
+      É(m:Ü)(f:^pfunn)(g:^pfunn)(ls:Ü)é
+	(aPr (SUC m) f g ls =
+	(	(át:ÜéÑx:Üé
+				g x t
+			Ä	(x = cpair ls (cpair m (FST (aPr m f g ls))))),
+		(Ñt:ÜéÑx:Üé
+				g x t
+			Ä	(SND (aPr m f g ls))
+			Ä	(x = cpair ls (cpair m (FST (aPr m f g ls)))))))");;
+
+new_definition(`Pr_DEF`,"(Pr:^pfunnã^pfunnã^pfunn) f g
+  = çx yé Ñué (y = (FST (aPr x f g u))) Ä
+              (SND (aPr x f g u)) Ä
+              (l x u)");;
+
+new_definition(`Ln_DEF`,"(Ln:^pfunnã^pfunn) f =
+  çp qé  f (cpair p q) 0 Ä
+         (Éué u < q ä Ñvé f (cpair p u) (SUC v))");;
+
+new_definition(`U_DEF`,"(U:^pfunnã^pfunnã^pfunn) f g =
+  çx yé ((f x 0 Å g x 0) Ä (y = 0)) Å (f x 1 Ä g x 1 Ä (y = 1))");;
+\end{HOL}
+
+The partial recursive functions are the functions which may be defined
+using the above five primitives and the five operators, i.e. it is
+the closure of the set of primitive functions under the operators.
+
+\subsection{The Encoding}
+
+We encode the partial functions as natural numbers in the following
+way:
+\begin{enumerate}
+\item enc l = 0
+\item enc r = 1
+\item enc i = 2
+\item enc c0 = 3
+\item enc s = 4
+\item enc rco f g = 5*(cpair (enc f) (enc g) + 1)
+\item enc Pi f g = 5*(cpair (enc f) (enc g) + 1)+1
+\item enc Pr f g = 5*(cpair (enc f) (enc g) + 1)+2
+\item enc Ln f = 5*((enc f) + 1) +3
+\item enc U f g = 5*(cpair (enc f) (enc g) + 1)+4
+\end{enumerate}
+We translate the operators over encodings as follows:
+\begin{HOL}
+new_definition(`enc_l_DEF`,"enc_l = 0");;
+new_definition(`enc_r_DEF`,"enc_r = 1");;
+new_definition(`enc_i_DEF`,"enc_i = 2");;
+new_definition(`enc_c0_DEF`,"enc_c0 = 3");;
+new_definition(`enc_s_DEF`,"enc_s = 4");;
+new_definition(`enc_rco_DEF`,"(enc_rco:ÜãÜãÜ) ef eg =
+  5*((cpair ef eg)+1)");;
+new_definition(`enc_Pi_DEF`,"(enc_Pi:ÜãÜãÜ) ef eg =
+  5*((cpair ef eg)+1)+1");;
+new_definition(`enc_Pr_DEF`,"(enc_Pr:ÜãÜãÜ) ef eg =
+  5*((cpair ef eg)+1)+2");;
+new_definition(`enc_Ln_DEF`,"(enc_Ln:ÜãÜ) ef =
+  5*(ef+1)+3");;
+new_definition(`enc_U_DEF`,"(enc_U:ÜãÜãÜ) ef eg =
+  5*((cpair ef eg)+1)+4");;
+\end{HOL}
+We define also a set of predicates and destructors.
+\begin{HOL}
+let REM_DEF = new_infix_definition(`REM_DEF`,"
+	(REM:ÜãÜãÜ) x y = ázé Ñvé (z < y) Ä (x = v*y+z)
+");;
+let is_enc_rco_DEF = new_definition(`is_enc_rco_DEF`,"
+	(is_enc_rco:Üãbool) x = ((x REM 5) = 0)
+");;
+let is_enc_Pi_DEF = new_definition(`is_enc_Pi_DEF`,"
+	(is_enc_Pi:Üãbool) x = (x REM 5) = 1
+");;
+let is_enc_Pr_DEF = new_definition(`is_enc_Pr_DEF`,"
+	(is_enc_Pr:Üãbool) x = (x REM 5) = 2
+");;
+let is_enc_Ln_DEF = new_definition(`is_enc_Ln_DEF`,"
+	(is_enc_Ln:Üãbool) x = (x REM 5) = 3
+");;
+let is_enc_U_DEF = new_definition(`is_enc_U_DEF`,"
+	(is_enc_U:Üãbool) x = (x REM 5) = 4
+");;
+\end{HOL}
+Only one destructor is needed, which may be used in conjunction
+with left and right as appropriate.
+\begin{HOL}
+new_definition(`dest_op`,"(dest_op:ÜãÜ) x = (x DIV 5) - 1");;
+\end{HOL}
+The following lemmas will be needed.
+
+First, that all numbers greater than 4 satisfy exactly one of the
+predicates.
+
+\begin{HOL}
+set_goal([],"Éxé x>4 ä (
+  is_enc_rco x Å is_enc_Pi x Å is_enc_Pr x Å
+  is_enc_Ln x Å is_enc_U x)");;
+e (REWRITE_TAC[is_enc_rco_DEF; is_enc_Pi_DEF;
+		is_enc_Pr_DEF; is_enc_Ln_DEF; is_enc_U_DEF]);;
+\end{HOL}
+\begin{HOL}
+let op_case_lemma = "Éxé x>4 ä (
+  is_enc_rco x Å is_enc_Pi x Å is_enc_Pr x Å
+  is_enc_Ln x Å is_enc_U x)";;
+let rco_lemma = "is_enc_rco x ä (x>4) Ä
+  å(is_enc_Pi x) Ä å(is_enc_Pr x) Ä
+  å(is_enc_Ln x) Ä å(is_enc_U x)";;
+let Pi_lemma = "is_enc_Pi x ä (x>4) Ä
+  å(is_enc_rco x) Ä å(is_enc_Pr x) Ä
+  å(is_enc_Ln x) Ä å(is_enc_U x)";;
+let Pr_lemma = "is_enc_Pr x ä (x>4) Ä
+  å(is_enc_rco x) Ä å(is_enc_Pi x) Ä
+  å(is_enc_Ln x) Ä å(is_enc_U x)";;
+let Ln_lemma = "is_enc_Ln x ä (x>4) Ä
+  å(is_enc_rco x) Ä å(is_enc_Pi x) Ä
+  å(is_enc_Pr x) Ä å(is_enc_U x)";;
+let U_lemma = "is_enc_U x ä (x>4) Ä
+  å(is_enc_rco x) Ä å(is_enc_Pi x) Ä
+  å(is_enc_Pr x) Ä å(is_enc_Ln x)";;
+\end{HOL}
+
+The inverse of the encoding function assigns a partial function to each
+natural number and is formally defined below.
+In order to use primitive recursion in the definition we define
+first an auxiliary function which for each natural number n
+returns a mapping from the natural numbers to the partial
+functions which is correct for every argument up to n.
+\begin{HOL}
+new_definition(`adec_DEF`,"(adec:Üã(Üã^pfunn)ã^pfunn) m cdec =
+  (is_enc_rco m => (cdec (left (dest_op m))) rco (cdec (right (dest_op m))) |
+  (is_enc_Pi m => Pi (cdec (left (dest_op m))) (cdec (right (dest_op m)))   |
+  (is_enc_Pr m => Pr (cdec (left (dest_op m))) (cdec (right (dest_op m)))   |
+  (is_enc_Ln m => Ln (cdec (dest_op m))   |
+  (is_enc_U m => U (cdec (left (dest_op m))) (cdec (right (dest_op m)))   |
+  ápf:^pfunnéT)))))");;
+\end{HOL}
+
+Some lemmas about \verb!adec!.
+
+\begin{HOL}
+let enc_rco_l2 =
+  "É(cd:Üã^pfunn)(x:Ü)(y:Ü)é adec (enc_rco x y) cd =
+    ((cd x) rco (cd y))";;
+let enc_Pi_l2 =
+  "É(cd:Üã^pfunn)(x:Ü)(y:Ü)é adec (enc_Pi x y) cd =
+    (Pi (cd x) (cd y))";;
+let enc_Pr_l2 =
+  "É(cd:Üã^pfunn)(x:Ü)(y:Ü)é adec (enc_Pr x y) cd =
+    (Pr (cd x) (cd y))";;
+let enc_Ln_l2 =
+  "É(cd:Üã^pfunn)(x:Ü)(y:Ü)é adec (enc_Ln x) cd =
+    (Ln (cd x))";;
+let enc_U_l2 =
+  "É(cd:Üã^pfunn)(x:Ü)(y:Ü)é adec (enc_U x y) cd =
+    (U (cd x) (cd y))";;
+\end{HOL}
+
+\begin{HOL}
+new_prim_rec_definition(`bdec`,"
+  (É(x:Ü)é(bdec:ÜãÜã^pfunn) 0 x =
+        (x=enc_l) => l   |
+         (x=enc_r) => r   |
+          (x=enc_i) => i   |
+           (x=enc_c0)=> c0  |
+            (x=enc_s) => s   |
+                 ápf:^pfunnéT) Ä
+  (É(m:Ü) (x:Ü)é bdec (SUC m) x =
+         ((x < 5) Å (x < (SUC m))) => bdec m x   |
+          (x = (SUC m)) => adec m (bdec m) |
+           (ápf:^pfunnéT))");;
+
+new_definition(`dec_DEF`,"(dec:Üã^pfunn) x = bdec x x");;
+\end{HOL}
+
+\subsubsection{lemmas}
+
+We prove here some useful lemmas about dec.
+\begin{HOL}
+let tactic = REWRITE_TAC (
+  map (definition `refl082`)
+    [`dec_DEF`;`enc_l_DEF`;`enc_r_DEF`;`enc_i_DEF`;`enc_c0_DEF`;`enc_s_DEF`]
+  @ [theorem `refl082` `bdec`;
+    NOT_SUC;LESS_MONO_EQ;LESS_0;SUC_ID;INV_SUC_EQ]
+  @ (map num_CONV ["1";"2";"3";"4";"5"]));;
+prove_thm(`dec_l_lemma`,"dec enc_l = l",tactic);;
+prove_thm(`dec_r_lemma`,"dec enc_r = r",tactic);;
+prove_thm(`dec_i_lemma`,"dec enc_i = i",tactic);;
+prove_thm(`dec_c0_lemma`,"dec enc_c0 = c0",tactic);;
+prove_thm(`dec_s_lemma`,"dec enc_s = s",tactic);;
+\end{HOL}
+We also state the unproved lemmas:
+\begin{HOL}
+let dec_rco_lemma = "É(x:Ü)(y:Ü)é dec (enc_rco x y) =
+  (dec x) rco (dec y)";;
+let dec_Pi_lemma = "É(x:Ü)(y:Ü)é dec (enc_Pi x y) =
+  Pi (dec x) (dec y)";;
+let dec_Pr_lemma = "É(x:Ü)(y:Ü)é dec (enc_Pr x y) =
+  Pr (dec x) (dec y)";;
+let dec_Ln_lemma = "É(x:Ü)é dec (enc_Ln x) =
+  Ln (dec x)";;
+let dec_U_lemma = "É(x:Ü)(y:Ü)é dec (enc_U x y) =
+  U (dec x) (dec y)";;
+\end{HOL}
+\subsection{The Partial Combinatory Algebra}
+
+\section{TRUTH}
+We now define the notion of TRUTH.
+
+TRUTH is a property of natural numbers relative to some encoding
+and an oracle.
+An oracle is a partial function interpreted as a partial characteristic
+function (in fact I only consider total oracles but it is convenient
+to use the type of partial functions).
+
+We define a partial ordering on the partial functions.
+\begin{HOL}
+new_infix_definition(`approaches_DEF`,
+  "($approaches:^pfunnã^pfunnãbool) f g =
+  Éxé (f x 0 ä g x 0) Ä (f x 1 ä g x 1)");;
+\end{HOL}
+
+And we define the relationship of inclusion over numeric encodings of
+partial characteristic functions.
+This corresponds to restricted quantification in Combinatory Logic, often
+denoted $\Xi$.
+
+\begin{HOL}
+new_definition(`Xi_DEF`,"(Xi:^pfunn) x y =
+  ((y = 0) Ä Ézé(dec x) z 0 ä (dec y) z 0) Å (y = 1)");;
+\end{HOL}
+
+A number {\em n} is true if there is an effective approximation to Xi
+{\em eaXi} such that every closer effective approximation is mapped to 0
+by n under the partial combinatory algebra. 
+
+\begin{HOL}
+new_definition(`true_DEF`,"(true:Üãbool) n =
+  ÑeaXin:Üé (dec eaXin) approaches Xi Ä
+    ÉceaXin:Üé ((dec eaXin) approaches (dec ceaXin) Ä
+        (dec ceaXin) approaches Xi) ä ((dec n) ceaXin 0)");;
+
+new_definition(`false_DEF`,"(false:Üãbool) n =
+  ÑeaXin:Üé (dec eaXin) approaches Xi Ä
+    ÉceaXin:Üé ((dec eaXin) approaches (dec ceaXin) Ä
+        (dec ceaXin) approaches Xi) ä ((dec n) ceaXin 1)");;
+\end{HOL}
+
+\section{On the Abuse of Church's Thesis}
+
+In the following, while exploring the expressiveness of this
+system, we will defer proof obligations by liberal invocation
+of Church's thesis.
+
+This will be done by formally describing a partial function,
+appealing to the readers intuitions for agreement that it is
+effectively computable, and trusting that it will therefore
+be numerically encodable under our encoding.
+
+A formal lemma will be stated that there is a number which
+decodes to the given partial function, and proofs of properties
+will be given with this lemma in the assumption list.
+
+Before these properties could be effectively used in HOL it
+would be necessary to prove the assumptions.
+
+\section{PACS}
+
+Relative to the truth we can derive another interpretation
+of natural numbers as partial characteristic functions.
+
+\begin{HOL}
+new_definition(`pac_DEF`,"(pac:Üã^pfunn) n =
+  çx yé Ñzé (dec n) x z Ä
+    (((y = 0) Ä true z) Å
+    ((y = 1) Ä false z))");;
+\end{HOL}
+
+The pacs are the natural numbers interpreted through this map.
+The following property of partial functions indicates whether
+any given partial function is the value of some pac.
+In the following I will use lower case pac to refer to a
+value of type num (i.e. a natural number) to be interpreted in the
+above manner as a partial characterisic function over the natural
+numbers, and upper case PAC to refer to a value of type pfunn, 
+(num->num->bool), which is in the codomain of the function pac.
+
+\subsection{pacs as sets}
+
+Pacs may clearly be thought of as numeric representatives of sets of
+natural numbers.
+Since the numbers themselves can be interpreted as sets of numbers
+we might hope to obtain a reflexive set theory by interpreting
+$a ù b$ as $(pac a) b 0$ or equivalently, $true (áz.(dec a) b z)$.
+
+This naive approach doesn't work because the encoding of partial
+functions into natural numbers cannot be a bijection, and a natural
+number cannot be interpreted as representing a set of sets unless
+it gives the same answer for every representative of a given set.
+It would seem necessary to identify a set with an equivalence class
+of natural numbers, but to know what equivalence relation is relevant
+it is necessary to know how the members of the set are to be interpreted.
+
+So we get a heavy push in the direction of type theory.
+It {\em looks} as though a type-free set theory cannot be built via encodings.
+
+In the next section we will look at types.
+
+\begin{HOL}
+new_definition(`is_PAC_DEF`,"(is_PAC:^pfunnãbool) f = Ñnéf = pac n");;
+\end{HOL}
+
+\begin{HOL}
+new_definition(`empty_PAC_DEF`,"(empty_PAC:^pfunn)= çx yé(y=1)");;
+new_definition(`universal_PAC_DEF`,"(universal_PAC:^pfunn) x y = (y=0)");;
+let empty_PAC_lemma = "is_PAC empty_PAC";;
+let universal_PAC_lemma = "is_PAC universal_PAC";;
+\end{HOL}
+
+\subsection{The empty pac}
+
+The empty pac is the natural number representing the
+function $ç x yé1$.
+
+We will here invoke Church's thesis by assuming that this
+is a partial recursive function.
+The required function takes any value and returns the constant
+one function.
+
+\begin{HOL}
+let empty_pac_lemma = "Ñxé dec x = çy zéz = enc_rco enc_s enc_c0";;
+new_definition(`empty_pac_witness_DEF`,"empty_pac_witness =
+  áxédec x = çy zéz = enc_rco enc_s enc_c0");;
+\end{HOL}
+
+This pac is analogous to the empty set in ZFC.
+
+\begin{HOL}
+new_definition(`empty_pac_DEF`,"empty_pac:Ü = án:Üé pac n = empty_PAC");;
+\end{HOL}
+
+We now wish to prove that empty\_ pac\_ lemma implies empty\_ PAC\_ lemma.
+
+ \begin{HOL}
+let empty_pac_goal = ([empty_pac_lemma],empty_PAC_lemma);;
+let empty_pac_lemma1 =
+  "dec empty_pac_witness = çy zéz = enc_rco enc_s enc_c0";;
+let empty_pac_lemma1 =
+  TAC_PROOF (([empty_pac_lemma],empty_pac_lemma1),
+       (PURE_REWRITE_TAC (map (definition `refl082`)
+           [`empty_pac_witness_DEF`;`is_PAC_DEF`;`empty_PAC_DEF`]))
+  THEN (ACCEPT_TAC (SELECT_RULE (ASSUME empty_pac_lemma))));;
+
+let empty_pac_lemma2 = "(Éa bé(f:^pfunn) a b = (g:^pfunn) a b) ä (f = g)";;
+let l1 = ASSUME "Éy xé(f:^pfunn) y x = (g:^pfunn) y x";;
+let l2 = SPEC "y:Ü" l1;;
+let l3 = SPEC_ALL (INST_TYPE [":Ü",":*";":Üãbool",":**"] EQ_EXT);;
+let l4 = SPEC_ALL (INST_TYPE [":Ü",":*";":bool",":**"] EQ_EXT);;
+let l5 = GEN "f:Üãbool"l4;;
+let l6 = SPEC "(f:ÜãÜãbool) y"l5;;
+let l7 = GEN "g:Üãbool"l6;;
+let l8 = SPEC "(g:ÜãÜãbool) y"l7;;
+let l9 = GEN "y:Ü" l8;;
+let l10 = MP l9 l1;;
+let l2 = REWRITE_RULE [] l1;;
+set_goal ([],empty_pac_lemma2);;
+expand STRIP_TAC;;
+expand (REWRITE_TAC []);;
+
+
+set_goal empty_pac_goal;;
+expand (PURE_REWRITE_TAC (map (definition `refl082`)
+           [`is_PAC_DEF`;`empty_PAC_DEF`]));;
+expand (EXISTS_TAC "empty_pac_witness");;
+expand (PURE_REWRITE_TAC [definition `refl082` `pac_DEF`]);;
+expand (PURE_REWRITE_TAC [empty_pac_lemma1]);;
+expand (CONV_TAC (DEPTH_CONV BETA_CONV));;
+\end{HOL}
+
+\subsection{The universal pac}
+
+The universal pac is the natural number representing the
+function $\lambda x yé1$.
+This pac is analogous to the universe, not in ZFC.
+
+\section{OPERATIONS OVER PACS}
+
+\subsection{Union}
+The union of two pacs is the function U when restricted to pacs.
+We need to define union as a function on natural numbers which
+induces U over the corresponding pacs.
+
+\begin{HOL}
+new_infix_definition(`Union_DEF`,"($Union:ÜãÜãÜ) f g =
+  áhé (pac h) = U (pac f) (pac g)");;
+\end{HOL}
+
+This is of course a cop-out, I now have to prove:
+\begin{HOL}
+new_definition(`Union_ok_DEF`,"Union_ok =
+  (É(x:Ü) (y:Ü)é pac (x Union y) = (U (pac x) (pac y)))");;
+\end{HOL}
+
+For which purpose I need a witness and must do the definition properly!
+However, as luck would have it, \verb!enc_U! is a witness.
+To prove this we prove first:
+ \begin{HOL}
+set_goal([],"Éf gé Ñhépac h = U (pac f) (pac g)");;
+expand STRIP_TAC;;
+expand STRIP_TAC;;
+expand (EXISTS_TAC "enc_U (f:Ü) (g:Ü)");;
+expand(PURE_REWRITE_TAC(map (definition `refl082`) [`enc_U`,`pac`]));;
+expand(PURE_REWRITE_TAC(map (definition `refl082`) [`pac`]));;
+set_goal([],"Union_ok");;
+expand(PURE_REWRITE_TAC(map (definition `refl082`) [`Union_ok`,`Union`]));;
+\end{HOL}
+\subsection{Complement}
+\subsection{Inclusion}
+\subsection{Quantification}
+\subsection{Cartesian Product}
+\subsection{Function Space}
+\subsection{Partial Function Space}
+
+\section{TYPES}
+For types we take ordered pairs, the first a pac indicating the
+natural numbers which represent the entities of the type, the
+second a pac which is an equivalence relationship over the
+natural numbers which form the type.
+
+We define formally the partial function (actually total) which
+expresses this property, and we conjecture that this is in fact a
+PAC.
+
+Even if this is false, there will certainly be a PAC which approximates
+it (the completely undefined PAC approximates all others), and a good
+approximation would be as much as any formal system could yield
+(the set of types is not recursively enumerable).
+
+Next we formally define, as a partial function (though total), what
+we mean by saying that two types are equal.
+We conjecture that this also is a PAC, and hence that the the pair
+consisting of the pac of types and the equality relationship over
+types is itself a type, the type of types.
+
+In due course we hope to establish these conjectures by formal proof
+within HOL. 
+
+From the point of view of VDM the existence of a type of types is not crucial.
+Readers exclusively concerned with VDM may skip to the next section where type
+constructors suitable for VDM are defined.
+
+\section{TYPE CONSTRUCTORS}
+\section{THE THEORY}
+ \begin{HOL}
+\input{/escher/usr2/rbj/refl/refl082.th.prt}
+\end{HOL}
+\end{document}

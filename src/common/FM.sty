@@ -1,0 +1,516 @@
+% $Id: FM.sty,v 1.1 2012/06/03 21:32:28 rbj Exp $
+
+\typeout{Document Style `FM'. Version $Revision: 1.1 $ $Date: 2012/06/03 21:32:28 $}
+
+%% derived from TQ.sty
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% FM style file is in various parts:
+%% **	to set page sizes large
+%% **	to redefine some LaTeX article style commands
+%% **	for defining frameworks for page headers and footers
+%% **	for FM style front page
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% For big pages
+%% **	Uses more of the page for text.
+%% **	No margins.
+%% **	Have vertical space between paragraphs, and no hanging indents.
+%% **	Alter table of contents and bibliography commands to not
+%%	produce any section titles.
+%% **	Make footnote separating rule full page width.
+%% ** 	Show dates.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% To get vertical space between paragraphs, and no hanging indents.
+\advance\parskip by 0.5\baselineskip
+\parindent 0pt  % was 20pt, in `lplain.tex', and 15pt in `art10.sty'.
+
+% From Article.sty, page size information.
+% Original sizes from Article.sty are shown after the current values
+
+\if@twoside
+    \oddsidemargin 17pt   % was 44pt
+    \evensidemargin 36pt  % was 82pt
+    \marginparwidth 0pt   % was 107pt
+\else
+    \oddsidemargin 26pt   % was 63pt
+    \evensidemargin 26pt  % was 63pt
+    \marginparwidth 0pt   % was 90pt
+\fi
+
+\columnsep 10pt
+\columnseprule 0pt
+\footskip 30pt
+\headheight 45pt
+\headsep 10pt
+\hoffset -0.3in
+\marginparpush 5pt
+\marginparsep 0pt
+\textheight = 9.15in
+\textwidth 6.6in
+\topmargin 0pt
+\topsep 0pt
+\voffset -0.6in
+
+%  Default is to use a large amount of the page, but this is not
+%  compatible with programs like `dvisun' which expect `\hoffset=0pt'
+%  and `\voffset=0pt'.  To allow viewing the file complete with its
+%  headers and LHS margin use the macro `\FMsmallpage'.  Note that page
+%  boundaries will change if this macro is used, because of the changes
+%  to `\textheight' and `\textwidth'.
+
+\def\FMsmallpage{%
+\textheight = 8.5in
+\textwidth 6in
+\advance\hoffset by 0.3in
+\advance\voffset by 0.6in
+}
+
+\setcounter{section}{-1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Define new version of various commands.
+
+% \tableofcontents and \thebibliography:  To omit the lines
+% saying CONTENTS and REFERENCES.
+
+\def\tableofcontents{{\parskip=0pt\@starttoc{toc}}}
+
+\def\thebibliography#1{\list
+ {[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+ \advance\leftmargin\labelsep
+ \usecounter{enumi}}
+ \def\newblock{\hskip .11em plus .33em minus -.07em}
+ \sloppy\clubpenalty4000\widowpenalty4000
+ \sfcode`\.=1000\relax}
+\let\endthebibliography=\endlist
+
+% \renewcommand:  To get a full width separating line.
+\renewcommand{\footnoterule}{\kern-3pt
+  \hrule \kern 2.6pt} % the \hrule is .4pt high
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% LaTeX default shows dates as (eg)  `May 26, 1989'
+\def\today{\number\day\space\ifcase\month\or
+January\or February\or March\or April\or May\or June\or
+July\or August\or September\or October\or November\or December\fi
+\space\number\year}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%  `\FormatDate{}' formats a date in the style: `YY/MM/DD', as
+%	produced by sccs and similar, in the form `DD Monthname 19YY'.
+%	If the argument is empty (as in `\FormatDate{}') then today's
+%	date is used.  Thus a good way to use it in an sccs controlled
+%	document is with the `percent E percent' keyword (for the
+%	next few lines `%' will be shown as `*' so that sccs will not
+%	expand `*E*' in this explanatory text):
+%		\FormatDate{*E*
+%		} 
+%	So that if the *E* macro has not been expanded you get today's
+%	date, because the first `percent' is taken as TeX's start of
+%	comment.
+%
+%	Note the `\number#3\relax\space' for the day.  The `\number#3'
+%	part removes any leading zeroes and trailing spaces in argument
+%	3.  Leading zeroes come from SCCS.  Trailing spaces may come
+%	from the `*E*\n}' where the `\n' is treated as a space, in an
+%	alternative form of `{*E**\n}' the extra `*' (actually `%')
+%	means that there is no space.  The definition of `\number' is
+%	that it allows, and consumes <one optional space> (see the
+%	TeXbook, page 269), without the `\relax' then that space may be
+%	the explicit one we give here.  The combination of `\number'
+%	and `\relax' means that trailing spaces are suppressed, and
+%	that one space is included between day and month.
+%
+%	This is now extended to cope with inputs of the form `YY/MM/DD'
+%	or `YYYY/MM/DD' optionally followed by a space then something else.
+%	The something else is discarded. This caters for RCS Date substitutions
+%	which include a time after the date. FormatDateAux requires a space
+%	after operand 3. FormatDate tacks on a date and a dummy operand 4
+%	to cater for the SCCS format with no time field. If the time field
+%	is their TeX matches the first space and so discards the time
+%	along with the dummy operand.
+%	To permit RCS style keywords in documents checked for editing
+%	an argument beginning with a $ is also permitted and treated
+%	the same as an empty argument. Use `co -kv' with RCS to get
+%	the proper dates inserted when the document has been checked in.
+
+\def\@FormatDateAuxA#1/#2/#3 #4.{%
+	% Day
+		\number#3\relax\space
+	% Month
+		\ifcase#2{}?#2?\or
+		January\or February\or March\or April\or
+		May\or June\or July\or August\or
+		September\or October\or November\or December\else
+		?#2?\fi\space
+	% Year
+		\ifnum#1>99{}#1\else\ifnum#1>9{}19#1\else190#1\fi\fi}
+
+\def\@FormatDateAuxB#1$#2.{{%
+	\def\arg{#1}%
+	\def\cmp{}%
+	\ifx\arg\cmp
+		\@FormatDateAuxA{\number\year}/{\number\month}/{\number\day} X.%
+	\else
+		\@FormatDateAuxA#1 X.\fi}}
+
+\def\FormatDate#1{\@FormatDateAuxB#1$X.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Page numbering
+%%
+%% **	Define \FMNumPages to be number of pages in the document,
+%%	write it to the .aux file ready for the "next" run of LaTeX.
+%%	Use a default of `??' for the first run.
+
+\def\FMNumPages{??}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% For page headers and footers
+%%
+%% Both are formed from: ``lhs     centre     rhs'' each having several
+%% lines.  Below the head, and above the foot, there is a ruled line.
+%%
+%% Additionally we may have a document classification, which goes on a
+%% line of its own above and below everything else, this is requested
+%% by calling \FMclass.
+%%
+%% Having got all the header and footer contents, use \FMsetsizes to
+%% set the actual heights of the header, footer, and rest of the page.
+%% `\FMsetsizes' is called by `\makeFMfrontpage' so most documents
+%% will have the correct sizes, for documents without ths standard
+%% front page it must be called directly.
+
+\let\FMclass@head=\relax
+\let\FMclass@foot=\relax
+
+\def\FMclass#1{%
+    \def\FMclass@head{\hbox to \textwidth{\hfil #1\hfil}\vskip 6pt}%
+    \def\FMclass@foot{\vskip 6pt\hbox to \textwidth{\hfil #1\hfil}}%
+    \advance\footheight by \baselineskip
+    \advance\footskip by \baselineskip
+    \advance\headheight by \baselineskip
+    \advance\textheight by -2\baselineskip % allows for footheight
+}
+
+% Header.  Note `\vcenter' is only available in maths mode, hence
+% the dollar signs.
+
+\def\FMheadlhs{$\vcenter{\halign{\hfill\strut ##\hfill\cr
+	Lemma 1\cr}}$}
+\def\FMheadcentreproject{TECHNOLOGY PROJECTS}
+\def\FMheadcentre{$\vcenter{\halign{\hfill\strut ##\hfill\cr
+	\FMheadcentreproject\cr
+	\FMheadtitle\cr}}$}
+\def\FMheadrhs{$\vcenter{\halign{\hfill\strut ##\cr
+	{\em Ref:} \FMxref\cr
+	{\em Issue:} \FMxissue\cr
+	{\em Date:} \FMdocdate\cr}}$}
+
+\def\FMhe@d{%
+    \FMclass@head
+    \hbox to \textwidth
+	{\hbox to 0pt{\FMheadlhs\hss}\hfil
+	\FMheadcentre\hfil\hbox to 0pt{\hss\FMheadrhs}}}
+
+% Footer
+
+\def\FMfootlhs{}
+\def\FMfootcentre{}
+\def\FMfootrhs{{\em Page\/} \thepage{ \em of\/} \FMNumPages}
+
+\def\FM@write{%
+    \if@filesw\immediate\write\@auxout{\string
+	\gdef\string\FMNumPages{\thepage}}\fi}
+
+\def\FMf@@t{%
+	\vbox{\hbox to \textwidth{%
+			\hbox to 0pt{\FMfootlhs\hss}\hfill
+			\FMfootcentre\hfill
+			\hbox to 0pt{\hss\FMfootrhs}}%
+		\FMclass@foot
+	}}
+
+\def\ps@FM{% This is the macro called by `\pagestyle{FM}'
+    \message{Pagestyle `FM' is set automatically by the `FM' style.}
+    \message{The `\ pagestyle{FM}' should be deleted from the document.}
+}
+\def\ps@FMrule{% This is the macro called by `\pagestyle{FMrule}'
+    \message{Pagestyle `FMrule' is not available in `FM' style.}
+    \message{The pagestyle `FM' is set autmatically by the `FM' style.}
+    \message{The `\ pagestyle{FM}' should be deleted from the document.}
+}
+
+\let\@mkboth\@gobbletwo
+\def\FMfoot{\vbox{%
+			\baselineskip 0pt
+			\hbox to \textwidth
+				{\vrule height 6pt depth 6pt width 0pt
+				 \hrulefill}%
+			\FMf@@t}}%
+\def\FMhead{\vbox{%
+			\FMhe@d
+			\hbox to \textwidth
+				{\vrule height 6pt depth 6pt width 0pt
+				\hrulefill}}}%
+\def\@oddfoot{\FM@write\FMfoot}%
+\def\@evenfoot{\FM@write\FMfoot}%
+\let\@evenhead\FMhead
+\let\@oddhead\FMhead
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%	Sets the head, text, and foot sizes based on the sizes
+%	actually needed.
+%
+%	We do not care what the sizes start at, they will be
+%	adjusted to preserve their total.
+
+\def\FMsetsizes{%
+%   Add current head and foot heights into \textheight.
+%   \footheight is not needed, it is part of \footskip.
+%   We don't clear the head and foot heights, we
+%   give them new values later on.
+	\advance\textheight by \headheight
+	\advance\textheight by \footskip
+%   Set a box containing the header, put its total height
+%   into \headheight, reduce \textheight by that height.
+%   Note that \box0 can be used as a scratch box, see the
+%   TeXbook page 122, top paragraph.
+	\setbox0=\vbox{\FMhead}%
+	\headheight=\ht0\advance\headheight by \dp0%
+	\advance\textheight by -\headheight
+%   Set a box containing the footer, put its total height
+%   into \footheight.  Add a little more to give \footskip,
+%   then reduce \textheight by \footskip.
+	\setbox0=\vbox{\FMfoot}%
+	\footheight=\ht0\advance\footskip by \dp0
+%	\footskip=0pt
+	\footskip=\footheight
+	\advance\footskip by 5pt
+	\advance\textheight by -\footskip
+%  "latex.tex" says:
+%  %   Page layout must also initialize \@colht and \@colroom to \textheight.
+\@colht\textheight
+\@colroom\textheight
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%	Style to generate front pages of documents in the FM
+%%	document style.  Based on [AW...] issue ..., version...
+%%
+%% **	Defines lots of macros, general style is that macros with an
+%%	`@' are used in creating the front page, and may be deleted
+%%	when it is actually produced.  A few macros are left after the
+%%	front page is produced, for use in (eg) page headers and
+%%	footers, they are:
+%%	      \FMheadtitle
+%%
+%% **	The abstract is treated in a strange manner, the aim being to
+%%	allow multi-paragraph abstracts.  This is done with a
+%%	`FMabstract' environment, it means a little more typing for
+%%	the users of short abstracts, but gives the flexibility for
+%%	long abstracts.
+%%
+
+% First set some default values for front page entries.  Default
+% for many is to output almost nothing at all
+
+\let\FM@FPproject=\relax
+\let\FM@FPvolume=\relax
+\let\FM@FPpart=\relax
+\let\FMheadtitle=\relax
+\let\FM@FPtitle=\relax
+\def\FMxref{??}
+\def\FMxissue{??}
+\def\FMdocdate{\today}
+\let\FM@FPstatus=\relax
+\let\FM@FPtype=\relax
+\let\FM@FPkeywords=\relax
+\let\FM@FPauthor=\relax
+\let\FM@FPauthizn=\relax
+\let\FM@FPabstractA=\relax
+\let\FM@FPabstractB=\relax
+\let\FM@FPabstractC=\relax
+\let\FM@FPabstractD=\relax
+\let\FM@FPabstractE=\relax
+\let\FM@FPabstractF=\relax
+\let\FM@FPdist=\relax
+
+
+% These macros are called by the user to set up parts of the front page
+% Most are simple one parameter macros, the exceptions are:
+%
+%   Abstracts.  Use these macros,  \FMabstractB to \FMabstractF may
+%   be omitted for short abstracts
+%	\FMabstract{text of the first paragraph of the abstract}
+%	\FMabstractB{text of the second paragraph of the abstract}
+%	\FMabstractC{text of the third paragraph of the abstract}
+%	\FMabstractD{text of the 4th paragraph of the abstract}
+%	\FMabstractE{text of the 5th paragraph of the abstract}
+%	\FMabstractF{text of the 6th paragraph of the abstract}
+%   Authors:
+%	Use either \FMauthors{} or \FMauthor{}.  They give
+%	the same effect, except that \FMauthors{} outputs the
+%	line title ``Authors'' and \FMauthor{} outputs ``Author''.
+%	See also the section below on Authorisation and Authors.
+%   Authorisation:
+%	To get an authorisation entry use \FMauthorisation{}.
+%   Authorisation and Authors:
+%	The  Authorisation, Author and Authors entries requires are a
+%	four column LaTeX tabular environments, containing: name,
+%	function, signature, and date.  (Author has location rather
+%	than function).  Multiple authorisation entries can be obtained
+%	by having several table rows.  Eg:
+%		\FMauthorisation{name1 & func1 & sig1 & date1\\
+%			name2 & func2 & sig2 & date2}
+%   Distribution:
+%	This is a simple text field, to get multiple
+%	distributions use some sort of table, eg:
+%		\begin{tabular}{@{\hspace{1.1in}}l} ...
+%	Or, for a distribution list with addresses etc, use
+%	a table with several columns.
+%
+% These macros are called after the \begin{document}.
+
+\def\FMproject#1{\def\FM@FPproject{{\em Project:}&#1\\}%
+	\def\FMheadcentreproject{\uppercase{#1}}}
+\def\FMvolume#1{\def\FM@FPvolume{\em Volume:&#1\\}}
+\def\FMpart#1{\def\FM@FPpart{\em Part:&#1\\}}
+\def\FMtitle#1{\def\FM@FPtitle{#1}\let\FMheadtitle=\FM@FPtitle}
+%% `\FMheadtitle' may be redefined if the header title and
+%% front page ttles should be different.
+\def\FMdate#1{\def\FMdocdate{#1}}
+\def\FMref#1{\def\FMxref{#1}}
+\def\FMidentity#1{\def\FMxref{#1}}
+\def\FMissue#1{\def\FMxissue{#1\unskip}}
+\def\FMstatus#1{\def\FM@FPstatus{{\em Status:}&#1}}
+
+%% \FMtype is interesting.  If there is have a status field, then want
+%%		\def\FM@FPtype{\hfill {\em Type:\/} #1\\}
+%% whereas if there is no status then want
+%%		\def\FM@FPtype{{\em Type:\/}&#1\\}
+%% This must be achieved which ever order the status and
+%% type fields are given.  The definition of `\FM@FPAND' is used to protect
+%% the `&' from the `\if...\fi' and to stop TeX from complaining.
+
+\def\FM@FPAND{&}
+\def\FMtype#1{\def\FM@FPtype{%
+	\ifx\FM@FPstatus\relax		% No status field
+		{\em Type:\/}\FM@FPAND#1%
+	\else				% Have a status field
+		\hfill {\em Type:\/} #1%
+	\fi}}
+\def\FMkeywords#1{\def\FM@FPkeywords{{\em Keywords:}&#1\\}}
+\def\FMauthors#1{\def\FM@FPauthor{\FM@NamLocSig
+	{Authors:}{Location}{#1}}}
+\def\FMauthor#1{\def\FM@FPauthor{\FM@NamLocSig
+	{Author:}{Location}{#1}}}
+\def\FMauthorisation#1{\def\FM@FPauthizn{\FM@NamLocSig
+	{\hbox to 0pt{Authorisation for Issue:\hss}}{Function}{#1}}}
+\def\FMauthority#1{\def\FM@FPauthizn{\FM@NamLocSig
+	{\hbox to 0pt{Authorisation for Issue:\hss}}{Function}{#1}}}
+\def\FM@NamLocSig#1#2#3{%
+		{\em #1}&\\%
+		\multicolumn{2}{l}%
+		{{\renewcommand{\arraystretch}{2}%
+		\begin{tabular}[b]{@{}*4{p{0.22\textwidth}}@{}}%
+		\em Name&\em #2&\em Signature&\em Date%
+		\\#3\strut
+		\end{tabular}}}\\[1.7ex]}
+\def\FMabstract#1{\def\FM@FPabstractA{{\em Abstract:}&#1\\}}
+\def\FMabstractB#1{\def\FM@FPabstractB{&#1\\}}
+\def\FMabstractC#1{\def\FM@FPabstractC{&#1\\}}
+\def\FMabstractD#1{\def\FM@FPabstractD{&#1\\}}
+\def\FMabstractE#1{\def\FM@FPabstractE{&#1\\}}
+\def\FMabstractF#1{\def\FM@FPabstractF{&#1\\}}
+\def\FMdistribution#1{\def\FM@FPdist{{\em Distribution}:&#1}}
+\def\FMsummary#1{\FMabstract{#1}}
+
+% This macro makes the front page itself
+
+\def\makeFMfrontpage{%
+\FMsetsizes
+{\large\renewcommand{\arraystretch}{1.8}
+\newlength{\RHScol}
+\setlength{\RHScol}{\textwidth}
+\addtolength{\RHScol}{-1in}
+\begin{tabular}{@{}p{1in}@{}p{\RHScol}@{}}%
+\FM@FPproject
+\FM@FPvolume
+\FM@FPpart
+{\em Title:}&\FM@FPtitle\\
+{\em Ref:}&\FMxref \hfill
+	{\em Issue:\/} \FMxissue \hfill
+	{\em Date:\/} \FMdocdate\\
+\FM@FPstatus \FM@FPtype\\
+\FM@FPkeywords
+\FM@FPauthor
+\FM@FPauthizn
+\FM@FPabstractA
+\FM@FPabstractB
+\FM@FPabstractC
+\FM@FPabstractD
+\FM@FPabstractE
+\FM@FPabstractF
+\FM@FPdist
+\end{tabular}}%
+% Now lose the large and unwanted definitions
+\let\FM@FPabstractA=\relax
+\let\FM@FPabstractB=\relax
+\let\FM@FPabstractC=\relax
+\let\FM@FPabstractD=\relax
+\let\FM@FPabstractE=\relax
+\let\FM@FPabstractF=\relax
+\let\FM@FPauthizn=\relax
+\let\FM@FPauthor=\relax
+\let\FM@FPdist=\relax
+\let\FM@FPkeywords=\relax
+\let\FM@FPpart=\relax
+\let\FM@FPproject=\relax
+\let\FM@FPstatus=\relax
+\let\FM@FPtype=\relax
+\let\FM@FPvolume=\relax
+\let\FMabstract=\relax
+\let\FMabstractB=\relax
+\let\FMabstractC=\relax
+\let\FMabstractD=\relax
+\let\FMabstractE=\relax
+\let\FMabstractF=\relax
+\let\FMauthor=\relax
+\let\FMauthorisation=\relax
+\let\FMauthors=\relax
+\let\FMdate=\relax
+\let\FMdistribution=\relax
+\let\FMissue=\relax
+\let\FMkeywords=\relax
+\let\FMpart=\relax
+\let\FMproject=\relax
+%\let\FMref=\relax		% keep this for page headers
+\let\FMstatus=\relax
+\let\FMtitle=\relax
+\let\FMtype=\relax
+\let\FMvolume=\relax
+\let\FMref=\relax
+%\let\FMheadtitle=\relax	% keep this for page headers
+\let\FM@FPtitle=\relax
+\let\makeFMfrontpage=\relax
+}

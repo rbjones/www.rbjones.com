@@ -1,0 +1,237 @@
+.nr PS 11
+.nr VS 14
+.so roff2.defs
+.so lroff2.defs
+.nr P 1 Presentation Flag
+.nr D 0 Document Flag
+.LP
+.TL
+Security Modelling with in Z Schemas
+.AU
+Roger Bishop Jones
+.AI
+ICL Defence Systems
+.AB
+.ct D
+.cx
+.ct P
+This document consists of the overheads for a presentation to
+CESG on June 19 1989.
+.cx
+.AE
+.ds LH \s-8\s+8
+.ds CH \s-9166/\\n(PN\s+9
+.ds RH \s-8\s+8
+.ds LF \s-9DS/FMU/RBJ/166\s+9
+.ds CF \s-2\s+2
+.ds RF \s-9Issue 0.1 \*(DY Page \\n(PN\s+9
+.ct P
+.nr PS 20
+.nr VS 24
+.cx
+.KS
+.LP
+Given a state consisting of one highly classified and one lowly
+classified object:
+
+.sd STATE
+    high, low :bool
+.se
+.LP
+can we specify loosely an operation on the state which does not
+result in any information transfer from `high' to `low'?
+
+.sd \(*DSTATE
+    STATE, STATE'
+.sb
+	?
+.se
+.LP
+It is easy enough to give a specific operation satisfying this requirement,
+but to capture the requirement loosely we have to use a loose specification
+outside of the schema, e.g.:
+.KE
+
+.KS
+.sv
+	f: STATE ã STATE
+.sb
+	És∞ s¨:STATEé (s∞.low = s¨.low)
+			ä (f s∞).low = (f s¨).low
+.sw
+.LP
+We could then write our schema:
+
+.sd \(*DSTATE
+	STATE, STATE'
+.sb
+	\(*h STATE' = f \(*h STATE
+.se
+.LP
+but since all the work has been done in the specification
+of `f' the use of the schema appears superfluous.
+.KE
+.KS
+.LP
+Note that in the axiomatic definition of f, the requirement
+is expressed as a property of f, but this property has
+not itself been given a name.
+.LP
+It is therefore not possible to express in the object language
+the claim that some other explicitly defined function has this property.
+.LP
+For example the following function has the required property:
+
+.sv
+	g: STATE ã STATE
+.sb
+	És :STATEé f s = s
+.sw
+.LP
+but we cannot state this in Z without restating the original property
+(though it can be said in the metalanguage).
+.KE
+.KS
+.LP
+To enable such correctness propositions to be expressed we must
+give a name to the property itself as follows:
+
+.sv
+	secure : ë (STATE ã STATE)
+.sb
+	f ù secure Ç
+	És∞ s¨:STATEé (s∞.low = s¨.low)
+			ä (f s∞).low = (f s¨).low
+.sw
+.LP
+The conjecture that `g' satisfies this specification can now be expressed:
+.DS
+		Ö? g ù secure
+.DE
+.KE
+.KS
+.LP
+If we define a further requirement:
+
+.sv
+	safe : ë (STATE ã STATE)
+.sb
+	f ù safe Ç
+	És∞ s¨:STATEé (s∞.high = s¨.high)
+			ä (f s∞).high = (f s¨).high
+.sw
+Then the combination of these two requirements:
+
+.sv
+	no_flow : ë (STATE ã STATE)
+.sb
+	no_flow = secure † safe
+.sw
+.LP
+may be regarded as a REFINEMENT of the original specification "secure".
+.LP
+That it is a refinement can be expressed in the object language
+as the conjecture:
+
+.DS
+	Ö? no_flow • secure
+.DE
+.LP
+Note that here refinement is defined as a relationship between
+specifications which is distinct from the relationship between
+a specification and an implementation.
+.KE
+.KS
+.
+.KE
+.KS
+.DS C
+\fBSPECIFYING OPERATIONS AS FUNCTIONS\fP
+.DE
+.LP
+.sp
+.nf
+Type of \fIObject\fP
+	\fBAUTO\fP
+Type of \fISpecification\fP
+	\fBë AUTO\fP
+Type of \fIOperation\fP
+	\fBIN â STATE ã STATE â OUT\fP
+		\(ib ë(IN â STATE â STATE â OUT)
+Type of \fISpecification of\fP Operation
+	\fBë (IN â STATE ã STATE â OUT)\fP
+Type of \fINon-Deterministic\fP Operation
+	\fBIN â STATE ã ë∞ (STATE â OUT)\fP
+Type of \fISpecification of Non-Deterministic\fP Operation
+	\fBë (IN â STATE ã ë∞ (STATE â OUT))\fP
+Type of \fIPartial\fP Operation
+	\fBIN â STATE ñ STATE â OUT\fP
+Type of \fISpecification of Partial\fP Operation
+	\fBë (IN â STATE ñ STATE â OUT)\fP
+Type of \fIPartial Non-Deterministic\fP Operation
+	\fBIN â STATE ñ ë∞ (STATE â OUT)\fP
+Type of \fISpecification of Partial Non-Deterministic\fP Operation
+	\fBë (IN â STATE ñ ë∞ (STATE â OUT))\fP
+.KE
+.KS
+.DS C
+\fBZ SCHEMAS INTERPRETED AS OPERATIONS\fP
+.DE
+.LP
+Until the publication of Spivey's book "understanding Z" no account
+was available of how schemas are to be interpreted as specifications
+of operations.
+.LP
+Spivey gives an account of a satisfaction relationship between schemas and
+implementations which can be formalised within Z as follows.
+.LP
+Let us consider this with reference to schemas describing the secure
+operations discussed above.
+.LP
+The type of a schema describing an operation over STATE is:
+
+.sv
+	SOPTYPE == ë \(*DSTATE
+.sw
+.LP
+According to Spivey this is a loose specification of a
+non-deterministic partial operation (in the general case).
+It might therefore be re-represented as an entity of type:
+
+.sv
+	FTYPE == IN â STATE ñ ë∞ (STATE â OUT)
+.sw
+
+.sv
+	INTTYPE == \fBë (IN â STATE ñ ë∞ (STATE â OUT))\fP
+.sw
+.br
+.LP
+A formal account of this interpretation would therefore be
+a map from OPTYPE to INTTYPE:
+
+.sv
+	MAPTYPE == OPTYPE ã INTTYPE
+.sw
+
+.sv
+	_satisfies_ : FTYPE ê SOPTYPE
+.sb
+	ÉSOPTYPE:S, FTYPE:fé
+	f satisfies S Ç
+		dom f = {Sé \(*h STATE}
+	Ä	És:STATE | s ù dom fé
+			f s • {S | \(*h STATE = s é \(*h STATE'}
+.sw
+.LP
+note that:
+
+.DS
+	f satisfies S Ä g satisfies S
+		ä (f merge g) satisfies S
+
+	where (f merge g) x = f x ° g x
+.DE
+.KE
+
+

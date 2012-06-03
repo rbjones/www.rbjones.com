@@ -1,62 +1,91 @@
-# $Id: Makefile.in,v 1.4 2012/05/03 20:44:06 rbj Exp $
+# $Id: Makefile.in,v 1.5 2012/06/03 21:32:25 rbj Exp $
 
 include @top_srcdir@/top_srcdir.mk
 RELSRCDIR=src/rbjpub/rbjcv/docarch
 RELWEBDIR=rbjpub/rbjcv/docarch
 SUBDIRS=
 
-XML007=
+XML007=index.xml da001.xml
 
 PERLSCRIPTS=ptex2qtex.pl trans2.pl
 
 XMLFILES=$(XML007)
 
-PLAINTEX=082.tex 171.tex 178.tex 186.tex 187.tex 188.tex 189.tex 195.tex
+PLAINTEX=069.tex 080.tex 171.tex 178.tex
 
-OLDPPPTEX=180.ptex 181.ptex 193.ptex
-#         150.ptex 191.ptex 194.ptex
+HOLTEX=082.ptex
+
+OLDPPPTEX=180.ptex 181.ptex 189.ptex 193.ptex 150.ptex
 OLDPPQTEX=$(OLDPPPTEX:.ptex=.qtex)
 OLDPPDOC=$(OLDPPPTEX:.ptex=.doc)
 OLDPPPDF=$(OLDPPPTEX:.ptex=.pdf)
 
 NEWPPTEX=138.qtex 199.qtex
-#         197.qtex
 NEWPPDOC=$(NEWPPTEX:.qtex=.doc)
 NEWPPPDF=$(NEWPPTEX:.qtex=.pdf)
 
+SLITEXOTEX=
+SLITEX2PTEX=$(SLITEXOTEX:.tex=.ptex)
+SLITEXPTEX= 191.ptex 194.ptex
+SLITEX2QTEX=$(SLITEXPTEX:.ptex=.qtex) $(SLITEX2PTEX:.ptex=.qtex)
+SLITEXQTEX=186.qtex 187.qtex 188.qtex 195.qtex 197.qtex
+SLITEXATEX=$(SLITEXOTEX) $(SLITEXPTEX) $(SLITEXQTEX)
+SLITEXODOC=$(SLITEXOTEX:.tex=.doc)
+SLITEXPDOC=$(SLITEXPTEX:.ptex=.doc)
+SLITEXQDOC=$(SLITEXQTEX:.qtex=.doc)
+SLITEXADOC=$(SLITEXODOC) $(SLITEXPDOC) $(SLITEXQDOC)
+
+PTEX4QTEX=$(OLDPPPTEX) $(SLITEXPTEX) $(SLITEX2PTEX)
+PTEX2QTEX=$(PTEX4QTEX:.ptex=.qtex)
+SLITEXAQTEX=$(SLITEXQTEX) $(SLITEX2QTEX)
+SLITEXQTEX2DOC=$(SLITEXAQTEX:.qtex=.doc)
+
+vars:
+	@echo "SLITEX2PTEX: "$(SLITEX2PTEX)
+	@echo "PTEX2QTEX: "$(PTEX2QTEX)
+	@echo "SLITEXQTEX2DOC: "$(SLITEXQTEX2DOC)
+
 # troff .txt files for conversion into .htm files
 TXT4HTM=034.txt 036.txt 037.txt 038.txt 039.txt 040.txt 041.txt 042.txt 048.txt \
-	049.txt 051.txt 052.txt 053.txt 054.txt 059.txt 065.txt 069.txt 070.txt \
-	071.txt 072.txt 075.txt 076.txt 080.txt 085.txt 087.txt \
+	049.txt 051.txt 052.txt 053.txt 054.txt 059.txt 065.txt 070.txt \
+	071.txt 072.txt 075.txt 076.txt 085.txt 087.txt \
 	094.txt 095.txt 096.txt 099.txt 100.txt 184.txt
 
-# troff .txt files for conversion to pdf 
-TROFFTXT=029.txt 050.txt 110.txt 113.txt 116.txt 119.txt 120.txt \
-	113.txt 116.txt 119.txt 120.txt 122.txt 123.txt 126.txt \
-	127.txt 128.txt 129.txt 130.txt 149.txt 159.txt 160.txt \
-	166.txt 167.txt 169.txt 170.txt 172.txt 175.txt \
-	176.txt 177.txt 182.txt 184.txt 185.txt \
+# troff .txt files for conversion to pdf
+
+TROFFBTXT= 120.btxt 122.btxt 126.btxt 128.btxt 129.btxt 130.btxt \
+	149.btxt 160.btxt 166.btxt 167.btxt 170.btxt 175.btxt \
+	176.btxt 182.btxt 185.btxt
+TROFFFBTXT=$(TROFFBTXT:.btxt=.txt)
+TROFFTXT=029.txt 050.txt 110.txt 113.txt 116.txt 119.txt 123.txt \
+	127.txt 131.txt 159.txt 169.txt 172.txt 177.txt \
 	$(TXT4HTM)
-TROFFPS=$(TROFFTXT:.txt=.ps)
-TROFFPDF=$(TROFFTXT:.txt=.pdf)
+
+ROFF2PS=122.ps 123.ps 126.ps 128.ps 129.ps 130.ps 149.ps 160.ps 166.ps 167.ps
+TROFFATXT=$(TROFFTXT) $(TROFFFBTXT)
+TROFFPS=$(TROFFATXT:.txt=.ps)
+TROFFPDF=$(TROFFATXT:.txt=.pdf) $(SLITEXPDF)
 
 HTMTXT=$(TXT4HTM:.txt=.htm)
 
-ALLPPDOC=$(OLDPPDOC) $(NEWPPDOC)
-ALLTEX=$(PLAINTEX) $(OLDPPPTEX) $(NEWPPTEX)
+MOSTPPDOC=$(OLDPPDOC) $(NEWPPDOC)
+ALLPPDOC=$(MOSTPPDOC) $(SLITEXADOC)
+ALLTEX=$(PLAINTEX) $(OLDPPPTEX) $(NEWPPTEX) $(SLITEXATEX)
 
 TEXPDF=$(PLAINTEX:.tex=.pdf)
 DOCPDF=$(ALLPPDOC:.doc=.pdf)
+ALLPDF=$(TROFFPDF) $(TEXPDF) $(DOCPDF)
 
 ENTFILES=pp-symbol.ent
 
 SRCDIRCPY2WEB= 000a.htm
-SRCDIRCPY=$(ALLTEX) $(PERLSCRIPTS) $(SRCDIRCPY2WEB) $(TROFFTXT)
+SRCDIRCPY=$(ALLTEX) $(PERLSCRIPTS) $(SRCDIRCPY2WEB) $(TROFFTXT) $(TROFFBTXT) \
+	slitexhead.doc slitextail.doc roff.defs roff2.defs btxt2txt.pl
 XLDPDIRCPY=$(ENTFILES)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-WEBFILES=$(HTML007) $(PDF) $(SRCDIRCPY2WEB) $(DOCPDF) $(HTMLTXT) $(TROFFPDF)
+WEBFILES=$(HTML007) $(HTMLTXT) $(ALLPDF) $(SRCDIRCPY2WEB)
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -72,21 +101,36 @@ allppdoc: $(ALLPPDOC)
 
 # rules
 
-$(OLDPPQTEX): %.qtex: %.ptex ptex2qtex.pl
+$(PTEX2QTEX): %.qtex: %.ptex ptex2qtex.pl
 	perl -w ptex2qtex.pl $*
 
-$(ALLPPDOC): %.doc : %.qtex
+$(MOSTPPDOC): %.doc : %.qtex
 	dos2unix <$*.qtex >| $*.doc;
+	conv_ascii $*
+
+$(SLITEX2PTEX): %.ptex : %.tex
+	cat $*.tex >| $*.ptex
+
+$(SLITEXQTEX2DOC): %.doc : %.qtex slitexhead.doc slitextail.doc
+	cat slitexhead.doc >| $*.doc
+	dos2unix <$*.qtex >> $*.doc;
+	cat slitextail.doc >> $*.doc;
 	conv_ascii $*
 
 $(HTMTXT): %.htm : %.txt testconv.pl
 	perl testconv.pl $*
 
-$(TROFFPS): %.ps: %.txt
+$(TROFFPS): %.ps: %.txt roff.defs
 	groff -ms -t $*.txt >| $*.ps
 
 $(TROFFPDF): %.pdf: %.ps
 	ps2pdf $*.ps 
 
+$(TROFFBTXT:.btxt=.txt): %.txt : %.btxt btxt2txt.pl
+	perl -w btxt2txt.pl $*
+
 # Dependencies
 
+$(ROFF2PS): roff2.defs
+
+index.html: da001.xmlt
