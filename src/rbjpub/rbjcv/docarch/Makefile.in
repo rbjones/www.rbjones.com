@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.5 2012/06/03 21:32:25 rbj Exp $
+# $Id: Makefile.in,v 1.6 2012/06/05 20:09:55 rbj Exp $
 
 include @top_srcdir@/top_srcdir.mk
 RELSRCDIR=src/rbjpub/rbjcv/docarch
@@ -13,9 +13,10 @@ XMLFILES=$(XML007)
 
 PLAINTEX=069.tex 080.tex 171.tex 178.tex
 
-HOLTEX=082.ptex
+OLDESTPTEX=082.ptex
+OLDESTQTEX2PDF=$(OLDESTPTEX:.ptex=.pdf)
 
-OLDPPPTEX=180.ptex 181.ptex 189.ptex 193.ptex 150.ptex
+OLDPPPTEX=150.ptex 180.ptex 181.ptex 189.ptex 193.ptex
 OLDPPQTEX=$(OLDPPPTEX:.ptex=.qtex)
 OLDPPDOC=$(OLDPPPTEX:.ptex=.doc)
 OLDPPPDF=$(OLDPPPTEX:.ptex=.pdf)
@@ -26,7 +27,7 @@ NEWPPPDF=$(NEWPPTEX:.qtex=.pdf)
 
 SLITEXOTEX=
 SLITEX2PTEX=$(SLITEXOTEX:.tex=.ptex)
-SLITEXPTEX= 191.ptex 194.ptex
+SLITEXPTEX=191.ptex 194.ptex
 SLITEX2QTEX=$(SLITEXPTEX:.ptex=.qtex) $(SLITEX2PTEX:.ptex=.qtex)
 SLITEXQTEX=186.qtex 187.qtex 188.qtex 195.qtex 197.qtex
 SLITEXATEX=$(SLITEXOTEX) $(SLITEXPTEX) $(SLITEXQTEX)
@@ -36,7 +37,7 @@ SLITEXQDOC=$(SLITEXQTEX:.qtex=.doc)
 SLITEXADOC=$(SLITEXODOC) $(SLITEXPDOC) $(SLITEXQDOC)
 
 PTEX4QTEX=$(OLDPPPTEX) $(SLITEXPTEX) $(SLITEX2PTEX)
-PTEX2QTEX=$(PTEX4QTEX:.ptex=.qtex)
+PTEX2QTEX=$(PTEX4QTEX:.ptex=.qtex) $(OLDESTPTEX:.ptex=.qtex)
 SLITEXAQTEX=$(SLITEXQTEX) $(SLITEX2QTEX)
 SLITEXQTEX2DOC=$(SLITEXAQTEX:.qtex=.doc)
 
@@ -74,18 +75,18 @@ ALLTEX=$(PLAINTEX) $(OLDPPPTEX) $(NEWPPTEX) $(SLITEXATEX)
 
 TEXPDF=$(PLAINTEX:.tex=.pdf)
 DOCPDF=$(ALLPPDOC:.doc=.pdf)
-ALLPDF=$(TROFFPDF) $(TEXPDF) $(DOCPDF)
+ALLPDF=$(TROFFPDF) $(OLDESTQTEX2PDF) $(TEXPDF) $(DOCPDF)
 
 ENTFILES=pp-symbol.ent
 
 SRCDIRCPY2WEB= 000a.htm
-SRCDIRCPY=$(ALLTEX) $(PERLSCRIPTS) $(SRCDIRCPY2WEB) $(TROFFTXT) $(TROFFBTXT) \
+SRCDIRCPY=$(ALLTEX) $(PERLSCRIPTS) $(SRCDIRCPY2WEB) $(TROFFTXT) $(TROFFBTXT) $(OLDESTPTEX) \
 	slitexhead.doc slitextail.doc roff.defs roff2.defs btxt2txt.pl
 XLDPDIRCPY=$(ENTFILES)
 
 include $(TOPSRCDIR)/build/common/vars.mk
 
-WEBFILES=$(HTML007) $(HTMLTXT) $(ALLPDF) $(SRCDIRCPY2WEB)
+WEBFILES=$(HTML007) $(ALLPDF) $(SRCDIRCPY2WEB)
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -100,6 +101,11 @@ vpath %.xsl $(XLCOMDIR)
 allppdoc: $(ALLPPDOC)
 
 # rules
+
+$(OLDESTQTEX2PDF): %.pdf: %.qtex
+	cp $*.qtex $*.doc
+	-doctex $*
+	texpdf $*
 
 $(PTEX2QTEX): %.qtex: %.ptex ptex2qtex.pl
 	perl -w ptex2qtex.pl $*
@@ -121,6 +127,7 @@ $(HTMTXT): %.htm : %.txt testconv.pl
 	perl testconv.pl $*
 
 $(TROFFPS): %.ps: %.txt roff.defs
+	dos2unix $*.txt
 	groff -ms -t $*.txt >| $*.ps
 
 $(TROFFPDF): %.pdf: %.ps
