@@ -1,3 +1,4 @@
+$Id="$Id";
 $modified="2009/04/26";
 $created="1996/11/24";
 
@@ -6,7 +7,8 @@ $created="1996/11/24";
 # 	a single book, some multiple books).
 # (2) Part indexes for each book
 # (3) Paragraph indexes for each Part
-# (4) Part files containing the text of the work
+# (4) Part (HTML) files containing the text of the work
+# (5) A book tex file to make a book PDF.
 
 # file naming conventions are:
 # (1) every file begins with $stub (set in main procedure)
@@ -19,6 +21,14 @@ $created="1996/11/24";
 #		The index of paragraphs in a part is called $stub.$file.$book.$part.".htm"
 #		The content of a part is called $stub.$file.$book.$part."c.htm"
 # (6) The last character of the filename is "c" for content and "i" for an index.
+# (7) The tex files are $stub.tex
+
+# The tex files are structured using the following commands which should be defined in
+# a tex wrapper which includes the generated tex file.
+# \Avolume   =?> part
+# \ASbook    =?> chapter
+# \AMbook    =?> chapter
+# \Apart     =?> section
 
 $rbjgifs="../../../../rbjgifs";
 $rbjhref="<A HREF=\"../../../rbj.htm\">";
@@ -50,6 +60,17 @@ $up
 <TABLE>
 <TR><TD WIDTH=40%><I>Volume</I></TD><TD WIDTH=15%><I>Book</I></TD><TD WIDTH=45%><I>Description</I></TD></TR>
 EOF
+	$volTex=$stub.".tex";
+	open (TEXFILE, "> $volTex");
+	print TEXFILE <<EOF;
+% This is the start of texfile $volTex ($Id)
+EOF
+};
+
+sub fileStart
+{   $csourceTitle=$sourceTitle;
+#   chop($csourceTitle);
+    print TEXFILE "\n\n\\Avolume{".$csourceTitle."}\n";
 };
 
 sub oIndexEntry
@@ -112,6 +133,13 @@ $body
 <TABLE>
 <TR><TD><B>Text</B></TD><TD><B>Paragraph Index</B></TD></TR>
 EOF
+#print "Book Title: $bookTitle\n";
+         $cbookTitle=$bookTitle;
+         chop($cbookTitle);
+#print "cBook Title: $cbookTitle\n";
+         print TEXFILE <<EOF;
+\n\n\\AMbook{$cbookTitle}
+EOF
 };
 
 sub bookIndexEntry
@@ -125,6 +153,9 @@ sub bookIndexEntry
 <TD><A HREF="$partIFile">$partTitle</A></TD>
 </TR>
 EOF
+    $cpartTitle=$partTitle;
+	chop($cpartTitle);
+    print TEXFILE "\n\n\\Apart{$cpartTitle}\n";
 };
 
 sub closeBookIndex
@@ -216,10 +247,20 @@ sub startParagraph
 <A NAME="$para">$para\.</A>
 $paraTitle
 EOF
+	($texline=$paraTitle) =~ s|&|\\&|g;
+	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
+	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
+        print TEXFILE "\n".$texline;
 };
 
 sub writeLine
 {	print OUTFILE $_[0];
+	($texline=$_[0]) =~ s|&|\\&|g;
+	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
+	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
+	$texline =~ s|<PRE>|\\begin{verbatim}|g;
+	$texline =~ s|</PRE>|\\end{verbatim}|g;
+	print TEXFILE $texline;
 };
 
 1;

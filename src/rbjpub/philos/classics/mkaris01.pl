@@ -97,6 +97,7 @@ sub doSBFile
 {	if ($trace>0) {print "doSBFile $file $fileName $fileType $fileTitle\n"};
 	if ($trace>1){$temp=<STDIN>};
 	&openFile($fileName);
+	&fileStart;
 	$book=1; $bookHead="Book 1";
 	$testPartStart=\&testSBPartStart;
 	&book;
@@ -107,6 +108,7 @@ sub doMBFile
 {	if ($trace>0) {print "doMBFile $file $fileName $fileType $fileTitle\n"};
 	if ($trace>1){$temp=<STDIN>};
 	&openFile($fileName);
+	&fileStart;
 	$testPartStart=\&testMBPartStart;
 	$book=0;
 	while (&testBookStart) {$bookHead=$1; $_=<INPUT>; ++$book; &book};
