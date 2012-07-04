@@ -1,3 +1,6 @@
+#!/usr/bin/perl -w
+# ($Id)
+
 $modified="2009/04/26";
 $created="1996/11/25";
 

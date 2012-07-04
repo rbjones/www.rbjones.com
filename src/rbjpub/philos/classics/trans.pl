@@ -1,3 +1,6 @@
+#!/usr/bin/perl -w
+# ($Id)
+
 $input="mkaris_metaphysics.txt";
 $output="mkaris_metaphysics2.txt";
 print "input: $input output: $output\n";

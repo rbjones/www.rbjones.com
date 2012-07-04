@@ -1,3 +1,6 @@
+#!/usr/bin/perl -w
+# ($Id)
+
 # Kant's Critique of Pure Reason has a more complex section structure 
 # than works I have previously converted.
 # The following hierarchic divisions are present:

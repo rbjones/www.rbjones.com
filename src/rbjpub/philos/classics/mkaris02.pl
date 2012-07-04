@@ -1,4 +1,6 @@
-$Id="$Id";
+#!/usr/bin/perl -w
+
+$Id="\$Id";
 $modified="2009/04/26";
 $created="1996/11/24";
 
@@ -43,6 +45,7 @@ $home="$homeref$homeimg</A>";
 $up="$upref$upimg</A>";
 $upm="$upref$upimgm</A>";
 $body="<BODY BGCOLOR=\"#e0e0f0\">";
+$pre=0; # this flag indicates whether we are in a <PRE>/\verbatim section
 
 sub startOIndex
 {	$volIndexRef=$stub."i.htm";
@@ -70,7 +73,7 @@ EOF
 sub fileStart
 {   $csourceTitle=$sourceTitle;
 #   chop($csourceTitle);
-    print TEXFILE "\n\n\\Avolume{".$csourceTitle."}\n";
+    print TEXFILE "\n\n\\Avolume{".$csourceTitle."}\n\\label{\\thepart}\n\\setcounter{chapter}{0}\n";
 };
 
 sub oIndexEntry
@@ -248,18 +251,28 @@ sub startParagraph
 $paraTitle
 EOF
 	($texline=$paraTitle) =~ s|&|\\&|g;
-	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
-	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
+	    $texline =~ s/\"/{\\dq}/g;
+	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+#	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
+#	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
+#	$texline =~ s/\"/{\\dq}/g;
+#	$texline =~ s/\'/{\\sq}/g;
         print TEXFILE "\n".$texline;
 };
 
 sub writeLine
 {	print OUTFILE $_[0];
 	($texline=$_[0]) =~ s|&|\\&|g;
-	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
-	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
-	$texline =~ s|<PRE>|\\begin{verbatim}|g;
-	$texline =~ s|</PRE>|\\end{verbatim}|g;
+	if (not $pre) {
+	    if (/<PRE>/) {$texline =~ s|<PRE>|\\begin{verbatim}|; $pre=1}
+	    $texline =~ s/\"/{\\dq}/g;
+	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+	};
+	if ($pre) {
+	    if (/<\/PRE>/) {$texline =~ s|</PRE>|\\end{verbatim}|; $pre=0}
+	};
+#	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
+#	$texline =~ s/\'/{\\sq}/g;
 	print TEXFILE $texline;
 };
 

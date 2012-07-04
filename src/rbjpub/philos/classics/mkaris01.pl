@@ -1,3 +1,6 @@
+#!/usr/bin/perl -w
+# ($Id)
+
 # The following required file contains procedures supporting the generation of the
 # output from this translation.
 require "mkaris02.pl";

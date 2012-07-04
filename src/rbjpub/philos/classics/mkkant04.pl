@@ -1,3 +1,6 @@
+#!/usr/bin/perl -w
+# ($Id)
+
 # This script generates a second multi-level index structure.
 #
 # Kant's Critique of Pure Reason has a more complex section structure 

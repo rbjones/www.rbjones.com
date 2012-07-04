@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.5 2012/06/29 21:42:54 rbj Exp $
+# $Id: Makefile.in,v 1.6 2012/07/04 05:13:33 rbj Exp $
 
 top_srcdir=@top_srcdir@
 include $(top_srcdir)/top_srcdir.mk
@@ -19,11 +19,12 @@ ORGANTXT=mkaris_catego2.txt mkaris_interp2.txt mkaris_poster2.txt mkaris_prior2.
 	mkaris_topics2.txt organon.txt mkaris_soph_ref.txt
 METAPTXT=mkaris_metaphysics.txt metaphysics.txt
 CLASSICSTXT=echu.txt kantcpur.txt kantstru.txt locke.txt medit.txt monad.txt tractatus.txt \
-	$(ORGANTXT) $(METAPTXT)
-ARISPERL=mkaris01.pl mkaris02.pl mkaris03.pl trans.pl scan.pl
+	$(ORGANTXT) $(METAPTXT) arisxwords.txt
+PERLTOOLS=linkmon1.pl tex2index.pl trans.pl scan.pl indexfile.pl
+ARISPERL=mkaris01.pl mkaris02.pl mkaris03.pl
 CLASSICSPERL=mkechu01.pl mklok01.pl mkkant03.pl mkkant04.pl trac2html.pl mkmed01.pl \
-	 mkmon01.pl linkmon1.pl \
-	$(ARISPERL)
+	 mkmon01.pl \
+	$(ARISPERL) $(PERLTOOLS)
 
 TEXPDF= mbook_draft.pdf mbook_final.pdf obook_draft.pdf obook_final.pdf 
 TEXFILES=$(TEXPDF:.pdf=.tex) mbook.tex obook.tex
@@ -60,15 +61,21 @@ $(PPTH): $(PPDB).dbts
 
 #Specific Rules
 
+ariswords.txt: o.tex m.tex tex2index.pl
+	cat o.tex m.tex | perl  tex2index.pl > ariswords.txt
+
 arisorganp o.tex: $(ARISPERL) $(ORGANTXT)
 	-mkdir aristotl
 	perl -w mkaris01.pl o organon.txt "Aristotle - The Organon"
 	touch arisorganp
 
-obook_draft.pdf obook_final.pdf: obook.tex o.tex
+oi.tex: o.tex arisxwords.txt indexfile.pl
+	cat o.tex | perl -w indexfile.pl arisxwords.txt > oi.tex
+
+obook_draft.pdf obook_final.pdf: obook.tex oi.tex
 
 arisorgan: arisorganp obook_draft.pdf
-	cp obook_draft.pdf aristotl
+#	cp obook_draft.pdf aristotl
 	touch arisorgan
 
 arismetapp m.tex: $(ARISPERL) $(METAPTXT)
@@ -79,7 +86,7 @@ arismetapp m.tex: $(ARISPERL) $(METAPTXT)
 mbook_draft.pdf mbook_final.pdf: mbook.tex m.tex
 
 arismetap: arismetapp mbook_draft.pdf
-	cp mbook_draft.pdf aristotl
+#	cp mbook_draft.pdf aristotl
 	touch arismetap
 
 kantcpurm: mkkant03.pl kantcpur.txt kantstru.txt
