@@ -73,7 +73,7 @@ EOF
 sub fileStart
 {   $csourceTitle=$sourceTitle;
 #   chop($csourceTitle);
-    print TEXFILE "\n\n\\Avolume{".$csourceTitle."}\n\\label{\\thepart}\n\\setcounter{chapter}{0}\n";
+    print TEXFILE "\n\n\\Avolume\{".$csourceTitle."\}\n\\label{\\thechapter}\n";
 };
 
 sub oIndexEntry
@@ -138,6 +138,7 @@ $body
 EOF
 #print "Book Title: $bookTitle\n";
          $cbookTitle=$bookTitle;
+         $cbookTitle=~s/\&([^;]*);/\$\\$1\$/;
          chop($cbookTitle);
 #print "cBook Title: $cbookTitle\n";
          print TEXFILE <<EOF;
@@ -156,7 +157,8 @@ sub bookIndexEntry
 <TD><A HREF="$partIFile">$partTitle</A></TD>
 </TR>
 EOF
-    $cpartTitle=$partTitle;
+        $cpartTitle=$partTitle;
+	$cpartTitle=~s/\&([^;]*);/\$\\$1\$/;
 	chop($cpartTitle);
     print TEXFILE "\n\n\\Apart{$cpartTitle}\n";
 };
@@ -253,6 +255,8 @@ EOF
 	($texline=$paraTitle) =~ s|&|\\&|g;
 	    $texline =~ s/\"/{\\dq}/g;
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 #	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
 #	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
 #	$texline =~ s/\"/{\\dq}/g;
@@ -265,6 +269,8 @@ sub writeLine
 	($texline=$_[0]) =~ s|&|\\&|g;
 	if (not $pre) {
 	    if (/<PRE>/) {$texline =~ s|<PRE>|\\begin{verbatim}|; $pre=1}
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/\"/{\\dq}/g;
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 	};
