@@ -9,7 +9,9 @@
 # The tex file is taken from STDIN and sent to STDOUT
 
 $glosspath=$ARGV[0];
+$emph=0; # this flag controls italicisation of indexed words in the body
 %gloss=();
+
 
 open (GLOSS, $glosspath) || die "can't open glossary file";
 
@@ -31,8 +33,9 @@ while (<STDIN>) {
 	$ie = ($gloss{lc $iword} eq "") ? lc $iword : $iwords{$iword};
 # This following line causes indexed words to be emphasised in the body of the document
 # This is to facilitate completion of the index prior to publication.
-	s/$iword\\index{}/\\emph{$iword}\\index{$ie}/g}
+	if ($index) {s/$iword\\index{}/\\emph{$iword}\\index{$ie}/g}
 # This line should be used when the emphasis is not required, i.e. for publication
-#	s/$iword\\index{}/$iword\\index{$ie}/g}
+	else {s/$iword\\index{}/$iword\\index{$ie}/g};
+    };
     print 
 };
