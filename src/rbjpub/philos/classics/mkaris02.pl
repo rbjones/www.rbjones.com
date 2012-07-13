@@ -46,6 +46,96 @@ $up="$upref$upimg</A>";
 $upm="$upref$upimgm</A>";
 $body="<BODY BGCOLOR=\"#e0e0f0\">";
 $pre=0; # this flag indicates whether we are in a <PRE>/\verbatim section
+$precount=0; # this flag indicates how many PRE sections have been processed
+%pretexts=(); # this hash contains the tex source to replace the contents of the PRE sections
+%greek2tex=(); # this maps the utf8 greek words used in the texts into tex.
+%greek2htm=(); # this maps the utf8 greek words used in the texts into html.
+
+$pretexts{1}=<<EOF;
+
+\\vspace{1em}
+\\hfil
+\\begin{tabular}{c c c}
+{\\bf A. Affirmation} && {\\bf B. Denial}\\\\
+Man is just  &&     Man is not just\\\\
+&{\\Huge\$\\times\$}&\\\\
+{\\bf D. Denial} && {\\bf C. Affirmation}\\\\
+Man is not not-just && Man is not-just\\\\
+\\end{tabular}
+\\hfil
+\\vspace{1em}
+
+EOF
+
+$pretexts{2}=<<EOF;
+
+\\vspace{1em}
+\\hfil
+\\begin{tabular}{c c c}
+{\\bf A'. Affirmation} && {\\bf B'. Denial}\\\\
+Every man is just  &&     Not every man is just\\\\
+&{\\Huge\$\\times\$}&\\\\
+{\\bf D'. Denial} && {\\bf C'. Affirmation}\\\\
+Every man is not not-just && Every man is not-just\\\\
+\\end{tabular}
+\\hfil
+\\vspace{1em}
+
+EOF
+
+$pretexts{3}=<<EOF;
+
+\\vspace{1em}
+\\hfil
+\\begin{tabular}{c c c}
+{\\bf A". Affirmation} && {\\bf B". Denial}\\\\
+Not-man is just  &&     Not-man is not just\\\\
+&{\\Huge\$\\times\$}&\\\\
+{\\bf D". Denial} && {\\bf C". Affirmation}\\\\
+Not-man is not not-just && Not-man is not-just\\\\
+\\end{tabular}
+\\hfil
+\\vspace{1em}
+
+EOF
+
+$pretexts{4}=<<EOF;
+
+\\vspace{1em}
+\\hfil
+\\begin{tabular}{l l}
+   It may be.             & It cannot be.\\\\
+   It is contingent.      & It is not contingent.\\\\
+   It is impossible.      & It is not impossible.\\\\
+   It is necessary.       & It is not necessary.\\\\
+   It is true.            & It is not true.\\\\
+\\end{tabular}
+\\hfil
+\\vspace{1em}
+
+EOF
+$pretexts{5}=<<EOF;
+
+\\vspace{1em}
+\\hfil
+\\begin{tabular}{p{1.5in} p{1.5in}}
+\\hfil{\\bf A.}\\hfil       &      \\hfil{\\bf B.}\\hfil\\\\\\\\
+    It may be.                 &  It cannot be.\\\\\\\\
+    It is contingent.          &  It is not contingent.\\\\\\\\
+  \\rr It is not impossible that it~should be. & \\rr It is impossible that it~should be.\\tn\\tn
+  \\rr It is not necessary that it~should be.  &  \\rr It is necessary that it~should not be.\\tn\\tn
+\\\\
+ \\hfil{\\bf           C. }\\hfil                 &     \\hfil{\\bf  D.}\\hfil\\\\\\\\
+   It may not be.             &  It cannot not be.\\\\\\\\
+\\rr   It is contingent that \\hspace{2em}it~should not be.   &  \\rr It is not contingent that it~should not be.\\tn\\tn
+\\rr   It is not impossible  that it~should not be.      &  \\rr It is impossible that it~should not be.\\tn\\tn
+\\rr   It is not necessary that  it~should not be.  &  \\rr It is necessary that it~should be.\\tn\\tn
+\\end{tabular}
+\\hfil
+\\vspace{1em}
+
+EOF
+
 
 sub startOIndex
 {	$volIndexRef=$stub."i.htm";
@@ -264,7 +354,7 @@ EOF
         print TEXFILE "\n".$texline;
 };
 
-sub writeLine
+sub writeLine2
 {	print OUTFILE $_[0];
 	($texline=$_[0]) =~ s|&|\\&|g;
 	if (not $pre) {
@@ -281,5 +371,56 @@ sub writeLine
 #	$texline =~ s/\'/{\\sq}/g;
 	print TEXFILE $texline;
 };
+
+# this version of writeline substitutes for the contents of the PRE section
+
+sub writeLine
+{	
+# translate unicode greek into html entities
+    $htmline=$_[0];
+    foreach (keys %greek2htm) {
+	$key=$_;
+	$res=$greek2htm{$key};
+	if ($htmline=~/$key/) {
+	    print "key: $key; res: $res\n";
+	    $htmline =~ s|$key|$res|g;
+	    print "line: $htmline\n";
+	};
+    };
+    print OUTFILE $htmline;
+# transformations for tex version
+    ($texline=$_[0]) =~ s|&|\\&|g;
+    if (not $pre) {
+	if (/<PRE>/) {
+	    $precount+=1;
+	    $texline = $pretexts{$precount};
+	    $pre=1}
+	else {$texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	      $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	      $texline =~ s/\"/{\\dq}/g;
+	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
+	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
+	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;
+	      $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+	      foreach (keys %greek2tex) {
+		  $key=$_;
+		  $res=$greek2tex{$key};
+		  $texline =~ s|$key|$res|g;      
+	      };
+	};
+	print TEXFILE $texline
+    };
+    if ($pre) {
+	if (/<\/PRE>/) {$pre=0}
+    };  
+};
+
+$greek2tex{"καταλύεις"}="\\textgreek\{καταλύεις\}";
+$greek2tex{"οὐ"}="\\textgreek\{οὐ\}";
+$greek2tex{"οὗ"}="\\textgreek\{οὗ\}";
+
+$greek2htm{"καταλύεις"}="&#954;&#945;&#964;&#945;&#955;&#973;&#949;&#953;&#962;";
+$greek2htm{"οὐ"}="&#959;&#8016;";
+$greek2htm{"οὗ"}="&#959;&#8023;";
 
 1;
