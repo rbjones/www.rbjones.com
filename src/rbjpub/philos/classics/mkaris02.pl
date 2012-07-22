@@ -137,6 +137,24 @@ $pretexts{5}=<<EOF;
 EOF
 
 
+$pretexts{101}=<<EOF;
+
+\\begin{quote}
+"Love first of all the Gods she planned."
+\\end{quote}
+
+EOF
+
+$pretexts{102}=<<EOF;
+
+\\begin{quote}
+    "First of all things was chaos made, and then \\\\
+     Broad-breasted earth... \\\\
+     And love, `mid all the gods pre-eminent'"
+\\end{quote}
+
+EOF
+
 sub startOIndex
 {	$volIndexRef=$stub."i.htm";
 	open (OINDEX, "> $direc/$volIndexRef");
@@ -227,12 +245,16 @@ $body
 <TR><TD><B>Text</B></TD><TD><B>Paragraph Index</B></TD></TR>
 EOF
 #print "Book Title: $bookTitle\n";
-         $cbookTitle=$bookTitle;
-         $cbookTitle=~s/\&([^;]*);/\$\\$1\$/;
+        $cbookTitle=$bookTitle;
+	$cbookLetter="";
+#        $cbookTitle=~s/\&([^;]*);(.*)/{\$\\$1\$}{$2}/;
+	if ($cbookTitle=~/^\s*\&([^;]*);\s*:\s*(.*)$/)
+	{$cbookTitle=$2;
+	 $cbookLetter="\$\\$1\$"};
          chop($cbookTitle);
 #print "cBook Title: $cbookTitle\n";
          print TEXFILE <<EOF;
-\n\n\\AMbook{$cbookTitle}
+\n\n\\AMbook{$cbookLetter}{$cbookTitle}
 EOF
 };
 
@@ -393,14 +415,14 @@ sub writeLine
     if (not $pre) {
 	if (/<PRE>/) {
 	    $precount+=1;
-	    $texline = $pretexts{$precount};
+	    $texline = $pretexts{$precount+($stub eq "m" ? 100 : 0)};
 	    $pre=1}
 	else {$texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	      $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	      $texline =~ s/\"/{\\dq}/g;
-	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
-	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
-	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;
+#	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
+#	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
+#	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;
 	      $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 	      foreach (keys %greek2tex) {
 		  $key=$_;
@@ -415,12 +437,22 @@ sub writeLine
     };  
 };
 
-$greek2tex{"καταλύεις"}="\\textgreek\{καταλύεις\}";
+$greek2tex{"καταλύεις"}="\\textgreek\{καταλύεις\}";   # lodge
+$greek2tex{"μῆνις"}="\\textgreek\{μῆνις\}";         # wrath
+$greek2tex{"πήλνξ"}="\\textgreek\{πήλνξ\}";         # helmet
+$greek2tex{"οὐλομένην"}="\\textgreek\{οὐλομένην\}";  # destructress
+$greek2tex{"οὐλόμενην"}="\\textgreek\{οὐλόμενην\}";  # destructor     
 $greek2tex{"οὐ"}="\\textgreek\{οὐ\}";
 $greek2tex{"οὗ"}="\\textgreek\{οὗ\}";
+#$greek2tex{""}="\\textgreek\{\}";         
 
 $greek2htm{"καταλύεις"}="&#954;&#945;&#964;&#945;&#955;&#973;&#949;&#953;&#962;";
+$greek2htm{"μῆνις"}="&#956;&#8134;&#957;&#953;&#962;";
+$greek2htm{"πήλνξ"}="&#960;&#942;&#955;&#957;&#958;";
+$greek2htm{"οὐλομένην"}="&#959;&#8016;&#955;&#959;&#956;&#941;&#957;&#951;&#957;";
+$greek2htm{"οὐλόμενην"}="&#959;&#8016;&#955;&#972;&#956;&#949;&#957;&#951;&#957;";
 $greek2htm{"οὐ"}="&#959;&#8016;";
 $greek2htm{"οὗ"}="&#959;&#8023;";
+#$greek2htm{""}="";
 
 1;

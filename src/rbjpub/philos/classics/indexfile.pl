@@ -9,7 +9,7 @@
 # The tex file is taken from STDIN and sent to STDOUT
 
 $glosspath=$ARGV[0];
-$emph=1; # this flag controls italicisation of indexed words in the body
+$emph=0; # this flag controls italicisation of indexed words in the body
 %gloss=();
 
 

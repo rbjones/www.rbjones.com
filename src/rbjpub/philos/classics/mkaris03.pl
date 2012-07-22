@@ -11,10 +11,10 @@ $created="1996/11/25";
 #};
 
 # The controldata file consists of the following kinds of records:
-# File:filenumber:filename:filetype(single book=SB multiple book-MB):filetitle
+# File:filenumber:filename:filetype(single book=SB multiple book=MB):filetitle
 # Book:booknumber:booktitle
 # Part:partnumber:parttitle
-# Para:paranumber:paratitle
+# Para:paranumber:paratitle (I don't think this is ever used)
 # THEY MUST BE in ascending order
 
 # When it is read in a data structure is created which is a direct representation
