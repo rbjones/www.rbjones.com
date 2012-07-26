@@ -122,7 +122,8 @@ sub readLine {
 
 sub testBookStart
 {	if (/^\s*(Book|BOOK|SECTION)\s*(\w+)\s*$/)
-	{	if ($trace>2) {print "$1 $book\n"};
+	{	if ($trace>2) {print "$1 $book\n"}
+		$booktype="book"; if ($1=~/SECTION/) {$booktype="section"};
 		1
 	} else {0}
 };

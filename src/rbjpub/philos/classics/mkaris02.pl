@@ -250,11 +250,11 @@ EOF
 #        $cbookTitle=~s/\&([^;]*);(.*)/{\$\\$1\$}{$2}/;
 	if ($cbookTitle=~/^\s*\&([^;]*);\s*:\s*(.*)$/)
 	{$cbookTitle=$2;
-	 $cbookLetter="\$\\$1\$"};
+	 $cbookLetter="\\Rbj$1"};
          chop($cbookTitle);
 #print "cBook Title: $cbookTitle\n";
          print TEXFILE <<EOF;
-\n\n\\AMbook{$cbookLetter}{$cbookTitle}
+\n\n\\AM$booktype\{$cbookLetter}{$cbookTitle}
 EOF
 };
 
@@ -410,6 +410,8 @@ sub writeLine
 	};
     };
     print OUTFILE $htmline;
+# remove <gk></gk> tags
+    $htmline=~s/<gk>([^<]*)<\/gk>/$1/g;
 # transformations for tex version
     ($texline=$_[0]) =~ s|&|\\&|g;
     if (not $pre) {
@@ -417,18 +419,21 @@ sub writeLine
 	    $precount+=1;
 	    $texline = $pretexts{$precount+($stub eq "m" ? 100 : 0)};
 	    $pre=1}
-	else {$texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	else {
+	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
+#	    $texline =~ s/<gk>([^<]*)<\/gk>/$1/g;
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	      $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	      $texline =~ s/\"/{\\dq}/g;
 #	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;
 	      $texline =~ s|\'([^\']*)\'|\`$1\'|g;
-	      foreach (keys %greek2tex) {
-		  $key=$_;
-		  $res=$greek2tex{$key};
-		  $texline =~ s|$key|$res|g;      
-	      };
+#	      foreach (keys %greek2tex) {
+#		  $key=$_;
+#		  $res=$greek2tex{$key};
+#		  $texline =~ s|$key|$res|g;      
+#	      };
 	};
 	print TEXFILE $texline
     };
