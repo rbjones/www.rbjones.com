@@ -26,7 +26,7 @@ $created="1996/11/24";
 # (7) The tex files are $stub.tex
 
 # The tex files are structured using the following commands which should be defined in
-# a tex wrapper which includes the generated tex file.
+ {# a tex wrapper which includes the generated tex file.
 # \Avolume   =?> part
 # \ASbook    =?> chapter
 # \AMbook    =?> chapter
