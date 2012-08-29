@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.27 2012/02/14 20:44:22 rbj Exp $
+# $Id: rules.mk,v 1.28 2012/08/29 13:58:48 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -201,6 +201,23 @@ $(TEXPDF2): %.pdf : %.tex
 	-bibtex $*
 	@pdflatex $*
 	@pdflatex $*
+
+$(TEXPDFGLO): %.pdf : %.tex
+	@echo "TEXPDFGLO"
+	@pdflatex $*
+	@touch $*.ind
+	-cat $*.idx \
+	    | sed -e 's/\([^@]\)\(@[^@]\)/\1"\2/;' \
+		  -e 's/@@/@/g;' \
+		  -e 's/\([^"]\)|/\1"|/g' \
+	          -e 's/"|hyperpage/|hyperpage/g' \
+	    | makeindex -i -o $*.ind
+	-sed -i -e 's/delimiter 026E30F/Backslash/' $*.ind
+	-bibtex $*
+	-makeglossaries $*
+	@pdflatex $*
+	@pdflatex $*
+
 
 # Unqualified rules
 

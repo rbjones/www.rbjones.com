@@ -26,7 +26,7 @@ $created="1996/11/24";
 # (7) The tex files are $stub.tex
 
 # The tex files are structured using the following commands which should be defined in
- {# a tex wrapper which includes the generated tex file.
+# a tex wrapper which includes the generated tex file.
 # \Avolume   =?> part
 # \ASbook    =?> chapter
 # \AMbook    =?> chapter
@@ -76,7 +76,7 @@ $pretexts{2}=<<EOF;
 Every man is just  &&     Not every man is just\\\\
 &{\\Huge\$\\times\$}&\\\\
 {\\bf D'. Denial} && {\\bf C'. Affirmation}\\\\
-Every man is not not-just && Every man is not-just\\\\
+Not every man is not-just && Every man is not-just\\\\
 \\end{tabular}
 \\hfil
 \\vspace{1em}
@@ -369,6 +369,8 @@ EOF
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
+	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
 #	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
 #	$texline =~ s/\"/{\\dq}/g;
@@ -423,12 +425,12 @@ sub writeLine
 	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	    $texline =~ s/<gk>([^<]*)<\/gk>/$1/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
-	      $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
-	      $texline =~ s/\"/{\\dq}/g;
+	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+	    $texline =~ s/\"/{\\dq}/g;
 #	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;
-	      $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 #	      foreach (keys %greek2tex) {
 #		  $key=$_;
 #		  $res=$greek2tex{$key};
