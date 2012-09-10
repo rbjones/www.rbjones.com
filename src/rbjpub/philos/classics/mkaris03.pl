@@ -78,9 +78,11 @@ sub parano
 
 sub paraTitle
 {	$paraTitle="";
-	while (/^\s*((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
+	$paraPrefix="";
+	if (s/^(\s+)//) {$paraPrefix=$1};
+	while (!/^(\s+)/ && /^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
 	    $temp=$1; $paraTitle.="$temp"; &readLine;};
-	if (s/^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])*[\.\?\:;])(\s*.*)$/$3/){
+	if (!/^(\s+)/ && s/^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])*[\.\?\:;])(\s*.*)$/$3/){
 	    $temp=$1; $paraTitle.="$temp";};
 	if ($trace == 9) { print "paraTitle: $paraTitle\n";
 			print "rest: $_\n"
