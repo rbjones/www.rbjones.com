@@ -76,21 +76,6 @@ sub parano
 	$2;
 };
 
-sub paraTitle
-{	$paraTitle="";
-	$paraPrefix="";
-	if (s/^(\s+)//) {$paraPrefix=$1};
-	while (!/^(\s+)/ && /^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
-	    $temp=$1; $paraTitle.="$temp"; &readLine;};
-	if (!/^(\s+)/ && s/^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])*[\.\?\:;])(\s*.*)$/$3/){
-	    $temp=$1; $paraTitle.="$temp";};
-	if ($trace == 9) { print "paraTitle: $paraTitle\n";
-			print "rest: $_\n"
-			};
-#	chop;
-#	while ((/^\s*$/) && !eof(<INPUT>)) {&readLine; chop;};
-};
-
 sub openFile
 {	my($filename)=$_[0];
 	open (INPUT,$filename) || die "unable to open file $filename";

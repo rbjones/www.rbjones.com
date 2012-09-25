@@ -20,6 +20,7 @@ while (<GLOSS>) {
 };
 
 while (<STDIN>) {
+    if (/^\\index{[^}]*}$/) {print; next};
     my $line=$_;
     my %iwords=();
     while ($line=~s/([\w]+(-[\w]+)*)//) {

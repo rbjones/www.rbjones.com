@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# ($Id: mkaris01.pl,v 1.8 2012/07/26 14:21:27 rbj Exp $)
+# ($Id: mkaris01.pl,v 1.9 2012/09/25 15:04:03 rbj Exp $)
 
 # The following required file contains procedures supporting the generation of the
 # output from this translation.
@@ -31,6 +31,9 @@ $file=0;
 $book=0;
 $part=0;
 $para=0;
+$rest="";
+$paraTitle="";
+$paraFlag=1;
 $booktype="book";
 
 # The hypertext edition will be structured into HTML files as follows.
@@ -157,19 +160,44 @@ sub paragraph
 		if (/^\<\/PRE\>/) {&writeLine($_); &readLine};
 		--$para}
 	else 	{&paraTitle;
-		 my($rest)=$_;
-#		 print "Rest: $rest";
+		 my($rest)= $paraFlag ? "" : $_;
+#		 print "Rest: $rest\n paraFlag:$paraFlag\n";
 #		 $in=<STDIN>;
-		&startParagraph;
-		&partIndexEntry;
-		&writeLine($rest); &readLine;
-		if ($trace>4) {print "Line:$_";};
-		until (/^\s/ || &$testPartStart || &testBookStart || eof(INPUT))
-			{
-			&writeLine($_); &readLine;
-			if ($trace>4) {print "Line:$_";}};
-		};
+		 &startParagraph;
+		 &partIndexEntry;
+		 &writeLine($rest);
+		 if (not $paraFlag) {&readLine};
+		 if ($trace>4) {print "Line:$_";};
+		 until (/^\s/ || &$testPartStart || &testBookStart || eof(INPUT))
+		 {   &writeLine($_); &readLine;
+		     if ($trace>4) {print "Line:$_";}
+		 };
+	};
 	while (/^\s*$/ && !eof(INPUT)) {&readLine;};
+};
+
+
+sub paraTitle
+{	$paraTitle="";
+	$paraPrefix=""; # this is the leading whitespace into the paragraph (before the title).
+	$paraFlag=0; # this is set to 1 if the first line of next para is read.
+	if (s/^(\s+)//) {$paraPrefix=$1};
+	while (!/^\s/ && /^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
+	    $temp=$1; $paraTitle.="$temp"; &readLine;};
+	if (/^\s/) {$paraFlag=1;
+#		    print "Paragraph title: $paraTitle\n";
+#		    print "Parastart in ParaHeading: $_\n"
+	}
+	else {
+	    if (s/^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])*[\.\?\:;](\'|\"|))(\s*.*)$/$4/)
+	    {$temp=$1; $paraTitle.="$temp"}
+	};
+	if ($trace == 9) { print "paraTitle: $paraTitle\n";
+			   print "rest: $_\n";
+			   print "paraFlag=$paraFlag\n"
+	};
+#	chop;
+#	while ((/^\s*$/) && !eof(<INPUT>)) {&readLine; chop;};
 };
 
 1;

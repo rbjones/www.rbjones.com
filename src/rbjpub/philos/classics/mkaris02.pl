@@ -365,11 +365,12 @@ sub startParagraph
 $paraTitle
 EOF
 	($texline=$paraTitle) =~ s|&|\\&|g;
+	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
+	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/\"/{\\dq}/g;
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
-	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
 	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
 #	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
@@ -383,6 +384,9 @@ sub writeLine2
 	($texline=$_[0]) =~ s|&|\\&|g;
 	if (not $pre) {
 	    if (/<PRE>/) {$texline =~ s|<PRE>|\\begin{verbatim}|; $pre=1}
+	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
+	    print "2";
+	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/\"/{\\dq}/g;
@@ -406,9 +410,9 @@ sub writeLine
 	$key=$_;
 	$res=$greek2htm{$key};
 	if ($htmline=~/$key/) {
-	    print "key: $key; res: $res\n";
+#	    print "key: $key; res: $res\n";
 	    $htmline =~ s|$key|$res|g;
-	    print "line: $htmline\n";
+#	    print "line: $htmline\n";
 	};
     };
     print OUTFILE $htmline;
@@ -422,6 +426,8 @@ sub writeLine
 	    $texline = $pretexts{$precount+($stub eq "m" ? 100 : 0)};
 	    $pre=1}
 	else {
+	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
+	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	    $texline =~ s/<gk>([^<]*)<\/gk>/$1/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
