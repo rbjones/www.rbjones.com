@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# ($Id: mkaris01.pl,v 1.9 2012/09/25 15:04:03 rbj Exp $)
+# ($Id: mkaris01.pl,v 1.10 2012/10/09 20:06:37 rbj Exp $)
 
 # The following required file contains procedures supporting the generation of the
 # output from this translation.
@@ -181,6 +181,7 @@ sub paraTitle
 {	$paraTitle="";
 	$paraPrefix=""; # this is the leading whitespace into the paragraph (before the title).
 	$paraFlag=0; # this is set to 1 if the first line of next para is read.
+# something here to process leading comments (<!--!  -->)
 	if (s/^(\s+)//) {$paraPrefix=$1};
 	while (!/^\s/ && /^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
 	    $temp=$1; $paraTitle.="$temp"; &readLine;};

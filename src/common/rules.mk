@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.29 2012/09/25 15:04:03 rbj Exp $
+# $Id: rules.mk,v 1.30 2012/10/09 20:06:37 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -381,10 +381,26 @@ $(LATEX2HTML): %.html: %.tex
 		-info "" -up_url "../index.html" -up_title "up" $<
 	touch $@
 
+$(LATEX2HTMLA): %.html: %.tex
+	texdvi -b $*
+	texdvi $*
+	texdvi $*
+	latex2html -ascii -split 0 -link 2 -toc_depth 5 -show_section_numbers \
+		-info "" -up_url "../index.html" -up_title "up" $<
+	touch $@
+
 $(LATEX2HTM): %.htm: %.tex
 	texdvi -b $*
 	texdvi $*
 	texdvi $*
 	latex2html -short_extn -split 3 -link 2 -toc_depth 5 -show_section_numbers \
+		-info "" -up_url "../index.htm" -up_title "up" $<
+	touch $@
+
+$(LATEX2HTMA): %.htm: %.tex
+	texdvi -b $*
+	texdvi $*
+	texdvi $*
+	latex2html -short_extn -ascii -split 0 -link 2 -toc_depth 5 -show_section_numbers \
 		-info "" -up_url "../index.htm" -up_title "up" $<
 	touch $@
