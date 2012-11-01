@@ -1,5 +1,5 @@
 =IGN
-$Id: t042.doc,v 1.5 2011/10/25 09:10:46 rbj Exp $
+$Id: t042.doc,v 1.6 2012/11/01 15:59:57 rbj Exp $
 open_theory "'a GSU";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-ord", "'savedthm_cs_∂_proof"];
 set_merge_pcs ["hol", "'wf_relp", "'wf_recp", "'GSU1", "'savedthm_cs_∂_proof"];
@@ -41,12 +41,12 @@ This is a modification of the pure set theory GS to admit urelements.
 
 Created 2010/10/08
 
-Last Change $ $Date: 2011/10/25 09:10:46 $ $
+Last Change $ $Date: 2012/11/01 15:59:57 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t042.pdf}
 
-$ $Id: t042.doc,v 1.5 2011/10/25 09:10:46 rbj Exp $ $
+$ $Id: t042.doc,v 1.6 2012/11/01 15:59:57 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -87,14 +87,17 @@ Since the theory is not conservative over plain HOL, it must be introduced using
 The axiom which introduces the urelements asserts that there is an injection from type î'aÆ into type î'a GSUÆ.
 
 =SML
-val Urelement_Axiom = new_axiom(["Urelement_Axiom"], ¨∂Urelement:'a ≠ 'a GSU∑ OneOne UrelementÆ);
+val Urelement_Axiom = new_axiom(["Urelement_Axiom"], ¨∂f:'a ≠ 'a GSU∑ OneOne fÆ);
 =TEX
 
 Having asserted the existence of such an injection we now introduce a constant with that characteristic:
 
 \ignore{
 =SML
-save_cs_∂_thm Urelement_Axiom;
+set_goal([], ¨∂Urelement:'a ≠ 'a GSU∑ OneOne UrelementÆ);
+a (strip_asm_tac Urelement_Axiom);
+a (∂_tac ¨fÆ THEN asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
 =TEX
 }%ignore
 
@@ -104,7 +107,7 @@ save_cs_∂_thm Urelement_Axiom;
 ‹ OneOne Urelement
 ∞
 
-The range of this injection is extension of the set of urelements, but we can't say this until we have introduced membership.
+The range of this injection is the extension of the set of urelements, but we can't say this until we have introduced membership.
 
 πHOLCONST
 ‹ €UeVal› : 'a GSU ≠ 'a
@@ -188,7 +191,7 @@ set_merge_pcs ["basic_hol", "'gsu-ax"];
 
 \subsection{Membership}
 
-Membership is a relation over the the type.
+Membership is a relation over the type.
 We can't define this constant (in this context) so it is introduced as a new constant (about which nothing is asserted except its name and type) and its properties are introduced axiomatically. 
 
 =SML
@@ -226,7 +229,7 @@ Here I have to chose between preserving extensionality (which can by done using 
 \footnote{I could also fudge it by saying nothing about the membership of urelements, but that seems the least attractive option since both extensionality and well-foundedness would have to be qualified.}
 
 When I first addressed this issue, I was mistakenly under the impression that this was just a question of an aribitrary choice of what to say about the membership of urelements, and under this illusion I tried having two different membership relations one well-founded and the other extensional.
-One couls have two different membership relations which differed only what the members of the urelements are, but the adoption of the unqualified axiom of extensionality (which is the point of Quine's trick) is nevertheless Substantive, for otherwise, even though a urelement would be its own sole member, it would nevertheless be distinct from its own unit set and extensionality would fail.
+One could have two different membership relations which differed only what the members of the urelements are, but the adoption of the unqualified axiom of extensionality (which is the point of Quine's trick) is nevertheless substantive, for otherwise, even though a urelement would be its own sole member, it would nevertheless be distinct from its own unit set and extensionality would fail.
 It therefore seems that an unqualified extensionality is incompatible with the closure of the universe under the formation of unit \emph{set}s, for if Quine's trick is used to admit extensionality, the ``unit set'' of a urelement will not be a set at all (or else the urelement is also a set).
 
 This consideration persuaded me against urelements being unit sets, and I will therefore have to put up with extensionality being conditional.
@@ -345,7 +348,7 @@ val €gsu_wf_axiom› = new_axiom (["gsu_wf_axiom"], ¨UWellFounded $çâuÆ);
 =GFT
 €gsu_wf_thm1› =		Ù well_founded $çâu
 €gsu_wf_min_thm› =		Ù µ x∑ (∂ y∑ y çâu x)
-					¥ (∂ z∑ z çâu x ± ≥ (∂ v∑ v çâu z ± v çâu x))
+						¥ (∂ z∑ z çâu x ± ≥ (∂ v∑ v çâu z ± v çâu x))
 €gsu_wftc_thm› =		Ù well_founded (tc $çâu)
 =TEX
 
@@ -385,7 +388,7 @@ declare_infix (230, "çâuõ+");
 
 =GFT
 €gsu_wftc_thm2› =	Ù well_founded $çâuõ+
-€tcçâu_incr_thm› =		Ù µ x y∑ x çâu y ¥ x çâuõ+ y
+€tcçâu_incr_thm› =	Ù µ x y∑ x çâu y ¥ x çâuõ+ y
 €tcçâu_cases_thm› =	Ù µ x y∑ x çâuõ+ y § (x çâu y ≤ (∂ z∑ x çâuõ+ z ± z çâu y))
 €tcçâu_trans_thm› =	Ù µ s t u∑ s çâuõ+ t ± t çâuõ+ u ¥ s çâuõ+ u
 =TEX
@@ -433,12 +436,6 @@ val €'a GSU_INDUCTION_T› = WF_INDUCTION_T gsu_wf_thm1;
 val €gsu_induction_tac› = wf_induction_tac gsu_wf_thm1;
 val €'a GSU_INDUCTION_T2› = WF_INDUCTION_T gsu_wftc_thm2;
 val €gsu_induction_tac2› = wf_induction_tac gsu_wftc_thm2;
-=TEX
-
-=GFT
-€gsu_wf_ind_thm› = Ù µ p∑ (µ x∑ (µ y∑ y çâu x ¥ p y) ¥ p x) ¥ (µ x∑ p x)
-€gsu_cv_ind_thm› = Ù µ p∑ (µ x∑ (µ y∑ tc $çâu y x ¥ p y) ¥ p x) ¥ (µ x∑ p x)
-€gsu_cv_ind_thm2› = Ù µ p∑ (µ x∑ (µ y∑ y çâuõ+ x ¥ p y) ¥ p x) ¥ (µ x∑ p x)
 =TEX
 
 \ignore{
@@ -555,23 +552,29 @@ a (rewrite_tac[once_rewrite_conv
 	[(eq_sym_rule o asm_rule) ¨g (fix g) = fix gÆ] ¨fix g sÆ]);
 a (GET_NTH_ASM_T 5 rewrite_thm_tac);
 val çâuõp_recursion_lemma = save_pop_thm "çâuõp_recursion_lemma";
+
+set_goal([], ¨µ(af:('a GSU ≠ 'b) ≠ 'a GSU ≠ 'b)∑ ∂(f:'a GSU ≠ 'b)∑
+	µs∑ f s = af ((Ãf x∑ if x çâuõ+ s then f x else ≈y∑T)f) sÆ);
+
 =TEX
 }%ignore
 
 =IGN
-stop;
 
 evaluate_∂_cd_thm çâuõp_recursion_lemma;
 
-stop;
-
 add_∂_cd_thms [çâuõp_recursion_lemma] "'gsu-ax";
 set_merge_pcs ["basic_hol", "'gsu-ax"];
+
+basic_prove_∂_conv ¨Æ;
+
+
+
 =TEX
 
 \subsection{The Ontology Axiom}
 
-The remaining axioms are intended to ensure that the Subset is a large and well-rounded Subset of the cumulative heirarchy.
+The remaining axioms are intended to ensure that the sets are a large and well-rounded part of the cumulative heirarchy.
 This is to be accomplished by defining a Galaxy as a set satisfying certain closure properties and then asserting that every set is a member of some Galaxy.
 It is convenient to introduce new constants and axioms for each of the Galactic closure properties before asserting the existence of the Galaxies.
 
@@ -599,7 +602,6 @@ declare_infix (230,"†âu");
 ∞
 
 =GFT
-
 €Äâu_eq_thm› =		Ù µ A B∑ Setâu A ± Setâu B ¥ (A = B § A Äâu B ± B Äâu A)
 €Äâu_refl_thm› =		Ù µ A∑ A Äâu A
 €çâuÄâu_def› =		Ù µ e A B∑ e çâu A ± A Äâu B ¥ e çâu B
@@ -664,7 +666,7 @@ The formulation of replacement only makes membership of a galaxy dependent on th
 
 Because we have urelements and the ontology axiom introduces sets by their extension, special provision is necessary to ensure the existence of the empty set.
 In the corresponding theory without urelements the existence of the empty set is obtained from the ontology axiom using the clause which corresponds to the axiom of replacement, but this axiom only establishes that something has no members, leaving open the possibility that there is an urelement but there is no empty set.
-We therefore assert that the image of a set through a functional relation is a set.
+We therefore assert that the image of a something through a functional relation is a set.
 
 In some other places it is necessary to insist on certain objects being sets.
 Thus, power sets never contain urelements, and this must be made explicit.
@@ -691,6 +693,9 @@ val €UOntology_axiom› =
 			± Setâu r))Æ
 );
 =TEX
+
+I originally thought that in this version of set theory with urelements, iteration of the type constructor would always create larger universes.
+However, I don't see anything which tells us that there is a set containing all the urelements, and it is therefore possible that the urelements have the same cardinality as the sets.
 
 \subsection{PowerSets and Union}
 
@@ -1115,8 +1120,8 @@ Each set is in its smallest enclosing galaxy, which is of course a galaxy and is
 
 =GFT
 €t_in_Gxâu_t_thm› =		Ù µ t∑ t çâu Gxâu t
-€tcçâu_Gxâu_thm› =			Ù µ t∑ t çâuõ+ Gxâu t
-€Setâu_Gxâu_thm› =	Ù µ x∑ Setâu (Gxâu x)
+€tcçâu_Gxâu_thm› =		Ù µ t∑ t çâuõ+ Gxâu t
+€Setâu_Gxâu_thm› =		Ù µ x∑ Setâu (Gxâu x)
 =TEX
 
 \ignore{
@@ -1210,7 +1215,7 @@ val galaxiesâu_transitive_thm = save_pop_thm "galaxiesâu_transitive_thm";
 }%ignore
 
 =GFT
-€GâuTrans_thm› =	Ù µ g∑ galaxyâu g ¥ (µ s t∑ s çâu g ± t çâu s ¥ t çâu g)
+€GâuTrans_thm› =		Ù µ g∑ galaxyâu g ¥ (µ s t∑ s çâu g ± t çâu s ¥ t çâu g)
 €GCloseâuâu_thm› =	Ù µ g∑ galaxyâu g ¥ (µ s∑ s çâu g ¥ âu s çâu g)
 €GCloseâuﬁ_thm› =	Ù µ g∑ galaxyâu g ¥ (µ s∑ s çâu g ¥ ﬁâu s çâu g)
 €GCloseâuSepâu_thm› =	Ù µ g∑ galaxyâu g ¥ (µs∑ s çâu g ¥ µp∑ Sepâu s p çâu g)
@@ -1312,6 +1317,7 @@ val GCloseâu_fc_clauses = save_pop_thm "GCloseâu_fc_clauses";
 =GFT
 €tcçâu_lemma› =		Ù µ s e∑ e çâuõ+ s ¥ (µ t∑ Transitiveâu t ± s Äâu t ¥ e çâu t)
 €GCloseâu_tcçâu_thm› =	Ù µ s g∑ galaxyâu g ¥ s çâuõ+ g ¥ s çâu g
+€GCloseâu_tcçâu_thm2› =   Ù µ t s g∑ galaxyâu g ± t çâu g ± s çâuõ+ t ¥ s çâu g
 =TEX
 
 \ignore{
@@ -1341,12 +1347,22 @@ a (fc_tac [tcçâu_lemma]);
 a (asm_fc_tac []);
 a (POP_ASM_T ante_tac THEN rewrite_tac[Äâu_refl_thm]);
 val GCloseâu_tcçâu_thm = save_pop_thm "GCloseâu_tcçâu_thm";
+
+set_goal([], ¨µt s g∑ galaxyâu g ± t çâu g ± s çâuõ+ t ¥ s çâu gÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨t çâuõ+ gÆ THEN1 fc_tac [tcçâu_incr_thm]);
+a (lemma_tac ¨s çâuõ+ gÆ THEN1 all_fc_tac [tcçâu_trans_thm]);
+a (all_fc_tac[GCloseâu_tcçâu_thm]);
+val GCloseâu_tcçâu_thm2 = save_pop_thm "GCloseâu_tcçâu_thm2";
 =TEX
 }%ignore
 
 =GFT
-€Gxâu_mono_thm› =	Ù µs t∑ s Äâu t ¥ Gxâu s Äâu Gxâu t
-€Gxâu_mono_thm2› =	Ù µs t∑ s çâu t ¥ Gxâu s Äâu Gxâu t
+€Gxâu_mono_thm› =		Ù µs t∑ s Äâu t ¥ Gxâu s Äâu Gxâu t
+€Gxâu_mono_thm2› =		Ù µs t∑ s çâu t ¥ Gxâu s Äâu Gxâu t
+€t_Subâu_Gxâu_t_thm› =	Ù µ t∑ t Äâu Gxâu t
+€Gxâu_mono_thm3› =		Ù µ s t∑ s Äâu t ¥ s Äâu Gxâu t
+€Gxâu_mono_thm4› =		Ù µ s t∑ Setâu s ± s Äâu t ¥ s çâu Gxâu t
 =TEX
 
 =GFT
@@ -1354,12 +1370,10 @@ val GCloseâu_tcçâu_thm = save_pop_thm "GCloseâu_tcçâu_thm";
 €Gxâu_trans_thm2› =	Ù µ s t∑ s çâu t ¥ s çâu Gxâu t
 €Gxâu_trans_thm3› =	Ù µ s t u∑ s çâu t ± t çâu Gxâu u ¥ s çâu Gxâu u
 €Gxâu_trans_thm4› =	Ù µ s t u∑ s çâuõ+ t ± t çâu Gxâu u ¥ s çâu Gxâu u
-€t_Subâu_Gxâu_t_thm› =	Ù µ t∑ t Äâu Gxâu t
+€Gxâu_trans_thm5› =	Ù µ s t u∑ s çâuõ+ t ¥ s çâu Gxâu t
 =TEX
 
 =GFT
-€Gxâu_mono_thm3› =	Ù µ s t∑ s Äâu t ¥ s Äâu Gxâu t
-€Gxâu_mono_thm4› =	Ù µ s t∑ Setâu s ± s Äâu t ¥ s çâu Gxâu t
 =TEX
 
 \ignore{
@@ -1437,6 +1451,13 @@ a (all_fc_tac [tcçâu_trans_thm]);
 a (lemma_tac ¨galaxyâu (Gxâu u)Æ THEN1 rewrite_tac[galaxyâu_Gxâu]);
 a (all_fc_tac [GCloseâu_tcçâu_thm]);
 val Gxâu_trans_thm4 = save_pop_thm "Gxâu_trans_thm4";
+
+set_goal([], ¨µs t u∑ s çâuõ+ t ¥ s çâu Gxâu tÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨galaxyâu (Gxâu t)Æ THEN1 rewrite_tac[galaxyâu_Gxâu]);
+a (strip_asm_tac (µ_elim ¨tÆ t_in_Gxâu_t_thm));
+a (all_fc_tac [Gxâu_trans_thm4]);
+val Gxâu_trans_thm5 = save_pop_thm "Gxâu_trans_thm5";
 =TEX
 }%ignore
 
@@ -1485,8 +1506,8 @@ val Xöâu_thm = prove_thm ("Xöâu_thm", ¨µx∑ ≥ x ç Xâu öâuÆ, PC_T1 "hol1" rewrite_
 
 val Setâu_öâu_thm = ±_left_elim öâu_def;
 
-add_rw_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
-add_sc_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu] "'gsu-ax";
+add_rw_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu, Setâu_Gxâu_thm] "'gsu-ax";
+add_sc_thms [öâu_thm, Xöâu_thm, Setâu_öâu_thm, galaxyâu_Gxâu, Setâu_Gxâu_thm] "'gsu-ax";
 set_merge_pcs ["basic_hol", "'gsu-ax"];
 
 set_goal([],¨µg:'a GSU∑ galaxyâu g ¥ öâu çâu gÆ);
@@ -1580,6 +1601,8 @@ $¨Imagepâu\ f\ sÆ$ is the image of $s$ through $f$.
 ‹ µf s∑ Setâu(Imagepâu f s) ± µx∑ x çâu Imagepâu f s § ∂e∑ e çâu s ± x = f e
 ∞
 
+This is what computer scientists might call Map.
+
 \ignore{
 =SML
 val Imagepâu_def = get_spec ¨ImagepâuÆ;
@@ -1601,6 +1624,9 @@ We now show that galaxies are closed under $Imagepâu$.
 =GFT
 €GImagepâuC› =	Ù µg∑ galaxyâu g ¥ µs∑ s çâu g
 				¥ µf∑ Imagepâu f s Äâu g ¥ Imagepâu f s çâu g
+€GImagepâuC2› =	Ù µ s t∑ s çâu Gxâu t ¥ (µ f∑ Imagepâu f s Äâu Gxâu t
+				¥ Imagepâu f s çâu Gxâu t)
+€GImagepâuC3› = Ù µ f s t∑ s çâu Gxâu t ¥ Imagepâu f s Äâu Gxâu t ¥ Imagepâu f s çâu Gxâu t
 =TEX
 
 \ignore{
@@ -1627,6 +1653,21 @@ a (fc_tac[get_spec ¨galaxyâuÆ]);
 a (list_spec_nth_asm_tac 5 [¨sÆ,¨frÆ]
 	THEN asm_rewrite_tac[]);
 val GImagepâuC = save_pop_thm "GImagepâuC";
+
+set_goal([],¨µs t∑ s çâu Gxâu t
+	¥ µf∑ Imagepâu f s Äâu Gxâu t
+	¥ Imagepâu f s çâu Gxâu tÆ);
+a (REPEAT strip_tac);
+a (lemma_tac ¨galaxyâu (Gxâu t)Æ THEN1 rewrite_tac[galaxyâu_Gxâu]);
+a (strip_asm_tac (µ_elim ¨Gxâu tÆ GImagepâuC));
+a (all_asm_fc_tac[]);
+val GImagepâuC2 = save_pop_thm "GImagepâuC2";
+
+set_goal([],¨µf s t∑ s çâu Gxâu t
+	¥ Imagepâu f s Äâu Gxâu t
+	¥ Imagepâu f s çâu Gxâu tÆ);
+a (REPEAT strip_tac THEN all_fc_tac[GImagepâuC2]);
+val GImagepâuC3 = save_pop_thm "GImagepâuC3";
 =TEX
 }%ignore
 
@@ -2160,8 +2201,6 @@ val not_x_çâu_x_thm = save_pop_thm "not_x_çâu_x_thm";
 =TEX
 }%ignore
 
-
-
 \subsection{Galaxy Closure Clauses}
 
 =GFT
@@ -2207,6 +2246,37 @@ val tcçâu_clauses = save_pop_thm "tcçâu_clauses";
 }%ignore
 
 
+\subsection{Set Clauses}
+
+For the application of the principle of extensionality we need to know that the expressions on either side of the equality are sets.
+
+The following theorem is useful in automating the proofs.
+
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx y r p f∑
+		Setâu (âu x)
+	±	Setâu (ﬁâu x)
+	±	Setâu (RelImâu r x)
+	±	Setâu (Sepâu x p)
+	±	Setâu (Gxâu x)
+	±	Setâu (öâu)
+	±	Setâu (Imagepâu f y)
+	±	Setâu (Pairâu x y)
+	±	Setâu (Unitâu x)
+	±	Setâu (x ¿âu y)
+	±	Setâu (•âu x)
+	±	Setâu (x °âu y)
+Æ);
+a (rewrite_tac[]);
+val Setâu_clauses = save_pop_thm "Setâu_clauses";
+=TEX
+}%ignore
+
 \subsection{Proof Context}
 
 To simplify Subsequent proofs a new "proof context" is created enabling automatic use of the results now available.
@@ -2228,7 +2298,7 @@ val gsu_ax_thms = [
 	öâu_thm,
 	get_spec ¨âuÆ,
 	ﬁâu_def,
-	Imagepâu_thm,
+	Imagepâu_def,
 	Pairâu_eq_thm,
 	Pairâu_def,
 	Unitâu_eq_thm,
@@ -2266,6 +2336,160 @@ save_thm ("gsu_relext_clauses", gsu_relext_clauses);
 
 There are a number of important theorems, such as well-foundedness and galaxy closure which have not been mentioned in this context.
 The character of these theorems makes them unsuitable for the proof context, their application requires thought.
+
+\subsection{Recursion Theorem}
+
+To facilitate definition by transfinite induction induction theorems are required which permit various kinds of inductive definition to be proven consistent automatically.
+
+Certain practices in the presentation of inductive definitions facilitate such proofs.
+In general, rather than referring directly in the body of such a definition to the function being defined, it is desirable to refer to restricted version of the function obtained by restricting the function to some domain related to the argument of the function by a relationship which is well-founded.
+
+The simplest case of this is to restrict the function to the transitive closure of set it is applied to, and this is the one we address first.
+This is 
+
+To do this we need an operator to restrict a function over sets to a domain determined by some set.
+
+=SML
+declare_infix (300, "Úçõ+âu");
+=TEX
+
+πHOLCONST
+‹ $€Úçõ+âu› : 'a GSU ≠ ('a GSU ≠ 'b) ≠ ('a GSU ≠ 'b)
+˜
+‹ µs f∑ s Úçõ+âu f = Ãx∑ if x çâuõ+ s then f x else ≈y∑T
+∞
+
+
+To get a recursion theorem we prove first that the functional used in the theorem respects the ordering by membership.
+
+=GFT
+€Útcçâu_respects_çâu_thm› =
+   Ù µ af∑ (Ã f x∑ af (x Úçõ+âu f) x) respects $çâu
+
+€Imagepâu_respects_çâu_thm› =
+   Ù µ af∑ (Ã f x∑ af (Imagepâu f x) x) respects $çâu
+=TEX
+
+The automatic existence proof facility is geared to working with functions over recursive datatypes with constructor functions, and though we don't really want a constructor for this application, it won't work without one.
+So we use \emph{CombI}, which is an identity function, as a dummy constructor to trigger the consistency proof.
+
+=GFT
+€Útcçâu_recursion_thm› =
+   Ù µ af∑ ∂ f∑ µ x∑ f (CombI x) = af (x Úçõ+âu f) x
+
+€Imagepâu_recursion_thm› =
+   Ù µ af∑ ∂ f∑ µ x∑ f (CombI x) = af (Imagepâu f x) x
+=TEX
+
+\ignore{
+=SML
+val Útcçâu_def = get_spec ¨$Úçõ+âuÆ;
+
+set_goal([], ¨µaf∑ (Ã(f:'a GSU ≠ 'b) x∑ af (x Úçõ+âu f) x) respects $çâuÆ);
+a (rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac);
+a (LEMMA_T ¨x Úçõ+âu g = x Úçõ+âu hÆ rewrite_thm_tac);
+a (rewrite_tac [Útcçâu_def, ext_thm] THEN strip_tac);
+a (cond_cases_tac ¨x' çâuõ+ xÆ THEN REPEAT strip_tac);
+a (POP_ASM_T (asm_tac o (rewrite_rule [get_spec ¨$çâuõ+Æ])));
+a (ALL_ASM_FC_T (MAP_EVERY rewrite_thm_tac) []);
+val Útcçâu_respects_çâu_thm = save_pop_thm "Útcçâu_respects_çâu_thm";
+
+set_goal([], ¨µaf∑ ∂f:'a GSU ≠ 'b∑ µx∑ f (CombI x) = af (x Úçõ+âu f) xÆ);
+a (REPEAT strip_tac THEN rewrite_tac[get_spec ¨CombIÆ]);
+a (∂_tac ¨fix (Ãf x∑ af (x Úçõ+âu f) x)Æ);
+a (asm_tac Útcçâu_respects_çâu_thm);
+a (asm_tac gsu_wf_thm1);
+a (spec_nth_asm_tac 2 ¨afÆ);
+a (all_fc_tac [get_spec ¨fixÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[ext_thm]);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac []);
+val Útcçâu_recursion_thm = save_pop_thm "Útcçâu_recursion_thm";
+
+set_goal([], ¨µaf∑ (Ãf x∑ af (Imagepâu f x) x) respects $çâuÆ);
+a (rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac);
+a (LEMMA_T ¨Imagepâu g x = Imagepâu h xÆ rewrite_thm_tac);
+a (gsu_ext_tac THEN rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (ASM_FC_T (MAP_EVERY (asm_tac o (rewrite_rule [get_spec ¨$çâuõ+Æ]))) [tcçâu_incr_thm] );
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+a (ASM_FC_T (MAP_EVERY (asm_tac o (rewrite_rule [get_spec ¨$çâuõ+Æ]))) [tcçâu_incr_thm] );
+a (asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+val Imagepâu_respects_çâu_thm = save_pop_thm "Imagepâu_respects_çâu_thm";
+
+set_goal([], ¨µaf∑ ∂f∑ µx∑ f (CombI x) = af (Imagepâu f x) xÆ);
+a (REPEAT strip_tac THEN_TRY rewrite_tac[get_spec ¨CombIÆ]);
+a (∂_tac ¨fix (Ãf x∑ af (Imagepâu f x) x)Æ);
+a (asm_tac Imagepâu_respects_çâu_thm);
+a (asm_tac gsu_wf_thm1);
+a (spec_nth_asm_tac 2 ¨afÆ);
+a (all_fc_tac [get_spec ¨fixÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[ext_thm]);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac []);
+val Imagepâu_recursion_thm = save_pop_thm "Imagepâu_recursion_thm";
+
+set_goal([], ¨µaf∑ ∂f∑ µx∑ f x = af (Imagepâu f x) xÆ);
+a (REPEAT strip_tac THEN_TRY rewrite_tac[get_spec ¨CombIÆ]);
+a (∂_tac ¨fix (Ãf x∑ af (Imagepâu f x) x)Æ);
+a (asm_tac Imagepâu_respects_çâu_thm);
+a (asm_tac gsu_wf_thm1);
+a (spec_nth_asm_tac 2 ¨afÆ);
+a (all_fc_tac [get_spec ¨fixÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[ext_thm]);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac []);
+val Imagepâu_recursion_thm2 = save_pop_thm "Imagepâu_recursion_thm2";
+=TEX
+}%ignore
+
+Now we plug in the recursion theorems for use in automatic consistency proofs.
+
+=SML
+add_∂_cd_thms [Imagepâu_recursion_thm, Útcçâu_recursion_thm] "'gsu-ax";
+set_merge_pcs ["basic_hol", "'gsu-ax"];
+
+local val CombI_def = get_spec ¨CombIÆ
+in
+fun CombI_prove_∂_rule tm =
+	let val tmthm = basic_prove_∂_rule tm
+	in rewrite_rule [CombI_def] tmthm
+	end
+end;
+
+stop;
+
+=IGN
+val (_,_,_,_,rbjthm1) = evaluate_%exists%_cd_thm Útcçâu_recursion_thm;
+val (_,_,_,_,rbjthm2) = evaluate_%exists%_cd_thm Imagepâu_recursion_thm;
+val (_,_,_,_,rbjthm3) = evaluate_%exists%_cd_thm Imagepâu_recursion_thm2;
+CombI_prove_∂_rule
+	¨∂Rank5âu∑ µx y∑ Rank5âu y (CombI x)
+	= Sucâv(x Úçõ+âu (Rank5âu y)) (ﬁâu x)Æ;
+
+get_cs_∂_convs "'gsu-ax";
+
+CombI_prove_∂_rule ¨∂Rank5âu∑ µx∑ Rank5âu (CombI x)
+	= Ssucâu((x Úçõ+âu Rank5âu) (ﬁâu x))Æ;
+
+CombI_prove_∂_rule ¨∂Rank5âu∑ µx∑ Rank5âu (CombI x) = Sucâu(Imagepâu Rank5âu x)Æ;
+
+prove_∂_conv ¨P x ¥ ∂ f∑ P fÆ;
+
+fun rt_conv rt =
+	let val (_,_,_,_,et) = evaluate_∂_cd_thm rt
+	in simple_∂_cd_thm_conv et
+	end ;
+
+rt_conv Imagepâu_recursion_thm ¨∂Rank5âu∑ µx∑ Rank5âu (CombI x) = Sucâu(Imagepâu Rank5âu x)Æ;
+=TEX
 
 \subsubsection{Automatic Proof}
 
@@ -2347,6 +2571,7 @@ a (prove_tac[]);
 a contr_tac;
 Sepâu_thm;
 =TEX
+
 
 \section{Products and Sums}
 
@@ -2529,6 +2754,26 @@ a (all_fc_tac[tcçâu_trans_thm]);
 val tcçâu_Ìâu_right_thm = save_pop_thm "tcçâu_Ìâu_right_thm";
 =TEX
 
+
+=GFT
+€Ìâu_tc_thm› =	Ù µ x y∑ tc $çâu x (x Ìâu y) ± tc $çâu y (x Ìâu y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µx y∑ tc $çâu x (x Ìâu y) ± tc $çâu y (x Ìâu y)Æ);
+a (REPEAT µ_tac);
+a (LEMMA_T ¨Pairâu x y çâu (x Ìâu y) ± x çâu Pairâu x y ± y çâu Pairâu x yÆ
+	(REPEAT_TTCL ±_THEN asm_tac)
+	THEN1 (rewrite_tac [Ìâu_spec_thm, Pairâu_çâu_thm]
+		THEN all_var_elim_asm_tac));
+a (fc_tac [tc_incr_thm]);
+a (all_fc_tac [tran_tc_thm2]
+	THEN asm_rewrite_tac[]);
+val Ìâu_tc_thm = save_pop_thm "Ìâu_tc_thm";
+=TEX
+
+
 =SML
 add_pc_thms "'gsu-fun" [≥Ìâuöâu_thm, ≥öâuÌâu_thm];
 add_rw_thms [Ìâu_çâu_Gxâu_Pairâu_thm, tcçâu_Ìâu_left_thm, tcçâu_Ìâu_right_thm] "'gsu-fun";
@@ -2575,22 +2820,17 @@ save_cs_∂_thm (pop_thm ());
 ∞
 
 =GFT
-€Ìâu_tc_thm› =	Ù µ x y∑ tc $çâu x (x Ìâu y) ± tc $çâu y (x Ìâu y)
 =TEX
 
 \ignore{
 =SML
-set_goal([], ¨µx y∑ tc $çâu x (x Ìâu y) ± tc $çâu y (x Ìâu y)Æ);
-a (REPEAT µ_tac);
-a (LEMMA_T ¨Pairâu x y çâu (x Ìâu y) ± x çâu Pairâu x y ± y çâu Pairâu x yÆ
-	(REPEAT_TTCL ±_THEN asm_tac)
-	THEN1 (rewrite_tac [Ìâu_spec_thm, Pairâu_çâu_thm]
-		THEN all_var_elim_asm_tac));
-a (fc_tac [tc_incr_thm]);
-a (all_fc_tac [tran_tc_thm2]
-	THEN asm_rewrite_tac[]);
-val Ìâu_tc_thm = save_pop_thm "Ìâu_tc_thm";
+set_goal([], ¨µs t g∑ galaxy g ± s Ìâu t ç g ¥ s ç g ± t ç gÆ);
+
 =TEX
+}%ignore
+
+
+
 
 =SML
 add_pc_thms "'gsu-fun" [get_spec ¨FstâuÆ];
@@ -2896,10 +3136,71 @@ val tcçâu_Ranâu_thm = save_pop_thm "tcçâu_Ranâu_thm";
 =TEX
 }%ignore
 
+The following function maps a HOL function over the range of a GSU function, returning in effect the composition of the two functions.
+Its primary use is likely to be with sequences, for which it can be used to systematically transform all the elements of the sequence, but its definitiom is not specific to sequences so it is included here.
+
+πHOLCONST
+‹ €RanMapâu›: ('a GSU ≠ 'a GSU) ≠ 'a GSU ≠ 'a GSU
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹	µf s∑ RanMapâu f s = Imagepâu (Ãe∑ Fstâu e Ìâu f (Sndâu e)) s
+∞
+
+RanMap does preserves the domain of a relation.
+
+=GFT
+€Domâu_RanMapâu_thm› =	Ù µ f r∑ Relâu r ¥ Domâu (RanMapâu f r) = Domâu r
+=TEX
+
 \ignore{
 =SML
-set_goal([],¨∂Fieldâu∑ µs e∑
-e çâu (Fieldâu s) § e çâu (Domâu s) ≤ e çâu (Ranâu s)Æ);
+val RanMapâu_def = get_spec ¨RanMapâuÆ;
+
+set_goal([], ¨µf r∑ Relâu r ¥ Domâu (RanMapâu f r) = Domâu rÆ);
+a (REPEAT strip_tac THEN rewrite_tac [RanMapâu_def, Domâu_def]);
+a (gsu_ext_tac THEN_TRY rewrite_tac[] THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (fc_tac [Relâu_def]);
+a (asm_fc_tac []);
+a (var_elim_asm_tac ¨e' = s Ìâu tÆ);
+a (rewrite_tac[]);
+a (lemma_tac ¨galaxyâu (Gxâu r)Æ THEN1 rewrite_tac[galaxyâu_Gxâu]);
+a (lemma_tac ¨r çâu Gxâu rÆ THEN1 rewrite_tac[t_in_Gxâu_t_thm]);
+a (lemma_tac ¨s çâuõ+ s Ìâu tÆ THEN1 rewrite_tac[tcçâu_Ìâu_right_thm]);
+a (lemma_tac ¨s Ìâu t çâuõ+ rÆ THEN1 fc_tac [tcçâu_incr_thm]);
+a (lemma_tac ¨s çâuõ+ rÆ THEN1 all_fc_tac [tcçâu_trans_thm]);
+a (lemma_tac ¨r çâuõ+ Gxâu rÆ THEN1 fc_tac [tcçâu_incr_thm]);
+a (lemma_tac ¨s çâuõ+ Gxâu rÆ THEN1 all_fc_tac [tcçâu_trans_thm]);
+a (all_fc_tac [GCloseâu_tcçâu_thm]);
+(* *** Goal "2" *** *)
+a (fc_tac [Relâu_def]);
+a (asm_fc_tac []);
+a (var_elim_asm_tac ¨e' = s Ìâu tÆ);
+a (∂_tac ¨tÆ THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (lemma_tac ¨e Ìâu f v çâu (Imagepâu (Ã e∑ Fstâu e Ìâu f (Sndâu e)) r)Æ );
+(* *** Goal "3.1" *** *)
+a (rewrite_tac [Imagepâu_def] THEN REPEAT strip_tac);
+a (∂_tac ¨e Ìâu vÆ THEN asm_rewrite_tac[]);
+(* *** Goal "3.2" *** *)
+a (LEMMA_T ¨e çâuõ+ Imagepâu (Ã e∑ Fstâu e Ìâu f (Sndâu e)) rÆ asm_tac);
+(* *** Goal "3.2.1" *** *)
+a (LEMMA_T ¨e Ìâu f v çâu Imagepâu (Ã e∑ Fstâu e Ìâu f (Sndâu e)) rÆ asm_tac);
+(* *** Goal "3.2.1.1" *** *)
+a (rewrite_tac [Imagepâu_def] THEN REPEAT strip_tac);
+a (∂_tac ¨e Ìâu vÆ THEN asm_rewrite_tac[]);
+(* *** Goal "3.2.1.2" *** *)
+a (lemma_tac ¨e çâuõ+ e Ìâu f vÆ THEN1 rewrite_tac[tcçâu_Ìâu_left_thm]);
+a (lemma_tac ¨e Ìâu f v çâuõ+ Imagepâu (Ã e∑ Fstâu e Ìâu f (Sndâu e)) rÆ
+	THEN1 all_fc_tac [tcçâu_incr_thm]);
+a (all_fc_tac [tcçâu_trans_thm]);
+(* *** Goal "3.2.2" *** *)
+a (all_fc_tac [Gxâu_trans_thm5]);
+(* *** Goal "4" *** *)
+a (∂_tac ¨f vÆ THEN ∂_tac ¨e Ìâu vÆ THEN_TRY asm_rewrite_tac[]);
+val Domâu_RanMapâu_thm = save_pop_thm "Domâu_RanMapâu_thm";
+
+set_goal([],¨∂Fieldâu∑ µs e∑ e çâu (Fieldâu s) § e çâu (Domâu s) ≤ e çâu (Ranâu s)Æ);
 a (∂_tac ¨Ãx∑ (Domâu x) ¿âu (Ranâu x)Æ);
 a (prove_tac[]);
 save_cs_∂_thm (pop_thm ());
@@ -3040,7 +3341,7 @@ add_sc_thms [SetâuRel2DepTypeâu_thm] "'gsu-fun";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-fun"];
 
 =IGN
-stop;
+
 set_goal([], ¨µr e∑ Relâu r ¥
 	(e çâu Rel2DepTypeâu r
 	§ ∂i t:'a GSU∑ e = i Ìâu t
@@ -3072,7 +3373,9 @@ a (SYM_ASMS_T ufc_tac);
 a (lemma_tac ¨Ranâu r çâu Gxâu rÆ THEN1 all_fc_tac [GCloseâu_Ranâu_thm]);
 a (lemma_tac ¨Sepâu (Ranâu r) (Ã j∑ i Ìâu j çâu r) çâu Gxâu rÆ
 	THEN1 (ALL_FC_T  rewrite_tac[GCloseâu_fc_clauses]));
-stop;
+
+ =========
+
 a (lemma_tac ¨Æ THEN1 fc_tac [tcçâu_incr_thm]);
 
 
@@ -3149,7 +3452,6 @@ add_sc_thms [SetâuDepSumâu_thm] "'gsu-fun";
 set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-fun"];
 
 =IGN
-stop;
 
 set_goal([], ¨µr∑ Relâu r ¥ DepSumâu (Rel2DepTypeâu r) = rÆ);
 a (REPEAT strip_tac THEN rewrite_tac (map get_spec [¨DepSumâuÆ, ¨Rel2DepTypeâuÆ]));
@@ -3288,7 +3590,6 @@ set_merge_pcs ["basic_hol", "'gsu-ax", "'gsu-fun"];
 
 \ignore{
 =IGN
-stop;
 
 set_goal([], ¨s ∏âu t çâu = {z | }Æ);
 
@@ -3531,16 +3832,18 @@ val Funâu_def = get_spec ¨FunâuÆ;
 \subsubsection{lemmas}
 
 =GFT
-Funâu_öâu_thm =
+€Funâu_öâu_thm› =
 	Ù Funâu öâu
-oâu_Funâu_thm =
+€oâu_Funâu_thm› =
 	Ù µ f g∑ Funâu f ± Funâu g ¥ Funâu (f oâu g)
-Ranâu_oâu_thm =
+€Ranâu_oâu_thm› =
 	Ù µ f g∑ Ranâu (f oâu g) Äâu Ranâu f
-Domâu_oâu_thm =
+€Domâu_oâu_thm› =
 	Ù µ f g∑ Domâu (f oâu g) Äâu Domâu g
-Domâu_oâu_thm2 =
+€Domâu_oâu_thm2› =
 	Ù µ f g∑ Ranâu g Äâu Domâu f ¥ Domâu (f oâu g) = Domâu g
+€Funâu_RanMapâu_thm› =
+	Ù µ f g∑ Funâu g ¥ Funâu (RanMapâu f g)
 =TEX
 \ignore{
 =SML
@@ -3585,10 +3888,30 @@ a (spec_nth_asm_tac 1 ¨eÆ);
 (* *** Goal "2.2" *** *)
 a (∂_tac ¨x'Æ THEN ∂_tac ¨xÆ THEN asm_rewrite_tac[]);
 val Domâu_oâu_thm2 = save_pop_thm "Domâu_oâu_thm2";
+
+set_goal([], ¨µ f g∑ Funâu g ¥ Funâu (RanMapâu f g)Æ);
+a (rewrite_tac [Funâu_def, RanMapâu_def, Relâu_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨Fstâu eÆ THEN ∂_tac ¨f(Sndâu e)Æ THEN strip_tac);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+a (var_elim_nth_asm_tac 1);
+a (var_elim_nth_asm_tac 1);
+a (lemma_tac ¨Fstâu (s'' Ìâu t'') = Fstâu (s' Ìâu t')Æ
+	THEN1 rewrite_tac[eq_sym_rule (asm_rule ¨s = Fstâu (s'' Ìâu t'')Æ),
+			eq_sym_rule (asm_rule ¨s = Fstâu (s' Ìâu t')Æ)]);
+a (POP_ASM_T ante_tac);
+a (rewrite_tac[] THEN strip_tac);
+a (var_elim_asm_tac ¨s'' = s'Æ);
+a (all_asm_fc_tac[]);
+a (asm_rewrite_tac[]);
+a (var_elim_asm_tac ¨t'' = t'Æ);
+a (var_elim_asm_tac ¨t' = t'''Æ);
+a (asm_rewrite_tac[]);
+val Funâu_RanMapâu_thm = save_pop_thm "Funâu_RanMapâu_thm";
 =TEX
 }%ignore
-
-
 
 \subsubsection{Partial Function Space}
 
@@ -3774,6 +4097,7 @@ oâu_âu_thm =
 =TEX
 \ignore{
 =SML
+val lambdaâu_def = get_spec ¨$ÃâuÆ;
 
 set_goal([],¨µf x∑ (∂â1y∑ x Ìâu y çâu f)
 	¥ x Ìâu (f âu x) çâu fÆ);
@@ -5173,8 +5497,12 @@ The operand here is intended to be an arbitrary set of ordinals and the result i
 ∞
 
 =GFT
-€Ordinalâu_Ssupâu_thm› =
+€Ssupâu_Ordinalâu_thm› =
 	Ù µ ¡∑ (µ ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ Ordinalâu (Ssupâu ¡)
+€Ssupâu_çâu_thm› =
+   Ù µ ¡∑ (µ ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ (µ ¬∑ ¬ çâu ¡ ¥ ¬ çâu Ssupâu ¡)
+€Ssupâu_ltâu_thm› = Ù µ ¡∑ (µ ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ (µ ¬∑ ¬ çâu ¡ ¥ ¬ <âu Ssupâu ¡)
+€Ssupâu_Subâu_thm› = Ù µ ¡∑ (µ ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ ¡ Subâu Ssupâu ¡
 =TEX
 
 \ignore{
@@ -5192,17 +5520,36 @@ a (once_asm_rewrite_tac[]);
 a strip_tac;
 (* *** Goal "2" *** *)
 a (fc_tac [Ordinalâu_limit_thm]);
-val Ordinalâu_Ssupâu_thm = save_pop_thm "Ordinalâu_Ssupâu_thm";
+val Ssupâu_Ordinalâu_thm = save_pop_thm "Ssupâu_Ordinalâu_thm";
+
+set_goal ([], ¨µ¡∑ (µ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ (µ¬∑ ¬ çâu ¡ ¥ ¬ çâu (Ssupâu ¡))Æ);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨SsupâuÆ] THEN REPEAT strip_tac);
+a (∂_tac ¨Sucâu ¬Æ THEN rewrite_tac [Sucâu_def]);
+a (∂_tac ¨¬Æ THEN asm_rewrite_tac [Sucâu_def]);
+val Ssupâu_çâu_thm = save_pop_thm "Ssupâu_çâu_thm";
+
+set_goal ([], ¨µ¡∑ (µ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥ (µ¬∑ ¬ çâu ¡ ¥ ¬ <âu (Ssupâu ¡))Æ);
+a (REPEAT strip_tac);
+a (rewrite_tac [get_spec ¨$<âuÆ]
+	THEN_TRY all_asm_fc_tac [Ssupâu_Ordinalâu_thm, Ssupâu_çâu_thm]
+	THEN_TRY asm_rewrite_tac[]);
+val Ssupâu_ltâu_thm = save_pop_thm "Ssupâu_ltâu_thm";
+
+set_goal ([], ¨µ¡∑ (µ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬) ¥  ¡ Subâu (Ssupâu ¡)Æ);
+a (rewrite_tac [get_spec ¨$SubâuÆ] THEN REPEAT strip_tac
+	THEN_TRY all_asm_fc_tac [Ssupâu_ltâu_thm]);
+val Ssupâu_Subâu_thm = save_pop_thm "Ssupâu_Subâu_thm";
 
 =IGN
-stop;
+
 set_goal([], ¨µ¡∑ (µ¬∑ ¬ çâu ¡ ¥ Ordinalâu ¬)
 	¥ ¡ Subâu (Ssupâu ¡) ± µ«∑ Ordinalâu « ± ¡ Subâu « ¥ (Supâu ¡) ºâu «Æ);
 a (rewrite_tac (map get_spec [¨$SubâuÆ])
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
-a (fc_tac[Ordinalâu_Ssupâu_thm]);
+a (fc_tac[Ssupâu_Ordinalâu_thm]);
 a (fc_tac[]);
 
 
@@ -5271,16 +5618,10 @@ val _ = save_cs_∂_thm (pop_thm());
 }%ignore
 
 πHOLCONST
- €Rankâu› : 'a GSU ≠ 'a GSU
+‹ €Rankâu› : 'a GSU ≠ 'a GSU
 ˜
-  µx∑ Rankâu x = ﬁâu (Imagepâu (Sucâu o Rankâu) x)
+‹  µx∑ Rankâu x = ﬁâu (Imagepâu (Sucâu o Rankâu) x)
 ∞
-
-\subsection{Recursion Theorem}
-
-
-
-
 
 \subsection{Ordinal Arithmetic}
 
@@ -5346,6 +5687,16 @@ a (spec_nth_asm_tac 2 ¨¡Æ);
 a (POP_ASM_T (asm_tac o (rewrite_rule[ext_thm])));
 a (SYM_ASMS_T rewrite_tac);
 save_cs_∂_thm (pop_thm());
+
+stop;
+
+CombI_prove_∂_rule ¨
+	∂Rank5âu∑ µx y∑ Rank5âu y (CombI x)
+	= Sucâv(x Úçõ+âu (Rank5âu y)) (ﬁâu x)Æ;
+
+CombI_prove_∂_rule ¨
+	∂$+âu∑ µ¡ ¬∑ ¡ +âu (CombI ¬)
+	= Ssupâu (Imagepâu ($+âu ¡) ¬)Æ;
 =TEX
 }%ignore
 
@@ -5362,6 +5713,8 @@ ordâu_plus_thm =
 
 \ignore{
 =SML
+val plusâu_def = get_spec ¨$+âuÆ;
+
 set_goal ([], ¨µ¡ ¬∑ Ordinalâu ¡ ± Ordinalâu ¬ ¥ Ordinalâu (¡ +âu ¬)Æ);
 a (REPEAT µ_tac);
 a (wf_induction_tac gsu_wf_thm1 ¨¬Æ);
@@ -5383,12 +5736,12 @@ a (fc_tac[ordâu_memâu_ord]);
 a (spec_nth_asm_tac 1 ¨eÆ);
 a (spec_nth_asm_tac 6 ¨eÆ);
 (* *** Goal "2.2" *** *)
-a (fc_tac[Ordinalâu_Ssupâu_thm]);
+a (fc_tac[Ssupâu_Ordinalâu_thm]);
 val ordâu_plus_thm = save_pop_thm "ordâu_plus_thm";
-=IGN
-stop;
-set_goal ([], ¨µ¡ ¬∑ Ordinalâu ¡ ± Ordinalâu ¬ ¥ ¡ +âu ¬ = ﬁâu {« | ∂»∑ » <âu ¬ ± « = Sucâu(¡ +âu »)}Æ);
 
+=IGN
+
+set_goal ([], ¨µ¡ ¬∑ Ordinalâu ¡ ± Ordinalâu ¬ ¥ ¡ +âu ¬ = ﬁâu {« | ∂»∑ » <âu ¬ ± « = Sucâu(¡ +âu »)}Æ);
 
 
 set_goal ([], ¨µ¡∑ Ordinalâu ¡ ¥ öâu +âu ¡ = ¡Æ);
@@ -5445,7 +5798,7 @@ a (lemma_tac ¨Sucâu o $+âu öâu = öâuÆ);
 
 The following definition is of reverse subtraction, i.e. the right operand is subtracted from the left and is taken from the left of that operand so that the following lemma (as yet unproven) obtains:
 
-=GFT
+=GFT desideratum
 €--âu_lemma› =
 	µ¡ ¬∑ ¡ ºâu ¬ ¥ ¡ +âu (¬ --âu ¡) = ¬
 =TEX
@@ -5906,8 +6259,12 @@ A sequence is a function whose domain is an ordinal.
 πHOLCONST
 ‹ €Seqâu›: 'a GSU ≠ BOOL
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹       µs∑ Seqâu s § Ordinalâu(Domâu s)
+‹       µs∑ Seqâu s § Funâu s ± Ordinalâu(Domâu s)
 ∞
+
+\subsubsection{Operations on Sequences}
+
+A few operations over sequences are defined here, without proving any of their properties (which will be done as and when needed).
 
 πHOLCONST
 ‹ €Headâu›: 'a GSU ≠ 'a GSU
@@ -5942,14 +6299,36 @@ declare_infix(300,"@âu");
 πHOLCONST
 ‹ $€@âu›: 'a GSU ≠ 'a GSU ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
-‹       µs t∑ s @âu t =
-		(Ãâu ¡∑
-			if ¡ çâu (Domâu s)
-			then s âu ¡
-			else t âu (¡ --âu (Domâu s)))
-		((Domâu s) +âu (Domâu t))
+‹       µs t∑ s @âu t = s ¿âu
+‹		(Imagepâu (Ãp∑ (Fstâu p) +âu (Domâu s) Ìâu Sndâu p) t)
 ∞
 
+
+=GFT
+=TEX
+
+\ignore{
+=IGN
+val app_def = get_spec ¨$@âuÆ;
+
+set_goal([], ¨µs t u∑ Seqâu s ± Seqâu t ± Seqâu t
+		¥ (s @âu t) @âu u = s @âu t @âu uÆ);
+a (rewrite_tac[app_def] THEN REPEAT strip_tac);
+a (gsu_ext_tac THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (∂_tac ¨e'Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨(Ã p∑ Fstâu p +âu Domâu t Ìâu Sndâu p) e'Æ THEN asm_rewrite_tac[]);
+a (LEMMA_T ¨∂ e
+               ∑ e çâu u
+                   ± (Ã p∑ Fstâu p +âu Domâu t Ìâu Sndâu p) e'
+                     = (Ã p∑ Fstâu p +âu Domâu t Ìâu Sndâu p) eÆ
+	 rewrite_thm_tac
+	THEN1 (∂_tac ¨e'Æ THEN asm_rewrite_tac[])); 
+
+a (rewrite_tac[lambdaâu_def]);
+=TEX
+}%ignore
 
 πHOLCONST
 ‹ €UnitSeqâu›: 'a GSU ≠ 'a GSU
@@ -5969,6 +6348,42 @@ declare_infix(300,"@âu");
 ‹       SeqDispâu [] = öâu
 ‹ ±	µe s∑ SeqDispâu	(Cons e s) = SeqConsâu e (SeqDispâu s)
 ∞
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+
+=TEX
+}%ignore
+
+\subsubsection{Mapping Functions over Sequences}
+
+A function can be mapped over a sequence using $RanMapâu$, so we don't need to define a sequence map operator.
+We probably will need to know that the result of mapping something over a sequence is another sequence of the same length.
+We already know that mapping over a relation preserves the domain of the relation, so this is trivial.
+
+=GFT
+€Seqâu_RanMapâu_thm› = Ù µ f s∑ Seqâu s ¥ Seqâu (RanMapâu f s)
+=TEX
+
+\ignore{
+=SML
+val Seqâu_def = get_spec ¨SeqâuÆ;
+
+set_goal([], ¨µf s∑ Seqâu s ¥ Seqâu (RanMapâu f s)Æ);
+a (rewrite_tac[Seqâu_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_asm_fc_tac [Funâu_RanMapâu_thm] THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac [Funâu_def]);
+a (all_asm_fc_tac [Domâu_RanMapâu_thm] THEN asm_rewrite_tac[]);
+val Seqâu_RanMapâu_thm = save_pop_thm "Seqâu_RanMapâu_thm";
+=TEX
+}%ignore
+
+
 
 \subsubsection{Proof Context}
 

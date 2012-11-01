@@ -3,9 +3,9 @@
 =VDUMP t041i.tex
 \hypersetup{pdfkeywords=RogerBishopJones}
 
-Last Change $ $Date: 2012/04/25 18:44:36 $ $
+Last Change $ $Date: 2012/11/01 15:59:57 $ $
 
-$ $Id: t041.doc,v 1.15 2012/04/25 18:44:36 rbj Exp $ $
+$ $Id: t041.doc,v 1.16 2012/11/01 15:59:57 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -35,6 +35,7 @@ The systems of type assignments I am interested in have the following features:
 \item Dependent product and sum (function and pair) types.
 \item A heirarchy of `Universes' (but since we have an absolute universe I will probably follow GSU in calling them galaxies), not all well-founded, each closed under dependent type constructions (this has the effect of power set and replacement).
 \item A well-founded part in which classical mathematics can be conducted in the normal way (i.e. getting the theories isomorphic to the standard classical versions), and which admits arbitrarily risky axiomatic extensions analogous to (possibly even identical to) large cardinal axioms (with no greater risk here than in ZFC).
+The well founded part is the union of iterated galaxy construction over the empty set.
 \end{itemize}
 
 The difficult question with such a shopping list, is whether it can be consistently fulfilled, and the principal purpose of this document is to explore an idea about how to construct an interpretation which might allow the equiconsistency of the systems considered here with ZFC (plus large cardinals where appropriate) to be established.
@@ -59,8 +60,11 @@ To succeed it is necessary to understand how the consistency problem appears and
 
 In this case, the consistency problem for an illative lambda-calculus is to be resolved by providing a syntactic model in an infinitary illative combinatory logic.
 The problem is then to obtain a satisfactory account of the infinitary combinatory system.
-Ideally the elements of model would be equivalence classes of terms under convertibility, but one of the primitive combinators is to be read as that equivalence relation and the effect is that the relation of convertability cannot be a total relation over the combinators (this is how the consistency problem reappears).
-We have to find a way of working with a partial equivalence relation.
+Ideally the elements of the model would be equivalence classes of terms under convertibility, but one of the primitive combinators is to be read as that very equivalence relation and the effect is that the relation of convertability cannot be a total relation over the combinators (this is how the consistency problem reappears).
+This effect arises because the combinator must be defined by recursion, and the higher order equation of which a fixed point is obtained from the definition will not have a total fixed point (this is the manifestation of the various paradoxes such as Russell's or more directly relevant here, Curry's paradox).
+Consistency is obtained by accepting a partial fixed point, this is equivalent on the one hand to regarding the Russell set as a "partial set", of which some things (including itself) are neither members nor non-members, neither definitely in nor out.
+In the case of the Curry paradox, we find that implication does not always have a truth value (it is total over the truth values, just not over lambda terms in general).
+So we have to find a way of working with a partial equivalence relation, which will be the primitive illative combinator in terms of which all the others are defined.
 
 In the context of a combinatory logic this can be realised by limiting the possible reductions of equivalence terms, which is not a pure combinator.
 Such an equivalence will always reduce to `T' if its two arguments are convertible, but in the case that they are not, it may not always be reduced to `F', in some cases it will not reduce.
@@ -159,11 +163,15 @@ The well-formed syntax is then the smallest set which is \emph{CrepClosed}.
          ¥ c Ìâu i ç Csyntax
 =TEX
 
-=IGN
+=GFT
 €crepclosed_csyntax_thm2› =
    Ù µ c i∑ Funâu i
 		± Ordinalâu (Domâu i)
 		± (µ x∑ x çâu Ranâu i ¥ x ç Csyntax)
+	¥ c Ìâu i ç Csyntax
+
+€crepclosed_csyntax_thm3› =
+   Ù µ c i∑ Seqâu i ± (µ x∑ x çâu Ranâu i ¥ x ç Csyntax)
 	¥ c Ìâu i ç Csyntax
 =TEX
 =GFT
@@ -196,6 +204,14 @@ val crepclosed_csyntax_thm = save_thm ("crepclosed_csyntax_thm",
 
 val crepclosed_csyntax_thm2 = save_thm ("crepclosed_csyntax_thm2",
 	rewrite_rule [get_spec ¨XâuÆ] crepclosed_csyntax_thm);
+
+set_goal([],¨µ c i∑ Seqâu i
+		± (µ x∑ x çâu Ranâu i ¥ x ç Csyntax)
+	¥ c Ìâu i ç CsyntaxÆ);
+a (rewrite_tac[Seqâu_def]);
+a (rewrite_tac[prove_rule [] ¨µA B C∑ (A ± B) ± C § A ± B ± CÆ]);
+a (accept_tac crepclosed_csyntax_thm2);
+val crepclosed_csyntax_thm3 = save_pop_thm "crepclosed_csyntax_thm3";
 
 local val _ = set_goal([], ¨µs∑ CrepClosed s ¥ Csyntax Ä sÆ);
 val _ = a (rewrite_tac [get_spec ¨CsyntaxÆ]
@@ -442,6 +458,64 @@ The assumption
 =TEX
  is replaced by three new assumptions asserting that $¨iÆ$ is a function, that its domain is an ordinal, and that everything in its range is a member of \emph{Csyntax} for which the property expressed in the conclusion holds.
 
+A slight variant on that is:
+
+=GFT
+€csyn_induction_thm2› =
+   Ù	(µc i∑ Seqâu i
+		± (µx∑ x çâu (Ranâu i) ¥ x ç Csyntax ± p x)
+		¥ p (c Ìâu i))
+	¥ (µ x∑ x ç Csyntax ¥ p x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨(µc i∑ Seqâu i ± (µx∑ x çâu (Ranâu i) ¥ x ç Csyntax ± p x) ¥ p (c Ìâu i))
+	¥ (µ x∑ x ç Csyntax ¥ p x)Æ);
+a (rewrite_tac [Seqâu_def, prove_rule [] ¨µA B C∑ ((A ± B) ± C) § (A ± B ± C)Æ]);
+a (accept_tac csyn_induction_thm);
+val csyn_induction_thm2 = save_pop_thm "csyn_induction_thm2";
+=TEX
+}%ignore
+
+
+=SML
+fun €icomb_induction_tac2› t (a,c) = (
+	let val l1 = mk_app (mk_Ã (t,c), t)
+	    and l2 = mk_app (mk_app (mk_const ("ç", î'a GSU ≠ 'a GSU SET ≠ BOOLÆ), t),
+					mk_const ("Csyntax", î'a GSU SETÆ))
+	in  let val l3 = mk_µ (t, mk_¥ (l2, l1))
+	in  LEMMA_T l1 (rewrite_thm_tac o rewrite_rule[])
+	THEN DROP_ASM_T l2 ante_tac
+	THEN LEMMA_T l3 (rewrite_thm_tac o rewrite_rule[])
+	THEN bc_tac [csyn_induction_thm2]
+	THEN rewrite_tac[]
+	THEN strip_tac
+	end end) (a,c);
+=TEX
+
+This tactic expects an argument $t$ of type $TERM$ which is a free variable of type $î('a)GSUÆ$ whose sole occurrence in the assumptions is in an assumption $¨ëtÆ ç CsyntaxÆ$, and results in a single subgoal.
+The conclusion of the subgoal is as in the original except that free occurrences of $¨tÆ$ have been replaced by $¨c Ìâu iÆ$.
+The assumption 
+=INLINEFT
+¨ëtÆçCsyntaxÆ
+=TEX
+ is replaced by three new assumptions asserting that $¨iÆ$ is a sequence, and that everything in its range is a member of \emph{Csyntax} for which the property expressed in the conclusion holds.
+
+=GFT
+€csyntax_pair_thm› = Ù µ t∑ t ç Csyntax ¥ (∂ c ts∑ t = c Ìâu ts)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µt∑ t ç Csyntax ¥ ∂c ts∑ t = c Ìâu tsÆ);
+a (strip_tac THEN strip_tac);
+a (icomb_induction_tac2 ¨tÆ);
+a (∂_tac ¨cÆ THEN ∂_tac ¨iÆ THEN rewrite_tac[]);
+val csyntax_pair_thm = save_pop_thm "csyntax_pair_thm";
+=TEX
+}%ignore
+
 =IGN
 open_theory "icomb";
 set_pc "icomb";
@@ -527,52 +601,31 @@ This is just to test the recursion theorem.
 	ﬁâu (Imagepâu Sucâu ((Imagepâu (i Úâuâe CscRank)) (Ranâu i)))
 ∞
 
-That one is not general enough.
-Lets try:
+
+\subsubsection{More Closure Properties}
+
+In order to prove that various expressions yield elements of Csyntax further definitions and theorems are required.
+
+The construction of terms is accomplished primarily by the construction of sequences of terms.
+For concision in expressing closure conditions of operators over such sequences we give a name for a sequence of terms in our syntax.
+
+πHOLCONST
+‹ €CscSeq› : 'a GSU ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µs∑ CscSeq s § Seqâu s ± µt∑ t çâu Ranâu s ¥ t ç Csyntax
+∞
 
 =GFT
-€csc_recursion_lemma› =
-   Ù µaf∑ ∂f∑ µc i∑ f (c Ìâu i) = af ((Ranâu Úâuâe i) f) c i
 =TEX
 
-
 \ignore{
-=IGN
-val Úâuâe_def = get_spec ¨$ÚâuâeÆ;
+=SML
+val CscSeq_def = get_spec ¨CscSeqÆ;
 
-set_goal([], ¨µ(af:('a GSU ≠ 'b) ≠ 'a GSU ≠ 'a GSU ≠ 'b)∑ ∂(f:'a GSU ≠ 'b)∑
-	µc i∑ f (c Ìâu i) = af f c iÆ);
-val _ = a (REPEAT strip_tac);
-val _ = a (lemma_tac ¨∂g:((('a)GSU≠'b)≠('a)GSU≠'b)∑
-	g = Ãf x∑ if (∂c i∑ x = c Ìâu i) 
-		then af ((Ranâu (Sndâu x)) Úâuâe f) (Fstâu x) (Sndâu x)
-		else ≈x∑TÆ
-	THEN1 prove_∂_tac);
-val _ = a (lemma_tac ¨g respects CscPrecÆ
-	THEN1 (asm_rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac));
-(* *** Goal "1" *** *)
-a (cond_cases_tac ¨∂ c i∑ x = c Ìâu iÆ);
-a (LEMMA_T ¨(Ranâu (Sndâu x)) Úâuâe g' = (Ranâu (Sndâu x)) Úâuâe hÆ rewrite_thm_tac);
-a (rewrite_tac [Úâuâe_def] THEN strip_tac);
-a (cond_cases_tac ¨x' çâu Ranâu (Sndâu x)Æ);
-a (lemma_tac ¨CscPrec x' xÆ THEN1 (rewrite_tac [get_spec ¨CscPrecÆ]));
-(* *** Goal "1.1" *** *)
-a (∂_tac ¨cÆ THEN ∂_tac ¨iÆ THEN asm_rewrite_tac[]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
-(* *** Goal "1.2" *** *)
-a (fc_tac [tc_incr_thm]);
-a (asm_fc_tac []);
-(* *** Goal "2" *** *)
-a (∂_tac ¨fix gÆ);
-a (asm_tac well_founded_CscPrec_thm);
-a (all_fc_tac [get_spec ¨fixÆ]);
-a (POP_ASM_T ante_tac THEN asm_rewrite_tac[] THEN strip_tac);
-a (GET_NTH_ASM_T 1 (once_rewrite_thm_tac o map_eq_sym_rule));
-a (rewrite_tac[] THEN REPEAT strip_tac);
-a (cond_cases_tac ¨∂ c' i'∑ c = c' ± i = i'Æ);
-a (spec_nth_asm_tac 1 ¨cÆ);
-a (spec_nth_asm_tac 1 ¨iÆ);
-val csc_recursion_lemma = save_pop_thm "csc_recursion_lemma";
+set_goal([], ¨µs t∑ CscSeq s ± CscSeq t ¥ CscSeq (s @âu t)Æ);
+a (rewrite_tac[CscSeq_def]);
+a (REPEAT strip_tac);
+
 =TEX
 }%ignore
 
@@ -921,7 +974,7 @@ The least fixed point will then be used to determine the semantics of the infini
 These are defined as relations over \emph{Csyntax}.
 
 =SML
-declare_type_abbrev("RED", ["'a"], î'a GSU ≠ 'a GSU ≠ BOOLÆ);
+declare_type_abbrev("€RED›", ["'a"], î'a GSU ≠ 'a GSU ≠ BOOLÆ);
 =TEX
 
 
@@ -1560,16 +1613,29 @@ To get a Church-Rosser relation we need to allow all these `residuals' to be red
 I therefore define an operator which takes a relation of direct reduction and makes from it a parallel reduction relation which is more likely to be Church-Rosser.
 The idea is that any set of redexes in the term can be reduced in a single step, but that no redex which was not in that original term can be reduced in that step.
 
-There are two ways of defining this relationship.
+There are (at least!) two ways of defining this relationship.
 
 The first (which is the kind of approach used in Barendregt) is to define it as undertaking a single depth-first scan of the term reducing any of the redexes.
 
 The second is to devise a representation of a set of redexes and to define the reduction parameterised by such a set of redexes.
 The desired relation is then obtained by existentially quantifying over sets of redexes.
 
-This latter form is probably needed anyway in order to do the Church-Rosser proof, I might have to prove it is equivalent to the first form at some point.
+I started out with the second approach, but this was rapidly getting too complicated, so I am trying out the first approach.
 
-Redexes in a combinatorial term can be identified by coordinates, finite sequences of (not necessarily finite) ordinals suffice.
+They are presented here (so far as they go) in reverse order.
+
+With either of these approaches it is possible to identify a maximal direct reduction of any term.
+One can argue that the relation is Church-Rosser because whatever reduction is undertaken on a term it can be converted by just one more reduction to the maximal reduct of the original term.
+Thus for each term, there is some other term (its maximal reduct), which could serve as the bottom of the diamond whatever two other reducts were considered.
+One might hope that this observation would permit a simplification of the Church-Rosser proof, but so far I have not found a way to realise that simplification.
+
+I shall keep my eye on this as I work through the preliminary stages of the proof.
+
+In the following section I make some steps towards a proof based on coordinates, in the subsequent section I mentally put this aside and try an approach more closely following one presented by Barendregt.
+
+\subsubsection{Approach based on Coordinates}
+
+Redexes (or subterms in general) in a combinatorial term can be identified by coordinates, finite sequences of (not necessarily finite) ordinals suffice.
 We do need to insist that the coordinates are coordinates of redexes.
 
 I define first the operation of extracting from a combinator the substructure identified by a set of coordinates.
@@ -1670,7 +1736,6 @@ The following function restricts a set of coordinates to the relative coordinate
 We need direct reduction to be deterministic, i.e. to be a many-one relation.
 Assuming that it is we can use the following function to perform a reduction.
 
-
 πHOLCONST
 ‹ €reduce› : 'a RED ≠ 'a GSU ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
@@ -1699,7 +1764,7 @@ declare_type_abbrev ("CC", ["'a"], î('a GSU ∏ ('a GSU LIST ≠ 'a GSU LIST)) LIST
 =TEX
 
 πHOLCONST
-‹ €depth_map_aux› : ('a GSU ≠ 'a GSU) ≠ 'a GSU ≠ ('a GSU LIST)SET ≠ 'a GSU
+‹ €depth_map_aux› : ('a GSU ≠ 'a GSU) ≠ 'a GSU ≠ ('a GSU LIST) SET ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µf c ts∑ depth_map_aux f (c Ìâu ts) = Ãcls∑ 
 ‹	let newts =
@@ -1710,7 +1775,7 @@ declare_type_abbrev ("CC", ["'a"], î('a GSU ∏ ('a GSU LIST ≠ 'a GSU LIST)) LIST
 
 =IGN
  πHOLCONST
-‹ €depth_map_aux2› : ('a CT ∏ 'a CC) ≠ 'a GSU ≠ ('a GSU LIST)SET
+‹ €depth_map_aux2› : ('a CT ∏ 'a CC) ≠ 'a GSU ≠ ('a GSU LIST) SET
 ‹			≠ 'a GSU ∏ ('a GSU LIST ≠ 'a GSU LIST)
  ˜¸¸¸¸¸¸¸¸¸¸¸
 ‹ µct cc c ts∑ depth_map_aux2 (ct, cc) (c Ìâu ts) = Ãcls∑ 
@@ -1721,6 +1786,7 @@ declare_type_abbrev ("CC", ["'a"], î('a GSU ∏ ('a GSU LIST ≠ 'a GSU LIST)) LIST
 ‹		cc (Map Snd newts))
  ∞ 
 =TEX
+
 πHOLCONST
 ‹ €depth_map› : ('a GSU ≠ 'a GSU) ≠ ('a GSU LIST)SET ≠ 'a GSU ≠ 'a GSU
 ˜¸¸¸¸¸¸¸¸¸¸¸
@@ -1744,6 +1810,7 @@ We can then compute a residual map for a parallel reduction by composing these m
 
 
 
+
 We then prove for each direct reduction a commutativity result, which says that performing some reduction before that direct reduction is equivalent to applying that reduction to each of the residuals after the direct reduction.
 Next I prove that combining direct reductions preserves this property, and finally that lifting to parallel reduction gives a similar commutativity for the resulting parallel reduction.
 
@@ -1755,9 +1822,174 @@ satisfying the relevant commutativity property, and yields a Church-Rosser reduc
 The functor will be monotone, and its least fixed point will be the final reduction relation, which will be a limit of Church-Rosser relations.
 So then I need to prove that the functor some relevant continuity property so that its least fixed point is also Church-Rosser.
 
+\subsubsection{More closely following Barendregt}
+
+The previous approach looks too complex.
+Eventually I returned to Barendregt for better ideas.
+My main reason for not following him more closely had been that he works with systems which contain variables, whereas I am working with a system which lacks variables.
+However, it now occurs to me that I can do with ``inert'' combinators the kinds of thing which are normally done with free variables, and so it is plausible that following Barendregt more closely will be possible.
+The signficance of this is that variables provide a simple way to track residuals, and the main complexity arising from my previous proof ideas arose from tracking residuals so that a deferred reduction can be completed at all the instances.
 
 
+Barendregt leaves the Church-Rosser proof for combinatory logic as an exercise (exercise 7.13), so it ought to be manageable, even perhaps with the added complications here.
+Before noting the complications I consider the clues available in Barendregt on how to do the exercise.
 
+There is an earlier proof that beta reduction in the lambda-calculus is Church-Rosser in Chapter 3 (Theorem 3.2.8), which can be simplified to give the proof for combinatory logic.
+The approach is to define a restricted notion of beta reduction whose transitive closure is CR and to prove that this more restrictive notion is CR.
+The particular reduction used for the lambda calculus cannot be used for combinatory logic, but Barendregt suggests instead the reduction which allows parallel reduction of any disjoint set of redexes.
+
+The plan here is to do a version of that adapted to our infinitary combinators, and follow through in the spirit of the proof for beta reduction in Chapter 3.
+
+In addition to allowing for infinitary combinators, we have to parameterise the proof to work with any notion of direct reduction which satisfies certain conditions, so that we can then apply it to systems involving illatory combinators.
+Exactly what these conditions should be is not yet clear, but I propose to start by trying something analogous to Barendregt's Lemma 3.2.4 which may be paraphrase as ``reduction commutes with substitution''.
+
+So we start with the definition of disjoint parallel reduction, which is given as an operator over relations.
+
+πHOLCONST
+‹ €disj_par_reduce› : 'a RED ≠ 'a RED
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µr c ts nt∑ disj_par_reduce r (c Ìâu ts) nt §
+‹		r (c Ìâu ts) nt
+‹	≤	∂ts'∑ (µi v∑ i Ìâu v çâu ts
+‹			 § ∂v'∑ i Ìâu v' çâu ts'
+‹			    ± ((ts Úâuâe (disj_par_reduce r)) v v' ≤ v' = v))
+‹		      ± (∂i v v'∑ i Ìâu v çâu ts ± i Ìâu v' çâu ts'
+‹			    ± ((ts Úâuâe (disj_par_reduce r)) v v'))
+‹		      ± nt = (c Ìâu ts')
+∞ 
+
+The first result I need to prove is that disjoint parallel reduction commutes with substitution, provided that direct reduction does.
+So I need to define substitution.
+We have no variables so the substitution in question is substitution for a combinator, which with these infinitary combinators is not quite as straightforward as with the traditional combinators, it invoves concatenating the list of arguments in the two expressions involved.
+
+In the intended applications substitution is for inert combinators only, but we do not need to take that into consideration in the definition of substitution.
+In the following:-
+
+\begin{itemize}
+\item the first argument is the name of the combinator for which the substitution is being made (not actually a combinatory term, just the name)
+\item the second is the combinatory term which is being substituted for that combinator, and
+\item the third is the combinatory term into which substitution takes place.
+\end{itemize}
+
+πHOLCONST
+‹ €subs› : 'a GSU ≠ 'a GSU ≠ 'a GSU ≠ 'a GSU
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ cn c ts s∑ subs cn s (c Ìâu ts) =
+‹	if c = cn
+‹	then (Fstâu s Ìâu ((Sndâu s) @âu (RanMapâu (ts Úâuâe (subs cn s)) ts)))
+‹	else (c Ìâu (RanMapâu (ts Úâuâe (subs cn s)) ts))
+∞ 
+
+
+=GFT
+€r_disj_par_thm› = Ù µ r x y∑ x ç Csyntax ± r x y ¥ disj_par_reduce r x y
+=TEX
+
+\ignore{
+=SML
+val disj_par_reduce_def = get_spec ¨disj_par_reduceÆ;
+val subs_def = get_spec ¨subsÆ;
+
+set_goal([], ¨µr x y∑ x ç Csyntax ± r x y ¥ disj_par_reduce r x yÆ);
+a (REPEAT strip_tac);
+a (all_fc_tac [csyntax_pair_thm]);
+a (var_elim_asm_tac ¨x = c Ìâu tsÆ);
+a (asm_rewrite_tac [disj_par_reduce_def]);
+val r_disj_par_thm = save_pop_thm "r_disj_par_thm";
+
+=IGN
+
+stop;
+
+set_goal([], ¨µcn s t∑ s ç Csyntax ± t ç Csyntax ¥ subs cn s t ç CsyntaxÆ);
+a (REPEAT strip_tac);
+a (icomb_induction_tac2 ¨tÆ);
+a (rewrite_tac [subs_def]);
+a (cond_cases_tac ¨c = cnÆ);
+
+=TEX
+}%ignore
+
+
+We do now need the notion of an inert combinator, relative to some notion of reduction.
+This takes a reduction and returns a property of combinator names which is satisfied only be combinators which are never reduced by the reduction.
+
+πHOLCONST
+‹ €inert› : 'a RED ≠ 'a GSU ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r c∑ inert r c § ≥ ∂ ts c' ts'∑ r (c Ìâu ts) (c' Ìâu ts') ± ≥ c = c'
+∞ 
+
+=GFT
+€inert_disj_par_thm› = Ù µ r cn∑ inert (disj_par_reduce r) cn § inert r cn
+=TEX
+
+\ignore{
+=SML
+val inert_def = get_spec ¨inertÆ;
+
+set_goal([], ¨µr cn∑ inert (disj_par_reduce r) cn § inert r cnÆ);
+a (rewrite_tac [inert_def, disj_par_reduce_def] THEN REPEAT strip_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 2 ¨tsÆ);
+a (spec_nth_asm_tac 1 ¨c'Æ);
+a (spec_nth_asm_tac 1 ¨ts'Æ);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨tsÆ);
+a (spec_nth_asm_tac 1 ¨c'Æ);
+a (spec_nth_asm_tac 1 ¨ts'Æ);
+(* *** Goal "3" *** *)
+a (var_elim_asm_tac ¨c' = cnÆ);
+val inert_disj_par_thm = save_pop_thm "inert_disj_par_thm";
+=TEX
+}%ignore
+
+The property of reductions that they commute with substitution is now definable.
+
+πHOLCONST
+‹ €comm_subs› : 'a RED ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ r∑ comm_subs r § µcn∑ inert r cn ¥
+‹		µ s t t2∑ s ç Csyntax ± t ç Csyntax
+‹			¥ r t t2
+‹			¥ r (subs cn s t) (subs cn s t2) 
+∞ 
+
+
+The following theorem states that substitution commutes with disjoint parallel reduction if it commutes with direct reduction.
+
+\ignore{
+=SML
+val comm_subs_def = get_spec ¨comm_subsÆ;
+
+=IGN
+
+stop;
+
+set_goal([], ¨µr∑ comm_subs r ¥ comm_subs (disj_par_reduce r)Æ);
+a (rewrite_tac [disj_par_reduce_def, comm_subs_def]
+	THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac THEN icomb_induction_tac2 ¨tÆ);
+a (rewrite_tac [disj_par_reduce_def] THEN strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ¨inert r cnÆ
+	THEN1 (once_rewrite_tac [map_eq_sym_rule inert_disj_par_thm]
+		THEN strip_tac)); 
+a (lemma_tac ¨(c Ìâu i) ç CsyntaxÆ
+	THEN1 (bc_tac [crepclosed_csyntax_thm3]
+		THEN strip_tac
+		THEN asm_fc_tac[]));
+a (lemma_tac ¨r (subs cn s (c Ìâu i)) (subs cn s t2)Æ
+	THEN1 all_asm_fc_tac[]);
+a (all_fc_tac [r_disj_par_thm]);
+
+a (lemma_tac ¨disj_par_reduce r (c Ìâu i) t2Æ
+	THEN1 (rewrite_tac [disj_par_reduce_def] THEN asm_rewrite_tac[]));
+a (all_asm_fc_tac[]);
+
+=TEX
+}%ignore
 
 \subsubsection{Proof Strategy}
 

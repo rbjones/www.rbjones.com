@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.30 2012/10/09 20:06:37 rbj Exp $
+# $Id: rules.mk,v 1.31 2012/11/01 15:59:58 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -401,6 +401,6 @@ $(LATEX2HTMA): %.htm: %.tex
 	texdvi -b $*
 	texdvi $*
 	texdvi $*
-	latex2html -short_extn -ascii -split 0 -link 2 -toc_depth 5 -show_section_numbers \
+	latex2html -short_extn -ascii -split 0 -link 2 -toc_depth 5 \
 		-info "" -up_url "../index.htm" -up_title "up" $<
 	touch $@
