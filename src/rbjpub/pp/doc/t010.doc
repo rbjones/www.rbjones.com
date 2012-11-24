@@ -1,5 +1,5 @@
 =IGN
-$Id: t010.doc,v 1.21 2011/05/16 21:40:17 rbj Exp $
+$Id: t010.doc,v 1.22 2012/11/24 20:22:24 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -20,7 +20,7 @@ $Id: t010.doc,v 1.21 2011/05/16 21:40:17 rbj Exp $
 
 \title{Miscellaneous Tactics}
 \author{Roger Bishop Jones}
-\date{$ $Date: 2011/05/16 21:40:17 $ $}
+\date{$ $Date: 2012/11/24 20:22:24 $ $}
 
 \makeindex
 \usepackage[pdftex]{hyperref}
@@ -38,7 +38,7 @@ Several structures providing tactics, tacticals, etc. for theories, forward chai
 \href{http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t010.pdf}
 
-$ $Id: t010.doc,v 1.21 2011/05/16 21:40:17 rbj Exp $ $
+$ $Id: t010.doc,v 1.22 2012/11/24 20:22:24 rbj Exp $ $
 
 \bf Copyright \copyright\ : Roger Bishop Jones \\
 
@@ -107,7 +107,7 @@ If in $asms Ù conc$, $conc$ is a universally quantified implication, then $¥\_T\
 =ENDDOC
 
 =DOC
-val €§_FC_T›: (THM list -> TACTIC) -> THM -> TACTIC;
+val €§_FC_T›: (THM list -> TACTIC) -> THM list -> TACTIC;
 =DESCRIBE
 For doing forward chaining using $fc\_§\_canon$.
 =ENDDOC
@@ -269,7 +269,7 @@ fun €¥_T_canon› thm =
 	then [thm]
 	else [¥_intro ¨TÆ thm];
 
-fun €§_FC_T› tac thm = GET_ASMS_T (tac o (fc_rule (fc_§_canon thm)));
+fun €§_FC_T› tac thms = GET_ASMS_T (tac o (fc_rule (flat (map fc_§_canon thms))));
 
 val €all_¥_intro_canon›: CANON = rule_canon all_¥_intro;
 
@@ -619,6 +619,8 @@ end; (* of structure StripFail *)
 
 \section{Theories, Proof Contexts and Consistency}
 
+\subsection{Specifications}
+
 =DOC
 signature €PreConsisProof› = sig
 =DESCRIBE
@@ -627,10 +629,10 @@ This signature provide the wherewithal to conduct a consistency proof for a HOL 
 The signature also provides some procedures to incorporate exception handling require when a document is required to create or to recreate a theory, and must therefore first delete things which are not necessarily present, similarly for proof contexts and other functions for manipulating proof contexts.
 =ENDDOC
 
-\subsection{Doing Consistency Proofs before Axiomatic Descriptions}
+\subsubsection{Doing Consistency Proofs before Axiomatic Descriptions}
 
 =DOC
-val €save_cs_∂_thm› : THM -> unit;
+val €save_cs_∂_thm› : THM -> THM;
 =DESCRIBE
 This function may be used to provide to the system a theorem which establishes the consistency of a HOL constant specification about to be introduced.
 
@@ -649,6 +651,47 @@ This partial proof context contains only the existence prover $savedthm\_cs\_∂\_
 $savedthm\_cs\_∂\_conv$, $save\_cs\_∂\_thm$
 =ENDDOC
 
+\subsubsection{Recursive Definitions without Constructors}
+
+=DOC
+val €CombI_prove_∂_rule› : string -> TERM -> THM;
+=DESCRIBE
+The provision for recursive definitions to be proven consistent is designed for recursion of types which have constructors, and is not therefore directly applicable to definitions by transfinite recursion in set theory.
+
+However, with a small hack it can be applied to such definitions.
+
+The basic observation is that it will work with a dummy constructor ($CombI$ will do) inserted in the place where a real constructor would normally be.
+There are two problems with this.
+The first is that you have to put this constructor in your recursive definitions where they look pretty stupid.
+The second is that only one recursion pattern can be used with any dummy constructor, so if you want more than one recursion principle to be available you have to invent more dummy constructors, and your spec will look really stupid.
+
+The fixes for these problemettes are, firstly to get the existence claim before entering the definition, for the definition with the constructor in it, and then rewrite it to eliminate the constructor and save it so that when you make the definition without the constructor the consistency result is to hand.
+The second problem is fixed by having a distinct partial proof context for each recursion principle which uses the dummy constructor so that only one recursion principle using the dummy constructor is in scope when the consistency proof is obtained.
+
+A special rule is made available here to simplify the operation of this procedure.
+
+The basic method is as follows (presumes some familiarity with the existing mechanisms):
+
+\begin{itemize}
+
+\item prove a recursion theorem corresponding to the pattern of recursion under consideration, but for the argument to the function being defined on which recursion is taking place add the ``constructor'' \emph{CombI}.
+
+\item create a partial proof context just for the recursion principle (see: $add\_∂\_cd\_thms$).
+
+\item use $CombI\_prove\_∂\_rule$ to obtain and save the required consistency result, supplying as a parameter to it the name of a partial proof context containing just the relevant recursion principle.
+This function expects to be given the term to be used for the definition except with the constructor \emph{CombI} applied.
+It will save the result using $save\_cs\_∂\_thm$.
+
+\item do the definition in the desired form (i.e. without the dummy constructor).
+
+\end{itemize}
+
+=SEEALSO
+$add\_∂\_cd\_thm$,  $save\_cs\_∂\_thm$
+=ENDDOC
+
+\subsubsection{Existential Proofs}
+
 =DOC
 val €∂_¥_conv› : CONV;
 =DESCRIBE
@@ -662,7 +705,7 @@ val €prove_∂_¥_conv› : CONV;
 Conversion to prove the result of applying the basic existence proving conversion to a conditional function definition using $∂\_¥\_conv$ to push the existential for the function value through the condition and then discarding the antecedent.
 =ENDDOC
 
-\subsection{Force New Theory}
+\subsubsection{Force New Theory}
 
 =DOC
 val €force_new_theory› : string -> unit;
@@ -674,7 +717,7 @@ It deletes the old theory (if present, from your previous build, by using $force
 $force\_delete\_theory$, $force\_new\_pc$
 =ENDDOC
 
-\subsection{Proof Contexts}
+\subsubsection{Proof Contexts}
 
 =DOC
 val €force_new_pc› : string -> unit;
@@ -697,7 +740,7 @@ These function allows you to add theorems to a proof context.
 $add\_rw\_thms$, $add\_sc\_thms$, $add\_st\_thms$
 =ENDDOC
 
-\subsection{Output Stats}
+\subsubsection{Output Stats}
 
 =DOC
 val €output_stats› : string -> unit;
@@ -711,6 +754,8 @@ $get\_stats$
 =SML
 end; (* of signature PreConsisProof *)
 =TEX
+
+\subsection{Implementation}
 
 =SML
 structure €PreConsisProof› : PreConsisProof = struct
@@ -878,7 +923,7 @@ val saved_cs_∂_thm = ref t_thm;
 =TEX
 
 =SML
-fun save_cs_∂_thm thm = (saved_cs_∂_thm := thm);
+fun save_cs_∂_thm thm = (saved_cs_∂_thm := thm; thm);
 =TEX
 
 I also have a special partial proof context with a consistency prover which knows to look for the consistency proof in this special place.
@@ -909,6 +954,20 @@ val _ = commit_pc "'savedthm_cs_∂_proof";
 =IGN
 current_ad_cs_∂_conv();
 =TEX
+
+=SML
+local	val lthy = get_current_theory_name ();
+	val _ = open_theory "combin";
+	val CombI_def = get_spec ¨CombIÆ;
+	val _ = open_theory lthy
+in
+fun CombI_prove_∂_rule pc tm =
+	let val tmthm = pc_rule pc basic_prove_∂_rule tm
+	in save_cs_∂_thm (rewrite_rule [CombI_def] tmthm)
+	end
+end;
+=TEX
+
 
 \ignore{
 =IGN

@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.14 2011/10/25 09:10:46 rbj Exp $
+$Id: t005.doc,v 1.15 2012/11/24 20:22:24 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -40,12 +40,12 @@ Fixed points, well founded relations and a recursion theorem.
 
 Created 2004/07/15
 
-Last Modified $ $Date: 2011/10/25 09:10:46 $ $
+Last Modified $ $Date: 2012/11/24 20:22:24 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 
-$ $Id: t005.doc,v 1.14 2011/10/25 09:10:46 rbj Exp $ $
+$ $Id: t005.doc,v 1.15 2012/11/24 20:22:24 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -122,16 +122,25 @@ set_pc "hol";
 		¥ tc r x y
 =TEX
 =GFT
-€tc_decomp_thm› = 
+€tc_decomp_thm› =
 	Ù µ r x y∑ tc r x y ± ≥ r x y
 		¥ ∂z∑ tc r x z ± r z y
 €tc_decomp_thm2› =
-   	Ù µ r x y∑ tc r x y
-	¥ (∂ f n∑ x = f 0 ± y = f n ± (µ m∑ m < n ¥ r (f m) (f (m + 1))))
-
+	Ù µ r x y∑ tc r x y
+		¥ (∂ f n∑ x = f 0 ± y = f n ± (µ m∑ m < n ¥ r (f m) (f (m + 1))))
 €tc_decomp_thm3› =
-   Ù µ r x y∑ tc r x y ¥ (∂ f n∑ x = f 0 ± y = f (n + 1)
-				± (µ m∑ m º n ¥ r (f m) (f (m + 1))))
+	Ù µ r x y∑ tc r x y 
+		¥ (∂ f n∑ x = f 0 ± y = f (n + 1)
+		± (µ m∑ m º n ¥ r (f m) (f (m + 1))))
+€tc_decomp_thm4› =
+	Ù µ r x y∑ (∂ f n∑ x = f 0 ± y = f (n + 1) ± (µ m∑ m º n ¥ r (f m) (f (m + 1))))
+		¥ tc r x y
+€tc_decomp_thm5› =
+	Ù µ r x y∑ tc r x y ± ≥ r x y
+		¥ (∂ z∑ r x z ± tc r z y)
+€tc_§_thm› =
+	Ù µ r x y∑ tc r x y
+		§ (∂ f n∑ x = f 0 ± y = f (n + 1) ± (µ m∑ m º n ¥ r (f m) (f (m + 1))))
 
 €tc_mono_thm› = 
 	Ù µ r1 r2∑ (µ x y∑ r1 x y ¥ r2 x y)
@@ -300,6 +309,64 @@ a (DROP_ASM_T  ¨r z yÆ ante_tac
 	THEN asm_rewrite_tac[]);
 val tc_decomp_thm3 = save_pop_thm "tc_decomp_thm3";
 
+set_goal([], ¨µ r x y∑ (∂f n∑ x = f 0 ± y = f (n + 1)
+	± (µm∑ m º n ¥ r (f m) (f (m+1))))
+		¥ tc r x yÆ);
+a (lemma_tac ¨µn r x y∑ (∂f∑ x = f 0 ± y = f (n + 1)
+	± (µm∑ m º n ¥ r (f m) (f (m+1))))
+		¥ tc r x yÆ);
+(* *** Goal "1" *** *)
+a (strip_tac);
+a (induction_tac ¨nÆ THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¨0Æ);
+a (LEMMA_T ¨tc r (f 0) (f (0 + 1))Æ ante_tac
+	THEN_LIST [fc_tac [tc_incr_thm], rewrite_tac[]]);
+(* *** Goal "1.2" *** *)
+a (list_spec_nth_asm_tac 4 [¨rÆ, ¨xÆ, ¨f (n + 1)Æ]);
+a (spec_nth_asm_tac 1 ¨fÆ);
+a (spec_nth_asm_tac 4 ¨m'Æ);
+a (PC_T1 "lin_arith" asm_prove_tac[]);
+(* *** Goal "1.2.2" *** *)
+a (spec_nth_asm_tac 2 ¨n + 1Æ);
+a (lemma_tac ¨tc r (f (n + 1)) (f ((n + 1) + 1))Æ THEN1 fc_tac [tc_incr_thm]);
+a (LEMMA_T ¨tc r x (f ((n + 1) + 1))Æ ante_tac THEN1 all_fc_tac [tran_tc_thm2]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT strip_tac );
+a (spec_nth_asm_tac 4 ¨nÆ);
+a (all_asm_fc_tac[]);
+val tc_decomp_thm4 = save_pop_thm "tc_decomp_thm4";
+
+set_goal([], ¨µ r x y∑ tc r x y § ∂f n∑ x = f 0 ± y = f (n + 1)
+	± (µm∑ m º n ¥ r (f m) (f (m+1)))Æ);
+a (REPEAT µ_tac THEN REPEAT_N 3 strip_tac
+	THEN all_fc_tac [tc_decomp_thm3, tc_decomp_thm4]);
+a (∂_tac ¨fÆ THEN ∂_tac ¨nÆ THEN asm_rewrite_tac[]);
+val tc_§_thm = save_pop_thm "tc_§_thm";
+
+set_goal([],¨µ r x y∑ tc r x y ± ≥ r x y ¥ ∂z∑ r x z ± tc r z yÆ);
+a (REPEAT strip_tac);
+a (asm_fc_tac [tc_decomp_thm3]);
+a (∂_tac ¨f 1Æ THEN asm_rewrite_tac[]);
+a (SPEC_NTH_ASM_T 1 ¨0Æ (rewrite_thm_tac o  (rewrite_rule[])));
+a (rewrite_tac [tc_§_thm]);
+a (∂_tac ¨Ãx∑ f (x + 1)Æ THEN asm_rewrite_tac[]);
+a (lemma_tac ¨∂n'∑ n = n'+1Æ THEN1 contr_tac);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (µ_elim ¨nÆ Ó_cases_thm));
+(* *** Goal "1.1" *** *)
+a (var_elim_asm_tac ¨n = 0Æ);
+a (spec_nth_asm_tac 2 ¨0Æ);
+a (POP_ASM_T ante_tac THEN SYM_ASMS_T rewrite_tac);
+(* *** Goal "1.2" *** *)
+a (spec_nth_asm_tac 2 ¨iÆ);
+(* *** Goal "2" *** *)
+a (∂_tac ¨n'Æ THEN asm_rewrite_tac[]);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+a (lemma_tac ¨m + 1º nÆ THEN1 PC_T1 "lin_arith" asm_prove_tac[]);
+a (asm_fc_tac[]);
+val tc_decomp_thm5 = save_pop_thm "tc_decomp_thm5";
 
 set_goal([],¨µ r1 r2∑ (µ x y∑ r1 x y ¥ r2 x y)
 	¥ (µ x y∑ tc r1 x y ¥ tc r2 x y)Æ);
