@@ -1,5 +1,5 @@
 =IGN
-$Id: t006.doc,v 1.43 2012/08/11 21:01:53 rbj Exp $
+$Id: t006.doc,v 1.44 2013/01/03 17:12:44 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -33,12 +33,12 @@ Definitions or theorems which arguably belong in a theory already produced by so
 
 Date Created 2004/07/15
 
-Last Changed $ $Date: 2012/08/11 21:01:53 $ $
+Last Changed $ $Date: 2013/01/03 17:12:44 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t006.pdf}
 
-$ $Id: t006.doc,v 1.43 2012/08/11 21:01:53 rbj Exp $ $
+$ $Id: t006.doc,v 1.44 2013/01/03 17:12:44 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -184,7 +184,7 @@ The relations used in replacement must be ``ManyOne'' relations, otherwise the i
 \section{Type Definition Lemmas}
 
 =GFT
-type_lemmas_thm2 =
+Ûtype_lemmas_thm2Ý =
    ô µ pred
      · (¶ f· TypeDefn pred f)
          ´ (¶ abs rep
@@ -192,18 +192,28 @@ type_lemmas_thm2 =
              ± (µ r· pred r ¤ rep (abs r) = r)
              ± OneOne rep)
 
-type_defn_lemma1 =
+Ûtype_defn_lemma1Ý =
    ô µ f g· (µ x· f (g x) = x) ´ (µ x y· g x = g y ´ x = y)
 
-type_defn_lemma2 =
+Ûtype_defn_lemma2Ý =
    ô µ p f g
      · (µ x· p x ´ f (g x) = x) ´ (µ x y· p x ± p y ´ g x = g y ´ x = y)
-
-type_defn_lemma3 =
+=TEX
+=GFT
+Ûtype_defn_lemma3Ý =
    ô (¶ f· TypeDefn (Ì x· T) f)
        ´ (¶ abs rep· (µ a· abs (rep a) = a) ± (µ r· rep (abs r) = r))
 
-oneone_contrapos_lemma =
+Ûtype_defn_lemma4Ý =
+   ô µ pred
+     · (¶ f· TypeDefn pred f)
+         ´ (¶ abs rep
+         · (µ a· abs (rep a) = a)
+             ± (µ r· pred r ¤ rep (abs r) = r)
+             ± OneOne rep
+             ± (µ a· pred (rep a)))
+
+Ûoneone_contrapos_lemmaÝ =
 	ô OneOne f ´ (µ x y· ³ x = y ´ ³ f x = f y)
 =TEX
 
@@ -245,6 +255,27 @@ a (fc_tac [type_lemmas_thm2]);
 a (DROP_NTH_ASM_T 2 (asm_tac o (rewrite_rule[])));
 a (¶_tac ¬abs® THEN ¶_tac ¬rep® THEN asm_rewrite_tac[]);
 val type_defn_lemma3 = save_pop_thm "type_defn_lemma3";
+
+set_goal([], ¬µ pred
+     · (¶ f: 'a ­ 'b· TypeDefn pred f)
+         ´ µ a· pred (rep a)®);
+a (REPEAT strip_tac THEN fc_tac [type_lemmas_thm]);
+
+set_goal([], ¬µ pred
+     · (¶ f: 'a ­ 'b· TypeDefn pred f)
+         ´ (¶ abs (rep: 'a ­ 'b)·
+	  (µ a· abs (rep a) = a)
+	± (µ r· pred r ¤ rep (abs r) = r)
+	± OneOne rep
+	± µ a· pred (rep a))®);
+a (REPEAT strip_tac THEN fc_tac [type_lemmas_thm]);
+a (¶_tac ¬abs® THEN ¶_tac ¬rep®
+	THEN asm_rewrite_tac[get_spec ¬OneOne®]
+	THEN REPEAT strip_tac);
+a (LEMMA_T ¬abs (rep x1) = abs(rep x2)®
+	(rewrite_thm_tac o (rewrite_rule[asm_rule ¬µ a· abs (rep a) = a®]))
+	THEN1 rewrite_tac[asm_rule ¬rep x1 = rep x2®]);
+val type_defn_lemma4 = save_pop_thm "type_defn_lemma4";
 
 set_goal([], ¬µf· OneOne f ´ µx y· ³ x = y ´ ³ f x = f y®);
 a (strip_tac THEN rewrite_tac [get_spec ¬OneOne®] THEN contr_tac);
