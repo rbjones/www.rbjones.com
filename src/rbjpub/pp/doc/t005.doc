@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.16 2013/01/03 17:12:44 rbj Exp $
+$Id: t005.doc,v 1.17 2013/01/05 14:52:44 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -40,12 +40,12 @@ Fixed points, well founded relations and a recursion theorem.
 
 Created 2004/07/15
 
-Last Modified $ $Date: 2013/01/03 17:12:44 $ $
+Last Modified $ $Date: 2013/01/05 14:52:44 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 
-$ $Id: t005.doc,v 1.16 2013/01/03 17:12:44 rbj Exp $ $
+$ $Id: t005.doc,v 1.17 2013/01/05 14:52:44 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -89,6 +89,16 @@ set_pc "hol";
 =TEX
 
 \subsection{Definitions}
+
+There is in hol4 a theory of relations in which transitive closure is defined in the obvious way, similar to the way in which it is defined here.
+There is also a package providing support for defining relations using rules, and an example in which a Church-Rosser result for the pure combinatory logic is obtained very concisely by using a definition of reflexive transitive relation through that package instead of the one in the theory of relations.
+The main advantage of this alternative approach is that it gives automatically induction principles for reasoning about reflexive transitive closures which are not available in the theory of relations.
+
+The following development begins in a similar vein to the hol4 theory of relations but then continues to obtain the results delivered by defining reflexive transitive closure using the hol4 relation definition package.
+Of these the most important are the induction principles, but I have replicated the other principles which are automatically obtained in hol4.
+
+The results below which involve decomposition of transitive closure into a path of direct reductions represent a more cumbersome approach to proofs about transitive closures which demand some kind of induction.
+It may be best in considering such proofs, first to look at the induction principles which follow these decompositions.
 
 πHOLCONST
 ‹ €trans›: ('a  ≠ 'a ≠ BOOL) ≠ BOOL
@@ -548,6 +558,35 @@ val tc_ind2 = save_pop_thm "tc_ind2";
 }%ignore
 
 =GFT
+€tran_rtc_thm› =
+	Ù µr∑ trans (rtc r)
+
+€tran_rtc_thm2› =
+	Ù µ r s t u∑ rtc r s t ± rtc r t u ¥ rtc r s u
+
+€rtc_incr_thm› =
+	Ù µr x y ∑ r x y ≤ x = y ¥ rtc r x y
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µr∑ trans (rtc r)Æ);
+a (rewrite_tac [get_spec ¨transÆ, rtc_def] THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac);
+a (all_fc_tac [tran_tc_thm2]);
+val tran_rtc_thm = save_pop_thm "tran_rtc_thm";
+
+val tran_rtc_thm2 = save_thm("tran_rtc_thm2", rewrite_rule [get_spec ¨transÆ] tran_rtc_thm);
+
+set_goal([], ¨µr x y ∑ r x y ≤ x = y ¥ rtc r x yÆ);
+a (rewrite_tac[rtc_def] THEN REPEAT strip_tac
+	THEN all_asm_fc_tac [tc_incr_thm]);
+val rtc_incr_thm = save_pop_thm "rtc_incr_thm";
+=TEX
+}%ignore
+
+
+=GFT
 €rtc_decomp_thm› =
 	Ù µ R a0 a1∑ rtc R a0 a1 ¥ a1 = a0 ≤ (∂ y∑ R a0 y ± rtc R y a1)
 €rtc_decomp_thm2› =
@@ -603,8 +642,8 @@ val rtc_decomp_thm3 = save_pop_thm "rtc_decomp_thm3";
 	Ù µ R r∑ (µ x∑ R x x) ± (µ x y z∑ R x y ± r y z ¥ R x z)
 	¥ (µ x y∑ rtc r x y ¥ R x y)
 
-€rtc_ind2› =
-	Ù µ R r∑ (µ x∑ R x x) ± (µ x y z∑ r x y ± R y z ¥ R x z)
+€rtc_ind› =
+	Ù µ r R∑ (µ x∑ R x x) ± (µ x y z∑ r x y ± R y z ¥ R x z)
 	¥ (µ x y∑ rtc r x y ¥ R x y)
 =TEX
 
@@ -633,56 +672,14 @@ a (REPEAT µ_tac THEN rewrite_tac [rtc_def] THEN REPEAT strip_tac
 a (lemma_tac ¨µx y∑ r x y ¥ R x yÆ
 	THEN1 (REPEAT strip_tac THEN all_asm_ufc_tac[]));
 a (all_fc_tac [tc_ind2]);
-val rtc_ind2 = save_pop_thm "rtc_ind2";
+val rtc_ind2 = pop_thm ();
+
+set_goal([], ¨µr R∑ (µx∑ R x x) ± (µx y z∑ r x y ± R y z ¥ R x z)
+	¥ (µx y∑ rtc r x y ¥ R x y)Æ);
+a (rewrite_tac [rtc_ind2]);
+val rtc_ind = save_pop_thm "rtc_ind";
 =TEX
 }%ignore
-
-=GFT
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ¨µr∑ rtc r = (Ã x y∑ µ s∑ (µ x∑ s x x) ± (µ x y z∑ r x y ± s y z ¥ s x z) ¥ s x y)Æ);
-a (rewrite_tac [ext_thm] THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (all_fc_tac [rtc_ind2]);
-(* *** Goal "2" *** *)
-a (asm_rewrite_tac [rtc_def, tc_def, get_spec ¨transÆ]
-	THEN REPEAT strip_tac);
-a (all_asm_fc_tac[]);
-
-=TEX
-}%ignore
-
-To admit inductive reasoning over the domain of transitively closed relations we need a well-founded ordering over their elements (related pairs).
-One way to do this is to use the length of the shortest path between two elements.
-
-\ignore{
-=IGN
-
-=TEX
-}%ignore
-
-\subsection{Alternative Definition Following HOL4}
-
-In order to follow a Church-Rosser result used as a tutorial in hol4 I have been looking at their rather different approach to reasoning about reflexive transitive closures.
-
-There is in hol4 a theory of relations which defines reflexive transitive closure in much the same was as has been done above.
-However, the tutorial example in which a Church-Rosser theorem for the pure combinatory logic is obtained hides the definition of reflexive transitive closure and defines it anew using a package for defining relations which automatically comes up with a useful induction principle.
-
-Having seen this it is apparent that the weakness of the more obvious definition is that it does not naturally suggest such an induction principle.
-Instead in my applications I have resorted to inductive reasoning on the length of sequences which show that some pair is in the transitive closure.
-The induction principles obtained from the definition of reflexive transitive closure using the hol4 relations package seem much slicker, so it is my purpose here to replicate these induction principles.
-
-I would have liked to establish the equivalence of the two approaches first and then replicate the results obtained in that treatment which are not already to hand.
-However, I have not found a straightforward way of establishing the equivalence, and I am therefore replicating more of the hol4 approach than I would have liked, in the course of obtaining the equivalence.
-
-Since I can't here use the hol4 relations package I here introduce the alternative definition more explicitly and proceed as rapidly as possible to proving it equivalent to my first definition.
-I can then get the desirable induction principles proven for the original concept.
-
-From the rules used to introduce the notion in hol4 three theorems are obtained automatically.
-
-The first is called $RTC\_rules$ and is straightforward to replicate here both for the hol4 definition and for my own.
 
 =GFT
 €rtc_rules› =
@@ -723,12 +720,40 @@ a (lemma_tac ¨µ x∑ rtc' x x ± rtc r x xÆ
 a (lemma_tac ¨µ x y z∑ r x y ± rtc' y z ± rtc r y z ¥ rtc' x z ± rtc r x zÆ
 	THEN1 (REPEAT strip_tac
 		THEN all_asm_fc_tac[rtc_rules]));
-a (ante_tac (rewrite_rule[](list_µ_elim [¨Ãx y∑ rtc' x y ± rtc r x yÆ, ¨rÆ] rtc_ind2)));
+a (ante_tac (rewrite_rule[](list_µ_elim [¨rÆ, ¨Ãx y∑ rtc' x y ± rtc r x yÆ] rtc_ind)));
 a (asm_rewrite_tac[]
 	THEN REPEAT strip_tac THEN all_asm_fc_tac[]);
 val rtc_strongind = save_pop_thm "rtc_strongind";
 =TEX
 }%ignore
+
+\subsection{Induction Tactics}
+
+
+=SML
+fun €rel_induction_tac› (thm : THM): TACTIC =
+(	let	fun bad_thm thm = thm_fail "REL_INDUCTION_T" 29021 [thm];
+		val ([r,rtc], body) = (strip_µ (concl thm))
+			handle Fail _ => bad_thm thm;
+		val (prem, conc) = dest_¥ body
+			handle Fail _ => bad_thm thm;
+		fun match tm = simple_ho_match [] tm conc
+			handle Fail _ => bad_thm thm;
+	in 	fn (asms, tm) =>
+		let	val (tys, tms) = match tm;
+			val nth = (conv_rule (MAP_C ¬_conv) (inst_term_rule tms
+					(inst_type_rule tys (all_µ_elim thm))));
+		in	bc_tac [nth] (asms, tm)
+		end
+	end
+);
+=TEX
+
+=SML
+val €rtc_ind_tac› = rel_induction_tac rtc_ind;
+val €rtc_strongind_tac› = rel_induction_tac rtc_strongind;
+=TEX
+
 
 =GFT
 €rtc_cases› =

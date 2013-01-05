@@ -3,9 +3,9 @@
 =VDUMP t050i.tex
 \hypersetup{pdfkeywords=RogerBishopJones}
 
-Last Change $ $Date: 2013/01/03 17:12:44 $ $
+Last Change $ $Date: 2013/01/05 14:52:44 $ $
 
-$ $Id: t050.doc,v 1.1 2013/01/03 17:12:44 rbj Exp $ $
+$ $Id: t050.doc,v 1.2 2013/01/05 14:52:44 rbj Exp $ $
 =TEX
 }%ignore
 
@@ -113,7 +113,7 @@ I am assuming that once this is done here, there will be no further need to refe
 The natural way to hand crank such a datatype in ProofPower HOL would be to use the theory of trees in Arthan's mathematical examples as a representation type.
 However, I am more familiar with using the domain of an axiomatic set theory so it will be slightly easier for me to do that.
 
-I define the constructors over the representation type since they are simple enough to write out, instead I go straight to defining the closure conditions on the set of representatives.
+I don't define the constructors over the representation type since they are simple enough to write out, instead I go straight to defining the closure conditions on the set of representatives.
 
 There are two constructors, a constant constructor and an application constructor.
 There are countably many constants named by natural numbers, and tagged by zero to distinguish them from applications.
@@ -128,7 +128,7 @@ The closure condition is:
 Ü	± (µf a· s f ± s a ´ s (Nat‰u 1 í‰u (f í‰u a)))
 °
 
-The set of combinatory terms is then the smallest set which is \emph{CTrepClosed}.
+The property of being a combinatory term is then the smallest property which is \emph{CTrepClosed}.
 
 ¹HOLCONST
 Ü ÛCTsyntaxÝ : ONE GSU ­ BOOL
@@ -238,6 +238,21 @@ The type \emph{CT} is then introduced as follows:
 val CT_type_defn_thm = new_type_defn(["CT"], "CT", [], CTsyntax_nonempty);
 =TEX
 
+Which gives the following result:
+=GFT
+ÛCT_type_defn_thmÝ = ô ¶ f· TypeDefn CTsyntax f
+=TEX
+
+From which we can derive:
+
+=GFT
+ÛCT_type_lemma2Ý =
+	ô ¶ abs rep· (µ a· abs (rep a) = a)
+         ± (µ r· CTsyntax r ¤ rep (abs r) = r)
+         ± OneOne rep
+         ± (µ a· CTsyntax (rep a))
+=TEX
+
 \ignore{
 =SML
 val [CT_type_lemma2] = fc_rule [type_defn_lemma4] [CT_type_defn_thm];
@@ -246,12 +261,7 @@ val [CT_type_lemma2] = fc_rule [type_defn_lemma4] [CT_type_defn_thm];
 
 \subsection{Primitive Constructors over CT}
 
-There will be two constructors one for constants and one for applications.
-Applications are infix.
-
-=SML
-declare_infix(1000, "‰c");
-=TEX
+I could manage without defining the following mappings between the new type and its representations , but its easier to define them.
 
 \ignore{
 =SML
@@ -275,6 +285,14 @@ save_cs_¶_thm(pop_thm());
 Ü     ± OneOne CTrep
 Ü     ± (µ a· CTsyntax (CTrep a))
 °
+
+
+There will be two constructors one for constants and one for applications.
+Applications are infix.
+
+=SML
+declare_infix(1000, "‰c");
+=TEX
 
 ¹HOLCONST
 Ü Û$‰cÝ: CT ­ CT ­ CT
@@ -724,6 +742,13 @@ So the natural way to proceed in the absence of the rule-based relation definiti
 Ü µR x· normform R x ¤ µy· ³ R x y
 °
 
+=GFT
+Ûconfluent_normforms_uniqueÝ =
+	ô µ R· confluent R ´
+		(µ x y z· rtc R x y ± normform R y ± rtc R x z ± normform R z
+		´ y = z)
+=TEX
+
 \ignore{
 =SML
 val confluent_def = get_spec ¬confluent®;
@@ -734,29 +759,79 @@ set_goal([], ¬µR· confluent R ´
                   ´ (y = z)®);
 a (rewrite_tac[confluent_def, normform_def]
 	THEN REPEAT strip_tac);
-a (LIST_SPEC_NTH_ASM_T 5 [¬x®, ¬y®, ¬z®] ante_tac
-	THEN rewrite_tac [rtc_def]
-	THEN strip_tac
-	THEN_TRY asm_rewrite_tac[]);
+a (LIST_SPEC_NTH_ASM_T 5 [¬x®, ¬y®, ¬z®] strip_asm_tac);
+a (REPEAT_N 2 (POP_ASM_T ante_tac)
+	THEN once_rewrite_tac[rtc_cases]
+	THEN REPEAT strip_tac
+	THEN_TRY all_asm_ufc_tac[]
+	THEN (SYM_ASMS_T rewrite_tac));
+val confluent_normforms_unique = save_pop_thm "confluent_normforms_unique";
+=TEX
+}%ignore
+
+
+¹HOLCONST
+Ü ÛdiamondÝ: ('a ­ 'a  ­ BOOL) ­ BOOL
+÷üüüüüüüüüüü
+Ü µR· diamond R = µx y z· R x y ± R x z ´ ¶u· R y u ± R z u
+°
+
+=GFT
+Ûconfluent_diamond_rtcÝ =
+	ô µ R· confluent R ¤ diamond (rtc R)
+
+ÛR_rtc_diamondÝ =
+	ô µ R· diamond R ´ (µ x p· rtc R x p ´
+		(µ z· R x z ´ (¶ u· rtc R p u ± rtc R z u)))
+=TEX
+
+\ignore{
+=SML
+val diamond_def = get_spec ¬diamond®;
+
+set_goal([], ¬µR· confluent R = diamond (rtc R)®);
+a (rewrite_tac[confluent_def, diamond_def]);
+val confluent_diamond_rtc = save_pop_thm "confluent_diamond_rtc";
+
+set_goal([], ¬µR· diamond R ´
+         µx p· rtc R x p ´
+               µz· R x z ´
+                   ¶u· rtc R p u ± rtc R z u®);
+a (µ_tac THEN strip_tac);
+a (rtc_ind_tac THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
+a (fc_tac[diamond_def]);
+a (fc_tac [rtc_incr_thm]);
+a (¶_tac ¬z® THEN asm_rewrite_tac[rtc_def]);
+(* *** Goal "2" *** *)
+a (fc_tac[diamond_def]);
+a (all_asm_fc_tac[]);
+a (spec_nth_asm_tac 9 ¬u'®);
+a (all_fc_tac [rtc_incr_thm]);
+a (all_fc_tac [tran_rtc_thm2]);
+a (¶_tac ¬u''''® THEN asm_rewrite_tac[]);
+val R_rtc_diamond = save_pop_thm "R_rtc_diamond";
 
 =IGN
 
 stop;
 
-a (spec_nth_asm_tac 9 ¬u'®);
-a (all_asm_fc_tac[]);
-
-
-RW_TAC std_ss [confluent_def] THEN
-  `?u. RTC R y u /\ RTC R z u` by PROVE_TAC [] THEN
-  PROVE_TAC [normform_def, RTC_cases]);
-
-val confluent_normforms_unique = save_pop_thm "confluent_normforms_unique";
+set_goal([], ¬µr· diamond r ´ diamond (rtc r)®);
+a (REPEAT strip_tac THEN fc_tac [diamond_rtc_lemma]
+	THEN rewrite_tac[diamond_def]
+	THEN REPEAT strip_tac);
 
 =TEX
 }%ignore
 
+
+=IGN
+âˆ€	µ
+â‡’	´
+âˆƒ	¶
+âˆ§	±
+.	·
+=TEX
 
 =SML
 set_flag ("subgoal_package_quiet", false);
