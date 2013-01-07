@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.31 2012/11/01 15:59:58 rbj Exp $
+# $Id: rules.mk,v 1.32 2013/01/07 09:07:44 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -350,7 +350,7 @@ $(HTML008): %.html: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
 
-$(HTM008f): %.htm: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
+$(HTM008S): %.htm: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* suffix=htm imagedir=rbjgifs 
 
