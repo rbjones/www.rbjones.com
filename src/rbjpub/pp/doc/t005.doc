@@ -1,5 +1,5 @@
 =IGN
-$Id: t005.doc,v 1.17 2013/01/05 14:52:44 rbj Exp $
+$Id: t005.doc,v 1.18 2013/01/10 16:35:58 rbj Exp $
 open_theory "wfrel";
 set_merge_pcs ["hol", "wfrel"];
 =TEX
@@ -40,12 +40,12 @@ Fixed points, well founded relations and a recursion theorem.
 
 Created 2004/07/15
 
-Last Modified $ $Date: 2013/01/05 14:52:44 $ $
+Last Modified $ $Date: 2013/01/10 16:35:58 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t005.pdf}
 
-$ $Id: t005.doc,v 1.17 2013/01/05 14:52:44 rbj Exp $ $
+$ $Id: t005.doc,v 1.18 2013/01/10 16:35:58 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -112,12 +112,6 @@ It may be best in considering such proofs, first to look at the induction princi
 Ü µr· tc r = Ì s t· µtr· trans tr ± (µv u· r v u ´ tr v u) ´ tr s t
 °
 
-¹HOLCONST
-Ü ÛrtcÝ: ('a  ­ 'a ­ BOOL) ­  ('a  ­ 'a ­ BOOL)
-÷
-Ü µr· rtc r = Ì s t· s = t ² tc r s t
-°
-
 \subsection{Theorems}
 
 =GFT
@@ -170,7 +164,6 @@ It may be best in considering such proofs, first to look at the induction princi
 \ignore{
 =SML
 val tc_def = get_spec ¬tc®;
-val rtc_def = get_spec ¬rtc®;
 
 set_goal([], ¬µr· trans (tc r)®);
 a (rewrite_tac(map get_spec [¬tc®,¬trans®]));
@@ -557,6 +550,12 @@ val tc_ind2 = save_pop_thm "tc_ind2";
 =TEX
 }%ignore
 
+¹HOLCONST
+Ü ÛrtcÝ: ('a  ­ 'a ­ BOOL) ­  ('a  ­ 'a ­ BOOL)
+÷
+Ü µr· rtc r = Ì s t· s = t ² tc r s t
+°
+
 =GFT
 Ûtran_rtc_thmÝ =
 	ô µr· trans (rtc r)
@@ -570,6 +569,8 @@ val tc_ind2 = save_pop_thm "tc_ind2";
 
 \ignore{
 =SML
+val rtc_def = get_spec ¬rtc®;
+
 set_goal([], ¬µr· trans (rtc r)®);
 a (rewrite_tac [get_spec ¬trans®, rtc_def] THEN REPEAT strip_tac
 	THEN_TRY all_var_elim_asm_tac);
@@ -633,6 +634,10 @@ val rtc_decomp_thm3 = save_pop_thm "rtc_decomp_thm3";
 }%ignore
 
 =GFT
+Ûrtc_mono_thmÝ =
+	ô µ r1 r2· (µ x y· r1 x y ´ r2 x y)
+	 ´ (µ x y· rtc r1 x y ´ rtc r2 x y)
+
 Ûrtc_ind0Ý =
 	ô µ R r· (µ x y· r x y ´ R x y) ± (µ x· R x x)
 		± (µ x y z· R x y ± R y z ´ R x z)
@@ -640,15 +645,22 @@ val rtc_decomp_thm3 = save_pop_thm "rtc_decomp_thm3";
 
 Ûrtc_ind1Ý =
 	ô µ R r· (µ x· R x x) ± (µ x y z· R x y ± r y z ´ R x z)
-	´ (µ x y· rtc r x y ´ R x y)
+	 ´ (µ x y· rtc r x y ´ R x y)
 
 Ûrtc_indÝ =
 	ô µ r R· (µ x· R x x) ± (µ x y z· r x y ± R y z ´ R x z)
-	´ (µ x y· rtc r x y ´ R x y)
+	 ´ (µ x y· rtc r x y ´ R x y)
 =TEX
 
 \ignore{
 =SML
+set_goal([],¬µ r1 r2· (µ x y· r1 x y ´ r2 x y)
+	´ (µ x y· rtc r1 x y ´ rtc r2 x y)®);
+a (rewrite_tac [rtc_def]);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[tc_mono_thm]);
+val rtc_mono_thm = save_pop_thm "rtc_mono_thm";
+
 set_goal([], ¬µR r· (µx y· r x y ´ R x y) ± (µx· R x x) ± (µx y z· R x y ± R y z ´ R x z) ´ (µx y· rtc r x y ´ R x y)®);
 a (REPEAT strip_tac);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule[rtc_def, tc_def, get_spec ¬trans®]))
