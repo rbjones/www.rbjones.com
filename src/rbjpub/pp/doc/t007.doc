@@ -1,5 +1,5 @@
 =IGN
-$Id: t007.doc,v 1.30 2012/08/11 21:01:53 rbj Exp $
+$Id: t007.doc,v 1.31 2013/01/28 19:30:13 rbj Exp $
 open_theory "fixp";
 set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 =TEX
@@ -12,7 +12,7 @@ set_merge_pcs ["basic_hol1", "'sets_alg", "'Ø", "'savedthm_cs_∂_proof"];
 \def\Hide#1{\relax}
 \newcommand{\ignore}[1]{}
 
-\title{Inductive, Co-inductive and Pseudo-(Co-)Inductive Definitions in ProofPower}
+\title{Inductive and Co-inductive Definitions in ProofPower}
 \makeindex
 \author{Roger Bishop Jones\\rbj@rbjones.com}
 \date{\ }
@@ -35,12 +35,12 @@ Systematic facilities for a range of different kinds of inductive and co-inducti
 
 Created 2004/07/15
 
-Last Change $ $Date: 2012/08/11 21:01:53 $ $
+Last Change $ $Date: 2013/01/28 19:30:13 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t007.pdf}
 
-$ $Id: t007.doc,v 1.30 2012/08/11 21:01:53 rbj Exp $ $
+$ $Id: t007.doc,v 1.31 2013/01/28 19:30:13 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -605,6 +605,35 @@ declare_infix (300, "OpenUnder");
 ‹ µf X∑ X OpenUnder f § X Ä f(X)
 ∞
 
+It would be possible here to provide an induction principle based on the well-founded ordering by rank, in which the rank is the number of iteration of f starting with the empty set necessary to reach the element in question.
+However, I'm not convinved that this would be useful.
+Induction principles derived from more specific features of particular constructions are likely to be more useful in practice.
+I shall therefore hold off attemping such principles unless I find a need for them.
+
+\ignore{
+=SML
+val Monotonic_def = get_spec ¨MonotonicÆ;
+val ClosedUnder_def = get_spec ¨$ClosedUnderÆ;
+val OpenUnder_def = get_spec ¨$OpenUnderÆ;
+=IGN
+push_pc "hol1";
+pop_pc();
+
+set_goal([], ¨µ h∑ Monotonic h ¥ µs∑ (µt∑ t † s ¥ h t Ä s) ¥ s ClosedUnder hÆ);
+a (REPEAT strip_tac THEN rewrite_tac[ClosedUnder_def]);
+a (fc_tac[Monotonic_def]);
+a (PC_T1 "hol1" rewrite_tac[] THEN contr_tac);
+a (lemma_tac ¨∂t∑ t = s \ {x}Æ THEN1 prove_∂_tac);
+a (lemma_tac ¨s † h sÆ THEN1 (PC_T1 "hol1" asm_rewrite_tac[] THEN REPEAT strip_tac));
+(* *** Goal "1" *** *)
+
+a (PC_T1 "hol1" (spec_nth_asm_tac 4) ¨tÆ);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 1 ¨xÆ);
+
+=TEX
+}%ignore
+
 \subsection{Least and Greatest Fixed Points}
 
 Now we define the conditions for being a least fixed point.
@@ -718,15 +747,12 @@ val isgfp_unique_lemma = pop_thm();
 
 {\it Lfp} gives a fixed point:
 =GFT
-lfp_fixedpoint_thm =
+€lfp_fixedpoint_thm› =
 	Ù µh∑ Monotonic h ¥ h (Lfp h) = Lfp h
 =TEX
 
 \ignore{
 =SML
-val Monotonic_def = get_spec ¨MonotonicÆ;
-val ClosedUnder_def = get_spec ¨$ClosedUnderÆ;
-val OpenUnder_def = get_spec ¨$OpenUnderÆ;
 val Lfp_def = get_spec ¨LfpÆ;
 
 set_goal([],¨µh∑ Monotonic h ¥ h (Lfp h) = Lfp hÆ);
@@ -758,7 +784,7 @@ val lfp_fixedpoint_thm = save_pop_thm "lfp_fixedpoint_thm";
 
 {\it Lfp} gives the least fixed point:
 =GFT
-‹ Lfp_lfp_thm =
+€Lfp_lfp_thm› =
 	Ù µh∑ Monotonic h ¥ µg∑ h g = g ¥ (Lfp h) Ä g
 =TEX
 
@@ -782,7 +808,7 @@ val Lfp_lfp_thm = save_pop_thm "Lfp_lfp_thm";
 
 {\it Gfp} gives a fixed point:
 =GFT
-gfp_fixedpoint_thm
+€gfp_fixedpoint_thm›
 	Ù µh∑ Monotonic h ¥ h (Gfp h) = Gfp h
 =TEX
 
@@ -827,7 +853,7 @@ val gfp_fixedpoint_thm = save_pop_thm "gfp_fixedpoint_thm";
 Gfp gives the greatest fixed point:
 
 =GFT
-gfp_gfp_thm =
+€gfp_gfp_thm› =
 	Ù µh∑ Monotonic h ¥ µg∑ h g = g ¥ g Ä (Gfp h)
 =TEX
 
@@ -845,16 +871,16 @@ val gfp_gfp_thm = save_pop_thm "gfp_gfp_thm";
 \subsection{Closure and Interior}
 
 =GFT
-lfp_closed_thm =
+€lfp_closed_thm› =
 	Ù µh∑ Monotonic h ¥ (Lfp h) ClosedUnder h
 
-lfp_closed_thm1 =
+€lfp_closed_thm1› =
 	Ù µ h∑ Monotonic h ¥ (µ x∑ x ç h (Lfp h) ¥ x ç Lfp h)
 
-lfp_open_thm =
+€lfp_open_thm› =
 	Ù µh∑ Monotonic h ¥ (Lfp h) OpenUnder h
 
-lfp_open_thm1 =
+€lfp_open_thm1› =
 	Ù µ h∑ Monotonic h ¥ (µ x∑ x ç Lfp h ¥ x ç h (Lfp h))
 =TEX
 
@@ -867,8 +893,7 @@ a (fc_tac [lfp_fixedpoint_thm]
 val lfp_closed_thm = save_pop_thm "lfp_closed_thm";
 val lfp_closed_thm1 = save_thm ("lfp_closed_thm1",
 	rewrite_rule [ClosedUnder_def, sets_ext_clauses] lfp_closed_thm);
-=TEX
-=SML
+
 set_goal([],¨µh∑ Monotonic h ¥ (Lfp h) OpenUnder hÆ);
 a (rewrite_tac [OpenUnder_def] THEN REPEAT strip_tac);
 a (fc_tac [lfp_fixedpoint_thm]
@@ -880,13 +905,13 @@ val lfp_open_thm1 = save_thm ("lfp_open_thm1",
 }%ignore
 
 =GFT
-gfp_closed_thm =
+€gfp_closed_thm› =
 	Ù µh∑ Monotonic h ¥ (Gfp h) ClosedUnder h
-gfp_closed_thm1 =
+€gfp_closed_thm1› =
 	Ù µ h∑ Monotonic h ¥ (µ x∑ x ç h (Gfp h) ¥ x ç Gfp h)
-gfp_open_thm =
+€gfp_open_thm› =
 	Ù µh∑ Monotonic h ¥ (Gfp h) OpenUnder h
-gfp_open_thm1 =
+€gfp_open_thm1› =
 	Ù µ h∑ Monotonic h ¥ (µ x∑ x ç Gfp h ¥ x ç h (Gfp h))
 =TEX
 
@@ -899,8 +924,7 @@ a (fc_tac [gfp_fixedpoint_thm]
 val gfp_closed_thm = save_pop_thm "gfp_closed_thm";
 val gfp_closed_thm1 = save_thm ("gfp_closed_thm1",
 	rewrite_rule [ClosedUnder_def, sets_ext_clauses] gfp_closed_thm);
-=TEX
-=SML
+
 set_goal([],¨µh∑ Monotonic h ¥ (Gfp h) OpenUnder hÆ);
 a (rewrite_tac [OpenUnder_def] THEN REPEAT strip_tac);
 a (fc_tac [gfp_fixedpoint_thm]
@@ -936,9 +960,9 @@ val lfp_induction_thm1 = save_thm ("lfp_induction_thm1",
 }%ignore
 
 =GFT
-lfp_induction_thm =
+€lfp_induction_thm› =
 	Ù µh∑ Monotonic h ¥ µs∑ s ClosedUnder h ¥ (Lfp h) Ä s
-lfp_induction_thm1 =
+€lfp_induction_thm1› =
 	Ù µh∑ Monotonic h ¥ µs∑ h s Ä s ¥ (Lfp h) Ä s
 =TEX
 
@@ -958,11 +982,83 @@ val gfp_coinduction_thm1 = save_thm ("gfp_coinduction_thm1",
 }%ignore
 
 =GFT
-gfp_coinduction_thm =
+€gfp_coinduction_thm› =
 	Ù µh∑ Monotonic h ¥ µs∑ s OpenUnder h ¥ s Ä (Gfp h)
-gfp_coinduction_thm1 =
+€gfp_coinduction_thm1› =
 	Ù µ h∑ Monotonic h ¥ (µ s∑ s Ä h s ¥ s Ä Gfp h)
 =TEX
+
+These basic induction and co-induction theorems can be strengthened.
+The induction principle tells us that any collection having the relevant closure property contains the closure.
+
+The following allows properties to be established which are not themselves closed.
+
+=GFT
+€lfp_induction_thm2› =
+	Ù µh∑ Monotonic h ¥ µs∑ (s ° (Lfp h)) ClosedUnder h ¥ (Lfp h) Ä s
+€gfp_coinduction_thm2› =
+	Ù µh∑ Monotonic h ¥ µs∑ (s ¿ (Gfp h)) OpenUnder h ¥ s Ä (Gfp h)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µh∑ Monotonic h ¥ µs∑ (s ° (Lfp h)) ClosedUnder h ¥ (Lfp h) Ä sÆ);
+a (REPEAT strip_tac THEN all_fc_tac [lfp_induction_thm]);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val lfp_induction_thm2 = save_pop_thm "lfp_induction_thm2";
+
+set_goal([], ¨µh∑ Monotonic h ¥ µs∑ (s ¿ (Gfp h)) OpenUnder h ¥ s Ä (Gfp h)Æ);
+a (REPEAT strip_tac THEN all_fc_tac [gfp_coinduction_thm]);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val gfp_coinduction_thm2 = save_pop_thm "gfp_coinduction_thm2";
+=TEX
+}%ignore
+
+Above one must show that the intersection of $s$ and the least fixed point of $h$ is closed under $h$.
+
+It suffices however to show that the image of that set under $h$ is contained in $s$:
+
+=GFT
+€lfp_induction_thm3› =
+	Ù µ h∑ Monotonic h ¥ (µ s∑ h (s ° Lfp h) Ä s ¥ Lfp h Ä s)
+€gfp_coinduction_thm3› =
+	Ù µ h∑ Monotonic h ¥ (µ s∑ s Ä h (s ¿ Gfp h) ¥ s Ä Gfp h)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ h∑ Monotonic h ¥ (µ s∑ h (s ° Lfp h) Ä s ¥ Lfp h Ä s)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [Monotonic_def]);
+a (fc_tac [lfp_induction_thm1]);
+a (lemma_tac ¨s ° Lfp h Ä Lfp hÆ THEN1 (PC_T1 "hol1" prove_tac[])); 
+a (lemma_tac ¨h (s ° Lfp h) Ä Lfp hÆ
+	THEN1 (ALL_ASM_FC_T (MAP_EVERY ante_tac) []
+		THEN FC_T rewrite_tac [lfp_fixedpoint_thm]
+		THEN strip_tac));
+a (lemma_tac ¨h (s ° Lfp h) Ä s ° Lfp hÆ
+	THEN1 (PC_T1 "hol1" asm_prove_tac[]));
+a (all_fc_tac [lfp_induction_thm1]);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val lfp_induction_thm3 = save_pop_thm "lfp_induction_thm3";
+
+set_goal([], ¨µ h∑ Monotonic h ¥ (µ s∑ s Ä h (s ¿ Gfp h) ¥ s Ä Gfp h)Æ);
+a (REPEAT strip_tac);
+a (fc_tac [Monotonic_def]);
+a (fc_tac [gfp_coinduction_thm1]);
+a (lemma_tac ¨Gfp h Ä s ¿ Gfp hÆ THEN1 (PC_T1 "hol1" prove_tac[])); 
+a (lemma_tac ¨Gfp h Ä h (s ¿ Gfp h)Æ
+	THEN1 (ALL_ASM_FC_T (MAP_EVERY ante_tac) []
+		THEN FC_T rewrite_tac [gfp_fixedpoint_thm]
+		THEN strip_tac));
+a (lemma_tac ¨s ¿ Gfp h Ä h (s ¿ Gfp h)Æ
+	THEN1 (PC_T1 "hol1" asm_prove_tac[]));
+a (all_fc_tac [gfp_coinduction_thm1]);
+a (PC_T1 "hol1" asm_prove_tac[]);
+val gfp_coinduction_thm3 = save_pop_thm "gfp_coinduction_thm3";
+
+=TEX
+}%ignore
 
 \subsection{Monotonicity Against Other Relations}
 
@@ -2045,8 +2141,8 @@ This result is needed to establish course of values induction over $FChain$s, fo
 
 =GFT
 €ccrpou_fchainu_lemma1› =
-   Ù µ r f
-     ∑ CcRpoU r ± Increasing r r f ¥ (µ z∑ z ç FChainU f r ¥ r z (f z))
+   Ù µ r f∑ CcRpoU r ± Increasing r r f
+	¥ (µ z∑ z ç FChainU f r ¥ r z (f z))
 =TEX
 
 \ignore{
@@ -3183,9 +3279,9 @@ val fchainu_induction_thm4 = save_pop_thm "fchainu_induction_thm4";
 =TEX
 }%ignore
 
+=IGN
 This one looks plausible enough to turn into an induction tactic:
 
-=IGN
 €fchainu_induction_thm3› =
    Ù µ r f p
      ∑ CcRpoU r
@@ -3839,7 +3935,7 @@ The first result I am looking for is that the closure of a function {\it f} maps
 
 \ignore{
 =IGN
-stop;
+
 set_goal([], ¨µX f $ºâv x∑ Increasing $ºâv $ºâv f ± ChainComplete (X, $ºâv)
 	¥ FChainClosed f ({y | y ç X ± x ºâv y}, $ºâv)Æ);
 a (rewrite_tac [get_spec ¨FChainClosedÆ, get_spec ¨IncreasingÆ,
@@ -4084,8 +4180,6 @@ val crpou_induction_thm = save_pop_thm "crpou_fixp_induction_thm";
 =TEX
 }%ignore
 
-
-
 Here's a stronger induction principle:
 
 =GFT
@@ -4180,7 +4274,6 @@ a (REPEAT µ_tac THEN rewrite_tac [get_spec ¨FallingÆ, get_spec ¨IsGlbÆ, get_spec
 =TEX
 }%ignore
 
-
 A second notion of continuity is:
 
 πHOLCONST
@@ -4211,7 +4304,7 @@ We begin with inductive definitions of sets, later addressing the conversion of 
 
 The simplest example of interest here is the natural numbers, which can be defined (in HOL) as the smallest set of individuals which includes zero (the individual which is not in the range of the one-one function whose existence is asserted by the usual axiom of infinity) and is closed under the successor function (which is that same one-one function).
 
-We can think of this as forming the natural numbers by starting with some set ({0}) and then adding the additional values following some prescription until no more can be added.
+We can think of this as forming the natural numbers by starting with some set ({0}) and then adding further elements following some prescription until no more can be added.
 Because we are always adding values, the operation on the set-of-values-so-far is monotonic.
 If the closure is supplied in a suitable manner then a completely general proof of monotonicity will suffice.
 
@@ -4251,7 +4344,7 @@ We do this by working from a function which models the available constructions o
 Other things might be used in the construction, but no other ``objects'', so the purpose of this map, which I will call a content function, is not to fully capture the details of the available constructors or derivation rules, but rather to capture the {\it content} of the available constructions or the premises of the rules.
 
 From a content function a fixed point can be obtained.
-This is done by converting it into a monotonic function and then using the Tarki-Knaster result.
+This is done by converting it into a monotonic function and then using the Knaster-Tarski result.
 
 πHOLCONST
 ‹ €Fun2MonoFun›: ('a SET ≠ 'a SET) ≠ ('a SET ≠ 'a SET)
@@ -4262,7 +4355,7 @@ This is done by converting it into a monotonic function and then using the Tarki
 This function does always deliver a monotonic result:
 
 =GFT
-F2MF_Monotonic_thm =
+€F2MF_Monotonic_thm› =
 	Ù µ r∑ Monotonic (Fun2MonoFun f)
 =TEX
 
@@ -4281,7 +4374,7 @@ We now define the function which maps such a content function to the least fixed
 
 πHOLCONST
 ‹ €HeredFun›: ('a SET ≠ 'a SET) ≠ 'a SET
-˜¸¸¸¸¸¸
+˜¸¸¸¸¸¸¸¸¸¸
 ‹ µ f∑ HeredFun f = Lfp (Fun2MonoFun f)
 ∞
 
@@ -4289,7 +4382,7 @@ And its dual:
 
 πHOLCONST
 ‹ €CoHeredFun›: ('a SET ≠ 'a SET) ≠ 'a SET
-˜¸¸¸¸¸¸
+˜¸¸¸¸¸¸¸¸¸¸
 ‹ µ f∑ CoHeredFun f = Gfp (Fun2MonoFun f)
 ∞
 
@@ -4302,21 +4395,26 @@ declare_infix (300, "OpenUnderFun");
 
 πHOLCONST
 ‹ $€ClosedUnderFun› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
-˜
+˜¸¸¸¸¸¸¸¸
 ‹ µs f∑ s ClosedUnderFun f § s ClosedUnder (Fun2MonoFun f)  
 ∞
 
 πHOLCONST
 ‹ $€OpenUnderFun› : 'a SET ≠ ('a SET ≠ 'a SET) ≠ BOOL
-˜
+˜¸¸¸¸¸¸¸
 ‹ µs f∑ s OpenUnderFun f § s OpenUnder (Fun2MonoFun f)
 ∞
 
-=IGN
-rewrite_rule [get_spec ¨$ClosedUnderFunÆ,
-	get_spec ¨$ClosedUnderÆ,
-	get_spec ¨Fun2MonoFunÆ,
-	sets_ext_clauses] HeredFun_induction_thm;
+We then prove the obvious claims about closure and openness, and the simplest induction and co-induction principles.
+
+=GFT
+€ClosedUnderFun_thm› =
+	Ù µ f s∑ s ClosedUnderFun f § (µ t∑ t Ä s ¥ f t Ä s)
+€OpenUnderFun_thm1› =
+	Ù µ f s∑ s OpenUnderFun f
+         § (µ t∑ s Ä t ¥ (µ e∑ e ç s ¥ (∂ t'∑ t' Ä t ± e ç f t')))
+€OpenUnderFun_thm2› =
+	Ù µ f s∑ s OpenUnderFun f § (µ t∑ s Ä t ¥ s Ä Fun2MonoFun f t)
 =TEX
 
 \ignore{
@@ -4327,6 +4425,58 @@ val CoHeredFun_def = get_spec ¨CoHeredFunÆ;
 val ClosedUnderFun_def = get_spec ¨$ClosedUnderFunÆ;
 val OpenUnderFun_def = get_spec ¨$OpenUnderFunÆ;
 =TEX
+=SML
+set_goal([], ¨µf s∑ s ClosedUnderFun f § (µ t∑ t Ä s ¥ f t Ä s)Æ);
+a (rewrite_tac[ClosedUnderFun_def, ClosedUnder_def, Fun2MonoFun_def]);
+a (PC_T1 "hol1" prove_tac[ClosedUnderFun_def, ClosedUnder_def, Fun2MonoFun_def]);
+val ClosedUnderFun_thm = save_pop_thm "ClosedUnderFun_thm";
+
+set_goal([], ¨µf s∑ s OpenUnderFun f §
+	(µt∑ s Ä t ¥ µe∑ e ç s ¥ ∂t'∑ t' Ä t ± e ç f t')Æ);
+a (PC_T1 "hol1" rewrite_tac[OpenUnderFun_def, OpenUnder_def, Fun2MonoFun_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (asm_ufc_tac[]);
+a (∂_tac ¨t'Æ THEN asm_prove_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨sÆ);
+a (asm_ufc_tac[]);
+a (∂_tac ¨t'Æ THEN asm_rewrite_tac[]);
+val OpenUnderFun_thm1 = save_pop_thm "OpenUnderFun_thm1";
+
+set_goal([], ¨µf s∑ s OpenUnderFun f § (µ t∑ s Ä t ¥ s Ä (Fun2MonoFun f) t)Æ);
+a (rewrite_tac[OpenUnderFun_def, OpenUnder_def]
+	THEN REPEAT strip_tac
+	THEN_TRY asm_fc_tac[]);
+(* *** Goal "1" *** *)
+a (fc_tac [rewrite_rule [Monotonic_def] (µ_elim ¨fÆ F2MF_Monotonic_thm)]);
+a (spec_nth_asm_tac 1 ¨fÆ THEN all_fc_tac [Ä_trans_thm]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 1 ¨sÆ);
+val OpenUnderFun_thm2 = save_pop_thm "OpenUnderFun_thm2";
+=TEX
+}%ignore
+
+=GFT
+€HeredFun_Closed_thm› =
+	Ù µf∑ (HeredFun f) ClosedUnderFun f
+€HeredFun_Closed_thm1› =
+	Ù µ f x∑ (∂ t∑ (µ x∑ x ç t ¥ x ç HeredFun f) ± x ç f t)
+		¥ x ç HeredFun f
+
+€HeredFun_Open_thm› =
+	Ù µf∑ (HeredFun f) OpenUnderFun f
+€HeredFun_Open_thm1› =
+	Ù µ f x∑ x ç HeredFun f
+	¥ (∂ t∑ (µ x∑ x ç t ¥ x ç HeredFun f) ± x ç f t)
+
+€HeredFun_induction_thm› =
+	Ù µf s∑ s ClosedUnderFun f ¥ HeredFun f Ä s
+€HeredFun_induction_thm1› =
+	Ù µf s∑ (µt∑ t Ä s ¥ f t Ä s) ¥ HeredFun f Ä s
+=TEX
+
+\ignore{
 =SML
 set_goal([], ¨µf∑ (HeredFun f) ClosedUnderFun fÆ);
 a (rewrite_tac [HeredFun_def, ClosedUnderFun_def]);
@@ -4346,8 +4496,7 @@ a (list_spec_nth_asm_tac 1 [¨fÆ, ¨xÆ]);
 a (spec_nth_asm_tac 1 ¨tÆ);
 a (asm_fc_tac[]);
 val HeredFun_Closed_thm1 = save_pop_thm "HeredFun_Closed_thm1";
-=TEX
-=SML
+
 set_goal([], ¨µf∑ (HeredFun f) OpenUnderFun fÆ);
 a (rewrite_tac [HeredFun_def, OpenUnderFun_def]);
 a (REPEAT strip_tac);
@@ -4355,8 +4504,7 @@ a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
 a (FC_T rewrite_tac [lfp_open_thm]);
 val HeredFun_Open_thm = save_pop_thm "HeredFun_Open_thm";
-=TEX
-=SML
+
 set_goal([], ¨µf s∑ s ClosedUnderFun f ¥ HeredFun f Ä sÆ);
 a (rewrite_tac [HeredFun_def, ClosedUnderFun_def]);
 a (REPEAT strip_tac);
@@ -4364,8 +4512,7 @@ a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
 a (ALL_FC_T rewrite_tac [lfp_induction_thm]);
 val HeredFun_induction_thm = save_pop_thm "HeredFun_induction_thm";
-=TEX
-=SML
+
 set_goal([], ¨µf s∑ (µt∑ t Ä s ¥ f t Ä s) ¥ HeredFun f Ä sÆ);
 a (rewrite_tac [HeredFun_def]);
 a (REPEAT strip_tac);
@@ -4377,7 +4524,7 @@ a (swap_nth_asm_concl_tac 1);
 a (rewrite_tac [ClosedUnder_def, Fun2MonoFun_def]);
 a (DROP_NTH_ASM_T 4 ante_tac
 	THEN prove_tac [sets_ext_clauses]);
-val HeredFun_induction_thm2 = save_pop_thm "HeredFun_induction_thm2";
+val HeredFun_induction_thm1 = save_pop_thm "HeredFun_induction_thm1";
 =TEX
 
 =IGN
@@ -4430,33 +4577,23 @@ a (asm_fc_tac[]);
 val HeredFun_Closed_thm1 = save_pop_thm "HeredFun_Closed_thm1";
 =TEX
 
-
-=GFT
-HeredFun_Closed_thm =
-	Ù µf∑ (HeredFun f) ClosedUnderFun f
-HeredFun_Open_thm =
-	Ù µf∑ (HeredFun f) OpenUnderFun f
-HeredFun_induction_thm =
-	Ù µf s∑ s ClosedUnderFun f ¥ HeredFun f Ä s
-HeredFun_induction_thm2 =
-	Ù µf s∑ (µt∑ t Ä s ¥ f t Ä s) ¥ HeredFun f Ä s
-=TEX
-
-=IGN	
+=SML	
 val HeredFun_Open_thm1 = save_thm ("HeredFun_Open_thm1",
 	rewrite_rule [OpenUnderFun_def, OpenUnder_def, Fun2MonoFun_def, sets_ext_clauses]
 	HeredFun_Open_thm);
-OpenUnder_def;
 =TEX
 }%ignore
 
 =GFT
-CoHeredFun_Closed_thm =
+€CoHeredFun_Closed_thm› =
 	Ù µf∑ (CoHeredFun f) ClosedUnderFun f
-CoHeredFun_Open_thm =
+€CoHeredFun_Open_thm› =
 	Ù µf∑ (CoHeredFun f) OpenUnderFun f
-CoHeredFun_coinduction_thm =
+
+€CoHeredFun_coinduction_thm› =
 	Ù µs f∑ s OpenUnderFun f ¥ s Ä CoHeredFun f
+€CoHeredFun_coinduction_thm2› =
+	Ù µ s f∑ s Ä Fun2MonoFun f s ¥ s Ä CoHeredFun f
 =TEX
 
 \ignore{
@@ -4468,8 +4605,7 @@ a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
 a (FC_T rewrite_tac [gfp_closed_thm]);
 val CoHeredFun_Closed_thm = save_pop_thm "CoHeredFun_Closed_thm";
-=TEX
-=SML
+
 set_goal([], ¨µf∑ (CoHeredFun f) OpenUnderFun fÆ);
 a (rewrite_tac [CoHeredFun_def, OpenUnderFun_def]);
 a (REPEAT strip_tac);
@@ -4485,8 +4621,48 @@ a (lemma_tac ¨Monotonic (Fun2MonoFun f)Æ
 	THEN1 (rewrite_tac [F2MF_Monotonic_thm]));
 a (ALL_FC_T rewrite_tac [gfp_coinduction_thm]);
 val CoHeredFun_coinduction_thm = save_pop_thm "CoHeredFun_coinduction_thm";
+
+val CoHeredFun_coinduction_thm2 = save_thm ("CoHeredFun_coinduction_thm2", rewrite_rule [OpenUnderFun_def, OpenUnder_def] CoHeredFun_coinduction_thm);
+
 =TEX
 }%ignore
+
+The following stronger induction and co-induction principles correspond to the notion of strong induction principle in the hol4 package for definition of relations by taking transitive closures.
+These principles are not specific to the definition of relations but their inclusion is motivated by problems arising in the definition of relations, more specifically in obtaining Church-Rosser or confluence results in combinatory logics.
+
+The following principle is a very slight strengthening of the basic induction principle:
+
+
+=GFT
+€HeredFun_induct_thm0› =
+	Ù µf s∑ (s ° HeredFun f) ClosedUnderFun f ¥ HeredFun f Ä s
+=IGN
+HeredFun_strong_induct_thm2 =
+	Ù µf s∑ (µt∑ t Ä (s ° HeredFun f) ¥ f t Ä HeredFun f) ¥ HeredFun f Ä s
+
+=TEX
+
+
+\ignore{
+=SML
+set_goal([], ¨µf s∑ (s ° HeredFun f) ClosedUnderFun f ¥ HeredFun f Ä sÆ);
+a (REPEAT strip_tac);
+a (fc_tac [list_µ_elim [¨fÆ, ¨s ° HeredFun fÆ] HeredFun_induction_thm]);
+a (POP_ASM_T ante_tac THEN PC_T1 "hol1" prove_tac[]);
+val HeredFun_induct_thm0 = save_pop_thm "HeredFun_induct_thm0";
+
+=IGN
+set_goal([], ¨µf s∑ (µt∑ t Ä (s ° HeredFun f) ¥ f t Ä s)
+	¥ HeredFun f Ä sÆ);
+a (REPEAT µ_tac);
+a (fc_tac [list_µ_elim [¨fÆ, ¨s ° HeredFun fÆ] HeredFun_induction_thm0]);
+
+
+stop;
+
+=TEX
+}%ignore
+
 
 \subsection{Collections of Rules}
 
@@ -4550,11 +4726,11 @@ $€OpenUnderRel› : 'a SET ≠ ('a ≠ 'a ≠ BOOL) ≠ BOOL
 ∞
 
 =GFT
-HeredRel_Closed_thm =
+€HeredRel_Closed_thm› =
 	Ù µf∑ (HeredRel f) ClosedUnderRel f
-HeredRel_Open_thm =
+€HeredRel_Open_thm› =
 	Ù µf∑ (HeredRel f) OpenUnderRel f
-HeredRel_induction_thm =
+€HeredRel_induction_thm› =
 	Ù µs f∑ s ClosedUnderRel f ¥ HeredRel f Ä s
 =TEX
 
@@ -4584,11 +4760,11 @@ val HeredRel_induction_thm = save_pop_thm "HeredRel_induction_thm";
 }%ignore
 
 =GFT
-CoHeredRel_Closed_thm =
+€CoHeredRel_Closed_thm› =
 	Ù µf∑ (CoHeredRel f) ClosedUnderRel f
-CoHeredRel_Open_thm =
+€CoHeredRel_Open_thm› =
 	Ù µf∑ (CoHeredRel f) OpenUnderRel f
-CoHeredRel_coinduction_thm =
+€CoHeredRel_coinduction_thm› =
 	Ù µs f∑ s OpenUnderRel f ¥ s Ä CoHeredRel f
 =TEX
 
@@ -4658,13 +4834,13 @@ To accomplish this we need the concepts of closure and co-closure for sets relat
 ∞
 
 =GFT
-Hereditary_Closed_thm =
+€Hereditary_Closed_thm› =
 	Ù µ(X, $<<) p∑
 	ClosedUnderProp (X, $<<) (Hereditary (X, $<<) p) p
-Hereditary_Open_thm =
+€Hereditary_Open_thm› =
 	Ù µ(X, $<<) p∑
 	OpenUnderProp (X, $<<) (Hereditary (X, $<<) p) p
-Hereditary_induction_thm =
+€Hereditary_induction_thm› =
 	Ù µ(X, $<<) s p∑
 	ClosedUnderProp (X, $<<) s p ¥ Hereditary (X, $<<) p Ä s
 =TEX
@@ -4698,13 +4874,13 @@ val Hereditary_induction_thm = save_pop_thm "Hereditary_induction_thm";
 }%ignore
 
 =GFT
-CoHereditary_Closed_thm =
+€CoHereditary_Closed_thm› =
 	Ù µ(X, $<<) p∑
 	ClosedUnderProp (X, $<<) (CoHereditary (X, $<<) p) p
-CoHereditary_Open_thm =
+€CoHereditary_Open_thm› =
 	Ù µ(X, $<<) p∑
 	OpenUnderProp (X, $<<) (CoHereditary (X, $<<) p) p
-CoHereditary_coinduction_thm =
+€CoHereditary_coinduction_thm› =
 	Ù µ(X, $<<) s p∑
 	OpenUnderProp (X, $<<) s p ¥ s Ä CoHereditary (X, $<<) p
 =TEX
@@ -4862,6 +5038,28 @@ This whole process can be accomplished by a single function application to a lis
 ‹ µ tf asrll ∑ HCR tf asrll = HeredRel (CompoundRels tf asrll)
 ∞
 
+\section{INDUCTIVE DEFINITIONS OF RELATIONS}
+
+This section is included to provided support for defining reduction systems over various kinds of terms.
+The two kinds of term with which I am most concerned are those of combinatory logic, and of infinitary combinatory logic.
+These are of course quite different, the material here is therefore independent of the type of terms involved.
+
+This material is intended to provide an alternative to the facilities available in hol4 for defining relations.
+These facilities work from a notation for defining rules, and define the reflexive transitive closure of the given rules, delivering a couple of induction principles and some other useful theorems.
+
+The approach here is to assume that primitive reductions are defined using the normal definitional features in HOL, and provide the obvious operators for obtaining the required kind of relation from these primitive reductions.
+
+The two main operations of interest are that of forming the reflexive and transitive closures and that of making a congruence relation.
+The first two are independent of the term structure, but the last one is not.
+To reason about that operation independently of the structure we would need to work with parameters which expose some aspects of the structure.
+
+
+
+
+
+
+
+
 \section{PSEUDO (CO-)INDUCTIVE DEFINITIONS}
 
 This discussion is tainted by the attempt to support a tendentious application of the notion of pseudo-inductive definition to the construction of pure, non-well-founded ontologies of concrete categories and functors.
@@ -4946,11 +5144,13 @@ The third change is to split our definitions of {\it I\_closed} and {\it II\_clo
 ‹ µr w∑ II_closed r w
 ‹	§ µx∑ (µy∑ r y x ¥ ∂z∑ r z y ± z ç w) ¥ x ç w
 ∞
+
 πHOLCONST
 ‹ €I_closure› : ('X ≠ 'X ≠ BOOL) ≠ 'X 
 ˜¸¸¸¸¸¸
 ‹ µr∑ I_closure r = •{x | I_closed r x}
 ∞
+
 πHOLCONST
 ‹ €II_closure› : ('X ≠ 'X ≠ BOOL) ≠ 'X 
 ˜¸¸¸¸¸¸
@@ -5012,12 +5212,12 @@ set_goal([], ¨µR∑ PseudoWellFounded R §
 The following theorems correspond to the induction principles in \cite{forster92}, p14.
 
 =GFT
-p_induct_thm1 =
+€p_induct_thm1› =
    Ù µ X' R
      ∑ (µ x∑ (∂ y∑ R y x ± (µ z∑ R z y ¥ z ç X')) ¥ x ç X')
          ¥ I_closure R Ä X'
 
-p_induct_thm2 =
+€p_induct_thm2› =
    Ù µ X' R
      ∑ (µ x∑ (µ y∑ R y x ¥ (∂ z∑ R z y ± z ç X')) ¥ x ç X')
          ¥ II_closure R Ä X'
@@ -5058,16 +5258,16 @@ val II_closed_•_lemma = save_pop_thm "II_closed_•_lemma";
 }%ignore
 
 =GFT
-I_closed_•_lemma =
+€I_closed_•_lemma› =
    Ù µ R y∑ (µ x∑ x ç y ¥ I_closed R x) ¥ I_closed R (• y)
 
-II_closed_•_lemma =
+€II_closed_•_lemma› =
    Ù µ R y∑ (µ x∑ x ç y ¥ II_closed R x) ¥ II_closed R (• y)
 
-I_closed_closure_lemma =
+€I_closed_closure_lemma› =
    Ù µ R∑ I_closed R (I_closure R)
 
-II_closed_closure_lemma =
+€II_closed_closure_lemma› =
    Ù µ R∑ II_closed R (II_closure R)
 =TEX
 
@@ -5205,10 +5405,10 @@ val P_closed_¥_P_thm = save_pop_thm "P_closed_¥_P_thm";
 }%ignore
 
 =GFT
-P_closed_¥_P_thm =
+€P_closed_¥_P_thm› =
 	Ù µ c d P Q x∑ x ç P_closure (c, d, P, Q) ¥ P x
 
-Q_closed_¥_Q_thm =
+€Q_closed_¥_Q_thm› =
 	Ù µ c d P Q x∑ x ç Q_closure (c, d, P, Q) ¥ Q x
 =TEX
 
@@ -5275,7 +5475,8 @@ I need to ba able to talk about a region over which the values of a function are
 πHOLCONST
 ‹ €FixedRegion›: (('a ≠ 'b) ≠ ('a≠ 'b)) ≠ ('a ≠ 'b) ≠ 'a SET ≠ BOOL
 ˜¸¸¸¸¸¸
-‹ µG f X∑ FixedRegion G f X § µg∑ (µx∑ x ç X ¥ g x = f x) ¥ (µx∑ x ç X ¥ G g x = f x)
+‹ µG f X∑ FixedRegion G f X §
+‹	µg∑ (µx∑ x ç X ¥ g x = f x) ¥ (µx∑ x ç X ¥ G g x = f x)
 ∞
 
 What I aim to say here is that if a functor satisfies something a bit like and induction principle then it has a fixed point.
@@ -5283,8 +5484,9 @@ What I aim to say here is that if a functor satisfies something a bit like and i
 =GFT
 €special_recursion_thm› = 
    Ù? µ G∑
-	(µP x∑ (∂v X f∑ µg∑ (µy∑ y ç X ¥ g y = f y) ¥ G g x = v ± (µy∑ y ç X ¥ P y)) ¥ P x)
-	¥ ∂g∑ G g = g
+	(µP x∑ (∂v X f∑ µg∑ (µy∑ y ç X ¥ g y = f y)
+			¥ G g x = v ± (µy∑ y ç X ¥ P y)) ¥ P x)
+			¥ ∂g∑ G g = g
 =TEX
 
 
@@ -5797,14 +5999,14 @@ We might as well treat the necessary injection from the natural numbers into the
 
 
  πHOLCONST
-‹ SierpinskiPair ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
+‹ €SierpinskiPair› ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
  ˜¸¸¸¸¸¸
 ‹ µ (S, $çâm) (x,y) = 
  ∞
 
 
  πHOLCONST
-‹ MSUPair ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
+‹ €MSUPair› ('a SET ∏ ('a ≠ 'a ≠ BOOL)) ≠ 'a ∏ 'a ≠ 'a
  ˜¸¸¸¸¸¸
 ‹ µ (S, $çâm) (x,y)∑ MSUPair (S, $çâm) (x,y) = 
  ∞
