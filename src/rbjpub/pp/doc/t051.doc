@@ -1,5 +1,5 @@
 =IGN
-$Id: t051.doc,v 1.1 2013/01/28 19:30:14 rbj Exp $
+$Id: t051.doc,v 1.2 2013/02/01 09:02:00 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -41,12 +41,12 @@ These trees are similar to the terms of the infinite combinatory logic which are
 
 Created 2013/01/20
 
-Last Change $ $Date: 2013/01/28 19:30:14 $ $
+Last Change $ $Date: 2013/02/01 09:02:00 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t051.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t051.pdf}
 
-$ $Id: t051.doc,v 1.1 2013/01/28 19:30:14 rbj Exp $ $
+$ $Id: t051.doc,v 1.2 2013/02/01 09:02:00 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -79,7 +79,7 @@ At this time I am not yet decided whether there should also be a type of ordinal
 
 I am thinking of doing this in parallel in ProofPower and in hol4.
 
-\section{Ordinals and Cardinals}
+\section{Preparatory Materials}
 
 This section is likely to mostly disappear.
 It will then contain those materials on ordinals on cardinals which are independent of the types introduced in the next section.
@@ -88,6 +88,7 @@ It will then contain those materials on ordinals on cardinals which are independ
 open_theory "rbjmisc";
 force_new_theory "Ûordcard0Ý";
 new_parent "U_orders";
+new_parent "trees";
 new_parent "wf_relp";
 new_parent "wf_recp";
 force_new_pc "Û'ordcard0Ý";
@@ -114,174 +115,6 @@ From here on in we have the original commentary (at least, {\it pro-tem}), which
 The material in this section is primarily oriented towards expressing strong axioms of infinity.
 It does this by treating well-orderings as if they were ordinals and cardinals.
 
-\subsection{Ordinals}
-
-This material is least likely to survive, the subsequent 
-
-Using the order types of well-orderings would be pukka, but the full order types are not available to us because ot the HOL type system, and taking the well-orderings themselves is probably better than using the kinds of order-types which we can come up with.
-The situation is slightly further complicated by the fact that exactly the same well ordering of the same set has more than one representative, a strict (irreflexive) relationship a reflexive relationship, and a variety of muddles which are neither reflexive not irreflexive.
-
-I could insist on treating only the strict relationships as ordinals and cardinals, but so far as I can see at present there is no need to do that.
-The main problem I see at the moment is that two representatives of the same ordinal will not necessarily be isomorphic relations.
-I suppose that's pretty bad so I will insist on ordinals being strict well-orderings.
-
-I'll define that here, so that I have a single place to alter if I change my mind.
-
-¹HOLCONST
-Ü ÛOrdinal‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<)· Ordinal‰o (X, $<<) ¤ Irrefl (X, $<<) ± WellOrdering (X, $<<)
-°
-
-\subsubsection{Relation Morphisms}
-
-A morphism between two relations is a function between the carriers of the relations which maps pairs related under the first relation to pairs related under the second.
-
-¹HOLCONST
-Ü ÛRelMorphÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL))
-Ü			­ ('a ­ 'b) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<) (Y, $<<<) f·
-Ü	RelMorph (X, $<<) (Y, $<<<) f
-Ü ¤	µx y· x  X ± y  X ´ f x  Y ± f y  Y ±  (x << y ¤ f x <<< f y)
-°
-
-=SML
-declare_infix(300, "¼‰rel");
-declare_infix(300, "~‰rel");
-declare_infix(300, "<‰rel");
-=TEX
-
-¹HOLCONST
-Ü $Û¼‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<) (Y, $<<<)·
-Ü	(X, $<<) ¼‰rel (Y, $<<<)
-Ü ¤	¶f· RelMorph (X, $<<) (Y, $<<<) f
-°
-
-¹HOLCONST
-Ü $Û<‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<) (Y, $<<<)·
-Ü	(X, $<<) <‰rel (Y, $<<<)
-Ü ¤	(X, $<<) ¼‰rel (Y, $<<<) ± ³ (Y, $<<<) ¼‰rel (X, $<<)
-°
-
-A relation isomorphism is a relation morphism which has an inverse morphism.
-
-¹HOLCONST
-Ü ÛRelIsoÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL))
-Ü			­ ('a ­ 'b) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<) (Y, $<<<) f·
-Ü	RelIso (X, $<<) (Y, $<<<) f
-Ü ¤	RelMorph (X, $<<) (Y, $<<<) f
-Ü	± (¶g·
-Ü		RelMorph (Y, $<<<) (X, $<<) g
-Ü		± (µx· x  X ´ g (f x) = x)
-Ü		± (µy· y  Y ´ f (g y) = y)
-Ü	)
-°
-
-¹HOLCONST
-Ü $Û~‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<) (Y, $<<<)·
-Ü	(X, $<<) ~‰rel (Y, $<<<)
-Ü ¤	¶f· RelIso (X, $<<) (Y, $<<<) f
-°
-
-\ignore{
-=SML
-set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´ (Y, $<<<) ~‰rel (X, $<<)®);
-a (rewrite_tac [get_spec ¬$~‰rel®, get_spec ¬RelIso®] THEN REPEAT strip_tac);
-a (¶_tac ¬g® THEN REPEAT strip_tac);
-a (¶_tac ¬f® THEN asm_rewrite_tac[]);
-val reliso_sym_lemma1 = save_pop_thm "reliso_sym_lemma1";
-
-set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ¤ (Y, $<<<) ~‰rel (X, $<<)®);
-a (REPEAT strip_tac THEN all_fc_tac [reliso_sym_lemma1]);
-val reliso_sym_lemma2 = save_pop_thm "reliso_sym_lemma2";
-
-set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´
-	(Antisym (X, $<<) ´ Antisym (Y, $<<<))®);
-a (rewrite_tac (map get_spec [¬$~‰rel®, ¬RelIso®, ¬RelMorph®, ¬Antisym®]));
-a (REPEAT strip_tac);
-a (all_asm_fc_tac[]);
-(*
-a (lemma_tac ¬g y << g x®);
-(* *** Goal "1" *** *)
-a (lemma_tac ¬f (g y) <<< f (g x)®
-	THEN1 (asm_rewrite_tac[]));
-a (lemma_tac ¬f (g y)  Y ± f (g x)  Y® THEN1 asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 15 [¬y®, ¬x®]);
-*)
-(* *** Goal "2" *** *)
-a (lemma_tac ¬³ (g x) << (g y)®);
-(* *** Goal "2.1" *** *)
-a (lemma_tac ¬³ g x = g y® THEN1 swap_nth_asm_concl_tac 7);
-(* *** Goal "2.1.1" *** *)
-a (SYM_ASMS_T once_rewrite_tac);
-a (POP_ASM_T rewrite_thm_tac);
-(* *** Goal "2.1.2" *** *)
-a (list_spec_nth_asm_tac 11 [¬g x®, ¬g y®]);
-(* *** Goal "2.2" *** *)
-a (lemma_tac ¬f (g x)  Y ± f (g y)  Y® THEN1 asm_rewrite_tac[]);
-a (list_spec_nth_asm_tac 16 [¬x®, ¬y®]);
-val reliso_antisym_lemma1 = save_pop_thm "reliso_antisym_lemma1";
-
-set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) ~‰rel (Y, $<<<) ´
-	(Antisym (X, $<<) ¤ Antisym (Y, $<<<))®);
-a (REPEAT strip_tac THEN all_fc_tac [reliso_antisym_lemma1]);
-a (all_fc_tac [reliso_sym_lemma2]);
-a (all_fc_tac [reliso_antisym_lemma1]);
-val reliso_antisym_lemma2 = save_pop_thm "reliso_antisym_lemma2";
-
-=IGN
-set_goal([], ¬µ(X, $<<) (Y, $<<<)· (X, $<<) <‰rel (Y, $<<<) ´
-	(PartialOrder (X, $<<) ´ PartialOrder (Y, $<<<))®);
-a (rewrite_tac (map get_spec [¬$<‰rel®, ¬RelMorph®, ¬PartialOrder®]));
-=TEX
-}%ignore
-
-=GFT
-reliso_sym_lemma1 =
-   ô µ (X, $<<) (Y, $<<<)
-     · (X, $<<) ~‰rel (Y, $<<<) ´ (Y, $<<<) ~‰rel (X, $<<)
-
-reliso_sym_lemma2 =
-   ô µ (X, $<<) (Y, $<<<)
-     · (X, $<<) ~‰rel (Y, $<<<) ¤ (Y, $<<<) ~‰rel (X, $<<)
-
-reliso_antisym_lemma1 =
-   ô µ (X, $<<) (Y, $<<<)
-     · (X, $<<) ~‰rel (Y, $<<<) ´ Antisym (X, $<<) ´ Antisym (Y, $<<<)
-
-reliso_antisym_lemma2 =
-   ô µ (X, $<<) (Y, $<<<)
-     · (X, $<<) ~‰rel (Y, $<<<) ´ (Antisym (X, $<<) ¤ Antisym (Y, $<<<))
-=TEX
-
-\subsubsection{Successor and Limit Ordinals}
-
-
-¹HOLCONST
-Ü $ÛSuccessor‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<)· Successor‰o (X, $<<)
-Ü	¤ Ordinal‰o (X, $<<) ± ¶x· x  X ± µy· y  X ´ y << x
-°
-
-¹HOLCONST
-Ü $ÛLimit‰oÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ (X, $<<)· Limit‰o (X, $<<)
-Ü	¤ Ordinal‰o (X, $<<) ± ³ Successor‰o (X, $<<)
-°
-
-\subsection{Cardinality and Cardinals}
-
 The relations defined here with subscript \emph{s} on their names are cardinality comparisons on sets.
 
 =SML
@@ -300,20 +133,34 @@ declare_infix(300, "~‰s");
 =GFT
 Û¼‰s_reflÝ =
 	ô µ A· A ¼‰s A
+Û€_¼‰s_thmÝ =
+	ô µ A B· A € B ´ A ¼‰s B
+Û¼‰s_transÝ =
+	ô µ A B C· A ¼‰s B ± B ¼‰s C ´ A ¼‰s C
 =TEX
 
 \ignore{
 =SML
 val ¼‰s_def = get_spec ¬$¼‰s®;
 
-set_goal([], ¬®);
-
-
 set_goal([], ¬µA:'a ð· A ¼‰s A®);
 a (rewrite_tac[¼‰s_def] THEN strip_tac
 	THEN ¶_tac ¬Ìx:'a·x®
 	THEN rewrite_tac[]);
 val ¼‰s_refl = save_pop_thm "¼‰s_refl";
+
+set_goal([], ¬µA B· A € B ´ A ¼‰s B®);
+a (rewrite_tac[¼‰s_def, sets_ext_clauses] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx:'a·x® THEN asm_prove_tac[]);
+val €_¼‰s_thm = save_pop_thm "€_¼‰s_thm";
+
+set_goal([], ¬µA B C· A ¼‰s B ± B ¼‰s C ´ A ¼‰s C®);
+a (rewrite_tac[¼‰s_def] THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx· f'(f x)®
+	THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN (REPEAT_N 3 (TRY (all_asm_ufc_tac[]))));
+val ¼‰s_trans = save_pop_thm "¼‰s_trans";
 =TEX
 }%ignore
 
@@ -327,6 +174,12 @@ val ¼‰s_refl = save_pop_thm "¼‰s_refl";
 =GFT
 Ûlt‰s_irreflÝ =
 	ô µ A· ³ A <‰s A
+Ûlt‰s_transÝ =
+	ô µ A B C· A <‰s B ± B <‰s C ´ A <‰s C
+Ûlt‰s_¼‰s_transÝ =
+	ô µ A B C· A <‰s B ± B ¼‰s C ´ A <‰s C
+Û¼‰s_lt‰s_transÝ =
+	ô µ A B C· A ¼‰s B ± B <‰s C ´ A <‰s C
 =TEX
 
 \ignore{
@@ -336,6 +189,25 @@ val lt‰s_def = get_spec ¬$<‰s®;
 set_goal([], ¬µA:'a ð· ³ A <‰s A®);
 a (rewrite_tac[lt‰s_def] THEN REPEAT strip_tac);
 val lt‰s_irrefl = save_pop_thm "lt‰s_irrefl";
+
+set_goal([], ¬µA B C· A <‰s B ± B <‰s C ´ A <‰s C®);
+a (rewrite_tac[lt‰s_def]
+	THEN contr_tac
+	THEN all_fc_tac [¼‰s_trans]);
+val lt‰s_trans = save_pop_thm "lt‰s_trans";
+
+set_goal([], ¬µA B C· A <‰s B ± B ¼‰s C ´ A <‰s C®);
+a (rewrite_tac[lt‰s_def]
+	THEN contr_tac
+	THEN all_fc_tac [¼‰s_trans]);
+val lt‰s_¼‰s_trans = save_pop_thm "lt‰s_¼‰s_trans";
+
+set_goal([], ¬µA B C· A ¼‰s B ± B <‰s C ´ A <‰s C®);
+a (rewrite_tac[lt‰s_def]
+	THEN contr_tac
+	THEN all_fc_tac [¼‰s_trans]);
+val ¼‰s_lt‰s_trans = save_pop_thm "¼‰s_lt‰s_trans";
+
 =TEX
 }%ignore
 
@@ -357,15 +229,10 @@ val lt‰s_irrefl = save_pop_thm "lt‰s_irrefl";
 
 \ignore{
 =SML
-stop;
-
 val eq‰s_def = get_spec ¬$~‰s®;
 
 set_flag("pp_show_HOL_types", false);
 push_pc "hol";
-
-set_goal([], ¬µA B· A ~‰s B ¤ A ¼‰s B ± B ¼‰s A®);
-a (REPEAT µ_tac THEN rewrite_tac[eq‰s_def, ¼‰s_def]);
 
 set_goal([], ¬µx y z· (x ~‰s x)
 		± (x ~‰s y ¤ y ~‰s x)
@@ -390,86 +257,20 @@ a (spec_nth_asm_tac 6 ¬g' y'®);
 a (asm_rewrite_tac[]);
 val card_equiv_lemma = save_pop_thm "card_equiv_lemma";
 
+=IGN
+I think I need to refer to Schroeder-Bernstein here.
+
+set_goal([], ¬µA B· A ~‰s B ¤ A ¼‰s B ± B ¼‰s A®);
+a (REPEAT µ_tac
+	THEN rewrite_tac[eq‰s_def, ¼‰s_def]
+	THEN REPEAT strip_tac);
+
 set_goal([], ¬µA B· A ~‰s B ¤ A ¼‰s B ± B ¼‰s A®);
 a (rewrite_tac 
 pop_pc();
 =TEX
 }%ignore
 
-The property (of ordinals) of being a cardinal is now defined.
-In this context using ordinals as representatives of cardinals is even more silly than some advocates of set theory with a Universal Set have suggested it is in set theory.
-This is because here we have a relation in the representation which is completely irrelevant to its cardinality.
-At least in set theory the ordinals which represent cardinals are just representative sets of the right size.
-Here however, our interest in cardinals is simply to  the property of being an inaccessible.
-
-
-¹HOLCONST
-Ü ÛCardinalÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ(X, $<<)· Cardinal (X, $<<) ¤ Ordinal‰o (X, $<<)
-Ü	± ³ ¶Y· Ordinal‰o (Y, $<<) ± (Y, $<<) <‰rel (X, $<<) ± X ~‰s Y
-°
-
-The ordering of cardinals by cardinality is:
-
-=SML
-declare_infix (300, "<‰c");
-=TEX
-
-¹HOLCONST
-Ü $Û<‰cÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ ('b SET ¸ ('b ­ 'b ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ(X, $<<) (Y, $<<<)· (X, $<<) <‰c (Y, $<<<) ¤ X <‰s Y
-°
-
-\subsection{Cofinality, Regularity, Singularity}
-
-¹HOLCONST
-Ü ÛInfiniteÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ(X, $<<)· Infinite (X, $<<) ¤ (Universe:'a SET) ¼‰s X
-°
-
-¹HOLCONST
-Ü ÛRegularÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ(X, $<<)· Regular (X, $<<) ¤ Cardinal (X, $<<) ± Infinite (X, $<<)
-Ü	± ³ ¶SX· SX € ð X ± (µs x y· s  SX ± x  X ± y  s ± x << y ´ x  s)
-Ü		±  Þ SX = X ± (SX, $ ) <‰rel (X, $<<)
-°
-
-¹HOLCONST
-Ü ÛSingularÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
-÷üüüüüü
-Ü µ(X, $<<)· Singular (X, $<<) ¤ Cardinal (X, $<<) ± Infinite (X, $<<) ± ³ Regular (X, $<<)
-°
-
-\subsection{Powers of Ordinals}
-
-My aim in introducing this topic is to be able to state strong axioms of infinity without getting into set theory.
-To do this we may treat well-orderings as if they were ordinals and aim to define properties such as {\it inaccessible}.
-To what extent it is necessary to be dealing with well-orderings rather than relations in general is not yet clear to me.
-
-To express inaccessiblity I need the notion of a strong limit, which requires exponentiation.
-If suffices to define the powers of 2.
-
-¹HOLCONST
-Ü $Ûð‰relÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
-Ü		­ ('a SET SET ¸ ('a SET ­ 'a SET ­ BOOL))
-÷üüüüüü
-Ü µ (X, $<<)·
-Ü	ð‰rel (X, $<<)
-Ü =	(ð X, Ìx y· ¶z· (µv· v << z ´ (v  x ¤ v  y)) ± z  x ± ³ z  y)
-°
-
-\ignore{
-=IGN
-stop;
-set_goal([], ¬µ(X, $<<)· WellOrdering (X, $<<) ´ WellOrdering (ð‰rel (X, $<<))®);
-a (rewrite_tac (map get_spec [¬ð‰rel®]) THEN REPEAT strip_tac);
-
-=TEX
-}%ignore
 
 \section{Types of Ordinals and Cardinals}
 
@@ -499,7 +300,7 @@ new_type ("ordinal", 0);
 
 We now use a well ordering theorem to define the ordering over the ordinals.
 The consistency proof uses definitions and results from t009 \cite{rbjt009}.
-The principal result is that every set can be well-ordered, but the definition of well-ordering does not entail well-foundedness, since a well-ordering might be reflexive but well-foundedness does not admit reflexiveness.
+The principal result is that every set can be well-ordered, but the definition of well-ordering does not entail well-foundedness or transitivity, since a well-ordering might be reflexive but well-foundedness does not admit reflexiveness.
 So the proof (not shown) takes an arbitrary well-ordering makes it irreflexive and then proves that the result is a well-founded well-ordering.
 
 \ignore{
@@ -556,18 +357,25 @@ save_cs_¶_thm (pop_thm());
 ¹HOLCONST
 Ü Û<‰oÝ: ordinal ­ ordinal  ­ BOOL
 ÷üüüüüüüüüüü
-Ü WellOrdering(Universe, <‰o) ± WellFounded(Universe, <‰o)
+Ü 	WellOrdering(Universe, <‰o)
+Ü	± WellFounded(Universe, <‰o)
 °
 
 =SML
 declare_infix(500, "<‰o");
 =TEX
 
-It is useful to extract from the definition the following statement of well-foundedness.
+It is useful to extract from the definition the following consequences.
 
 =GFT
 Ûlt‰o_min_condÝ =
 	ô µ A· ³ A = {} ´ (¶ x· x  A ± (µ y· y  A ´ ³ y <‰o x))
+Ûlt‰o_transÝ =
+	ô µ Â Ç È· Â <‰o Ç ± Ç <‰o È ´ Â <‰o È
+Ûlt‰o_irreflÝ =
+	ô µ Â· ³ Â <‰o Â
+Ûlt‰o_trichÝ =
+	ô µ Â Ç· Â <‰o Ç ² Ç <‰o Â ² Â = Ç
 =TEX
 
 \ignore{
@@ -599,6 +407,78 @@ a (var_elim_asm_tac ¬x' = y® THEN asm_fc_tac[]);
 (* *** Goal "2.2" *** *)
 a (all_asm_fc_tac[]);
 val lt‰o_min_cond = save_pop_thm "lt‰o_min_cond";
+
+set_goal([], ¬µÂ Ç È· Â <‰o Ç ± Ç <‰o È ´ Â <‰o È®);
+a (strip_asm_tac lt‰o_def);
+a (fc_tac [well_ordering_def]);
+a (fc_tac [linear_order_def]);
+a (fc_tac [partial_order_def]);
+a (fc_tac [trans_def]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac[get_spec ¬Universe®]
+	THEN REPEAT strip_tac
+	THEN all_asm_fc_tac[]);
+val lt‰o_trans = save_pop_thm "lt‰o_trans";
+
+set_goal([], ¬µÂ· ³ Â <‰o Â®);
+a (strip_asm_tac(lt‰o_def) THEN REPEAT strip_tac);
+a (fc_tac [well_founded_def]);
+a (fc_tac [irrefl_def]);
+a (POP_ASM_T ante_tac THEN rewrite_tac[get_spec¬Universe®]);
+a (prove_tac[]);
+val lt‰o_irrefl = save_pop_thm "lt‰o_irrefl";
+
+set_goal([], ¬µÂ Ç· Â <‰o Ç ² Ç <‰o Â ² Â = Ç®);
+a (strip_asm_tac lt‰o_def);
+a (fc_tac [well_ordering_def]);
+a (fc_tac [linear_order_def]);
+a (fc_tac [trich_def]);
+a (POP_ASM_T ante_tac
+	THEN rewrite_tac[get_spec ¬Universe®]
+	THEN contr_tac
+	THEN all_asm_fc_tac[]);
+val lt‰o_trich = save_pop_thm "lt‰o_trich";
+=TEX
+}%ignore
+
+=SML
+declare_infix(500, "¼‰o");
+=TEX
+
+¹HOLCONST
+Ü $Û¼‰oÝ: ordinal ­ ordinal  ­ BOOL
+÷üüüüüüüüüüü
+Ü µÂ Ç· Â ¼‰o Ç ¤  Â <‰o Ç ² Â = Ç
+°
+
+=GFT
+Ûlt‰o_¼‰oÝ =
+	ô µ Â Ç È· Â <‰o Ç ´ Â ¼‰o Ç
+Û¼‰o_transÝ =
+	ô µ Â Ç È· Â ¼‰o Ç ± Ç ¼‰o È ´ Â ¼‰o È
+Û¼‰o_casesÝ =
+	ô µ Â Ç· Â ¼‰o Ç ² Ç ¼‰o Â
+=TEX
+
+\ignore{
+=SML
+val ¼‰o_def = get_spec ¬$¼‰o®;
+
+set_goal([], ¬µ Â Ç È· Â <‰o Ç ´ Â ¼‰o Ç®);
+a (rewrite_tac[¼‰o_def] THEN REPEAT strip_tac);
+val lt‰o_¼‰o = save_pop_thm "lt‰o_¼‰o";
+
+set_goal([], ¬µÂ Ç È· Â ¼‰o Ç ± Ç ¼‰o È ´ Â ¼‰o È®);
+a (rewrite_tac[¼‰o_def] THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN all_fc_tac [lt‰o_trans]
+	THEN rewrite_tac[]);
+val ¼‰o_trans = save_pop_thm "¼‰o_trans";
+
+set_goal([], ¬µÂ Ç· Â ¼‰o Ç ² Ç ¼‰o Â®);
+a (rewrite_tac[¼‰o_def] THEN contr_tac);
+a (strip_asm_tac (all_µ_elim lt‰o_trich));
+val ¼‰o_cases = save_pop_thm "¼‰o_cases";
 =TEX
 }%ignore
 
@@ -617,14 +497,50 @@ Of course the well-foundedness of the ordering supplies a basis for such definit
 One could introduce cardinals in a manner similar to the introduction of ordinals, but we would then have no coupling between the two types.
 We want the cardinals to be the initial ordinals, so that when we introduce a strong axiom of infinity both types are populated in sync.
 
-Some of the concepts used here are defined in t009.pdf \cite{rbjt009}.
-Since these concepts concern cardinality of sets, their applicability to ordinals is mediated by the following function which turns an ordinal into a set of ordinals.
+The cardinality of an ordinal is conventionally the cardinality of the collection of strictly smaller ordinals.
+It is therefore handy to have a function which delivers that set.
 
 ¹HOLCONST
 Ü ÛX‰oÝ: ordinal ­ ordinal ð
 ÷üüüüüüüüüüü
 Ü µÂ· X‰o Â = {È | È <‰o Â}
 °
+
+=GFT
+Ûlt‰o_€Ý =
+	ô µ Â Ç· Ç <‰o Â ´ X‰o Ç € X‰o Â
+Ûlt‰o_ Ý =
+	ô µ Â Ç· Ç <‰o Â ´ X‰o Ç   X‰o Â
+Û¼‰o_€Ý =
+	ô µÂ Ç· Ç ¼‰o Â ´ X‰o Ç € X‰o Â
+=TEX
+
+\ignore{
+=SML
+val X‰o_def = get_spec ¬X‰o®;
+
+set_goal([], ¬µÂ Ç· Ç <‰o Â ´ X‰o Ç € X‰o Â®);
+a (PC_T1 "hol1" rewrite_tac[X‰o_def] THEN REPEAT strip_tac);
+a (all_fc_tac[lt‰o_trans]);
+val lt‰o_€ = save_pop_thm "lt‰o_€";
+
+set_goal([], ¬µÂ Ç· Ç <‰o Â ´ X‰o Ç   X‰o Â®);
+a (PC_T1 "hol1" rewrite_tac[X‰o_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[lt‰o_trans]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬Ç® THEN asm_rewrite_tac[lt‰o_irrefl]);
+val lt‰o_  = save_pop_thm "lt‰o_ ";
+
+set_goal([], ¬µÂ Ç· Ç ¼‰o Â ´ X‰o Ç € X‰o Â®);
+a (PC_T1 "hol1" rewrite_tac[X‰o_def, ¼‰o_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[lt‰o_trans]);
+(* *** Goal "2" *** *)
+a (all_var_elim_asm_tac);
+val ¼‰o_€ = save_pop_thm "¼‰o_€";
+=TEX
+}%ignore
 
 The ordering of ordinals by cardinality is then:
 
@@ -641,16 +557,56 @@ declare_infix(400, "¼‰o‰c");
 =GFT
 Û¼‰o‰c_reflÝ =
 	ô µ Â· Â ¼‰o‰c Â
+Ûlt‰o_¼‰o‰cÝ =
+	ô µ Â Ç· Ç <‰o Â ´ Ç ¼‰o‰c Â
+Û¼‰o‰c_transÝ =
+	ô µ Â Ç È· Â ¼‰o‰c Ç ± Ç ¼‰o‰c È ´ Â ¼‰o‰c È
+Û¼‰o‰c_casesÝ =
+	ô µ Â Ç· Â ¼‰o‰c Ç ² Ç ¼‰o‰c Â
 =TEX
 
 \ignore{
 =SML
-val X‰o_def = get_spec ¬X‰o®;
 val ¼‰o‰c_def = get_spec ¬$¼‰o‰c®;
 
 set_goal([], ¬µÂ· Â ¼‰o‰c Â®);
 a (strip_tac THEN rewrite_tac[¼‰o‰c_def, X‰o_def, ¼‰s_refl]);
 val ¼‰o‰c_refl = save_pop_thm "¼‰o‰c_refl";
+
+=IGN
+set_goal([], ¬µÂ Ç· Â ¼‰o‰c Ç ² Ç ¼‰o‰c Â®);
+=SML
+
+set_goal([], ¬µÂ Ç· Ç <‰o Â ´ Ç ¼‰o‰c Â®);
+a (rewrite_tac[¼‰o‰c_def] THEN REPEAT strip_tac
+	THEN fc_tac [lt‰o_¼‰o]
+	THEN fc_tac [¼‰o_€]);
+a (POP_ASM_T ante_tac THEN PC_T1 "hol1" rewrite_tac[¼‰s_def]
+	THEN REPEAT strip_tac);
+a (¶_tac ¬Ìx:'a·x® THEN asm_rewrite_tac[]
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+val lt‰o_¼‰o‰c = save_pop_thm "lt‰o_¼‰o‰c";
+
+set_goal([], ¬µÂ Ç È· Â ¼‰o‰c Ç ± Ç ¼‰o‰c È ´ Â ¼‰o‰c È®);
+a (rewrite_tac[¼‰o‰c_def] THEN REPEAT strip_tac);
+a (all_asm_fc_tac [¼‰s_trans]);
+val ¼‰o‰c_trans = save_pop_thm "¼‰o‰c_trans";
+
+set_goal([], ¬µÂ Ç· Â ¼‰o‰c Ç ² Ç ¼‰o‰c Â®);
+a (rewrite_tac[¼‰o‰c_def] THEN REPEAT µ_tac);
+a (lemma_tac ¬X‰o Ç € X‰o Â ² X‰o Â € X‰o Ç®
+	THEN_TRY (FC_T rewrite_tac [€_¼‰s_thm]));
+a (PC_T1 "hol1" rewrite_tac[X‰o_def] THEN contr_tac);
+a (strip_asm_tac (list_µ_elim [¬x®, ¬Â®] lt‰o_trich));
+(* *** Goal "1" *** *)
+a (strip_asm_tac (list_µ_elim [¬x'®, ¬Ç®] lt‰o_trich));
+a (REPEAT (all_ufc_tac [lt‰o_trans]));
+(* *** Goal "1.2" *** *)
+a (all_var_elim_asm_tac THEN all_ufc_tac [lt‰o_trans]);
+(* *** Goal "2" *** *)
+a (all_var_elim_asm_tac THEN all_ufc_tac [lt‰o_trans]);
+val ¼‰o‰c_cases = save_pop_thm "¼‰o‰c_cases";
 =TEX
 }%ignore
 
@@ -661,21 +617,28 @@ declare_infix(400, "<‰o‰c");
 ¹HOLCONST
 Ü $Û<‰o‰cÝ: ordinal ­ ordinal ­ BOOL
 ÷üüüüüüüüüü
-Ü µÂ Ç· Â <‰o‰c Ç ¤ X‰o Â <‰s X‰o Ç
+Ü µÂ Ç· Â <‰o‰c Ç ¤ ³ Ç ¼‰o‰c Â
 °
 
 =GFT
 Û<‰o‰c_irreflÝ =
 	ô µ Â· ³ Â <‰o‰c Â
+Û¼‰o‰c_³_lt‰o‰cÝ =
+	ô µ Â Ç· Â ¼‰o‰c Ç ´ ³ Ç <‰o‰c Â
 =TEX
 
 \ignore{
 =SML
+val ¼‰o_def = get_spec ¬$¼‰o®;
 val lt‰o‰c_def = get_spec ¬$<‰o‰c®;
 
 set_goal([], ¬µÂ· ³ Â <‰o‰c Â®);
-a (strip_tac THEN rewrite_tac[lt‰o‰c_def, X‰o_def, lt‰s_irrefl]);
+a (strip_tac THEN rewrite_tac[lt‰o‰c_def, ¼‰o‰c_refl]);
 val lt‰o‰c_irrefl = save_pop_thm "lt‰o‰c_irrefl";
+
+set_goal([], ¬µÂ Ç· Â ¼‰o‰c Ç ´ ³ Ç <‰o‰c Â®);
+a (rewrite_tac[lt‰o‰c_def] THEN contr_tac);
+val ¼‰o‰c_³_lt‰o‰c = save_pop_thm "¼‰o‰c_³_lt‰o‰c";
 =TEX
 }%ignore
 
@@ -686,21 +649,53 @@ declare_infix(400, "~‰o‰c");
 ¹HOLCONST
 Ü $Û~‰o‰cÝ: ordinal ­ ordinal ­ BOOL
 ÷üüüüüüüüüü
-Ü µÂ Ç· Â ~‰o‰c Ç ¤ X‰o Â ~‰s X‰o Ç
+Ü µÂ Ç· Â ~‰o‰c Ç ¤ Â ¼‰o‰c Ç ± Ç ¼‰o‰c Â
 °
 
 =GFT
+Û¼‰o‰c_cases2Ý =
+	ô µ Â Ç· Â ¼‰o‰c Ç ¤ Â <‰o‰c Ç ² Â ~‰o‰c Ç
 Û~‰o‰c_reflÝ =
 	ô µ Â· Â ~‰o‰c Â
+Ûeq‰o‰c_symÝ =
+	ô µ Â Ç· Â ~‰o‰c Ç ´ Ç ~‰o‰c Â
+Ûeq‰o‰c_transÝ =
+	ô µ Â Ç È· Â ~‰o‰c Ç ± Ç ~‰o‰c È ´ Â ~‰o‰c È
+Ûlt‰o‰c_trichÝ =
+	ô µ Â Ç· Â <‰o‰c Ç ² Ç <‰o‰c Â ² Â ~‰o‰c Ç
 =TEX
 
 \ignore{
 =SML
 val eq‰o‰c_def = get_spec ¬$~‰o‰c®;
 
+set_goal([], ¬µÂ Ç· Â ¼‰o‰c Ç  ¤ Â <‰o‰c Ç ² Â ~‰o‰c Ç®);
+a (strip_tac
+	THEN rewrite_tac[eq‰o‰c_def, lt‰o‰c_def]
+	THEN contr_tac);
+a (strip_asm_tac (all_µ_elim ¼‰o‰c_cases));
+val ¼‰o‰c_cases2 = save_pop_thm "¼‰o‰c_cases2";
+
 set_goal([], ¬µÂ· Â ~‰o‰c Â®);
-a (strip_tac THEN rewrite_tac[eq‰o‰c_def, X‰o_def, eq‰s_refl]);
+a (strip_tac THEN rewrite_tac[eq‰o‰c_def, ¼‰o‰c_def, X‰o_def, ¼‰s_refl]);
 val eq‰o‰c_refl = save_pop_thm "eq‰o‰c_refl";
+
+set_goal([], ¬µÂ Ç· Â ~‰o‰c Ç ´ Ç ~‰o‰c Â®);
+a (REPEAT µ_tac
+	THEN rewrite_tac[eq‰o‰c_def]
+	THEN contr_tac);
+val eq‰o‰c_sym = save_pop_thm "eq‰o‰c_sym";
+
+set_goal([], ¬µÂ Ç È· Â ~‰o‰c Ç ± Ç ~‰o‰c È ´ Â ~‰o‰c È®);
+a (rewrite_tac[eq‰o‰c_def]
+	THEN REPEAT strip_tac
+	THEN REPEAT_N 3 (TRY (all_asm_fc_tac[¼‰o‰c_trans])));
+val eq‰o‰c_trans  = save_pop_thm "eq‰o‰c_trans";
+
+set_goal([], ¬µÂ Ç· Â <‰o‰c Ç ² Ç <‰o‰c Â ² Â ~‰o‰c Ç®);
+a (rewrite_tac[lt‰o‰c_def] THEN contr_tac);
+a (all_fc_tac [map_eq_sym_rule eq‰o‰c_def]);
+val lt‰o‰c_trich = save_pop_thm "lt‰o‰c_trich";
 =TEX
 }%ignore
 
@@ -716,7 +711,14 @@ A initial ordinal is one which is not smaller than or equal in cardinality with 
 Before introducing a type using this predicate we must prove that there exists an initial ordinal, for which the witness is the least ordinal, obtainable using the minimal condition.
 
 =GFT
-InitialOrdinal_exists = ô ¶ Â· InitialOrdinal Â
+ÛInitialOrdinal_existsÝ =
+	ô ¶ Â· InitialOrdinal Â
+
+ÛInitialOrdinals_existÝ =
+	ô µ Â· ¶ Ä· InitialOrdinal Ä ± Ä ~‰o‰c Â
+
+ÛInitialOrdinal_eqÝ =
+	ô µ Â Ç· InitialOrdinal Â ± InitialOrdinal Ç ± Â ~‰o‰c Ç ´ Â = Ç
 =TEX
 
 \ignore{
@@ -733,8 +735,31 @@ set_goal([], ¬µÂ· ¶ Ä· InitialOrdinal Ä ± Ä ~‰o‰c Â®);
 a (rewrite_tac[InitialOrdinal_def] THEN strip_tac);
 a (strip_asm_tac (µ_elim ¬{È | È ~‰o‰c Â}® lt‰o_min_cond));
 (* *** Goal "1" *** *)
-a (PC_T1 "hol1" asm_prove_tac[]);
+a (swap_nth_asm_concl_tac 1 THEN PC_T "hol1" (REPEAT strip_tac));
+a (¶_tac ¬Â® THEN PC_T1 "hol1" rewrite_tac[eq‰o‰c_refl]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬x® THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (spec_nth_asm_tac 2 ¬Ç®);
+a (swap_nth_asm_concl_tac 1 THEN PC_T1 "hol1" rewrite_tac[]);
+a (fc_tac[lt‰o_¼‰o‰c]);
+a (fc_tac[¼‰o‰c_def]);
+a (fc_tac[¼‰o‰c_cases2]);
+a (DROP_NTH_ASM_T 7 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+a (all_fc_tac [eq‰o‰c_trans]);
+(* *** Goal "2.2" *** *)
+a (DROP_NTH_ASM_T 2 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
+val InitialOrdinals_exist = save_pop_thm "InitialOrdinals_exist";
 
+set_goal([], ¬µÂ Ç· InitialOrdinal Â ± InitialOrdinal Ç ± Â ~‰o‰c Ç
+	´ Â = Ç®);
+a (rewrite_tac[InitialOrdinal_def, eq‰o‰c_def]
+	THEN REPEAT strip_tac);
+a (fc_tac[¼‰o‰c_³_lt‰o‰c]);
+a (spec_nth_asm_tac 6 ¬Ç®);
+a (spec_nth_asm_tac 6 ¬Â®);
+a (strip_asm_tac (all_µ_elim lt‰o_trich));
+val InitialOrdinal_eq = save_pop_thm "InitialOrdinal_eq";
 =TEX
 }%ignore
 
@@ -752,15 +777,13 @@ These two maps can be defined thus:
 
 \ignore{
 =SML
-stop;
-
 val [cardinal_lemma] = fc_rule [type_defn_lemma4] [cardinal_def];
 
-set_goal([], ¬¶Aleph· ¶Card· (µÂ:cardinal· Card(Aleph Â) = Â)
-	± (µÂ:ordinal· InitialOrdinal Â ¤ Aleph (Card Â) = Â)
-	± OneOne Aleph
-	± (µ Â· InitialOrdinal (Aleph Â))
-	± (µÂ Ç· Â ~‰o‰c Ç ´ Card Â = Card Ç)
+set_goal([], ¬¶Ord‰c:cardinal ­ ordinal· ¶Card‰o· (µÂ:cardinal· Card‰o(Ord‰c Â) = Â)
+	± (µÂ:ordinal· InitialOrdinal Â ¤ Ord‰c (Card‰o Â) = Â)
+	± OneOne Ord‰c
+	± (µ Â· InitialOrdinal (Ord‰c Â))
+	± (µÂ Ç· Â ~‰o‰c Ç ´ Card‰o Â = Card‰o Ç)
 ®);
 a (strip_asm_tac cardinal_lemma);
 a (lemma_tac ¬¶g· g = ÌÇ:ordinal· ÅÂ:ordinal· InitialOrdinal Â ± Â ~‰o‰c Ç®
@@ -771,71 +794,80 @@ a (lemma_tac ¬µx· InitialOrdinal (g x)®
 (* *** Goal "1" *** *)
 a (strip_tac);
 a (Å_tac ¬Å Â· InitialOrdinal Â ± Â ~‰o‰c x®);
-a (strip_asm_tac (µ_elim ¬{Ä | ³ Ä <‰o‰c x}® lt‰o_min_cond));
-	THEN POP_ASM_T ante_tac
-	THEN PC_T1 "hol1" rewrite_tac[]
-	THEN strip_tac);
-	THEN spec_nth_asm_tac 1 ¬x®
-	THEN fc_tac [lt‰o‰c_irrefl]);
-a (¶_tac ¬x'® THEN contr_tac THEN asm_fc_tac[]);
-(* *** Goal "1.2" *** *)
-a (rewrite_tac [InitialOrdinal_def] THEN REPEAT strip_tac);
-a (spec_nth_asm_tac 2 ¬Ç®);
-
-
-a (¶_tac ¬rep® THEN ¶_tac ¬g®);
-a (REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (asm_rewrite_tac[]);
-a (Å_tac ¬Å $"Â'"· ³ (¶ Ä· rep Â ¼‰o‰c Ä ± Ä <‰o $"Â'")®);
-(* *** Goal "1.1" *** *)
-a (strip_asm_tac (µ_elim ¬{Ä | rep Â ¼‰o‰c Ä}® lt‰o_min_cond)
-	THEN POP_ASM_T ante_tac
-	THEN PC_T1 "hol1" rewrite_tac[]
-	THEN strip_tac
-	THEN spec_nth_asm_tac 1 ¬rep Â®
-	THEN fc_tac [¼‰o‰c_refl]);
-a (¶_tac ¬x® THEN contr_tac THEN asm_fc_tac[]);
-(* *** Goal "1.2" *** *)
-a (LEMMA_T ¬(Å $"Â'"· ³ (¶ Ä· rep Â ¼‰o‰c Ä ± Ä <‰o $"Â'")) = rep Â®
-	asm_rewrite_thm_tac);
-
-
-
-
-a (strip_asm_tac (µ_elim ¬{Ä | Ç ¼‰o‰c Ä}® lt‰o_min_cond)
-	THEN POP_ASM_T ante_tac
-	THEN PC_T1 "hol1" rewrite_tac[]
-	THEN strip_tac
-	THEN spec_nth_asm_tac 1 ¬Ç®
-	THEN fc_tac [¼‰o‰c_refl]);
-
-a (POP_ASM_T ante_tac);
-a (Å_tac ¬ÅÂ· ³ (¶ Ä· Ç ¼‰o‰c Ä ± Ä <‰o Â)®);
-(* *** Goal "1" *** *)
-a (¶_tac ¬x® THEN contr_tac THEN asm_fc_tac[]);
-
+a (strip_asm_tac InitialOrdinals_exist);
+a (spec_nth_asm_tac 1 ¬x®);
+a (¶_tac ¬Ä® THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
-a (REPEAT strip_tac);
+a (¶_tac ¬rep® THEN ¶_tac ¬Ìx· abs(g x)®
+	THEN rewrite_tac[]
+	THEN REPEAT strip_tac);
 (* *** Goal "2.1" *** *)
-a (LEMMA_T ¬(Å $"Â'"· ³ (¶ Ä· rep Â ¼‰o‰c Ä ± Ä <‰o $"Â'")) = rep Â®
-	asm_rewrite_thm_tac);
-
+a (lemma_tac
+	¬g (rep Â) = rep Â®
+	THEN_LIST [TRY (rewrite_tac[]), asm_rewrite_tac[]]);
+a (rewrite_tac[asm_rule ¬g = (Ì Ç· Å Â· InitialOrdinal Â ± Â ~‰o‰c Ç)®]);
+a (Å_tac ¬Å $"Â'"· InitialOrdinal $"Â'" ± $"Â'" ~‰o‰c rep Â®);
+(* *** Goal "2.1.1" *** *)
+a (¶_tac ¬rep Â® THEN asm_rewrite_tac[eq‰o‰c_refl]);
+(* *** Goal "2.1.2" *** *)
+a (all_ufc_tac [InitialOrdinal_eq]);
+(* *** Goal "2.2" *** *)
+a (ALL_ASM_UFC_T rewrite_tac []);
+a (rewrite_tac[asm_rule ¬g = (Ì Ç· Å Â· InitialOrdinal Â ± Â ~‰o‰c Ç)®]);
+a (Å_tac ¬Å $"Â'"· InitialOrdinal $"Â'" ± $"Â'" ~‰o‰c Â®);
+(* *** Goal "2.2.1" *** *)
+a (¶_tac ¬Â® THEN asm_rewrite_tac[eq‰o‰c_refl]);
+(* *** Goal "2.2.2" *** *)
+a (all_ufc_tac [InitialOrdinal_eq]);
+(* *** Goal "2.3" *** *)
+a (SYM_ASMS_T once_rewrite_tac);
+a (asm_rewrite_tac[]);
+(* *** Goal "2.4" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2.5" *** *)
+a (LEMMA_T ¬g Â = g Ç® rewrite_thm_tac);
+a (lemma_tac ¬µx· g x ~‰o‰c x®
+	THEN1 (strip_tac THEN asm_rewrite_tac[]));
+(* *** Goal "2.5.1" *** *)
+a (Å_tac ¬Å Â· rep (abs Â) = Â ± Â ~‰o‰c x®);
+a (strip_asm_tac (µ_elim ¬x® InitialOrdinals_exist));
+a (¶_tac ¬Ä® THEN ALL_ASM_UFC_T asm_rewrite_tac []);
+(* *** Goal "2.5.2" *** *)
+a (lemma_tac ¬g Â ~‰o‰c Â ± g Ç ~‰o‰c Ç® THEN1 rewrite_tac[asm_rule ¬µ x· g x ~‰o‰c x®]);
+a (lemma_tac ¬g Ç ~‰o‰c g Â®
+	THEN1 (all_ufc_tac[eq‰o‰c_sym]
+		THEN REPEAT (all_ufc_tac[eq‰o‰c_trans])));
+a (lemma_tac ¬InitialOrdinal (g Â) ± InitialOrdinal (g Ç)®
+	THEN1 rewrite_tac[asm_rule ¬µ x· InitialOrdinal (g x)®]);
+a (all_ufc_tac [list_µ_elim [¬g Ç®, ¬g Â®] InitialOrdinal_eq]);
+a (asm_rewrite_tac[]);
+save_cs_¶_thm (pop_thm());
 =TEX
 }%ignore
 
+¹HOLCONST
+Ü ÛOrd‰cÝ: cardinal ­ ordinal;
+Ü ÛCard‰oÝ: ordinal ­ cardinal
+÷üüüüüüüüüüü
+Ü	  (µÂ:cardinal· Card‰o(Ord‰c Â) = Â)
+Ü	± (µÂ:ordinal· InitialOrdinal Â ¤ Ord‰c (Card‰o Â) = Â)
+Ü	± OneOne Ord‰c
+Ü	± (µ Â· InitialOrdinal (Ord‰c Â))
+Ü	± (µÂ Ç· Â ~‰o‰c Ç ´ Card‰o Â = Card‰o Ç)
+°
 
+\section{Definitions over Ordinals and Cardinals}
 
+Some operations must be defined before we can proceed to sequences and trees?
 
-[axiom of infinity]
+\section{Strong Infinity}
 
 Here are my ideas on how this can be done, which run parallel to my earlier axiomatisations of set theory.
-These are set theories with ``universes'' satisfying the closure properties expected of the universe in ZFC.
-The axiom asserts that every set is a member of such a universe (and also satisfies global replacement).
+These earlier axiomatisations are set theories with ``universes'' (galaxies I call them) satisfying the closure properties expected of the universe in ZFC.
+The closure axiom asserts that every set is a member of such a universe (and also gives global replacement).
 
-Since we only have ordinals here, we assert that every ordinal is less than some ordinal such that the ordinals below it have the desired closure properties.
-
-This is all about size, and to get to larger ordinals the two
+Since we only have ordinals here (and cardinals, but not sets in general), we assert that every ordinal is less than some ordinal such that the ordinals below it have the desired closure properties.
+I suspect I could have managed without the cardinals, but I had in mind defining closure under power set via a definition of the power operation on the cardinals.
 
 =IGN
 strong_infinity_axiom = new_axiom(["strong_infinity_axiom"], ¬
@@ -843,8 +875,6 @@ strong_infinity_axiom = new_axiom(["strong_infinity_axiom"], ¬
 
 ®);
 =TEX
-
-
 
 \section{Infinitary Sequences}
 
@@ -872,13 +902,138 @@ set_goal([], ¬¶isr:ordinal ¸ (ordinal ­ 'a)· ISeqRep isr®);
 a (¶_tac ¬((Åx:ordinal·T), Ìor· Åx:'a·T)® THEN rewrite_tac[ISeqRep_def]);
 val ISeqRep_nonempty_thm = pop_thm();
 
-new_type_defn(["iseq"], "iseq", ["'a"], ISeqRep_nonempty_thm);
+val iseq_def = new_type_defn(["iseq"], "iseq", ["'a"], ISeqRep_nonempty_thm);
+
+val [iseq_lemma] = fc_rule [type_defn_lemma4] [iseq_def];
+
+set_goal([], ¬¶ MkISeq: ordinal ¸ (ordinal ­ 'a) ­ 'a iseq;
+	DestISeq: 'a iseq ­ ordinal ¸ (ordinal ­ 'a)·
+	(µÂ Ç· DestISeq Â = DestISeq Ç ´ Â = Ç) 
+ ±	(µÂ· ISeqRep (DestISeq Â))
+ ±	(µÂ· MkISeq (DestISeq Â) = Â)
+ ±      (µp· ISeqRep p ´ DestISeq(MkISeq p) = p)®);
+a (strip_asm_tac iseq_lemma);
+a (DROP_ASM_T ¬OneOne rep® (asm_tac o (rewrite_rule [get_spec ¬OneOne®])));
+a (¶_tac ¬abs® THEN ¶_tac ¬rep® THEN asm_rewrite_tac[]);
+save_cs_¶_thm (pop_thm());
 =TEX
 }%ignore
 
+We now define destructor/constructor operations over these sequences.
+
+¹HOLCONST
+Ü ÛMkISeqÝ: ordinal ¸ (ordinal ­ 'a) ­ 'a iseq;
+Ü ÛDestISeqÝ: 'a iseq ­ ordinal ¸ (ordinal ­ 'a)
+÷üüüüüüüüüüü
+Ü	(µÂ Ç· DestISeq Â = DestISeq Ç ´ Â = Ç) 
+ ±	(µÂ· ISeqRep (DestISeq Â))
+ ±	(µÂ· MkISeq (DestISeq Â) = Â)
+ ±      (µp· ISeqRep p ´ DestISeq(MkISeq p) = p)
+°
+
+¹HOLCONST
+Ü ÛLength‰i‰sÝ: 'a iseq ­ ordinal
+÷üüüüüüüüüüü
+Ü	µis· Length‰i‰s is = Fst (DestISeq is) 
+°
+
+¹HOLCONST
+Ü ÛElems‰i‰sÝ: 'a iseq ­ 'a ð
+÷üüüüüüüüüüü
+Ü	µis· Elems‰i‰s is = {e | ¶Â· Â <‰o Fst (DestISeq is) ± e = Snd (DestISeq is) Â}
+°
+
 \section{Infinitary Trees}
 
+An infinitary tree is to be represented by a partial function from sequences of ordinals to some type of labels.
+The sequences are the coordinates of nodes in the tree, and the labels label each node.
+There is a well-formedness condition which ensures that the set of coordinates of branches from any node is an initial segment of the ordinals.
 
+¹HOLCONST
+Ü ÛITreeRepÝ: (ordinal LIST ­ 'a + ONE) ­ BOOL
+÷üüüüüüüüüüü
+Ü µf· ITreeRep f ¤
+Ü	µl:ordinal LIST· ¶Â· {Ç | IsL (f (l @ [Ç]))} = X‰o Â
+°
+
+=GFT
+ÛiTree_defÝ = ô ¶ f· TypeDefn ITreeRep f
+=TEX
+
+\ignore{
+=SML
+val ITreeRep_def = get_spec ¬ITreeRep®;
+
+set_goal([], ¬¶itr: ordinal LIST ­ 'a + ONE· ITreeRep itr®);
+a (¶_tac ¬(Ìx· InR One): ordinal LIST ­ 'a + ONE®);
+a (rewrite_tac[ITreeRep_def]);
+a (strip_asm_tac (µ_elim ¬{x:ordinal|T}® lt‰o_min_cond));
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac THEN PC_T1 "hol1" rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (¶_tac ¬x® THEN POP_ASM_T ante_tac
+	THEN PC_T1 "hol1" rewrite_tac[] THEN strip_tac);
+a (PC_T1 "hol1" asm_rewrite_tac[X‰o_def]);
+val iTree_exists = pop_thm();
+
+val iTree_def = new_type_defn(["iTree"], "iTree", ["'a"], iTree_exists);
+=TEX
+}%ignore
+
+=GFT
+
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ¬¶®);
+
+=TEX
+}%ignore
+
+\ignore{
+
+\section{Graphs}
+
+There may be no point in developing the Trees because it looks like Graphs would be more general an no less easily applicable to the kinds of problem for which one would have used Trees.
+
+Not sure about that, so a bit of exploration is called for.
+
+Graphs could be done in a manner closely similar to the Trees, using ordinals and infinitary sequences, and requiring that the children of a node are indexed by an initial segment of the ordinals.
+Its not obvious that this is better than allowing the children to be any indexed set, in which case the construction becomes independent of the ordinals and ordinals need only be introduced where the specific application demands it.
+
+So lets consider the notion of graph independently of the ordinals, but in such a way that the graphs are not assumed to be finitary.
+
+A graph will be a collection of nodes (not necessarily a type) and a function which takes each node to a label (of some type) and an indexed collection of children.
+That sounds like three type variables, do we really want that many?
+
+Its not really my present aim to do something independent of the ordinals.
+I am really interested here in whether the kind of thing which is done above for trees using ordinals would be as well generalised to graphs.
+So here is a type of graphs in which the nodes are represented by ordinals and the children of a node must be a (possibly infinite) sequence.
+
+The essential information in a graph is the mapping from nodes to label and sequences (which is very similar to the signature for the trees).
+So we have to define when two such mappings are isomorphic.
+
+Lets use a type abbreviation here:
+
+ =SML
+declare_type_abbrev("IG", ["'a"], ”ordinal LIST ­ ONE + 'a + ordinal LIST®);
+ =TEX
+
+The first ordinal is the "top" of the graph, and the extent of the graph is disovered by chasing through the graph.
+The function must take a default value everywhere not in this reachable extent and the choice of ordinals for nodes must comply with a natural ordering of the paths throught the graph (it must be the least of the ordinals corresponding to paths which reach that node).
+This means that when graphs are distroyed or created they must be renumbered, so it might be better to use functions over coordinate lists, which gets us closer to the tree representation.
+
+There is a well-formedness condition on these (this one is not yet complete):
+
+ ¹HOLCONST
+Ü ÛIGraphRepÝ: 'a IG ­ BOOL
+÷üüüüüüüüüüü
+Ü µf· IGraphRep f ¤
+Ü	µl:ordinal LIST· ¶Â· {Ç | IsR (f (l @ [Ç]))} = X‰o Â
+ °
+
+}%ignore
 
 \subsubsection{Proof Context}
 

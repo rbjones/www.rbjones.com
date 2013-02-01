@@ -366,6 +366,7 @@ $paraTitle
 EOF
 	($texline=$paraTitle) =~ s|&|\\&|g;
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
+# this is a general facility for passing through LaTeX commands
 	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/\"/{\\dq}/g;
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;

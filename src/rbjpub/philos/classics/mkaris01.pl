@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# ($Id: mkaris01.pl,v 1.10 2012/10/09 20:06:37 rbj Exp $)
+# ($Id: mkaris01.pl,v 1.11 2013/02/01 09:02:00 rbj Exp $)
 
 # The following required file contains procedures supporting the generation of the
 # output from this translation.
@@ -153,7 +153,10 @@ sub part
 sub paragraph
 {
 	if ($trace>3) {print "Starting f $file b $book p $part paragraph $para.\n"};
-	while (/^$/ && !eof(INPUT)) {&writeLine($_); &readLine;};
+	while ((/^$/ || /\<\!--\!/) && !eof(INPUT)) {
+# remove leading comments (<!--!  -->)
+	    s|^<\!--\!(.*)-->$|$1|g;
+	    &writeLine($_); &readLine;};
 	if (/^\<PRE\>/)
 		{until (/^\<\/PRE\>/ || eof(INPUT))
 			{&writeLine($_); &readLine};
@@ -172,16 +175,15 @@ sub paragraph
 		 {   &writeLine($_); &readLine;
 		     if ($trace>4) {print "Line:$_";}
 		 };
+		 if (eof(INPUT)) {&writeLine($_)};
 	};
 	while (/^\s*$/ && !eof(INPUT)) {&readLine;};
 };
-
 
 sub paraTitle
 {	$paraTitle="";
 	$paraPrefix=""; # this is the leading whitespace into the paragraph (before the title).
 	$paraFlag=0; # this is set to 1 if the first line of next para is read.
-# something here to process leading comments (<!--!  -->)
 	if (s/^(\s+)//) {$paraPrefix=$1};
 	while (!/^\s/ && /^((i\.e\.|e\.g\.|viz\.|[^\.\?\:;])+)$/) {
 	    $temp=$1; $paraTitle.="$temp"; &readLine;};
