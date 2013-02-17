@@ -1,5 +1,5 @@
 =IGN
-$Id: t009.doc,v 1.17 2013/02/01 09:02:00 rbj Exp $
+$Id: t009.doc,v 1.18 2013/02/17 20:48:27 rbj Exp $
 =TEX
 \documentclass[12pt]{article}
 %\usepackage{ProofPower}
@@ -23,7 +23,7 @@ $Id: t009.doc,v 1.17 2013/02/01 09:02:00 rbj Exp $
 \newcommand{\ignore}[1]{}
 
 \title{Well-orderings and Well-foundedness}
-\date{$ $Date: 2013/02/01 09:02:00 $ $}
+\date{$ $Date: 2013/02/17 20:48:27 $ $}
 \author{R.D. Arthan and R.B. Jones}
 \vfill
 \makeindex
@@ -46,12 +46,12 @@ The second is material on well-foundedness, mainly consisting in the proof of th
 
 Created 2004/10/03
 
-Last Change $ $Date: 2013/02/01 09:02:00 $ $
+Last Change $ $Date: 2013/02/17 20:48:27 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 
-$ $Id: t009.doc,v 1.17 2013/02/01 09:02:00 rbj Exp $ $
+$ $Id: t009.doc,v 1.18 2013/02/17 20:48:27 rbj Exp $ $
 
 \copyright\ Rob Arthan and Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -2209,6 +2209,56 @@ a (¶‰1_tac ¬f® THEN asm_rewrite_tac [ext_thm]
 	THEN REPEAT strip_tac THEN asm_ufc_tac[]
 	THEN asm_rewrite_tac[]);
 val tf_recursion_thm = save_pop_thm "tf_recursion_thm";
+=TEX
+}%ignore
+
+It may be helpful to have a proforma which facilitates proof that a function respects some well-founded relation.
+One way of approaching this is to define a function which restricts some other function to the part of its domain strictly below some value.
+These will be the values which are accessible to a function computing its value at that point which respects the relation.
+
+Here I assume the relation is over the whole type.
+
+=SML
+declare_infix(400, "§ò");
+=TEX
+
+¹HOLCONST
+Ü $Û§òÝ:  ('a ¸ ('a ­ 'a ­ BOOL)) ­ ('a ­ 'a) ­ ('a ­ 'a)
+÷üüüüüü
+Ü µ x $<< f· (x, $<<) §ò f = Ìy· if y << x then f y else Åz·T
+°
+
+=GFT
+Û§ò_fc_thmÝ = ô µ y x $<< f· y << x ´ ((x, $<<) §ò f) y = f y
+=TEX
+
+\ignore{
+=SML
+val §ò_def = get_spec ¬$§ò®;
+
+set_goal([], ¬µ y x $<< f· y << x ´ ((x, $<<) §ò f) y = f y®);
+a (rewrite_tac [§ò_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val §ò_fc_thm = save_pop_thm "§ò_fc_thm";
+
+set_goal([], ¬µ$<<· WellFounded(Universe, $<<) ´
+	µaf· ¶f· µx· f x = af ((x, $<<) §ò f) x®);
+a (REPEAT strip_tac);
+a (lemma_tac ¬FunctRespects (Ìg x· af ((x, $<<) §ò g) x) (Universe, $<<)®
+	THEN1 rewrite_tac[funct_respects_def, §ò_def, get_spec ¬Universe®] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (LEMMA_T ¬(Ì y· if y << x then g y else Å z· T) 
+	= (Ì y· if y << x then h y else Å z· T)® rewrite_thm_tac
+	THEN1 (rewrite_tac[ext_thm]
+		THEN REPEAT strip_tac));
+a (cond_cases_tac ¬x' << x®);
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[tf_recursion_thm]);
+a (¶_tac ¬f®);
+a (strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac[ext_thm] THEN strip_tac
+	THEN asm_rewrite_tac[]);
+val tf_rec_thm2 = save_pop_thm "tf_rec_thm2";
 =TEX
 }%ignore
 

@@ -1,5 +1,5 @@
 =IGN
-$Id: t051.doc,v 1.2 2013/02/01 09:02:00 rbj Exp $
+$Id: t051.doc,v 1.4 2013/03/01 12:26:30 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
 %\usepackage{latexsym}
@@ -41,12 +41,12 @@ These trees are similar to the terms of the infinite combinatory logic which are
 
 Created 2013/01/20
 
-Last Change $ $Date: 2013/02/01 09:02:00 $ $
+Last Change $ $Date: 2013/03/01 12:26:30 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t051.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t051.pdf}
 
-$ $Id: t051.doc,v 1.2 2013/02/01 09:02:00 rbj Exp $ $
+$ $Id: t051.doc,v 1.4 2013/03/01 12:26:30 rbj Exp $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -62,7 +62,7 @@ $ $Id: t051.doc,v 1.2 2013/02/01 09:02:00 rbj Exp $ $
 
 \newpage
 
-\section{Introduction}
+\section{INTRODUCTION}
 
 Theory t041 \cite{rbjt041} approaches an illative combinatory logic working in a well-founded set theory with urelements.
 The urelements were admitted because at the time I thought that integration of the resulting theory with HOL would be more straightforward if elements of other types were allowed in set theoretic constructions, and in the resulting combinatory logic.
@@ -79,7 +79,7 @@ At this time I am not yet decided whether there should also be a type of ordinal
 
 I am thinking of doing this in parallel in ProofPower and in hol4.
 
-\section{Preparatory Materials}
+\section{PRELIMINARIES}
 
 This section is likely to mostly disappear.
 It will then contain those materials on ordinals on cardinals which are independent of the types introduced in the next section.
@@ -93,7 +93,7 @@ new_parent "wf_relp";
 new_parent "wf_recp";
 force_new_pc "€'ordcard0›";
 merge_pcs ["'savedthm_cs_∂_proof"] "'ordcard0";
-set_merge_pcs ["basic_hol", "'ordcard0"];
+set_merge_pcs ["rbjmisc", "'ordcard0"];
 =TEX
 
 The material in this section is moved here en-block from t009 \cite{rbjt009}, and was not therefore originally undertaken for the purposes in hand.
@@ -161,6 +161,9 @@ a (∂_tac ¨Ãx∑ f'(f x)Æ
 	THEN REPEAT strip_tac
 	THEN (REPEAT_N 3 (TRY (all_asm_ufc_tac[]))));
 val ºâs_trans = save_pop_thm "ºâs_trans";
+
+add_pc_thms "'ordcard0" [ºâs_refl];
+set_merge_pcs ["basic_hol", "'ordcard0"];
 =TEX
 }%ignore
 
@@ -220,11 +223,9 @@ val ºâs_ltâs_trans = save_pop_thm "ºâs_ltâs_trans";
 ‹	±	(µy∑ y ç B ¥ g y ç A ± f (g y) = y)
 ∞
 
-
 =GFT
 €card_equiv_lemma› =
-   Ù µ x y z∑ x ~âc x ± (x ~âc y § y ~âc x) ± (x ~âc y ± y ~âc z ¥ x ~âc z)
-
+	Ù µ x y z∑ x ~âc x ± (x ~âc y § y ~âc x) ± (x ~âc y ± y ~âc z ¥ x ~âc z)
 =TEX
 
 \ignore{
@@ -272,7 +273,17 @@ pop_pc();
 }%ignore
 
 
-\section{Types of Ordinals and Cardinals}
+=SML
+commit_pc "'ordcard0";
+force_new_pc "ordcard0";
+merge_pcs ["rbjmisc", "'ordcard0"] "ordcard0";
+commit_pc "ordcard0";
+force_new_pc "ordcard01";
+merge_pcs ["rbjmisc1", "'ordcard0"] "ordcard01";
+commit_pc "ordcard01";
+=TEX
+
+\section{ORDINALS}
 
 I had at first intended to do a minimal set theory sufficient for defining a type of infinitary trees.
 But I think the simplest development is to go straight to a type of ordinals and work forward from there.
@@ -285,7 +296,7 @@ new_parent "wf_relp";
 new_parent "wf_recp";
 force_new_pc "€'ordcard›";
 merge_pcs ["'savedthm_cs_∂_proof"] "'ordcard";
-set_merge_pcs ["basic_hol", "'ordcard"];
+set_merge_pcs ["ordcard0", "'ordcard"];
 =TEX
 
 The method is as follows.
@@ -362,10 +373,93 @@ save_cs_∂_thm (pop_thm());
 ∞
 
 =SML
-declare_infix(500, "<âo");
+declare_infix(300, "<âo");
 =TEX
 
-It is useful to extract from the definition the following consequences.
+It proves helpful to have this alternative rendering of well-foundedness:
+
+=GFT
+€ltâo_wf› =
+	Ù well_founded $<âo
+=TEX
+
+\ignore{
+=SML
+val ltâo_def = get_spec ¨$<âoÆ;
+
+set_goal ([], ¨well_founded $<âoÆ);
+a (LEMMA_T ¨well_founded $<âo § WellFounded(Universe, $<âo)Æ rewrite_thm_tac
+	THEN1 rewrite_tac 
+	[get_spec ¨well_foundedÆ, rewrite_rule [get_spec ¨UWellFoundedÆ] u_well_founded_induction_thm]);
+a (rewrite_tac[ltâo_def]);
+val ltâo_wf = save_pop_thm "ltâo_wf";
+=TEX
+}%ignore
+
+=SML
+val €ORD_INDUCTION_T› = WF_INDUCTION_T ltâo_wf;
+val €ord_induction_tac› = wf_induction_tac ltâo_wf;
+=TEX
+
+Every well-founded well-ordering is an initial segment of ordinals, so we have now a type of ordinals.
+At this point we have no idea how many ordinals there are in the type, there might be only one.
+
+So we will need a strong axiom of infinity to tell us that we have enough ordinals for our purposes.
+
+By analogy with a set theory with Universes, I assert that every ordinal is less than some inaccessible ordinal.
+To get an analogue to global replacement (rather than replacement below any inaccessible ordinal corresponding to replacement within a ``universe''), we would need to require that the universe is regular.
+
+To help in expressing the notion of strong limit ordinal the following definition is helpful:
+
+The cardinality of a Von Neumann ordinal is the cardinality of the collection of strictly smaller ordinals.
+The following function which delivers that set.
+I also use the partial ordering of sets by cardinality ($<âs$) which was defined above.
+
+=SML
+declare_infix(300, "ºâo");
+=TEX
+
+πHOLCONST
+‹ $€ºâo›: ordinal ≠ ordinal  ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬ «∑ ¬ ºâo « §  ¬ <âo « ≤ ¬ = «
+∞
+
+πHOLCONST
+‹ €Xâo›: ordinal ≠ ordinal 
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Xâo ¬ = {» | » <âo ¬}
+∞
+
+=SML
+val strong_infinity = new_axiom(["strong_infinity"], ¨
+µ¬∑
+	∂«∑ ¬ <âo «
+±
+	µ‘∑ ‘ <âo « ¥ 
+	    (Xâo ‘) <âs Xâo «
+	± (µf∑ (∂“∑ (µŒ∑ Œ <âo ‘ ¥ f Œ <âo “) ±
+			(“ ºâo « ¥ “ <âo «)))
+	
+Æ);
+=TEX
+
+Later the essential ideas here may be expressed in more conventional terms and used to validate this definition.
+Pro-tem, the following notes may illuminate the axiom.
+
+The axiom is intended to state:
+\begin{enumerate}
+\item that every ordinal is less than some inaccessible ordinal
+\item that the universe is the set of ordinals less than some regular ordinal
+\end{enumerate}
+
+Thus $«$ in the axiom is the name used for this supposedly inaccessible ordinal, but note that the least such $«$ will not be inaccessible, but will be $◊$, the first limit ordinal.
+Adding the requirement that $«$ be uncountable does not strengthen the axiom which still entails that every ordinal is less than some inaccessible ordinal.
+What we assert of $«$ is first that it is a strong limit ordinal and then that it (and the universe as a whole) is regular.
+These concepts are given formal definitions later, but the axiom is presented in concise form rather than through the definitions of the concepts.
+
+It will be a while before any use is made of this axiom at all.
+For the meantime the elementary theorems obtained hold even in a singleton ordinal type.
 
 =GFT
 €ltâo_min_cond› =
@@ -376,11 +470,23 @@ It is useful to extract from the definition the following consequences.
 	Ù µ ¬∑ ≥ ¬ <âo ¬
 €ltâo_trich› =
 	Ù µ ¬ «∑ ¬ <âo « ≤ « <âo ¬ ≤ ¬ = «
+€ltâo_trich_fc› =
+	Ù µ ¬ «∑ ≥ ¬ <âo « ± ≥ « <âo ¬ ¥ ¬ = «
+€ltâo_trich_fc2› =
+	Ù µ ¬ «∑ ≥ (≥ ¬ <âo « ± ≥ « <âo ¬ ± ≥ ¬ = «)
+€ºâo_refl› =
+	Ù µ ¬∑ ¬ ºâo ¬
+€ºâo_ltâo› =
+	Ù µ ¬ «∑ ¬ ºâo « § ≥ « <âo ¬
+€≥âo_clauses› =
+	Ù µ ¬ «∑ (≥ ¬ <âo « § « ºâo ¬) ± (≥ « ºâo ¬ § ¬ <âo «)
 =TEX
 
 \ignore{
 =SML
 val ltâo_def = get_spec ¨$<âoÆ;
+val ºâo_def = get_spec ¨$ºâoÆ;
+val Xâo_def = get_spec ¨XâoÆ;
 
 set_goal([], ¨µA∑ ≥ A = {} ¥ ∂x∑ x ç A ± µy∑ y ç A ¥ ≥ y <âo xÆ);
 a (strip_asm_tac ltâo_def);
@@ -438,32 +544,90 @@ a (POP_ASM_T ante_tac
 	THEN contr_tac
 	THEN all_asm_fc_tac[]);
 val ltâo_trich = save_pop_thm "ltâo_trich";
+
+set_goal([], ¨µ¬ «∑ ≥ ¬ <âo « ± ≥ « <âo ¬ ¥ ¬ = «Æ);
+a contr_tac;
+a (strip_asm_tac (list_µ_elim [¨¬Æ, ¨«Æ] ltâo_trich));
+val ltâo_trich_fc = save_pop_thm "ltâo_trich_fc";
+
+set_goal([], ¨µ¬ «∑ ≥ (≥ ¬ <âo « ± ≥ « <âo ¬ ± ≥ ¬ = «)Æ);
+a contr_tac;
+a (strip_asm_tac (list_µ_elim [¨¬Æ, ¨«Æ] ltâo_trich));
+val ltâo_trich_fc2 = save_pop_thm "ltâo_trich_fc2";
+
+set_goal([], ¨µ¬∑ ¬ ºâo ¬Æ);
+a (rewrite_tac[ºâo_def]);
+val ºâo_refl = save_pop_thm "ºâo_refl";
+
+set_goal([], ¨µ¬ «∑ ¬ ºâo « § ≥ « <âo ¬Æ);
+a (REPEAT µ_tac THEN rewrite_tac [ºâo_def]);
+a (contr_tac
+	THEN strip_asm_tac (list_µ_elim [¨¬Æ, ¨«Æ] ltâo_trich)
+	THEN all_fc_tac [ltâo_trans]
+	THEN_TRY var_elim_nth_asm_tac 2
+	THEN fc_tac[ltâo_irrefl]);
+val ºâo_ltâo = save_pop_thm "ºâo_ltâo";
+
+set_goal([], ¨µ¬ «∑ (≥ ¬ <âo « § « ºâo ¬)
+	±  (≥ « ºâo ¬ § ¬ <âo «)Æ);
+a (rewrite_tac[ºâo_def] THEN contr_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY all_fc_tac [ltâo_trich_fc, ltâo_trans]
+	THEN asm_prove_tac [ltâo_irrefl]);
+val ≥âo_clauses = save_pop_thm "≥âo_clauses";
+
+add_rw_thms [ltâo_irrefl, ºâo_refl] "'ordcard";
+add_sc_thms [ltâo_irrefl, ºâo_refl] "'ordcard";
+add_st_thms [ltâo_irrefl] "'ordcard";
+set_merge_pcs ["basic_hol", "'ordcard0", "'ordcard"];
 =TEX
 }%ignore
 
-=SML
-declare_infix(500, "ºâo");
+A useful principle for reasoning about the ordinals is the following analogue of set theoretic extensionality:
+
+=GFT
+€ord_ext_thm› =
+	Ù µ ¬ «∑ ¬ = « § (µ ƒ∑ ƒ <âo ¬ § ƒ <âo «)
 =TEX
 
-πHOLCONST
-‹ $€ºâo›: ordinal ≠ ordinal  ≠ BOOL
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ¬ «∑ ¬ ºâo « §  ¬ <âo « ≤ ¬ = «
-∞
+We we later make use of quasi extensional characterisations of operations over ordinals, in which an ordinal expression is characterised by a statement of the conditions under which ordinals are less than the value of the expression.
+This facilitates proofs about ordinals in which the complexity is on the right of an inequality, or in which such can be obtained by the extesionality principle above.
+
+This leaves an awkwardness where our goal has an expression on the left of an inequality which the following rule is intended to ameliorate.
+
+=GFT
+€ºâo_ext_thm› =
+	Ù µ ¬ «∑ ¬ ºâo « § (µ ƒ∑ ƒ <âo ¬ ¥ ƒ <âo «)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ¨µ¬ «∑ ¬ = « § µƒ∑ ƒ <âo ¬ § ƒ <âo «Æ);
+a (REPEAT_N 5 strip_tac THEN_TRY asm_rewrite_tac[] THEN contr_tac);
+a (spec_nth_asm_tac 2 ¨¬Æ
+	THEN spec_nth_asm_tac 4 ¨«Æ
+	THEN all_fc_tac [ltâo_trich_fc2]);
+val ord_ext_thm = save_pop_thm "ord_ext_thm";
+
+(* skip to end of next section for ºâo_ext_thm *)
+=TEX
+}%ignore
 
 =GFT
 €ltâo_ºâo› =
 	Ù µ ¬ « »∑ ¬ <âo « ¥ ¬ ºâo «
 €ºâo_trans› =
 	Ù µ ¬ « »∑ ¬ ºâo « ± « ºâo » ¥ ¬ ºâo »
+€ºâo_ltâo_trans› =
+	Ù µ ¬ « »∑ ¬ ºâo « ± « <âo » ¥ ¬ <âo »
+€ltâo_ºâo_trans› =
+	Ù µ ¬ « »∑ ¬ <âo « ± « ºâo » ¥ ¬ <âo »
 €ºâo_cases› =
 	Ù µ ¬ «∑ ¬ ºâo « ≤ « ºâo ¬
 =TEX
 
 \ignore{
 =SML
-val ºâo_def = get_spec ¨$ºâoÆ;
-
 set_goal([], ¨µ ¬ « »∑ ¬ <âo « ¥ ¬ ºâo «Æ);
 a (rewrite_tac[ºâo_def] THEN REPEAT strip_tac);
 val ltâo_ºâo = save_pop_thm "ltâo_ºâo";
@@ -475,36 +639,1151 @@ a (rewrite_tac[ºâo_def] THEN REPEAT strip_tac
 	THEN rewrite_tac[]);
 val ºâo_trans = save_pop_thm "ºâo_trans";
 
+set_goal([], ¨µ¬ « »∑ ¬ ºâo « ± « <âo » ¥ ¬ <âo »Æ);
+a (rewrite_tac[ºâo_def] THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN all_fc_tac [ltâo_trans]
+	THEN rewrite_tac[]);
+val ºâo_ltâo_trans = save_pop_thm "ºâo_ltâo_trans";
+
+set_goal([], ¨µ¬ « »∑ ¬ <âo « ± « ºâo » ¥ ¬ <âo »Æ);
+a (rewrite_tac[ºâo_def] THEN REPEAT strip_tac
+	THEN_TRY all_var_elim_asm_tac
+	THEN all_fc_tac [ltâo_trans]
+	THEN rewrite_tac[]);
+val ltâo_ºâo_trans = save_pop_thm "ltâo_ºâo_trans";
+
 set_goal([], ¨µ¬ «∑ ¬ ºâo « ≤ « ºâo ¬Æ);
 a (rewrite_tac[ºâo_def] THEN contr_tac);
 a (strip_asm_tac (all_µ_elim ltâo_trich));
 val ºâo_cases = save_pop_thm "ºâo_cases";
+
+set_goal([], ¨µ¬ «∑ ¬ ºâo « § µƒ∑ ƒ <âo ¬ ¥ ƒ <âo «Æ);
+a (REPEAT_N 5 strip_tac THEN_TRY asm_rewrite_tac[] THEN contr_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [ltâo_ºâo_trans]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 ¨«Æ);
+a (REPEAT_N 2 (POP_ASM_T ante_tac)
+	THEN rewrite_tac[≥âo_clauses]
+	THEN REPEAT strip_tac);
+val ºâo_ext_thm = save_pop_thm "ºâo_ext_thm";
 =TEX
 }%ignore
 
-Every well-founded well-ordering is an initial segment of ordinals, so we have now a type of ordinals.
-At this point we have no idea how many ordinals there are in the type, there might be only one.
+It will be useful to have a name for the least element of a collection of ordinals...
 
-So we will need at some point a strong axiom of infinity to tell us that we have enough ordinals for our purposes.
+\ignore{
+=SML
+set_goal([], ¨∂Leastâo∑ µso∑ 
+	µ»∑ » ç so ¥ Leastâo so ç so ± Leastâo so ºâo »Æ);
+a (∂_tac ¨Ãso∑ ≈«∑ « ç so ± µ¬∑ ¬ ç so ¥ « ºâo ¬Æ
+	THEN rewrite_tac[]
+	THEN REPEAT_N 3 strip_tac);
+a (≈_tac ¨≈ «∑ « ç so ± (µ ¬∑ ¬ ç so ¥ « ºâo ¬)Æ);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (µ_elim ¨soÆ ltâo_min_cond));
+(* *** Goal "1.1" *** *)
+a (PC_T1 "hol1" asm_prove_tac[]);
+(* *** Goal "1.2" *** *)
+a (∂_tac ¨xÆ
+	THEN asm_rewrite_tac []
+	THEN µ_tac
+	THEN asm_rewrite_tac[get_spec ¨$ºâoÆ]
+	THEN contr_tac
+	THEN asm_fc_tac[]);
+a (strip_asm_tac (list_µ_elim [¨xÆ, ¨¬Æ] ltâo_trich));
+(* *** Goal "2" *** *)
+a (ASM_FC_T asm_rewrite_tac[]);
+save_cs_∂_thm (pop_thm());
+=TEX
+}%ignore
 
-To get a nice formulation of such an axiom it helps to make a type of cardinals, which will be done in the next section.
-However, it will be desirable to define functions over the ordinals, and so we now seek to obtain a basis for recursive definitions over the ordinals.
+πHOLCONST
+‹ €Leastâo›: ordinal  ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µso »∑ » ç so ¥ Leastâo so ç so ± Leastâo so ºâo »
+∞
 
-Of course the well-foundedness of the ordering supplies a basis for such definitions.
+... and for the supremum of a set of ordinals.
+
+πHOLCONST
+‹ €Ubâo›: ordinal  ≠ ordinal 
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µso∑ Ubâo so = {¬ | µ»∑ » ç so ¥ » ºâo ¬}
+∞
+
+πHOLCONST
+‹ €SUbâo›: ordinal  ≠ ordinal 
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µso∑ SUbâo so = {¬ | µ»∑ » ç so ¥ » <âo ¬}
+∞
+
+πHOLCONST
+‹ €Supâo›: ordinal  ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µso∑ Supâo so = Leastâo (Ubâo so)
+∞
+
+πHOLCONST
+‹ €SSupâo›: ordinal  ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µso∑ SSupâo so = Leastâo (SUbâo so)
+∞
+
+=GFT
+€Leastâo_thm› =
+	Ù µ so ¬∑ ¬ ç so ¥
+		(µ «∑ « <âo Leastâo so § (µ »∑ » ç so ¥ « <âo »))
+€Ubâo_thm› =
+	Ù µ so «∑ « ç Ubâo so § (µ »∑ » ç so ¥ » ºâo «)
+€Ubâo_Xâo_thm› =
+	Ù µ ¡∑ ¡ ç Ubâo (Xâo ¡)
+€Ubâo_Xâo_thm2› =
+	Ù µ ¡∑ ¡ ç Ubâo {¬|¬ <âo ¡}
+€SUbâo_thm› =
+	Ù µ so «∑ « ç SUbâo so § (µ »∑ » ç so ¥ » <âo «)
+€SUbâo_Xâo_thm› =
+	Ù µ ¡∑ ¡ ç SUbâo (Xâo ¡)
+€SUbâo_Xâo_thm2› =
+	Ù µ ¡∑ ¡ ç SUbâo {¬|¬ <âo ¡}
+€ltâo_Supâo› =
+	Ù µ so ¡∑ ¡ ç Ubâo so ¥
+		(µ«∑ « <âo Supâo so § (∂»∑ » ç so ± « <âo »))
+€ltâo_Supâo2› =
+	Ù µ ¡ «∑ « <âo Supâo {¬|¬ <âo ¡} § (∂ »∑ » <âo ¡ ± « <âo »)
+€ltâo_SSupâo› =
+	Ù µ so ¡∑ ¡ ç SUbâo so ¥
+		(µ «∑ « <âo SSupâo so § (∂ »∑ » ç so ± « ºâo »))
+€SSupâo_ltâo› =
+	Ù µ ¡∑ SSupâo {¬|¬ <âo ¡} = ¡
+€SSupâo_ltâo2› =
+	Ù µ so ¡ ¬∑ ¬ ç so ± ¬ ç SUbâo so ¥
+		(SSupâo so <âo ¡ § (∂ ¬∑ ¬ ç SUbâo so ± ¬ <âo ¡))
+€SSupâo_Xâo› =
+	Ù µ ¡∑ SSupâo (Xâo ¡) = ¡
+=TEX
+
+\ignore{
+=SML
+val Leastâo_def = get_spec ¨LeastâoÆ;
+val Ubâo_def = get_spec ¨UbâoÆ;
+val SUbâo_def = get_spec ¨SUbâoÆ;
+val Supâo_def = get_spec ¨SupâoÆ;
+val SSupâo_def = get_spec ¨SSupâoÆ;
+
+push_pc "hol1";
+
+set_goal([], ¨µso ¬∑ ¬ ç so ¥
+	(µ«∑ « <âo Leastâo so § µ»∑ » ç so ¥ « <âo »)Æ);
+a (REPEAT strip_tac THEN all_ufc_tac [Leastâo_def]);
+(* *** Goal "1" *** *)
+a (all_fc_tac[ltâo_ºâo_trans]);
+(* *** Goal "2" *** *)
+a (asm_fc_tac[]);
+val Leastâo_thm = save_pop_thm "Leastâo_thm";
+
+set_goal([], ¨µso «∑ « ç Ubâo so § µ»∑ » ç so ¥ » ºâo «Æ);
+a (rewrite_tac[Ubâo_def]);
+val Ubâo_thm = save_pop_thm "Ubâo_thm";
+
+set_goal([], ¨µ¡∑ ¡ ç Ubâo (Xâo ¡)Æ);
+a (strip_tac THEN rewrite_tac[Ubâo_thm, Xâo_def, ºâo_def]
+	THEN REPEAT strip_tac);
+val Ubâo_Xâo_thm = save_pop_thm "Ubâo_Xâo_thm";
+
+set_goal([], ¨µ¡∑ ¡ ç Ubâo {¬ | ¬ <âo ¡}Æ);
+a (strip_tac THEN rewrite_tac[Ubâo_thm, ºâo_def]
+	THEN REPEAT strip_tac);
+val Ubâo_Xâo_thm2 = save_pop_thm "Ubâo_Xâo_thm2";
+
+set_goal([], ¨µso «∑ « ç SUbâo so § µ»∑ » ç so ¥ » <âo «Æ);
+a (rewrite_tac[SUbâo_def]);
+val SUbâo_thm = save_pop_thm "SUbâo_thm";
+
+set_goal([], ¨µ¡∑ ¡ ç SUbâo (Xâo ¡)Æ);
+a (strip_tac THEN rewrite_tac[SUbâo_thm, Xâo_def, ºâo_def]
+	THEN REPEAT strip_tac);
+val SUbâo_Xâo_thm = save_pop_thm "SUbâo_Xâo_thm";
+
+set_goal([], ¨µ¡∑ ¡ ç SUbâo {¬ | ¬ <âo ¡}Æ);
+a (strip_tac THEN rewrite_tac[SUbâo_thm, ºâo_def]
+	THEN REPEAT strip_tac);
+val SUbâo_Xâo_thm2 = save_pop_thm "SUbâo_Xâo_thm2";
+
+set_goal([], ¨µso ¡∑ ¡ ç Ubâo so ¥
+	(µ«∑ « <âo Supâo so § ∂»∑ » ç so ± « <âo »)Æ);
+a (rewrite_tac[Supâo_def]
+	THEN REPEAT_N 5 strip_tac
+	THEN_TRY all_ufc_§_rewrite_tac [Leastâo_thm]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (contr_tac);
+a (lemma_tac ¨« ç Ubâo soÆ);
+(* *** Goal "1.1" *** *)
+a (asm_rewrite_tac [Ubâo_thm]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨»Æ);
+a (asm_rewrite_tac[ºâo_ltâo]);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[]);
+a (fc_tac[ltâo_irrefl]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[Ubâo_thm]);
+a (all_fc_tac[ltâo_ºâo_trans]);
+val ltâo_Supâo = save_pop_thm "ltâo_Supâo";
+
+=IGN
+set_goal([], ¨µso1 so2 ¡∑ ¡ ç Ubâo so2 ± so1 Ä so2
+	¥ Supâo so1 ºâo Supâo so2Æ);
+a (REPEAT strip_tac THEN rewrite_tac[]);
+=SML
+
+set_goal([], ¨µ¡ «∑ « <âo Supâo {¬ | ¬ <âo ¡} § ∂»∑ » <âo ¡ ± « <âo »Æ);
+a (REPEAT µ_tac);
+a (lemma_tac ¨∂ »∑ » ç Ubâo {¬|¬ <âo ¡}Æ
+	THEN1 (∂_tac ¨¡:ordinalÆ THEN rewrite_tac[Ubâo_Xâo_thm2]));
+a (all_ufc_§_tac[ltâo_Supâo]);
+a (asm_rewrite_tac[]);
+val ltâo_Supâo2 = save_pop_thm "ltâo_Supâo2";
+
+=IGN
+set_goal([], ¨µso∑ (∂¡∑ ¡ ç Ubâo so) ¥
+	µ«∑ Supâo so <âo « § ∂»∑ » ç Ubâo so ¥ » <âo «Æ);
+a (rewrite_tac[Supâo_def]
+	THEN REPEAT_N 5 strip_tac);
+	THEN_TRY all_ufc_§_rewrite_tac [Leastâo_thm]
+	THEN REPEAT strip_tac);
+=SML
+
+pop_pc();
+set_merge_pcs ["ordcard01", "'ordcard"];
+
+set_goal([], ¨µso ¡∑ ¡ ç SUbâo so ¥
+	(µ«∑ « <âo SSupâo so § ∂»∑ » ç so ± « ºâo »)Æ);
+a (rewrite_tac[SSupâo_def]
+	THEN REPEAT_N 5 strip_tac
+	THEN_TRY all_ufc_§_rewrite_tac [Leastâo_thm]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (contr_tac);
+a (lemma_tac ¨« ç SUbâo soÆ);
+(* *** Goal "1.1" *** *)
+a (asm_rewrite_tac [SUbâo_thm]
+	THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ¨»Æ);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac[ºâo_ltâo]);
+(* *** Goal "1.2" *** *)
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[SUbâo_thm]);
+a (all_fc_tac[ºâo_ltâo_trans]);
+val ltâo_SSupâo = save_pop_thm "ltâo_SSupâo";
+
+set_goal([], ¨µ¡∑ SSupâo {¬ | ¬ <âo ¡} = ¡Æ);
+a (REPEAT µ_tac THEN rewrite_tac[ord_ext_thm]);
+a (lemma_tac ¨∂ »∑ » ç SUbâo {¬|¬ <âo ¡}Æ
+	THEN1 (∂_tac ¨¡:ordinalÆ THEN rewrite_tac[SUbâo_Xâo_thm2]));
+a (all_ufc_§_tac[ltâo_SSupâo]);
+a (asm_rewrite_tac[]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac [ºâo_ltâo_trans]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨ƒÆ THEN asm_rewrite_tac[]);
+val SSupâo_ltâo = save_pop_thm "SSupâo_ltâo";
+
+set_goal([], ¨µ¡∑ SSupâo (Xâo ¡) = ¡Æ);
+a (strip_tac THEN rewrite_tac[Xâo_def, SSupâo_ltâo]);
+val SSupâo_Xâo = save_pop_thm "SSupâo_Xâo";
+
+set_goal([], ¨µso ¬ «∑ ¬ ç so ± « ç SUbâo so ¥
+	(µ¡∑ SSupâo so <âo ¡ § ∂»∑ » ç SUbâo so ± » <âo ¡)Æ);
+a (REPEAT µ_tac THEN rewrite_tac[SSupâo_def]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_ufc_§_tac [Leastâo_def]);
+a (∂_tac ¨Leastâo (SUbâo so)Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_ufc_§_tac [Leastâo_def]);
+a (all_ufc_tac [ºâo_ltâo_trans]);
+val SSupâo_ltâo2 = save_pop_thm "SSupâo_ltâo2";
+
+=IGN
+set_goal([], ¨µ« P∑ (∂»∑ » ç SUbâo {¬ | P ¬ «}) ± (µ¬∑ ¬ <âo « § P ¬ «)
+	¥ « = SSupâo{¬ | P ¬ «}Æ);
+a (rewrite_tac[ord_ext_thm] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_ufc_§_rewrite_tac [ltâo_SSupâo]);
+a (∂_tac ¨ƒÆ THEN all_asm_fc_tac[] THEN REPEAT strip_tac);
+(* *** Goal "2" *** *)
+a (POP_ASM_T ante_tac
+	THEN all_ufc_§_rewrite_tac [ltâo_SSupâo]
+	THEN strip_tac);
+a (DROP_NTH_ASM_T 2 ante_tac
+	THEN SYM_ASMS_T rewrite_tac
+	THEN strip_tac);
+a (all_fc_tac [ºâo_ltâo_trans]);
+val 
+
+=SML
+add_rw_thms [Ubâo_thm, SUbâo_thm, Ubâo_Xâo_thm, SUbâo_Xâo_thm,
+	Ubâo_Xâo_thm2, SUbâo_Xâo_thm2, ltâo_Supâo2, SSupâo_ltâo, SSupâo_Xâo] "'ordcard";
+add_sc_thms [Ubâo_thm, SUbâo_thm, Ubâo_Xâo_thm, SUbâo_Xâo_thm,
+	Ubâo_Xâo_thm2, SUbâo_Xâo_thm2, ltâo_Supâo2, SSupâo_ltâo, SSupâo_Xâo] "'ordcard";
+add_st_thms [ltâo_Supâo2] "'ordcard";
+set_merge_pcs ["ordcard01", "'ordcard"];
+=TEX
+}%ignore
+
+Now a name to the least ordinal:
+
+πHOLCONST
+‹ €0âo›: ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ 0âo = Leastâo {ƒ | T}
+∞
+
+=GFT
+€zeroâo_thm› =
+	Ù µ ¬∑ 0âo ºâo ¬
+€ltâo_zeroâo_thm› =
+	Ù µ ¬∑ ≥ ¬ <âo 0âo
+=TEX
+
+\ignore{
+=SML
+val zeroâo_def = get_spec ¨0âoÆ;
+
+set_goal([], ¨µ¬∑ 0âo ºâo ¬Æ);
+a (rewrite_tac[zeroâo_def, pc_rule1 "hol1" rewrite_rule []
+	(µ_elim ¨{ƒ:ordinal|T}Æ Leastâo_def)]
+	THEN strip_tac);
+val zeroâo_thm = save_pop_thm "zeroâo_thm";
+
+val ltâo_zeroâo_thm = save_thm ("ltâo_zeroâo_thm",
+	rewrite_rule [ºâo_ltâo] zeroâo_thm);
+=TEX
+}%ignore
+
+In order to define operators over the ordinals (without undesirable complications) the ordinals must be closed under the operations.
+If we want to use such operations in formulating our strong axiom of infinity, then we would need to assert sufficiently strong closure conditions in advance of our axiom of infinity.
+
+The basis for the closure principle one which definitions of functions like ordinal addition is based is a related to the axiom of replacement in set theory.
+In talking of ordinals the corresponding notion is that or regularity, which we can define without any kind of axiom of infinity as follows.
+
+First the notion of cofinality.
+This definition is perhaps a little eccentric, in that it is defined over all ordinals not just limit ordinals, and in that it is couched in terms of arbitrary functions rather than increasing sequences, and consequently takes the supremum of the image rather than the limit of a sequence.
+
+The supremum of an image will prove more generally useful so we give it a name.
+
+By the image of an ordinal through a map, I mean the image of the set of ordinals less than that ordinal (which will be a set of ordinals of course):
+
+πHOLCONST
+‹ €Imageâo›: ((ordinal ≠ ordinal) ∏ ordinal) ≠ ordinal 
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µf ¬∑ Imageâo(f, ¬) = {ƒ | ∂»∑ » <âo ¬ ± f » = ƒ}
+∞
+
+=GFT
+€Imageâo_thm› =
+	Ù µ f ¬ «∑ « ç Imageâo (f, ¬) § (∂ »∑ » <âo ¬ ± « = f »)
+€Imageâo_zeroâo_thm› =
+	Ù µ f∑ Imageâo (f, 0âo) = {}
+€Imageâo_mono_thm› =
+	Ù µ f ¡ ¬∑ ¡ ºâo ¬ ¥ Imageâo (f, ¡) Ä Imageâo (f, ¬)
+€Ubâo_Imageâo_thm› =
+	Ù µ f ¬∑ ∂ «∑ « ç Ubâo (Imageâo (f, ¬))
+€Ubâo_Imageâo_zeroâo› =
+	Ù µ f ¬ «∑ « ç Ubâo (Imageâo (f, 0âo))
+€SUbâo_Imageâo_thm› =
+	Ù µ f ¬∑ ∂ «∑ « ç SUbâo (Imageâo (f, ¬))
+€SUbâo_Imageâo_zeroâo› =
+	Ù µ f ¬ «∑ « ç SUbâo (Imageâo (f, 0âo))
+=TEX
+
+\ignore{
+=SML
+val Imageâo_def = get_spec ¨ImageâoÆ;
+
+set_goal([], ¨µf ¬ «∑ « ç Imageâo (f, ¬) § ∂»∑ » <âo ¬ ± « = f »Æ);
+a (rewrite_tac[Imageâo_def] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[]);
+val Imageâo_thm = save_pop_thm "Imageâo_thm";
+
+set_goal([], ¨µf∑ Imageâo(f, 0âo) = {}Æ);
+a (rewrite_tac[Imageâo_thm, ltâo_zeroâo_thm]);
+val Imageâo_zeroâo_thm = save_pop_thm "Imageâo_zeroâo_thm";
+
+set_goal([], ¨µf ¡ ¬∑ ¡ ºâo ¬ ¥ Imageâo(f, ¡) Ä Imageâo(f, ¬)Æ);
+a (rewrite_tac[Imageâo_thm, ltâo_zeroâo_thm]
+	THEN REPEAT strip_tac);
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[]);
+a (all_fc_tac[ltâo_ºâo_trans]);
+val Imageâo_mono_thm = save_pop_thm "Imageâo_mono_thm";
+
+set_goal([], ¨µf ¬∑ ∂«∑ « ç Ubâo(Imageâo (f, ¬))Æ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (strong_infinity));
+a (spec_nth_asm_tac 1 ¨¬Æ);
+a (spec_nth_asm_tac 1 ¨¬Æ);
+a (SPEC_NTH_ASM_T 1 ¨fÆ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
+a (POP_ASM_T discard_tac);
+a (rewrite_tac[Ubâo_def]);
+a (∂_tac ¨“Æ
+	THEN rewrite_tac[Imageâo_thm]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[ºâo_def]
+	THEN asm_fc_tac[]
+	THEN contr_tac);
+val Ubâo_Imageâo_thm = save_pop_thm "Ubâo_Imageâo_thm";
+
+set_goal([], ¨µf ¬ «∑ « ç Ubâo(Imageâo (f, 0âo))Æ);
+a (rewrite_tac[Ubâo_thm, Ubâo_Imageâo_thm, Imageâo_zeroâo_thm]);
+val Ubâo_Imageâo_zeroâo = save_pop_thm "Ubâo_Imageâo_zeroâo";
+
+set_goal([], ¨µf ¬∑ ∂«∑ « ç SUbâo(Imageâo (f, ¬))Æ);
+a (REPEAT µ_tac);
+a (strip_asm_tac (strong_infinity));
+a (spec_nth_asm_tac 1 ¨¬Æ);
+a (spec_nth_asm_tac 1 ¨¬Æ);
+a (SPEC_NTH_ASM_T 1 ¨fÆ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
+a (POP_ASM_T discard_tac);
+a (rewrite_tac[SUbâo_def]);
+a (∂_tac ¨“Æ
+	THEN rewrite_tac[Imageâo_thm]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[ºâo_def]
+	THEN asm_fc_tac[]
+	THEN contr_tac);
+val SUbâo_Imageâo_thm = save_pop_thm "SUbâo_Imageâo_thm";
+
+set_goal([], ¨µf ¬ «∑ « ç SUbâo(Imageâo (f, 0âo))Æ);
+a (rewrite_tac[SUbâo_Imageâo_thm, Imageâo_zeroâo_thm]);
+val SUbâo_Imageâo_zeroâo = save_pop_thm "SUbâo_Imageâo_zeroâo";
+
+add_rw_thms [Imageâo_thm, zeroâo_thm, ltâo_zeroâo_thm, Ubâo_Imageâo_zeroâo,
+	SUbâo_Imageâo_zeroâo] "'ordcard";
+add_sc_thms [Imageâo_thm, zeroâo_thm, ltâo_zeroâo_thm, Ubâo_Imageâo_zeroâo,
+	SUbâo_Imageâo_zeroâo] "'ordcard";
+add_st_thms [Imageâo_thm, ltâo_zeroâo_thm] "'ordcard";
+set_merge_pcs ["ordcard01", "'ordcard"];
+=TEX
+}
+
+$SupImâo$ is then the supremum of the image of an ordinal.
+In the case that the function is increasing then this is the limit of a $¬$ sequence.
+Sometimes where such a limit is used in the literature there is no apparent benefit from the restriction to increasing sequences and I use $SupImâo$ of an arbitary map, as in, for example, the definition of ordinal addition.
+
+πHOLCONST
+‹ €SupImâo›: ((ordinal ≠ ordinal) ∏ ordinal) ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ SupImâo x = Supâo (Imageâo x)
+∞
+
+$SSupImâo$ is the strict supremum of the image of an ordinal.
+
+πHOLCONST
+‹ €SSupImâo›: ((ordinal ≠ ordinal) ∏ ordinal) ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx∑ SSupImâo x = SSupâo (Imageâo x)
+∞
+
+In general the supremum of an image only exists if the image is bounded above.
+However, one of the principle purposes of our axiom of strong infinity is to ensure that such bounds exist.
+By analogy with replacement in set theory, which tells us that the image of a set is a set, we know that the image of a bounded collection of ordinals is itself bounded.
+This enables us to prove the following results about $SupImâo$ and $SSupImâo$.
+
+=GFT
+€ltâo_SupImâo› =
+	Ù µ f ¬ «∑ « <âo SupImâo (f, ¬) § (∂ »∑ » <âo ¬ ± « <âo f »)
+€SupImâo_zeroâo› =
+	Ù µ f ¬ «∑ ≥ « <âo SupImâo (f, 0âo)
+€ltâo_SSupImâo› =
+	Ù µ f ¬ «∑ « <âo SSupImâo (f, ¬) § (∂ »∑ » <âo ¬ ± « ºâo f »)
+€SSupImâo_zeroâo› =
+	Ù µ f ¬ «∑ ≥ « <âo SSupImâo (f, 0âo)
+=TEX
+
+\ignore{
+=SML
+val SupImâo_def = get_spec ¨SupImâoÆ;
+val SSupImâo_def = get_spec ¨SSupImâoÆ;
+
+set_goal([], ¨µf ¬ «∑ « <âo SupImâo (f, ¬) § ∂»∑ » <âo ¬ ± « <âo f »Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [SupImâo_def]);
+a (strip_asm_tac (list_µ_elim [¨fÆ, ¨¬Æ] Ubâo_Imageâo_thm));
+a (all_ufc_§_rewrite_tac [µ_elim ¨Imageâo (f, ¬)Æ ltâo_Supâo]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨$"»'"Æ THEN asm_rewrite_tac[]);
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2" *** *)
+a (∂_tac ¨f »Æ THEN asm_rewrite_tac[Imageâo_thm]);
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[]);
+val ltâo_SupImâo = save_pop_thm "ltâo_SupImâo";
+
+set_goal([], ¨µf ¬ «∑ ≥ « <âo SupImâo (f, 0âo)Æ);
+a (rewrite_tac[ltâo_SupImâo]);
+val SupImâo_zeroâo = save_pop_thm "SupImâo_zeroâo";
+
+=IGN
+set_goal([], ¨µf ¡ ¬∑ ¡ ºâo ¬ ¥ SupImâo (f, ¡) ºâo SupImâo (f, ¬)Æ);
+a (REPEAT µ_tac THEN rewrite_tac[SupImâo_def] THEN REPEAT strip_tac);
+=SML
+
+set_goal([], ¨µf ¬ «∑ « <âo SSupImâo (f, ¬) § ∂»∑ » <âo ¬ ± « ºâo f »Æ);
+a (REPEAT µ_tac
+	THEN rewrite_tac [SSupImâo_def]);
+a (strip_asm_tac (list_µ_elim [¨fÆ, ¨¬Æ] SUbâo_Imageâo_thm));
+a (all_ufc_§_rewrite_tac [µ_elim ¨Imageâo (f, ¬)Æ ltâo_SSupâo]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨$"»'"Æ THEN asm_rewrite_tac[]);
+a (SYM_ASMS_T rewrite_tac);
+(* *** Goal "2" *** *)
+a (∂_tac ¨f »Æ THEN asm_rewrite_tac[Imageâo_thm]);
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[]);
+val ltâo_SSupImâo = save_pop_thm "ltâo_SSupImâo";
+
+set_goal([], ¨µf∑ SSupImâo (f, 0âo) = 0âoÆ);
+a (rewrite_tac[ord_ext_thm, ltâo_SSupImâo]);
+val SSupImâo_zeroâo = save_pop_thm "SSupImâo_zeroâo";
+
+add_rw_thms [ltâo_SupImâo, ltâo_SSupImâo, SupImâo_zeroâo, SSupImâo_zeroâo] "'ordcard";
+add_sc_thms [ltâo_SupImâo, ltâo_SSupImâo, SupImâo_zeroâo, SSupImâo_zeroâo] "'ordcard";
+add_st_thms [ltâo_SupImâo, ltâo_SSupImâo, SupImâo_zeroâo, SSupImâo_zeroâo] "'ordcard";
+set_merge_pcs ["ordcard01", "'ordcard"];
+=TEX
+}%ignore
+
+\subsection{Defining Functions over the Ordinals}
+
+Often functions over ordinals are defined by cases in a manner analogous to primitive recursive definitions over the natural numbers (in which the cases are zero and successors) by adding a further case for limit ordinals.
+Its not clear whether such an approach would work for us, because there is some difficulty in dealing with the limit case.
+
+The approach I adopt addresses directly the limit case and subsumes the whole.
+
+It may help to think of this as definition by inequality.
+Just as sets can be uniquely determined by identifying their members, so can ordinals when they are represented by sets.
+Though we do not represent an ordinal by a set, it is nevertheless uniquely determined by its predecessors, which would have been its members if we had been working in set theory.
+
+Thus an ordinal $¬$ might be defined by a sentence of the following form:
+
+=GFT
+	µ«∑ « <âo ¬ § formula
+=TEX	
+
+I did look for a way of automatically proving the consistency of definitions in that form, but found this to be less straightforward than I had expected.
+The reason is that not all formulae of the given form are consistent.
+The formula on the right has to have the property that if true for a given value $«$ it is true also for any smaller value.
+
+I have therefore to fall back on forms of definition more similar to those used in t042 \cite{rbjt042}.
+
+Thus instead of the above we would have something like:
+
+=GFT
+	¬ = SSupâo {« | formula}
+=TEX	
+
+Which is not subject to the same constraint.
+
+A further problem is the necessary recursion in defining operations over ordinals.
+A more definite example is desirable so we will look at addition.
+
+Addition could be defined as follows:
+
+=GFT
+	µ¬ « »∑ » <âo ¬ +âo « § » <âo ¬ ≤ ∂“∑ “ <âo « ± » = ¬ +âo “
+=TEX
+
+The recursion here is well-founded because the addition on the right operates on smaller arguments than the one on the left.
+To make this conspicuous we can rewrite the definition, first:
+
+=GFT
+	µ¬ «∑ ¬ +âo « = SSupâo {» | » <âo ¬ ≤ ∂“∑ “ <âo « ± » = ¬ +âo “}
+=TEX
+
+
+This first step overcomes the first problem (the dependence on establishing that the formula `downward closed', the set in the second formulation does not need to be downward closed).
+The smaller values become irrelevant, and this could be simplified to:
+
+=GFT
+	µ¬ «∑ ¬ +âo « = SSupâo {» | ∂“∑ “ <âo « ± » = ¬ +âo “}
+=TEX
+
+A further step allows the well-foundedness of the recursion to be made more obvious.
+
+=GFT
+	µ¬ «∑ ($+âo ¬) « = SSupâo (Imageâo ($+âo ¬) «)
+=TEX
+
+It is a feature of $SSupImâo (\$+âo ¬) «$ that it accessed values of $\$+âo ¬$ only for ordinals less than $«$.
+A suitable recursion theorem is necessary to permit definitions in this form to be accepted.
+
+There is a question in formulating such a recursion theorem as to what access to the function is required.
+A maximally general theorem will allow access to a restricted version of the function, an intermediate version to the image of the values below some ordinal through the map, and a minimal version to the supremum of strict supremum of the values.
+At this point it is not clear to me what is likely to be most useful.
+
+On considering this I came to the conclusion that a general principle should be provided elsewhere, and have put one ($tf\_rec\_thm2$) in t009 \cite{rbjt009}.
+This provides a recursion theorem for use with any well-founded relation.
+
+When we specialise that to the ordering over the ordinals we get:
+
+=GFT
+€ord_rec_thm› =
+	Ù µ af∑ ∂ f∑ µ x∑ f x = af ((x, $<âo) ßÚ f) x
+=TEX
+
+In which the operator $ßÚ$ restricts the domain of function $f$ hiding information about values for arguments not lower in the ordering than $x$.
+This can be made a little slicker for use in this document by defining a more specific restriction operator:
+
+=SML
+declare_infix(400, "Úâo");
+=TEX
+
+πHOLCONST
+‹ $€Úâo›: ordinal ≠ (ordinal ≠ ordinal) ≠ (ordinal ≠ ordinal)
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx f∑ x Úâo f = (x, $<âo) ßÚ f
+∞
+
+=GFT
+€Úâo_fc› =
+	Ù µ« f ¬∑ ¬ <âo « ¥ (« Úâo f) ¬ = f ¬
+€Imageâo_Úâo_thm› =
+	Ù µ « f∑ Imageâo (« Úâo f, «) = Imageâo (f, «)
+€SupImâo_Úâo_thm› =
+	Ù µ « f∑ SupImâo (« Úâo f, «) = SupImâo (f, «)
+€SSupImâo_Úâo_thm› =
+	Ù µ« f∑ SSupImâo (« Úâo f, «) = SSupImâo (f, «)
+=TEX
+
+Hence:
+
+=GFT
+€ord_rec_thm2› =
+	Ù µ af∑ ∂ f∑ µ x∑ f x = af (x Úâo f) x
+=TEX
+
+Unfortunately this will not work with the ProofPower consistency prover, which requires a constructor (as if we were defining a function by pattern matching over a recursive data type).
+To get automatic consistency proofs we need to add a dummy constructor, so:
+
+=GFT
+€ord_rec_thm3› =
+	Ù µ af∑ ∂ f∑ µ x∑ f (CombI x) = af (x Úâo f) x
+=TEX
+
+=GFT
+€Imageâo_recursion_thm› =
+	Ù µ af∑ ∂ f∑ µ x∑ f (CombI x) = af (Imageâo (f, x)) x
+=TEX
+
+
+\ignore{
+=SML
+val Úâo_def = get_spec ¨$ÚâoÆ;
+
+set_goal([], ¨µ« f ¬∑ ¬ <âo « ¥ (« Úâo f) ¬ = f ¬Æ);
+a (REPEAT µ_tac THEN rewrite_tac [Úâo_def] THEN REPEAT strip_tac
+	THEN FC_T rewrite_tac [ßÚ_fc_thm]); 
+val Úâo_fc = save_pop_thm "Úâo_fc";
+
+set_goal([], ¨µ« f∑ Imageâo (« Úâo f, «) = Imageâo (f, «)Æ);
+a (REPEAT µ_tac THEN rewrite_tac [ord_ext_thm]
+	THEN REPEAT strip_tac
+	THEN POP_ASM_T ante_tac
+	THEN_TRY UFC_T rewrite_tac [Úâo_fc]
+	THEN strip_tac
+	THEN ∂_tac ¨»:ordinalÆ
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]
+	);
+(* *** Goal "1" *** *)
+a (SYM_ASMS_T (fc_tac));
+(* *** Goal "2" *** *)
+a (FC_T asm_rewrite_tac [Úâo_fc]);
+(* *** Goal "3" *** *)
+a (POP_ASM_T ante_tac);
+a (FC_T asm_rewrite_tac [Úâo_fc]);
+val Imageâo_Úâo_thm = save_pop_thm "Imageâo_Úâo_thm";
+
+set_goal([], ¨µ« f∑ SupImâo (« Úâo f, «) = SupImâo (f, «)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [ord_ext_thm]
+	THEN REPEAT strip_tac
+	THEN POP_ASM_T ante_tac
+	THEN_TRY FC_T rewrite_tac [Úâo_fc]
+	THEN strip_tac
+	THEN ∂_tac ¨»:ordinalÆ
+	THEN REPEAT strip_tac
+	);
+a (FC_T asm_rewrite_tac [Úâo_fc]);
+val SupImâo_Úâo_thm = save_pop_thm "SupImâo_Úâo_thm";
+
+set_goal([], ¨µ« f∑ SSupImâo (« Úâo f, «) = SSupImâo (f, «)Æ);
+a (REPEAT strip_tac THEN rewrite_tac [ord_ext_thm]
+	THEN REPEAT strip_tac
+	THEN POP_ASM_T ante_tac
+	THEN_TRY FC_T rewrite_tac [Úâo_fc]
+	THEN strip_tac
+	THEN ∂_tac ¨»:ordinalÆ
+	THEN REPEAT strip_tac
+	);
+a (FC_T asm_rewrite_tac [Úâo_fc]);
+val SSupImâo_Úâo_thm = save_pop_thm "SSupImâo_Úâo_thm";
+
+val ord_rec_thm = save_thm("ord_rec_thm",
+	rewrite_rule [ltâo_def] (µ_elim ¨$<âoÆ tf_rec_thm2));
+
+set_goal([], ¨µ af∑ ∂ f∑ µ x∑ f x = af (x Úâo f) xÆ);
+a (rewrite_tac[Úâo_def, ord_rec_thm]);
+val ord_rec_thm2 = save_pop_thm "ord_rec_thm2";
+
+set_goal ([], ¨µ af∑ ∂ f∑ µ x∑ f (CombI x) = af (x Úâo f) xÆ);
+a (strip_tac);
+a (strip_asm_tac (µ_elim ¨afÆ ord_rec_thm2));
+a (∂_tac ¨fÆ THEN asm_rewrite_tac [get_spec ¨CombIÆ]);
+val ord_rec_thm3 = save_pop_thm "ord_rec_thm3";
+
+set_goal([], ¨µaf∑ (Ãf x∑ af (Imageâo (f, x)) x) respects $<âoÆ);
+a (rewrite_tac [get_spec ¨$respectsÆ] THEN REPEAT strip_tac);
+a (LEMMA_T ¨Imageâo (g, x) = Imageâo (h, x)Æ rewrite_thm_tac);
+a (rewrite_tac[ord_ext_thm] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (POP_ASM_T ante_tac);
+a (lemma_tac ¨tc $<âo » xÆ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T rewrite_tac []);
+(* *** Goal "1.2" *** *)
+a (POP_ASM_T ante_tac);
+a (lemma_tac ¨tc $<âo » xÆ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T rewrite_tac []);
+(* *** Goal "2" *** *)
+a (∂_tac ¨»Æ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a (POP_ASM_T ante_tac);
+a (lemma_tac ¨tc $<âo » xÆ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T rewrite_tac []);
+(* *** Goal "2.2" *** *)
+a (POP_ASM_T ante_tac);
+a (lemma_tac ¨tc $<âo » xÆ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T rewrite_tac []);
+val Imageâo_respects_ltâo = pop_thm ();
+
+set_goal([], ¨µ af∑ ∂ f∑ µx∑ f (CombI x) = af (Imageâo (f, x)) xÆ);
+a (REPEAT strip_tac THEN_TRY rewrite_tac[get_spec ¨CombIÆ]);
+a (∂_tac ¨fix (Ãf x∑ af (Imageâo (f, x)) x)Æ);
+a (asm_tac Imageâo_respects_ltâo);
+a (asm_tac ltâo_wf);
+a (spec_nth_asm_tac 2 ¨afÆ);
+a (all_fc_tac [get_spec ¨fixÆ]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[ext_thm]);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac []);
+val Imageâo_recursion_thm = save_pop_thm "Imageâo_recursion_thm";
+=TEX
+}%ignore
+
+Rather than having specific recursion theorems for definitions involving SupIm or SSupIm, we apply the required domain restriction to the function being defined wherever it is used on the right of the definition.
+
+=SML
+force_new_pc "'ordcard-rec1";
+add_∂_cd_thms [ord_rec_thm3] "'ordcard-rec1";
+=TEX
+
+\subsection{Ordinal Arithmetic}
+
+=SML
+declare_infix(400, "+âo");
+=TEX
+
+\ignore{
+=SML
+push_merge_pcs ["ordcard0", "'ordcard", "'ordcard-rec1"];
+
+set_goal([], ¨∂$+âo:ordinal ≠ ordinal ≠ ordinal∑
+		µ¬ «∑ ¬ +âo « = if « = 0âo then ¬ else SupImâo ($+âo ¬, «)Æ);
+a (LEMMA_T ¨∂$+âo:ordinal ≠ ordinal ≠ ordinal∑
+		µ¬ «∑ ¬ +âo (CombI «) = if « = 0âo then ¬ else SupImâo (« Úâo ($+âo ¬), «)Æ
+	(accept_tac o (pure_rewrite_rule [get_spec ¨CombIÆ, SupImâo_Úâo_thm]))
+	THEN1 basic_prove_∂_tac);
+val plusâo_consistent = save_cs_∂_thm (pop_thm());
+
+pop_pc();
+=TEX
+}%ignore
+
+The sum of two ordinals is the strict supremum of the set of ordinals less than the second operand under the function which adds each ordinal to the first operand.
+
+πHOLCONST
+‹ $€+âo›: ordinal ≠ ordinal ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬ «∑ ¬ +âo « = if « = 0âo then ¬ else SupImâo ($+âo ¬, «)
+∞
+
+=GFT
+€plusâo_0âo› =
+	Ù µ ¬∑ ¬ +âo 0âo = ¬
+=TEX
+
+\ignore{
+=SML
+
+=IGN
+val plusâo_def = get_spec ¨$+âoÆ;
+
+set_goal([], ¨µ¬∑ ¬ +âo 0âo = ¬Æ);
+a (REPEAT µ_tac);
+a (once_rewrite_tac [plusâo_def]);
+a (pure_rewrite_tac[ord_ext_thm]);
+a (rewrite_tac[]);
+val plusâo_0âo = save_pop_thm "plusâo_0âo";
+=SML
+
+val plusâo_def = get_spec ¨$+âoÆ;
+
+set_goal([], ¨µ¬∑ ¬ +âo 0âo = ¬Æ);
+a (REPEAT µ_tac);
+a (once_rewrite_tac [plusâo_def] THEN rewrite_tac[]);
+val plusâo_0âo = save_pop_thm "plusâo_0âo";
+
+=IGN
+
+push_merge_pcs ["ordcard0", "'ordcard", "'ordcard-rec1"];
+
+set_goal([], ¨µ¬ «∑ ¬ +âo « = if « = 0âo then ¬ else SupImâo ($+âo ¬, «)Æ);
+a (REPEAT µ_tac);
+a (cond_cases_tac ¨« = 0âoÆ THEN_TRY rewrite_tac[plusâo_0âo]);
+a (once_rewrite_tac [plusâo_def]);
+a (lemma_tac ¨∂set∑ set = {»|» <âo ¬ ≤ » <âo SupImâo ($+âo ¬, «)}Æ
+	THEN1 prove_∂_tac);
+a (lemma_tac ¨∂x∑ x ç SUbâo setÆ);
+(* *** Goal "1" *** *)
+a (∂_tac ¨SupImâo ($+âo ¬, «)Æ
+		THEN asm_rewrite_tac[]
+		THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (∂_tac ¨0âoÆ
+		THEN asm_rewrite_tac[plusâo_0âo]
+		THEN strip_asm_tac (µ_elim ¨«:ordinalÆ
+			(pure_rewrite_rule [ºâo_def] zeroâo_thm))
+		THEN asm_rewrite_tac[]
+		THEN_TRY all_var_elim_asm_tac);
+(* *** Goal "1.2" *** *)
+a (∂_tac ¨$"»'"Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (rewrite_tac[ord_ext_thm]);
+a (all_ufc_§_tac [ltâo_SSupâo]);
+a (POP_ASM_T ante_tac THEN asm_rewrite_tac[]);
+	THEN strip_tac THEN asm_rewrite_tac[]);
+
+(asm_tac o rewrite_rule[]));
+stop;
+
+=IGN
+
+set_goal([], ¨µ¡ ¬ «∑ ¡ ºâo ¬ § « +âo ¡ ºâo « +âo ¬Æ);
+a (REPEAT µ_tac
+	THEN ord_induction_tac ¨«:ordinalÆ
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (rewrite_tac[ºâo_ext_thm, plusâo_def] THEN REPEAT µ_tac);
+a (cond_cases_tac ¨¬ = 0âoÆ);
+a (lemma_tac ¨¡ = 0âoÆ 
+
+a (once_rewrite_tac[plusâo_def]);
+
+set_goal([], ¨µ¬ « »∑ » <âo ¬ +âo « § » <âo ¬ ≤ ∂“∑ “ <âo « ± » = ¬ +âo “Æ);
+a (REPEAT µ_tac
+	THEN ord_induction_tac ¨»:ordinalÆ
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (LEMMA_T ¨∂set∑ set = {’ | ∂ “∑ “ <âo t ± “ = ¬ +âo ’}Æ
+	(STRIP_THM_THEN asm_tac) THEN1 prove_∂_tac);
+a (lemma_tac ¨µv∑ v ç SUbâo set § t ºâo ¬ +âo vÆ 
+	THEN1 (asm_rewrite_tac[] THEN REPEAT strip_tac));
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¨vÆ);
+a (spec_nth_asm_tac 1 ¨¬ +âo vÆ);
+a (asm_rewrite_tac[ºâo_def]);
+a (contr_tac THEN strip_asm_tac (list_µ_elim [¨tÆ, ¨¬ +âo vÆ] ltâo_trich));
+(* *** Goal "1.2" *** *)
+a (var_elim_asm_tac ¨“ = ¬ +âo »Æ);
+a (LEMMA_T ¨¬ +âo » <âo ¬ +âo vÆ ante_tac
+	THEN1 (all_ufc_tac [ltâo_ºâo_trans]));
+a (rewrite_tac[plusâo_def]);
+
+
+
+a (lemma_tac ¨µv∑ v ç SUbâo set ¥ t ºâo ¬ +âo vÆ 
+	THEN1 (asm_rewrite_tac[] THEN REPEAT strip_tac));
+(* *** Goal "1.1" *** *)
+a (spec_nth_asm_tac 1 ¨vÆ);
+a (spec_nth_asm_tac 1 ¨¬ +âo vÆ);
+a (asm_rewrite_tac[ºâo_def]);
+a (contr_tac THEN strip_asm_tac (list_µ_elim [¨tÆ, ¨¬ +âo vÆ] ltâo_trich));
+(* *** Goal "1.2" *** *)
+a (lemma_tac ¨∂¡∑ ¡ ç setÆ
+	THEN1 (∂_tac ¨0âoÆ THEN asm_rewrite_tac[]));
+
+SSupâo_ltâo2;
+a (∂_tac ¨SSupâo setÆ THEN strip_tac);
+(* *** Goal "1.2.1" *** *)
+
+
+
+	THEN rewrite_tac[SSupâo_def]);
+
+a (lemma_tac ¨∂f:ordinal ≠ ordinal∑ µx:ordinal∑
+	if x <âo ¬ ≤ ≥ x <âo t
+	then f x = 0âo
+	else x = ¬ +âo (f x)Æ THEN1 (prove_∂_tac THEN strip_tac));
+(* *** Goal "1.1" *** *)
+a (cond_cases_tac ¨x' <âo ¬ ≤ ≥ x' <âo tÆ
+	THEN_TRY prove_∂_tac);
+a (asm_fc_tac[] THEN_TRY all_fc_tac [ltâo_trans]);
+a (∂_tac ¨“Æ THEN strip_tac);
+(* *** Goal "1.2" *** *)
+a (∂_tac ¨SSupImâo(f, t)Æ);
+
+
+a (∂_tac ¨if x <âo ¬ ≤ ≥ x <âo t then 0âo else ≈y:ordinal∑ x = ¬ +âo yÆ);
+
+a (∂_tac ¨SSupImâo((ÃŒ∑ ≈’∑ ’ <âo « ± Œ = ¬ +âo Œ ≤ v = 0), t)Æ
+	THEN_TRY asm_rewrite_tac[]);
+
+∂ “∑ “ <âo « ± u = ¬ +âo “)
+=TEX
+}%ignore
+
+
+
+
+\subsection{Defining Inaccessibility}
+
+The significance of this section to the purposes of this work is moot, since the strong axiom of infinity, which implicitly asserts the existence of inaccessible ordinals, does not depend upon an explicit definition.
+
+The purpose of this section is therefore as a kind of check on the formulation of that axiom.
+This check could go as far as defining inaccessible and proving the equivalence of the give axiom with a formulation based on the defined concept.
+However, to serve that pupose this material would have to come before the axiom, since in the context of that axiom we cannot distinguish between equivalence and entailment of the new formulation by the old.
+
+Co-finality is usually a relation between increasing $¬$ sequences (¬ a limit ordinal) and some limit ordinal $¡$.
+I don't yet have sequences, so its convenient to give a slightly broader definition.
+Instead of increasing sequences I allow the image of any ordinal under a function (which need not be increasing).
+At this point I don't actually understand why an increasing sequence is 
+
+Such an image is ``cofinal'' in an ordinal if:
+
+\begin{itemize}
+\item the image falls entirely below the ordinal
+\item the supremum of the image is that ordinal
+\end{itemize}
+
+=SML
+declare_infix(400, "CofinalInâo");
+=TEX
+
+πHOLCONST
+‹ $€CofinalInâo›: ((ordinal ≠ ordinal) ∏ ordinal) ≠ ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µx «∑ x CofinalInâo « § Imageâo x Ä Xâo « ± SupImâo x = « 
+∞
+
+πHOLCONST
+‹ €Cfâo›: ordinal ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Cfâo ¬ = Leastâo {« | ∂f∑ (f, «) CofinalInâo ¬}
+∞
+
+We can now define the notion of regularity, one of the defining properties of inaccessible cardinals.
+
+πHOLCONST
+‹ €Regularâo›: ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Regularâo ¬ § Cfâo ¬ = ¬
+∞
+
+πHOLCONST
+‹ €Singularâo›: ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Singularâo ¬ § ≥ Regularâo ¬
+∞
+
+As well as using this in the definition of inaccessibility we want to be able to state that the universe is regular (to get sufficiently generous recursion principles, analogous to global replacement).
+The vocabulary above doesn't really help in stating this global principle, but it is simple enough to state directly.
+We will come to that later.
+
+To get inaccessibilty we need also to express the notion of a strong limit.
+
+πHOLCONST
+‹ €Succâo›: ordinal ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Succâo ¬ = Leastâo {« | ¬ <âo «}
+∞
+
+πHOLCONST
+‹ €Successorâo›: ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Successorâo ¬ § ∂«∑ ¬ = Succâo «
+∞
+
+πHOLCONST
+‹ €Limitâo›: ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Limitâo ¬ § 0âo <âo ¬ ± ≥ Successorâo ¬
+∞
+
+πHOLCONST
+‹ €◊âo›: ordinal
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ ◊âo = Leastâo {¬ | Limitâo ¬}
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+val Succâo_def = get_spec ¨SuccâoÆ;
+val Successorâo_def = get_spec ¨SuccessorâoÆ;
+val Limitâo_def = get_spec ¨LimitâoÆ;
+val ◊âo_def = get_spec ¨◊âoÆ;
+
+=IGN
+set_goal([], ¨Limitâo ◊âo ± µ¬∑ Limitâo ¬ ¥ ◊âo ºâo ¬Æ);
+a (rewrite_tac[◊âo_def]);
+
+=TEX
+}%ignore
+
+πHOLCONST
+‹ €StrongLimitâo›: ordinal ≠ BOOL
+˜¸¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ StrongLimitâo ¬ § µ«∑ « <âo ¬ ¥  (Xâo «) <âs Xâo ¬
+∞
+
+=SML
+val strong_infinity2 = ¨
+µ¬∑ 	(∂«∑ ¬ <âo « ±
+		Regularâo « ±
+		StrongLimitâo «)
+    ±
+	(µf∑ (∂“∑ (µŒ∑ Œ <âo ¬ ¥ f Œ <âo “)))
+Æ;
+=TEX
+
+\ignore{
+=SML
+val CofinalInâo_def = get_spec ¨$CofinalInâoÆ;
+val Cfâo_def = get_spec ¨CfâoÆ;
+val Regularâo_def = get_spec ¨RegularâoÆ;
+val StrongLimitâo_def = get_spec ¨StrongLimitâoÆ;
+
+=IGN
+
+set_goal([], strong_infinity2);
+a (µ_tac);
+a (strip_asm_tac (µ_elim ¨¬Æ strong_infinity)
+	THEN REPEAT strip_tac
+	THEN asm_fc_tac[]);
+(* *** Goal "1" *** *)
+a (strip_asm_tac (µ_elim ¨¬Æ strong_infinity));
+a (∂_tac ¨«Æ THEN asm_rewrite_tac
+	[Limitâo_def, CofinalInâo_def, Cfâo_def,
+	Regularâo_def, StrongLimitâo_def]);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+
+set_labelled_goal "2";
+a (spec_nth_asm_tac 2 ¨fÆ);
+(* *** Goal "2.1" *** *)
+a (∂_tac ¨“Æ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a (∂_tac ¨“Æ THEN asm_rewrite_tac[]);
+
+=TEX
+}%ignore
+
+
+The basic idea is to state that every ordinal is less than some (strongly) inaccessible ordinal (also a cardinal), with a little tweak to give, in effect, global replacement  (or its analogue for a theory of ordinals rather than sets).
+Here local replacement is the requirement that each ordinal is less than some regular cardinal, global replacement tells us that the universe is regular.
+The other requirement is that this regular cardinal is a strong limit, i.e. closed under powerset.
+ 
+To validate this principle I could first prove the principal in the set theory in t023, or alternatively in t041 since the ordinals are further developed there.
+That would gives greater confidence in its consistency.
+That it is adequate can be testing in use, or by constructing a set theory from this type of ordinals which satisifies the first principle.
+
+However, without further validation I now proceed to establish that it can be used to justify a convenient recursion principle.
+
+The first step in this is to define a couple of functions using our axiom of infinity.
+
+The first is a function which give an infinite ordinal will deliver the least inaccessible ordinal greater than that ordinal, given a finite ordinal it returns $◊$.
+I will call this $Lio$.
+
+\ignore{
+=IGN
+set_goal(∂Lio:ordinal ≠ ordinal∑
+µ¬∑ let « = Lio ¬ in 
+    ¬ < «
+    ± µ‘∑ ‘ <âo « ¥ 
+	    (Xâo ‘) <âs Xâo «
+	± (µf∑ (µŒ∑ Œ <âo ‘ ¥ f Œ <âo ‘)
+		¥ (∂“∑ “ <âo « ± (µŒ∑ Œ <âo ‘ ¥ f Œ <âo “)))
+=TEX
+}%ignore
+
+
+πHOLCONST
+‹ €Gâo›: ordinal ≠ ordinal
+˜¸¸¸¸¸¸¸¸¸¸
+‹ µ¬∑ Gâo ¬ = Leastâo {« | ¬ <âo « ± ◊âo <âo «
+    ± µ‘∑ ‘ <âo « ¥ 
+	    (Xâo ‘) <âs Xâo «
+	± (µf∑ (µŒ∑ Œ <âo ‘ ¥ f Œ <âo ‘)
+		¥ (∂“∑ “ <âo « ± (µŒ∑ Œ <âo ‘ ¥ f Œ <âo “)))}
+∞
+
+=GFT
+=TEX
+
+\ignore{
+=SML
+val Gâo_def = get_spec ¨GâoÆ;
+
+list_µ_elim [¨{« | ¬ <âo « ± ◊âo <âo «
+    ± µ‘∑ ‘ <âo « ¥ 
+	    (Xâo ‘) <âs Xâo «
+	± (µf∑ (µŒ∑ Œ <âo ‘ ¥ f Œ <âo ‘)
+		¥ (∂“∑ “ <âo « ± (µŒ∑ Œ <âo ‘ ¥ f Œ <âo “)))}Æ] Leastâo_def;
+
+=IGN
+set_goal([], ¨µ¬∑ 
+
+Æ);
+
+
+=TEX
+}%ignore
+
+\section{CARDINALS}
+
+Its by no means clear that a type of cardinals is necessary for my purposes, so in the first instance the development of this type will be quite limited.
+I have put it in just to see whether it proves useful rather than in a firm expectation that it will.
+In fact I put in the type of cardinals before I came up with the strong infinity axiom above which does not make use of the cardinals, and my first thought about how the type might be useful was to think it might make possibly a neat strong axiom.
+The one I have now is pretty neat, but possibly it might look less of a Kluge if I talked about cardinality using the cardinals rather that by using cardinality comparisons over ProofPower sets.
 
 \subsection{The Type of Cardinals}
 
 One could introduce cardinals in a manner similar to the introduction of ordinals, but we would then have no coupling between the two types.
-We want the cardinals to be the initial ordinals, so that when we introduce a strong axiom of infinity both types are populated in sync.
+We want the cardinals to be the initial ordinals, so that a strong axiom of infinity for the ordinals populates the cardinals as well.
 
-The cardinality of an ordinal is conventionally the cardinality of the collection of strictly smaller ordinals.
-It is therefore handy to have a function which delivers that set.
-
-πHOLCONST
-‹ €Xâo›: ordinal ≠ ordinal 
-˜¸¸¸¸¸¸¸¸¸¸¸
-‹ µ¬∑ Xâo ¬ = {» | » <âo ¬}
-∞
+With that in mind we need the vocabulary to talk about initial ordinals before we can set up a type of cardinals.
 
 =GFT
 €ltâo_Ä› =
@@ -517,8 +1796,6 @@ It is therefore handy to have a function which delivers that set.
 
 \ignore{
 =SML
-val Xâo_def = get_spec ¨XâoÆ;
-
 set_goal([], ¨µ¬ «∑ « <âo ¬ ¥ Xâo « Ä Xâo ¬Æ);
 a (PC_T1 "hol1" rewrite_tac[Xâo_def] THEN REPEAT strip_tac);
 a (all_fc_tac[ltâo_trans]);
@@ -545,7 +1822,7 @@ val ºâo_Ä = save_pop_thm "ºâo_Ä";
 The ordering of ordinals by cardinality is then:
 
 =SML
-declare_infix(400, "ºâoâc");
+declare_infix(300, "ºâoâc");
 =TEX
 
 πHOLCONST
@@ -611,7 +1888,7 @@ val ºâoâc_cases = save_pop_thm "ºâoâc_cases";
 }%ignore
 
 =SML
-declare_infix(400, "<âoâc");
+declare_infix(300, "<âoâc");
 =TEX
 
 πHOLCONST
@@ -643,7 +1920,7 @@ val ºâoâc_≥_ltâoâc = save_pop_thm "ºâoâc_≥_ltâoâc";
 }%ignore
 
 =SML
-declare_infix(400, "~âoâc");
+declare_infix(300, "~âoâc");
 =TEX
 
 πHOLCONST
@@ -731,6 +2008,8 @@ a (∂_tac ¨xÆ THEN asm_rewrite_tac[InitialOrdinal_def]
 	THEN REPEAT strip_tac);
 val InitialOrdinal_exists = save_pop_thm "InitialOrdinal_exists";
 
+push_pc "hol1";
+
 set_goal([], ¨µ¬∑ ∂ ƒ∑ InitialOrdinal ƒ ± ƒ ~âoâc ¬Æ);
 a (rewrite_tac[InitialOrdinal_def] THEN strip_tac);
 a (strip_asm_tac (µ_elim ¨{» | » ~âoâc ¬}Æ ltâo_min_cond));
@@ -739,16 +2018,12 @@ a (swap_nth_asm_concl_tac 1 THEN PC_T "hol1" (REPEAT strip_tac));
 a (∂_tac ¨¬Æ THEN PC_T1 "hol1" rewrite_tac[eqâoâc_refl]);
 (* *** Goal "2" *** *)
 a (∂_tac ¨xÆ THEN REPEAT strip_tac);
-(* *** Goal "2.1" *** *)
 a (spec_nth_asm_tac 2 ¨«Æ);
-a (swap_nth_asm_concl_tac 1 THEN PC_T1 "hol1" rewrite_tac[]);
+a (swap_nth_asm_concl_tac 1);
 a (fc_tac[ltâo_ºâoâc]);
 a (fc_tac[ºâoâc_def]);
 a (fc_tac[ºâoâc_cases2]);
-a (DROP_NTH_ASM_T 7 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
 a (all_fc_tac [eqâoâc_trans]);
-(* *** Goal "2.2" *** *)
-a (DROP_NTH_ASM_T 2 (strip_asm_tac o (pc_rule1 "hol1" rewrite_rule[])));
 val InitialOrdinals_exist = save_pop_thm "InitialOrdinals_exist";
 
 set_goal([], ¨µ¬ «∑ InitialOrdinal ¬ ± InitialOrdinal « ± ¬ ~âoâc «
@@ -760,6 +2035,9 @@ a (spec_nth_asm_tac 6 ¨«Æ);
 a (spec_nth_asm_tac 6 ¨¬Æ);
 a (strip_asm_tac (all_µ_elim ltâo_trich));
 val InitialOrdinal_eq = save_pop_thm "InitialOrdinal_eq";
+
+pop_pc ();
+
 =TEX
 }%ignore
 
@@ -778,6 +2056,8 @@ These two maps can be defined thus:
 \ignore{
 =SML
 val [cardinal_lemma] = fc_rule [type_defn_lemma4] [cardinal_def];
+
+set_merge_pcs ["ordcard0", "'ordcard"];
 
 set_goal([], ¨∂Ordâc:cardinal ≠ ordinal∑ ∂Cardâo∑ (µ¬:cardinal∑ Cardâo(Ordâc ¬) = ¬)
 	± (µ¬:ordinal∑ InitialOrdinal ¬ § Ordâc (Cardâo ¬) = ¬)
@@ -856,27 +2136,7 @@ save_cs_∂_thm (pop_thm());
 ‹	± (µ¬ «∑ ¬ ~âoâc « ¥ Cardâo ¬ = Cardâo «)
 ∞
 
-\section{Definitions over Ordinals and Cardinals}
-
-Some operations must be defined before we can proceed to sequences and trees?
-
-\section{Strong Infinity}
-
-Here are my ideas on how this can be done, which run parallel to my earlier axiomatisations of set theory.
-These earlier axiomatisations are set theories with ``universes'' (galaxies I call them) satisfying the closure properties expected of the universe in ZFC.
-The closure axiom asserts that every set is a member of such a universe (and also gives global replacement).
-
-Since we only have ordinals here (and cardinals, but not sets in general), we assert that every ordinal is less than some ordinal such that the ordinals below it have the desired closure properties.
-I suspect I could have managed without the cardinals, but I had in mind defining closure under power set via a definition of the power operation on the cardinals.
-
-=IGN
-strong_infinity_axiom = new_axiom(["strong_infinity_axiom"], ¨
-	µ¬∑ ∂Œ∑ 
-
-Æ);
-=TEX
-
-\section{Infinitary Sequences}
+\section{INFINITARY SEQUENCES}
 
 Infinitary sequences are functions whose domain is an ordinal.
 To make a type of them we will need to use HOL total functions over the type of ordinals, and the domain would then be fixed.
@@ -943,7 +2203,7 @@ We now define destructor/constructor operations over these sequences.
 ‹	µis∑ Elemsâiâs is = {e | ∂¬∑ ¬ <âo Fst (DestISeq is) ± e = Snd (DestISeq is) ¬}
 ∞
 
-\section{Infinitary Trees}
+\section{INFINITARY TREES}
 
 An infinitary tree is to be represented by a partial function from sequences of ordinals to some type of labels.
 The sequences are the coordinates of nodes in the tree, and the labels label each node.
@@ -980,20 +2240,36 @@ val iTree_def = new_type_defn(["iTree"], "iTree", ["'a"], iTree_exists);
 =TEX
 }%ignore
 
+We now define a constructor/destructor pair for this new type of object.
+
 =GFT
 
 =TEX
 
 \ignore{
 =IGN
-set_goal([], ¨∂Æ);
+val [iTree_lemma] = fc_rule [type_defn_lemma4] [iTree_def];
+
+set_goal([], ¨∂	(MkiTree:'a ∏ ('a iTree)iseq ≠ 'a iTree)
+		(DestiTree:'a iTree ≠ 'a ∏ ('a iTree)iseq)∑ 
+	(µt∑ MkiTree (DestiTree t) = t)
+	± TÆ);
+a (strip_asm_tac (iTree_lemma));
+a (∂_tac ¨absÆ THEN ∂_tac ¨repÆ THEN asm_rewrite_tac[]);
+
+
 
 =TEX
 }%ignore
 
+
+
+
 \ignore{
 
 \section{Graphs}
+
+[I played with this idea a little but it goes beyond my present needs and involves some extra difficulty so I have shelved it pending stronger motivation.]
 
 There may be no point in developing the Trees because it looks like Graphs would be more general an no less easily applicable to the kinds of problem for which one would have used Trees.
 
@@ -1046,9 +2322,7 @@ set_merge_pcs ["basic_hol", "'ordcard"];
 commit_pc "'ordcard";
 =TEX
 
-
-
-\section{Closing}
+\subsection{Closing}
 
 =IGN
 val rewrite_thms = ref ([]:THM list);
@@ -1056,6 +2330,8 @@ val rewrite_thms = ref ([]:THM list);
 merge_pcs ["rbjmisc", "'ordcard"] "ordcard";
 commit_pc "ordcard";
 =TEX
+
+\appendix
 
 {\raggedright
 \bibliographystyle{fmu}

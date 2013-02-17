@@ -1,4 +1,4 @@
-# $Id: rules.mk,v 1.32 2013/01/07 09:07:44 rbj Exp $
+# $Id: rules.mk,v 1.33 2013/02/17 20:48:26 rbj Exp $
 
 .SUFFIXES:
 .SUFFIXES: .css .doc .gif .html .img .in .sml .xml .xdoc .xsl
@@ -205,7 +205,7 @@ $(TEXPDF2): %.pdf : %.tex
 $(TEXPDF3): %.pdf : %.tex
 	@echo "TEXPDF3"
 	@pdflatex $*
-	-makeindex $*
+	-makeindex $*.idx
 	-bibtex $*
 	@pdflatex $*
 	@pdflatex $*
