@@ -248,9 +248,15 @@ EOF
         $cbookTitle=$bookTitle;
 	$cbookLetter="";
 #        $cbookTitle=~s/\&([^;]*);(.*)/{\$\\$1\$}{$2}/;
-	if ($cbookTitle=~/^\s*\&([^;]*);\s*:\s*(.*)$/)
+	if ($cbookTitle=~/^\s*([^:]*):\s*(.*)$/)
 	{$cbookTitle=$2;
-	 $cbookLetter="\\Rbj$1"};
+	 $cbookLetter=$1;
+	 if ($cbookLetter=~/\&([^;]*);/)
+	 {$cbookLetter="\\Rbj$1"}
+	 };
+#	if ($cbookTitle=~/^\s*\&([^;]*);\s*:\s*(.*)$/)
+#	{$cbookTitle=$2;
+#	 $cbookLetter="\\Rbj$1"};
          chop($cbookTitle);
 #print "cBook Title: $cbookTitle\n";
          print TEXFILE <<EOF;
