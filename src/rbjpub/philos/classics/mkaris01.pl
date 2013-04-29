@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# ($Id: mkaris01.pl,v 1.11 2013/02/01 09:02:00 rbj Exp $)
+# ($Id: mkaris01.pl,v 1.12 2013/04/29 17:55:29 rbj Exp $)
 
 # The following required file contains procedures supporting the generation of the
 # output from this translation.
@@ -73,6 +73,7 @@ else {
 	$fileTitle=$controlData{$file}{"title"};
 	$fileType=$controlData{$file}{"type"};
 	$numBooks=$controlData{$file}{"numBooks"};
+	$abbrev=$controlData{$file}{"abbrev"};
 	if ($fileType eq "SB") {&doSBFile($file)};
 	if ($fileType eq "MB") {&doMBFile($file)};
     };
@@ -130,6 +131,7 @@ sub book
 	if ($trace>1){print "\$bookTitle: $bookTitle\n"};
 	&oIndexEntry;	&nextBookIndex;
 	$part=1;
+	&skipComments;
 	while (&$testPartStart)
 		{&readLine; &part; ++$part};
 	&closeBookIndex;
@@ -153,10 +155,7 @@ sub part
 sub paragraph
 {
 	if ($trace>3) {print "Starting f $file b $book p $part paragraph $para.\n"};
-	while ((/^$/ || /\<\!--\!/) && !eof(INPUT)) {
-# remove leading comments (<!--!  -->)
-	    s|^<\!--\!(.*)-->$|$1|g;
-	    &writeLine($_); &readLine;};
+	&skipComments;
 	if (/^\<PRE\>/)
 		{until (/^\<\/PRE\>/ || eof(INPUT))
 			{&writeLine($_); &readLine};
@@ -177,7 +176,7 @@ sub paragraph
 		 };
 		 if (eof(INPUT)) {&writeLine($_)};
 	};
-	while (/^\s*$/ && !eof(INPUT)) {&readLine;};
+	&skipComments;
 };
 
 sub paraTitle
@@ -201,6 +200,13 @@ sub paraTitle
 	};
 #	chop;
 #	while ((/^\s*$/) && !eof(<INPUT>)) {&readLine; chop;};
+};
+
+sub skipComments
+{	while ((/^\s*$/ || /\<\!--\!/) && !eof(INPUT)) {
+# remove leading comments (<!--!  -->)
+	    s|^<\!--\!(.*)-->$|$1|g;
+	    &writeLine($_); &readLine;};
 };
 
 1;

@@ -181,7 +181,7 @@ EOF
 sub fileStart
 {   $csourceTitle=$sourceTitle;
 #   chop($csourceTitle);
-    print TEXFILE "\n\n\\Avolume\{".$csourceTitle."\}\n\\label{\\thechapter}\n";
+    print TEXFILE "\n\n\\Avolume\{".$abbrev."\}\{".$csourceTitle."\}\n\\label{\\thechapter}\n";
 };
 
 sub oIndexEntry
@@ -374,14 +374,19 @@ EOF
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
 # this is a general facility for passing through LaTeX commands
 	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
-	    $texline =~ s/\"/{\\dq}/g;
+# this is for processing double quote symbols
+	    while ($texline =~ s|\"([^\"]*)\"|{\\RbJldq}$1\{\\RbJrdq}|) {print "quoted:$1\n\t$texline\n"};
+	    $texline =~ s|\"|{\\RbJdq}|g;
+# single quotes
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
+# products
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
+# greek text
 	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
 #	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
-#	$texline =~ s/\"/{\\dq}/g;
+#	$texline =~ s/\"/{\\RbJdq}/g;
 #	$texline =~ s/\'/{\\sq}/g;
         print TEXFILE "\n".$texline;
 };
@@ -396,7 +401,8 @@ sub writeLine2
 	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
-	    $texline =~ s/\"/{\\dq}/g;
+	    $texline =~ s/\"([^"]*)\"]/{\\RbJldq}$1{\\RbJrdq}/g;
+	    $texline =~ s/\"/{\\RbJdq}/g;
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
 	};
 	if ($pre) {
@@ -439,7 +445,8 @@ sub writeLine
 #	    $texline =~ s/<gk>([^<]*)<\/gk>/$1/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
-	    $texline =~ s/\"/{\\dq}/g;
+	    $texline =~ s/\"([^"]*)\"]/{\\RbJldq}$1{\\RbJrdq}/g;
+	    $texline =~ s/\"/{\\RbJdq}/g;
 #	      $texline =~ s|(katal\'ueis)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\>u)|\\textgreek\{$1\}|g;
 #	      $texline =~ s|(o\\~\<u)|\\textgreek\{$1\}|g;

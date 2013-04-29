@@ -11,7 +11,7 @@ $created="1996/11/25";
 #};
 
 # The controldata file consists of the following kinds of records:
-# File:filenumber:filename:filetype(single book=SB multiple book=MB):filetitle
+# File:filenumber:filename:filetype(single book=SB multiple book=MB): no of books : abbrev : filetitle
 # Book:booknumber:booktitle
 # Part:partnumber:parttitle
 # Para:paranumber:paratitle (I don't think this is ever used)
@@ -36,11 +36,12 @@ sub readcontroldata
 	my($file, $book, $part, $para)= (0,0,0,0);
 	open (CONTROL, $controlfile) || die "can't open control file: $controlfile \n";
 	loop: for (<CONTROL>)
-	{if (/File:(\d+):([^:]*):([^:]*):([^:]*):(.*)$/)
+	{if (/File:(\d+):([^:]*):([^:]*):([^:]*):([^:]*):(.*)$/)
 		{	$control{$1} = {"name"=>$2,
 					"type"=>$3,
 					"numBooks"=>$4,
-					"title"=>$5};
+					"abbrev"=>$5,
+					"title"=>$6};
 			$control{"filecount"}=$1;
 			$file=$1;
 			next loop
