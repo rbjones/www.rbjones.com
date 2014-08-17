@@ -1,5 +1,5 @@
 =IGN
-$Id: t009.doc,v 1.19 2014/05/30 20:58:18 rbj Exp $
+$Id: t009.doc,v 1.20 2014/08/17 16:07:53 rbj Exp $
 =TEX
 \documentclass[12pt]{article}
 %\usepackage{ProofPower}
@@ -23,7 +23,7 @@ $Id: t009.doc,v 1.19 2014/05/30 20:58:18 rbj Exp $
 \newcommand{\ignore}[1]{}
 
 \title{Well-orderings and Well-foundedness}
-\date{$ $Date: 2014/05/30 20:58:18 $ $}
+\date{$ $Date: 2014/08/17 16:07:53 $ $}
 \author{R.D. Arthan and R.B. Jones}
 \vfill
 \makeindex
@@ -46,12 +46,12 @@ The second is material on well-foundedness, mainly consisting in the proof of th
 
 Created 2004/10/03
 
-Last Change $ $Date: 2014/05/30 20:58:18 $ $
+Last Change $ $Date: 2014/08/17 16:07:53 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 
-$ $Id: t009.doc,v 1.19 2014/05/30 20:58:18 rbj Exp $ $
+$ $Id: t009.doc,v 1.20 2014/08/17 16:07:53 rbj Exp $ $
 
 \copyright\ Rob Arthan and Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -261,6 +261,13 @@ The following non-primitive properties are of interest.
 Ü ¤	LinearOrder(X, $<<)  ± WeakMinCond(X, $<<) 
 °
 
+
+The general policy heretofore has been to express properties of relations in a manner indifferent to whether the relation is reflexive or not.
+The concept of well-foundedness is important for recursive definitions and inductive reasoning, but for these purposes a strict inequality is needed.
+
+A well-founded relation is therefore an irreflexive relation which satisfies \emph{MinCond}:
+
+
 ¹HOLCONST
 Ü ÛWellFoundedÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
 ÷üüüüüü
@@ -268,6 +275,10 @@ The following non-primitive properties are of interest.
 Ü	WellFounded(X, $<<)
 Ü ¤	Irrefl(X, $<<)  ± MinCond(X, $<<) 
 °
+
+The inductive applications of well founded relations depend upon the equivalence of this definition with an induction principle.
+Such an induction principle is needed for reasoning about well-orderings so further results about well-orderings will be deferred until the induction principle is in place.
+
 
 \subsection{Using the Definitions}
 
@@ -309,7 +320,7 @@ val Ûwell_founded_defÝ = get_spec¬WellFounded®;
 A relation has the minimum condition iff. every non-empty subset has a minimal
 element (in the more usual sense).
 We will almost invariably use this formulation in the sequel.
-Well-foundedness can be rendered similarly, in this case expression of the minimality condition is simplfied by the fact that well-founded relations are by definition irreflexive.
+Well-foundedness can be rendered similarly, in this case expression of the minimality condition is simplified by the fact that well-founded relations are by definition irreflexive.
 
 =GFT
 min_cond_def_thm = ô µX $<<· MinCond(X, $<<) ¤
@@ -421,16 +432,31 @@ declare_infix(210, "¼‰o‰t");
 =TEX
 
 ¹HOLCONST
-Ü ÛOrderMorphismÝ : ('a ­ 'b)
-Ü		­ ('a SET ¸ ('a ­ 'a ­ BOOL))
+Ü ÛOrderMorphismÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
 Ü		­ ('b SET ¸ ('b ­ 'b ­ BOOL))
+Ü		­ ('a ­ 'b)
 Ü		­ BOOL
 ÷üüüüüü
 Ü µ m (X, $<<) (Y, $<<<)·
-Ü	OrderMorphism m (X, $<<) (Y, $<<<)
+Ü	OrderMorphism (X, $<<) (Y, $<<<) m
 Ü ¤	µx1 x2· x1  X ± x2  X ´ m x1  Y ± m x2  Y
-Ü		± (x1 << x2 ´ m x1 <<< m x2)
+Ü		± (x1 << x2 ¤ m x1 <<< m x2)
 °
+
+When considering the collection of orderings of a single domain the followng notion of morphism might be used.
+
+¹HOLCONST
+Ü $ÛOrdMorphÝ : 'a SET
+Ü		­ ('a ­ 'a ­ BOOL)
+Ü		­ ('a ­ 'a ­ BOOL)
+Ü		­ BOOL
+÷üüüüüü
+Ü µ X $<< $<<<·
+Ü	OrdMorph X $<< $<<<
+Ü =	¶m· OrderMorphism (X, $<<) (X, $<<<) m
+°
+
+The existence of order morphisms induces the following relation over order types.
 
 ¹HOLCONST
 Ü $Û¼‰o‰tÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
@@ -439,14 +465,18 @@ declare_infix(210, "¼‰o‰t");
 ÷üüüüüü
 Ü µ (X, $<<) (Y, $<<<)·
 Ü	(X, $<<) ¼‰o‰t (Y, $<<<)
-Ü ¤	¶m· OrderMorphism m (X, $<<) (Y, $<<<)
+Ü ¤	¶m· OrderMorphism (X, $<<) (Y, $<<<) m
 °
 
-The above ordering is not a relation in the sense of this document because of its type.
-When instantiated appropriately and supplied with a base set it does become such a relationship, however we have little incentive to accept the complications involved in considering this other than over the universal type.
-Thus our main interest will be in this as a relation over the universe of relations over sets of a single type.
+My main reason for introducing these is that I want to be able to use least well-orderings.
+Ideally this would be supported by a theorem to the effect that the above is a well-founded ordering of order types, but I can't just now see how to prove that, and may instead settle for showing that the well-orderings of a set are well-founded.
 
-With that in mind some elementary properties can be stated here, but my main interest in including these definitions is in showing that the ordering defined is a well-founded pre-order over the well-orderings of any set, which will be done in the next section.
+\ignore{
+=SML
+val ¼‰o‰t_def = get_spec ¬$¼‰o‰t®;
+=TEX
+}%ignore
+
 
 \section{WELL-ORDERING}\label{WELL-ORDERING}
 
@@ -1033,7 +1063,250 @@ save_pop_thm "well_ordering_thm"
 =TEX
 }%ignore
 
+
+
+
+\subsection{Lemmas About Well-Orderings}
+
+
+
+
+
+
+
+\subsection{Least Well-Orderings}
+
+There will be several distinct well-orderings of any given set.
+The order morphisms between these well-orderings well-order the order types of the well-orderings, and there will therefore be least well-orderings under this ordering.
+These least well-orderings correspond to enumerations by the initial ordinal corresponding to the cardinality of the set.
+
+If we directly formalised the above sketch then we would be involved in developing parts of the theory of ordinals and cardinals to obtain the result that each set has a least well-ordering.
+However, once the basic idea is in place it can be re-engineered with less equipment.
+
+The elements of any set, together with an arbitrary well-ordering of the set, will serve as surrogates for the ordinals sufficient for our purposes.
+If this arbitrary well-ordering is not the least, then all shorter well-orderings will be order-isomorpic to an initial segment of the given well-ordering, each of which may be represented by its strict supremum in the set.
+Such an inital segment of the well-ordering will be isomorphic to a well-ordering of the whole if it has the same cardinality as the whole, i.e. if there is an injection from the whole into the subset.
+The ordering of the whole can be obtained from the ordering of the part through the injection.
+
+If we take the subset of elements of our original well-ordered set which have the same cardinality as the whole, then this subset will have a minimal element under the well-ordering, and the subset determined by that minimal element will yield a minimal well-ordering of the whole.
+
+The purpose of this section is to prove the existence of such a minimal well-ordering of any set.
+
+
+¹HOLCONST
+Ü ÛMinimalWellOrderingÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
+Ü		­ BOOL
+÷üüüüüü
+Ü µ (X, $<<)·
+Ü	MinimalWellOrdering (X, $<<)
+Ü ¤	µ$<<<· WellOrdering (X, $<<<) ´ (X, $<<) ¼‰o‰t (X, $<<<)
+°
+
+\ignore{
+=IGN
+val MinimalWellOrdering_def = get_spec ¬MinimalWellOrdering®;
+
+push_pc "sets_ext1";
+pop_pc();
+
+set_goal([], ¬µX:'a SET· ¶$<<<· MinimalWellOrdering (X, $<<<)®);
+a (strip_tac);
+a (strip_asm_tac well_ordering_thm);
+a (spec_nth_asm_tac 1 ¬X®);
+a (lemma_tac ¬¶s· s = {x | ¶f· OneOne f ± FunImage f X = {y | y  X ± y << x}  }®
+	THEN1 prove_¶_tac);
+a (cases_tac ¬s = {}®);
+(* *** Goal "1" *** *)
+a (¶_tac ¬$<<®);
+a (all_var_elim_asm_tac);
+a (POP_ASM_T ante_tac THEN PC_T1 "sets_ext1" asm_rewrite_tac[MinimalWellOrdering_def, ¼‰o‰t_def] THEN REPEAT strip_tac);
+
+a (GET_NTH_ASM_T 2 ante_tac THEN rewrite_tac[sets_clauses]);
+
+
+type_of ¬$FunImage®;
+=TEX
+}%ignore
+
+
+
 \section{WELL-FOUNDEDNESS}\label{WELL-FOUNDEDNESS}
+
+\subsection{Strictness}
+
+The concept of well-foundedness is distinctive here in applying only to strict, i.e. irreflexive relations.
+This usage is adopted because well-foundedness is used as a criterion for judging the consistency of recursive definitions, which is secured if the values referred to on the right of a recursive definition are less than the value on the left under some strictly well-founded relationship.
+For this reason we require a well-founded relation to be irreflexive.
+
+In this context the variant of the well-ordering theorem which delivers a strict (and hence well-founded) well-order may be of use, and more generally therefore the theorems which show that strict (irreflexive) versions of relations have most of the properties of interest here which are possessed by the original.
+
+
+¹HOLCONST
+Ü ÛStrictÝ : ('a SET ¸ ('a ­ 'a ­ BOOL))
+Ü		­ ('a SET ¸ ('a ­ 'a ­ BOOL))
+÷üüüüüü
+Ü µ (X, $<<)·
+Ü	Strict (X, $<<)
+Ü =	(X, Ìx y· x << y ± ³ x = y)
+°
+
+[This is a bad definition, because it meddles with the relation outside its domain of relevance, and so may change a relation which is already irreflexive over its explicit domain.
+It would be better to define strict over the relation only, though perhaps it would be better not to work with this concept of relation at all and just to stick with the native HOL conception of a relation as curried property of pairs.]
+
+A few lemmas for proving properties of strict relations:
+
+=GFT
+ÛIrreflStrict_thmÝ =
+	ô µ (X, $<<)· Irrefl (Strict (X, $<<))
+ÛPartialOrderStrict_thmÝ = 
+	ô µ (X, $<<)· PartialOrder (X, $<<) ´ PartialOrder (Strict (X, $<<))
+ÛTrichStrict_thmÝ =
+	ô µ (X, $<<)· Trich (X, $<<) ´ Trich (Strict (X, $<<))
+ÛLinearOrderStrict_thmÝ =
+	ô µ (X, $<<)· LinearOrder (X, $<<) ´ LinearOrder (Strict (X, $<<))
+ÛAntisymStrict_thmÝ =
+	ô µ (X, $<<)· Antisym (X, $<<) ´ Antisym (Strict (X, $<<))
+ÛWeakMinCondStrict_thmÝ =
+	ô µ (X, $<<)· WeakMinCond (X, $<<) ´ WeakMinCond (Strict (X, $<<))
+ÛWellOrderingStrict_thmÝ =
+	ô µ (X, $<<)· WellOrdering (X, $<<) ´ WellOrdering (Strict (X, $<<))
+ÛMinCondStrict_thmÝ =
+	ô µ (X, $<<)· LinearOrder (X, $<<) ± WeakMinCond (X, $<<)
+		´ MinCond (Strict (X, $<<))
+ÛWellFoundedStrict_thmÝ =
+	ô µ (X, $<<)· WellOrdering (X, $<<) ´ WellFounded (Strict (X, $<<))
+=TEX
+
+
+Then a wrinkle on the well-ordering theorem:
+
+=GFT
+Ûwf_well_ordering_thmÝ =
+	ô µX :'a SET· ¶ $<<· WellOrdering(X, $<<) ± WellFounded(X, $<<)
+=TEX
+
+\ignore{
+=SML
+val strict_def = get_spec ¬Strict®;
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· Irrefl (Strict (X, $<<))®);
+a (rewrite_tac[irrefl_def, strict_def] THEN REPEAT strip_tac);
+val IrreflStrict_thm = save_pop_thm "IrreflStrict_thm";
+
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· PartialOrder (X, $<<) ´ PartialOrder (Strict (X, $<<))®);
+a (strip_tac THEN rewrite_tac[partial_order_def, trans_def, antisym_def, strict_def]
+	THEN contr_tac THEN all_asm_fc_tac[]);
+a (all_var_elim_asm_tac);
+a (all_asm_fc_tac[]);
+val PartialOrderStrict_thm = save_pop_thm "PartialOrderStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· Trich (X, $<<) ´ Trich (Strict (X, $<<))®);
+a (strip_tac THEN rewrite_tac[trich_def, strict_def]
+	THEN contr_tac THEN all_asm_fc_tac[]);
+a (all_var_elim_asm_tac);
+val TrichStrict_thm = save_pop_thm "TrichStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· LinearOrder (X, $<<) ´ LinearOrder (Strict (X, $<<))®);
+a (REPEAT µ_tac THEN rewrite_tac[linear_order_def]);
+a (strip_tac THEN fc_tac [PartialOrderStrict_thm, TrichStrict_thm]);
+a (REPEAT_N 2 (POP_ASM_T ante_tac) THEN rewrite_tac [strict_def, linear_order_def]
+	THEN REPEAT strip_tac);
+val LinearOrderStrict_thm = save_pop_thm "LinearOrderStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· Antisym (X, $<<) ´ Antisym (Strict (X, $<<))®);
+a (REPEAT µ_tac THEN rewrite_tac[strict_def, antisym_def]);
+a (contr_tac THEN all_asm_fc_tac[]);
+val AntisymStrict_thm = save_pop_thm "AntisymStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· WeakMinCond (X, $<<) ´ WeakMinCond (Strict(X, $<<))®);
+a (REPEAT µ_tac THEN rewrite_tac[strict_def, weak_min_cond_def]);
+a (contr_tac THEN all_asm_fc_tac[]);
+a (spec_nth_asm_tac 3 ¬x® THEN1 all_asm_fc_tac[]);
+a (all_var_elim_asm_tac);
+val WeakMinCondStrict_thm = save_pop_thm "WeakMinCondStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· WellOrdering (X, $<<) ´ WellOrdering (Strict (X, $<<))®);
+a (REPEAT µ_tac THEN rewrite_tac[well_ordering_def]
+	THEN strip_tac
+	THEN asm_fc_tac [LinearOrderStrict_thm, WeakMinCondStrict_thm]
+	THEN REPEAT_N 2 (POP_ASM_T ante_tac)
+	THEN rewrite_tac [strict_def, well_ordering_def]
+	THEN REPEAT strip_tac);
+val WellOrderingStrict_thm = save_pop_thm "WellOrderingStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)·
+	LinearOrder (X, $<<) ± WeakMinCond (X, $<<)
+               ´ MinCond (Strict (X, $<<))®);
+a (rewrite_tac[weak_min_cond_def, min_cond_def, strict_def, antisym_def]
+	THEN contr_tac);
+(* *** Goal "1" *** *)
+a (fc_tac [linear_order_def]);
+a (fc_tac [partial_order_def]);
+a (fc_tac [antisym_def]);
+a (all_asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (all_asm_fc_tac[]);
+a (spec_nth_asm_tac 3 ¬x®);
+(* *** Goal "2.1" *** *)
+a (all_asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (all_var_elim_asm_tac);
+val MinCondStrict_thm = save_pop_thm "MinCondStrict_thm";
+
+set_goal([], ¬µ(X, $<<):'a SET ¸ ('a ­ 'a ­ BOOL)· WellOrdering (X, $<<) ´ WellFounded (Strict (X, $<<))®);
+a (rewrite_tac[
+	well_ordering_def, well_founded_def,
+	rewrite_rule[strict_def] IrreflStrict_thm]);
+a (REPEAT strip_tac THEN asm_fc_tac[MinCondStrict_thm]);
+a (POP_ASM_T ante_tac THEN rewrite_tac [well_founded_def, strict_def]
+	THEN REPEAT strip_tac);
+a (rewrite_tac[rewrite_rule[strict_def]IrreflStrict_thm]);
+val WellFoundedStrict_thm = save_pop_thm "WellFoundedStrict_thm";
+
+set_goal([], ¬µX :'a SET· ¶ $<<· WellOrdering(X, $<<) ± WellFounded(X, $<<)®);
+a (strip_tac);
+a (strip_asm_tac well_ordering_thm THEN spec_nth_asm_tac 1 ¬X®);
+a (¶_tac ¬Snd(Strict (X, $<<))®);
+a (fc_tac[WellOrderingStrict_thm, WellFoundedStrict_thm]);
+a (REPEAT_N 2 (POP_ASM_T ante_tac)
+	THEN rewrite_tac[strict_def]
+	THEN REPEAT strip_tac);
+val wf_well_ordering_thm = save_pop_thm "wf_well_ordering_thm";
+=TEX
+}%ignore
+
+We might as well have the concept of strict well-ordering.
+
+¹HOLCONST
+Ü ÛStrictWellOrderingÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ (X, $<<)· StrictWellOrdering (X, $<<)
+Ü	¤ Irrefl (X, $<<) ± WellOrdering (X, $<<)
+°
+
+=GFT
+ÛStrictWellOrdering_thm1Ý =
+   ô µ (X, $<<)· WellOrdering (X, $<<) ´ StrictWellOrdering (Strict (X, $<<))
+=TEX
+
+\ignore{
+=SML
+val StrictWellOrdering_def = get_spec ¬StrictWellOrdering®;
+
+set_goal([], ¬µ(X, $<<)· WellOrdering (X, $<<) ´ StrictWellOrdering (Strict (X, $<<))®);
+a (REPEAT strip_tac);
+a (once_rewrite_tac [prove_rule [] ¬Strict (X, $<<)=(Fst (Strict (X, $<<)):'a SET, Snd (Strict (X, $<<)))®, StrictWellOrdering_def, IrreflStrict_thm]);
+a (pure_rewrite_tac[StrictWellOrdering_def]);
+a (asm_rewrite_tac [IrreflStrict_thm, WellFoundedStrict_thm]);
+a (fc_tac [WellOrderingStrict_thm]);
+val StrictWellOrdering_thm1 = save_pop_thm "StrictWellOrdering_thm1";
+
+set_goal([], ¬µ(X, $<<)· StrictWellOrdering (X, $<<) ´ WellFounded (X, $<<)®);
+
+=TEX
+}%ignore
+
 
 \subsection{The Minimum Conditions and Well-Founded Relations}
 
@@ -1511,7 +1784,7 @@ declare_infix (300, "€‰r");
 Allowing us to state concisely (and prove) that a relation is contained in its transitive closure:
 
 =GFT
-r_€r_tcr_thm =	ô µr· r €r TranClsr r
+r_€‰r_tcr_thm =	ô µr· r €‰r TranClsr r
 =TEX
 
 And that various properties of relations also hold of their subrelations:
@@ -2299,6 +2572,74 @@ a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac[ext_thm] THEN strip_tac
 val tf_rec_thm2 = save_pop_thm "tf_rec_thm2";
 =TEX
 }%ignore
+
+
+\subsection{Minimal Well Orderings}
+
+The term \emph{InitialWellOrdering} is used here for a function which returns the least well-ordering of some set.
+Every set has a least well-ordering, and the order type is that of an initial ordinal, hence the choice of name.
+
+However, this fact has not yet been proven, so the definition is couched in such a way as to avoid making that assumption.
+
+¹HOLCONST
+Ü ÛMinWellOrderingÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ X R· MinWellOrdering (X, R) ¤ WellOrdering (X, R)
+	±	µ(Y,S:('a ­ 'a ­ BOOL))· WellOrdering (Y, S)
+			´ (X, R) ¼‰o‰t (Y,S)
+°
+
+The following definition is written so that from it one can establish that
+the {\it InitialStrictWellOrdering} of a set is a well-founded well-ordering 
+without having to prove the existence of least or initial well-orderings.
+
+
+¹HOLCONST
+Ü ÛInitialStrictWellOrderingÝ : ('a SET ¸ ('a ­ 'a ­ BOOL)) ­ BOOL
+÷üüüüüü
+Ü µ X R· InitialStrictWellOrdering (X, R) ¤
+Ü		WellOrdering (X, R) ± WellFounded (X, R)
+Ü		± ((¶S· MinWellOrdering (X, S)) ´ MinWellOrdering (X, R))
+°
+
+
+We now obtain the somewhat fraudulent theorem that every non-empty set has an InitialStrictWellOrdering:
+
+\ignore{
+=SML
+val MinWellOrdering_def = get_spec ¬MinWellOrdering®;
+val InitialStrictWellOrdering_def = get_spec ¬InitialStrictWellOrdering®;
+
+set_goal([], ¬µX· ³ X={} ´ ¶R· InitialStrictWellOrdering (X,R)®);
+a (REPEAT strip_tac);
+a (rewrite_tac[InitialStrictWellOrdering_def]);
+a (cases_tac ¬¶ S· MinWellOrdering (X, S)®);
+(* *** Goal "1" *** *)
+a (fc_tac [MinWellOrdering_def]);
+=TEX
+}%ignore
+
+
+¹HOLCONST
+Ü ÛAnInitialStrictWellOrderingÝ : 'a SET ­ ('a ­ 'a ­ BOOL)
+÷üüüüüü
+Ü µ X· AnInitialStrictWellOrdering X =
+Ü	ÅR·	InitialStrictWellOrdering (X, R)
+°
+
+We can now define a constant which is an initial strict well-ordering of its type.
+
+=SML
+declare_infix(210, "<‰i‰w‰o");
+=TEX
+
+¹HOLCONST
+Ü Û$<‰i‰w‰oÝ : ('a ­ 'a ­ BOOL)
+÷üüüüüü
+Ü InitialStrictWellOrdering(Universe, $<‰i‰w‰o)
+°
+
+
 
 \section{RELATIONS OVER A TYPE}\label{RELATIONSOVERATYPE}
 
