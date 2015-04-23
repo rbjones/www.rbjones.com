@@ -1,0 +1,105 @@
+# $Id: Makefile.in,v 1.1 2015/04/23 09:58:08 rbj Exp $
+
+# This is the makefile for "What should we do?".
+#
+# This is a monograph intended to be
+# about 10,000 words long.
+# It is intended for publication in several forms, which are:
+#
+# A) small format book (5.25x8 inch) suitable for POD publication via amazon (PDF).
+# B) large format A4 two column, to go on the web site.
+# C) html from A by latex2html for rbjones.com
+# D) format suitable amazon ebook derived from A.
+
+include @top_srcdir@/top_srcdir.mk
+
+RELSRCDIR=src/rbjpub/www/books/wswd
+RELWEBDIR=rbjpub/www/books/wswd
+SUBDIRS=
+
+WSWDBODYTEX=wswd.tex
+WSWDBOOKTEX=wswdbookt.tex $(WSWDBODYTEX) bookend.tex
+WSWDBOOKHTEX=wswdbookht.tex $(WSWDBODYTEX) bookend.tex
+WSWDPAMTEX=wswdpamt.tex $(WSWDBODYTEX) end.tex
+WSWDOLDTEX=wswdbookt.tex oldstuff.tex oldend.tex
+WSWDTEX=$(WSWDBOOKTEX) wswdbookht.tex wswdpamt.tex end.tex oldstuff.tex oldend.tex
+
+SRCDIRBIB=
+
+SRCDIRCPY=$(WSWDTEX) 
+XLDPDIRCPY=$(ENTFILES)
+%TEXPDF=wswdpam.pdf wswdbook.pdf wswdbookh.pdf wswdold.pdf
+TEXPDF=wswdbookh.pdf
+
+include $(TOPSRCDIR)/build/common/vars.mk
+
+LATEX2HTMA=wswdbook.htm
+%BUILDEXTRAS=$(LATEX2HTMA)
+WEBFILES=wswdbookh.pdf
+%WEBDIRS=wswdbook
+
+include $(TOPSRCDIR)/src/common/rules.mk
+
+# Paths
+
+vpath %.bib $(COMDIR)
+vpath %.in $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(XLCOMDIR)
+
+# Rules
+
+SHELL = /bin/sh
+
+# Paths
+
+# Variables
+
+# General rules
+
+#%.pdf: %.tex
+#	echo "pdf"
+#	pdflatex $*
+#	makeindex $*.idx
+#	pdflatex $*
+#	pdflatex $* 
+
+# Qualified rules
+
+# Specific rules
+
+wswdbook.tex: $(WSWDBOOKTEX) rbj.bib
+	cat $(WSWDBOOKTEX) >$@
+
+wswdbookh.tex: $(WSWDBOOKHTEX) rbj.bib
+	cat $(WSWDBOOKHTEX) >$@
+
+wswdpam.tex: $(WSWDPAMTEX) rbj.bib
+	cat $(WSWDPAMTEX) >$@
+
+wswdold.tex: $(WSWDOLDTEX) rbj.bib
+	cat $(WSWDOLDTEX) >$@
+
+wswdbook.mobi: wswdbook.htm
+	kindlegen wswdbook/wswdbook.htm -o wswdbook.mobi
+
+# Phonies
+
+wswd: wswdbookh.htm
+
+pdf: $(TEXPDF)
+
+# Dependencies
+
+wswdbook.pdf : $(WSWDBOOKTEX)
+
+wswdpam.pdf: $(WSWDPAMTEX)
+
+wswdold.pdf: $(WSWDOLDTEX)
+
+wswdbook.htm: $(WSWDBOOKTEX)
+
+# targets
+
+stats: wswdbook.tex wswdpam.tex wswdold.tex
+	wc $(WSWDTEX) wswdbook.tex
