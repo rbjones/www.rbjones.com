@@ -251,6 +251,9 @@ $(TEXPDFGLO): %.pdf : %.tex
 
 # specific rules
 
+installwww:
+	if test "YES" = "$(INSTALLWWW)"; then cp -r $(TOPSRCDIR)/src/www/* $(RWEBDIR); fi  
+
 installbins:
 	@if ! test -d $(BINDIR) &&  test "" != "$(BINFILES)"; then $(INSTALL) -d -m 755 $(BINDIR); fi
 	if test "" != "$(BINFILES)"; then $(INSTALL) -m 755 $(BINFILES) $(BINDIR); fi
@@ -286,7 +289,7 @@ installweb: $(WEBFILES) $(WEBDIRS) $(WEBSUBDIRS)
 # WEBSUBDIRS allows multiple directories to be copied rather than included
 	if test "" != "$(WEBSUBDIRS)"; then cp -r $(WEBSUBDIRS) $(RWEBDIR); fi
 
-THISINSTALL=installweb installdata installbins installlibs installperllibs installsmllibs
+THISINSTALL= installwww installweb installdata installbins installlibs installperllibs installsmllibs
 
 ppthds: $(PPTHD) $(PPPPTHD)
 
