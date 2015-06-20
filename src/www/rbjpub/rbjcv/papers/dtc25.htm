@@ -1,0 +1,380 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="../../prof/p1sty.txt" TITLE="Factasia">
+<TITLE>CREATIVE FOUNDATIONS FOR PROGRAM VERIFICATION</TITLE>
+<META name="keywords" content="RbJ FoundationS PrograM VerificatioN LogiC">
+<META name="description" content="
+In this paper we describe an approach to logical foundations intended
+to facilitate construction of programs which have been mechanically
+proven to satisfy their specifications.
+">
+</HEAD>
+<BODY CLASS=con>
+<A HREF="index.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<CENTER>
+<H2>CREATIVE FOUNDATIONS FOR PROGRAM VERIFICATION</H2>
+<P>
+<H4>R.B.Jones</H4>
+<P>
+* ICL Defence Systems, Eskdale Road, Winnersh, Berks RG11 5TT, England
+<P>
+Abstract
+</CENTER>
+<P>
+In this paper we describe an approach to logical foundations which we
+believe may ultimately provide improved facility in constructing programs
+which have been mechanically proven to satisfy their specifications.
+<P>
+Our proposal involves two main elements.   The first is that from the set
+theoretic viewpoint our foundation should correspond not to classical set
+theory, but to the theory of recursively enumerable sets.  The second is
+that matters of syntax should be factored out by the use of a suitable
+notion of reduction.
+<P>
+We exhibit a primitive formal system which is in a precise technical sense
+maximally expressive, illustrating the use of functional programming
+languages for the definitive specification of formal systems.          The
+connections between this work and recent work in logical type theories and
+programming language type systems are briefly addressed.
+<P>
+<OL>
+<LI><A HREF="#1">THE CONVERGENCE OF PROGRAMMING AND LOGICAL TYPE SYSTEMS</A>
+<LI><A HREF="#2">REFLEXIVENESS IN SET THEORY</A>
+<LI><A HREF="#3">REDUCTIONISM AND COMPLETENESS</A>
+<LI><A HREF="#4">FORMAL DEFINITION AND PROTOTYPING OF LOGICS</A>
+<LI><A HREF="#5">A FORMALISATION OF THE CREATIVE THEORY</A>
+<LI><A HREF="#6">CONCLUSIONS</A>
+<LI><A HREF="#7">REFERENCES</A>
+</OL>
+<A NAME="1">1.</A>  THE CONVERGENCE OF PROGRAMMING AND LOGICAL TYPE SYSTEMS
+<P>
+Despite the interest which there has been for some time in the
+verification of computer programs, there have been but modest linguistic
+concessions to verification.  The languages used for programming computers
+have not been designed to facilitate formal reasoning about the properties
+of programs, and the scope for adaptation of logics to this problem domain
+is far from exhausted.
+<P>
+There have been over the past decade a number of developments which
+promise to improve this situation.      On the one hand quite radical
+developments in logic have been taking place which make these logics more
+appropriate for applications in computing.  Influential among these has
+been the intuitionistic type theory (ITT) of Martin-L&ouml;f [Mar821, of which
+a recent descendant is the "Calculus of Constructions" of Coquand and Huet
+[Coq86].
+<P>
+On the other hand there has been for some time widespread interest in the
+further development of programming language type systems.   The trend has
+been, for a variety of reasons, to make these type systems more flexible
+and more expressive.   In doing this it has been natural to borrow ideas
+from logical type theories.  An example of such cross fertilisation is the
+introduction of dependent types (taken from Martin-L&ouml;f's ITT) into Pebble
+[Bur85].
+<P>
+Two other intimately related areas of research have been the mechanisation
+of mathematics (e,g, the AUTOMATH project [deB801), and the verification
+of programs.   These two areas have become so closely connected that it is
+not always clear whether any given project should be included in the one
+or the other.   The work of Constable et al [Con801, while having roots in
+program verification, has assimilated and developed so much of
+constructive mathematics, together with the idea that programs should be
+extracted from constructive proofs, that it embodies as closely as any
+system the view that the development of correct programs and the
+development of theories in constructive mathematics are essentially the
+same activity.
+<P>
+These and other related developments lend credence to the view that in due
+course the distinction between logical type theories, and programming
+language type systems may entirely disappear.
+<P>
+<A NAME="2">2.</A>   REFLEXIVENESS IN SET THEORY
+<P>
+There remain however problems in completing the convergence.  Ever since
+Russell identified "vicious" circularity as the cause of the logical
+paradoxes, logicians have tended to treat as pathological constructs which
+are essential to the practice of computing.   In general the consistency of
+logical systems has been secured by selecting a hierarchic ontology which
+rules out certain forms of useful circularity.     Notable among these are
+fully "polymorphic" programs which may operate on arbitrary data objects
+(including programs).  Such programs are essential to practical computing
+and yet their natural mathematical counterparts, polymorphic functions
+which may be applied to themselves, are excluded from most logical type
+theories, and from classical set theory.     Related notions, desirable in
+practice but considered logically pathological, are the universal set
+(which contains everything), and the type of all types (or set of all
+ sets).
+<P>
+The controversy about the type of types is currently a principal point at
+which logical and programming language type systems are diff icult to
+reconcile.   We mention in this context the work of Meyer and Reinhold
+[Mey86] showing that the notion of type:type is pathological, and that of
+Cardelli [Car86] giving a clear specification of the proof theory and the
+semantics of a polymorphic lambda-calculus with a very rich type system
+including type:type.
+<P>
+It has been known however for some time, that if we restrict ourselves to
+sets (or types) which are finitely representable (more specifically,
+recursively enumerable), then we can construct a model which includes many
+supposedly pathological objects, covering all the computations which can
+be performed on a digital computer (without prejudice as to which of these
+is useful or "meaningful").  The recursively enumerable sets include among
+their number a universal set which contains every recursively enumerable
+set (including itself), and sets representing fully polymorphic functions
+which are in their own domains.  Thus, if we are prepared to do without
+the rather lavish ontology of unrepresentable objects in classical models,
+we may have instead the objects necessary for genuine polymorphism and
+ref lexiveness.   We consider this a good trade and will henceforth concern
+ourselves with only and all the finitely representable data objects and
+computable functions.
+<P>
+<A NAME="3">3.</A>   REDUCTIONISM AND COMPLETENESS
+<P>
+A technique frequently used, both in the definition of logical systems,
+and in that of programming languages, is to define first a minimal and
+syntactically simple core language, and then to extend this with richer
+syntactic constructs whose semantics are defined by "reduction" (direct or
+indirect) to constructs in the core language.
+<P>
+This process of extension is purely syntactic, adding nothing to the
+expressiveness of the language.
+<P>
+It is our objective to construct a common foundation suitable for general
+application in computer science and "computable mathematics". We
+therefore would like a wide variety of more or less problem oriented
+languages to be reducible to our foundation, and expect that the necessary
+syntactic transformations may need to be quite radical. In order to serve
+as such a foundation our primitive system needs in an appropriate sense to
+be maximally expressive.
+<P>
+To make these ideas more precise we take as admissible reductions the
+total one-one computable mappings. This gives us the notion of
+reducibility known in recursion theory as l-reducibility (for which see
+[Rog67]). We may use l-reducibility to define precisely the
+expressiveness of a formal system. From the supposition that a formal
+system may only be reduced to a formal system at least as expressive as
+itself we may infer that l-reducibility determines a partial order on
+formal systems in terms of expressiveness. Two theories are equally
+expressive if they are mutually l-reducible. The degrees of
+expressiveness are therefore just the recursively enumerable degrees of
+recursive unsolvability. These are known to form an upper semilattice
+with a largest degree, members of which degree may be described variously
+as 1-complete, m-complete, or (the term which we shall henceforth use),
+creative.
+<P>
+In short, certain results in recursion theory may be interpreted as
+asserting that there exists a collection of maximally expressive formal
+systems, to any member of which all other formal systems are reducible.
+<P>
+We therefore propose to adopt the unique (up to recursive isomorphism)
+creative theory as our foundation.  Since the syntax of problem oriented
+languages need not be close to that of our foundation we will chose to
+exhibit a formalisation of the creative theory which is stark in its
+simplicity.   It is however, in being based on pure combinatory logic,
+quite closely related to functional programming languages (forming an
+important part of the implementation technique for the language Miranda'
+[Tur841 which we use in the specification) and to the notations used for
+defining the denotational semantics of imperative languages.
+<P>
+<A NAME="4">4.</A>   FORMAL DEFINITION AND PROTOTYPING OF LOGICS
+<P>
+An interesting new development, which we illustrate below, has been the
+use of typed functional programming languages for the specification and
+prototyping of formal systems.
+<P>
+The use of functional languages for implementing formal systems is not
+new, Three different approaches can be identified.
+<P>
+Firstly a functional language such as LISP can be used as a programming
+language for implementing a theorem prover, The Boyer-Moore theorem prover
+exemplifies this approach [Boy79].
+<P>
+A second approach is to take a typed functional programming language and
+to implement a proof checker as an abstract data type for computing
+theorems.   A theorem prover may then be developed piecemeal using the
+functional language as a metalanguage for constructing proofs. This
+approach, primarily associated with LCF and its variants [Gor79], has the
+merit that the correctness of the derivations constructed is guaranteed by
+the type-checker.  Provided the abstract data type "theorem" is correctly
+implemented, no subsequent errors in developing theorem proving tactics
+will result in an erroneous proof being accepted.
+<P>
+The third approach has been made possible by improvements in the available
+functional programming languages, in particular, the availability of
+pattern matching and algebraic data types. This approach, advocated by
+Hanna and Daeche [Han861 is to use a pure functional language (Miranda' in
+this case) to provide a definitive (and executable) formal specification
+of the logic.  Hanna and Daeche recommend the use of algebraic types
+(giving   partial many sorted free algebras) for the specification of
+formal systems, and have used this technique in the def initive
+specification of their logic VERITAS.
+<P>
+We have ourselves evaluated the use of Miranda' for the specification of
+formal systems [Jon86b] by transcribing into Miranda' the specifications
+of a formal systems due to Cardelli [Car861, and to Coquand and Huet
+[Coq86].  We used a combination of algebraic and abstract data types
+similar to that used in the specif ication shown below for our creative
+formal system, and have found that the technique offers improved precision
+(and a prototype implementation) at marginal cost in transparency,
+<P>
+In the following section we supply two specifications of the same formal
+system so that the reader may observe for himself the relative merits of
+specification in a functional language.
+<P>
+<A NAME="5">5.</A>   A FORMALISATION OF THE CREATIVE THEORY
+<P>
+5.1 Semi-formal specification
+<P>
+5.l.l      Syntax
+<PRE>
+   term       ::= K I S      term term
+</PRE>
+5.1.2      Auxiliary Definitions
+<PRE>
+   proforma   ::= m I term I (proforma proforma)
+
+   Metavariables p,q range over proformas and t,u,v,w range over terms,
+
+   We define the term p[u] obtained by entering a term u into a proforma p.
+
+   m [U]      = U
+   t [U]      = t
+   (p q) [u]  = ((p [u]) (q [u]))
+</PRE>
+5.1.2    Axiom
+<PRE>
+   |- K
+</PRE>
+5.1.3    Inference Rule Schemata
+<PRE>
+(K) p [u]                 |- p [((K u)v)]
+(S) p [((U w)(v W))]      |- p [(((S u)v)w)l
+</PRE>
+5.2   Formal Specification in Miranda
+<PRE>
+|| The abstract syntax is defined using an algebraic type definition
+
+term      ::= S
+
+term $Ap term
+proforma $Pap proforma
+
+
+term      ::= S i K      I term $Ap term
+proforma  ::= M I T term I proforma $Pap proforma
+
+|| we define the substitution of a term into a proforma by the function st
+
+st :: proforma -> term -> term
+
+st M U               = U
+st (T t) u           = t
+st (p $Pap  q) u     = (st p u) $Ap (st q u)
+
+|| the inference system is defined by the abstract data type theorem
+
+abstype    theorem
+   with    k     :: theorem
+           krule :: (theorem,proforma,term,term)      -> theorem
+           srule :: (theorem,proforma,term,term,term) -> theorem
+
+theorem == term
+k = K
+krule (th,p,u,v)     = st p ((k $Ap u) $Ap v),
+                               th = st p u
+
+
+srule (th,P,U,V,W)   = st p (((S $Ap u) $Ap v) $Ap w),
+                               th = st p ((u $Ap w) $Ap (v $Ap w))
+</PRE>
+<A NAME="6">6.</A>   CONCLUSIONS
+<P>
+We claim that the above system formalises the creative theory. Readers
+having previous acquaintance with combinatory logic and recursion theory
+should find no difficulty in constructing a reduction to this theory of
+some other set known to be creative.  It therefore represents, modulo 1-
+reducibility, as expressive a foundation as may be obtained.
+<P>
+We proposed to define syntactically richer theories by reduction to our
+primitive system, in particular, intermediate between the primitive system
+and problem oriented languages we propose a rich type theory in which the
+types correspond to recursively enumerable sets of terms.   This will have
+a single universe identical with the type of types,
+<P>
+It is our hope and belief that it will not prove necessary at any point to
+restrict the combinatory terms which are admissible within our type
+theory, and that it will therefore prove suitable for reasoning about the
+properties of programs in the pure combinatory logic with normal order
+reduction, and hence for functional languages such as Miranda'.  By means
+of a denotational semantics it should also be applicable to imperative
+languages.
+<P>
+An important driving force behind this work has been the perception that
+the degree of reflexiveness and polymorphism supported in currently
+available type systems is insufficient to permit encompassing system
+software and the filestore fully within these type systems. This would
+inhibit the use of types as specifications in verification of complete
+operating system software.  We believe that the approach here outined will
+permit resolution of these difficulties.
+<P>
+<A NAME="7">7.</A>   REFERENCES
+<PRE>
+ [Boy79]    Boyer, R.S.; Hoore, J.S.: A Computational Logic. Academic
+            Press,1979
+
+ [Bur84]    Burstall, R,; Lampson, B.: A Kernel Language for Abstract Data
+            Types and Modules.  In Semantics of Data Types, Lecture Notes in
+            Computer Science 173, Springer-Verlag 1984.
+
+ [Car86]    Cardelli, L.: A Polymorphic lambda-calculus with Type:Type. DEC
+            SRC research report no.10, lst May 1986.
+
+ [Con80]    Constable, R.L.: Programs and Types. Proceedings of the 21st
+            Annual Symposium on Foundations of Computer Science, Syracuse,
+            NoYo 1980,
+
+ [Coq86]    Coquand, T,; Ruet, G.: The Calculus of Consttuctions. Rapport de
+            Recherche No. 530, INRIA, May 1986.
+
+ [deB80]    de Bruijn, N.G.: A survey of the project AUTOMATH, In Essays on
+            Combinatory Logic, lambda calculus and formalism, pp 589-606,
+            J.R.Hindley and J.P.Seldin ed., Academic Press 1980.
+
+ [Gor79]    Gordon, M.; Milner, R.; Wadsworth, C.: Edinburgh LCF, Springer-
+            Verlag, Lecture Notes in Computer Science, Vol. 78.
+
+ [Han86]    Hanna, F.K.; Daeche, N.: Purely Functional Implementation of a
+            Logic.  To appear in Proc. 8th International Conference on
+            Automated Deduction, Oxford 1986.
+
+ [Jon86a]   Jones, R.B.: Logical Foundations and Formal Verification. Proc.
+            3rd IDA Workshop on the formal specification and verification of
+            Ada, 1986.
+
+ [Jon86b]   Jones, R.B.: Implementing Cardelli's Type:Type in Turner's
+            Miranda'.   Unpublished note and script.
+
+ [Mar82]    Martin-L&ouml;f, P.: Constructive Mathematics and Computer
+            Programming.  In Logic, Methodology and Philosophy of Science, VI
+            (Proc. of the 6th Int.  Cong., Hanover, 1979), North Holland
+            Publishing Company, Amsterdam (1982).
+
+ [Mey86]    Meyer, A.R.; Reinhold, M.B.: 'Type' is not a Type.
+            Proc, POPL 1986,
+
+ [Rog67]    Rogers, H.: Theory of Recursive Functions and Effective
+            Computability.  McGraw Hill Book Company, 1967.
+
+ [Tur84]    Turner, D.A.: Functional programs as executable specifications.
+            Phil.  Trans.  R. Soc.  Lond.  A 312, 363-388 (1984).
+</PRE>
+Note: Miranda' is a trademark of Research Software Limited
+<P>
+DTC/RBJ/25 version 1/0
+<HR>
+<CENTER>
+<A HREF="index.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../../rbj.htm">
+<IMG SRC="../../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A> dated 1986/7/28 HTML 1996/6/6 edited 1996/6/15
+</CENTER></BODY>
+</HTML>

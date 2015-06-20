@@ -1,0 +1,1257 @@
+<HTML>
+<HEAD>
+<TITLE>Persistent Applicative Heaps and Knowledge Bases</TITLE>
+<META name="description" content="
+This paper considers the Knowledge Base as a fifth generation
+application development system.  It describes aspects of an
+architecture for a personal Knowledge Management system.    The system is
+based on an untyped combinator-graph reduction engine running on a
+persistent applicative heap.  
+The problem of knowledge representation and its relation to various type systems is discussed.
+">
+<META name="keywords" content="RbJ ArtificiaL IntelligencE KnowledgE">
+</HEAD>
+<BODY BGCOLOR="#e0e0f0">
+<CENTER><H2>Persistent Applicative Heaps<BR>
+                  and      <BR>
+ 		Knowledge Bases</H2>
+<P>
+<H4>R.B.Jones, International Computers Limited, 1985/7/7</H4>
+<H3>Abstract</H3>
+</CENTER>
+<P>
+This paper considers the "Knowledge Base" as a fifth generation
+application development system.  It describes aspects of an
+architecture for a personal Knowledge Management system.    The system is
+based on an untyped combinator-graph reduction engine running on a
+persistent applicative heap.  
+The problem of knowledge representation and its relation to various "type systems" is discussed.
+<PRE>
+O.   DOCUMENT CONTROL
+
+0.1  Contents
+
+0.   DOCUMENT CONTROL
+     0.1 Contents
+     0.2 Bibliography
+
+l.   INTRODUCTION AND OVERVIEW
+
+2.   OBJECTIVES AND ASSUMPTIONS
+     2.1 objectives
+     2.2 Assumptions about intelligence
+     2.3 Assumptions about knowledge representation
+
+3.   ARCHITECTURE
+
+4.   ENGINE
+     4.1  Hardware
+     4.2  Virtual Memory
+     4.3  Object Management
+     4.4  Combinator Engine
+     4.5  Garbage Collection and Session Control
+
+5.   LOGIC, KNOWLEDGE REPRESENTATION AND TYPES
+     5.1  Type Systems
+     5.2  Russell's Theory of Types
+     5.3  Axiomatic Set Theory
+     5.4  Intuitionistic Type Theory
+     5.5  Combinatory Logic
+     5.6  Types in Programming Languages
+     5.7  Data Dictionaries
+     5.8  Frames, Scripts, Semantic Nets.,
+     5.9  Putting it all together
+
+0.2  Bibliography
+
+[Bar81]    Barr, Avron; Feigenbaum, Edward A: The Handbook of Artificial
+           Intelligence, Vol.1. Pitman 1981.
+
+[Bur84]    Burstall, R.; Lampson, B.: A Kernal Language for Abstract
+           Data Types and Modules, Proc. Int. Symp. on Semantics of Data
+           Types, 1984.
+
+[Con80]    Constable, R.L.: Programs and Types. Proceedings of the 21st
+           Annual Symposium on Foundations of Computer Science,
+           Syracuse, N.Y. 1980.
+
+[Hei67]    van Heijenoort, Jean: From Frege to Godel, a sourcebook in
+           Mathematical Logic, 1879-1931.
+           Harvard University Press, 1967,
+
+[Hin72]    Hindley, J.R.; Lercher, B.; Seldin, J.P.: Introduction to
+           Combinatory Logic, London Mathematical Society Lecture Note
+           Series 7. Cambridge University Press, 1972.
+
+[Lam80]    Lambek, J.: From lambda-calculus to Cartesian Closed
+           Categories,    In - To H.B.Curry: Essays on Combinatory Logic,
+           Lambda Calculus and Formalism.  Ed.  J.P.Seldin, J.R.Hindley;
+           Academic Press, 1980.
+
+[Mar75]    Martin-Lof, P.: An intuitionistic theory of types:
+           predicative part. in Logic Colloquium 173, pp 73-118, North
+           Holland 1975.
+
+[Mar82]    Martin-Lof , Per: Constructive Mathematics and Computer
+           Programming.  In Logic, Methodology and Philosophy of Science,
+           VI (Proc. of the 6th Int. Cong. Hanover, 1979), North
+           Holland Publishing Company, Amsterdam (1982).
+
+[Mik84]    Nikhil, Rishiyur Sivaswami: An Incremental, Strongly-Typed
+           Database Query Language.  Doctoral dissertation, University of
+           Pennsylvania, 1984.
+
+[Owo84]    Owoso, Gabriel olusegun: Data Description and Manipulation in
+           Persistent Programming Languages.  Doctoral Thesis CST-32-84.
+           University of Edinburgh, December 1984.
+
+[Rus02]    Russell, B.:    Letter to Frege, In [Hei67].
+
+[Rus08]    Russell, B.: Mathematical Logic as based on the Theory of
+           Types.  American journal of Mathematics 30, 222-262.  Also in
+           [Hei67].
+
+[Sch24]    Schonfinkel, Moses: Uber die Bausteine der mathematischen
+           Logik.   Mathemtische Annalen 92, 305-316. Translated (On the
+           building blocks of mathematical logic) in [Hei67].
+
+[Tur79a]   Turner, D.A.: Another Algorithm for Bracket Abstraction,
+           Journal of Symbolic Logic, Vol. 44, No. 2, June 1979.
+
+[Tur79b]   Turner, D.A.: A new implementation technique for applicative
+           languages.  Software - Practice and Experience, Vol. 9, 31-49
+           (1979)
+
+[Tur84]    Turner, D.A.:       Functional programs as executable
+           specifications.  Phil. Trans. R. Soc.  Lond.  A 312, 363-388
+           (1984) &
+
+[Ung84]    Ungar, David: Generation Scavenging: A non-disruptive High
+           Performance Storage Reclamation Algorithm, Comm.  ACM,
+
+[Zer08]    Zermelo, Ernst: Untersuchungen uber die Grundlagen der
+           Mengenlehre 1, Mathematische Annalen 65, 261-281.  Also
+           translated ("Investigations in the foundations of set theory
+           I") in [Hei67].
+</PRE>
+1.    INTRODUCTION AND OVERVIEW
+<P>
+This paper presents aspects of a proposed architecture for a Knowledge    Management System.  This is viewed as a fifth generation support system
+for personal application development.    Present day (fourth generation)
+application development systems are built around and upon database
+management systems, the author anticipates that future application
+development systems will be built around knowledge base management
+systems which will subsume the functionality of current database
+mangement systems.
+<P>
+Though the prime objective is to apply state of the art techniques to
+Personal Application Development Systems, some of the key features of
+the architecture have been determined by longer term objectives.  Thus
+it is primarily consideration of Artificial Intelligence as a long term
+objective which has determined the reflexive structure of the proposed
+system, and these considerations have also been influential in the
+choice of an applicative infrastructure with both virtual store
+management, object management and persistence hidden away at as low a
+level as possible.
+<P>
+After setting the context with a statement of objectives and
+assumptions, the main body of the exposition begins in section 3 with
+an overview of the proposed architecture.         A reasonably detailed
+account is then given of the "engine" in section 4, followed by a
+discussion in section 5 of the knowledge base management system which
+runs on this engine,   The most interesting problems lie in this latter
+area, and remain as yet, unresolved.
+<P>
+2.   OBJECTIVES AND ASSUMPTIONS
+<P>
+This section provides a backcloth against which the rationale for some
+of the features described later in the paper may be better understood.
+<P>
+2.1 Objectives
+<P>
+It has been my aim to combine consideration of long term issues in
+artificial intelligence with more practical achievable targets.
+<P>
+To provide for the long term:
+<P>
+O1: To adopt an architecture which is consistent with what we believe
+     to be necessary for supporting artificial intelligence.
+<P>
+And the medium term:
+<P>
+O2:  To apply state of the art techniques to developing "End-User
+     Knowledge Base Application Development Systems".
+<P>
+2.2 Assumptions about Intelligence
+<P>
+     These "assumptions" determine the influence of O1 on the chosen
+     architecture,
+<P>
+Al: That an intelligent machine is "universal",
+<P>
+It can do anything that any other intelligent machine can do, once
+taught, (and hence anything that any Turing Machine can do)
+<P>
+A2: An intelligent machine is reflexive and self modifying.
+<P>
+It can study itself and can alter the way it does things.
+<P>
+And hence:
+<P>
+A3: An intelligent machine must be able to reason about algorithms.
+<P>
+This is a very exacting requirement judging by the very great
+difficulty experienced by human beings in proving properties of
+programs.  The main practical effect of this upon the proposed
+architecture is in chosing an engine which has a tranparent semantic
+structure and in which the differences between primary and secondary
+store, and between persistent and transient data are not obtrusive. It
+also influences what we consider to be an acceptable logic.
+<P>
+2.3  Assumptions about Knowledge Representation
+<P>
+The literature of AI contains a good deal of discussion of the merits
+     of various knowledge representation systems, In these discussions
+     logic (usually meaning first order predicate logic) is compared against
+     other forms of knowledge representation such as frames or semantic
+     nets. As a matter of terminology, any formal language for representing
+     propositions, if provided with some means of deriving true conclusions
+     given true premises, I will call a logic.  Since I have no intention of
+     chosing a knowledge representation system in which derivations are not
+     possible, chosing a knowledge representation system comes down to
+     chosing a logic.
+<P>
+This is not an observation on the merits of any particular logic or on
+the merits of any form of knowledge representation not normally
+described as a logic.
+<P>
+These observations are represented by the following assumptions:
+<P>
+Kl: A knowledge representation system is a way of encoding
+    propositions or facts as finite data structures in a digital
+    computer,
+<P>
+I avoid speaking of "languages" since this term has strong links with
+written, or writeable representations. Computer based representations
+may be networks which do not correspond naturally to a written
+notation.
+<P>
+K2:   A knowledge representation system must come with some operations
+     (just as a data type must have operations available upon it). The
+     operations appropriate to knowledge representation is an inference
+     or derivation, which deduces a new fact from a given set of facts.
+<P>
+K3: Since Kl and K2 are sufficient conditions for a system to be
+     called a "logic", we may infer that all knowledge representation
+     systems are logics.
+<P>
+3.   ARCHITECTURE
+<P>
+A fourth generation application development system may be viewed as a
+     thick sandwich thus:
+<P>
+<CENTER><TABLE CELLPADDING=20 BORDER>
+<TR><TH>Application</TH></TR>
+<TR><TH>Application Development System</TH></TR>
+<TR><TH>Computer</TH></TR>
+</TABLE></CENTER>
+<P>
+An application development system (consisting of database mangement
+software and high level facilities for specifying and running an
+application) is implemented on some computer.  Using this and therefore
+logically "on top" of it, we build an application.
+<P>
+An analogous sandwich for an "intelligent system" might be:
+<P>
+<CENTER>
+<TABLE CELLPADDING=20 BORDER>
+<TR><TH>Domain Specific Knowledge</TH></TR>
+<TR><TH>"Intelligence" (soft)</TH></TR>
+<TR><TH>Engine (hard)</TH></TR>
+</TABLE></CENTER>
+<P>
+The remaining sections of this paper consider the bottom two layers of
+this sandwich.  The top layer is considered only is so far as is
+necessary to give some account of the lower layers, i.e. no specific
+applications are considered.
+<P>
+The bottom layer is strictly firm rather than hard, It is beyond the
+limits of self modif ication of the system, and is theref ore in that
+sense hard.   But it is in fact a nice machine, intended to be easy to
+reason about (without being intolerably inefficient), and built with a
+layer of software on whatever hardware is available.
+<P>
+The reflexive nature of the "Intelligent" bit means that it is
+continually modifying itelf (and/or the domain knowlege, which is also
+soft) as a result of its interactions with its environment. Initially
+this self modification will be strictly under the control of the user.
+<P>
+4.   ENGINE
+<P>
+The "engine" too is layered.
+<P>
+<CENTER><TABLE CELLPADDING=20 BORDER>
+<TR><TH>Combinator Engine</TH></TR>
+<TR><TH>Object Management</TH></TR>
+<TR><TH>Virtual Memory (soft)</TH></TR>
+<TR><TH>Hardware (8085, 64KRAM, 5Mb Disc)</TH></TR>
+</TABLE></CENTER>
+<P>
+4.1  Hardware
+<P>
+     Some of this work has been prototyped on an 8-bit ICL personal
+     computer.  This has very little effect upon the architecture chosen.
+     It effects primarily the virtual store management, Object management
+     is marginally effected by the size of the virtual address space.
+<P>
+4.2 Virtual Memory
+<P>
+The details of virtual memory management are hardware dependent.
+<P>
+   Since this is done by software it is important to minimise the number
+   of passes through the address decode path and the length of that path.
+   The system is designed on the assumption that the engine above it will
+   retrieve objects into private space and then operate upon them,
+   resulting in one traversal for each use of an object.
+<P>
+The free space in the 64k RAM is divided int 256 byte pages, Virtual
+addresses 24 bits wide are used giving an addressing space of 16Mb.
+This address space is mapped in 4Mb sections onto up to 4 CP/M f i les.
+one of these files will be the "knowledge base", another the workfile,
+and the remaining two are available to effect import and export of data
+to more conventional CP/M files (though this might also be done without
+using a segment of virtual memory).
+<P>
+Virtual to real address mapping is done by page tables, One Master
+Table is permanently in RAM and contains 256 1 byte page numbers for
+second level Page Tables.    The (second level) page tables are present
+in RAM just as long as they refer to data pages currently in RAM, All
+page tables contain a zero for the page number of a page not currently
+in RAM.   The most significant byte of the 24 bit virtual address is
+used to index down the master table, and the second byte is used to
+index down the appropriate page table, giving rapid access to the page
+containing the information if it is in RAM.  Otherwise a more tortuous
+path causes the page to be read from disc,
+<P>
+<PRE>
+bit    0________________7________________15______________23
+       |                |                 |              |
+       |________________|_________________|______________|
+   ___________|                 |                |
+  |                      _______|                |
+  |    MT               |                        |
+  |   ____              |                        |
+  |  |____|             |                        |
+  |  |____|             |                        |
+  |->|____|=================>____                |
+                        |   |____|               | 
+     |____|             |   |____|               |    Page
+                        |-->|____|==================> ____
+                            |    |               |   |____|
+                                                 |   |____|
+                            |____|               |-->|____|
+                                                     |____| 
+
+</PRE>
+4.3 Object Management
+<P>
+     Each Objects consist of:
+<P>
+<OL>
+<LI>A data area
+<LI>An ordered set of pointers
+</OL>
+<P>
+Each pointer occupies 3 bytes.
+<P>
+An object may not run over a page boundary and therefore it is limited
+to 256 bytes in total size.
+<P>
+The persistent Heap is, from the object management viewpoint a directed
+graph with information stored at each node of the graph,
+<P>
+Pointers are virtual addresses, without any form of indirection.   This
+simple arrangement is made possible by the fact that the system is
+applicative, If this engine were used to displace the operating system
+on a personal workstation then the virtual address space could map
+directly onto the hardware addresses of the secondary storage,
+improving optimisation of secondary store access,     A fortiori this
+could also be done with write once optical storage,
+<P>
+"Object management" is quite rudimentary in this system, It consists
+of allocating space for new objects, either in the persistent heap, or
+in the workspace heap, The combinator engine will select the storage
+area according to whether the cell required will form part of the final
+result which will replace the current value of the persistent heap.
+Each of these areas is treated as a never decreasing stack by the
+allocator.
+<P>
+Garbage collection takes place at two levels.   The workspace is
+regularly collected by copying, for which purpose it is allocated two
+segments of virtual address space.    Since it contains only objects
+created since the last time the persistent heap was saved this should
+be tolerably efficient.  The fact that the engine is applicative will
+increase the proportion of inaccessible cells in the workspace and
+therefore makes a copying strategy more optimal.
+<P>
+The persistent heap is never collected during a session.     In fact the
+algorithm used by the engine guarantees that the only time that garbage
+is "created" on the persistent heap is when old generations of the
+knowledge base are deleted, and this may only take place between
+sessions (i.e. when the heap is being saved).    All transient objects
+created during a session are allocated in the workspace and never find
+their way onto the persistent heap, this simplifies garbage collection
+of the persistent heap.
+See later sections for further details of the garbage collection strategy.
+<P>
+Use of an applicative heap creates a high level of structure sharing
+(especially if old generations of the knowledge base are retained).
+which is entirely invisible to the user.      If any shared object is
+edited through one access route, then a new copy is created,  The
+change is only visible in the new generation of the database, and only
+through the one access route, So the system behaves as if no structure
+sharing were taking place.  If it is desired to give access to the same
+object through multiple routes (e.g. to several users) in such a way
+that updates are visible through all routes, then this must be done by
+means other than a simple virtual address pointer (which is
+semantically equivalent to a copying operation).   For such purposes a
+second level of object management may be required above the combinator
+engine, which requirement is not addressed in this paper.
+<P>
+4.4 Combinator Engine
+<P>
+The combinator engine creates a higher level view of the heap, in which
+the objects have particular semantic significance.  The semantics of
+the heap are determined by the operation of "elementary reduction",
+which defines various value preserving local transformations on rooted
+object graphs.  The transitive closure of "elementary reduction" is
+"reduction".  Two special statuses for rooted graphs are defined.
+<P>
+A rooted graph is in <B>"normal"</B> form if no reductions are defined on any
+graph or subgraph accessible from the root.
+<P>
+A rooted object graph is <B>cannonical</B> if either it is in normal form or
+if the root of the graph is not itself reducible and if every rooted
+subgraph accessible from the root via "strict" pointers is in
+cannonical form.
+<P>
+The combinator engine does two things:
+<P>
+<OL>
+<LI>
+It performs elementary reductions on the graph (whose root is) in the workspace
+until the graph is in normal form.
+<LI>
+It transcribes the graph contructed in
+          the workspace onto the persistent heap.
+</OL>
+<P>
+In practice these two are interleaved, Note that no transcription from
+the persistent heap to the workspace takes place, that part of the
+resulting graph which is taken without modification from the persistent
+heap will not be transcribed either into the workspace or back onto the
+persistent heap, Transcription onto the persistent heap takes place
+only when an object is certain to be "alive" in the result of the
+session.
+<P>
+The current prototype combinator engine has a set of combinators drawn
+from [Tur79a,b], Future implementations will use a different set of
+combinators for the following reasons:
+<P>
+<OL>
+<LI>The standard combinators neither provide for nor exploit the
+     tuples supported by the object manager.
+<LI>
+The Indecisive Pseudo-Combinator is introduced to provide a
+     reasonably efficient union of recursively enumerable sets,
+<LI>
+A special pseudo-combinator is required for fixing the
+    environment, (allowing interactive I/0)
+<LI>
+Availability of the Indecisive Pseudo-Combinator makes the use of
+     stacks by the engine inadvisable.
+</OL>
+<P>
+4.4.1     Node Types
+<P>
+The combinator engine is built onto the "object management" system,    it
+makes special use of certain information at the nodes of the object
+graph, which enables the engine to identify certain Illegitimate
+reductions",   The information of significance to the engine at each
+node is:
+<P>
+A boolean indicating whether the node is a primitive function or a
+constructor.
+<P>
+For each arc or pointer from the node, a boolean indicating whether the
+arc repesents an unevaluated strict argument to the function or
+constructor.
+<P>
+Nodes may be classified as follows:
+<P>
+a)   Constructors without pointers, known as atoms,<BR>
+b)   Constructors with pointers<BR>
+c)   Primitive Functions<BR>
+<P>
+Primitive functions have special significance to the engine and are
+distinguished by the value at the node,       Wherever a node has arcs
+leaving it, there is included in the data at that node a boolean value
+for each such arc.   In the case of all nodes except DC nodes (for which
+see below), these booleans indicate whether the relevant arc refers to
+a "strict" argument or not, A strict argument is one which must be in
+cannonical form before the node may be reduced (if it is a primitive
+function), or before the node may be considered cannonical.
+<P>
+4.4.2    Primitive Functions
+<P>
+Primitive functions may be further classified into operators and combinators.
+Operators take the data values stored at the nodes of
+     their reduced operands and compute a result from these values.
+A typical operator would be arithmetic addition, or string concatenation.
+     A generous set of such operations is assumed to be supported by the
+     engine.  They will not be further considered here.
+<P>
+There are a large number of combinators, mostly variants on a small
+number of themes.  This we have selector combinators, and constructor
+combinators.
+<P>
+Selector combinators use an arbitrary length row of integers embedded
+in the data at the selector node (and hence in a sense in the name of
+the combinator). to peform a sequence of selections on their argument.
+A selection is the operation of following an arc.   A selection on node n using integer i consists of following the ith pointer from n if it exists.
+If we represent the node obtained by following the ith pointer
+from n by n[i], and a selector by S(i,j,..z), then:
+<P>
+S(4,5,2)n = n[41[51[21 and is obtained by following three arcs starting from n. The null selector So is the identity function.
+<PRE>
+e.g.   :
+      / \
+     /   \  
+  S(2,3)  \
+         /|\  ========>  F
+        / | \
+       A  |  C
+         /|\
+        / | \
+       D  E  F
+</PRE>
+Distributing-constructor (DC) combinators are the means provided for
+propagating environments, and therefore stand instead of S.C.B [Tur79b]
+and S',C',B' in [Tur79a].  They also serve instead of K.
+<P>
+They do this in two ways, Firstly by providing for the distribution of
+environments over an arbitrary set of arcs from a node to be
+constructed, and secondly by permitting the values for the free
+variables in an expression to be aggregated into a single environment
+and thus simplifying the propagation of the values to the appropriate
+nodes of the graph.
+<P>
+By contrast with [Tur79b] which uses U to force functions expecting
+pairs as arguments to transmit the values as if they were curried, we
+provide combinators to encourage the compiler to transmit as single
+structured arguments, sets of values which may have resulted from
+multiple abstractions,    The availability of the selector functions
+inakes it efficient to select single values from such an aggregated
+environment.  There is a trade off between the cost of propagating
+values down through a number of levels of abstraction, and the work
+involved in aggregating the values of multiple arguments to reduce the
+level of abstraction, and then selecting values from the aggregate when
+required.  The S and DC combinators offer the compiler flexibility,
+which it may exploit if it so choses to optimise execution time.
+<P>
+A DC combinator contains in the data at the node the following
+information.   For each arc except the first from the DC, a boolean
+indicating whether the environment is to be propagated to the arc in
+question.   A DC is always strict in the first argument only.         On
+application of a DC to a single argument (which will in general be a
+complete 'environment'), a new node is created.  The data at the new
+node consists of the atom referred to by the first pointer at the DC
+node.  This data includes the strictness flags.   The pointers from the
+new node will point to values obtained by selective propagation of
+argument to the DC to the values referred to by the remaining pointers
+from the DC, Where a pointer is not selected for propagation the value
+of the corresponding pointer in the new node will be identical to that
+in the DC node.
+<P>
+Where a pointer is selected for propagation then the corresponding
+pointer in the resulting node will refer to an application of the graph
+referred to by the pointer in the DC to the argument supplied for the
+DC.
+<PRE>
+e.g.    :              Q
+       / \              \
+     DC1  \  =======>    :
+    / \    A            / \
+   Q   B               B   A
+
+        :                      ___Q___
+       / \                    /   |   \
+      /   A                  :    C    :
+  __DC101_     ======>      / \       / \
+ /  |  |  \                B   A     D   A
+Q   B  C   D
+</PRE>
+The resulting node may be of any sort.
+i.e. it may be either a constructor, or a primitive function (or a DC),
+<P>
+4.4.2    Propagation of Context
+<P>
+4.4.3    The Indecisive Pseudo-Combinator
+<P>
+In [2], David Turner states that the problem of whether logic languages
+can be implemented using combinators is unsolved.  Putting aside the
+matter of efficiency, the answer must be that they can.  Since
+a suitable set of combinators is computationally universal, anything
+that can be done with a computer can be done with combinators, An
+implementation of a logic language written in a functional would secure
+the desired effect if the functional language were implemented with
+combinators.
+<P>
+There are considerations however which suggest that a "good"
+implementation of a logic language would be needlessly inefficient if
+implemented with combinators, and these considerations have lead me to
+devise a "psuedo-combinator" to support the sort of computations which
+are necessary in a "good" implementation of a logic language.
+<P>
+Considering the use made of predicates in PROLOG, and what might be
+required in a functional language to achieve the same effect.          A
+predicate in PROLOG may be regarded as an algorithm for listing all the
+objects which satisfy the predicate.  We might therefore treat the
+value of the predicate as the list of objects which it enumerates,
+<P>
+When predicates are combined to def ine further predicates, these
+operations may be regarded as operations on the lists which the
+original predicates denote,
+<P>
+Thus:  P(X):-Q(X),R(X).
+<P>
+indicates that the predicate P is satisfied by those objects which
+satisfy both predicates Q and R. i.e. its value contains the
+intersection of Q and R.
+<P>
+P(X):- Q(X);R(X).
+indicates that P contains the union of Q and R.
+<P>
+In PROLOG it is not possible to specify that P is exactly the union of
+Q and R, but negation by failure makes that assumption if no other
+clauses are present with P at the head.  In PROLOG also the
+implementation is not "good", by which I mean for present purposes,
+that the implementation fails to fully capture the semantics of
+disjunction of predicates.  In PROLOG if Q produces an inf inite list,
+then P will not enumerate the members of R.
+<P>
+If we try to introduce these operations into a functional language we
+find a problem.  There is not and cannot be any deterministic
+computable operation on an arbitrary pair recursive enumerations which
+yeilds an enumeration which includes just those objects which are
+members of either of the original enumerations.     (such an operation
+could be used to solve Turing's halting problem)   We can construct an
+algorithm which will form a list which is the union of the two
+operands, but
+<P>
+4.4.2     I/O combinators
+<P>
+     Some means is necessary to enable the computation to take account of
+     the values typed by the user at the keyboard.
+<P>
+I take a purist and seek a method which does not introduce assumptions
+about the order of evaluation of the program, and which does not
+violate the requirement for referential transparency.
+<P>
+I have a solution which almost succeeds in this, in so far as:
+<P>
+Programs will not normally be sensitive to evaluation order except in
+that the arguments to strict fuctions are evaluated before evaluation
+of the function.
+<P>
+The only possible effect of changes in order of evaluation will be on
+values output, The result will always be the samer provided the inputs
+are the same.
+<P>
+Referential transparency is guaranteed.
+<P>
+This is achieved for both interactive console I/0 and for any other
+sort of I/O by provision of the special function e, which is used to
+represent the environment.   e takes an argument, which we will call a
+stream identifier, and delivers as result a "stream" and a new
+environment function.      It is necessary to return a replacement
+environment in order that  subsequent uses of the same stream identifier
+may return a different stream without violating referential integrity.
+<P>
+Once invoked the original value of the environment is transformed into
+a constant function delivering the same value whatever its argument,
+This guarantees its referential integrity, and discourages use of an
+environment more than once.   The function or combinator e therefore
+works as shown below:
+<PRE>
+                               :
+                              / \
+       :                     :   e
+      / \     ========>     / \
+     e   i                 p   s
+</PRE>
+Where s is the stream indicated by identifier i.
+<P>
+Also when e is invoked, the leaf occupied by the e is replaced by a
+constant function with the same value as e i. k(e i),
+<P>
+The streams returned by e behave in a manner similar to e.            In
+particular a console I/0 stream, s. accepts a string for output to the
+console and returns a pair, the first of which is a console input and
+the second of which is a further console stream,    Streams also should
+therefore be used only once, and to Guarantee referential integrity,
+the stream once invoked is replaced in the graph by a constant function which returns its first value.   A stream (and an environment) therefore
+behaves semantically as though it is a constant function which returns
+a value and another constant function.  It achieves I/0 not by
+returning a different value on each invokation but by not deciding what value it is going to have until actually invoked.     Since it is a strict function, we are guaranteed that the argument (i.e. console output) is
+evaluated before the stream is called and therefore we can ensure that
+the output appears on the console before the input is read.
+<P>
+It is still possible to write a program which makes the console output
+indeterministic, but the value of even such a program remains a
+deterministic function of the values typed at the keyboard.
+<P>
+4.5  Garbage Collection and session control
+<P>
+     The persistent heap consists of a list of versions of the
+     data/knowledge base, The most recent version of the database is at the
+     head of the list.  Each version of the database consists of a pair, the
+     first element of which must be a function.   Each session consists of
+     computing the value new heap defined by the equations below, and
+     replacing the persistene- heap with this value.      i.e. each session
+     consists of a single assignment.   In the following equations function
+     application is represented by juxtaposition (function on the left).
+<P>
+Were it not that the garbage collection strategy chosen requires
+knowledge of the top level structure of the heap we could do this
+simply by the assignment:
+<P>
+new-heap = head-of persistent-heap persistent-heap
+<P>
+In this case the function (head-of persistent-heap) is responsible for
+looking after retention or deletion of previous generations of the
+database as well as performing any transformations required by the user
+to form the new value of the heap.
+Our garbage collection however relies upon the following
+characteristics of the persistent heap and the combinator engine:
+<P>
+<OL>
+<LI>
+Space on the persistent heap is allocated from left to right
+     (say).
+<LI>At the end of each session the persistent heap is a fully reduced
+     combinator graph.
+<LI>If no deletion of previous generations takes place, then at the
+     end of each session the new heap differs from the previous one
+     simply by the addition of new material on the right.  The rightmost
+     element of the persistent heap is always the root node,
+<LI>Pointers from left to right in the persistent heap do not cross a
+     generation boundary.
+</OL>
+Item 2 is in some senses regrettable.  We might wish to take lazyness
+one step further and defer evaluation not just to the end of the
+current session, but until the data is really required (i.e. when the
+user wants to see it, or something derived from it).       However this
+would destroy the garbage collection stratagem,     Firstly, because of
+deferring evaluation we would get no clean separation between data
+attributable to different generations of the database, Secondly,
+temporary objects would appear in the persistent heap.  This would
+render the policy of collecting the persistent heap only at the end of
+a session unworkable.   In fact the distinction between the persistent
+heap and the workspace would completely disappear.
+<P>
+current-version = head-of persistent_heap
+<P>
+function = head-of current-version
+<P>
+result = function persistent_heap environment
+<P>
+The result is obtained by applying the function to the persistent heap
+and also to the special combinator "environment".
+<P>
+This is the only step which is performed by the graph reduction engine.
+<P>
+new-version = head-of result
+<P>
+deletion-list = tail-of result
+<P>
+The tail of the result is a list of integers known as the deletion
+list, which indicates whether the user has elected to delete any
+previous generations of the database.
+<P>
+pruned-heap = delete persistent-heap deletion-list
+<P>
+The persistent heap is pruned by deleting previous generations as
+     specified by the deletion list, This operation is not undertaken by
+     graph reduction since it is linked to the garbage collection process
+     and needs to be done simply by overwriting pointers in the top level
+     list.
+<P>
+new-heap = pair new-version pruned-heap
+<P>
+The new persistent heap is obtained by adding the new version on the
+front of the pruned list of database versions.
+<P>
+The computation resulting in value "result" will in general consist in
+any number of editing/processing operations on the database iterated
+until the user requests to quit, or to save.       Until this point (when
+the user requests quit or save) all new space allocated during the
+computation will usually have been allocated in the workspace, since
+the value of the top node of the "new    version" will not yet have been
+computed,   During this process the user may have requested deletion of
+one or more previous generations of the database,        Since deletion of
+previous generations is not done by the usual applicative method of
+deleting elements from a list, and since it is also used to trigger
+garbage collection on the persistent heap, deletion is effected by
+returning the position in the list of the versions to be deleted.
+<P>
+This scheme enables garbage collection on the persistent heap to be
+kept to an orderly minimum.  Because the graph reduction engine is
+organised to transcribe the result of the session onto the persistent
+heap, but to allocate all storage not certain to be a part of the
+result in the workspace, the result of a session in the persistent
+heap is perfectly dense.     All intermediate results were held in
+workspace, Hence garbage collection on the persistent heap is never
+necessary during the session.  It takes place only at the end of a
+session when previous generations of the database may be deleted.
+<P>
+At the end of a session the persistent heap may be collected by a
+copying process which can cover any most recent set of generations of
+the database,   The user can maintain a reasonably complete historical
+record of his database if he choses to do so, by keeping, say, the last
+generation for each preceding year, the last generation for each of the
+preceding four months, four days, and the last four generations.  Using
+this scheme and garbage collecting at each close of session just as far
+as the oldest generation deleted, the end-of-session garbage collection
+will normally cover just the last four generations (and this of course
+means just the space occupied by the changes made in those generations).  Once daily the collection will cover eight generations,
+once monthly twelve, and annually sixteen,
+<P>
+5.  LOGIC, KNOWLEDGE REPRESENTATION, AND TYPES
+<P>
+    In this section we address the soft centre of our architectural
+--   sandwich.  It is a matter of aspirations rather than achievements, and so the purpose of this section is to describe what I am looking for,
+to give my best ideas on where it might be found, and some reason to
+suppose that it can be found.
+<P>
+The behaviour of the Knowledge Base System depends importantly upon the
+function "head_of head_of persistent_heap" (see section4.5).
+This is subject to mo(Fificatio-n by the user-(or by itself on behalf of the user), and might at the end of application development have its
+capabilities reduced to set the application in concrete.
+More likely however, the end-user will wish to continue evolution of the system and the full functionality will be retained.
+<P>
+The behaviour of this system can be considered from two different
+viewpoints.
+<P>
+It is more easily understood from the viewpoint of 'end-user-
+application-development-system".
+From this perspective, the "function" is a sophisticated structure editor with which the user edits the persistent heap.
+The persistent heap is in this case a single (highly
+structured) data object.
+A powerful type system enables the behaviour
+of the editor to be adjusted automatically according to the type of the
+object under consideration.
+This enables the functionality of an
+incremental programming system, and a database query language to be
+embedded into the structure editor.
+Type information provides a
+generalised way of specifying a mapping between the form of data as
+stored, and the form of data as viewed by the user.        
+It provides a unified system for derivation of values from the database, for transformation from user oriented representations to engine oriented representations (including compilation), and includes all forms of integrity checking.
+Persistence is of course, built in.
+From this
+perspective, the function performed by a "directory", would be covered
+by something like a "set of bindings", a data type fully comprehended
+by the programming system, To select a directory, is to nominate a set
+of bindings as providing the current name environment,
+<P>
+This perspective, viewing the system in programming language terms,
+does not carry us quite into the "fifth generation".       The persistent
+heap does not qualify as a "Knowledge Base" until it is perceived as
+expressing a proposition, and manipulated in a manner consistent with
+that perception,   For this purpose we seek, not a programming language,
+but a logic (embedded within which we may hope to find a programming
+language).  This perspective need make no difference whatever to the
+stored form of the data.    A directory becomes a set (conjunction) of
+bindings (interpreted as conditionals).         Nominating the current
+directory is interpreted as adopting a hypothesis, or making an
+assumption.  A view on the database, becomes a deduction from the
+knowledge base (this does not imply that the way such things are
+computed is changed).
+<P>
+I was hoping to decompose this problem into two layers, the lower
+dealing with the "programming" system, and the upper with the "logic",
+However, a type system as powerful as that suggested above must be so
+close to a logic that little benefit would be obtained by that
+stratification.  Another possible stratification might be to take a
+type-free functional programming system first, and then add the types
+and the logic together.
+I now believe that a simpler and more elegant
+solution will be obtained by going straight for the logic.
+<P>
+The logic is the type system, and is expected to provide most of what
+is provided by type systems and metadata, in both logics and
+programming/database systems.  A discussion of type systems therefore
+ensues, culminating in some suggestions on how a logic may be devised
+which satisfies my perception of the requirements for an Intelligent
+Knowledge Based System.
+<P>
+5.1  Type Systems
+<P>
+The word "type" is used both in Mathematical Logic and in Computer
+Science in the names of systems with quite varied purposes.    Alongside
+these systems there are alternative solutions to similar problems which
+do not use "types", either in name or in form, there are similar
+systems which look in some respects like type systems, perform some of
+the same functions, but do not call themselves type systems.
+<P>
+To assist in a useful analysis we can identify a number of objectives
+addressed by type systems, and a number of features of those type
+systems.  The following classifications are not offered as definitive,
+but are chosen to facilitate the discussion which follows.
+<P>
+5.1.1     Objectives of Type Systems
+<OL>
+<LI>To avoid contradictions in a Logic.
+<LI>To facilitate detection of errors in computer programs
+<LI>To provide a language for data description
+<LI>To facilitate proofs of the correctness of computer programs
+</OL>
+5.1.2     Characteristics of Type Systems
+<P>
+<OL>
+<LI>Strong/Weak
+<P>
+These adjectives are used to describe type systems for programming
+           languages.
+<P>
+A <B>Strong</B> type system is one which permits all type errors to be
+detected.
+<P>
+A <B>Weak</B> type system is in which type errors are not necessarily
+detected either during compilation or when the program is run.
+<P>
+<LI>Dynamic/Static
+<P>A <B>Static</B> type system is one in which all type errors are detected
+during compilation.
+<P>
+A <B>Dynamic</B> type system is one in which some type errors may be
+detected during execution of the program.
+<P>
+<LI>Monomorphic/Polymorphic
+<P>
+A <B>Monomorphic</B> type system is one in which each function definition
+describes a function with a single f ixed type.
+<P>
+A <B>Polymorphic</B> type system is one in which a function definition
+may describe a collection of functions of different types, or a
+single function which will accept arguments and deliver values of
+more than one type,
+<P>
+<LI>Loose/Tight
+<P>
+A type system is <B>Tight</B> if it can be used to specify completely the
+required functional characteristics of a program.  By this we
+mean that the type system can be used to fully verify the
+correctness of the program.
+<P>
+A type system is <B>Loose</B> if the constraints expressible in the type
+system are not sufficient to competely specify the required
+behaviour of the program.
+<P>
+<LI>Decidable/Semidecidable
+<P>
+A static type system is usually completely decidable
+</OL>
+<P>
+5.l.3     Conflicts and Confusions
+<P>
+<OL>
+<LI>Consistency verses Reflexion
+<P>
+The  first type system was introduced by Russell to make his logic
+     consistent.
+In [Rus08] he states:
+<BLOCKQUOTE>
+Thus all our contradictions have in comnion the assumption of a
+totality such that, if it were legitimate, it would at once be
+enlarged by new members defined in terms of itself.
+</BLOCKQUOTE>
+This leads us to the rule: "Whatever involves all of a collection
+must not be one of the collection"...'
+<P>
+In Computer Science however, we find numerous cases where it is
+valuable to violate this principle.
+In the untyped lambda calculus we find a domain 'containing' in some sense, its own function space.
+My 'knowledge base' involves a function which is applied to itself.     The requirements of type dynamism or polymorphism suggest that a "universal type" (which would include itself) is desirable, and a step in this direction has been taken in Pebble [Bur84], with its type 'type'.
+<P>
+Nothwithstanding the pressure from Computer Science, I know of no type
+theory as a logic which contains a universal type and is consistent,
+Martin-Lofls Intuitionistic Type Theory [Mar] originally included such
+a type, but was shown to be inconsistent.       Indeed, to include a
+universal type seems almost to vitiate the whole purpose of having a
+type system at all.   Even where classical set theory is formalised
+without using a type theory, Russell's rule above is adhered to (e,g,
+in [Zer08]).
+<P>
+The problem is then: how do we reason about a highly reflexive system
+without running into contradictions?
+<P>
+<LI>Dynamic verses Static
+<P>
+Two recent Theses, [Nik84] and [Owo84], though not using the
+terminology I have used here (since "strong" in [Nik84] appears to mean "strong and static" in my sense, and "weak" to include "strong but dynamic" in my sense) have argued eloquently in favour of respectively static ([Nik841, but there called "strong") and dynamic ([Owo841) type systems.
+The function "head of head of persistent_heap" is a perfect
+example of the sort of function which Owoso uses to justify dynamic
+types, since it must operate intelligently on objects of any type.
+Can we reconcile the benefits of complete type checking at compile time with the need for complete flexibility at run time?
+<P>
+There are some indications that this should be possible.
+In Algol68, the Union of Modes construct shows how a small amount of flexibility can be introduced without compromising compile time verification.
+This is done by providing a syntax recognisable to the compiler which enables a union of types to be coerced to a specific type, subject to a check inserted by the compiler on the type of the object.
+A more powerful system is found in the "disjoint union of a family of types" introduced by Per Martin-Lof in his intuitionistic type theory
+[Mar75,82], and taken up by Burstall and Lampson in Pebble (as
+"dependent products" [Bur84]).  These suggest that sufficient
+flexibility may be obtainable in a strong statically typed language.
+In Pebble, for example the type: "(t type) xx t" looks as if it might
+serve instead of dynamic types (though I don't think it quite does).
+<P>
+<LI>Optional verses Mandatory
+<P>
+In Miranda, David Turner proposes a language in which type declarations are optional.
+In this case the compiler is able to undertake static
+type checking without the need of declarations.
+This is viewed as a considerable merit in the language, providing much of the benefit of type declarations without the pain.
+When prototyping this could make program development faster.
+At the other end of a spectrum, however,
+where we are particularly anxious to ensure correctness, we might wish
+to use the type system to guarantee correctness.  In this case the type
+of a function is its specification, and correctness against the
+specification can hardly be assured if the type was not declared, In
+this latter case, not only is the type required to be declared, but the
+type correctness may not be decidable, and a proof of correctness may
+have to be supplied.  In considering "intelligent" systems, we may even
+require the system to be able to program itself, i.e., taking the type
+(as specification) only, to discover both the algorithm, and the proof
+of correctness,
+<P>
+Ideally the user should be able to decide this for himself.       If we
+chose a type system which provides a "universal type" as well as the
+sort of expressiveness found in "intuitionistic type theory" then the
+user might be given the liberty to specify his program as precisely or
+as loosely as he choses and accept a corresponding level of error
+checking by the system.
+<P>
+<LI>Typed verses untyped
+<P>
+Its not even clear that a type system is the right way to achieve what
+we require.  Clearly we need a way of expressing meta-information for a
+wide variety of purposes,     But this can be done by means other than
+type systems,   For example an untyped combinatory logic could be used,
+and seems superficially appropriate to an untyped combinator engine.
+</OL>
+<P>
+5.2  Russell's Theory of Types
+<P>
+In 1901 Bertrand Russell discovered a paradox in Frege's 'Grundlagen'
+     which he later communicated to Frege in [Rus02].
+This paradox became known as Russell's Paradox, and concerns the incoherence of the notion of 'the set containing every set which does not contain itself', and
+     hence of any system of logic in which the existence of such a set may
+     be inferred. (such as that of Frege)
+<P>
+Russell then proceeded to spend the best part of the next seven years
+in developing his 'Theory of Types' [Rus08].  The purpose of this was to
+provide a consistent logic suitable as a foundation for classical
+mathematics, together with a satisfactory philosophical justification
+(i.e. one which supported his thesis that mathematics is just logic).
+<P>
+Though the details and complexities of Russell's system are no longer
+with us, the basic idea is established as a means of constructing a
+consistent logic (even the name 'first order predicate logic' seems to
+aknowledge the philosophical validity of type theory before it decides
+to steer clear), and has found its way into Cornputer Science (which in any case, Russell might have argued, is just applied logic).
+<P>
+The basic idea is that we should learn to walk before we try to run,
+or that before we can construct an object, we must first have
+constructed all the objects used in its definition.
+<P>
+What is the significance of all this?   Well, for my present purposes it
+highlights a problem.   If we need a logic for knowledge representation
+which is able to express reasoning about the algorithms which we apply
+to the persistent heap, then we find a conflict between the need for
+flexibility in the type system, and the need for consistency in the
+logic. owosa, in [Owo841. argues that to provide utilities which
+operate on a persistent heap we must have "dynamic types".    This means
+that names used in algorithms may refer to values whos type is not
+known at compile time,
+<P>
+A type system in which some names are exempt from constraint provides
+no protection from paradoxes, and is logically pretty much the same as
+a Theory of Types which includes a Universal Type.  This flies right in
+the face of Russell's essential insight-that the logical paradoxes are
+all associated with the use of such totalities.     What we need is a
+logic with a type system which includes a universal type which will
+serve for dynamic typing, but which is still consistent.
+<P>
+5.3  Axiomatic Set Theory
+<P>
+While Russell was finding a way round the paradoxes from a primarily
+     philosophical viewpoint, Zermelo was patching up set theory from a more
+     practical mathematical standpoint.   In [Zer081 he published, at about
+     the same time as Russell published his type theory, an axiom system for
+     set theory,    This avoided Russell's paradox without using a type
+     system, but not without mechanisms which ensured its adherance to the
+     principle enunciated by Russell,   In this theory the axioms prescribe
+     carefully how new sets may be constructed from sets already available,
+     and proscribe sets which contain themselves (and hence the set of all
+     sets, the set theoretic variant of the type of all types).
+<P>
+This demonstrates that a type theory is not the only way to avoid
+contradictions, but doesn't help us past Russell's principle.
+<P>
+4 Intuitionistic Type Theory
+<P>
+   More recently an Intuitionistic Type Theory has been developed by
+   Per Martin-Lof ([Mar75,821 as a foundation
+<P>
+5.5  Combinatory Logic
+<P>
+     The essential ideas behind Combinatory Logic were first presented to
+     the Gottingen Mathematical Society by Moses Schonf inkel in 1920 and
+     published in [Sch24].     A recent concise account may be found in
+     [Lam80], or in greater depth in [Hin72].
+Combinatory logic, now
+     available in type and untyped varieties is a logic which avoids the use
+     of variables and takes the function as its basic element.         It is
+     closely related to Church's Lambda Calculus and hence to pure
+     functional programming languages.  This latter connection has recently
+     resulted in an upsurge of interest in applying cofnbinators for the
+     implementation of functional languages ([Tur79a,b,84]).
+<P>
+Since combinatory logic permits functions to be in the domain of other
+functions, it is as expressive as classical set theory, and is
+therefore a contender for our present purposes.
+It has the advantage
+of untyped formulations which functions to be applied not only to
+other functions, but even to themselves, which is necessitated by our proposed architecture.  Our machine actually is a combinator engine and
+this would therefore strongly suggest that a combinatory logic would be
+appropriate.
+<P>
+5.6 Types in Programming Languages
+<P>
+5.7  Data Dictionaries
+<P>
+     As catch all depositories for "meta-datal' are useful places to look to
+     broaden our view of what we may expect from a comprehensive type
+     system,   In a Data Dictionary one can store virtually any knowledge.
+     Their limitations are apparent not in what you may put in them but in
+     what may be done with the information.
+<P>
+At a primitive level they are used to store information which looks
+very like the type information in a programming language.  In
+particular, the details of the stored form of the data in the database.
+<P>
+This may be supplemented by various other sorts of information which
+enable the data management system to perform automatically functions
+which would otherwise have to be programmed in detail.  So not only the
+stored forms of data but also the required displayed forms will be
+recorded,   Depending on the degree of sophistication of the data
+management system this may involve simple data conversion, or complex
+derived viewing mechanisms,   It may also involve forms for viewing or
+updating the data, and constraints to which updates on the data must
+conform,    The emphasis is on declarative specifications, but
+dictionaries may also allow procedures to be nominated for various
+processing on the data,
+<P>
+The data dictionary may provide for recording a "conceptual model"
+which relates this stored data to the real world,      In a database
+system, the conceptual models are likely to be strictly documentary.
+In a knowledge base we would expect the system to be able to utilise
+the conceptual information as well.
+<P>
+Just how much of this can be fitted into a "type system"?  Well if we
+identify types and propositions, and allow propositions about
+algorithms, all of it.
+<P>
+5.8  Frames, Scripts, Semantic Nets....
+<P>
+     Texts on AI (e.g, [Bar811) compare and constrast different knowledge
+     representation schemes, among which "Logic" (generally meaning first
+     order predicate logic) usually numbers.     Some texts show that the
+     semantics of various of these representation schemes may be explained
+     by providing a mapping from these schemes into a suitable logic.   The
+     logic which we seek must satisfy the stronger claim that it strictly
+     subsumes most other forms of knowledge representation,
+<P>
+In database systems we expect good support for separation between the
+stored form of data, and the end-user's view of the data.  This is also
+expected in our Knowledge Management system.
+We may design a data
+type which correponds to any chosen form of knowledge representation,
+Defining the semantics of such a data type as a knowledge
+representation system simply amounts to defining a function which maps
+the data type onto a known representation,    Alternatively rules of
+inference may be specified which operate directly on the data type in
+question.
+<P>
+We claim therefore that a "satisfactory" logic does not compete with
+other forms of knowledge representation, but rather subsumes them,
+allowing the user or "knowledge enginee@"" to determine the "stored
+form" most appropriate to the sort of knowledge in question.       This encompasses even procedural forms of knowledge representation, since algorithms (and propositions and proofs) are required to be "first class objects".
+<P>
+5.9 Putting it all together
+<P>
+     It's easy to fantasise about an ideal unspecified language which is all
+     things to all men.  What grounds are there for supposing that any logic
+     meeting my requirements can be devised?
+<P>
+In terms of expressiveness I believe there is little room for doubt.
+Logic demonstrates time and time again, that even the highest levels of
+expressiveness can be attained with a very small number of simple
+primitives.  The danger is that any logic sufficiently expressive will
+be neither consistent nor mechanisable.   This is particularly worrying
+when we include in our requirements the need for a "universal type",
+which destroys the effectiveness of a type system in safeguarding
+against paradoxes.
+<P>
+However, type systems are not the only way to arrive at consistency, I
+propose therefore that consistency be ensured by means other than the
+type system,   Adding a type system to a logic which is already
+consistent should permit the universal type to be retained without
+giving rise to inconsistency.  A suitable logic in this case might be
+derived from one of the variants of untyped combinatory logic described
+in [Hin72] chapter 10.
+<P>
+Furthermore, if we examine the purpose of the logic, we find reason for
+optimism.   The logic is essentially describing the behaviour of models
+of the universe which consist of finite rooted combinator graphs, and
+effectively computable functions on such graphs (also reresented as
+finite rooted combinator graphs).     If we take care to bear in mind this
+interpretation as we define the logic, and ensure that all the
+constructions and rules of derivation are consistent with that
+interpretation, then we are assured of a concrete interpretation of all
+the formulae of the logic, i.e. a model.
+<P>
+This gives us reasonable grounds for expecting a consistency proof
+analogous to that obtained for constructive arithmetic using G&ouml;del's
+"functions of finite type", defined using combinators (for an outline
+of such a proof see [Hin72] chapter 11),
+<P>
+Mechanisability may perhaps also be assured by keeping in mind the
+constructive interpretation, The predicates definable in the logic
+must all correspond to recursively enumerable sets, This should ensure
+at least a theoretical mechanisability.  We may hope to convert this
+into a practically effective mechanisability by judicious use of the
+type system, which will enable search spaces to be determined more
+precisely.   Introduction of the indecisive pseudo-combinator is also
+intended to expedite mechanisation.
+<HR>
+<CENTER>
+<A HREF="index.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../../rbj.htm">
+<IMG SRC="../../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A>
+written 1985/7/7 HTML 1996/6/6 modified 1997/12/1
+</CENTER>
+</BODY>
+</HTML>

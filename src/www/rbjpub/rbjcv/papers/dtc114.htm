@@ -1,0 +1,386 @@
+<HTML>
+<HEAD>
+<TITLE>Logical foundations and formal verification - TYPES AND SPECIFICATIONS</TITLE>
+<META name="keywords" content="RbJ FoundationS PrograM VerificatioN LogiC">
+<META name="description" content="
+This position paper presents an approach to the design and development
+of environments for the production of computer systems for which we
+require to have very high degrees of assurance of correctness.
+">
+</HEAD>
+<BODY>
+<A HREF="dtc110.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<P>
+4.    TYPES AND SPECIFICATIONS
+<P>
+4.1   Introduction
+<P>
+By adding "syntactic sugar" and by building a library of definitions,
+our primitive language can be built up into a more sophisticated and
+usable one,   The process of building a functional programming language
+in this way is well understood (or rather, the inverse problem, of
+implementing  a functional language using combinators).     For details see
+[Tur79a,b],  In our case the process is complicated by the need to use
+combinators  for everything, whereas in implementations of functional
+languages combinators have been used only for passing parameters, and
+other environmental data.   Examples of the use of combinators for
+arithmetic may be found in [Cur72] or [Hin72].
+<P>
+In this section we consider what it is that we are to take for
+sets, predicates, types and specifications, and how these may be
+constructed in our primitive formal system.
+<P>
+In first approaching this problem the value of the distinction between
+predicates and types was not clear.
+<P>
+The argument against a distinction between types and predicates in this
+context is as follows.
+<P>
+In logic, a primary role of types has been to constrain ontological
+commitment in order to secure the consistency of a logic.     This has
+proved to be a simple and effective way of avoiding logical paradoxes.
+More recently radical divergence from this limited role has been
+adopted by extending the expressiveness of type systems and identifying
+types with propositions ([Mar75,82],[Con80]).
+<P>
+The use of type systems for securing consistency inhibits abstraction
+by guarding against the circularities inherent in polymorphism.  For
+this reason we have adopted a type-free logical core (which is
+nevertheless consistent).  In our view, whatever its technical merits,
+the identification of types with propositions is counter-intuitive, and
+a type system extended could not be more expressive than we would
+expect to be by the use of predicates in our logic.     It is therefore
+not clear what we could expect to express in our logic by introducing
+types, which could not be expressed without them,
+<P>
+We have in fact found (what we consider to be) sufficient reason for
+introducing types as distinct from predicates, even though in our logic
+both types   and predicates will correspond (in their own ways) to
+recursively  enumerable sets of terms.   The reason lies primarily in the
+opacity of   terms representing predicates in our formalism.   This
+renders much more difficult the definition of functions whose domain is
+intended to  be a type of types, and makes all reasoning about types,
+and hence the properties of functions very tedious.
+<P>
+We therefore propose to introduce a type system as an encoding of
+predicates in a form which more transparently represents the intended
+interpretation of the terms which are members of the type.       This is
+intended to provide the necessary transparency of the specifications
+expressed in our system.   It will also provide a means of expressing,
+proving and applying derived rules of inference.  We observe that,
+while "syntactic sugar" might be used to make specifications more
+transparent to the user, it is not sufficient to enable specifications
+to be data values upon which operations may (transparently) be
+performed.
+<P>
+It may therefore be noted that while strongly motivated by ideas
+closely related to intuitionism, our formal system, and our notion of
+'type' has very little in common with the presentation of intuitionism
+due to Martin-Lof. [Mar75,82]
+<P>
+Within our framework any number of independent type systems could be
+introduced without danger of inconsistency.         Each system would
+represent an alternative encoding of the recursively enumerable sets of
+combinatory terms.  In this way we propose to provide coherent support
+for the linguistic pluralism necessary to provide optimal application
+development productivity.
+<P>
+In our system however, one type system will have a particular priority
+in having been designed to express derived rules of inference, and in
+having its type of derived rules built into an additional rule of
+inference permitting the application of any rule which has been proven
+sound.
+<P>
+By a derived rule in this context we do not mean derived rule in the
+sense in which the term is used in LCF ([Gor79]) and its variants. In
+such languages a derived rule is a procedure written in the
+metalanguage ML,, (possibly using a library of "tactics" and
+"tacticals"), which computes a proof,   In such systems there is no way
+of shortening a proof, but there are powerful facilities for automatic
+generation of proofs.    In our system the primitive formalism is so
+primitive (more primitive than LCF), that proofs, even if automatically
+generated, would be too complex if genuine shortcuts were not
+available.
+<P>
+We therefore propose that any rule of inference which can be proven
+sound may be invoked to establish a theorem without the need to furnish
+a proof in the primitive system.   A similar feature has been included
+in the Boyer-Moore theorem prover, [Boy81].
+<P>
+4.2  Recursive functions
+<P>
+Having chosen an encoding of terms into terms with distinct normal
+forms (this is a necessary, but possibly not a sufficient condition) we
+can represent recursive functions over terms, by terms which when
+applied to the encoding of a term in the domain, reduce to the encoding
+of the image of that term in the codomain.
+<P>
+That this is not possible without such an encoding follows from the
+Church-Rosser theorem, which has the consequence that two terms with
+similar normal form have the same image under any third combinatory
+term.,  The encoding enables terms with the same normal form to be
+distinguished by mapping them onto terms with distinct normal forms,
+This encoding algorithm is not, (as noted in section 3.6). expressible
+as a term, though there is a term (described above) which effects a
+decode (modulo convertibility), and encoding over limited subsets of
+the terms is expressible (notably over (True,False} or over encodings).
+<P>
+In the following subsections we show how type systems may be
+established by defining various operations over partial recursive
+functions which we describe as "type constructors".   These are strictly
+the denotations of type constructors (unless we consider the special
+type-system with the identity function as a semantic mapping).  Our
+terminology is still sub judice.
+<P>
+4.3  Recursive sets
+<P>
+By choosing representatives for the boolean values "true" and "false",
+(e.g. those given in section 3). we may represent characteristic
+functions by terms which represent boolean valued total recursive
+functions.   These characteristic functions are the characteristic
+functions of recursive sets of terms.
+<P>
+Type constructors are easy to define over recursive sets,   For example
+the following constructors can easily be seen to be definable as terms.
+<P>
+The unit type constructor U such that:
+<P>
+U 't' is the characteristic function of {t}
+<P>
+for any term t, is just an algorithm for checking (intensional)
+equality of terms.
+<P>
+For each dyadic truth function there is a corresponding operation on
+recursive characteristic functions which can be simply constructed from
+the term representing a (possibly strict) implementation of the truth
+function (such as those in section 3.6), viz:
+<PRE>
+Union X Y Z         ==  (X Z) Or (Y Z)
+
+Intersection X Y Z  ==  (X Z) And (Y z)
+</PRE>
+Also:
+<PRE>
+Complement X Y      ==   Not (X Y)
+</PRE>
+Under these operations recursive sets form a boolean algebra.
+<P>
+Unfortunately, as soon as we wish to introduce sets which are not
+decidable (with characteristic functions which are not total), the ease
+of constructing operators over types disappears.        In the case of
+partial recursive functions non-strict logical operators are required,
+which can only be defined over encodings of characteristic functions.
+<P>
+4.4  Recursively enumerable sets
+<P>
+Partial characteristic functions are mappings which for any encoded
+term will yield either a termwhich reduces to the encoding of true, or
+of false, or a term which has no normal form.  Such functions may be
+regarded as representing partial predicates, which correspond to pairs
+of disjoint recursively enumerable sets.
+<P>
+These are effectively closed under all truth functional logical
+operations and hence all these operations are themselves representable
+as terms.
+<P>
+Since partial characteristic functions sometimes fail to terminate, and
+the logical operators defined in section 3.6 are strict in their first
+argument, the methods used in section 4.3 fail to give satisfactory
+implementations of operations over recursively enumerable sets.
+<P>
+Furthermore, logical operations which are strict in neither argument
+are not expressible directly as terms in pure combinatory logic.  More
+precisely, there is no term O such that for any pair of terms t,u:
+<PRE>
+|- O t u        iff |-t or |-u
+</PRE>
+We can express this function however if we use encodings of t and u.
+If t and u are available in an encoded form, then their non termination
+can be guarded against by emulating interleaved evaluation.   So there
+is a term Ore (representing Or over encodings) such that for any pair
+of terms t,u:
+<PRE>
+|- 't' Ore 'u'             iff |-t or |-u
+</PRE>
+Furthermore, Ore can be defined in such a way that:
+<PRE>
+|- Not ('t' Ore 'u')      iff |- Not 't' and |- Not 'u'
+</PRE>
+So that Ande (And over encodings) may be defined:
+<PRE>
+Ande X Y    == Not ((Mk_app 'Not' X) Ore (Mk_app 'Not' Y))
+</PRE>
+(giving: Ande 'X' 'Y' = Not ('Not X' Ore 'Not Y'))
+<P>
+By the use of encodings we can therefore express non-strict logical
+operations, with which well behaved operations over partial
+characteristic functions may be defined. (To do this we need a partial
+encoding function EncEnc, which can be defined over encoded terms.  The
+definition is omitted.)
+<PRE>
+(X Orp Y) Z   == (Mk app X (EncEnc Z)) Ore (Mk app Y (EncEnc Z))
+</PRE>
+(giving: ('X' Orp 'Y') 'Z' = 'X 'Z'' Ore 'Y 'Z''
+<PRE>
+(X Andp Y) Z  == (Mk_app X (EncEnc Z)) Ande (Mk_app Y (EncEnc Z))
+</PRE>
+(giving: ('X' Andp 'Y') 'Z' == 'X 'Z'' Ande  'X 'Z'')
+<P>
+Orp and Andp correspond to the operations of union and intersection of
+recursively enumerable sets.
+<PRE>
+Notp X Y          Not (X Y)
+</PRE>
+Notp provides a complement, but not a true complement.   The classical
+complement of a recursively enumerable set is not in general
+recursively enumerable.       The recursively enumerable set whose
+characteristic function is obtained by applying Notp to some
+characteristic function is not uniquely determined by the recursively
+enumerable set determined by the characteristic function.  An
+interpretation of Notp in terms of operations on sets can only be given
+if partial characteristic functions are taken to represent, not single
+recursively enumerable sets, but pairs of disjoint recursively
+enumerable sets.   In this case the logical operators correspond to set
+operations as follows:
+<PRE>
+&lt;al,a2&gt; Andp &lt;bl,b2&gt; =&gt; &lt;intersection of al and bl,union of a2 and b2&gt;
+
+&lt;al,a2&gt; Orp &lt;bl,b2&gt; =&gt; &lt;union of al and bl,intersection of a2 and b2&gt;
+
+Notp &lt;a,b&gt; =&gt; &lt;b,a&gt;
+</PRE>
+The logic thus obtained is not classical.   For example, the law of the
+excluded middle does not hold.
+<P>
+Nor is it intuitionistic, since:
+<PRE>
+      A = not not A
+</PRE>
+It is a three valued logic which, in its finite operations, corresponds
+to the three valued logic due to Kleene.
+<P>
+A merit of considering types as partial characteristic functions in
+this way, with complement defined, is that the total characteristic
+functions are also closed under these operations, and the restriction
+of these operations to total characteristic functions gives a true
+complement and a classical logic.
+<P>
+Other type constructors can be defined from these.
+<P>
+Using the pairing operation defined in section 3.6 we can def ine
+a product type constructor:
+<PRE>
+(X prod Y) Z ==      (Mk_app X (EncEnc (Mk_app 'Fst' Z))
+                         Andp (Mk_app Y (EncEnc (Mk_app 'Snd' Z))
+</PRE>
+(giving: ('X' prod 'Y') 'Z' = 'X '(Fst Z) Andp 'Y '(Snd Z)'')
+<P>
+And a dependent product type constructor:
+<PRE>
+(X dprod Y) Z ==     (Mk app X (EncEnc (Mk_app 'Fst' Z))
+                    Anip(Mk_app (Mk_app Y (Mk_app 'Fst' Z))
+                                  (EncEnc (Mk_app 'Snd' Z)))
+</PRE>
+where Y is a function which maps a value of type X onto a type,
+<P>
+The dependent product type constructor takes any type X, and a function
+which maps elements of type X to types, and delivers the type of pairs
+such that the type of the first component is X and the type of the
+second is determined by the value of the first component under Y,
+Dependent products types are important as candidate representatives of
+abstract data types.
+<P>
+The idea for dependent product constructors comes (to me) from Martin-
+Lof's ITT [Mar75,82], (where it is called "disjoint union of a family
+of types"), similar type constructors also occur (among other places)
+in PL/CV3 [Con80] and Pebble [Bur84], from which our terminology is
+derived.
+<P>
+4.5  Function spaces
+<P>
+The definition of function space constructors is more difficult.
+<P>
+We have so far been rather vague about which terms may be used as
+representatives of recursively enumerable sets.       This is possible
+because all the type constructors we have illustrated so far behave
+well even if all terms are taken to represent recursively enumerable
+sets, Every term can be interpreted as determining a recursively
+enumerable set of terms, and so we could take the "type of types" to be
+the universe (represented by the term (K K)).   When we come to
+constructing function spaces however, we have found no construction
+which is as insensitive to the representative chosen as is the case for
+the, previous constructors.
+<P>
+A key question, (but not one which affects the viability of our
+proposal) is whether the space (A->B) of (total) computable functions
+from a recursively enumerable domain A into recursively enumerable
+codomain B is in general recursively enumerable.   Similarly we would
+like to know whether dependent function spaces (which we write A-?>B)
+are recursively enumerable.   If these spaces are enumerable, and if the
+operation of forming a representative combinator for a (dependent)
+function space from representative of the domain and codomains is
+computable, then we need only to determine one of the combinators which
+represents this computation and we have the basis for a maximally
+expressive type system.
+<P>
+If the function spaces are not enumerable, or if the type constructors
+are not effective then we will have to settle for an approximation
+(from below,  ie. a subset) to these spaces for which effective
+constructors can be discovered.  We have not yet resolved this problem.
+<P>
+4.6.  Derived rules of inference
+<P>
+Once we have decided how to def ine function spaces we expect to be able
+to use the function space constructor in an extra inference rule which
+will legitimise the use of derived rules of inference.
+<P>
+Since
+<PRE>
+|- Decode 'Z' iff |-Z
+</PRE>
+"Decode" is the type of theorems.
+<P>
+Consequently, for any encoded type X,
+<PRE>
+|- Decode ('X' -> 'Decode') 'Y'
+</PRE>
+and
+<PRE>
+|- X 'Z'
+</PRE>
+implies
+<PRE>
+|- Y Z
+</PRE>
+i.e. if Y maps elements of X into theorems, and Z is in X, then Y Z is
+a theorem.   We therefore propose to add this one further rule of
+inference,  which, provided our definitions are carried through
+correctly, will add no further theorems but will permit shorter proofs.
+<P>
+We should then be able to establish type inference rules as derived
+rules of inference.
+<P>
+4.7  Types as values
+<P>
+If types are identified with encodings of terms which represent partial
+characteristic functions over encodings of terms, they are data values,
+However, the form of such types bears little relationship to the
+constructors which were used to construct the type, If we require to be
+able to examine the type of an object, and discover with ease whether
+or not it is a product (for example) then a more transparent
+representation of types is required.
+<P>
+Such representations may be defined and may be given a denotational
+semantics by furnishing a semantic mapping into our clumsy
+representation.  In particular, for any application language a type
+system may be devised specifically to express the types in that
+language, or to provide an extension of the programming language type
+system sufficiently rich to serve as a specification language,
+<HR>
+<CENTER>
+<A HREF="dtc110.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../../rbj.htm">
+<IMG SRC="../../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A> dated 86/7/15 HTML 96/6/6 edited 96/6/15
+</CENTER></BODY>
+</HTML>

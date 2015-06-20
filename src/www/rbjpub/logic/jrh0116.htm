@@ -1,0 +1,206 @@
+<HTML>
+<HEAD><TITLE>Extensibility and LCF</TITLE>
+</HEAD>
+<BODY BGCOLOR="C0E0E0" LINK="#404080" VLINK="000000">
+<A HREF="jrh0115.htm#end"><IMG SRC="../../rbjgifs/left.gif" ALT=left BORDER=0 ALIGN=LEFT></A>
+<A HREF="jrh0100.htm"><IMG SRC="../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A NAME="start"></A>
+<CENTER><H2>Extensibility and LCF</H2></CENTER>
+<P>
+ <P>
+<A NAME="par159"></A>
+As de Bruijn says, we want to use abbreviations for common patterns of
+inference. The patterns of inference that are common may, of course, depend on
+the particular piece of mathematics being formalized, so it's desirable to
+allow ordinary users to extend the inference system, while at the same time
+being confident that only correct inferences are made. LCF realizes this desire
+exactly. Arbitrary programs can be written to prove a fact, perhaps from
+several premisses; the only restriction being that although terms and types may
+be built up, and theorems decomposed, quite arbitrarily, theorems can only be
+<EM> created</EM> by the primitive inference rules. It is not necessary that the
+program should prove some fact in a uniform way; it might, depending on the
+form of the fact to be proved, invoke one of several quite different
+algorithms. This is not always appreciated by outsiders, as one can see from
+the following assertion by <A HREF="jrh01b.htm#davis-schwartz"><EM>[davis-schwartz]</EM></A>: 'an LCF tactical is limited
+to a fixed combination of existing rules of inference'. It is <EM> not</EM>, and
+therein lies the value of the LCF approach as compared with simple macro
+languages.<A HREF="jrh01f.htm#40"><SUP>40</SUP></A>
+<P>
+<A NAME="par160"></A>
+Just how practical is this idea of breaking all inferences down to primitives?
+At first sight, when one considers the enormous number of special-purpose
+algorithms and the likely cost of generating formal proofs, it looks completely
+impractical; <A HREF="jrh01b.htm#armando-building"><EM>[armando-building]</EM></A> opine that it 'turns out to be both
+unnatural and ineffective' (though apparently on general grounds rather than on
+the evidence of having tried). And indeed, not all LCF systems have stuck with
+the rigorous policy of decomposing all inference to the primitives. For
+example, Nuprl users have quite happily added extra proof procedures for linear
+arithmetic or tautologies when the need arises. However these human factors do
+not provide hard evidence about feasibility.<A HREF="jrh01f.htm#41"><SUP>41</SUP></A> The users of the HOL system at least have ploughed
+their own furrow, implementing a variety of quite sophisticated proof
+techniques, all decomposing to primitive inferences. We are now able to step
+back and survey the lessons. There are two questions: whether it is a
+reasonably tractable task for the programmer, and whether the resulting program
+is acceptably efficient (the latter question is closely related to our previous
+discussion of feasibility). It has emerged that many HOL derived rules are
+feasible and practical. We can identify two clear reasons why the apparent
+difficulties are often not really serious.
+<P>
+<A NAME="par161"></A>
+First, complex patterns of inference can be encoded as single theorems, proved
+once and for all. These can then be instantiated for the case in hand rather
+cheaply. This idea has long been used by HOL experts; an early example is given
+by <A HREF="jrh01b.htm#melham-tydef"><EM>[melham-tydef]</EM></A>. A more recent, and complex, example is the following
+<A HREF="jrh01b.htm#harrison-hol93"><EM>[harrison-hol93]</EM></A> justifying a step in a quantifier-elimination procedure
+for the reals; it states that a finite set (list) of polynomials are all
+strictly positive throughout an interval if and only if they are all positive
+at the middle of the interval and are nonzero everywhere in it.
+<P>
+<A NAME="par162"></A>
+ <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> <IMG SRC="../../rbjgifs/forall.gif" ALT=forall BORDER=0>l, a, b<FONT SIZE=5>.</FONT>
+            a &lt; b <IMG SRC="../../rbjgifs/and.gif" ALT=and> <BR>
+              (<IMG SRC="../../rbjgifs/forall.gif" ALT=forall BORDER=0>x<FONT SIZE=5>.</FONT> a &lt; x <IMG SRC="../../rbjgifs/and.gif" ALT=and> x &lt; b <IMG SRC="../../rbjgifs/implies.gif" ALT=implies BORDER=0>
+                       FORALL (POS  x )  l) <BR>
+          =   
+             a &lt; b <IMG SRC="../../rbjgifs/and.gif" ALT=and> <BR>
+             FORALL (POS  (({a + b})/({2})) )  l <IMG SRC="../../rbjgifs/and.gif" ALT=and>  <BR>
+             <IMG SRC="../../rbjgifs/not.gif" ALT=not> <IMG SRC="../../rbjgifs/exists.gif" ALT=exists BORDER=0>x<FONT SIZE=5>.</FONT> a &lt; x <IMG SRC="../../rbjgifs/and.gif" ALT=and> x &lt; b <IMG SRC="../../rbjgifs/and.gif" ALT=and>
+                    EXISTS (ZERO  x )  l
+           
+<P>
+<A NAME="par163"></A>
+<P>
+<A NAME="par164"></A>
+Many special-purpose algorithms can be understood as a natural process of
+transformation on terms or formulas. It is not difficult to store theorems that
+justify the individual steps; the algorithm can often be implemented almost as
+one would do without the primitive inference steps, and generally with a modest
+linear slowdown. This applies, for example, to HOL's implementation of
+rewriting, as well as numerous special-purpose rules that users write in the
+course of their work, e.g. the conversion to differentiate algebraic
+expressions by proof described by <A HREF="jrh01b.htm#harrison-fmsd94"><EM>[harrison-fmsd94]</EM></A>. There are a few
+delicate points over the efficiency of equality testing and the use of
+imperative data structures, but these do not usually cause problems. More
+awkward are situations where a decomposition to primitive inferences may cause
+certain sidecondition checks to be repeated unnecessarily. This is precisely
+analogous to the insertion of array bound checks by some programming language
+compilers, even though they can be seen, by the global logic of the program, to
+be unnecessary. However it is potentially more pernicious, in that it can
+fundamentally change the complexity of certain operations. More experience is
+needed to see if this ever becomes a problem in practice.
+<P>
+<A NAME="par165"></A>
+Second, many other proof procedures rely heavily on <EM> search</EM>. For example,
+automated theorem provers for first order logic often perform thousands, even
+millions, of steps that are purely devoted to <EM> finding</EM> a proof. Once the
+proof is found, it is usually short, and can be translated into HOL inferences
+very easily, and proportionately the burden of translating to primitive
+inferences is practically nil; performance can match any other system written
+in the same language. There are now several tools for first order automation in
+HOL, the earliest being due to <A HREF="jrh01b.htm#kumar-faust"><EM>[kumar-faust]</EM></A>; they all work in this way.
+Actually, it's not even necessary to perform proof search in the same language
+or using the same machine; <A HREF="jrh01b.htm#harrison-thery2"><EM>[harrison-thery2]</EM></A> describe the use of the
+Maple computer algebra system as an oracle, to find solutions to integration
+and factorization problems which can then be checked fairly efficiently inside
+HOL. LCF-style checking of a result discovered by arbitrary other means forms
+an interesting contrast with computational reflection, a technique relying on
+code verification which we consider below. <A HREF="jrh01b.htm#blum-checking"><EM>[blum-checking]</EM></A> has put the
+case for result checking rather than code verification in a more general
+context; an example in a rather different field, computer graphics, is given by
+<A HREF="jrh01b.htm#mehlhorn-checking"><EM>[mehlhorn-checking]</EM></A>. It is not essential that the 'certificate' allowing
+the result to be formally checked should merely be the answer. For example, in
+first order automation, the proof itself is the certificate. Supporting this
+kind of checking may lead to more emphasis on algorithms that produce such
+certificates. For example, <A HREF="jrh01b.htm#pratt-prime"><EM>[pratt-prime]</EM></A> has shown how to give
+polynomially-checkable certificates of primality for natural
+numbers;<A HREF="jrh01f.htm#42"><SUP>42</SUP></A> it would be worth
+investigating similar methods for other symbolic algorithms.
+<P>
+<A NAME="par166"></A>
+The combination of these two factors is enough to make it plausible that any
+inference patterns likely to occur in normal mathematics can be performed with
+acceptable efficiency as an LCF-style derived rule. Even for the special
+algorithms often used in system verification, it's not inconceivable that an
+LCF implementation would be fast enough in practice; for example
+<A HREF="jrh01b.htm#boulton-thesis"><EM>[boulton-thesis]</EM></A> describes an implementation of a linear arithmetic
+decision procedure. An apparently difficult case is the BDD algorithm, but a
+HOL implementation has been produced by <A HREF="jrh01b.htm#harrison-cj95"><EM>[harrison-cj95]</EM></A> which exhibits
+only a linear slowdown, albeit a large one (around 50). Moreover, a
+finding/checking separation does offer <EM> some</EM> hope here, since deciding on
+a variable ordering can be done outside the logic, and a good ordering can cut
+the runtime of the main algorithm by orders of magnitude.
+<P>
+<A NAME="par167"></A>
+What are the rules that we can, in principle, implement in the LCF fashion?
+Suppose that a rule whose instances are schematically of the form:
+<P>
+<A NAME="par168"></A>
+<CENTER><TABLE><TR><TD><CENTER> 
+<IMG SRC="../../rbjgifs/ctor.gif" ALT="Gamma"><SUB>1</SUB> <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> <IMG SRC="../../rbjgifs/phi.gif" ALT="phi"><SUB>1</SUB>     ...     <IMG SRC="../../rbjgifs/ctor.gif" ALT="Gamma"><SUB>n</SUB> <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> <IMG SRC="../../rbjgifs/phi.gif" ALT="phi"><SUB>n</SUB></CENTER>
+</TD></TR>
+<TR><TD><HR></TD></TR>
+<TR><TD><CENTER>
+<IMG SRC="../../rbjgifs/ctor.gif" ALT="Gamma"> <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> <IMG SRC="../../rbjgifs/phi.gif" ALT="phi"></CENTER>
+</TD></TR></TABLE></CENTER>
+<P>
+<A NAME="par169"></A>
+<P>
+<A NAME="par170"></A>
+ has the property that whenever the hypotheses are provable, so is the
+conclusion. That is, the rule is conservative or 'admissible'.<A HREF="jrh01f.htm#43"><SUP>43</SUP></A> Assuming also that the rule is describable, i.e.
+recursively enumerable, then it is possible to write an LCF derived rule that
+implements it. It need simply accept the argument theorems, and begin an
+exhaustive proof search for the corresponding conclusion.
+<P>
+<A NAME="par171"></A>
+One might argue that this doesn't <EM> really</EM> implement the rule, since if one
+faked some non-theorems as hypotheses, the corresponding conclusion would not
+result, even though any rule with an unprovable hypothesis is (vacuously)
+admissible. Since in an LCF system one cannot derive such non-theorems, this
+objection is moot. Nevertheless it is clear that few if any practical LCF
+derived rules are going to work in such a fashion. Instead they are going to
+use the form of the hypotheses to construct a proof in the formal system. So
+the rules that are likely to be implemented in practice in LCF are the
+(recursively enumerable and) <EM> derivable</EM> ones. A rule is said to be
+derivable if for any instance, there is a deduction in the formal system of its
+conclusion from the hypotheses. Crudely, we may contrast admissible rules with
+derivable  ones by saying that the latter do not rely on any special properties
+of the turnstile '<IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0>', such as inductive closure of the set of theorems.
+<P>
+<A NAME="par172"></A>
+The fact that the standard LCF approach cannot, in one sense (and as we have
+argued, in a practical sense as well), implement arbitrary admissible rules has
+been pointed out by <A HREF="jrh01b.htm#pollack-extensibility"><EM>[pollack-extensibility]</EM></A>. However, as he also
+stresses, many admissible rules become directly implementable if one has not
+merely the form of the hypotheses, but also information about the way they were
+proved. Consider the Deduction theorem for Hilbert-style proof systems, which
+allows passage from <IMG SRC="../../rbjgifs/ctor.gif" ALT="Gamma"> <IMG SRC="../../rbjgifs/scup.gif" ALT=scup BORDER=0> p <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> q to <IMG SRC="../../rbjgifs/ctor.gif" ALT="Gamma"> <IMG SRC="../../rbjgifs/turnstil.gif" ALT="|-" BORDER=0> p <IMG SRC="../../rbjgifs/implies.gif" ALT=implies BORDER=0> q,
+and 'Skolemization' in certain systems of intuitionistic logic, allowing a step
+from <IMG SRC="../../rbjgifs/forall.gif" ALT=forall BORDER=0>x<FONT SIZE=5>.</FONT> <IMG SRC="../../rbjgifs/exists.gif" ALT=exists BORDER=0>y<FONT SIZE=5>.</FONT> P[x,y] to <IMG SRC="../../rbjgifs/exists.gif" ALT=exists BORDER=0>f<FONT SIZE=5>.</FONT> <IMG SRC="../../rbjgifs/forall.gif" ALT=forall BORDER=0>x<FONT SIZE=5>.</FONT> P[x,f(x)]. Both these can be
+justified by a transformation on the proofs of the hypothesis, but apparently
+not easily just from the form of the hypothesis.
+<P>
+<A NAME="par173"></A>
+It is not clear that there are any useful admissible rules that are not
+derivable for 'reasonable' logics (such as HOL). For example, we are aware of
+only one major theorem proving system that is based on a Hilbert-style
+axiomatization, namely Metamath <A HREF="jrh01b.htm#megill-metamath"><EM>[megill-metamath]</EM></A>, and it uses various
+tricks to avoid use of the Deduction Theorem if possible. If non-derivable
+rules are desired, it is of course possible to store proofs as concrete objects
+with the theorems. Various constructive systems such as Coq and Nuprl are
+already capable of doing that, since extracting programs from proofs is one of
+the key ideas underlying them. Of course there is a question mark over whether
+such manipulations on proofs are computationally practical.
+<P>
+<A NAME="par174"></A>
+<A NAME="end"></A>
+<HR>
+<CENTER>
+<A HREF="jrh0115.htm#end"><IMG SRC="../../rbjgifs/left.gif" ALT=left BORDER=0 ALIGN=LEFT></A>
+<A HREF="jrh0117.htm#start"><IMG SRC="../../rbjgifs/right.gif" ALT=right BORDER=0 ALIGN=RIGHT></A>
+<A HREF="jrh0100.htm"><IMG SRC="../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../index.htm"><IMG SRC="../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+ <A HREF="http://www.abo.fi/~jharriso/">John Harrison</A>
+ 96/8/13; HTML by <A HREF="http://www.rbjones.com/rbjpub/rbj.htm"><IMG SRC=../../rbjgifs/rbjin1.gif BORDER=0 ALIGN=TOP></A> 96/8/16
+</CENTER>
+</BODY></HTML>

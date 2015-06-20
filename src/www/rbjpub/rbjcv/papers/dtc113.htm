@@ -1,0 +1,319 @@
+<HTML>
+<HEAD>
+<TITLE>Logical foundations and formal verification - PRIMITIVE FORMALISATION</TITLE>
+<META name="keywords" content="RbJ FoundationS PrograM VerificatioN LogiC">
+<META name="description" content="
+This position paper presents an approach to the design and development
+of environments for the production of computer systems for which we
+require to have very high degrees of assurance of correctness.
+">
+</HEAD>
+<BODY>
+<A HREF="dtc110.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<P>
+3.   PRIMITIVE FORMALISATION
+<P>
+3.1  Introduction
+<P>
+The primitive formal system is intended to be as simple as possible, so
+that we may have confidence in its consistency, and in the correctness
+of its implementation without either depending on proof in a less well
+founded formal system, or on proof within itself.
+<P>
+The opacity of the syntax and the inefficiency of the proof rules is
+acceptable at this level, both of these problems can be addressed
+without logical extension.
+<P>
+The key characteristics required at this stage are simplicity,
+consistency, expressiveness (with reference to what can be expressed,,
+not how it is expressed), and completeness.
+<P>
+3.2 Syntax
+<PRE>
+atom ::= "S" | "K"
+
+term ::= atom | "(" term term ")"
+
+Henceforth:
+a,b,c...        are metavariables ranging over atoms.
+x,y,t,u,v,w ... are metavariables ranging over terms.
+</PRE>
+3.3  Axioms
+<PRE>
+|- K
+</PRE>
+The "standard interpretations of the terms "S" and "K" are the
+individuals S and K. and the juxtaposition of two terms denotes the
+application of the denotation of the one to the other.  The algebra of
+terms is therefore isomorphic to our domain of interpretation. The
+axiom "|-K" indicates that "K" is our version of the proposition "True".
+<P>
+Theorems of the form (u 't') may be interpreted as assertions that the
+term t satisfies the predicate represented by the term u.
+<P>
+3.4  Inference Rules
+<P>
+We first define the postfix substitution operator [t/a]:
+<PRE>
+     a[t/a] = t
+     b[t/a] = b (provided b!=a)
+     (u v)[t/a] = (u[t/a] v[t/a])
+</PRE>
+our inference rules are then:
+<PRE>
+(K) t[u/a]               |- t[((K u)v)/a]
+(S) t[((u w)(v w))/a]    |- t[(((S u)v)w)/a]
+</PRE>
+These rules are the inverse of the reduction relationship which
+determines the truth of a proposition.  They therefore make theorems of
+just those terms whose denotation is reducible to K. and are therefore
+sound and complete.   Since neither of the inference rules permits the
+derivation of an atomic theorem, "S" is not a theorem and the system is consistent in the sense of Post.
+<P>
+3.5  Abstraction
+<P>
+In the following sections for illustrative purposes we make liberal use
+of informal syntactic abbreviations.  These are not a part of our
+primitive formal system, but we expect in due course to deal with such
+matters in fully formal ways.
+<P>
+The techniques we use for abbreviation fall into two main categories.
+Firstly we allow arbitrary sequences of letters to be used as the names
+of terms in our primitive system,    Such names are introduced by the
+notation:
+<PRE>
+m == U
+</PRE>
+Where m (or ml,m2...) ranges over names which have not previously been
+used on the left of a definition, and u is a term of our primitive
+system expressed either directly or using our conventions for
+abbreviation.   A name thus defined may then be used in all those places
+where the term on the right hand side of its def inition would otherwise
+have been permitted,
+<P>
+Our metavariables a,b... and t,u... will henceforth range over atoms
+and terms, and over abbreviations of atoms and terms.  m,ml,m2... will
+be used to range over previously undefined names, and n,nl,n2... over
+arbitrary names.
+<P>
+The second technique is the use of suggestive informally defined
+alternative syntax for important constructs, notably for abstraction
+and for recursive function definitions.
+<P>
+Other abbreviations include, dropping brackets (taking application as
+left associative), and using infix notation for some dyadic operations.
+<P>
+The identity function may be defined in terms of S and K:
+<PRE>
+I   ==          ((S K) K)
+</PRE>
+We introduce a new construct [n]t, This construct may be thought of as
+a lambda abstraction term, but is in fact an abbreviation for a
+combinator extensionally equivalent to the lambda term.  Within the
+term t, the name n loses any value for which it has previously been
+defined, and is eliminated by the following recursive definition which
+determines a combinator lacking occurrences of n.
+<P>
+We define [n]t inductively as follows:
+<PRE>
+[n]n            ==    I
+
+[n]b            ==    (K b)
+</PRE>
+provided n!=b
+<PRE>
+[n](u v)        ==    ((S [n]u) [n]v)
+
+[nl,n2]t        ==    [n1][n2]t
+</PRE>
+and in general
+<PRE>
+[nl,n2,...nn]t  ==    [nl][n2]...[nn]t
+</PRE>
+In definitions we may write:
+<PRE>
+m n == t
+</PRE>
+for
+<PRE>
+m == [n]t
+</PRE>
+or:
+<PRE>
+m nl n2 ...  nn == t
+</PRE>
+for
+<PRE>
+m == [nl,n2,... nn] t
+</PRE>
+3.6 Definitions for encodings
+<P>
+In this section we define an encoding of terms into normal terms, We
+use the notation 't' for the encoding of a term t.
+<P>
+We define True as the (curried) function which selects the first of two
+arguments.
+<PRE>
+True           ==     K
+</PRE>
+And False as the function which selects its second argument:
+<PRE>
+False X Y      ==     Y
+</PRE>
+we may now adopt a sugared syntax for conditional constructs:
+<PRE>
+If X Then Y Else Z == X Y Z
+</PRE>
+and use this to define a selection of truth functions:
+<PRE>
+X And Y       ==       If X Then Y    Else False
+X Or Y        ==       If X Then True Else Y
+X => y        ==       If X Then Y    Else True
+
+X %lt;=> y       ==       (X => Y) And (Y => X)
+Not X         ==       If X Then False Else True
+</PRE>
+A pair constructor may be defined as function which takes any two
+values X and Y, and returns a function which X or Y depending on
+whether it is applied to True or False.
+<PRE>
+&lt;X,Y> Z       ==       If Z Then X Else Y
+</PRE>
+The definition of the projection functions is then:
+<PRE>
+Fst X         ==       X True
+Snd X         ==       X False
+</PRE>
+We may now define our encoding of terms into terms.      This is done
+inductively.  The base step is the definition of the encoding for the
+atomic terms, the induction step is the definition of the encoding for
+an application in terms of the encodings of the constituent terms.
+<P>
+The base step is then:
+<PRE>
+'K'           ==      &lt;True,True>
+
+'S'           ==      &lt;True,False>
+</PRE>
+And the induction step:
+<PRE>
+Mk_app X Y    ==      &lt;False,&lt;X,Y>>
+</PRE>
+Mk_app (make application) makes the encoding of an application given
+the encodings of the constituent terms, We also adopt the special
+syntactic form:
+<PRE>
+'XY'          ==       Mk_app 'X' 'Y'
+</PRE>
+Functions may then be defined for analysing encoded terms, e,g,:
+<PRE>
+Is_app X      ==       Not (Fst X)
+</PRE>
+(Is_app tests whether X is the encoding of an application)
+<PRE>
+Fun X         ==       Fst (Snd X)
+</PRE>
+(Fun extracts the function part of an encoded application)
+<PRE>
+Arg X         ==       Snd (Snd X)
+</PRE>
+(Arg extracts the argument part of an encoded application)
+<P>
+An encoding is itself a term and may therefore be itself (re-)encoded,
+This allows double encodings such as "K" (='&lt;True,True&gt;'),    Note that
+the encoding of terms cannot be expessed as a term (due to the Church-
+Rosser property), but its restriction to the encoding of encodings can
+be expressed as a term (since all encodings are distinct normal terms
+which can be analysed using Is_app etc.).
+<P>
+3.7 Recursion
+<P>
+Now, in order to permit recursive definitions we introduce the fixed
+point operator.
+<PRE>
+Sap F == F F
+
+Y F == Sap [X]F(XX)
+</PRE>
+Note that Y F = [X]F(XX) ([X]F(XX)) = F ([X]F(XX) [X]F(XX)) = F (Y F)
+i.e. Y F is a fixed point of F.
+<P>
+Henceforth we will admit recursive definitions, writing:
+<PRE>
+m == t
+</PRE>
+instead of
+<PRE>
+m == Y [m]t
+</PRE>
+and
+<PRE>
+m nl n2 ... nn == t
+</PRE>
+for
+<PRE>
+m = Y [m,nl,n2 .... nn] t
+</PRE>
+etc,
+<P>
+3.8  Decoding and partial encoding
+<P>
+The decoding of encoded terms may now be defined as an example of a
+term representing a predicate over terms:
+<PRE>
+Decode X ==     if   Is_app X
+                Then (Decode (Fun X)) (Decode (Arg X))
+                Else If Snd X
+                     Then K
+                     Else S
+</PRE>
+A partial encoding algorithm, defined over the set {T,F} may be
+defined:
+<PRE>
+Encode X = If X Then 'T' Else 'F'
+</PRE>
+Using the full encoding a every recursively enumerable set of terms RET
+may be represented by some term REP_RET such that:
+<PRE>
+ for any term t,       |-REP_RET 't'
+                           iff t mem RET.
+</PRE>
+3.9 Remarks on the primitive formalism
+<P>
+The key characteristics idehtif ied in section 3.1 were simplicity,
+consistency, expressiveness and completeness.
+<P>
+The system is evidently simple.
+<P>
+Its consistency in the sense of Post is immediately evident.
+<P>
+For each recursively enumerable subset of our intended domain of
+interpretation there is a term which represents that set.  For each
+individual and recursively enumerable set of individuals there is a
+term which represents the proposition that the individual is a member
+of the set.
+<P>
+In any formal logic, the ground terms which can be proven to satisfy
+any given predicate defined in that logic, are recursively enumerable.
+There is therefore a formal sense in which our logic is as expressive
+as any formal logic can be.  For any arbitrary formal system (assuming
+a reasonable definition of "formal system") the property of formulae
+known as theoremhood is expressible in our primitive logic.  We
+therefore believe that the formalism is sufficiently expressive for our
+purposes, and constitutes a foundation system on which sufficiently
+rich theories can be constructed by the use of definitions only.
+<P>
+Finally, we can say that the system is complete in the following
+sense:   all the propositions expressible are provable iff true. We
+cannot express classical negation in the system,    i.e. there is no term
+which denotes the set of unprovable terms.   This reflects the fact that
+the complement of a recursively enumerable set is not in general
+recursively enumerable.
+<HR>
+<CENTER>
+<A HREF="dtc110.htm"><IMG SRC="../../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../../rbj.htm">
+<IMG SRC="../../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A> dated 86/7/15 HTML 96/6/6 edited 96/6/15
+</CENTER></BODY>
+</HTML>

@@ -1,0 +1,182 @@
+<HEAD>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="../prof/p1sty.txt" TITLE="Resource">
+<TITLE>Formal Specification of Propositional Logic in ML</TITLE>
+</HEAD>
+<BODY CLASS=co2>
+<A HREF="index.htm"><IMG SRC="../../rbjgifs/up.gif" ALT=UP ALIGN=LEFT BORDER=0></A>
+<CENTER>
+<H1>Propositional Logic</H1>
+<P>
+See also: <A HREF="log003.htm">informal</A> and <A HREF="log017.htm">semi-formal</A> descriptions of propositional logic.<BR>
+<A HREF="log019.htm">informal</A>, <A HREF="log020.htm">semi-formal</A> and <A HREF="log021.htm">formal</A> descriptions of predicate logic.
+<P>
+<TABLE BORDER CELLPADDING=5 CLASS=con><TR VALIGN=TOP><TD>
+This is a very simple formal specification of the version of propositional logic called PS by Hunter in [<A HREF="../philos/bibliog/h.htm#Hunter71">Hunter71</A>].
+The specification is written in Standard ML, a strict functional programming language, and can be considered formal since Standard ML does benefit from a formal semantic specification presented as a structured operational semantics, and is therefore a well defined notation.
+The specification has been run through the Moscow ML implementation of Standard ML, together with a small example proof.
+</TD><TD>
+The system is a classical propositional logic with two connectives (not and implies) presented as a "Hilbert style" axiom system in which there is just one inference rule, modus ponens, and three axiom schemata.
+</TD></TR></TABLE>
+
+<P>
+<TABLE BORDER CELLPADDING=5 WIDTH="80%" CLASS=con>
+<TR><TH WIDTH="20%">
+<A HREF="#syntax"><IMG SRC="../../rbjgifs/syntax.gif" ALT="syntax" ALIGN=MIDDLE BORDER=0></A>
+</TH><TH WIDTH="20%"><A HREF="#semantics"><IMG SRC="../../rbjgifs/semantcs.gif" ALT="semantics" ALIGN=MIDDLE BORDER=0></A>
+</TH><TH WIDTH="20%"><A HREF="#proof"><IMG SRC="../../rbjgifs/prufrule.gif" ALT="proof rules" ALIGN=MIDDLE BORDER=0></A>
+</TH><TH WIDTH="20%"><A HREF="#samproof">Sample Proof</A>
+</TH><TH WIDTH="20%"><A HREF="#output">Output Transcript</A>
+</TH></TR></TABLE>
+
+<A NAME="syntax"></A>
+<H2><IMG SRC="../../rbjgifs/syntax.gif" ALT="syntax" ALIGN=MIDDLE></H2>
+
+<TABLE CLASS=con BORDER><TR><TD><PRE CLASS=SML>
+infix 5 ==>;
+
+datatype formula =
+		Pv of string
+	|	not of formula
+	|	op ==> of (formula * formula);
+</PRE></TD></TR></TABLE>
+
+<A NAME="semantics"></A>
+<H2><IMG SRC="../../rbjgifs/semantcs.gif" ALT="semantics" ALIGN=MIDDLE></H2>
+
+<P>
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+An interpretation is a map assigning to each propositional variable one of the two truth values <I><B>true</B></I> and <I><B>false</B></I>.
+<P>
+The truth value of a formula <I>f</I> under an interpretation <I>i</I> is <I>feval i f</I>, where <I>feval</I> is a (higher order) function taking two successive arguments, an interpretation <I>i</I> and a propositional formula <I>f</I>.
+<I>feval</I> is defined as follows (function application is shown as juxtaposition, brackets are not necessary for simple arguments):
+<PRE CLASS=SML>
+fun		feval v (Pv s)		= v s
+	|	feval v (not f) 	= if (feval v f)=true
+						then false
+						else true
+	|	feval v (f1 ==> f2)  	= if (feval v f1)=true
+						then (feval v f2)
+						else false;
+
+feval: (string -> bool) -> formula -> bool;
+</PRE>
+</TD></TR></TABLE>
+
+<P>
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+A formula is <I>tautological</I> (and hence true) if it is true under every interpretation and <I>contradictory</I> (and hence false) if it is false under every interpretation.
+</TD></TR></TABLE>
+<P>
+
+<A NAME="proof"></A>
+<H2><IMG SRC="../../rbjgifs/prufrule.gif" ALT="proof rules" ALIGN=MIDDLE></H2>
+<P>
+
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+
+
+There is just one inference rule, modus ponens, and three axiom schemata, as follows.
+<PRE CLASS=SML>
+abstype pthm = |- of formula
+with
+</PRE>
+<P>
+<CENTER><B>Modus Ponens</B></CENTER>
+<TABLE BORDER CELLPADDING=3 WIDTH="100%"><TR><TD>
+<PRE CLASS=SML>
+exception MpFail;
+
+fun MP (|- A) (|- (B ==> C)) = if A = B then |- C else |- raise MpFail
+|   MP t1 t2 		     = t1;
+</PRE>
+</TD></TR></TABLE>
+<P>
+<CENTER><B>Axiom Schemata</B></CENTER>
+<TABLE BORDER CELLPADDING=3 WIDTH="100%"><TR><TD>
+All instances of the following three schemata are theorems:
+<CENTER>
+<TABLE><TR><TD>
+<PRE CLASS=SML>
+fun PS1 A B	= |- (A ==> (B ==> A));
+
+fun PS2 A B C	= |- ((A ==>(B ==> C)) ==> ((A ==> B) ==>(A ==> C)));
+
+fun PS3 A B	= |- ((not A ==> not B) ==> (B ==> A));
+</PRE>
+</TD></TR></TABLE>
+</CENTER>
+</TD></TR></TABLE>
+<P>
+We also need a special function to extract the formula from a theorem:
+<PRE CLASS=SML>
+fun f (|- A)	= A;
+
+end;
+</PRE>
+</TD></TR></TABLE>
+<P>
+<A NAME="samproof"></A>
+<CENTER><H2>A Small Proof</H2></CENTER>
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+This is an <A HREF="../cs/cslog001.htm">LCF-like</A> ML version of the proof given by Hunter of p ==> p.
+<PRE CLASS=SML>
+val f1	= (Pv "p") ==> (Pv "p");  (* this is the goal *)
+
+val L1 	= PS1 (Pv "p") ((Pv "p") ==> (Pv "p"));
+val L2 	= PS2 (Pv "p") ((Pv "p") ==> (Pv "p")) (Pv "p");
+val L3	= MP L1 L2;
+val L4	= PS1 (Pv "p") (Pv "p");
+val L5	= MP L4 L3;
+f1 = f L5; (* this checks that the result is the same as our goal *)
+</PRE>
+</TD></TR></TABLE>
+<P>
+<A NAME="output"></A>
+<CENTER><H2>Output Transcript</H2></CENTER>
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+This is the output from Moscow ML resulting from processing <A HREF="log018.sml">the above Standard ML script</A>:
+<PRE CLASS=SML>
+> infix 5 ==>
+> datatype formula
+  con Pv = fn : string -> formula
+  con not = fn : formula -> formula
+  con ==> = fn : formula * formula -> formula
+> val feval = fn : (string -> bool) -> formula -> bool
+> val it = fn : (string -> bool) -> formula -> bool
+> abstype pthm
+  exn MpFail = MpFail : exn
+  val MP = fn : pthm -> pthm -> pthm
+  val PS1 = fn : formula -> formula -> pthm
+  val PS2 = fn : formula -> formula -> formula -> pthm
+  val PS3 = fn : formula -> formula -> pthm
+  val f = fn : pthm -> formula
+> val f1 = ==>(Pv "p", Pv "p") : formula
+> val L1 = <pthm> : pthm
+> val L2 = <pthm> : pthm
+> val L3 = <pthm> : pthm
+> val L4 = <pthm> : pthm
+> val L5 = <pthm> : pthm
+> val it = true : bool
+</PRE>
+</TD></TR></TABLE>
+<P>
+<TABLE BORDER CELLPADDING=3 WIDTH="80%" CLASS=con><TR VALIGN=TOP><TD>
+If you find all this Standard ML stuff desperately unintelligible, you could try the (even less intelligible!) <A HREF="log018.c">transcription into C</A>.
+</TD></TR></TABLE>
+<P>
+<HR>
+<CENTER>
+<A HREF="index.htm"><IMG SRC="../../rbjgifs/up.gif" ALT=up BORDER=0></A>
+<A HREF="../../index.htm"><IMG SRC="../../rbjgifs/home.gif" ALT=home BORDER=0></A>
+&copy; <A HREF="../rbj.htm">
+<IMG SRC="../../rbjgifs/rbjin1.gif" ALT=RBJ ALIGN=absmiddle BORDER=0></A>
+created 1997/10/20 modified 1998/04/08
+</CENTER>
+</BODY>
+
+
+
+
+
+
+
