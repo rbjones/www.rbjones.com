@@ -8,7 +8,7 @@ XMLFILES=$(XML007) $(XML008) $(XML008S)
 ENTFILES=pp-symbol.ent
 
 SRCCPYWEB=robots.txt rbj.asc index.htm index.html
-SRCDIRCPY=$(SRCCPYWEB)
+SRCDIRCPY=$(SRCCPYWEB) $(INDEXSCRIPTS)
 XLDPDIRCPY=$(ENTFILES)
 RELSRCDIR=src
 RELWEBDIR=
@@ -17,7 +17,9 @@ SUBDIRS=common rbjpub jls texts
 include $(TOPSRCDIR)/build/common/vars.mk
 
 WEBFILES=$(HTML005) $(HTML007) $(HTM008S) $(HTML008) $(SRCCPYWEB)
-INSTALLWWW=YES
+
+INDEXSCRIPTS=mkallidx.sh stats.pm sostat2.pl mkprch.pl mkplist.pl mklindex.pl \
+	mkglist.pl mkindex.pl mkdindex.pl mkchlist.pl 
 
 include $(TOPSRCDIR)/src/common/rules.mk
 
@@ -31,14 +33,17 @@ vpath %.xsl $(XLCOMDIR)
 # Dependencies
 #index.html: rbjpub/index.xmlt
 
+# Targets
 
-
-
-
-
-
-
-
-
-
-
+installindexes: $(INDEXSCRIPTS)
+	@echo "Processing stats and generating indexes"
+	perl -w sostat2.pl $(WEBDIR) $(STATSDIR) 77 rbjones.com-May-2015
+	perl -w mkplist.pl $(WEBDIR) "" fall
+	perl -w mkplist.pl $(WEBDIR) philosophy fphil
+	perl -w mkplist.pl $(WEBDIR) logic flogic
+	perl -w mkglist.pl $(WEBDIR) "" fall
+	perl -w mkchlist.pl $(WEBDIR) $(STATSDIR) 77 2015-01-01 4
+	perl -w mkprch.pl $(WEBDIR) $(STATSDIR) 77 2015-01-01 current
+	perl -w mkindex.pl $(WEBDIR) $(STATSDIR) rbjpub 77
+	perl -w mkdindex.pl $(WEBDIR) $(STATSDIR) rbjpub 3 77
+	perl -w mklindex.pl $(WEBDIR) rbjpub
