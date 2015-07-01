@@ -274,7 +274,7 @@ installsmllibs:
 	then $(INSTALL) -m 644 $(SMLLIBFILES) $(SMLLIBDIR); cp -r CM $(SMLLIBDIR); fi
 
 installweb: $(WEBFILES) $(WEBDIRS) $(WEBSUBDIRS)
-	@if ! test -d $(RWEBDIR) &&  test "" != "$(WEBFILES)"; then $(INSTALL) -d -m 755 $(RWEBDIR); fi
+	if ! test -d $(RWEBDIR) &&  test "" != "$(WEBFILES)"; then $(INSTALL) -d -m 755 $(RWEBDIR); fi
 	if test "" != "$(WEBFILES)"; then $(INSTALL) -m 644 $(WEBFILES) $(RWEBDIR); fi
 # note that this only works if WEBDIRS is just one directory
 # to be included, not copied (i.e. the content goes up a level).
@@ -286,7 +286,7 @@ installweb: $(WEBFILES) $(WEBDIRS) $(WEBSUBDIRS)
 # WEBSUBDIRS allows multiple directories to be copied rather than included
 	if test "" != "$(WEBSUBDIRS)"; then cp -r $(WEBSUBDIRS) $(RWEBDIR); fi
 
-THISINSTALL= installdata installbins installlibs installperllibs installsmllibs
+THISINSTALL= installdata installbins installlibs installperllibs installsmllibs installweb
 
 ppthds: $(PPTHD) $(PPPPTHD)
 
