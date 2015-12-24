@@ -2253,7 +2253,42 @@ fun Ûfalse_enum_eq_convÝ t =
 
 val Ûfalse_enum_eq_tacÝ = conv_tac (MAP_C false_enum_eq_conv); 
 =TEX
+=IGN
+(* This hack for conditional rewriting was done in response to
+a question on the ProofPower mailing list and is included here
+in case I need at sometime to do anything similar *)
 
+open_theory "¯";
+
+fun thm_eqn_cxt1 (thm : THM) : TERM * CONV = (
+let	val cnv = simple_eq_match_conv thm
+	val lhs = fst(dest_eq(snd(strip_µ (concl thm))));
+in
+	(lhs, cnv)
+end);
+
+fun cond_rewrite_canon thm = [strip_´_rule (all_µ_elim thm)];
+
+val cond_rewrite_conv = prim_rewrite_conv
+	empty_net
+	cond_rewrite_canon
+	(Value thm_eqn_cxt1)
+	MAP_C
+	[];
+
+cond_rewrite_conv [¯_over_times_over_thm] ¬2./3.*4./5.®;
+
+fun cond_rewrite_tac thm (asml, conc) =
+	let val thm2 = cond_rewrite_conv [thm] conc
+	in  MAP_EVERY (fn p => (LEMMA_T p
+		(fn q => MAP_EVERY asm_tac (forward_chain_rule [thm] [q]))))
+		(asms thm2)
+		(asml, conc)
+	end;
+
+set_goal ([], ¬2./3.*4./5. = 0.®);
+a(cond_rewrite_tac ¯_over_times_over_thm);
+=TEX
 \twocolumn[\section{INDEX}\label{INDEX}]
 {\small\printindex}
 

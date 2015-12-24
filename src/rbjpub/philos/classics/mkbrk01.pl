@@ -3,16 +3,13 @@
 #use strict;
 use warnings;
 open(INPUT,"<","berkeley.txt") || die "failed to open file berkeley.txt\n";
-print "file opened\n";
 my $modified="96/11/18";
 #$stem="brk";
 #$count=0;
 #$tail=sprintf("2.2x",$count);
 #$file=$stem.$tail.".htm";
 my $direc="berkeley";
-print "separator $/ end\n\n";
 $/="\r";
-print "separator $/ end\n\n";
 
 &preamble;
 &preface;
@@ -28,8 +25,8 @@ sub strip
 
 sub preamble
 {       open(OUTPUT,"> $direc/brkpream.htm");
-	$_ = <INPUT>; print "A:$_\n\n"; my $year = &strip($_);
-	$_ = <INPUT>; print "B:$_\n"; my $title = &strip($_);
+	$_ = <INPUT>; my $year = &strip($_);
+	$_ = <INPUT>; my $title = &strip($_);
 #	$_ = <STDIN>;
 	$_ = <INPUT>; my $author = &strip($_);
 	print OUTPUT <<EOF;
