@@ -365,15 +365,20 @@ EOF
 sub startParagraph      
 {	if ($trace>4) {print "startParagraph $para\n"};
 	if (! (defined $paraTitle)) {$paraTitle =""};
+	$htmTitle = $paraTitle;
+	if ($htmTitle =~ /RbJbk/) {
+	    $htmTitle =~ s/\<!--!\\RbJbk\{([^\}]*)\}\{([^\}]*)\}--\>/\<B\>[$1$2]\<\/B\>/g;
+#	    print "RbJbk[HTMb]: $htmTitle\n"
+	};
 	print OUTFILE <<EOF;
 <P>
 <A NAME="$para">$para\.</A>
-$paraTitle
+$htmTitle
 EOF
 	($texline=$paraTitle) =~ s|&|\\&|g;
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
 # this is a general facility for passing through LaTeX commands
-	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
+	    $texline =~ s|<\!--\!(.*)-->|$1|g;
 # this is for processing double quote symbols
 	    while ($texline =~ s|\"([^\"]*)\"|{\\RbJldq}$1\{\\RbJrdq}|) {print "quoted:$1\n\t$texline\n"};
 	    $texline =~ s|\"|{\\RbJdq}|g;
@@ -388,6 +393,9 @@ EOF
 #	$texline =~ s|\'([\w\s\.-]*)\'|\`$1\'|g;
 #	$texline =~ s/\"/{\\RbJdq}/g;
 #	$texline =~ s/\'/{\\sq}/g;
+	if ($texline=~/RbJbk/){
+#	    print "RbJbj[TEXb]:$texline\n"
+	};
         print TEXFILE "\n".$texline;
 };
 
@@ -398,7 +406,7 @@ sub writeLine2
 	    if (/<PRE>/) {$texline =~ s|<PRE>|\\begin{verbatim}|; $pre=1}
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
 	    print "2";
-	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
+	    $texline =~ s|<\!--\!(.*)-->|$1|g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
 	    $texline =~ s/\"([^"]*)\"]/{\\RbJldq}$1{\\RbJrdq}/g;
@@ -410,6 +418,9 @@ sub writeLine2
 	};
 #	$texline =~ s|\"([\w\s\.-]*)\"|\`\`$1\'\'|g;
 #	$texline =~ s/\'/{\\sq}/g;
+	if ($texline=~/RbJbk/){
+#	    print "RbJbj[TEXc]:$texline"
+	};
 	print TEXFILE $texline;
 };
 
@@ -425,8 +436,12 @@ sub writeLine
 	if ($htmline=~/$key/) {
 #	    print "key: $key; res: $res\n";
 	    $htmline =~ s|$key|$res|g;
-#	    print "line: $htmline\n";
 	};
+    };
+    if ($htmline =~ /\\RbJbk/) {
+	$htmline =~ s/\<!--!\\RbJbk\{([^\}]*)\}\{([^\}]*)\}--\>/\<B\>[$1$2]\<\/B\>/g;
+	$htmline =~ s/\\RbJbk\{([^\}]*)\}\{([^\}]*)\}/\<B\>[$1$2]\<\/B\>/g;
+#	print "RbJbk[HTMa]: $htmline\n"
     };
     print OUTFILE $htmline;
 # remove <gk></gk> tags
@@ -440,7 +455,7 @@ sub writeLine
 	    $pre=1}
 	else {
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
-	    $texline =~ s|^<\!--\!(.*)-->$|$1|g;
+	    $texline =~ s|<\!--\!(.*)-->$|$1|g;
 	    $texline =~ s/<gk>([^<]*)<\/gk>/\\textgreek{$1}/g;
 #	    $texline =~ s/<gk>([^<]*)<\/gk>/$1/g;
 	    $texline =~ s/(\d+)X(\d+)/$1\$\\times\$$2/g;
@@ -456,6 +471,9 @@ sub writeLine
 #		  $res=$greek2tex{$key};
 #		  $texline =~ s|$key|$res|g;      
 #	      };
+	};
+	if ($texline=~/RbJbk/){
+#	    print "RbJbj[TEXa]:$texline"
 	};
 	print TEXFILE $texline
     };

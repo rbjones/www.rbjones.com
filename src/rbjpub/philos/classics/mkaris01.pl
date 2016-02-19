@@ -205,6 +205,7 @@ sub paraTitle
 sub skipComments
 {	while ((/^\s*$/ || /\<\!--\!/) && !eof(INPUT)) {
 # remove leading comments (<!--!  -->)
+# don't know why it strips the comment, so leaving them alone
 	    s|^<\!--\!(.*)-->$|$1|g;
 	    &writeLine($_); &readLine;};
 };
