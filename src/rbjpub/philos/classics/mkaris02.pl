@@ -339,7 +339,9 @@ EOF
 #};
 
 sub startPart        
-{	open (OUTFILE, "> $direc/$partCFile");
+{	$outfile = "$direc/$partCFile";
+	if ($trace>1) {print "startPart \$outfile=$outfile\n"};
+        open (OUTFILE, "> $outfile") || die "Failed to open $outfile\n";
 	print OUTFILE <<EOF;
 <HTML><HEAD>
 <TITLE>$mainTitle $sourceTitle $bookSection $book Part $part $partTitle</TITLE>
@@ -360,6 +362,8 @@ $bookIndexRef$upimgm</A>$home HTML edition &copy; $rbjsig created $created modif
 </CENTER></BODY></HTML>
 EOF
 	close OUTFILE;
+	if ($trace>1){print "closed OUTFILE $outfile\n"};
+	$outfile=""
 };
 
 sub startParagraph      
@@ -380,7 +384,9 @@ EOF
 # this is a general facility for passing through LaTeX commands
 	    $texline =~ s|<\!--\!(.*)-->|$1|g;
 # this is for processing double quote symbols
-	    while ($texline =~ s|\"([^\"]*)\"|{\\RbJldq}$1\{\\RbJrdq}|) {print "quoted:$1\n\t$texline\n"};
+	    while ($texline =~ s|\"([^\"]*)\"|{\\RbJldq}$1\{\\RbJrdq}|) {
+		if ($trace>1) {print "quoted:$1\n\t$texline\n"}
+	    };
 	    $texline =~ s|\"|{\\RbJdq}|g;
 # single quotes
 	    $texline =~ s|\'([^\']*)\'|\`$1\'|g;
@@ -400,9 +406,10 @@ EOF
 };
 
 sub writeLine2
-{	print OUTFILE $_[0];
-	($texline=$_[0]) =~ s|&|\\&|g;
-	if (not $pre) {
+{   if ($outfile){print OUTFILE $_[0]}
+    else {print "Writeline2 discarded: $_[0]"};
+    ($texline=$_[0]) =~ s|&|\\&|g;
+    if (not $pre) {
 	    if (/<PRE>/) {$texline =~ s|<PRE>|\\begin{verbatim}|; $pre=1}
 	    $texline =~ s|<\!--pagebreak-->|\\pagebreak|g;
 	    print "2";
@@ -443,7 +450,8 @@ sub writeLine
 	$htmline =~ s/\\RbJbk\{([^\}]*)\}\{([^\}]*)\}/\<B\>[$1$2]\<\/B\>/g;
 #	print "RbJbk[HTMa]: $htmline\n"
     };
-    print OUTFILE $htmline;
+    if ($outfile){print OUTFILE $htmline}
+    else {print "Writeline discarded: $htmline"};
 # remove <gk></gk> tags
     $htmline=~s/<gk>([^<]*)<\/gk>/$1/g;
 # transformations for tex version

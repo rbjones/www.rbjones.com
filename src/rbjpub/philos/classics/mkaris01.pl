@@ -123,7 +123,7 @@ sub doMBFile
 };
 
 sub book
-{    	if ($trace>1){$temp=<STDIN>};
+{    	if ($trace>2){$temp=<STDIN>};
 	$bookTitle=$controlData{$file}{$book}{"title"};
 	$bookSection=$controlData{$file}{$book}{"booksection"};
 	if ($trace>0){print "Starting file $file $bookSection $book\n"};
@@ -131,7 +131,9 @@ sub book
 	if ($trace>1){print "\$bookTitle: $bookTitle\n"};
 	&oIndexEntry;	&nextBookIndex;
 	$part=1;
+#	if ($trace>0) {print "Book !\n$_\n"};
 	&skipComments;
+#	if ($trace>0) {print "Book !!\n$_\n"};
 	while (&$testPartStart)
 		{&readLine; &part; ++$part};
 	&closeBookIndex;
@@ -140,11 +142,13 @@ sub book
 sub part        
 {	$partTitle=$controlData{$file}{$book}{$part}{"title"};
 	if (!(defined $partTitle)){$partTitle=""};
-	&bookIndexEntry;	&nextPartIndex;
+	&bookIndexEntry;
+	&nextPartIndex;
 	&startPart;
-	if ($trace>2)
-	 {print "Writing file $file book $book part $part to ?\$partCFile ($temp).\n";
-	 $temp=<STDIN>};
+	&skipComments;
+	if ($trace>2){
+	     print "Writing file $file book $book part $part to ?\$partCFile ($temp).\n";
+	};
 	$para=0;
 	until (&$testPartStart || &testBookStart || eof(INPUT))
 		{++$para; &paragraph};
@@ -205,9 +209,12 @@ sub paraTitle
 sub skipComments
 {	while ((/^\s*$/ || /\<\!--\!/) && !eof(INPUT)) {
 # remove leading comments (<!--!  -->)
-# don't know why it strips the comment, so leaving them alone
-	    s|^<\!--\!(.*)-->$|$1|g;
-	    &writeLine($_); &readLine;};
+# don't know why it strips the comments, so leaving them alone
+#	    s|^<\!--\!(.*)-->$|$1|g;
+	    &writeLine($_);
+            if ($trace>0) {print "SkipComments: $_\n"};
+            &readLine
+        };
 };
 
 1;
