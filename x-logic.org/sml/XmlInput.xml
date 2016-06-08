@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: XmlInput.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="XmlInput"
+       title="XML Input"
+       description="Part of the X-Logic X-ification toolset to facilitate converting SML based tools to work with XML theory descriptions. This part concerns the construction of parse trees from an input XML document."
+       keywords="x-logic xml parse hooks SML fxp"
+       root="../"
+       path="sml/"
+       up="index.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Procedures for invoking the fxp XML parser to create a data structure (parse tree) for further processing.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Parser Hooks"/>
+</sbcol>
+<sbcol>
+<secref title="Parsing"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>                                                                                                             
+<section title="Parser Hooks">
+<abstract>
+This is a set of Hooks for constructing a full parse tree.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Hooks">
+<ft lang="xl-sml"><![CDATA[
+structure XmlParseHooks:Hooks =
+   struct
+      open Dtd Errors NullOptions FatTree
+
+      type AppData  = bool * ParseTree list * Dtd
+      type AppFinal = bool * ParseTree list * Dtd
+
+      val dummyEndTagInfo = ((ErrorData.nullPosition,ErrorData.nullPosition),0,NONE)
+
+      fun addToStack [XmlDoc (docinfo,l,dtd)] i = [XmlDoc (docinfo,i::l,dtd)]
+      |   addToStack (Element (sti,ptl,eti) :: stacktail) i = Element (sti,i::ptl,eti) :: stacktail
+      |   addToStack ptl i = raise InternalError "XmlParseHooks.addToStack"
+
+      fun hookXml ((status,_,dtd),docinfo) = (status,[XmlDoc (docinfo,[],dtd)],dtd)
+
+      fun hookFinish (status,[XmlDoc (docinfo,ptl,dtdo)],dtd) = (status, [XmlDoc (docinfo,rev ptl,dtd)], dtd)
+      |   hookFinish spd = spd
+          
+      fun hookProcInst ((status,ptl,dtd),pi) = (status,addToStack ptl (ProcInst pi),dtd)
+      fun hookComment ((status,ptl,dtd),ci) = (status,addToStack ptl (Comment ci),dtd)
+      fun hookWhite ((status,ptl,dtd),wi) = (status,addToStack ptl (White wi),dtd)
+
+      fun hookDecl ((status,ptl,dtd),decl) = (status,addToStack ptl (Decl decl),dtd) 
+
+      fun hookStartTag ((status,ptl,dtd),sti as (se,i,atts,n,empty))
+        = if empty
+          then (status,addToStack ptl (Element (sti,[],dummyEndTagInfo)),dtd)
+          else (status,(Element (sti,[],dummyEndTagInfo))::ptl,dtd)
+      fun hookEndTag ((status,(Element (sti,ptl,eti))::stacktail,dtd),neweti)
+        = (status,addToStack stacktail (Element (sti,rev ptl,neweti)),dtd)
+      |   hookEndTag ((status,_,dtd),neweti) = raise InternalError "XmlParseHooks.hookEndTag"
+
+      fun hookData ((status,ptl,dtd),di) = (status,addToStack ptl (Data di),dtd)
+      fun hookCData ((status,ptl,dtd),cdi) = (status,addToStack ptl (CData cdi),dtd)
+
+      fun hookCharRef ((status,ptl,dtd),cri) = (status,addToStack ptl (CharRef cri),dtd)
+      fun hookGenRef ((status,ptl,dtd),gri) = (status,addToStack ptl (GenRef gri),dtd)
+      fun hookParRef ((status,ptl,dtd),pri) = (status,addToStack ptl (ParRef pri),dtd)
+      fun hookEntEnd ((status,ptl,dtd),eei) = (status,addToStack ptl (EntEnd eei),dtd)
+
+      fun hookDocType ((status,ptl,dtd),dti) = (status,addToStack ptl (DocType dti),dtd)
+      fun hookSubset ((status,ptl,dtd),si) = (status,addToStack ptl (Subset si),dtd)
+      fun hookExtSubset ((status,ptl,dtd),esi) = (status,addToStack ptl (ExtSubset esi),dtd)
+      fun hookEndDtd ((status,ptl,dtd),edi) = (status,addToStack ptl (EndDtd edi),dtd) 
+
+      fun printError(pos,err) = if !O_SILENT then () else TextIO.output
+	 (!O_ERROR_DEVICE,formatMessage (4,!O_ERROR_LINEWIDTH) 
+	  (Position2String pos^" Error:"::errorMessage err))
+      fun printWarning(pos,warn) = if !O_SILENT then () else TextIO.output
+	 (!O_ERROR_DEVICE,formatMessage (4,!O_ERROR_LINEWIDTH) 
+	  (Position2String pos^" Warning:"::warningMessage warn))
+
+      fun hookError ((status,ptl,dtd),pe) = (false,ptl,dtd) before printError pe
+      fun hookWarning ((status,ptl,dtd),pw) = (status,ptl,dtd) before printWarning pw
+   end;
+]]></ft>
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+                                                                                                             
+<section title="Parsing">
+<abstract>
+This is the procedure to invoke the fxp parser with the XmlParseHooks to construct the parse tree.
+It is derived from the fxp "null" parser ("Apps/Null/null.sml").
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Parse">
+<ft lang="xl-sml"><![CDATA[
+structure XmlParse =
+   struct
+      structure CatOptions = CatOptions ()
+      structure ParserOptions = ParserOptions ()
+
+      structure CatParams =
+	 struct
+	    open CatError CatOptions NullOptions Uri UtilError 
+
+	    fun catError(pos,err) = if !O_SILENT then () else TextIO.output
+	       (!O_ERROR_DEVICE,formatMessage (4,!O_ERROR_LINEWIDTH) 
+		(Position2String pos^" Error in catalog:"::catMessage err))
+	 end
+      structure Resolve = ResolveCatalog (structure Params  = CatParams) 
+
+      structure Parse = Parse (
+                          structure Dtd = Dtd 
+                          structure Hooks = XmlParseHooks
+                          structure Resolve = Resolve
+                          structure ParserOptions = ParserOptions)
+
+      open CatOptions NullOptions Options ParserOptions Uri
+
+      val usage = List.concat [parserUsage,[U_SEP],catalogUsage,[U_SEP],nullUsage]
+
+      exception Exit of OS.Process.status 
+	 
+      fun parseXmlDoc(args) = 
+	 let 
+	    val prog = "parseXmlDoc"
+	    val hadError = ref false
+	       
+	    fun optError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in hadError := true
+	       end
+	    fun exitError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in raise Exit OS.Process.failure 
+	       end
+	    fun exitHelp prog = 
+	       let val _ = printUsage TextIO.stdOut prog usage
+	       in raise Exit OS.Process.success 
+	       end
+	    fun exitVersion prog = 
+	       let val _ = app print [prog," version ",Version.FXP_VERSION,"\n"]
+	       in raise Exit OS.Process.success 
+	       end
+	    
+	    fun summOpt prog = "For a summary of options type "^prog^"([\"--help\"]);"
+	    fun noFile(f,cause) = "can't open file '"^f^"': "^exnMessage cause
+	       
+	    val opts = parseOptions args
+	    val _ = setParserDefaults()
+	    val opts1 = setParserOptions (opts,optError)
+	    val _ = setCatalogDefaults()
+	    val opts2 = setCatalogOptions (opts1,optError)
+	    val _ = setNullDefaults()
+	    val (vers,help,err,file) = setNullOptions (opts2,optError)
+	    val _ = if !hadError then exitError (summOpt prog) else ()
+	    val _ = if vers then exitVersion prog else ()
+	    val _ = if help then exitHelp prog else ()
+	    val _ = case err 
+		      of SOME "-" => O_ERROR_DEVICE := TextIO.stdErr
+		       | SOME f => (O_ERROR_DEVICE := TextIO.openOut f
+				    handle IO.Io {cause,...} => exitError(noFile(f,cause)))
+		       | NONE => ()
+	    val f = valOf file handle Option => "-"
+	    val uri = if f="-" then NONE else SOME(String2Uri f)
+	    val dtd = Dtd.initDtdTables()
+	    val (s,ptl,dtd) = Parse.parseDocument uri (SOME dtd) (true,[],dtd)
+	    val _ = if isSome err then TextIO.closeOut (!O_ERROR_DEVICE) else ()
+	 in ptl
+	 end
+         handle FatTree.InternalError text => (print text; []) 
+	   | exn => 
+	 let val _ = TextIO.output 
+	    (TextIO.stdErr, ": Unexpected exception: "^exnMessage exn^".\n")
+	 in [] 
+	 end
+   end;
+]]></ft>
+<hide>
+XmlParse.parseXmlDoc(["--validate=no","/home/x-logic/x-logic/arch/prosp01.xml"]);
+
+XmlParse.parseXmlDoc(["--validate=no","/home/x-logic/x-logic/work/pp/gst/gst-axioms.xml"]);
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+

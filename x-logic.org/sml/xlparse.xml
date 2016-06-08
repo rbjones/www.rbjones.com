@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: xlparse.xml,v 1.1.1.1 2006-04-19 20:44:53 rbj01 Exp $"
+       name="xlparse"
+       title="X-Logic XML Parser in sml"
+       description="Code for invoking the fxp XML parser in an X-Logic application."
+       keywords="x-logic xml parser"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+<stripft lang="xl-cm"/>
+
+<section title="Overview">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Strucutre XLParse"/>
+</sbcol>
+<sbcol>
+<secref title="Parse Hooks"/>
+<secref title="Parser Options"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+<subsec title="cm file for xlparse">
+<ft lang="xl-cm">
+Group is
+    fxlib.cm
+    parseoptions.sml
+    parsehooks.sml
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+<ft lang="xl-sml"><![CDATA[
+structure XmlParse =
+   struct
+(*      structure XmlParseOptions = XmlParseOptions () *)
+      structure CatOptions = CatOptions ()
+      structure CatParams =
+	 struct
+	    open CatError CatOptions XmlParseOptions Uri UtilError 
+
+	    fun catError(pos,err) = if !O_SILENT then () else TextIO.output
+	       (!O_ERROR_DEVICE,formatMessage (4,!O_ERROR_LINEWIDTH) 
+		(Position2String pos^" Error in catalog:"::catMessage err))
+	 end
+      structure Resolve    = ResolveCatalog (structure Params = CatParams) 
+      structure XmlParseHooks = XmlParseHooks     (structure XmlParseOptions = XmlParseOptions)
+      structure ParseXmlParse = Parse          (structure Dtd = Dtd
+					     structure Hooks = XmlParseHooks
+					     structure Resolve = Resolve
+					     structure XmlParseOptions = XmlParseOptions)
+      open 
+	 CatOptions XmlParseOptions XmlParseHooks Options Uri
+
+      val usage = List.concat [parserUsage,[U_SEP],catalogUsage,[U_SEP],xlparseUsage]
+
+      exception Exit of OS.Process.status 
+	 
+      fun xlparse(prog,args) = 
+	 let 
+	    val prog = "xlparse"
+	    val hadError = ref false
+	       
+	    fun optError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in hadError := true
+	       end
+	    fun exitError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in raise Exit OS.Process.failure 
+	       end
+	    
+	    fun summOpt prog = "For a summary of options type "^prog^" --help"
+	    fun noFile(f,cause) = "can't open file '"^f^"': "^exnMessage cause
+
+	    val opts = parseOptions args
+	    val _ = setParserDefaults()
+	    val opts1 = setParserOptions (opts,optError)
+	    val _ = setCatalogDefaults()
+	    val opts2 = setCatalogOptions (opts1,optError)
+	    val _ = setXmlParseDefaults()
+	    val (vers,help,err,file) = setXmlParseOptions (opts2,optError)
+	    val _ = if !hadError then exitError (summOpt prog) else ()
+	    val _ = case err 
+		      of SOME "-" => O_ERROR_DEVICE := TextIO.stdErr
+		       | SOME f => (O_ERROR_DEVICE := TextIO.openOut f
+				    handle IO.Io {cause,...} => exitError(noFile(f,cause)))
+		       | NONE => ()
+	    val f = valOf file handle Option => "-"
+	    val uri = if f="-" then NONE else SOME(String2Uri f)
+	    val dtd = initDtdTables()
+	    val status = ParseXmlParse.parseDocument uri (SOME dtd) (xlparseStart dtd)
+	    val _ = if isSome err then TextIO.closeOut (!O_ERROR_DEVICE) else ()
+	 in status
+	 end
+   end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Parse Hooks" doc="parsehooks"/>
+
+<section title="Parser Options" doc="parseoptions"/>
+
+
+
+</xldoc>
+

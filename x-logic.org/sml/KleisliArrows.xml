@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: KleisliArrows.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="KleisliArrows"
+       title="Kleisli Arrows constructed from Basic Monads"
+       description="Parts of the XlTools arrow library which are derived from Monads."
+       keywords="x-logic xml tools"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sig"/>
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Arrows which can be constructed from Monads using a Kleisli functor.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="The Arrow Signatures"/>
+</sbcol>
+<sbcol>
+<secref title="Functors between Monads and Arrows"/>
+<secref title="Full Arrows"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody title="Background">
+<sbcol><subsec>
+Monads originated in category theory (putting aside Leibniz's completely unrelated monads and any others I havn't heard of!).
+They were seen by Eugenio Moggi to be relevant to denotational semantics and then taken up enthusiastically by Phil Wadler for functional programming in Haskell, leading to changes to Haskell recognising the significance of Monads for functional programming.
+<p/>
+One application of Monads is to the implementation of parsers.
+Monadic parsers, however, are not quite as efficient as might be desired.
+In attempting to eliminate the performance defect, Swierstra and Duponcheel found it necessary to abandon the strict monadic formula.
+That this had proved necessary concerned and gave food for thought for John Hughes, who sought a generalisation of the notion of Monad rather than accept a proliferation of ad-hoc non-monadic combinator libraries.
+</subsec></sbcol><sbcol><subsec>
+The generalisation he came up with was "arrows", which, like monads borrows from the terminology of category theory.
+The main merit of arrows is that, at the cost of slightly less ease of use, arrows generalise monads by allowing "static analysis" to take place as combinators are composed, permitting greater efficiency in their subsequent application.
+Efficiency, though relevant in the emergence of arrows, is not the sole benefit which they deliver. 
+<p/>
+Monads and arrows are predominantly applied in pure functional programming for reasons which are associated with that purity, and I am not aware of their having been used with standard ML.
+It is therefore worth mentioning why I am trying them out for X-Logic.
+</subsec></sbcol></secbody>
+<secbody title="Why Monads and Arrows Help Puritans">
+<sbcol><subsec>
+In pure functional programming almost everything has to be passed as a parameter or returned as a result.
+Assignment and exception handling, when handled in a pure functional language are not only complicated to program, but also highly disruptive to modify.
+These were lessons learned from denotational semantics, but the lesson is not specific to denotational semantics, they flow primarily from the fact that a denotation semantics is a kind of functional programming, conducted originally in languages not much more convenient that the lambda calculus.
+<p/>
+Though modern functional programming languages are marvellously more convenient for writing these kinds of program, there remain serious problems in organising the effects most characteristic of imperative programming.
+Monads help a lot in exactly those areas where functional languages loose out against imperative ones.
+</subsec></sbcol><sbcol><subsec>
+The extras you get with arrows are not (so far as I am aware) connected with the weaknesses of functional programming vis-a-vis imperative.
+they are more like a fix Monads to overcome a problem with the representation of Monads, which isn't abstract enough.
+<p/>
+Using monads and arrows is still not very nice.
+You are constantly having to do things which the systems ought to be able to help more with, like lifting.
+You are tempted to change the language (as Haskell has been in small ways).
+Overloading of application, implicit lifting coercions, tempt, but surely this leads all the way to a full blooded imperative style (perhaps still mitigated by a type system which recognises exactly what is going on behind the imperative syntax).
+</subsec></sbcol></secbody>
+<secbody title="Why X-Logic Needs Arrows">
+<sbcol><subsec>
+X-Logic is all about generic language tools, and extensible languages.
+Most of the literature on Monads and Arrows is talking about problems which are central to X-Logic.
+<p/>
+A central plank of X-Logic will be facilities for defining semantics by embedding into Higher Order Set Theory ("gst" in fact).
+This involves generic data driven parsers, backed up by mappings defined in (say) SML to HOL terms.
+After parsing the semantics is split between the impure functional language SML and pure HOL.
+To get transparent interactive proof support you can't do too much of that mapping in SML, since you have to be able to display intermediate stages in the proof in the original language.
+So you need a close correspondence between constructors in the source language and constants in HOL which embody their semantics.
+For embedding imperative languages, or for impure functional languages this suggests that monads or arrows should be used in HOL.
+<p/>
+Still not obvious why you would use them in SML.
+The thing which most attracts me to try them in SML is the static side of things, i.e. arrows not monads.
+Here are the two things which make me think there might be some mileage for arrows.
+</subsec></sbcol><sbcol><subsec>
+Firstly I want to try out some things on the parser front which make the parser to a lot more work.
+I want to support (for the sake of mathematics, inter alia) languages in which disambiguation of the parse tree uses type information.
+e.g. languages with overloading and coercions.
+And languages (again like maths) which are extensible, and where local definitions can change the language, in effect.
+I'm looking to merge the language definition into the symbol table.
+So it looks like the separation between the static and the dynamic aspects of parsing is breaking down.
+<p/>
+The other area is proof.
+Because X-Logic will embed languages into higher order set theory, the type system of the source language will often be mapped to sets rather than types in the target language.
+This presses upon the weakness of tools like ProofPower for conditional rewriting, since things which are "static" in the source language become "dynamic" in the target language.
+To be able to rewrite expressions in such an embedded language you have to be able to pick up context on the way down through the term so that it can be used to discharge the conditions on your rewrite rules.
+The machinery of conversions in LCF like provers is a machinery for applying pure rewrite rules and it suffers from a problem analogous to that appearing in monads.
+Conversions are represented as functions, and though there are efficient ways of forming a wide OR over a collection of conversions (using term nets) the information is lost when the conversion is formed, so the efficient OR can't be repeated and the conversional OR_C is unable to use the term nets which were used to make its operands.
+The latter point there is not connected with the rewrite context issue, and much less important, but the two together encourage me to explore the idea of using arrows for conversions.
+(you can also use this to integrate the effects of "stripping" into the rewriting process)
+</subsec></sbcol>
+</secbody>
+</section>
+
+<section title="The Arrow Signatures">
+<abstract>
+This tells us what arrows are.
+</abstract>
+<secbody title="The Arrow Signature">
+<sbcol>
+<subsec>
+Arrows are like Monads except that they permit "static analysis" to take place during composition.
+To do this the type of a parameterised computation, which is a function in a monad, is made more abstract, allowing that it may contain information which can be used for static analysis (to optimise the composed computation perhaps).
+Because this type is now more opaque, more operations are required in the primitive set.
+<p/>
+The primitive operations are:
+<dl>
+<dt>arr</dt>
+<dd>this is analogous to "unit" in that it maps a value to a computation which yields that value</dd>
+<dt>>>></dt>
+<dd>this is analogous to "bind" and provides composition of arrows</dd>
+<dt>first</dt>
+<dd>takes an arrow and returns an arrow over a product type which is in effect the product of the initial arrow (on the left component of the product) and the identity arrow (arr (fn x=>x)) on the right component.</dd>
+<dt>left</dt>
+<dd>as first "lifts" an arrow into the left side of a product, left lifts an arrow into the left side of a disjoint union, i.e. in the resulting arrow over the disjoint union the original arrow will be applied if the input value is in the left component of the disjoint union and the identity arrow will be applied otherwise.</dd>
+</dl>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sig"><![CDATA[
+infix >>>
+
+datatype ('a,'b)OR = L of 'a | R of 'b;
+]]></ft>
+<ft lang="xl-sig"><![CDATA[
+signature Arrow =
+  sig
+    type ('a,'b) A
+    val arr : ('a -> 'b) -> ('a,'b) A
+    val >>> : ('a,'b) A * ('b,'c) A -> ('a,'c) A
+    val first : ('a,'b) A -> (('a * 'c),('b * 'c))A
+    val left : ('a,'b) A -> (('a,'c)OR,('b,'c)OR)A
+    val lleft : (unit -> ('a,'b) A) -> (('a,'c)OR,('b,'c)OR)A
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functors between Monads and Arrows">
+<abstract>
+From any Monad we can construct an Arrow, and we ought to be able to retrieve the original Monad from that Arrow.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Kleisli Functor">
+<ft lang="xl-sml"><![CDATA[
+functor Kleisli (Monad:Monad):Arrow =
+  struct
+    local
+      open Monad
+    in
+      type ('a,'b)A      = 'a -> 'b M
+      fun arr f b        = unit (f b)
+      fun op >>> (f,g) b = bind (f b) g
+      fun first f (a,c)  = bind (f a) (fn b => unit (b,c))
+      fun left f (L v)   = bind (f v) (fn x => unit (L x))
+      |   left f (R v)   = unit (R v)
+      fun lleft f (L v)  = bind (f () v) (fn x => unit (L x))
+      |   lleft f (R v)   = unit (R v)
+    end
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Full Arrows">
+<abstract>
+A fuller signature for arrows is defined, with a functor constructing full arrows from primitive arrows.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Full Arrow Signature">
+From the primitive constructors of the monad or arrow signatures the following more complete set is definable.
+What they do can be guessed from the naming and signatures by extrapolation from the constructors in the primitive sets.
+<ft lang="xl-sig"><![CDATA[
+infix ||| |||| &&& ***
+
+signature FullArrow =
+  sig
+    include Arrow
+    val idarrc  : unit -> ('a,'a)A
+    val second : ('b,'c)A -> (('a * 'b),('a * 'c))A
+    val ***    : ('a,'b)A * ('c,'d)A -> (('a * 'c),('b * 'd))A
+    val &&&    : ('a,'b)A * ('a,'c)A -> ('a,('b * 'c))A
+    val right  : ('b,'c)A -> (('a,'b)OR,('a,'c)OR)A
+    val lright : (unit -> ('b,'c)A) -> (('a,'b)OR,('a,'c)OR)A
+    val |||    : ('a,'c)A * ('b,'c)A -> (('a,'b)OR,'c)A
+    val ||||   : (unit -> ('a,'c)A) * (unit -> ('b,'c)A) -> (('a,'b)OR,'c)A
+    val amerge : unit -> (('a,'a)OR,'a)A
+
+    val test   : ('a,bool)A -> ('a, ('a,'a)OR)A
+    val aif    : ('a,bool)A -> ('a,'b)A -> ('a,'b)A -> ('a,'b)A
+    val laif   : ('a,bool)A -> (unit -> ('a,'b)A) -> (unit -> ('a,'b)A) -> ('a,'b)A
+
+    val foldl  : ('b * 'a,'b)A -> ('b * ('a list),'b)A
+    val foldr  : ('a * 'b,'b)A -> (('a list) * 'b,'b)A
+
+    val mapl   : ('a,'b)A -> ('a list,'b list)A
+    val mapr   : ('a,'b)A -> ('a list,'b list)A
+
+    val amap   : ('a,'b)A list -> ('a, 'b list)A
+    val vseq  : ('a,'a)A list -> ('a,'a)A
+  end
+]]></ft>
+</subsec>
+<subsec title="The Full Arrow Functor">
+<ft lang="xl-sml"><![CDATA[
+functor FullArrow (Arrow:Arrow):FullArrow =
+  struct
+    local
+      fun swapp (x,y) = (y,x)
+      fun swapu (L x) = R x
+      |   swapu (R x) = L x
+      fun merge (L x) = x
+      |   merge (R x) = x
+      fun id x        = x
+    in
+      open Arrow
+      type arrextype      = string
+      exception arrex of arrextype
+      fun idarrc v        = arr (fn x=>x)
+      fun second f        = (arr swapp) >>> first f >>> (arr swapp)
+      fun op *** (f,g)    = first f >>> second g
+      fun op &&& (f,g)    = arr (fn x=> (x,x)) >>> (f *** g)
+      fun right f         = (arr swapu) >>> left f >>> (arr swapu)
+      fun lright f        = (arr swapu) >>> lleft f >>> (arr swapu)
+      fun op ||| (f,g)    = left f >>> right g >>> (arr merge)
+      fun op |||| (f,g)   = lleft f >>> lright g >>> (arr merge)
+      fun amerge x        = arr merge
+
+      fun test f          = (f &&& arr id) >>>
+                            arr (fn (b,a)=> if b then L a else R a)
+      fun aif t a1 a2     = (test t) >>> (a1 ||| a2)
+      fun laif t a1 a2    = (test t) >>> (a1 |||| a2)
+
+      fun foldl farr = aif (arr (fn (_,y) => null y))
+                           (arr (fn (x,y) => x))
+                           (((arr (fn (ib,h::_) => (ib,h)
+                                   | _ => raise arrex "foldl matching problem")
+                              >>> farr)
+                             &&& arr (fn (_,_::t) => t
+                                      | _ => raise arrex "foldl matching problem")
+                            )
+                            >>> foldl farr
+                           )
+      fun foldr farr = aif (arr (fn (x,_) => null x))
+                           (arr (fn (x,y) => y))
+                           ((arr (fn (_::t,_) => t | _ => raise arrex "foldr matching problem")
+                             &&& (arr (fn (h::_,ib) => (h,ib)
+                                          | _ => raise arrex "foldr matching problem")
+                                  >>> farr)
+                            )
+                            >>> foldr farr
+                           )
+
+      fun mapl a = ((arr (fn _=>[])) &&& arr id)
+                   >>> foldl ((second a)>>>(arr (fn (x,y)=> y::x)))
+      fun mapr a = (arr id &&& (arr (fn _=>[])))
+                   >>> foldr ((first a)>>>(arr (fn (x,y)=> x::y)))
+
+      fun amap (a::alist) = (a &&& (amap alist)) >>> (arr (op ::))
+      |   amap []         = arr (fn x=> [])
+
+      fun vseq (a::alist) = a >>> (vseq alist)
+      |   vseq []         = arr id
+    end
+end
+]]></ft>
+</subsec>
+<subsec title="Exception Arrow Signature">
+<ft lang="xl-sig"><![CDATA[
+signature XArrow =
+  sig
+    include FullArrow
+    type failinfo
+    type abortinfo
+    exception Fail of failinfo
+    exception Abort of abortinfo
+    val fail : failinfo -> ('a,'b)A
+    val abort : abortinfo -> ('a,'b)A
+    val catchfail : ('a,'b)A * (failinfo -> ('a,'b)A) -> ('a,'b)A
+    val catchabort : ('a,'b)A * (abortinfo -> ('a,'b)A) -> ('a,'b)A
+  end
+]]></ft>
+</subsec>
+<subsec title="State Arrow Signature">
+This is like a full arrow except that it has an arrow for reading/updating the state.
+<ft lang="xl-sig"><![CDATA[
+signature StateArrow =
+  sig
+    include FullArrow
+    type state
+    val sarr: ((state * 'a) -> ('b * state)) -> ('a,'b)A
+  end
+]]></ft>
+</subsec>
+<subsec title="The State Arrow Functor">
+<ft lang="xl-sml"><![CDATA[
+functor StateArrow(StateMonad:StateMonad):StateArrow =
+  struct
+    structure FullArrow = FullArrow(Kleisli(StateMonad))
+    open FullArrow
+    type state = StateMonad.state
+    fun sarr f a = StateMonad.mod_state (fn s => f(s,a))
+  end
+]]></ft>
+</subsec>
+<subsec title="Basic State Exception Arrow Signature">
+This is like a state arrow except that it has exception raising and handling.
+<ft lang="xl-sig"><![CDATA[
+signature StateXArrow =
+  sig
+      include StateArrow
+      type failinfo
+      type abortinfo
+      exception Fail of failinfo
+      exception Abort of abortinfo
+      val fail : failinfo -> ('a,'b)A
+      val abort : abortinfo -> ('a,'b)A
+      val catchfail : ('a,'b)A * (failinfo -> ('a,'b)A) -> ('a,'b)A
+      val catchabort : ('a,'b)A * (abortinfo -> ('a,'b)A) -> ('a,'b)A
+  end
+]]></ft>
+</subsec>
+<subsec title="Basic State Exception Arrow Functor">
+<ft lang="xl-sml"><![CDATA[
+functor StateXArrow (StateXMonad:StateXMonad):StateXArrow =
+  struct
+    local
+      fun id x = x
+    in
+      structure StateArrow = StateArrow(StateXMonad)
+      open StateArrow
+      type failinfo=StateXMonad.failinfo
+      type abortinfo=StateXMonad.abortinfo
+      exception Fail = StateXMonad.Fail
+      exception Abort = StateXMonad.Abort
+      fun fail i = arr (fn x=> raise Fail i)
+      fun abort i = arr (fn x=> raise Abort i)
+      fun catchfail (aba,fiaba) a = StateXMonad.catchfail ((aba a), fn fi=> fiaba fi a)
+      fun catchabort (aba,aiaba) a = StateXMonad.catchabort ((aba a),fn ai=> aiaba ai a)
+    end
+end
+]]></ft>
+</subsec>
+<subsec title="Full State Exception Arrow Signature">
+<ft lang="xl-sig"><![CDATA[
+signature FullStateXArrow =
+  sig
+    include StateXArrow
+
+    val read_state: (unit,state)A
+    val write_state: (state,unit)A
+
+    val unlessfail: (('a,'b)A * (unit -> ('b,'c)A) * (unit -> ('a,'c)A)) -> ('a,'c)A
+    val firstsucc: ('a,'b)A list -> ('a,'b)A
+    val frepeat: ('a,'a)A -> ('a,'a)A
+    val brepeat: ('a,'b)A -> ('a,'b list)A
+
+    val frepeat1p: ('a,'a)A -> ('a,'a)A
+    val brepeat1p: ('a,'b)A -> ('a,'b list)A
+  end
+]]></ft>
+</subsec>
+<subsec title="Full State Exception Arrow Functor">
+<ft lang="xl-sml"><![CDATA[
+local open XlTools
+in
+functor FullStateXArrow (StateXMonad:StateXMonad):FullStateXArrow =
+   struct
+    structure StateXArrow = StateXArrow(StateXMonad)
+    open StateXArrow
+
+    val read_state:(unit,state)A = sarr (fn (state,_) => (state,state)) 
+    val write_state = sarr (fn (_,x) => ((),x))
+
+    fun unlessfail (fa,a1c,a2c) = (catchfail ((fa >>> arr L), fn fi=> (a2c ()) >>> arr R))
+                                  >>> (lleft a1c) >>> amerge ()
+
+    fun firstsucc (a::al) = unlessfail (a, idarrc, fn x=> firstsucc al)
+    |   firstsucc [] = fail "firstsucc: all alternatives failed"
+
+    fun frepeat a = unlessfail (a, fn _=> (frepeat a), idarrc)
+    fun brepeat a = unlessfail (a &&& arr id,
+                              fn _=> second (brepeat a) >>> arr (op ::),
+                              fn _=> arr (fn y=> []))
+
+    fun frepeat1p a = a >>> (frepeat a)
+    fun brepeat1p a = (a &&& arr id) >>> (second (brepeat a)) >>> arr (op ::)
+   end
+end
+]]></ft>
+</subsec>
+<subsec title="Structure VectorParseArrow">
+<ft lang="xl-sml"><![CDATA[
+
+structure VectorParseArrow = FullArrow(Kleisli(InStreamMonad(XlVectorStream)));
+
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+

@@ -1,0 +1,117 @@
+# $Id: Makefile.in,v 1.4 2010-04-14 21:54:11 rbj Exp $
+# @configure_input@
+
+.PHONY : ibuild icommon iinstall uninstall $(UNINSTALL)
+
+TOPSRCDIR=@top_srcdir@
+
+default: help
+
+include build/vars.mk
+include build/project.mk
+
+CVSIGNORE=Makefile configure config.status config.cache config.log \
+	build/vars.mk autom4te.cache
+
+XLOG=x-logic
+XLOGDIR=@datadir@/$(XLOG)
+XBDIR=$(XLOGDIR)/xbuild
+
+SUBDIRS=work
+#TARDEST=/dosb/xfer
+#CVSSCRIPTDIR=/dosb/xfer/cvsud
+#OLDSRCDIR=/home/rbj/x-logic.old
+
+help:
+	@echo "help"
+	@echo "ibuild		- the x-logic web context in @datadir@/x-logic/build"
+	@echo "install		- the web directory in @datadir@/x-logic/x-logic"
+	@echo "clean		- tidy up (deletes Makefile as well!)"
+	@echo "x-logic.tar.gz"
+	@echo "configure	-	build a configure script from configure.in using autoconf"
+	@echo "Makefile		-	make Makefile using config.status"
+	@echo "config.status	-	update config.status to reflect any changes in configure"
+	@echo "every invocation of make will update Makefile (if out of date)"
+
+configure: configure.in
+	autoconf
+
+Makefile: $(MKDEPS)
+	./config.status
+
+clean:
+	rm -rf work
+	rm $(CVSIGNORE)
+
+icommon:
+	@if test -d $(WEBDIR)/common; then rm -rf $(WEBDIR)/common; fi
+	$(INSTALL) -d -m 755 $(WEBDIR)/common
+	$(INSTALL) common/*.css $(WEBDIR)/common
+	$(INSTALL) common/*.js $(WEBDIR)/common
+	$(INSTALL) common/*.php $(WEBDIR)/common
+
+config.status: configure
+	./config.status --recheck
+
+prebuild: install_0
+	cd work/build/docprep && $(MAKE) install
+
+ibuild: work prebuild
+	cd work && $(MAKE) build
+
+iimages:
+	@if test -d $(WEBDIR)/images; then rm -rf $(WEBDIR)/images; fi
+	$(INSTALL) -d -m 755 $(WEBDIR)/images
+	$(INSTALL) images/*.gif $(WEBDIR)/images
+	$(INSTALL) -d -m 755 $(WEBDIR)/images/sg
+	$(INSTALL) images/sg/*.gif $(WEBDIR)/images/sg
+
+install_0:
+#	if test -d $(XBDIR); then rm -rf $(XBDIR); fi
+	$(INSTALL) -d -m 755 $(XBDIR)
+	$(INSTALL) -d -m 755 $(XBDIR)/images
+	$(INSTALL) images/*.gif $(XBDIR)/images
+	$(INSTALL) -d -m 755 $(XBDIR)/images/sg
+	$(INSTALL) images/sg/*.gif $(XBDIR)/images/sg
+	$(INSTALL) -d -m 755 $(XBDIR)/common
+	$(INSTALL) common/*.css $(XBDIR)/common
+	$(INSTALL) common/*.xsl $(XBDIR)/common
+	$(INSTALL) common/*.js $(XBDIR)/common
+	$(INSTALL) -d -m 755 $(XBDIR)/build
+	$(INSTALL) build/vars.mk.in $(XBDIR)/build
+	$(INSTALL) $(MKFILES) $(XBDIR)/build
+
+install: ibuild icommon iimages install_0
+	cd work && $(MAKE) install
+
+installdirs:
+	$(INSTALL) -d -m 777 $(XBDIR)
+	$(INSTALL) -d -m 777 $(BINDIR)
+	$(INSTALL) -d -m 777 $(LIBDIR)
+	$(INSTALL) -d -m 777 $(PERLLIBDIR)
+	$(INSTALL) -d -m 777 $(DATADIR)	
+
+uninstallbins:
+	-rm -rf $(BINDIR)
+
+uninstalldata:
+	-rm -rf $(RDATADIR)
+
+uninstalllibs:
+	-rm -rf $(LIBDIR)
+
+uninstallperllibs:
+	-rm -rf $(PERLLIBDIR)
+
+uninstallweb:
+	-rm -rf $(RWEBDIR)
+
+UNINSTALL= uninstallbins uninstalllibs uninstallperllibs uninstallweb uninstalldata
+
+uninstall: $(UNINSTALL)
+
+work: config.status
+	./config.status
+
+#x-logic.tar.gz: install
+#	cd $(WEBDIR)/..; tar cvfz $(TARDEST)/x-logic.tar.gz x-logic

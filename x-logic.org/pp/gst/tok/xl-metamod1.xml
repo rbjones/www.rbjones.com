@@ -1,0 +1,382 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: xl-metamod1.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="xl-metamod1"
+       title="The Simplest Model of X-Logic"
+       description="A model concerning truth of documents and soundness of transformations, for X-Logic."
+       keywords="x-logic xml logic proofpower gst hol set theory philosophy knowledge analytic formal X-Logic document truth transformation soundness correctness"
+       class="con"
+       root="../../../"
+       path="pp/gst/tok/"
+       up="index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+A simple model of semantics and soundness for X-Logic.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction" />
+<secref title="Types" />
+<secref title="Propositions" />
+</sbcol>
+<sbcol>
+<secref title="Meta Reasoning" />
+<subsec title="Listing of Theory xl-mm1" href="xl-mm1.html"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+Purposes and key ideas.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Purposes">
+<p>The main purposes are:</p>
+<ol>
+<li>To provide a simple formal exposition of the core concepts of X-Logic</li>
+<li>To provide the basis for the XL-Glue proof tool.</li>
+<li>To provide some informal examples to clarify the point of it all.</li>
+</ol>
+</subsec>
+<subsec title="Key Ideas">
+<p>
+X-Logic is a document oriented logical framework for the semantic web.
+At the X-Logic level we are concerned with documents as assertions, and with programs performing inferences by reading documents and creating new documents.
+</p>
+<p>
+The key surprises here are:
+<ol>
+<li>The languages which concern us here are not just <i>logics</i>, but <i>any language</i> which has a <i>propositional</i> semantics, and any language <i>can be given</i> a propositional semantics (or two).</li>
+<li>The things which do inference are not just <i>theorem provers</i>, but <i>any program</i> which has a <i>propositional specification</i>, and any program <i>can be given</i> a propositional specification (or two).</li>
+</ol>
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Theory xl-mm1">
+We here introduce the new theory in the context of galactic set theory (though it could have been done in less exotic environs).
+<ft lang="xl-sml" rest="">
+open_theory "gst";
+set_pc "gst";
+force_new_theory "xl-mm1";
+force_new_pc "xl-mm1";
+</ft>
+</subsec>
+<subsec title="Caveats">
+This is just the first stage in the development of models for XL-Glue, and doesn't yield a good model.
+I had hoped that it would be useful for the exposition of the "two key ideas", but even for that purpose it would need to be reworked substantially.
+The second metamodel seems to me better, but because it is intended to address the use of digital signatures it is also significantly more complex.
+Someday this will have to be redone.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Types">
+<abstract>
+An overview of the model with specifications of the various types of entity involved in it.
+</abstract>
+<secbody title="Domain of Discourse">
+<sbcol>
+<subsec>
+<p>
+The subject matter of the model is programs which perform transformations over documents, which are written in a variety of languages.
+</p><p>
+We take the set of documents to be unspecified.
+A language is modelled as a set of documents.
+</p><p>
+This should be understood as a purely <i>semantic</i> definition, in which the essential feature of a document is that it expresses an assertion, and the only matter of interest for our present purposes is whether that assertion is true.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<p>Thus the set of documents which constitutes a language is the set of documents which when interpreted in that language are <i>true</i>.
+</p><p>
+A program is any partial function over the documents.
+A specification is any pair of languages, which are to be understood as the input and output languages of some program.
+</p>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Basic Types">
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;Document Language Program Specification DocProp ProgProp InferProp &bottom;:'a GS&bull;
+&not;	&bottom; &isin; Document
+&and;	Language = &weierp; Document
+&and;	Program = Document &nrarr; Document
+&and;	Specification = Language &cross; Language
+&and;	DocProp = Language &cross; Document
+&and;	ProgProp = Specification &cross; Program
+&and;	InferProp = Program &cross; (Document &cross; Document)
+&qqter;);
+a (MAP_EVERY &exist;_tac [
+	&qqtel;&empty;&qqter;, &qqtel;&weierp; &empty;&qqter;, &qqtel;&empty; &nrarr; &empty;&qqter;, &qqtel;&weierp; &empty; &cross; &weierp; &empty;&qqter;,
+	&qqtel;&weierp; &empty; &cross; &empty;&qqter;, &qqtel;(&weierp; &empty; &cross; &weierp; &empty;) &cross; (&empty; &nrarr; &empty;)&qqter;,
+	&qqtel;(&empty; &nrarr; &empty;) &cross; (&empty; &cross; &empty;)&qqter;, &qqtel;&empty;&qqter;]
+	THEN (prove_tac[]));
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+The following definition should be understood as introducing the semantic objects which correspond to the parts of a very simple language.
+Of these, the last three are kinds of "proposition" corresponding two three kinds of sentence which are available in our language.
+Informally they are the propositions respectively that a document in some language is true, that a program satisfies some specification, and that one document has been computed from another by some program.
+
+<holconst><holsig>
+Document Language Program Specification DocProp ProgProp InferProp &bottom;:'a GS
+</holsig>
+<holpred>
+&not;	&bottom; &isin; Document
+&and;	Language = &weierp; Document
+&and;	Program = Document &nrarr; Document
+&and;	Specification = Language &cross; Language
+&and;	DocProp = Language &cross; Document
+&and;	ProgProp = Specification &cross; Program
+&and;	InferProp = Program &cross; (Document &cross; Document)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Constructors">
+The following definitions provide constructors for the basic types. 
+<holconst><holsig>
+mk_spec mk_dp mk_pp:
+	'a GS &rarr; 'a GS &rarr; 'a GS;
+mk_ip:
+	'a GS &rarr; 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+	mk_spec = $&mapsto; &and;
+	mk_dp = $&mapsto; &and;
+	mk_pp = $&mapsto; &and;
+	mk_ip = &lambda;pr inp out&bull;
+		pr &mapsto; (inp &mapsto; out)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Projections">
+The following definitions provide projection functions for extracting components from the structures. 
+<holconst><holsig>
+in_lang out_lang dp_lang dp_doc
+pp_spec pp_prog ip_prog ip_in ip_out
+	:'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+	in_lang = fst
+&and;	out_lang = snd
+&and;	dp_lang = fst
+&and;	dp_doc = snd
+&and;	pp_spec = fst
+&and;	pp_prog = snd
+&and;	ip_prog = fst
+&and;	ip_in = (&lambda;d&bull; fst (snd d))
+&and;	ip_out = (&lambda;d&bull; snd (snd d))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Propositions">
+<abstract>
+Three kinds of proposition are defined, concerning truth of documents, correctness of programs and derivation of documents.
+</abstract>
+<secbody>
+<sbcol>
+<subsec>
+In this section we provide the meaning for the three kinds of proposition introduced above. In each case this is a property which should be understood as defining when the relevant kind of sentence is true.
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec title="Truth">
+First, a document is true in some language if it is a member of that language.
+(it suffices for our present purposes to model a language by its set of true sentences) 
+<holconst><holsig>
+TrueDocP: 'a GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;dp&bull; TrueDocP dp &equiv;
+	dp &isin; DocProp &and;
+	(dp_doc dp) &isin; (dp_lang dp)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Inference">
+Next, some document is inferred by a program from another document if the function which is the value of the program maps the second document to the first. 
+Note that function application is not used in this statement because of the possible complication that the input document is not in the domain of the function.
+<holconst><holsig>
+DocInferP: 'a GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;ip&bull; DocInferP ip &equiv;
+	ip &isin; InferProp &and;
+	(ip_in ip) &mapsto; (ip_out ip) &isin; (ip_prog ip)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Soundness">
+Finally, a program is sound with respect to some specification if any document computed by that program from a true document in its input language will be a true document of the output language.
+<holconst><holsig>
+SoundProgP: 'a GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;pp&bull; SoundProgP pp &equiv;
+	pp &isin; ProgProp &and;
+ &forall;ind oud&bull;
+	TrueDocP (mk_dp (in_lang (pp_spec pp)) ind) &and;
+	DocInferP (mk_ip (pp_prog pp) ind oud) &rArr;
+	TrueDocP (mk_dp (out_lang (pp_spec pp)) oud)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Soundness of Identity Function">
+<p>
+This is not the kind of reasoning which the metanotation is intended for, but as a very trivial demonstation of how programs other than proof tools can do inferences for us we demonstrate that the identity function infers soundly against any specification in which the input and output languages are the same.
+(i.e. given a true proposition it returns the same true proposition)
+</p><p>
+In the following theorem the &qqtel;l &mapsto; l&qqter; is the specification, which states that the input and output languages are both &qqtel;l&qqter;, and the right hand side of the conditional asserts that the identity function over &qqtel;l&qqter; satisfies that specification or is sound with respect to that specification.
+i.e. when given a true proposition in language &qqtel;l&qqter;, it returns a true proposition in the same language.
+The specification does not require the output proposition to be the same as the input proposition, but in this case it is.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;l&bull; l &isin; Language &rArr;
+SoundProgP ((l &mapsto; l) &mapsto; (id l))&qqter;);
+a (prove_tac [
+	get_spec &qqtel;id&qqter;,
+	get_spec &qqtel;pp_spec&qqter;,
+	get_spec &qqtel;mk_pp&qqter;,
+	get_spec &qqtel;Language&qqter;,
+	get_spec &qqtel;SoundProgP&qqter;,
+	get_spec &qqtel;DocInferP&qqter;,
+	get_spec &qqtel;TrueDocP&qqter;]);
+a (bc_thm_tac (rewrite_rule
+	[get_spec &qqtel;id&qqter;] id&isin;&nrarr;_thm2)
+	THEN strip_tac);
+val id_spec_thm =
+	save_pop_thm "id_spec_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Meta Reasoning">
+<abstract>
+Elementary reasoning about inferences and their composition.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Introduction">
+In the following we investigate the kind of reasoning which could be undertaken in a language suitable for talking about the model we have introduced.
+Rather than invent a language, we use the syntax already available to us, and build up some elementary tools for reasoning about the model.
+If we then devised a suitable special concrete syntax and gave this its semantics in terms of the model by a semantic embedding into ProofPower GST, the proof tools we devise here would then serve as a tools for reasoning about this new language.
+The step to concrete syntax will be omitted, however, since we expect further elaborations to the model before this would be worthwhile.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="What kind of logic?">
+<p>
+We have a language in which programs, modelled as functions, are applied to documents to yield new documents, and hence an expression language involving function application.
+We have a couple of predicates which are applied to these programs and documents.
+So it looks like we are heading for some kind of predicate calculus.
+</p><p>
+On the other hand, if we consider languages as types of document and specifications as types of program, then both our predicates become typing assertions in an applicative calculus.
+Since typing inference in pure combinatory logic is the same as a fragment of propositional logic we may hope that a metalanguage based on the simple model we have in hand will logically much simpler than the predicate calculus, and we may hope for fully automatic proofs.
+</p>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Modus Ponens">
+The central inference rule is analogous to modus ponens.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;in_doc in_lan p out_doc out_lan&bull;
+  TrueDocP
+	(mk_dp in_lan in_doc) 
+&and; SoundProgP
+	(mk_pp (mk_spec in_lan out_lan) p)
+&and; DocInferP
+	(mk_ip p in_doc out_doc)
+&rArr; TrueDocP
+	(mk_dp out_lan out_doc)&qqter; );
+a (rewrite_tac[
+	get_spec &qqtel;TrueDocP&qqter;, 
+	get_spec &qqtel;SoundProgP&qqter;, 
+	get_spec &qqtel;DocInferP&qqter;,
+	get_spec &qqtel;Document&qqter;,
+	get_spec &qqtel;mk_spec&qqter;,
+	get_spec &qqtel;in_lang&qqter;]
+ THEN REPEAT strip_tac
+ THEN all_asm_fc_tac[]);
+val mm1_mp_thm =
+	save_pop_thm "mm1_mp_thm";
+</ft>
+Because programs are permitted only one input and one output document, the limitations of this metamodel are very severe.
+Now we have modus ponens we can easily compose inferences to give results over chains of computations, but that's about all we can do.
+</subsec>
+<subsec title="Composition of Inferences">
+The following proof demonstrates that sound inferences compose.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;d1 l1 d2 l2 d3 l3 p1 p2&bull;
+  TrueDocP
+	(mk_dp l1 d1) 
+&and; SoundProgP
+	(mk_pp (mk_spec l1 l2) p1)
+&and; SoundProgP
+	(mk_pp (mk_spec l2 l3) p2)
+&and; DocInferP
+	(mk_ip p1 d1 d2)
+&and; DocInferP
+	(mk_ip p2 d2 d3)
+&rArr; TrueDocP
+	(mk_dp l3 d3)&qqter; );
+a (REPEAT strip_tac
+	THEN REPEAT
+	(all_fc_tac[mm1_mp_thm]));
+val mm1_mpc_thm =
+	save_pop_thm "mm1_mpc_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

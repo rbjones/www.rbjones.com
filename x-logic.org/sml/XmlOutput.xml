@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: XmlOutput.xml,v 1.1.1.1 2006-04-19 20:44:53 rbj01 Exp $"
+       name="XmlOutput"
+       title="XML Output"
+       description="Part of the X-Logic X-ification toolset to facilitate converting SML based tools to work with XML theory descriptions. This part concerns the output of XML files from internal parse trees."
+       keywords="x-logic xml parse hooks SML fxp"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Procedures for driving collections of "hooks" from fat or lean datatype representations of XML documents, primarily intended to support writing XML documents to files.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Driving Fat Hooks"/>
+<secref title="Full XML Output"/>
+</sbcol>
+<sbcol>
+<secref title="Lean Hooks"/>
+<secref title="Driving Lean Hooks"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+This document provides facilities for output of XML documents using the fxp library.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Fat Tree Output">
+The most complete representation of the data provided by the fxp parser is the "fat" parse tree.
+A fat parse tree can be used to drive a set of fxp parser hooks, and a functor is provided to do this.
+A structure is also provide which gives "full" XML output from a fat parse tree by driving the fxp copy hooks.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Lean Tree Output">
+The fat tree is likely to have few applications in X-Logic, and is more a easy staging point in discovering how to use fxp.
+The lean tree is what X-Logic will mostly use.
+To generate output from the lean tree we use a scheme similar to that for the fat tree.
+A signature for lean tree hooks is defined and a procedure for driving such hooks from a lean tree is defined.
+Then the fxp copy/canon hooks are stripped down to match the lean tree hook signature, and an output structure for lean trees is obtained.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+                                                                                                             
+<section title="Driving Fat Hooks">
+<abstract>
+The following functor provides a driver for a set of Hooks.
+This allows the Hooks to be driven from a parse tree as if the parser were driving the hooks when it originally parsed the file.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The HookDriver Functor">
+<ft lang="xl-sml"><![CDATA[
+functor HookDriver (Hooks:Hooks) =
+  struct
+    open Hooks FatTree;
+    
+    fun drive (XmlDoc (xi,ptl,dtd)) ad = drivel ptl(hookXml (ad,xi))
+    |   drive (ProcInst pii) ad = hookProcInst (ad,pii)
+    |   drive (Comment ci) ad = hookComment (ad,ci)
+    |   drive (White wi) ad = hookWhite (ad,wi)
+    |   drive (Decl di) ad = (print "!5"; hookDecl (ad,di)) before print "!5"
+    |   drive (Element (sti as (se,i,atts,n,empty),ptl,eti)) ad =
+          let val ad1 = hookStartTag (ad,sti)
+          in if empty
+             then ad1
+             else hookEndTag (drivel ptl ad1,eti)
+          end  
+    |   drive (CData cdi) ad = hookCData (ad,cdi)
+    |   drive (Data di) ad = hookData (ad,di)
+    |   drive (CharRef cri) ad = hookCharRef (ad,cri)
+    |   drive (GenRef gri) ad = (print "!1"; hookGenRef (ad,gri)) before print "!1"
+    |   drive (ParRef pri) ad = hookParRef (ad,pri)
+    |   drive (EntEnd eei) ad = (print "!2"; hookEntEnd (ad,eei)) before print "!2"
+    |   drive (DocType dti) ad = hookDocType (ad,dti)
+    |   drive (Subset si) ad = hookSubset (ad,si)
+    |   drive (ExtSubset esi) ad = (print "!3";  hookExtSubset (ad,esi)) before print "!3"
+    |   drive (EndDtd edi) ad = (print "!4";  hookEndDtd (ad,edi)) before print "!4"
+    and
+        drivel [] ad = ad
+    |   drivel (h::t) ad = drivel t (drive h ad)
+
+    fun driveHooks p ad = hookFinish (drive p ad)
+  end;
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+                                                                                                             
+<section title="Full XML Output">
+<abstract>
+This structure provides a function which writes to a file the XML generated from a FatTree.
+It is based on the fxp program "Copy" and uses the copyHooks verabatim.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="print">
+<ft lang="xl-sml"><![CDATA[
+structure XmlOutput =
+   struct
+      structure ParserOptions = ParserOptions ()
+      structure CatOptions = CatOptions ()
+      structure CatParams =
+	 struct
+	    open CatError CatOptions CopyOptions Uri UtilError 
+
+	    fun catError(pos,err) = if !O_SILENT then () else TextIO.output
+	       (!O_ERROR_DEVICE,formatMessage (4,!O_ERROR_LINEWIDTH) 
+		(Position2String pos^" Error in catalog:"::catMessage err))
+	 end
+      structure Resolve    = ResolveCatalog (structure Params = CatParams) 
+      structure CopyHooks  = CopyHooks      (structure ParserOptions = ParserOptions)
+(*    structure ParseCopy  = Parse          (structure Dtd = Dtd 
+					     structure Hooks = CopyHooks
+					     structure Resolve = Resolve
+					     structure ParserOptions = ParserOptions)
+*)
+      structure Output = HookDriver (CopyHooks)
+
+      open 
+	 CatOptions CopyOptions Options Output ParserOptions Uri
+
+      val usage = List.concat [parserUsage,[U_SEP],catalogUsage,[U_SEP],copyUsage]
+
+      exception Exit of OS.Process.status 
+	 
+      fun output(args,parsetree) = 
+	 let 
+	    val prog = "XmlOutput.output"
+	    val hadError = ref false
+	       
+	    fun optError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in hadError := true
+	       end
+	    fun exitError msg = 
+	       let val _ = TextIO.output(TextIO.stdErr,msg^".\n")
+	       in raise Exit OS.Process.failure 
+	       end
+	    fun exitHelp prog = 
+	       let val _ = printUsage TextIO.stdOut prog usage
+	       in raise Exit OS.Process.success 
+	       end
+	    fun exitVersion prog = 
+	       let val _ = app print [prog," version ",Version.FXP_VERSION,"\n"]
+	       in raise Exit OS.Process.success 
+	       end
+	    
+	    fun summOpt prog = "For a summary of options type "^prog^" --help"
+	    fun noFile(f,cause) = "can't open file '"^f^"': "^exnMessage cause
+	       
+	    val opts = parseOptions args
+	    val _ = setParserDefaults()
+	    val opts1 = setParserOptions (opts,optError)
+	    val _ = setCatalogDefaults()
+	    val opts2 = setCatalogOptions (opts1,optError)
+	    val _ = setCopyDefaults()
+	    val (vers,help,err,file) = setCopyOptions (opts2,optError)
+	    val _ = if !hadError then exitError (summOpt prog) else ()
+	    val _ = if vers then exitVersion prog else ()
+	    val _ = if help then exitHelp prog else ()
+	    val _ = case err 
+		      of SOME "-" => O_ERROR_DEVICE := TextIO.stdErr
+		       | SOME f => (O_ERROR_DEVICE := TextIO.openOut f
+				    handle IO.Io {cause,...} => exitError(noFile(f,cause)))
+		       | NONE => ()
+(*	    val f = valOf file handle Option => "-"
+	    val uri = if f="-" then NONE else SOME(String2Uri f)
+*)
+            val (XmlDoc (_,_,dtd)) = parsetree 
+            val status = Output.driveHooks parsetree (CopyHooks.copyStart dtd)
+	 in status
+	 end
+      handle Exit status => status 
+	   | exn => 
+	 let val _ = TextIO.output 
+	    (TextIO.stdErr,"XmlOutput.output: Unexpected exception: "^exnMessage exn^".\n")
+	 in OS.Process.failure
+	 end
+   end;
+]]></ft>
+<hide>
+val [result] = XmlParse.parseXmlDoc(["--validate=no","/home/x-logic/x-logic/work/pp/gst/gst-axioms.xml"]);
+val status = XmlOutput.output(["--output=temp.xml"],result);
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+                                                                                                             
+<section title="Lean Hooks">
+<abstract>
+The following functor provides a signature for a set of hooks which match the lean parse tree.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The LeanHookData structure">
+
+<ft lang="xl-sml"><![CDATA[
+structure LeanHookData =
+  struct
+    type XmlInfo = ((UniChar.Vector * UniChar.Vector), UniChar.Vector) LeanTree.item
+    type StartTagInfo =
+      (UniChar.Vector * UniChar.Vector) *
+      ((UniChar.Vector * UniChar.Vector), UniChar.Vector) LeanTree.attribute list *
+      bool
+    type EndTagInfo = (UniChar.Vector * UniChar.Vector)
+    type DataInfo = UniChar.Vector
+  end
+]]></ft>
+</subsec>
+<subsec title="The LeanHooks signature">
+
+<ft lang="xl-sml"><![CDATA[
+signature LeanHooks =
+  sig
+      type AppData 
+      type AppFinal       
+      val hookXml       : AppData * LeanHookData.XmlInfo -> AppData
+      val hookFinish    : AppData -> AppFinal
+      val hookStartTag  : AppData * LeanHookData.StartTagInfo -> AppData
+      val hookEndTag    : AppData * LeanHookData.EndTagInfo   -> AppData
+      val hookData      : AppData * LeanHookData.DataInfo  -> AppData
+  end
+]]></ft>
+</subsec>
+<subsec title="Lean Output">
+
+<ft lang="xl-sml"><![CDATA[
+structure LeanOutput =
+   struct
+      open Base CanonEncode UniChar
+
+      fun putAttValue (f,cv) = 
+	 let 
+	    val f1 = putChar(f,0wx22)
+	    val f2 = putVector(f1,cv)
+	    val f3 = putChar(f2,0wx22)
+	 in f3
+	 end
+	 
+      fun putAttSpec(f,((uri,lname),cv)) = 
+	 let 
+	    val f1 = putBlank f
+	    val f2 = putVector(f1,lname)
+	    val f3 = putChar(f2,0wx3D)
+	    val f4 = putAttValue(f3,cv)
+	 in f4
+	 end
+      
+      fun putEndTag (f,(uri,lname)) = 
+	 let 
+	    val f1 = putData(f,[0wx3C,0wx2F]) (* "</" *)
+	    val f2 = putVector(f1,lname)
+	 in putChar(f2,0wx3E) (* #">" *)
+	 end
+
+      fun putStartTag (f,((uri,lname),atts,mt)) = 
+	 let 
+	    val f1 = putChar(f,0wx3C) (* #"<" *)
+	    val f2 = putVector(f1,lname)
+	    val atts2 = UtilList.sort (fn (((_,a1),_),((_,a2),_)) => compareVector (a1,a2)) atts
+	    val f3 = foldl (fn (spec,f) => putAttSpec (f,spec)) f2 atts2
+            val f4 = if mt then putChar (f3,0wx2F) (* #"/" *) else f3
+	 in putChar(f4,0wx3E) (* #">" *)
+	 end
+   end
+]]></ft>
+</subsec>
+<subsec title="Canonical LeanHooks">
+
+<ft lang="xl-sml"><![CDATA[
+structure CanonLeanHooks:LeanHooks =
+   struct
+      open Base CanonEncode LeanOutput
+
+      type AppData  = File
+      type AppFinal = bool
+
+      fun hookXml _ = openFile()
+      fun hookFinish f = true before closeFile f
+      fun hookStartTag (f,stag) = putStartTag (f,stag)
+      fun hookEndTag (f,etag) = putEndTag (f,etag)
+      fun hookData (f,text) = putVector(f,text)
+   end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+                                                                                                             
+<section title="Driving Lean Hooks">
+<abstract>
+The following functor provides a driver for a set of Hooks.
+This allows the Hooks to be driven from a parse tree as if the parser were driving the hooks when it originally parsed the file.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The LeanHookDriver Functor">
+<ft lang="xl-sml"><![CDATA[
+functor LeanHookDriver (LeanHooks:LeanHooks) =
+  struct
+    local open LeanHooks LeanTree;
+    in
+    fun drive (Element (el as (tag,atts,items))) ad =
+          let val empty = (length items = 0);
+              val ad1 = hookStartTag (ad,(tag,atts,empty))
+          in if empty
+             then ad1
+             else hookEndTag (drivel items ad1,tag)
+          end  
+    |   drive (Data di) ad = hookData (ad,di)
+    and
+        drivel [] ad = ad
+    |   drivel (h::t) ad = drivel t (drive h ad)
+
+    fun driveHooks p ad = hookFinish (drive p ad)
+    end
+  end;
+]]></ft>
+<hide>
+structure CanonHooks = CanonHooks (structure ParserOptions = ParserOptions());
+structure canonOutput = HookDriver (CanonHooks);
+
+val [fatdoc] = XmlParse.parseXmlDoc(["--validate=no","--include-par","--include-external=yes","/home/x-logic/x-logic/work/pp/gst/gst-axioms.xml"]);
+val (FatTree.XmlDoc (_,_,dtd)) = fatdoc;
+(* structure Output =HookDriver(CanonHooks);
+   val status = Output.driveHooks fatdoc (CanonHooks.canonStart dtd); *)
+(* val status = XmlOutput.output(["--output=temp.xml"],fatdoc); *)
+(* val status = XmlOutput.output([],fatdoc); *)
+
+val leandoc = Slim.fatdoc2slim fatdoc;
+val file = Encode.encOpenFile ("output.xml",Encoding.UTF8,"");
+
+structure CanonLeanOutput = LeanHookDriver(CanonLeanHooks);
+CanonLeanOutput.drivel leandoc file;
+
+/usr/local/fxp/bin/fxcanon --validate=no /home/x-logic/x-logic/work/pp/gst/gst-axioms.xml
+/usr/local/fxp/bin/fxcanon /home/x-logic/x-logic/work/pp/gst/gst-axioms.xml
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>

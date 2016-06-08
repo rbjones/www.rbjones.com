@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: BasicMonads.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="BasicMonads"
+       title="Basic Monads"
+       description=""
+       keywords="x-logic xml unicode monad"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sig"/>
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Singatures for state and exception monads, and an input stream monad, with an implementation of an input stream monad with exception handling.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Basic Monad"/>
+<secref title="State Monad"/>
+</sbcol>
+<sbcol>
+<secref title="Exception Monad"/>
+<secref title="InStream Monad"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+Monads for conversion to arrows.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Monads versus Arrows">
+The XlTools combinator library experiments with the use of arrows to achieve high levels of genericity.
+Arrows are used because it appears that some of the intended applications will make use of methods which will work with arrows but not with monads.
+However, many of the applications could be done using monads, and the intention is therefore to implement these as arrows which have been derived from monads via the Kleisli construction, since the monads in these cases are easier to implement than the arrow would be.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Monad Transformers">
+It is possible that functors could be used as monad transformers in building the monads in this document.
+Since this is peripheral to my primary concerns at present, I have not done this, and only one Monad implementation is provided.
+At best the benefits of monad transformers as SML functors would more limited than those of the examples in the literature, which typically make use of the more flexible features available in Haskell.
+For example, a functor could be written to transform a state monad to a state monad with exceptions, but not for adding exceptions to an arbitrary monad.
+<p>
+(I think the above underestimates what can be done.
+I need to try some experiments.)
+</p>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Basic Monad">
+<abstract>
+The basic monad does nothing behind the scenes, no side effects or exceptions.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Signature">
+A Monad is a type of computations together with two primitive operations.
+A computation of some type <i>a</i> is a way of (possibly) obtaining a value of type <i>a</i> which may involve complications, such as side effects or failure.
+The first primitive operation, "unit", takes some value and returns the trivial computation which just returns that value unchanged.
+<p />
+The second, "bind", takes a computation of some type <i>a</i> and function which takes a value of type <i>a</i> and yields a computation of type <i>b</i> and yields a computation of type <i>b</i>.
+It is intended to provide composition of computations where the second computation takes an input which is the type of value delivered by the first.
+<ft lang="xl-sig"><![CDATA[
+signature Monad =
+  sig
+    type 'a M
+    val unit : 'a -> 'a M
+    val bind : 'a M -> ('a -> 'b M) -> 'b M
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="State Monad">
+<abstract>
+A state monad represents computations with possible side effects involving reading and/or writing to a state.
+</abstract>
+<secbody>
+<sbcol>
+
+<subsec title="Signature">
+<ft lang="xl-sig"><![CDATA[
+signature StateMonad =
+  sig
+    include Monad
+    type state
+    val mod_state : (state -> 'a * state) -> 'a M
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Exception Monad">
+<abstract>
+An exception monad provides for raising and handling exceptions.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Using SML exceptions">
+I have attempted to use SML exceptions for implementing this feature, since this ought to be more efficient than the usual way of doing this in pure functional languages.
+Our interest in using monads and arrows is because of the genericity obtained by having a combinator library which can be re-targetted by changing an underlying monad or arrow.
+The purpose is not to find a pure way of providing imperative features.
+</subsec>
+<subsec title="Signature">
+<ft lang="xl-sig"><![CDATA[
+signature XMonad =
+  sig
+    include Monad
+    type failinfo = string
+    type abortinfo = string
+    exception Fail of failinfo
+    exception Abort of abortinfo
+    val fail : failinfo -> 'a M
+    val abort : abortinfo -> 'a M
+    val catchfail : 'a M * (failinfo -> 'a M) -> 'a M
+    val catchabort : 'a M * (abortinfo -> 'a M) -> 'a M
+  end
+]]></ft>
+</subsec>
+<subsec title="State Monad with Exceptions">
+<ft lang="xl-sig"><![CDATA[
+signature StateXMonad =
+  sig
+    include XMonad
+    type state
+    val mod_state : (state -> 'a * state) -> 'a M
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="InStream Monad">
+<abstract>
+An "InStream" monad is one which reads an input stream as a side effect.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="inStream Monad functor">
+This functor creates a monad for processing an input stream (which is the "state" of the monad).
+<ft lang="xl-sml"><![CDATA[
+functor InStreamMonad (XlStream:XlStream):StateXMonad =
+  struct
+    open XlStream
+    type state = inStream
+
+    type 'a M = state -> 'a * state
+
+    fun unit x f = (x,f)
+
+    fun bind am fabm s =
+      let val (a,s) = am s
+      in fabm a s
+      end
+
+    fun mod_state f = f
+
+    type failinfo = string
+    type abortinfo = string
+    exception Fail of failinfo
+    exception Abort of abortinfo
+
+    fun fail failinfo = raise Fail failinfo
+    fun abort abortinfo = raise Abort abortinfo
+    fun catchfail (am,fam) s = am s handle Fail info => fam info s
+    fun catchabort (am,aam) s = am s handle Abort info => aam info s
+  end;
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>                                                                                                  
+
+</xldoc>
+

@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: holzfc1.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="holzfc1"
+       title="ZFC in HOL"
+       description="An axiomatisation of ZFC set theory in ProofPower HOL."
+       keywords="x-logic xml logic proofpower zfc hol set theory"
+       class="con"
+       root="../../"
+       up="../index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document is a literate script containing the axiomatisation in ProofPower HOL of Zermelo-Fraenkel set theory.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="HOL and ProofPower"/>
+<secref title="Membership and Extensionality"/>
+<secref title="Well Foundedness"/>
+</sbcol>
+<sbcol>
+<secref title="The Cumulative Hierarchy"/>
+<secref title="The Empty Set and Separation"/>
+<secref title="Pairing and Union"/>
+<secref title="Subset, Powerset and Choice"/>
+<secref title="Replacement"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+What is the point of all this?
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="HOL and ProofPower" tag="HolAndPP">
+<abstract>
+Why axiomatise ZFC in HOL (Higher Order Logic), and why use ProofPower?
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Membership and Extensionality" tag="MemExt">
+<abstract>
+The first thing we do is to introduce a new ProofPower theory and, in that theory, the new TYPE SET together with the membership relation, which we use to assert the extensionality of sets.
+</abstract>
+<secbody>
+<sbcol>
+<subsec>
+The theory "zfc", in which we propose to axiomatise set theory, is created as a child of "hol".
+The sets under consideration will be the elements of a new type "SET" so the first thing we do is to introduce that new type.
+Since the theory will not be conservative, we make no attempt to relate the membership of "SET" to any of the types already available.
+</subsec>
+<subsec title="The Type of SETS">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+<ft lang="xl-sml" rest="">
+open_theory "hol";
+set_pc "hol";
+force_delete_theory "zfc"
+	handle _ =&gt; ();
+new_theory "zfc";
+new_type ("SET<sub>z</sub>", 0);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Membership">
+The most important constant is membership, which is a relation over the sets.
+We can't define this constant (in this context) so it is introduced as a new constant (about which nothing is asserted except its name and type) and its properties are introduced axiomatically. 
+<ft lang="xl-sml" rest="">
+new_const ("&isin;<sub>z</sub>", &qqco;SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;BOOL&qqter;);
+declare_infix (230,"&isin;<sub>z</sub>");
+</ft>
+</subsec>
+<subsec title="Extensionality">
+The most fundamental property of membership (or is it of sets?) is <i>extensionality</i>, which tells us what kind of thing a set is.
+The axiom tells us that if two sets have the same elements then they are in fact the same set.
+<ft lang="xl-sml" rest="">
+val ext_axiom = new_axiom (["ext_axiom"],
+&qqtel; &forall;s t:SET<sub>z</sub>&bull;
+	(&forall;u:SET<sub>z</sub>&bull; u &isin;<sub>z</sub> s &equiv; u &isin;<sub>z</sub> t)
+	&rArr; s=t &qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Well Foundedness" tag="WF">
+<abstract>
+An axiom of well-foundedness is introduced in the form of the principle of Noetherian induction.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Noetherian Induction">
+<p>
+In the intuition behind classical set theory, a heirarchy of sets is built up from the empty set by an iterative process in each stage of which new sets are formed from sets formed at earlier stages in the process.
+This intuition makes us comfortable to assert the non-existence of problematic sets whose existence may lead to paradox.
+</p>
+<p>
+Since this intuition is an important element in our confidence that set theory is consistent, it is natural to want to see this stated in the axioms (even though we may not need to know this to make use of the theory, and even though adding an axiom can only increase the risk of inconsistency).
+</p>
+<p>
+In first-order axiomatisations of ZFC well foundedness is expressed by asserting that every set s has a member which is disjoint from s.
+This formulation has two disadvantages.
+The first is that the connection between this axiom and well-foundedness may not be obvious to all.
+The second is that it doesn't guarantee well-foundedness.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<p>
+Here we assert well-foundedness using the principle of noetherian induction, which relates more directly to the intuition behind the cumulative heirarchy, since it asserts in effect, that any property which is is inherited through this process is true of all sets.
+</p>
+<p>
+In first order logic this has the disadvantage that it can only be expressed using an axiom scheme, and this scheme fails to guarantee well-foundedness.
+In higher order logic the principle can be expressed as a single axiom, which under the standard semantics suffices to guarantee well-foundedness.
+</p>
+<ft lang="xl-sml" rest="">
+val wf_axiom = new_axiom (
+	["wf_axiom"],
+&qqtel; &forall;p:SET<sub>z</sub>&rarr;BOOL&bull;
+	(&forall;s:SET<sub>z</sub>&bull; (&forall;e:SET<sub>z</sub>&bull; e &isin;<sub>z</sub> s &rArr; p e) &rArr; p s)
+	&rArr; &forall;s:SET<sub>z</sub>&bull; p s &qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The Cumulative Hierarchy" tag="CumHier">
+<abstract>
+We have now characterised our subject matter as a heirarchy of well-founded sets.
+The remaining axioms serve to place a lower bound on how many of these well-founded sets exist.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The Empty Set and Separation" tag="EmptySep">
+<abstract>
+There exists a set containing no members, and for any set s and property p there exists a set containing just those members of s which satisfy p.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Separation">
+<ft lang="xl-sml" rest="">
+new_const ("Sep<sub>z</sub>",
+	&qqco;(SET<sub>z</sub>&rarr;BOOL)&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>&qqter;);
+val separation_axiom = new_axiom (
+	["separation_axiom"],
+&qqtel;&forall;p:SET<sub>z</sub>&rarr;BOOL; s:SET<sub>z</sub>&bull;
+	(&forall;u:SET<sub>z</sub>&bull; u &isin;<sub>z</sub> Sep<sub>z</sub> p s 
+	&equiv; u &isin;<sub>z</sub> s &and; p u)
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Empty Set">
+In the first order formulation an axiom may be used for introducing the empty set, for though it is definable from any other set by separation, and thought there must be a set, there may not be description operator to facilitate the definition.
+In our Higher Order Logic we can use the choice operator (the semantics of which is incidental, definite description would have done just as well).
+<holconst><holsig>
+	&empty;<sub>z</sub> : SET<sub>z</sub>
+</holsig>
+<holpred>
+
+	&empty;<sub>z</sub> = Sep<sub>z</sub> (&lambda;e&bull;F) (&epsilon;s&bull;T)
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+(*
+new_const ("&empty;<sub>z</sub>", &qqco;SET<sub>z</sub>&qqter;);
+val &empty;<sub>z</sub>_axiom = new_axiom (
+	["&empty;<sub>z</sub>_axiom"],
+*)
+set_goal([],
+	&qqtel;&forall;s:SET<sub>z</sub>&bull; &not; s &isin;<sub>z</sub> &empty;<sub>z</sub>&qqter;);
+a (prove_tac [get_spec&qqtel;&empty;<sub>z</sub>&qqter;, separation_axiom]);
+val &empty;<sub>z</sub>_thm = save_pop_thm "&empty;<sub>z</sub>_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Pairing and Union" tag="PairUnion">
+<abstract>
+For any two sets there is a set whose members are just those two sets.
+For any set of sets there is a set whose members are all the members of the sets.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Pairing">
+<ft lang="xl-sml" rest="">
+new_const ("Pair",
+	&qqco;SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>&qqter;);
+val pair_axiom = new_axiom (
+	["pair_axiom"],
+&qqtel;&forall;s t u:SET<sub>z</sub>&bull;
+	u &isin;<sub>z</sub> Pair s t
+	&equiv; u = s &or; u = t
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Union">
+This is the distributed union operator which takes a set of sets and forms the union of them all
+<ft lang="xl-sml" rest="">
+new_const ("&lcup;<sub>z</sub>", &qqco;SET<sub>z</sub>&rarr;SET<sub>z</sub>&qqter;);
+val &lcup;<sub>z</sub>_axiom = new_axiom (
+	["&lcup;<sub>z</sub>_axiom"],
+&qqtel;&forall;s u:SET<sub>z</sub>&bull;
+	u &isin;<sub>z</sub> (&lcup;<sub>z</sub> s) &equiv;
+	&exist;v&bull; u &isin;<sub>z</sub> v &and; v &isin;<sub>z</sub> s
+&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Subset, Powerset and Choice" tag="SubPowerChoice">
+<abstract>
+The subset relation is defined and used in the powerset axiom, which asserts that the elements of the power set are the subsets.
+</abstract>
+<secbody>
+<sbcol>
+
+<subsec title="Subset">
+
+<ft lang="xl-sml" rest="">
+declare_infix (230,"&sube;<sub>z</sub>");
+</ft>
+<holconst><holsig>
+ $&sube;<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;BOOL
+</holsig>
+<holpred>
+
+&forall;s t&bull;  s &sube;<sub>z</sub> t = &forall;u&bull; u &isin;<sub>z</sub> s &rArr; u &isin;<sub>z</sub> t
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Power Set">
+<ft lang="xl-sml" rest="">
+new_const ("&weierp;<sub>z</sub>", &qqco;SET<sub>z</sub>&rarr;SET<sub>z</sub>&qqter;);
+
+val &weierp;<sub>z</sub>_axiom = new_axiom (
+	["&weierp;<sub>z</sub>_axiom"],
+&qqtel; &forall;s u:SET<sub>z</sub>&bull;
+	u &isin;<sub>z</sub> &weierp;<sub>z</sub> s &equiv; u &sube;<sub>z</sub> s &qqter;);
+</ft>
+</subsec>
+<subsec title="Choice">
+An axiom of choice is already present in higher order logic.
+Using this axiom the principle of choice in set theory can be derived and does not therefore need to be asserted as an axiom.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Replacement">
+<abstract>
+Any collection of sets which is smaller than a set is itself a set.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Axiom of Replacement">
+<p>
+In a first order formulation the axiom of replacement is an axiom schema in which a formula is used to express a relationship, which is required to be functional (so that its range is no larger than its domain).
+</p><p>
+In higher order logic the statement of the principle is simplified, a schema is not required, and the type system permits us to quantify over functions without explicitly stating the many-one requirement.
+</p><p>
+Semantically the axiom is stronger, (assuming standard semantics for hol), since the axiom speaks of <i>all</i> functions, not just those which can be captured in a first order formula.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+new_const ("RImage",
+	&qqco;(SET<sub>z</sub>&rarr;SET<sub>z</sub>)&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>&qqter;);
+val replacement_axiom =
+ new_axiom (["replacement_axiom"],
+	&qqtel;&forall;f:SET<sub>z</sub>&rarr;SET<sub>z</sub>; s:SET<sub>z</sub>&bull;
+		(&forall;u:SET<sub>z</sub>&bull; u &isin;<sub>z</sub> (RImage f s)
+		&equiv; &exist;v&bull; v &isin;<sub>z</sub> s &and; u = f v)
+	&qqter;);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+</xldoc>
+
+
+
+
+
+

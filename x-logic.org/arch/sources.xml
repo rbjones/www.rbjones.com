@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: sources.xml,v 1.1.1.1 2006-04-19 20:44:51 rbj01 Exp $"
+       name="sources"
+       title="X-Logic Source Release Information"
+       description="How to build and install X-Logic from sources"
+       keywords="x-logic xml logic philosophy"
+       class="con"
+       root="../"
+       path="arch/"
+       up="releases.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm">
+
+<section title="Overview">
+<abstract>
+The content of an X-Logic source release, how to prepare for and then build and install, and what little you can then do with it.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="About the Sources"/>
+<secref title="Preparing to Build"/>
+</sbcol>
+<sbcol>
+<secref title="Build and Install"/>
+<secref title="What its good for"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="About the Sources">
+<abstract>
+Current version of sources, what's in it and what's it good for.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="name and version">
+This is available as the file "x-logic-src.1.0.tar.gz".
+It should really be version "0.0.0.1", or maybe "-0.1".
+</subsec>
+<subsec title="content">
+The content of this file is the X-Logic source tree as exported from cvs after running "autoconf".
+Note that this is not the source tree you find in cvs on SourceForge which does contain some rubbish but is not currently being kept up to date (since I find that extremely hard to do for reasons I won't go into, and for some time to come I don't think anyone will miss it).
+</subsec>
+
+</sbcol>
+<sbcol>
+
+<subsec title="what it does">
+This contains sources for the website and various bits of hackery which make it possible to build the web site from the sources.
+The sources are mainly XML but contain embedded SML and HOL.
+Also some CSS and XSLT style sheets.
+There are some PERL and BASH scripts which are used in building the website from the sources.
+</subsec>
+<subsec title="re-use">
+It is intended that X-Logic will provide re-usable facilities for building web sites including fancy formal notations from XML literate scripts.
+However, the re-usability of this release is doubtful.
+I will be using this stuff for the OpenBrand.org website and that might result in a more usable system.
+Meanwhile, the sources attempt to install themselves, and the web site, if you do a make install.
+At this stage its a bit of a mess, but it does work insofar as it does build the X-Logic web site, running the ProofPower theorem prover in the process and incorporating theory listings from ProofPower after checking all the specifications and proof scripts.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Preparing to Build">
+<abstract>
+What other software you need and what you should do before building.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="What else you would need to build the site?">
+<p>
+This list is probably not exhaustive, and you will probably find that running ./configure doesn't yet warn you of all the things you need that are missing.
+The configure script is deliberately written to carry on when it finds something missing so that parts of the build process may be complete
+</p>
+<p>
+If you are on a recent version of Linux then what you need extra is:
+<ol>
+<li>Java SDK 1.1 for the XSLT software (unless you use a non-java implementation).</li>
+<li>A SAX XML parser, usually there is one with the XSLT processor so its maybe best to use that one.</li>
+<li>An XSLT processor.
+At 1.0 this should be <a target="_top" href="http://www.jclark.com/bio.htm">James Clarke</a>'s XT, though it might work with one of the others with an appropriate change to the makefile.</li>
+<li>The <a target="_top" href="http://search.cpan.org/search?dist=XML-DOM">XML/DOM</a> <a target="_top" href="http://www.cpan.org/">Perl CPAN</a> module.</li>
+<li><a target="_top" href="http://cm.bell-labs.com/cm/cs/what/smlnj/">New Jersey Standard ML</a>. Version 110.0.3 is required for ProofPower.
+Isabelle also required standard ML.</li>
+<li><a target="_top" href="http://www.lemma-one.com/ProofPower/index/index.html">ProofPower HOL</a> (PPHol and PPTex are the only essential components for the build)</li>
+<li>The <a target="_top" href="http://www.informatik.uni-trier.de/~aberlea/Fxp/">fxp</a> functional XML parser in SML with the fxplib library (version 1.4.1)</li>
+</ol>
+Isabelle, though not required for the build, is used for one of the models (xl metamodel 2), so if you wanted to tinker with that model you would need Isabelle, though no output from Isabelle is actually included in the web site.
+</p>
+
+</subsec>
+
+</sbcol>
+<sbcol>
+<subsec title="preparing to build">
+In theory, to do the whole build and "install" the results all you need to do is this.
+It is not necessary or advisable to do the build or install process as user root.
+As far as I no there would be no harm done, but why take the risk?
+<ol>
+<li>Get your environment right, i.e. get all the software declared above as prerequisite and make sure it is all accessible via appropriate environment variables.</li>
+<li>In this build the locations of the fxp library (FXPLIB=/usr/local/fxp/lib), and of the code of  the fxp applications (FXPAPPS=/usr/local/fxp/fxp-1.4.1/src/Apps) is hard coded in the file x-logic/build/vars.mk.in.
+You will have to edit this file if these values do not correspond to the place where you have installed it.
+</li>
+<li>Add to your relevant paths the software which will be installed by x-logic to build the x-logic site.
+The relevant directories are $prefix/bin/x-logic, $prefix/lib/x-logic and $prefix/share/x-logic where "$prefix" defaults to "/usr/local/" but can be set to something else by parameter to "./configure".
+The $prefix/bin/x-logic directory should be added to your PATH variable and the $prefix/lib/x-logic directory to your PERL5LIB variable.
+</li>
+<li>Either make sure that the user you will use for the build has permission to create the installation directories, or else create them from a user that has and give write permission to the user doing the build.
+The relevant directories are $prefix/bin/x-logic, $prefix/lib/x-logic and $prefix/share/x-logic (prefix as above).
+Probably easiest to do everything as user local and use the default prefix.
+</li>
+<li>Unpack the tar file</li>
+<li>cd into the x-logic directory</li>
+</ol>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Build and Install">
+<abstract>
+How to do the actual build and install.
+</abstract>
+
+<secbody>
+
+<sbcol>
+<subsec title="build and install to /usr/local">
+Information will be written to /usr/local/bin/x-logic, /usr/local/lib/x-logic and /usr/local/share/x-logic, some of this during "make ibuild".
+<ol>
+<li>cd into the x-logic directory</li>
+<li>autoconf</li>
+<li>./configure</li>
+<li>make ibuild (optional)</li>
+<li>make install</li>
+</ol>
+</subsec>
+</sbcol>
+
+<sbcol>
+<subsec title="build and install elsewhere">
+Information will be written to <i>PREFIX</i>/bin/x-logic, <i>PREFIX</i>/lib/x-logic and <i>PREFIX</i>/share/x-logic, some of this during "make ibuild".
+
+<ol>
+<li>cd into the x-logic directory</li>
+<li>autoconf</li>
+<li>./configure ==prefix=<i>PREFIX</i></li>
+<li>make ibuild (optional)</li>
+<li>make install</li>
+</ol>
+</subsec>
+</sbcol>
+
+</secbody>
+</section>
+
+<section title="What its good for">
+<abstract>
+Well, at this stage its only good for doing more of the same.
+i.e. further developments to the various theories and libraries so far in progress.
+</abstract>
+
+<secbody>
+<sbcol>
+<subsec title="what the build does">
+<p>
+The build first installs the hackery which is used in building the web site, and then it builds the website and then it installs the web site.
+The locations for these are determined when you run ./configure, and will default to something appropriate to your environment.
+On my Linux RH 6.1 system these defaults are /usr/local/share/x-logic /usr/local/bin/x-logic /usr/local/lib/x-logic /usr/local/lib/perl5/x-logic.
+This means that you need to have permission to create all these directories.
+If you want to confine the possible damage from running this very flaky build process with those permissions, then you can change the prefix used to determine the directories by parameter to "./configure", e.g.:
+</p><p>
+./configure  --prefix=/home/x-logic/xl-install
+</p><p>
+causes all these directories to be created under directory "/home/x-logic/xl-install", instead of under "/usr/local". 
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="paths">
+The following paths need to be setup to pick up the X-Logic build software.
+"PREFIX" is whatever the autoconf default is (/usr/local on RH 6.1) or whatever you chose to set it to when you ran "configure".
+<ol>
+<li>The PATH variable should include PREFIX/bin/x-logic</li>
+<li>The PERL5LIB should include PREFIX/lib/x-logic</li>
+<li></li>
+</ol>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+</xldoc>
+
+
+
+
+
+
+
+
+

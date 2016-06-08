@@ -1,0 +1,74 @@
+# $Id: Makefile.in,v 1.6 2009-10-16 12:15:23 rbj Exp $
+
+TOPSRCDIR=@top_srcdir@
+RELDATADIR=/docprep
+RELSRCDIR=/build/docprep
+RELWEBDIR=/build/docprep
+BASHBIN=xppedit
+PERLBIN=addftl ppdoc2xml xml2ppdoc xxml2xml ppthd2xml stripdocdoc tppdoc2xml gencharpage \
+	texindex2tex texindex2xml
+%XSLBIN=xslt001s8.sxx xslt004s8.sxx
+PERLLIB=xpptran.pm DomXtras.pm
+PERLLIBNAME=XLogic
+SRCDIRCPY=DomXtras.pm ppcodes.doc
+
+XSLT001=$(XSLBIN:.sxx=.xsl)
+
+XML001=
+HTML001=$(XML001:.xml=.html)
+HTML001i=$(XML001:.xml=-i.html)
+HTML001m=$(XML001:.xml=-m.html)
+
+XML003=
+HTML003=$(XML003:.xml=.html)
+
+#XML004=XldSchema.xml
+HTML004=$(XML004:.xml=.html)
+HTML004i=$(XML004:.xml=-i.html)
+HTML004m=$(XML004:.xml=-m.html)
+
+XFTFILES=XldSchema.xft
+
+ENTFILES=pp-symbol.ent
+
+DPDIRCPY=$(ENTFILES) sieveview
+
+BINFILES=$(PERLBIN) $(BASHBIN)
+DATAFILES=sieveview pp-symbol.ent ppcodes.doc $(XSLBIN)
+LIBFILES=
+PERLLIBFILES=$(PERLLIB)
+#WEBFILES=$(HTML004) $(HTML004i) $(HTML004m)
+
+include $(TOPSRCDIR)/build/rules.mk
+
+# directories
+
+# Paths
+
+vpath %.in $(SRCDIR)
+vpath %.pl $(SRCDIR)
+vpath %.sh $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(COMDIR)
+
+# Extra targets
+
+perlbins: $(PERLBIN)
+
+perllib: $(PERLLIB)
+
+$(PERLBIN): % : xpptran.pm
+
+# Specific dependencies
+
+xslt001s8.sxx: Common2.xsl X-Logic2.xsl frame012.xsl MainFrame2.xsl IndexFrame2.xsl \
+	ppft2.xsl xhtmlinxld2.xsl
+
+xslt004s8.sxx: Common2.xsl X-Logic2.xsl MainFrame2.xsl ppft2.xsl xhtmlinxld2.xsl
+
+# Specific rules
+
+xpptran.pm: genxpptran.pl ppcodes.doc
+	$(PERL) -w $^
+
+XldSchema.xmlt: installbins installperllibs

@@ -1,0 +1,361 @@
+<?xml version="1.0"?>
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: xl-metamod2.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="xl-metamod2"
+       title="X-Logic MetaModel no.2"
+       description="A model for XL-Glue in isabelle, covering signatures."
+       keywords="x-logic xml logic isabelle hol theory knowledge philosophy xml digital signatures assurance"
+       class="con"
+       root="../../"
+       path="isabelle/tok/"
+       up="index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<stripft lang="xl-isabelle-thy" filename="XLMM2.thy"/>
+<stripft lang="xl-isabelle-ML" filename="XLMM2.ML"/>
+
+<section title="Overview">
+<abstract>
+A model in isabelle contributing to X-Logic architecture and the design of XL-Glue.
+This version includes the use of signatures.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Abstract Syntax"/>
+</sbcol>
+<sbcol>
+<secref title="Semantics"/>
+<secref title="Proof Rules"/>
+<secref title="Soundness, Monotonicity and Safety"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+This second in a series of models in which the metatheory of X-Logic is developed, improves on the first model by allowing that programs read and write multiple documents, and by introducing the use of digital signatures to provide degrees of confidence in the truth of documents and the soundness of programs.
+</abstract>
+
+</section>
+
+<section title="Abstract Syntax" tag="AbSyn">
+<abstract>
+The abstract syntax of our metalanguage is defined using a datatype in isabelle HOL.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="theory XLMM2">
+Theory XLMM2 is a theory in isabelle HOL, formed by extending theory "Main".
+In it we model a metalanguage for X-Logic.
+This model begins with an abstract syntax for the metalanguage.
+The language is about documents (which are understood as propositions) expressed in various object languages, and programs (whose computations are interpreted as inferences) which read documents and create new documents.
+These documents languages and programs are all understood to inhabit the World Wide Web and each identified by a URI, which is a string.
+So we begin with a type abbreviation indicating that URIs are to be represented by strings.
+<ft lang="xl-isabelle-thy">
+<![CDATA[
+XLMM2 = Main +
+
+types URI = string
+   document = URI
+   language = URI
+   program = URI
+   authority = URI
+]]>
+</ft>
+</subsec>
+<subsec title="sentences">
+The subject matter of the metalanguage is the truth of documents.
+The metalanguage permits the establishment (proof) of truth to be compounded from inferences performed by a variety of programs in various languages.
+From premises about the inferences performed by these various programs (which may be thought of as demonstrating lemmas) it is to be possible in the metalanguage to infer an overall conclusion.
+<p>
+The metalanguage therefore contains sentences which express the claim that:
+</p>
+<ol>
+<li>certain documents are true documents of particular languages</li>
+<li>a certain program satisfies a specification formulated as soundness with respect to given lists of input and output languages</li>
+<li>a specified list of output documents was computed by a program from a list of input documents</li>
+<li>a set of authorities are endorsed as infallible</li>
+</ol>
+<ft lang="xl-isabelle-thy">
+<![CDATA[
+datatype sentence =
+ 	TrueDocs (document list) (language list)	
+|	ProgSpec program (language list) (language list)
+|	Compute program (document list) (document list)
+]]>
+</ft>
+The significance of endorsements will become clearer shortly.
+</subsec>
+<subsec title="judgements">
+In general sentences are not proven absolutely, but on the assurance of various authorities (sometimes called oracles).
+The combination of a sentence with a set of authorities which have contributed to our grounds for asserting the sentence is called a "judgement".
+For reasons connected with well-definedness of the semantics of judgements a judgement also contains a number.
+This may be thought of as a time-stamp, but is more loosely specified.
+<ft lang="xl-isabelle-thy">
+<![CDATA[
+types stamp = nat
+
+datatype judgement =
+    Assert stamp (authority set) sentence |
+    Endorse authority (authority set)
+
+consts
+    jstamp :: judgement => stamp
+    jauth  :: judgement => authority
+    jauths :: judgement => authority set
+    jsent  :: judgement => sentence
+
+primrec
+    "jstamp (Assert st as se) = st"
+primrec
+    "jauth (Endorse a as) = a"
+primrec
+    "jauths (Assert st as se) = as"
+    "jauths (Endorse a as) = as"
+primrec
+    "jsent (Assert st as se) = se"
+
+]]>
+</ft>
+<p>
+The set of authorities can be empty, but when asserted a judgement must be signed by an authority.
+The meaning of a judgement is that <i>if</i> all the authorities cited in the list have been hitherto infallible then the sentence is true.
+</p><p>
+However, the judgement is known only with that degree of confidence which we attach to the authority which asserts it (and has signed it), so even an unconditional judgement (one with an empty set of cited authorities) is still no better assured than its signing authority.
+</p><p>
+An authority has been "hitherto infallible" if all the judgements which it has signed with numbers less than that of the judgement in hand are true.
+In fallibility and truth are therefore mutually defined, the numbers attached to judgements relativise infallibility so as to make the mutual recursion well-founded.
+</p>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Semantics">
+<abstract>
+The semantics of sentences and judgements is defined as truth valuations relative to appropriate interpretations.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="sentence interpretations">
+
+<ft lang="xl-isabelle-thy"><![CDATA[
+types
+	document_map = document => string
+	language_map = language => string set
+	program_map = program => (string list => string list)
+
+datatype Sinterp = SI document_map language_map program_map
+
+consts
+	docmap :: Sinterp => document_map
+	langmap :: Sinterp => language_map
+	progmap :: Sinterp => program_map
+
+primrec "docmap (SI d l p) = d"
+primrec "langmap (SI d l p) = l"
+primrec "progmap (SI d l p) = p"
+]]></ft>
+
+</subsec>
+<subsec title="true sentences">
+
+<ft lang="xl-isabelle-thy"><![CDATA[
+consts
+	truedoclist :: [Sinterp, document list, language list] => bool
+
+primrec
+   "truedoclist i (h_d#t_d) l_l =
+     (case l_l of
+      [] => False |
+      (h_l#t_l) =>  (docmap i h_d):(langmap i h_l) & truedoclist i t_d t_l)"
+   "truedoclist i [] l_l = (case l_l of [] => True | (h_l#t_l) => False)"
+
+constdefs
+   trueprogspec :: [Sinterp, program, language list, language list] => bool
+    "trueprogspec i p ill oll ==
+     (! idl . truedoclist i idl ill
+              --> truedoclist i (progmap i p idl) oll)"
+
+   truecompute :: [Sinterp, program, document list, document list] => bool
+    "truecompute i p idl odl == (odl = progmap i p idl)"
+
+   trueendorse :: [Sinterp, authority set] => bool
+    "trueendorse i al == True"
+
+consts
+   truesen :: [Sinterp, sentence] => bool
+
+primrec
+   "truesen i (TrueDocs dl ll) = truedoclist i dl ll"
+   "truesen i (ProgSpec p ill oll) = trueprogspec i p ill oll"
+   "truesen i (Compute p idl odl) = truecompute i p idl odl"
+]]></ft>
+
+</subsec>
+<subsec title="judgement interpretations">
+<p>
+A judgement is true if infallibility of its authorities implies the truth of its sentence.
+To formalise this we need to talk about infallibility, and to talk about infallibility we need to have an interpretation which tells us which judgements have been affirmed by which authorities.
+</p>
+<p>
+We therefore devise an extended interpretation for judgements in which a judgement map is available mapping each authority to the judgements it has affirmed.
+</p>
+<ft lang="xl-isabelle-thy"><![CDATA[
+types
+	judgement_map = authority => judgement set
+
+datatype Jinterp = JI Sinterp judgement_map
+
+consts
+	judgemap :: Jinterp => judgement_map
+	sinterp :: Jinterp => Sinterp
+
+primrec "judgemap (JI s j) = j"
+primrec "sinterp (JI s j) = s"
+]]></ft>
+
+</subsec>
+<subsec title="infallibility">
+<p>
+Informally an authority is infallible if it only asserts true judgements.
+However, the definition of truth of a judgement will depend upon the infallibility of authorities, and this naive view does not lead to a well defined concept.
+</p><p>
+This is fixed by slighly <i>strengthening</i> the meaning of judgements, so that their truth depends only on the truth of <i>previous</i> judgements, and it is for this reason that judgements have been given a "stamp".
+This leads us to the property of being "hitherto infallible" at some stamp value.
+This is the property that all judgements affirmed by the authority with smaller stamp values are true.
+It will be clear from the proof rules which we show later that this mechanism does not have to be implemented with timestamps.
+</p><p>
+One further complication is necessary, arising from endorsement.
+The infallibility of an authority is conditional on the infallibility of the authorities it has endorsed in a way which cannot be allowed for by attaching a truth value to the judgement in which the endorsement takes place.
+This is because the truth value of the endorsement can only depend on that of previous judgements, but the infallibility of an authority at some time depends on judgements made by authorities he has endorsed between the time at which the endorsement took place and the later time at which an infallibility judgement may be taking place.
+</p><p>
+Endorsements are therefore held to create a timeless partial ordering on authorities, and we require for the infallibility of an authority at some moment that neither he nor any greater authority has made a previous error.
+Greater in this case means directly or indirectly endorsed by the authority in question.
+</p>
+
+<ft lang="xl-isabelle-thy"><![CDATA[
+types
+	inftest = [nat, authority, Jinterp] => bool
+	truthtest = [judgement, Jinterp] => bool
+
+constdefs
+
+   authrel :: "judgement_map => (authority * authority)set"
+   "authrel jm == rtrancl {p. ? as. (snd p):as
+      & (Endorse (fst p) as):(jm (fst p))}"
+
+   hirec :: "[nat, (inftest * truthtest)] => inftest"
+   "hirec n1 tsts n2 auth ji == case n1 of
+     0       => True |
+     (Suc m) => !a. (auth,a):(authrel (judgemap ji))
+                 --> (!j. j:(judgemap ji a) & (jstamp j) <= m
+                         --> (snd tsts j ji))"
+
+   jtrec :: "[nat, (inftest * truthtest)] => truthtest"
+   "jtrec n tsts j ji == case n of
+     0       => snd tsts j ji |
+     (Suc m) => (!auth. auth:(jauths j) --> (fst tsts) (n-1) auth ji)
+                --> snd tsts j ji"
+
+consts
+   hijt :: "nat => (inftest * truthtest)"
+
+primrec
+   "hijt 0       = ((%x y z. True), (%x y. True))"
+   "hijt (Suc n) = (hirec n (hijt n), jtrec n (hijt n))"
+
+constdefs
+   hitherto_infallible  :: [nat, authority, Jinterp] => bool
+   "hitherto_infallible n == fst (hijt n) n"
+]]></ft>
+
+</subsec>
+<subsec title="true judgements">
+
+<ft lang="xl-isabelle-thy"><![CDATA[
+consts
+   truej  :: [Jinterp, judgement] => bool
+
+primrec
+   "truej ji (Assert stamp auths sent)
+    = snd (hijt stamp) (Assert stamp auths sent) ji"
+   "truej ji (Endorse auth auths) = True"
+]]></ft>
+
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Proof Rules" tag="pr">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="inference">
+<ft lang="xl-isabelle-thy"><![CDATA[
+consts
+   thms :: judgement set => judgement set
+   "|-"  :: [judgement set, judgement] => bool   (infixl 50)
+
+translations
+   "H |- p" == "p : thms(H)"
+
+inductive "thms(H)"
+   intrs
+   H "p:H ==> H |- p"
+   E "[| H |- Assert n1 (ll Un levels1) sent;
+         H |- Endorse l ll;
+         n1 < n3;
+         n2 < n3 |]
+     ==> H |- Assert n3 ({l} Un levels2) sent"
+  TI "[| H |- Assert n1 levels1 (TrueDocs [d] [l]);
+         H |- Assert n2 levels2 (TrueDocs dl ll);
+         n1 < n3;
+         n2 < n3 |]
+     ==> H |- Assert n3 (levels1 Un levels2) (TrueDocs (d#dl) (l#ll))"
+ TEH "[| H |- Assert n1 levels (TrueDocs (d#dl) (l#ll));
+         n1 < n2 |] 
+     ==> H |- Assert n2 levels (TrueDocs [d] [l])"
+ TET "[| H |- Assert n1 levels (TrueDocs (d#dl) (l#ll));
+         n3 < n2 |] 
+     ==> H |- Assert n2 levels (TrueDocs dl ll)"
+  MP "[| H |- Assert n1 levels (TrueDocs idl ill);
+         H |- Assert n2 levels (ProgSpec p ill oll);
+         H |- Assert n3 levels (Compute p idl odl);
+         n1 < n4;
+         n2 < n4;
+         n3 < n4 |]
+     ==> H |- Assert n4 levels (TrueDocs odl oll)"
+end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Soundness, Monotonicity and Safety" tag="sms">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec>
+<ft lang="xl-isabelle-ML">
+<![CDATA[
+]]>
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+<hide>
+<!-- Local Variables: -->
+<!-- x-symbol-coding:  -->
+<!-- x-symbol-language: Isabelle symbol -->
+<!-- End: -->
+</hide>
+</xldoc>

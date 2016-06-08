@@ -1,0 +1,47 @@
+# $Id: Makefile.in,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $
+
+BUILDFIRST=
+TOPSRCDIR=../..
+RELSRCDIR=/isabelle
+RELWEBDIR=/isabelle
+WEBROOTDIR=../
+SUBDIRS=tok xml
+
+PPDOC=$(PPXML:.xml=.doc)
+PPLDS=$(PPXML:.xml=.lds)
+PPTH=
+PPTHD=$(PPTH:.th=.thd)
+
+XML005=index.xml
+#HTML004=$(XML004:.xml=.html)
+#HTML004i=$(XML004:.xml=-i.html)
+#HTML004m=$(XML004:.xml=-m.html)
+
+XMLFILES=$(XML005)
+
+HTMLTHLSi=$(HTMLTHLS:.html=-i.html)
+HTMLTHLSm=$(HTMLTHLS:.html=-m.html)
+
+ENTFILES=pp-symbol.ent
+
+DPDIRCPY=$(ENTFILES)
+SRCDIRCPY=
+
+WEBFILES=$(HTML005) $(HTMLTHLS) $(HTMLTHLSi) $(HTMLTHLSm)
+
+include $(TOPSRCDIR)/build/rules.mk
+
+# directories
+
+# Paths
+
+vpath %.in $(SRCDIR)
+vpath %.xml $(SRCDIR)
+vpath %.xsl $(COMDIR)
+
+# Rules
+
+$(PPTH): $(PPDB).dbts 
+	touch $@
+
+

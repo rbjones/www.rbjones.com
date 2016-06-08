@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: XmlData.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="XmlData"
+       title="XML datatypes"
+       description="Part of the X-Logic X-ification toolset to facilitate converting SML based tools to work with XML theory descriptions. This part concerns the construction of a fat parse tree from an input XML document."
+       keywords="x-logic xml parse hooks SML fxp"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+<stripft lang="xl-sig"/>
+
+<section title="Overview">
+<abstract>
+Two datatypes for representing XML documents (Fat and Lean) and a function for throwing away the fat.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="The Fat Datatype"/>
+</sbcol>
+<sbcol>
+<secref title="The Lean Datatype"/>
+<secref title="Slimming"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+This document datatypes for representing XML parse trees using the fxp xml parser.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Note of fxp interfaces">
+fxp is written in SML and cannot replicate exactly the java DOM or SAX interfaces.
+The parse delivers its data through hooks and is therefore a SAX-like interface, but there seems to have been no attempt to make it close to SAX in any detail.
+<p/>
+For X-Logic purposes DOM-like structures of a functional rather than object-oriented kind are needed, and this is the purpose of the data structures provided here.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Fat">
+This datatype follows as closely as possible the types of the Hooks required by the parser, retaining all the information supplied to the hooks, so that an identical XML document (except for the XML declaration) can be output.
+</subsec>
+<subsec title="Lean">
+This datatype is stripped down to be suitable for use in semantic applications.
+It has close to the necessary information for cannonical XML but all the processing instructions are moved to the top level so that they do not form part of XML elements.
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The Fat Datatype">
+<abstract>
+A datatype of parse trees naively based on the HookData structure in fxp "Parser/Params/hookData.sml".
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Structure XmlParseTree">
+<ft lang="xl-sml"><![CDATA[
+structure FatTree = 
+  struct
+    open HookData
+    datatype ParseTree =
+         XmlDoc of XmlInfo * ParseTree list * Dtd.Dtd
+      |  ProcInst of ProcInstInfo
+      |  Comment of CommentInfo
+      |  White of WhiteInfo
+      |  Decl of DeclInfo
+      |  Element of StartTagInfo * ParseTree list * EndTagInfo
+      |  CData of CDataInfo
+      |  Data of DataInfo
+      |  CharRef of CharRefInfo
+      |  GenRef of GenRefInfo
+      |  ParRef of ParRefInfo
+      |  EntEnd of EntEndInfo
+      |  DocType of DtdInfo
+      |  Subset of SubsetInfo
+      |  ExtSubset of ExtSubsetInfo
+      |  EndDtd of EndDtdInfo;
+
+    exception InternalError of string
+(*    val sundry=XlTools.sundry *)
+  end;
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>                                                                                                  
+
+<section title="The Lean Datatype">
+<abstract>
+The lean datatype is for use in semantic applications where details of presentation of the XML document need not be preserved.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Principles">
+For the purpose of giving semantics to, or doing semantic processing on an XML document, some of the information in the fat datatype is superfluous, and the structure is more complex than it need be.
+In slimming this down it would be nice to target some appropriate XML standard, but there does not appear to be one.
+I am therefore putting forward a view of my own about what should be in a document model suitable for use in semantic applications, which I fear will inevitably be slimmer than would ever be widely endorsed.
+</subsec>
+<subsec title="Relevant Standards">
+Let me say a few more words about why existing standards do not answer to the needs of X-Logic.
+<p/>
+First, standards such as the XML infoset, DOM and SAX are for processing documents and must deliver pretty much everything about the way the document is presented.
+They correspond informally to our fat datatype.
+Its a shame the correspondence is not more direct, but fat is intended to couple closely with fxp.
+<p/>
+The XML 1.0 standard defines a notion of "logical equivalence" of documents, which is used in the definition of canonical XML.
+There are two problems with this from the X-Logic standpoint.
+<ul>
+<li>Firstly, cannonical XML is still a document format rather than an internal format, and therefore involves a utf-8 encoding, and various other features which are only relevant in this context.
+Better to stick to unicode for internal representation, and character escaping becomes irrelevant.
+</li>
+<li>Secondly, its still too fat.
+For example, comments are still present in cannonical XML.
+</li>
+</ul>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Relationship with Canonical XML">
+Canonical XML is the best starting point, so the lean datatype is obtained from canonical XML by:
+<ol>
+<li>dropping the utf-8 encoding (using unicode codes as integers without attempting to encode them as a byte sequence)</li>
+<li>discarding processing instructions and comments</li>
+</ol>
+</subsec>
+<subsec title="The Datatype">
+<p>In the following, item, attribute and element are polymorphic in the kind of data and in the type of names, so that the types can be used for some things other than XML parse trees (generalising the applicability of transformation facilities).
+</p><p>
+In the application to XML parse trees the data is represented as unicode vectors, and the names are pairs of unicode vectors.
+Of these two vectors the first is the namespace URI and the second is the local name in that namespace.
+Thus, namespace prefixes are not used in this representation.
+This is to permit context free comparison of names, which will be necessary when these names are used as the names of HOL constants.
+</p>
+<ft lang="xl-sml"><![CDATA[
+structure LeanTree =
+  struct
+    datatype
+      ('name,'data) item =
+        Element of ('name,'data) element
+      | Data of 'data
+    withtype
+      ('name,'data) attribute = 'name * 'data
+    and
+      ('name,'data) element = 'name * ('name,'data) attribute list * ('name,'data) item list
+    type LeanXmlTree = (UniChar.Vector * UniChar.Vector, UniChar.Vector) item
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Slimming">
+<abstract>
+A function to throw away the fat.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="What it does">
+At this stage the function does just two things.
+<ol>
+<li>It throws away anything which does not belong in the lean datatype.</li>
+<li>It looks up element names in the "dtd" and replaces the numeric value by the unicode data.</li>
+</ol>
+There needs to be some processing to handle the namespaces properly.
+</subsec>
+<subsec title="Slim">
+<ft lang="xl-sml"><![CDATA[
+structure Slim =
+  struct
+    local
+      open FatTree Dtd HookData UniChar
+
+      fun fat2sliml dtd ptl =
+        let
+          fun fat2slimi (White v) = [LeanTree.Data v]
+          | fat2slimi (CData (se,v)) = [LeanTree.Data v]
+          | fat2slimi (Data (se,v,b)) = [LeanTree.Data v]
+          | fat2slimi (Element (sti as (se,i,atts,d,b),ptl,eti))
+            = [LeanTree.Element (
+                (UniChar.nullVector,
+                UniChar.Data2Vector(Index2Element dtd i)),
+                slimatl atts,
+                fat2sliml dtd ptl)
+              ]
+          | fat2slimi (CharRef (se,c,cv)) = [LeanTree.Data (Vector.fromList[c])]
+          | fat2slimi (GenRef (se,idx,ge,included)) = [(*LeanTree.Data (Data2Vector (Index2GenEnt dtd idx))*)]
+          | fat2slimi _ = []
+          and slimatl atts =
+	    let
+	      val atts1 = List.mapPartial 
+	         (fn (aidx,ap,_) => 
+		  case ap 
+		    of AP_PRESENT(_,cv,_) => SOME((UniChar.nullVector,UniChar.Data2Vector(Index2AttNot dtd aidx)),cv)
+		     | AP_DEFAULT(_,cv,_) => SOME((UniChar.nullVector,UniChar.Data2Vector(Index2AttNot dtd aidx)),cv)
+		     | _ => NONE) atts
+	    in UtilList.sort (
+                 fn (((_,a),_),((_,b),_)) =>
+                   UniChar.compareVector (a,b)) atts1
+            end
+        in
+          List.concat(map fat2slimi ptl)
+        end
+    in
+      fun fatdoc2slim (XmlDoc (xmli,ptl,dtd)) = fat2sliml dtd ptl
+        | fatdoc2slim _  = raise XlTools.XlTools "Slim.fatdoc2slim - not an XmlDoc" 
+    end
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Transformation">
+<abstract>
+Functions to assist in transformation of lean trees.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="What for?">
+These provide basic transformation combinators partly inspired by the approach conversions used in HOL.
+They are written to provide a non-arrow basis for an arrow based combinator library, i.e. do as much as can be packaged nicely before building into arrows, so that these basic combinators can be used without arrows is desired.
+</subsec>
+<subsec title="Signature LeanXform">
+<ft lang="xl-sig"><![CDATA[
+signature LeanXform =
+    sig
+
+      type ('n,'d)attribute
+      type ('n,'d)element
+      type ('n,'d)item
+
+      type ('n,'d)attributeTrav
+      type ('n,'d)elementTrav
+      type ('n,'d)itemTrav
+      type ('n,'d)dataTrav
+
+      val atName: ('n,'d)attribute -> 'n
+      val atData: ('n,'d)attribute -> 'd
+      val elName: ('n,'d)element -> 'n
+      val elAttributes: ('n,'d)element -> ('n,'d) attribute list 
+      val elItems: ('n,'d)element -> ('n,'d) item list
+
+      val atNameC: ('n,'d)attribute -> ('n -> 'n) -> ('n,'d)attribute
+      val atDataC: ('n,'d)attribute -> ('d -> 'd) -> ('n,'d)attribute
+      val elNameC: ('n,'d)element -> ('n -> 'n) -> ('n,'d)element
+      val elAttributesC: ('n,'d)element -> (('n,'d) attribute list -> ('n,'d) attribute list) -> ('n,'d)element
+      val elItemsC: ('n,'d)element -> (('n,'d) item list -> ('n,'d) item list) -> ('n,'d)element
+(*
+      val elAttributesMapC: ('n,'d)element -> (('n,'d) attribute -> ('n,'d) attribute) -> ('n,'d)element
+      val elItemsMapC: ('n,'d)element -> (('n,'d) item -> ('n,'d) item) -> ('n,'d)element
+*)
+    end
+
+]]></ft>
+</subsec>
+<subsec title="Structure XForm">
+<ft lang="xl-sml"><![CDATA[
+structure LeanXform:LeanXform =
+  struct
+    open LeanTree
+    
+    type ('n,'d)itemTrav = (('n,'d)item -> ('n,'d)item) -> ('n,'d)item -> ('n,'d)item
+
+    type ('n,'d)attributeTrav = (('n,'d)attribute -> ('n,'d)attribute) -> ('n,'d)item -> ('n,'d)item
+    type ('n,'d)elementTrav = (('n,'d)element -> ('n,'d)element) -> ('n,'d)item -> ('n,'d)item
+    type ('n,'d)dataTrav = ('d -> 'd) -> ('n,'d)item -> ('n,'d)item
+
+    fun atName (n,d) = n
+    fun atData (n,d) = d
+    fun elName (n,al,el) = n
+    fun elAttributes (n,al,el) = al
+    fun elItems (n,al,el) = el
+
+    fun atNameC (n,d) f = (f n,d)
+    fun atDataC (n,d) f = (n,f d)
+    fun elNameC (n,al,el) f = (f n,al,el)
+    fun elAttributesC (n,al,el) f = (n,f al,el)
+    fun elItemsC (n,al,el) f = (n,al,f el)
+    
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+

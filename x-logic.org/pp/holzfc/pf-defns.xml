@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: pf-defns.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="pf-defns"
+       title="Definitions for pure functions."
+       description="The definition of a pure function in HOL-ZFC and of various operations over them."
+       keywords="x-logic xml logic proofpower zfc hol set theory function pure"
+       class="con"
+       root="../../"
+       up="../index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document defines the concept of a pure function as a preliminary to introducing the type of pure functions.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="The definition of a Pure Function"/>
+</sbcol>
+<sbcol>
+<secref title="Application and Extensionality"/>
+<subsec title="The Theory pf" href="pf.html"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="The definition of a Pure Function">
+<abstract>
+Here we define and show the consistency of the concept of a "pure function".
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="The Theory pf">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+First we introduce for these definitions the new theory "pf", a child of zfc.
+<ft lang="xl-sml" rest="">
+open_theory "zfc";
+set_pc "basic_hol";
+delete_theory"pf"
+	handle _ =&gt; ();
+new_theory"pf";
+</ft>
+</subsec>
+<subsec title="hereditary properties">
+A property of sets is "pf_hered" if a function inherits this property from the sets in its field.
+i.e. if all functions over a field of pf_hered sets are themselves pf_hered.
+
+<holconst><holsig>
+pf_hered : (SET<sub>z</sub>&rarr;BOOL)&rarr;BOOL
+</holsig>
+<holpred>
+&forall;p&bull; pf_hered p &equiv; &forall;s&bull;
+	(&forall;e&bull; e &isin;<sub>z</sub> (field<sub>z</sub> s) &rArr; p e)
+	&and; fun<sub>z</sub> s &rArr; p s
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="pf_hereditary">
+A pure function is a function which has all the pf_hereditary properties.
+This is an oblique way of saying that the function can be constructed from the empty set by a process which involves only the formation of functions from functions already constructed.
+
+<holconst><holsig>
+pure_function : SET<sub>z</sub>&rarr;BOOL
+</holsig>
+<holpred>
+&forall;s&bull; pure_function s &equiv;
+	&forall;p&bull; pf_hered p &rArr; p s
+</holpred>
+</holconst>
+</subsec>
+<subsec title="consistency proof">
+We now prove that there exists a pure function.
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;pure_function &empty;<sub>z</sub>&qqter;);
+a (prove_tac [
+	get_spec &qqtel;pure_function&qqter;,
+	get_spec &qqtel;pf_hered&qqter;
+	]);
+a (spec_nth_asm_tac 1 &qqtel;&empty;<sub>z</sub>&qqter;
+	THEN (asm_prove_tac [
+	get_spec &qqtel;pure_function&qqter;,
+	get_spec &qqtel;pf_hered&qqter;,
+	&empty;<sub>z</sub>_thm,
+	fun<sub>z</sub>_&empty;<sub>z</sub>_thm,
+	field<sub>z</sub>_&empty;<sub>z</sub>_thm
+	]));
+val pure_function_&empty;<sub>z</sub> =
+	save_pop_thm "pure_function_&empty;<sub>z</sub>";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;x&bull; pure_function x&qqter;);
+a (&exist;_tac &qqtel;&empty;<sub>z</sub>&qqter;);
+a (prove_tac [pure_function_&empty;<sub>z</sub>]);
+val pure_function_exists =
+	save_pop_thm "pure_function_exists";
+val pf_def = new_type_defn (["PF","pf_def"],"PF",[], pure_function_exists);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Application and Extensionality">
+<abstract>
+In this section we define function application and show that the pure functions are extensional.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Application">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+</xldoc>

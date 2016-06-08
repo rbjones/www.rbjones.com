@@ -1,0 +1,457 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: holzfc2.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="holzfc2"
+       title="ZFC in HOL - functions"
+       description="Definitions and theorems concerning functions in HOL-ZFC."
+       keywords="x-logic xml logic proofpower zfc hol set theory functions"
+       class="con"
+       root="../../"
+       up="../index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document proves some elementary consequences of the ZFC axioms in HOL, and then introduces further definitions relating to the representation of functions in set theory.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Extensionality"/>
+<secref title="Union and Intersection"/>
+<secref title="Pairs"/>
+</sbcol>
+<sbcol>
+<secref title="Relations and Functions"/>
+<secref title="Domain Range and Field"/>
+<secref title="Empty Set Theorems"/>
+<secref title="Functional Abstraction, Abstraction and Extensionality"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Extensionality">
+<abstract>
+The principle of extensionality is more easily applied if it is expressed as an equation which can be used for rewriting.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Extensionality">
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+<p>
+The axiom of extensionality tells us that whenever two sets have all the same members then they are equal.
+The properties of equality tell us that the converse is also true.
+From these two we infer that a two sets are equal <i>iff</i> they have the same members, and this is a boolean equality which can conveniently be used as a rewriting rule.
+</p><p>
+The application of this rule will prove to be more delicate than that of extensionality in the typed set theory available in HOL (in effect as a congenial syntax for talking about properties).
+This is because in a typed set theory repeated application of the principle eventually translates all set equations into talk about elements, but in a pure untyped set theory, only sets exist and rewriting with the principle of extensionality may never terminate.
+</p>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+open_theory("zfc");
+set_goal([],
+	&qqtel;&forall;s t:SET<sub>z</sub>&bull; s=t
+	&equiv; (&forall;u:SET<sub>z</sub>&bull; u &isin;<sub>z</sub> s &equiv; u &isin;<sub>z</sub> t)&qqter;);
+a (
+	REPEAT &forall;_tac
+	THEN &equiv;_tac
+	THEN_TRY asm_rewrite_tac[]);
+a (fc_tac[ext_axiom]);
+val set_ext_thm = save_pop_thm "set_ext_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Union and Intersection" tag="UnIn">
+<abstract>
+In the introduction we do some preliminaries and introduce the new type of sets.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Union">
+The union of a set of sets has already been introduced axiomatically.
+It is convenient also to have an infix binary union operator, which is defined below.
+First we chose an appropriate symbol and declare it as an infix operator.
+
+<ft lang="xl-sml" rest="">
+declare_infix (240,"&cup;<sub>z</sub>");
+</ft>
+Binary union is then defined as the union of a pair.
+
+<holconst><holsig>
+ $&cup;<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;s t&bull; s &cup;<sub>z</sub> t = &lcup;<sub>z</sub> (Pair s t)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Extensional Characterisation">
+The following theorem assists in reasoning about unions by permitting statements about members of unions to be eliminated in favour of statements about members of the operands of the union.
+(the union axiom is already in this form, we just want an analogous theorem for binary union) 
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t u:SET<sub>z</sub>&bull; u &isin;<sub>z</sub> (s &cup;<sub>z</sub> t)
+	&equiv; (u &isin;<sub>z</sub> s  &or; u &isin;<sub>z</sub> t)&qqter;);
+a (prove_tac
+	[get_spec &qqtel;$&cup;<sub>z</sub>&qqter;,
+	&lcup;<sub>z</sub>_axiom,
+	pair_axiom]);
+val &cup;<sub>z</sub>_ext_thm =
+	save_pop_thm "&cup;<sub>z</sub>_ext_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Intersection">
+
+The intersection of a set of sets is contained in each of the sets, and hence in their union.
+It can therefore be defined using separation as follows:
+<holconst><holsig>
+ $&lcap;<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+	&forall;s&bull; &lcap;<sub>z</sub> s =
+	Sep<sub>z</sub>
+	(&lambda;e&bull; &forall;t&bull; t &isin;<sub>z</sub> s &rArr; e &isin;<sub>z</sub> t)
+	(&lcup;<sub>z</sub> s)
+</holpred>
+</holconst>
+Bearing in mind that the intersection is not defined for empty sets.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Extensional Characterisation">
+We now prove an extensional characterisation of intersection (which, however must be qualified).
+<ft lang="xl-sml" rest="">
+prove_thm ("&lcap;<sub>z</sub>_ext_thm2",
+  &qqtel;&forall;t&bull; (&exist;x&bull; x &isin;<sub>z</sub> t) &rArr; &forall;s&bull;
+	(s &isin;<sub>z</sub> (&lcap;<sub>z</sub> t)
+	&equiv; &forall;u&bull; u &isin;<sub>z</sub> t &rArr; s &isin;<sub>z</sub> u)&qqter;	,
+  prove_tac[
+	get_spec &qqtel;$&lcap;<sub>z</sub>&qqter;,
+	separation_axiom,
+	&lcup;<sub>z</sub>_axiom]);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec title="Binary Intersection">
+Binary intersection could be defined using the previous definition, but because the definition behaves awkardly in relation to the empty set of sets it is easier to define binary intersection independently.
+<ft lang="xl-sml" rest="">
+declare_infix (240,"&cap;<sub>z</sub>");
+</ft>
+<holconst><holsig>
+ $&cap;<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;s t&bull; s &cap;<sub>z</sub> t = 	Sep<sub>z</sub>
+	(&lambda;e&bull; e &isin;<sub>z</sub> t)
+	s
+</holpred>
+</holconst>
+The proof of the extensional characterisation is then
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Extensional Characterisation">
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t u&bull; u &isin;<sub>z</sub> (s &cap;<sub>z</sub> t)
+	&equiv; u &isin;<sub>z</sub> s &and; u &isin;<sub>z</sub> t&qqter;);
+a (rewrite_tac[
+	get_spec&qqtel;$&cap;<sub>z</sub>&qqter;,
+	separation_axiom]);
+val &cap;<sub>z</sub>_ext_thm =
+	save_pop_thm "&cap;<sub>z</sub>_ext_thm";
+</ft>
+</subsec>
+
+</sbcol>
+</secbody>
+</section>
+
+<section title="Pairs">
+<abstract>
+After proving a theorem about when (un-ordered) pairs are equal we introduce ordered pairs, which are required for representing functions as graphs.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Equality of Pairs">
+The following theorem permits the elimination of statements about equality of pairs in favour of statements about the equality of the elements in the pairs.
+
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;s t u v&bull;
+	Pair s t = Pair u v &equiv;
+	(s = u &and; t = v &or; s = v &and; t = u)&qqter;);
+a (prove_tac[
+	&forall;_elim &qqtel;Pair s t&qqter; set_ext_thm,	
+	pair_axiom]);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 2 &qqtel;u&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (spec_nth_asm_tac 2 &qqtel;v&qqter;
+	THEN_TRY all_var_elim_asm_tac
+	THEN_TRY asm_rewrite_tac[]);
+val pair_eq_thm = save_pop_thm "pair_eq_thm";
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Ordered Pairs">
+<ft lang="xl-sml" rest="">
+declare_infix (240,"&mapsto;<sub>z</sub>");
+</ft>
+<holconst><holsig>
+
+ $&mapsto;<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>
+
+</holsig>
+<holpred>
+
+&forall;s t&bull; s &mapsto;<sub>z</sub> t = Pair (Pair s t) (Pair s s)
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+declare_infix (240,"&mapsto;<sub>z</sub>");
+val &mapsto;<sub>z</sub>_spec = get_spec &qqtel;$&mapsto;<sub>z</sub>&qqter;;
+
+set_goal ([],&qqtel;&forall;s t u v&bull;
+	s &mapsto;<sub>z</sub> t = u &mapsto;<sub>z</sub> v
+	&equiv; s = u &and; t = v&qqter;);
+a (prove_tac[&mapsto;<sub>z</sub>_spec, pair_eq_thm]);
+val &mapsto;<sub>z</sub>_eq_thm = save_pop_thm "&mapsto;<sub>z</sub>_eq_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Relations and Functions" tag="RelFun">
+<abstract>
+A relation is a set of ordered pairs, a function is a many-one relation.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Relations">
+<holconst><holsig>
+ rel<sub>z</sub> : SET<sub>z</sub>&rarr;BOOL
+</holsig>
+<holpred>
+&forall;x&bull;
+	rel<sub>z</sub> x &equiv;
+	&forall;y&bull; y &isin;<sub>z</sub> x &rArr;
+		&exist;s t&bull; y = s &mapsto;<sub>z</sub> t
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Empty Set a Relation">
+<ft lang="xl-sml" rest="">
+val rel<sub>z</sub>_&empty;<sub>z</sub>_thm =
+  prove_thm ("rel<sub>z</sub>_&empty;<sub>z</sub>_thm",
+	&qqtel;rel<sub>z</sub> &empty;<sub>z</sub>&qqter;,
+  prove_tac[
+	get_spec&qqtel;rel<sub>z</sub>&qqter;,
+	&empty;<sub>z</sub>_thm]);
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Functions">
+<holconst><holsig>
+
+ fun<sub>z</sub> : SET<sub>z</sub>&rarr;BOOL
+
+</holsig>
+<holpred>
+
+&forall;x&bull; fun<sub>z</sub> x &equiv; rel<sub>z</sub> x &and;
+	&forall;s t u&bull; s &mapsto;<sub>z</sub> u &isin;<sub>z</sub> x
+		&and; t &mapsto;<sub>z</sub> u &isin;<sub>z</sub> x
+		&rArr; s = t
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Empty Set a Function">
+<ft lang="xl-sml" rest="">
+val fun<sub>z</sub>_&empty;<sub>z</sub>_thm =
+  prove_thm ("fun<sub>z</sub>_&empty;<sub>z</sub>_thm",
+	&qqtel;fun<sub>z</sub> &empty;<sub>z</sub>&qqter;,
+  prove_tac[
+	get_spec&qqtel;fun<sub>z</sub>&qqter;,
+	&empty;<sub>z</sub>_thm,
+	rel<sub>z</sub>_&empty;<sub>z</sub>_thm]);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Domain, Range and Field" tag="DomRanField">
+<abstract>
+The domain, range and field of a relation are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="domain">
+The domain is the set of elements which are related to something under the relationship.
+<holconst><holsig>
+ dom<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;x&bull; dom<sub>z</sub> x = Sep<sub>z</sub>
+	(&lambda;y&bull; &exist;z&bull; y &mapsto;<sub>z</sub> z &isin;<sub>z</sub> x)
+	(&lcup;<sub>z</sub> (&lcup;<sub>z</sub> x))
+</holpred>
+</holconst>
+</subsec>
+<subsec title="The domain of the empty set">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;dom<sub>z</sub> &empty;<sub>z</sub> = &empty;<sub>z</sub>&qqter;);
+a (prove_tac[
+	get_spec&qqtel;dom<sub>z</sub>&qqter;,
+	&empty;<sub>z</sub>_thm,
+	separation_axiom,
+	set_ext_thm]);
+val dom<sub>z</sub>_&empty;<sub>z</sub>_thm = save_pop_thm "dom<sub>z</sub>_&empty;<sub>z</sub>_thm";
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="range">
+<holconst><holsig>
+ ran<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;x&bull; ran<sub>z</sub> x = Sep<sub>z</sub>
+	(&lambda;z&bull; &exist;y&bull; y &mapsto;<sub>z</sub> z &isin;<sub>z</sub> x)
+	(&lcup;<sub>z</sub> (&lcup;<sub>z</sub> x))
+</holpred>
+</holconst>
+</subsec>
+<subsec title="The range of the empty set">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;ran<sub>z</sub> &empty;<sub>z</sub> = &empty;<sub>z</sub>&qqter;);
+a (prove_tac[
+	get_spec&qqtel;ran<sub>z</sub>&qqter;,
+	&empty;<sub>z</sub>_thm,
+	separation_axiom,
+	set_ext_thm]);
+val ran<sub>z</sub>_&empty;<sub>z</sub>_thm = save_pop_thm "ran<sub>z</sub>_&empty;<sub>z</sub>_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<subsec title="field">
+<holconst><holsig>
+ field<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;x&bull; field<sub>z</sub> x = (dom<sub>z</sub> x) &cup;<sub>z</sub> (ran<sub>z</sub> x)
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The field of the empty set">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;field<sub>z</sub> &empty;<sub>z</sub> = &empty;<sub>z</sub>&qqter;);
+a (prove_tac[
+	get_spec&qqtel;field<sub>z</sub>&qqter;,
+	dom<sub>z</sub>_&empty;<sub>z</sub>_thm,
+	ran<sub>z</sub>_&empty;<sub>z</sub>_thm,
+	&cup;<sub>z</sub>_ext_thm,
+	set_ext_thm]);
+val field<sub>z</sub>_&empty;<sub>z</sub>_thm = save_pop_thm "field<sub>z</sub>_&empty;<sub>z</sub>_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functional Abstraction, Abstraction and Extensionality">
+<abstract>
+In this section we define function application and functional abstraction, and show that functions are extensional.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Application">
+<ft lang="xl-sml" rest="">
+declare_infix (250,"<sub>z</sub>");
+</ft>
+<holconst><holsig>
+ $<sub>z</sub> : SET<sub>z</sub>&rarr;SET<sub>z</sub>&rarr;SET<sub>z</sub>
+</holsig>
+<holpred>
+&forall;f x&bull; f <sub>z</sub> x =
+	if &exist;y&bull; x &mapsto;<sub>z</sub> y &isin;<sub>z</sub> f
+	then &epsilon;y&bull; x &mapsto;<sub>z</sub> y &isin;<sub>z</sub> f
+	else f
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+<ft lang="xl-sml" rest="">
+(*
+set_goal([],&qqtel;
+&forall;f x&bull; (&exist;<sub>1</sub>y&bull; x &mapsto;<sub>z</sub> y &isin;<sub>z</sub> f)
+	&rArr; x &mapsto;<sub>z</sub> (f <sub>z</sub> x) &isin;<sub>z</sub> f
+&qqter;);
+a step_strip_tac;
+a (asm_fc_tac [all_&beta;_rule(&forall;_elim &qqtel;&lambda;y&bull; x &mapsto;<sub>z</sub> y &isin;<sub>z</sub> f&qqter; &epsilon;_axiom)]);
+val app_thm = save_top_thm "app_thm";
+*)
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+
+<ft lang="xl-ign" rest="">
+ &circS;HOLCONST
+left : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+&turnstil;
+&forall;s&bull; left s = &lcap;<sub>z</sub>
+ &bbox;
+
+ &circS;HOLCONST
+right : SET<sub>z</sub>&rarr;SET<sub>z</sub>
+
+&turnstil;
+
+&forall;s&bull; right s = (&lcup;<sub>z</sub> s) \<sub>z</sub> (left s)
+ &bbox;
+</ft>
+</xldoc>
+
+
+
+
+
+

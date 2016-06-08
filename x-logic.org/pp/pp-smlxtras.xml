@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: pp-smlxtras.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="pp-smlxtras"
+       title="Extra sml procedures for ProofPower"
+       description="A collection of small extras to facilitate the OpenMind/X-Logic methods of working with ProofPower"
+       keywords="x-logic xml logic proofpower hol sml"
+       class="con"
+       root="../"
+       path="pp/"
+       up="../index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document contains extra sml procedures for use with ProofPower to support the methods adopted at X-Logic.org.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Building Proof Contexts"></secref>
+</sbcol>
+<sbcol>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Building Proof Contexts">
+<abstract>
+The available proof context facilities are a bit cumbersome if you want to build up a proof context incrementatlly as you work your way through a theory.
+Here are some hacks to make that easier.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="force new theory">
+This procedure is for making a new theory in a context where a previous version of the same theory could be present and if so should be deleted (even if it has children).
+<ft lang="xl-sml" rest="">
+fun force_new_theory name =
+let
+val _ = force_delete_theory name handle _ =&gt; ();
+in
+new_theory name
+end;
+</ft>
+</subsec>
+<subsec title="force new proof context">
+This procedure is for making a new pc in a context where a previous version of the pc could be present and if so should be deleted.
+<ft lang="xl-sml" rest="">
+fun force_new_pc name =
+let
+val _ = delete_pc name handle _ =&gt; ();
+in
+new_pc name
+end;
+</ft>
+</subsec>
+<subsec title="Adding new theorems">
+The following procedure just abbreviates the process of adding one or more theorems for rewriting and for stripping.
+<ft lang="xl-sml" rest="">
+fun add_pc_thms pc thms =
+		(add_rw_thms thms pc;
+		add_sc_thms thms pc;
+ 		add_st_thms thms pc);
+</ft>
+</subsec>
+<subsec title="Consistency Proofs">
+To permit hand consistency proofs to be completed before a HOLCONST specification we provide a consistency prover which just looks up a standard location for the consistency proof and put this in a proof context.
+<ft lang="xl-sml" rest="">
+open_theory "basic_hol";
+val xl_consistency_result = ref t_thm;
+fun xl_cs_&exist;_conv x =
+	if x =$ (concl(!xl_consistency_result))
+	then &equiv;_t_intro (!xl_consistency_result)
+	else eq_sym_conv x;
+force_new_pc "xl_cs_&exist;_conv";
+set_cs_&exist;_convs [xl_cs_&exist;_conv] "xl_cs_&exist;_conv";
+set_pr_conv basic_prove_conv "xl_cs_&exist;_conv";
+set_pr_tac basic_prove_tac "xl_cs_&exist;_conv";
+commit_pc "xl_cs_&exist;_conv";
+fun xl_set_cs_&exist;_thm thm = (xl_consistency_result := thm);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+

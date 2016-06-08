@@ -1,0 +1,956 @@
+<?xml version="1.0"?>
+<!DOCTYPE ProofPower SYSTEM "pp-symbol.ent">
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: gst-functions.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="gst-functions"
+       title="The theory of functions in GST"
+       description="Definitions and theorems concerning functions in GST."
+       keywords="x-logic xml logic proofpower gst hol set theory functions"
+       class="con"
+       root="../../"
+       path="pp/gst/"
+       up="../index.html"
+       rbjhome="http://www.rbjones.com/rbjpub/rbj.htm"
+       maintitle="mnt">
+
+<section title="Overview">
+<abstract>
+This document introduces definitions and derives results relating to the representation of functions in galactic set theory.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Ordered Pairs"/>
+<secref title="Relations"/>
+<secref title="Domain, Range and Field"/>
+</sbcol>
+<sbcol>
+<secref title="Functions"/>
+<secref title="Functional Abstraction"/>
+<secref title="Application and Extensionality"/>
+<secref title="Proof Context"/>
+<subsec title="Listing of Theory gst-fun" href="gst-fun.html" />
+</sbcol>
+</secbody>
+</section>
+
+<ft lang="xl-ign" rest="">
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
+</ft>
+
+<section title="Introduction">
+<abstract>
+A new "gst-fun" theory is created as a child of "gst-ax".
+The theory will contain the definitions of ordered pairs, relations and functions and related material for general use.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Motivation">
+Most of the specification work which I am likely to do with galactic set theory will make use of functions.
+My first application of the functions will be in the theory of pure functors, which is frivolous and unlikely to be widely applied, and so I am creating this theory first so that more generally applicable results which are required for the theory of pure functors will be available separately.
+I have no clear idea of what this theory will contain, it will initially contain basic materials about functions, but will be augmented by anything else that turns out to be necessary elsewhere and which can appropriately be placed here.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The Theory gst-fun">
+The new theory is first created, together with a proof context which we will build up as we develop the theory.
+<ft lang="xl-sml" rest="">
+open_theory "gst-ax";
+force_new_theory "gst-fun";
+force_new_pc "gst-fun";
+merge_pcs ["xl_cs_&exist;_conv"] "gst-fun";
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+<ft lang="xl-ign" rest="">
+open_theory "gst-fun";
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Ordered Pairs">
+<abstract>
+We now introduce ordered pairs, which are required for representing functions as graphs.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Ordered Pairs">
+<ft lang="xl-sml" rest="">
+declare_infix (240,"&mapsto;");
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist; $&mapsto;:'a GS &rarr; 'a GS &rarr; 'a GS&bull;
+	&forall;s t u v:'a GS&bull;
+	(s &mapsto; t = u &mapsto; v
+	&equiv; s = u &and; t = v)
+&qqter;);
+a (&exist;_tac &qqtel;&lambda;s t:'a GS&bull; Pair (Unit s) (Pair s t)&qqter;);
+a (rewrite_tac[]
+	THEN contr_tac
+	THEN_TRY all_var_elim_asm_tac);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+This is more abstract than the usual definition since it conceals the way in which ordered pairs are encoded.
+Behind the scenes the usual definition is used to prove that this looser definition is a conservative extension.
+<holconst><holsig>
+ $&mapsto; : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+	&forall;s t u v:'a GS&bull;
+	s &mapsto; t = u &mapsto; v
+	&equiv; s = u &and; t = v
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+add_pc_thms "gst-fun" [get_spec &qqtel;$&mapsto;&qqter;];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</subsec>
+<subsec title="Projections">
+The following functions may be used for extracting the components of ordered pairs.
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([], &qqtel;&exist; fst snd&bull;
+&forall;s t&bull;
+	fst(s &mapsto; t) = s
+	&and; snd(s &mapsto; t) = t&qqter;);
+a (&exist;_tac &qqtel;&lambda;p&bull;&epsilon;x&bull;&exist;y&bull;p=x&mapsto;y&qqter;);
+a (&exist;_tac &qqtel;&lambda;p&bull;&epsilon;y&bull;&exist;x&bull;p=x&mapsto;y&qqter;);
+a (rewrite_tac[] THEN REPEAT &forall;_tac);
+a (all_&epsilon;_tac);
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;t&qqter; THEN &exist;_tac &qqtel;s&qqter;
+ THEN prove_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;s&qqter; THEN &exist;_tac &qqtel;t&qqter;
+ THEN prove_tac[]);
+(* *** Goal "3" *** *)
+a (&exist;_tac &qqtel;t&qqter; THEN &exist;_tac &qqtel;s&qqter;
+ THEN prove_tac[]);
+(* *** Goal "4" *** *)
+a (eq_sym_nth_asm_tac 1);
+a (eq_sym_nth_asm_tac 4);
+a (asm_rewrite_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+<holconst><holsig>
+ fst snd : 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s t&bull;
+	fst(s &mapsto; t) = s
+	&and; snd(s &mapsto; t) = t
+</holpred>
+</holconst>
+<hide>
+<ft lang="xl-sml" rest="">
+add_pc_thms "gst-fun" [get_spec &qqtel;fst&qqter;];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Relations">
+<abstract>
+A relation is defined as a set of ordered pairs.
+Cartesian product and relation space are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Cartesian Product">
+The following theorem is required to introduce the conservative specification of cartesian product.
+The witness for the proof is shown, involving a double application of replacement.
+This is necessary because the loose specification of ordered pair does not provide sufficient information for a more conventional definition using separation.
+<ft lang="xl-sml" rest="">
+declare_infix(240,"&cross;");
+set_goal([],&qqtel;&exist; $&cross;&bull; 
+&forall;s t e&bull; e &isin; s &cross; t &equiv;
+	&exist;l r&bull;l &isin; s &and; r &isin; t
+	&and; e = l &mapsto; r
+&qqter;);
+a (&exist;_tac &qqtel;
+&lambda;s t&bull; &lcup; (
+	Image
+	(&lambda;se&bull; (Image (&lambda;te&bull; se &mapsto; te) t))
+	s)
+&qqter;);
+</ft>
+<hide>
+<ft lang="xl-sml" rest="">
+a (prove_tac[]);
+a (&exist;_tac &qqtel;e''&qqter;
+	THEN &exist;_tac &qqtel;snd(e)&qqter;
+	THEN asm_rewrite_tac[]);
+a (DROP_NTH_ASM_T 2 
+	(fn x=&gt; fc_tac [
+	(once_rewrite_rule
+		[gst_relext_clauses] x)]));
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;Image (&lambda; te&bull; l &mapsto; te) t&qqter;);
+a (prove_tac[]);
+(* *** Goal "2.1" *** *)
+a (&exist;_tac &qqtel;l&qqter;
+ THEN prove_tac[]);
+(* *** Goal "2.2" *** *)
+a (&exist;_tac &qqtel;r&qqter;
+ THEN prove_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+After completing this proof (script display inhibited) cartesian product can be specified by conservative extension as follows:
+<holconst><holsig>
+ $&cross; : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s t e&bull; e &isin; s &cross; t &equiv;
+	&exist;l r&bull;l &isin; s &and; r &isin; t
+	&and; e = l &mapsto; r
+</holpred>
+</holconst>
+<hide>
+<ft lang="xl-sml" rest="">
+val &cross;_spec = get_spec &qqtel;$&cross;&qqter;;
+</ft>
+</hide>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Pair-Projection inverse theorem">
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;s t p&bull; p &isin; s &cross; t
+	&rArr; fst(p) &mapsto; snd(p) = p&qqter;);
+a (prove_tac[&cross;_spec]);
+a (asm_rewrite_tac[]);
+val f&mapsto;s_thm = save_pop_thm "f&mapsto;s_thm";
+</ft>
+</subsec>
+<subsec title="Var in Product theorem">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;p s t&bull;
+	p &isin; (s &cross; t)
+	&rArr; fst p &isin; s &and; snd p &isin; t&qqter;);
+a (prove_tac[get_spec&qqtel;$&cross;&qqter;]
+      THEN_TRY asm_rewrite_tac[]);
+val v&isin;&cross;_thm = 
+	save_pop_thm "v&isin;&cross;_thm";
+add_pc_thms "gst-fun" [v&isin;&cross;_thm];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Pair in Product theorem">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;l r s t&bull;
+	(l &mapsto; r) &isin; (s &cross; t)
+	&equiv; l &isin; s &and; r &isin; t&qqter;);
+a (prove_tac[get_spec&qqtel;$&cross;&qqter;]);
+a (&exist;_tac &qqtel;l&qqter;
+	THEN &exist;_tac &qqtel;r&qqter;
+	THEN asm_prove_tac[]);
+val &mapsto;&isin;&cross;_thm = save_pop_thm "&mapsto;&isin;&cross;_thm";
+add_pc_thms "gst-fun" [&mapsto;&isin;&cross;_thm];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+
+<subsec title="Relation Space">
+This is the set of all relations over some domain and codomain, i.e. the power set of the cartesian product.
+<ft lang="xl-sml" rest="">
+declare_infix(240,"&harr;");
+</ft>
+<holconst><holsig>
+ $&harr; : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s t&bull; s &harr; t = &weierp;(s &cross; t)
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Relation Subset Product Theorem">
+We prove here that relations are subsets of cartesian products.
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;s t r&bull; r &isin; s &harr; t &equiv; r &sube; (s &cross; t)&qqter;);
+a (prove_tac[get_spec&qqtel;$&harr;&qqter;,
+	gst_relext_clauses]);
+val &harr;&sube;&cross;_thm = save_pop_thm "&harr;&sube;&cross;_thm";
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Relation Space Non-Empty">
+We prove here that the empty set is a member of every relation space.
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;s t&bull; &empty; &isin; s &harr; t&qqter;);
+a (prove_tac[get_spec&qqtel;$&harr;&qqter;,
+	gst_relext_clauses]);
+val &empty;&isin;&harr;_thm = save_pop_thm "&empty;&isin;&harr;_thm";
+add_pc_thms "gst-fun" [&empty;&isin;&harr;_thm];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Another Pair-Projection Inverse Theorem">
+Couched in terms of membership of relation spaces.
+<ft lang="xl-sml" rest="">
+set_goal ([], &qqtel;&forall;p r s t&bull;
+	p &isin; r &and;
+	r &isin; s &harr; t &rArr;
+	fst(p) &mapsto; snd(p) = p&qqter;); 
+a (prove_tac[
+	get_spec &qqtel;$&harr;&qqter;,
+	&sube;_thm]); 
+a (REPEAT
+	(asm_fc_tac[f&mapsto;s_thm])); 
+val f&mapsto;s_thm1 =
+	save_pop_thm "f&mapsto;s_thm1"; 
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Member of Relation Theorem">
+<ft lang="xl-sml" rest="">
+set_goal ([],&qqtel;&forall;p r s t&bull;
+	p &isin; r &and;
+	r &isin; s &harr; t &rArr;
+	fst(p) &isin; s &and;
+	snd(p) &isin; t&qqter;); 
+a (prove_tac[
+	get_spec &qqtel;$&harr;&qqter;,
+	&sube;_thm]); 
+a (asm_fc_tac[]); 
+a (fc_tac[v&isin;&cross;_thm]); 
+a (asm_fc_tac[]); 
+a (fc_tac[v&isin;&cross;_thm]); 
+val &isin;&harr;_thm =
+	save_pop_thm "&isin;&harr;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Relations">
+<holconst><holsig>
+ rel : 'a GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;x&bull; rel x &equiv;
+	&forall;y&bull; y &isin; x &rArr; &exist;s t&bull; y = s &mapsto; t
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>	
+<subsec title="Empty Set a Relation">
+<ft lang="xl-sml" rest="">
+val rel_&empty;_thm = prove_thm (
+	"rel_&empty;_thm",
+	&qqtel;rel &empty;&qqter;,
+	prove_tac[get_spec&qqtel;rel&qqter;]);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Relational Composition">
+<ft lang="xl-sml" rest="">
+declare_infix (250,"o");
+</ft>
+<holconst><holsig>
+ $o : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;f g&bull; f o g =
+	Image
+	(&lambda;p&bull; (fst(fst p) &mapsto; snd(snd p)))
+	(Sep (g &cross; f) &lambda;p&bull; snd(fst p)=fst(snd p))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Domain, Range and Field" tag="DomRanField">
+<abstract>
+The domain, range and field of a relation are defined.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="domain">
+The domain is the set of elements which are related to something under the relationship.
+<holconst><holsig>
+ dom : 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;x&bull; dom x = Image fst x
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The domain of the empty set">
+<ft lang="xl-sml" rest="">
+(*
+add_pc_thms "gst-fun" (map get_spec [&qqtel;&qqter;]);
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+*)
+set_goal([],&qqtel;dom &empty; = &empty;&qqter;);
+a (prove_tac[get_spec&qqtel;dom&qqter;,
+	gst_relext_clauses]);
+val dom_&empty;_thm =
+	save_pop_thm "dom_&empty;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="range">
+<holconst><holsig>
+ ran : 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;x&bull; ran x = Image snd x
+</holpred>
+</holconst>
+</subsec>
+<subsec title="The range of the empty set">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;ran &empty; = &empty;&qqter;);
+a (prove_tac[get_spec&qqtel;ran&qqter;,
+	gst_relext_clauses]);
+val ran_&empty;_thm =
+	save_pop_thm "ran_&empty;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+<secbody>
+<sbcol>
+<hide>
+<subsec title="Relation Subset of Cartesian Product">
+<ft lang="xl-sml" rest="">
+(*
+set_goal ([], &qqtel;&forall;x&bull; rel x &equiv; &exist;s t&bull; x &sube; s &cross; t&qqter;);
+a (once_rewrite_tac [gst_relext_clauses]);
+a (prove_tac[get_spec&qqtel;rel&qqter;	]);
+a (&exist;_tac &qqtel;dom x&qqter; THEN &exist;_tac &qqtel;ran x&qqter;
+	THEN asm_prove_tac[&cross;_spec]);
+a (asm_fc_tac[]);
+a (&exist;_tac &qqtel;s&qqter; THEN &exist;_tac &qqtel;t&qqter;
+	THEN asm_prove_tac[get_spec &qqtel;dom&qqter;]);
+
+val &empty;&isin;&harr;_thm = save_pop_thm "&empty;&isin;&harr;_thm";
+add_pc_thms "gst-fun" [&empty;&isin;&harr;_thm];
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+*)
+</ft>
+</subsec>
+</hide>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="field">
+<hide>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&exist;field&bull; &forall;s e&bull;
+e &isin; (field s) &equiv; e &isin; (dom s) &or; e &isin; (ran s)&qqter;);
+a (&exist;_tac &qqtel;&lambda;x&bull; (dom x) &cup; (ran x)&qqter;);
+a (prove_tac[]);
+xl_set_cs_&exist;_thm (pop_thm ());
+</ft>
+</hide>
+<holconst><holsig>
+ field : 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s e&bull; e &isin; (field s)
+&equiv; e &isin; (dom s) &or; e &isin; (ran s)
+</holpred>
+</holconst>
+<hide>
+<ft lang="xl-sml" rest="">
+add_pc_thms "gst-fun" ([
+	get_spec &qqtel;field&qqter;,
+	rel_&empty;_thm,
+	dom_&empty;_thm,
+	ran_&empty;_thm]);
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+</ft>
+</hide>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="The field of the empty set">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;field &empty; = &empty;&qqter;);
+a (prove_tac[gst_relext_clauses]);
+val field_&empty;_thm =
+	save_pop_thm "field_&empty;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functions">
+<abstract>
+Definition of partial and total functions and the corresponding function spaces.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Functions">
+<holconst><holsig>
+ fun : 'a GS &rarr; BOOL
+</holsig>
+<holpred>
+&forall;x&bull; fun x &equiv; rel x &and;
+	&forall;s t u&bull; s &mapsto; u &isin; x
+		&and; s &mapsto; t &isin; x
+		&rArr; u = t
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Empty Set a Function">
+<ft lang="xl-sml" rest="">
+val fun_&empty;_thm = prove_thm (
+	"fun_&empty;_thm", &qqtel;fun &empty;&qqter;,
+	prove_tac[
+	 get_spec &qqtel;fun&qqter;]);
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Partial Function Space">
+This is the set of all partial functions (i.e. many one mapings) over some domain and codomain.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&nrarr;");
+</ft>
+<holconst><holsig>
+ $&nrarr; : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s t&bull; s &nrarr; t = Sep (s &harr; t) fun
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Partial Function Space Non-Empty">
+First the theorem that the empty set is a partial function over any domain and codomain.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t&bull; &empty; &isin; s &nrarr; t&qqter;);
+a (prove_tac[
+	get_spec &qqtel;$&nrarr;&qqter;,
+	fun_&empty;_thm]);
+val &empty;&isin;&nrarr;_thm =
+	save_pop_thm "&empty;&isin;&nrarr;_thm";
+</ft>
+And then that every partial function space is non-empty.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t&bull; &exist; f&bull; f &isin; s &nrarr; t&qqter;);
+a (REPEAT strip_tac
+	THEN &exist;_tac &qqtel;&empty;&qqter;
+	THEN
+	rewrite_tac [&empty;&isin;&nrarr;_thm]);
+val &exist;&nrarr;_thm =
+	save_pop_thm "&exist;&nrarr;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+
+<secbody>
+<sbcol>
+<subsec title="Function Space">
+This is the set of all total functions over some domain and codomain.
+<ft lang="xl-sml" rest="">
+declare_infix (240, "&rarr;");
+</ft>
+<holconst><holsig>
+ $&rarr; : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s t&bull; s &rarr; t = Sep (s &nrarr; t)
+	&lambda;r&bull; dom r = s
+</holpred>
+</holconst>
+</subsec>
+<subsec title="Function Space Non-Empty">
+First, for the special case of function spaces with empty domain we prove the theorem that the empty set is a member:
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t&bull; &empty; &isin; &empty; &rarr; t&qqter;);
+a (prove_tac[get_spec &qqtel;$&rarr;&qqter;,
+	fun_&empty;_thm,
+	&empty;&isin;&nrarr;_thm]);
+val &empty;&isin;&empty;&rarr;_thm =
+	save_pop_thm "&empty;&isin;&empty;&rarr;_thm";
+</ft>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+Then that whenever the codomain is non-empty the function space is non-empty.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;s t&bull; (&exist;x&bull; x &isin; t)
+	&rArr; &exist; f&bull; f &isin; s &rarr; t&qqter;);
+a (REPEAT strip_tac
+	THEN &exist;_tac &qqtel;s &cross; (Unit x)&qqter;);
+a (rewrite_tac [get_spec &qqtel;$&rarr;&qqter;,
+	get_spec &qqtel;$&nrarr;&qqter;,
+	get_spec &qqtel;$&harr;&qqter;]);
+a (once_rewrite_tac
+	[gst_relext_clauses]);
+a (rewrite_tac[
+	get_spec &qqtel;dom&qqter;,
+	get_spec &qqtel;fun&qqter;,
+	get_spec &qqtel;rel&qqter;,
+	get_spec &qqtel;$&cross;&qqter;]
+	THEN REPEAT strip_tac
+	THEN TRY (asm_rewrite_tac[]));
+(* *** Goal "1" *** *)
+a (&exist;_tac &qqtel;l&qqter; THEN &exist;_tac &qqtel;r&qqter;
+	THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (&exist;_tac &qqtel;l&qqter; THEN &exist;_tac &qqtel;r&qqter;
+	THEN asm_rewrite_tac[]);
+(* *** Goal "3" *** *)
+a (&exist;_tac &qqtel;e &mapsto; x&qqter;
+	THEN asm_rewrite_tac[]);
+a (&exist;_tac &qqtel;e&qqter; THEN &exist;_tac &qqtel;x&qqter;
+	THEN asm_rewrite_tac[]);
+val &exist;&rarr;_thm =
+	save_pop_thm "&exist;&rarr;_thm";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Functional Abstraction">
+<abstract>
+Functional abstraction is defined as a new variable binding construct yeilding a functional set.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Abstraction">
+<p>
+Because of the closeness to lambda abstraction "&lambda;<sub>g</sub>" is used as the name of a new binder for set theoretic functional abstraction.
+<ft lang="xl-sml" rest="">
+declare_binder "&lambda;<sub>g</sub>";
+</ft>
+To define a functional set we need a HOL function over sets together with a set which is to be the domain of the function.
+Specification of the range is not needed.
+The binding therefore yields a function which maps sets to sets (maps the domain to the function).
+</p>
+<p>
+The following definition is a placeholder, a more abstract definition might eventually be substituted.
+The function is defined as that subset of the cartesian product of the set s and its image under the function f which coincides with the graph of f over s.
+</p>
+<holconst><holsig>
+$&lambda;<sub>g</sub>: ('a GS &rarr; 'a GS) &rarr;
+	'a GS  &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;f s&bull; $&lambda;<sub>g</sub> f s =
+	Sep (s &cross; (Image f s))
+	(&lambda;p&bull; snd p = f (fst p))
+</holpred>
+</holconst>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Application and Extensionality">
+<abstract>
+In this section we define function application and show that functions are extensional.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Application">
+Application by juxtaposition cannot be overloaded and is used for application of HOL functions.
+Application of functional sets is therefore defined as an infix operator whose name is the empty name subscripted by "g".
+<ft lang="xl-sml" rest="">
+declare_infix (250,"<sub>g</sub>");
+</ft>
+<p>
+The particular form shown here is innovative in the value specified for applications of functions to values outside their domain.
+The merit of the particular value chosen is that it makes true an extensionality theorem which quantifies over all sets as arguments to the function, which might not otherwise be the case.
+Whether this form is useful I don't know.
+Generally a result with fewer conditionals is harder to prove but easier to use, but in this case I'm not so sure of the benefit.
+</p>
+It may be noted that it may also be used to apply a non-functional relation, if what you want it some arbitrary value (selected by the choice function) to which some object relates.
+<holconst><holsig>
+ $<sub>g</sub> : 'a GS &rarr; 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;f x&bull; f <sub>g</sub> x =
+	if &exist;y&bull; x &mapsto; y &isin; f
+	then &epsilon;y&bull; x &mapsto; y &isin; f
+	else f
+</holpred>
+</holconst>
+The following basic lemma is useful in reasoning about function application: 
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;
+&forall;f x&bull; (&exist;<sub>1</sub>y&bull; x &mapsto; y &isin; f)
+	&rArr; x &mapsto; (f <sub>g</sub> x) &isin; f
+&qqter;);
+a (prove_tac[get_spec&qqtel;$<sub>g</sub>&qqter;]);
+a (LEMMA_T &qqtel;&exist; y&bull; x &mapsto; y &isin; f&qqter;
+	(fn x=&gt; rewrite_tac[x])
+	THEN1 (
+		&exist;_tac &qqtel;y&qqter;
+		THEN prove_tac[]));
+a (all_&epsilon;_tac);
+a (&exist;_tac &qqtel;y&qqter; THEN prove_tac[]);
+val app_thm1 =
+	save_pop_thm "app_thm1";
+</ft>
+<p>
+Note that the result is not conditional on f being a function.
+</p>
+<p>
+The next theorem applies to functions only and obtains the necessary uniqueness of image from that assumption.
+</p>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;
+&forall;f x y&bull; fun f &and; (x &mapsto; y &isin; f)
+	&rArr; f <sub>g</sub> x = y
+&qqter;);
+a (prove_tac[get_spec&qqtel;$<sub>g</sub>&qqter;,
+	get_spec &qqtel;fun&qqter;]);
+a (LEMMA_T
+	&qqtel;&exist; y&bull; x &mapsto; y &isin; f&qqter;
+	(fn x=&gt; rewrite_tac[x])
+	THEN1 (
+		&exist;_tac &qqtel;y&qqter;
+		THEN prove_tac[]));
+a (all_&epsilon;_tac);
+a (&exist;_tac &qqtel;y&qqter;
+	THEN prove_tac[]);
+a (REPEAT (asm_fc_tac[]));
+val app_thm2 =
+	save_pop_thm "app_thm2";
+</ft>
+</subsec>
+<subsec title='The "Type" of an Application (1)'>
+The following theorem states that the result of applying a partial function to a value in its domain is a value in its codomain.&and;
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;f s t u&bull; f &isin; s &nrarr; t &and;
+	u &isin; dom f &rArr;
+	f <sub>g</sub> u &isin; t&qqter;); 
+a (prove_tac[
+	get_spec &qqtel;$&nrarr;&qqter;,
+	get_spec &qqtel;dom&qqter;]);
+a (all_fc_tac [f&mapsto;s_thm1]); 
+a (lemma_tac
+	&qqtel;fst e &mapsto; snd e &isin; f&qqter;
+	THEN1 asm_rewrite_tac[]); 
+a (lemma_tac
+	&qqtel;f <sub>g</sub> u = snd e&qqter; 
+	THEN1 (
+		bc_thm_tac app_thm2 
+		THEN asm_rewrite_tac[])); 
+a (asm_rewrite_tac[]); 
+a (all_fc_tac [&isin;&harr;_thm]); 
+val <sub>g</sub>&isin;_thm = save_pop_thm "<sub>g</sub>&isin;_thm";
+</ft>
+</subsec>
+<subsec title='The "Type" of an Application (2)'>
+The following theorem states that the result of applying a total function to a value in its domain is a value in its codomain.
+<ft lang="xl-sml" rest="">
+set_goal([],
+	&qqtel;&forall;f s t u&bull; f &isin; s &rarr; t &and;
+	u &isin; s &rArr;
+	f <sub>g</sub> u &isin; t&qqter;); 
+a (prove_tac[
+	get_spec &qqtel;$&rarr;&qqter;]);
+a (bc_thm_tac <sub>g</sub>&isin;_thm);
+a (&exist;_tac &qqtel;s&qqter;
+	THEN asm_rewrite_tac[]); 
+val <sub>g</sub>&isin;_thm1 = save_pop_thm "<sub>g</sub>&isin;_thm1";
+</ft>
+</subsec>
+<subsec title='Partial functions are total'>
+Every partial function is total over its domain.
+(there is an ambiguity in the use of the term "domain" for a partial function.
+It might mean the left hand operand of some partial function space construction within which the partial function concerned may be found, or it might mean the set of values over which the function is defined.
+Here we are saying that if f is a partial function over A, then its domain is some subset of A and f is a total function over that subset of A.)
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;f s t u&bull; f &isin; s &nrarr; t &rArr; f &isin; dom f &rarr; t&qqter;); 
+a (rewrite_tac[
+	get_spec &qqtel;$&rarr;&qqter;,
+	get_spec &qqtel;$&harr;&qqter;,
+	get_spec &qqtel;dom&qqter;,
+	get_spec &qqtel;$&nrarr;&qqter;]);
+a (once_rewrite_tac[gst_relext_clauses]); 
+a (REPEAT strip_tac); 
+a (rewrite_tac[get_spec &qqtel;$&cross;&qqter;]); 
+a (asm_fc_tac[]); 
+a (all_fc_tac[
+	f&mapsto;s_thm,
+	v&isin;&cross;_thm]); 
+a (&exist;_tac &qqtel;fst e&qqter;
+	THEN &exist;_tac &qqtel;snd e&qqter;
+	THEN asm_rewrite_tac[]); 
+a (&exist;_tac &qqtel;e&qqter;
+	THEN asm_rewrite_tac[]); 
+val &isin;&nrarr;&rArr;&isin;&rarr;_thm = save_pop_thm "&isin;&nrarr;&rArr;&isin;&rarr;_thm";
+</ft>
+</subsec>
+<subsec title="The Identity Function">
+<holconst><holsig>
+ id : 'a GS &rarr; 'a GS
+</holsig>
+<holpred>
+&forall;s&bull; id s = Sep
+	(s &cross; s)
+	&lambda;x&bull; fst x = snd x
+</holpred>
+</holconst>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s x&bull;
+	x &isin; id s	
+	&equiv; &exist;y&bull; y &isin; s
+	&and; x = y &mapsto; y&qqter;);
+a (prove_tac[get_spec &qqtel;id&qqter;]
+	THEN_TRY (asm_rewrite_tac[
+	get_spec&qqtel;$&harr;&qqter;,
+	get_spec&qqtel;$&cross;&qqter;]));
+(* *** Goal "1" *** *)
+a (fc_tac[get_spec&qqtel;$&cross;&qqter;]);
+a (asm_ante_tac &qqtel;fst x = snd x&qqter;
+	THEN asm_rewrite_tac[]
+	THEN strip_tac
+	THEN all_var_elim_asm_tac);
+a (&exist;_tac &qqtel;r&qqter; THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (REPEAT (&exist;_tac &qqtel;y&qqter;) THEN asm_rewrite_tac[]);
+val id_thm1 =
+	save_pop_thm "id_thm1";
+</ft>
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s x&bull;
+	x &isin; s	
+	&rArr; (id s) <sub>g</sub> x = x&qqter;);
+a (once_rewrite_tac[gst_relext_clauses]);
+a (rewrite_tac[get_spec &qqtel;$<sub>g</sub>&qqter;, id_thm1]);
+a (REPEAT_N 4 strip_tac);
+a (LEMMA_T &qqtel;&exist; y y'&bull; y' &isin; s &and; x = y' &and; y = y'&qqter;
+	(fn x=&gt; rewrite_tac[x] THEN asm_tac x)
+	THEN1 (REPEAT_N 2 (&exist;_tac &qqtel;x&qqter;)
+		THEN asm_rewrite_tac[]));
+a (all_&epsilon;_tac
+	THEN asm_rewrite_tac[]);
+val id_ap_thm = save_pop_thm "id_ap_thm"; 
+</ft>
+</subsec>
+<subsec title="Identity Function in Partial Function Space">
+<ft lang="xl-sml" rest="">
+set_goal([],&qqtel;&forall;s t u&bull; s &sube; t &cap; u &rArr; id s &isin; t &nrarr; u&qqter;);
+a (rewrite_tac[gst_relext_clauses]);
+a (prove_tac[get_spec &qqtel;$&nrarr;&qqter;,
+	get_spec &qqtel;id&qqter;,
+	get_spec &qqtel;$&harr;&qqter;,
+	get_spec &qqtel;$&cross;&qqter;]);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac[gst_relext_clauses]);
+a (prove_tac[get_spec &qqtel;$&cross;&qqter;]);
+a (MAP_EVERY &exist;_tac [&qqtel;l&qqter;, &qqtel;r&qqter;] THEN REPEAT strip_tac
+	THEN (REPEAT (asm_fc_tac[])));
+(* *** Goal "2" *** *)
+a (prove_tac[get_spec &qqtel;fun&qqter;,
+	get_spec &qqtel;rel&qqter;,
+	get_spec &qqtel;$&cross;&qqter;]);
+val id&isin;&nrarr;_thm1 = save_pop_thm "id&isin;&nrarr;_thm1";
+
+set_goal([],&qqtel;&forall;s t u&bull; s &sube; t &rArr; id s &isin; t &nrarr; t&qqter;);
+a (prove_tac[]);
+a (bc_thm_tac id&isin;&nrarr;_thm1);
+a (asm_rewrite_tac [
+	prove_rule [gst_relext_clauses]
+	&qqtel;t &cap; t = t&qqter;]);
+val id&isin;&nrarr;_thm2 = save_pop_thm "id&isin;&nrarr;_thm2";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+
+<section title="Relational Composition">
+<abstract>
+In this section we define Relational Composition.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Proof Context">
+<ft lang="xl-sml" rest="">
+add_pc_thms "gst-fun" ([
+	field_&empty;_thm,
+	fun_&empty;_thm,
+	&empty;&isin;&nrarr;_thm]);
+set_merge_pcs ["basic_hol", "gst-ax", "gst-fun"];
+commit_pc "gst-fun";
+</ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
+
+
+
+
+

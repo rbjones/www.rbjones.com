@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: parsehooks.xml,v 1.1.1.1 2006-04-19 20:44:53 rbj01 Exp $"
+       name="parsehooks"
+       title="Hooks for parsing xml with fxp building a parse tree."
+       description="Part of the X-Logic X-ification toolset to facilitate converting SML based tools to work with XML theory descriptions. This part concerns the construction of a parse tree from an input XML document."
+       keywords="x-logic xml parse hooks SML"
+       root="../"
+       path="sml/"
+       up="index.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+<secref title="Tree Building"/>
+</sbcol>
+<sbcol>
+<secref title=""/>
+<secref title=""/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="">
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Tree Building">
+<abstract>
+A type for a partially constructed tree representation of an XML document, together with functions which create an empty tree, add things into this tree and finally extract the completed structure.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Encode signature">
+This version of "Encode" encodes the XML document as a data structure.
+<ft lang="xl-sml"><![CDATA[
+signature XmlParseEncode = 
+   sig   
+      type XmlStack
+      type startTagInfo
+      type characterInfo
+
+      val emptyStack    : XmlStack
+      val putStartTag   : XmlStack * startTagInfo -> XmlStack
+      val putCharacters : XmlStack * characterInfo -> XmlStack
+      val putEndTag     : XmlStack -> XmlStack
+      val unStack       : XmlStack -> XmlDocRep.element
+   end;
+]]></ft>
+</subsec>
+<subsec title="Encode">
+<ft lang="xl-sml"><![CDATA[
+structure XmlParseEncode : XmlParseEncode = 
+  struct
+    open XmlDocRep UniChar;
+    type XmlStack = element list; 
+    type characterInfo = UniChar.Vector;
+    type startTagInfo = Uri.Uri option * string * (attribute list);
+
+    val emptyStack = [];
+
+    fun putStartTag (s, (urio,name,attlist)) = (urio,name,attlist,[])::s;
+
+    fun putCharacters ((uri,lname,attributes,items)::s, ci) =
+      (uri,lname,attributes,(Characters ci)::items)::s;
+
+    fun
+      putEndTag ((uri1,lname1,attributes1,items1)::(uri2,lname2,attributes2,items2)::r)
+      = (uri2,lname2,attributes2,(Element (uri1,lname1,attributes1,rev(items1)))::items2)::r
+    | putEndTag [(uri1,lname1,attributes1,items1)]
+      = [(uri1,lname1,attributes1,rev(items1))];
+
+    fun unStack [e] = e:element;
+  end;
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>                                                                                                                                                                                                                
+<section title="Parser Hooks">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Hooks">
+<ft lang="xl-sml"><![CDATA[
+functor XmlParseHooks (structure XmlParseOptions : XmlParseOptions):Hooks =
+   struct
+(*      structure CanonOutput = CanonOutput (structure ParseOptions = ParseOptions)   *)
+      open 
+	 Base Dtd
+	 XmlParseEncode XmlParseOptions
+
+      datatype Where = SOMEWHERE | SUBSET | CONTENT of int | REFERENCE of Where
+
+      type AppData  = Dtd * OS.Process.status * XmlParseEncode.XmlStack * Where
+      type AppFinal = OS.Process.status
+
+      fun xlparseStart dtd = (dtd,OS.Process.success,XmlParseEncode.emptyStack,SOMEWHERE)
+
+      fun hookXml ((dtd,status,_,wher),_) = (dtd,status,emptyStack,wher)
+      fun hookFinish (a as (_,status,f,_)) = status
+	 
+      fun hookError   ((dtd,status,f,wher),err) = (dtd,OS.Process.failure,f,wher) 
+	 (* before printError err *)
+      fun hookWarning (a,warn) = a (* before printWarning warn *)
+
+      fun hookProcInst (a as (dtd,status,f,wher),pi) = a
+      fun hookWhite (a as (dtd,status,f,wher),ws) = 
+	 case wher 
+	   of CONTENT _ => (dtd,status,putCharacters(f,ws),wher)
+	    | _ => a
+	      
+      fun hookDecl (a,_) = a
+      fun hookComment (a,_) = a
+
+      fun hookStartTag (a as (dtd,status,f,wher),(s,i,a,u,b)) =
+	 case wher
+	   of CONTENT level => (dtd,status,putStartTag(f,stag),CONTENT(level+1))
+	    | SOMEWHERE => (dtd,status,putStartTag(f,stag),CONTENT 1)
+	    | _ => a
+      fun hookEndTag (a as (dtd,status,f,wher),etag) =
+	 case wher
+	   of CONTENT level => (dtd,status,putEndTag f, 
+				if level>1 then CONTENT(level-1) else SOMEWHERE)
+	    | _ => a
+
+      fun hookCData (a as (dtd,status,f,wher),(_,text)) = 
+	 case wher
+	   of CONTENT _ => (dtd,status,putCharacters(f,text),wher)
+	    | _ => a
+      fun hookData (a,(pp,text,_)) = hookCData(a,(pp,text))
+      fun hookCharRef (a,(pp,ch,_)) = hookCData(a,(pp,Vector.fromList [ch]))
+
+      fun hookGenRef (a as (dtd,status,f,wher),_) = a
+      fun hookParRef (a as (dtd,status,f,wher),_) = a
+      fun hookEntEnd (a as (dtd,status,f,wher),_) = a
+
+      fun hookDocType (a,_) = a
+      fun hookSubset (a as (dtd,status,f,wher),_) = a
+      fun hookExtSubset (a as (dtd,status,f,wher),_) = a
+      fun hookEndDtd(a as (dtd,status,f,wher),_) = a
+   end;
+]]></ft>
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+

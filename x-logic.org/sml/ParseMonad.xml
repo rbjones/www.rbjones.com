@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: ParseMonad.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="ParseMonad"
+       title="A Simple Monadic Parser"
+       description=""
+       keywords="x-logic xml unicode monad parser"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Superceeded by the InStream Monad in BasicMonads.xml.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+</sbcol>
+<sbcol>
+<secref title="Input"/>
+<secref title="Output"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec>
+</subsec>
+</sbcol>
+<sbcol>
+<subsec>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Simple Parser">
+<abstract>
+This is a non-deterministic parser monad.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="functor SimpleParseMonad">
+It is intended that parsers built using this monad can be used on any XlStream.
+<ft lang="xl-sml"><![CDATA[
+functor SimpleParseMonad (XlStream:XlStream):StateXMonad =
+  struct
+    open XlStream
+
+    type 'a M = inStream -> 'a * inStream
+
+    fun unit x f = (x,f)
+
+    fun bind am fabm file =
+      let val (a,f) = am file
+      in fabm a f
+      end
+
+    type 'a M = inStream -> 'a * inStream;
+
+    exception Mexception of string * inStream
+
+    fun mraise x s = raise (Mexception (x,s))
+
+    fun mhandle am h s = am s handle Mexception x => h x
+  end;
+]]></ft>
+</subsec>
+<hide>
+<subsec title="functor NonDetParseMonad">
+A non-deterministic version of SimpleParseMonad
+<ft lang="xl-sml"><![CDATA[
+functor NonDetParseMonad (XlStream:XlStream):Monad =
+  struct
+    open XlStream
+
+    type 'a M = inStream -> ('a * inStream) list
+
+    fun unit x f = [(x,f)]
+
+    fun fail f = []
+
+    fun bind am fabm file =
+      let val afl = am file
+      in foldr (op @) [] (map (fn (a,f)=> fabm a f) afl)
+      end
+  end;
+]]></ft>
+</subsec>
+<subsec title="Structure VectorParseArrow">
+<ft lang="xl-sml"><![CDATA[
+structure VectorParseArrow = FullArrow(Kleisli(SimpleParseMonad(XlVectorStream)));
+]]></ft>
+</subsec>
+<subsec title="">
+<ft lang="xl-sml"><![CDATA[
+structure VectorParseArrow = FullArrow(Kleisli(SimpleParseMonad(XlVectorStream)));
+]]></ft>
+</subsec>
+</hide>
+</sbcol>
+</secbody>
+</section>                                                                                                  
+
+<section title="Parse Arrows">
+<abstract>
+Starting with the Kleisli arrow built from the simple parse monad and an XlStream.
+</abstract>
+<secbody>
+<sbcol>
+</sbcol>
+<sbcol>
+<subsec title="Signature BasicParseArrow">
+<ft lang="xl-sml"><![CDATA[
+signature BasicParseArrow = 
+  sig
+    include FullStateXArrow
+    include XlStream
+  end;
+]]></ft>
+</subsec>
+<subsec title="Functor BasicParseArrow">
+<ft lang="xl-sml"><![CDATA[
+functor BasicParseArrow (XlStream:XlStream):BasicParseArrow= 
+  struct
+    structure Parser = FullStateXArrow(StateXArrow(SimpleParseMonad(XlStream)))
+    open XlStream Parser
+  end;
+]]></ft>
+</subsec>
+<subsec title="Structure BasicParseVectorArrow">
+<ft lang="xl-sml"><![CDATA[
+structure BasicParseVectorArrow = BasicParseArrow(XlVectorStream);
+]]></ft>
+</subsec>
+<subsec title="">
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<hide>
+fun id (v:UniChar.Vector) = v
+val stream = XlVectorStream.openStream (UniChar.String2Vector "12");
+val res = VectorParseArrow.arr id (UniChar.String2Vector "34") stream;
+</hide>
+</xldoc>
+

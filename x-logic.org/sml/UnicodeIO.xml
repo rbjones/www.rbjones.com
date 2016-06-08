@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xldoc xmlns="http://www.x-logic.org/xmlns/draft/xld"
+       xmlns:xhtml="http://www.w3.org/TR/xhtml1/strict"
+       id="$Id: UnicodeIO.xml,v 1.1.1.1 2006-04-19 20:44:52 rbj01 Exp $"
+       name="UnicodeIO"
+       title="Facilities for reading and writing Unicode data"
+       description="Wrappers for the fxp Unicode decode and encode facilities"
+       keywords="x-logic xml unicode fxp"
+       root="../"
+       path="sml/"
+       up="xltools.html"
+       author="rbj">
+
+<stripft lang="xl-sml"/>
+
+<section title="Overview">
+<abstract>
+Wrappers for the Unicode decode and encode facilities provided in the fxp parser library to package these in ways which are convenient for X-Logic.
+</abstract>
+<secbody>
+<sbcol>
+<secref title="Introduction"/>
+</sbcol>
+<sbcol>
+<secref title="Input"/>
+<secref title="Output"/>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Introduction">
+<abstract>
+A few words on the fxp facilities and how they are adapted for X-Logic.
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Note on fxp facilities">
+The fxp parser reads and parses XML in a range of standard encodings for the unicode character set, and is also able to write files in these same encodings.
+These are useful even when the parser is not being used, for reading and writing unicode data in languages other than XML.
+This document serves to adapt the fxp facilities to the needs of X-Logic, and to provide a layer minimising the dependency of X-Logic facilities on the specifics of these fxp interfaces.
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="Input">
+The two main features to supplied here are:
+<dl>
+<dt>first</dt>
+<dd>to provide a "lazy" input stream suitable for use by a backtracking parser</dd>
+<dt>second</dt>
+<dd>to allow for parsing of data which is not being read from a file</dd>
+</dl>
+Ideally this would be a structure with signature STREAM_IO and  be built using the StreamIO functor.
+However, that's a bit complicated.
+</subsec>
+<subsec title="Output">
+Where XML transformers generate a stream of unicode output it should be possible to direct this either to a selected file in a chosen encoding, or to retain the output as a unicode vector (or both).
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+<section title="Input">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="Signature XlDecode">
+This signature is a subset of the fxp "Decode" signature, containing just those things required by XlParseInput.
+It is assumed that XlParse applications will not open files (they will be passed an open file) and will not know about encoding (they may be operating on an unencoded unicode data source).
+So this signature is a very small part of the original.
+<ft lang="xl-sml"><![CDATA[
+signature XlDecode =
+   sig
+      type DecFile
+      exception DecEof of DecFile
+      val decOpenUni   : Uri.Uri option * Encoding.Encoding -> DecFile
+      val decClose     : DecFile -> DecFile
+      val decGetChar   : DecFile -> UniChar.Char * DecFile
+   end
+]]></ft>
+</subsec>
+<subsec title="Signature XlStream">
+This signature defines the facilities required by X-Logic parsers.
+It looks as if it's just renaming the XlDecode features, but it is semantically different because the input file is "lazy".
+This means that if you invooke getChar on the same InStream value several times you get the same results each time.
+You have to use the returned inStream if you want to get the next character.
+<ft lang="xl-sml"><![CDATA[
+signature XlStream =
+   sig
+      type streamData
+      type inStream
+      type openInfo
+      exception Eof of inStream
+      val openStream : openInfo -> inStream
+      val closeStream : inStream -> inStream
+      val getChar : inStream -> streamData * inStream
+   end
+]]></ft>
+</subsec>
+<subsec title="Functor XlDecodeStream">
+This functor addresses only the first item on the list of requirements, building from the X-Logic subset of the decode signature a lazy input file.
+The second requirement is satisfied by a structure which makes no use of XlDecode.
+<ft lang="xl-sml"><![CDATA[
+functor XlFileStream(XlDecode:XlDecode):XlStream =
+  struct
+    datatype inData
+      = File of XlDecode.DecFile
+      | Char of UniChar.Char * inData ref
+
+    type streamData = UniChar.Char
+    type inStream = inData ref
+    type openInfo = Uri.Uri option * Encoding.Encoding
+
+    exception Eof of inStream
+
+    fun openStream p = ref (File (XlDecode.decOpenUni p))
+
+    fun findfile (File rf) = rf
+      | findfile (Char (c,nf)) = findfile (!nf)
+
+    fun closeStream f = (XlDecode.decClose (findfile (!f));f)
+
+    fun indfile (Char d) infile = d
+      | indfile (File f) infile =
+          let val (c,nf) = (XlDecode.decGetChar f
+                           handle XlDecode.DecEof f => raise Eof infile)
+              val cnxf = (c, ref (File nf))
+          in (infile := Char cnxf; cnxf)
+          end
+
+    fun getChar infile = indfile (!infile) infile
+  end
+]]></ft>
+</subsec>
+<subsec title="Structure XlVectorStream">
+This is the conversion to a stream of the Decode structure from the fxp library.
+<ft lang="xl-sml"><![CDATA[
+structure XlFileStream = XlFileStream(Decode)
+]]></ft>
+</subsec>
+<subsec title="Structure XlVectorStream">
+<ft lang="xl-sml"><![CDATA[
+structure XlVectorStream:XlStream = 
+  struct
+    type streamData = UniChar.Char
+    type inStream = UniChar.Vector * int * int
+    type openInfo = UniChar.Vector
+    exception Eof of inStream
+
+    fun openStream v = (v,1,Vector.length v)
+    fun closeStream (v,p,len) = (v,0,len)
+    fun getChar (f as (v,p,len))
+      = if p<len
+        then (Vector.sub(v,p),(v,p+1,len))
+        else raise Eof f
+  end
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>                                                                                                  
+
+
+<section title="Output">
+<abstract>
+</abstract>
+<secbody>
+<sbcol>
+<subsec title="">
+</subsec>
+</sbcol>
+<sbcol>
+<subsec title="">
+<ft lang="xl-sml"><![CDATA[
+
+]]></ft>
+</subsec>
+</sbcol>
+</secbody>
+</section>
+
+</xldoc>
+
