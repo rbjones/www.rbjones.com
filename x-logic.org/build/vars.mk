@@ -2,11 +2,11 @@
 # build/vars.mk.  Generated from vars.mk.in by configure.
 
 
-prefix=/usr/local/rbj
+prefix=/Users/rbj
 exec_prefix=${prefix}
 
 displayvars:
-	@echo "prefix = /usr/local/rbj"
+	@echo "prefix = /Users/rbj"
 	@echo "exec_prefix = ${prefix}"
 	@echo "bindir = ${exec_prefix}/bin"
 	@echo "datadir = ${prefix}/share"
@@ -50,7 +50,7 @@ SHELL = /bin/sh
 INSTALL=/usr/bin/install
 JAVA=/usr/bin/java
 MAKE=/usr/bin/make
-PERL=/usr/bin/perl
+PERL=/opt/local/bin/perl5
 SML=:
 SML-CM=$(SML)-cm
 # You may need to change these hard coded values

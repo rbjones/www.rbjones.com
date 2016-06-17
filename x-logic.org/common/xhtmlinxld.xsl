@@ -16,7 +16,7 @@ Which is what this stylesheet is for.  There probably is a better way to do this
 				version="1.0"
 				xmlns="http://www.w3.org/TR/xhtml1/strict"
 				xmlns:xld="http://www.x-logic.org/xmlns/draft/xld"
-				xsl:exclude-result-prefixes="xld">
+				exclude-result-prefixes="xld">
 
 <xsl:template match="xld:p">
   <p>

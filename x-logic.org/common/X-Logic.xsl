@@ -6,7 +6,7 @@
 				version="1.0"
 				xmlns="http://www.w3.org/TR/xhtml1/strict"
 				xmlns:xld="http://www.x-logic.org/xmlns/draft/xld"
-				xsl:exclude-result-prefixes="xld">
+				exclude-result-prefixes="xld">
 
 <xsl:template name="author">
   <xsl:if test="ancestor-or-self::xld:xldoc/@author='rbj'">

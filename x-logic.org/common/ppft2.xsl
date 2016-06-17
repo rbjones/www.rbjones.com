@@ -6,7 +6,7 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
   xmlns="http://www.w3.org/1999/xhtml"
   xmlns:xld="http://www.x-logic.org/xmlns/draft/xld"
-  xsl:exclude-result-prefixes="xld">
+  exclude-result-prefixes="xld">
 
 <xsl:template mode="index" match="xld:ft">
 </xsl:template>
