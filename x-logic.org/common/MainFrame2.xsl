@@ -194,7 +194,7 @@
   <xsl:message><xsl:value-of select="concat('***[2] ', $docpath)"/></xsl:message>
   <xsl:apply-templates select="document($docpath,@doc)//xld:section[position()=1]" mode="referenced">
       <xsl:with-param name="prefix" tunnel="yes"><xsl:value-of select="$newprefix"/></xsl:with-param>
-      <xsl:with-param name="byreference" tunnel="yes"><xsl:value-of select="true"/></xsl:with-param>
+      <xsl:with-param name="byreference" tunnel="yes"><xsl:value-of select="child::true"/></xsl:with-param>
       <xsl:with-param name="title"><xsl:value-of select="$title"/></xsl:with-param>
       <xsl:with-param name="dochtmref"><xsl:value-of select="$filename"/></xsl:with-param>
   </xsl:apply-templates>
