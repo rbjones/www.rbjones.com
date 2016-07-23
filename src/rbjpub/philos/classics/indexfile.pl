@@ -39,7 +39,7 @@ while (<STDIN>) {
 # This is to facilitate completion of the index prior to publication.
 	if ($emph) {s/$iword\\index{}/\\emph{$iword}\\index{$ie}/g}
 # This line should be used when the emphasis is not required, i.e. for publication
-	else {s/$iword\\index{}/$iword\\index{$ie}/g};
+	else {s/$iword\\index\{\}/$iword\\index\{$ie\}/g};
     };
     print 
 };
