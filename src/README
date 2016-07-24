@@ -19,6 +19,76 @@ The first step is not necessary if your source tree comes with a "configure" scr
 However, success depends on there being already installed on the build machine a variety of other software.
 The configure script makes a rather pathetic attempt at detecting whether this software is present, and reports on any discrepancies which it finds.
 
+There follows just one detailed working prescription, which is for building under Ubuntu 16.04 on VirtualBox, together with some incomplete notes on possible cloud builds.
+
+==========================
+Ubuntu 16.04 on VirtualBox
+==========================
+
+To install ProofPower
+---------------------
+sudo apt-get update
+
+sudo apt-get install g++ libmotif-dev \
+	polyml \
+	libpolyml-dev \
+	texlive-latex-recommended
+
+cd
+mkdir src
+cd src
+mkdir pp
+cd pp
+curl http://www.lemma-one.com/ProofPower/getting/versions/OpenProofPower-3.1w7.tgz
+tar xfz OpenProofPower-3.1w7.tgz
+cd OpenProofPower-3.1w7
+patch -p1 -b -B orig ../ubuntu1604-patch.txt
+./configure
+install
+export PPHOME=~/pp
+export PATH=$PPHOME/bin:$PATH
+cd
+ln -s pp/app-defaults
+cd ~/src/pp
+curl http://www.lemma-one.com/ProofPower/examples/maths_egs/PPMathsEgs-3.1.tgz >PPMathsEgs-3.1.tgz
+tar xfz PPMathsEgs-3.1.tgz
+cd PPMathsEgs-3.1/src
+make -f maths_egs.mkf bld
+make -f maths_egs.mkf pdf
+cp maths_egs.polydb $PPHOME/db
+
+Install rbjones.com:
+--------------------
+sudo apt-get install perl
+sudo apt-get install latex2html
+sudo apt-get install emacs splint groff
+sudo apt-get install autoconf dos2unix git
+sudo apt-get install default-jre
+
+cpan install XML::DOM
+
+download saxonHe zip file from sourceforge to ~/src/saxon/saxon9he/saxon9he.zip
+unzip saxon9he.zip
+export CLASSPATH=~/src/saxon/saxon9he/saxon9he.jar
+
+cd
+mkdir git
+cd git
+git clone https://github.com/rbjones/www.rbjones.com
+
+cd www.rbjones.com/x-logic.org
+autoconf
+./configure --prefix=/home/rbj
+make ibuild
+
+export PATH=/home/rbj/bin:$PATH
+
+cd ..
+autoconf
+./configure --prefix=/home/rbj
+make
+
+=====================
 Building in the cloud
 =====================
 
@@ -77,101 +147,14 @@ sudo apt-get install tightvncserver
 vncserver
 (New 'X' desktop is ip-10-245-186-179:1)
 
-=================================================
-building on Ubuntu 12.04
-
-required software:
-
-sudo apt-get install texlive-latex-extra texlive-fonts-extra \
-     	     	     latex2html
-sudo apt-get install libXp-dev libXext-dev \
-		     libXmu-dev libXt-dev \
-		     libxft-dev libjpeg-dev libpng12-dev
-sudo apt-get install libmotif4 libmotif-dev libmotif4-dbg
-sudo apt-get install libxml-perl libxml-dom-perl
-sudo apt-get install emacs splint groff
-sudo apt-get install autoconf
-sudo apt-get install g++
-sudo apt-get install cvs
-sudo apt-get install 
-
-The following installation of saxon does not work (for me, yet)
-
-sudo apt-get install libsaxon-java
-sudo apt-get install libsaxon-java-doc
-
-Install polyml 5.4 from tarfile
-Install ProofPower 2.8.1w5 from tarfile
-Install PPMathsEgs-2.2 from tarfile (& copy database)
-
-get java sdk from oracle.
-
-Unpack saxon tarfile in /usr/local/src
-
-Setup from backupcd
-
-checkout X-Logic.org, build and then install as root
-checkout rbjones.com autoconf ./configure make and make install
-
 ===========================================
-Ubuntu 16.04
-
-To install ProofPower
----------------------
-
-sudo apt-get install libmotif-dev \
-	polyml \
-	libpolyml-dev \
-	texlive-latex-recommended
-
-===========================================
-
-On Debian 
-
-apt-get install \
-   gcc \
-   g++ \
-   texlive \
-   libXp-dev \
-   libXmu-dev \
-   libXt-dev \
-   emacs \
-   autoconf \
-   libtool \
-   flex \
-   bison \
-   groff
-   
-
-apt-get install libxft-dev
-apt-get install libjpeg-dev
-apt-get install libpng12-dev
-apt-get install splint
-apt-get install make
-
-install motif
-
-install polyml
-
-unpack polyml
-./configure
-make
-make install
-
-Now follow ProofPower installation instructions, i.e.
-untar then ./configure then ./install.
-
-Then for the rbjones.com build we need further software as follows.
-
-We need the XSLT processor, which is in java.
-
-x-logic.org
-
-Roger Jones
-
 
 BUILDING on MAC OS X El Capitain 10.11.4
 ========================================
+
+[Never got this to work fully, but ProofPower is OK]]
+
+sudo apt-get install
 
 First Install ProofPower and its prerequisites.
 
@@ -204,19 +187,4 @@ In the main directory,
 PPPOLYLINKFLAGS=" " ./configure
 ./install
 
-(of course you may want to set other variables as well to change the defaults)
-
-Now install PERL:
-
-sudo curl -L http://xrl.us/installperlosx | bash
-
-Java should already be installed.
-
-Install Perl:XPAT from https://sourceforge.net/projects/expat/
-
-perl -MCPAN -e "shell"
-install XML::DOM
-
-Add to PERL5LIB /opt/local/lib/perl5/site_perl/5.22
-
-get saxon
+(of course you may want to set other variables as well to change the default)
