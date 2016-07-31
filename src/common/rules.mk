@@ -322,7 +322,7 @@ $(HTML005f): %.html: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame012.xsl \
 #$(HTM005f): %.htm: %.xmlt xslt001$(XSLTSUFF).xsl xslt002.xsl frame01.xsl IndexFrame.xsl MainFrame.xsl pp-symbol.ent ppft.xsl X-Logic.xsl sitespecific.xsl
 #	$(JAVA) $(XSLTPROC) $*.xmlt $(XLCOMDIR)/xslt001$(XSLTSUFF).xsl dir=$(BLDDIR) name=$*
 
-$(HTM005) $(HTM005x): %.htm: %.xmlt xslt001s8.xsl pp-symbol.ent
+$(HTM005f) $(HTM005fx): %.htm: %.xmlt xslt001s8.xsl pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt001s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* suffix=htm imagedir=rbjgifs 
 
