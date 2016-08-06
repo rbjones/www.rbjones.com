@@ -71,7 +71,7 @@ $(HTML003): %.html: %.xml xslt003$(XSLTSUFF).xsl xslt002.xsl X-Logic.xsl
 	$(JAVA) $(XSLTPROC) $< $(XLCOMDIR)/xslt003$(XSLTSUFF).xsl dir=$(BLDDIR) name=$*
 
 $(XMLT004): %.xmlt: %.xml
-	addftl <$<  >$*.xmlx
+	addftl2 <$<  >$*.xmlx
 	xxml2xml <$*.xmlx >$*.xmlt
 
 $(XMLT004x): %.xmlt: %.xml
@@ -309,7 +309,7 @@ install: build $(FIRSTINSTALLS) $(THISINSTALL) $(SUBINSTALLS) $(LASTINSTALLS)
 # Qualified rules
 
 $(XMLT005S) $(XMLT005) $(XMLT006) $(XMLT007) $(XMLT008) $(XMLT008S): %.xmlt: %.xml
-	addftl <$<  | xxml2xml >$*.xmlt
+	addftl2 <$<  | xxml2xml >$*.xmlt
 
 $(XMLT005Sx) $(XMLT005x) $(XMLT006x) $(XMLT007x) $(XMLT008x) $(XMLT008Sx): %.xmlt: %.xml
 	cat <$<  | xxml2xml >$*.xmlt
