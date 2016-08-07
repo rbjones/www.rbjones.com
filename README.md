@@ -20,6 +20,6 @@ However, none of these has yet come close to completion.
 
 In order to build this site (though its not clear why anyone else would want to do that) you would need to refer to the README file in the src directory.
 I try to keep a record there of how to make it work, mainly so that I can reproduce the build process whenever I have to migrate from one machine to another.
-However, this documentation is, I fear, unlikely to be quite as good as it should be, for which I apologies to anyone who might attempt to use it.
+However, this documentation is, I fear, unlikely to be quite as good as it should be, for which I apologise to anyone who might attempt to use it.
 
 Roger Bishop Jones
