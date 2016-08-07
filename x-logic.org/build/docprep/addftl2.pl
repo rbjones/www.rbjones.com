@@ -8,28 +8,30 @@
 
 # This procedure copies standard input to standard output until it finds a formal text element.
 sub skiptoft {
-    while (!eof(STDIN) && !/^\W*\<(ft|hosig|holpred)/){
-	print;
-	$_=<STDIN>
+    if (!eof(STDIN)) {
+	$_=<STDIN>;
+	while (!eof(STDIN) && !/^\W*\<(ft|hosig|holpred)/){
+	    print;
+	    $_=<STDIN>
+	};
+	print
     };
 };
 
 # This procedure copies formal text from STDIN to STDOUT until it finds a formal text end tag. 
 sub transcribeft {
+    $_=<STDIN>;
     while (!eof(STDIN) && !/^\<\/(ft|holsig|holpred)\>/){
 	s!\t!<fttab \/>!g;
-	s/^(.*)$/\1<ftnl \/>/;
+	s/^(.*)$/$1<ftnl \/>/;
 	print;
 	$_=<STDIN>
     };
+    print
 };
 
 $_=<STDIN>;
 while(!eof(STDIN)){
     &skiptoft;
-    print;
-    $_=<STDIN>;
     &transcribeft;
-    print;
-    $_=<STDIN>
 };
