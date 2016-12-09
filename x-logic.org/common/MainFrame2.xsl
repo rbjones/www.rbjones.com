@@ -78,7 +78,6 @@
   <xsl:call-template name="newline"/>
   </p>
   <xsl:call-template name="newline"/>
-  <xsl:call-template name="googleA"/>
   <xsl:call-template name="privacy"/>
   <xsl:call-template name="newline"/>
   <p>Created:<xsl:value-of select="@created"/></p>
@@ -505,61 +504,6 @@
     <xsl:apply-templates/>
   </a>
 </xsl:template>
-
-<!-- the following templates process google searches -->
-
-<xsl:template mode="#all" match="xld:google">
-  <a>
-    <xsl:attribute name="target">_top</xsl:attribute>
-    <xsl:attribute name="href">http://www.google.com/search?hl=en&amp;ie=UTF-8&amp;oe=UTF-8&amp;q=<xsl:value-of select="@q"/>&amp;btnG=Google+Search
-    </xsl:attribute>
-    <xsl:for-each select="@*"><xsl:copy/></xsl:for-each>
-    <xsl:apply-templates/>
-  </a>
-</xsl:template>
-
-<xsl:template name="google2">
-<form action="http://www.google.com/cse" id="cse-search-box">
-  <div>
-    <input type="hidden" name="cx" value="partner-pub-2635823546822889:9f6c75aq13p" />
-    <input type="hidden" name="ie" value="ISO-8859-1" />
-    <input type="text" name="q" size="22" />
-    <input type="submit" name="sa" value="Search" />
-  </div>
-</form>
-<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&amp;lang=en"></script>
-</xsl:template>
-
-<xsl:template name="google10">
-
-<form action="http://www.google.com/cse" id="cse-search-box" target="_blank">
-  <div>
-    <input type="hidden" name="cx" value="partner-pub-2635823546822889:tlepathmeru" />
-    <input type="hidden" name="ie" value="ISO-8859-1" />
-    <input type="text" name="q" size="10" />
-    <input type="submit" name="sa" value="Search" />
-  </div>
-</form>
-<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&amp;lang=en"></script>
-
-</xsl:template>
-
-<!-- google search www.rbjones.com -->
-
-<xsl:template name="googleA">
-
-<form action="http://www.google.com/cse" id="cse-search-box" target="_blank">
-  <div>
-    <input type="hidden" name="cx" value="partner-pub-2635823546822889:tlepathmeru" />
-    <input type="hidden" name="ie" value="ISO-8859-1" />
-    <input type="text" name="q" size="31" />
-    <input type="submit" name="sa" value="Search" />
-  </div>
-</form>
-<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&amp;lang=en"></script>
-
-</xsl:template>
-
 
 <!-- this template processes reference to the bibliography -->
 

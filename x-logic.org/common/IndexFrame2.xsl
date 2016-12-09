@@ -44,10 +44,6 @@
   <xsl:call-template name="newline"/>
   <xsl:call-template name="valid_xhtml10"/>
   <xsl:call-template name="newline"/>
-  <p/>
-  <xsl:call-template name="newline"/>
-  <xsl:call-template name="google10"/>
-  <xsl:call-template name="newline"/>
   </div>
   <xsl:call-template name="newline"/>
   </body>

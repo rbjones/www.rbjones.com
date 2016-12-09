@@ -51,6 +51,7 @@ PPTHTOTEX=$(PPTHTODOC:.doc=.tex)
 
 # DVI, Postscript, PDF
 
+TEXPDFPROG=xelatex
 DOCTEX=$(PPPDOC:.doc=.tex) $(PPTHTEX) $(PPTHTOTEX)
 TEX=$(KLUTEX) $(DOCTEX)
 KLUDVI=$(KLUTEX:.tex=.dvi)
@@ -181,7 +182,7 @@ $(DOCPDF): %.pdf: %.doc
 
 $(TEXPDF): %.pdf : %.tex
 	@echo "TEXPDF"
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
 	@touch $*.ind
 	-cat $*.idx \
 	    | sed -e 's/\([^@]\)\(@[^@]\)/\1"\2/;' \
@@ -191,31 +192,31 @@ $(TEXPDF): %.pdf : %.tex
 	    | makeindex -i -o $*.ind
 	-sed -i -e 's/delimiter 026E30F/Backslash/' $*.ind
 	-bibtex $*
-	@pdflatex $*
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG) $*
 
 $(TEXPDF2): %.pdf : %.tex
 	@echo "TEXPDF2"
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
 	@touch $*.ind
 	perl -n -e 'if (/\\indexentry{!/) {while (/([^"])([@!|])/) {s/([^"])([@!|])/$1"$2/g}; s/indexentry{"!/indexentry{/; s/"\|hyperpage/\|hyperpage/}; print;' < $*.idx \
 	| makeindex -i -s rbjpp.ist -o $*.ind
 	sed -i -e 's/\\delimiter /\\delimiter "/' $*.ind
 	-bibtex $*
-	@pdflatex $*
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG) $*
 
 $(TEXPDF3): %.pdf : %.tex
 	@echo "TEXPDF3"
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
 	-makeindex $*.idx
 	-bibtex $*
-	@pdflatex $*
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG) $*
 
 $(TEXPDFGLO): %.pdf : %.tex
 	@echo "TEXPDFGLO"
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
 	@touch $*.ind
 	-cat $*.idx \
 	    | sed -e 's/\([^@]\)\(@[^@]\)/\1"\2/;' \
@@ -226,8 +227,8 @@ $(TEXPDFGLO): %.pdf : %.tex
 	-sed -i -e 's/delimiter 026E30F/Backslash/' $*.ind
 	-bibtex $*
 	-makeglossaries $*
-	@pdflatex $*
-	@pdflatex $*
+	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG) $*
 
 
 # Unqualified rules
