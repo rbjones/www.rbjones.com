@@ -27,7 +27,7 @@ sub transcribeft {
 	print;
 	$_=<STDIN>
     };
-    print
+    unless (eof(STDIN)){print}
 };
 
 $_=<STDIN>;
