@@ -76,6 +76,7 @@ sub tranxml2ppdoc_nft {
 	\$_=\$line;
 # first process single subscripted characters
 	s/<sub>(.)<\\\/sub>/\\211\$1/g;
+	s/<sup>(.)<\\\/sup>/\\233\$1/g;
 	s/<sup class="l">([^<]*)<\\\/sup>/\\347\$1\\352/g;
 	s/<sub class="l">([^<]*)<\\\/sub>/\\350\$1\\352/g;
 # then process &#n; forms for <3 digits in n

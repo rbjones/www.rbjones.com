@@ -2,7 +2,7 @@
 # ($Id)
 # For preprocessing an XML file containing xld:ft sections before
 # transforming into XHTML using XT.
-# Encloses each line in formal text sections with <xld:ftl></xld:ftl> markers.
+# Adds a <ftbr /> tag at the end of each line in a formal text section.
 # This second version does not make use of XML::DOM and has been done because I had a problem
 # getting a working installation of XML::DOM on OS X.
 
@@ -23,7 +23,7 @@ sub transcribeft {
     $_=<STDIN>;
     while (!eof(STDIN) && !/^\<\/(ft|holsig|holpred)\>/){
 	s!\t!<fttab \/>!g;
-	s/^(.*)$/$1<ftnl \/>/;
+	s/^(.*)$/$1<ftbr \/>/;
 	print;
 	$_=<STDIN>
     };
