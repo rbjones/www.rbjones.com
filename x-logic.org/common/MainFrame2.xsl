@@ -67,11 +67,11 @@
   <hr width="70%" /><xsl:call-template name="newline"/>
   <p><xsl:call-template name="newline"/>
   <a target="_top" href="{@up}">
-     <img src="{$imagepath}/up.gif" alt="up" border="0" align="bottom"/>
+     <img src="{$imagepath}up.gif" alt="up" border="0" align="bottom"/>
   </a>
   <xsl:call-template name="newline"/>
   <a target="_top" href="{concat($rootpath,$topindex)}">
-     <img src="{$imagepath}/home.gif" alt="quick index" border="0" align="bottom"/>
+     <img src="{$imagepath}home.gif" alt="quick index" border="0" align="bottom"/>
   </a>
   <xsl:call-template name="newline"/>
   <xsl:call-template name="author"/>

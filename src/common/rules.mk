@@ -351,8 +351,8 @@ $(HTML007f) $(HTML007fx): %.html: %.xmlt xslt001s8.xsl pp-symbol.ent xslt002.xsl
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt001s8.xsl root=$(BLDROOT) \
 		dir=$(RELWEBDIR)/ name=$* imagedir=rbjgifs 
 
-$(HTML007i) $(HTML007m): $(HTML007f)
-$(HTML007ix) $(HTML007mx): $(HTML007fx)
+$(HTML007i) $(HTML007ix): %-i.html : %.html
+$(HTML007m) $(HTML007mx): %-m.html : %.html
 
 $(HTML008) $(HTML008x): %.html: %.xmlt $(XLCOMDIR)/xslt004s8.xsl pp-symbol.ent
 	$(JAVA) $(XSLT2PROC) $*.xmlt $(XLCOMDIR)/xslt004s8.xsl root=$(BLDROOT) \
