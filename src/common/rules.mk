@@ -51,7 +51,9 @@ PPTHTOTEX=$(PPTHTODOC:.doc=.tex)
 
 # DVI, Postscript, PDF
 
-TEXPDFPROG=xelatex
+TEXPDFPROG=pdflatex
+TEXPDFPROG3=xelatex
+TEXPDFPROG4=lualatex
 DOCTEX=$(PPPDOC:.doc=.tex) $(PPTHTEX) $(PPTHTOTEX)
 TEX=$(KLUTEX) $(DOCTEX)
 KLUDVI=$(KLUTEX:.tex=.dvi)
@@ -208,11 +210,19 @@ $(TEXPDF2): %.pdf : %.tex
 
 $(TEXPDF3): %.pdf : %.tex
 	@echo "TEXPDF3"
-	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG3) $*
 	-makeindex $*.idx
 	-bibtex $*
-	@$(TEXPDFPROG) $*
-	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG3) $*
+	@$(TEXPDFPROG3) $*
+
+$(TEXPDF4): %.pdf : %.tex
+	@echo "TEXPDF4"
+	@$(TEXPDFPROG4) $*
+	-makeindex $*.idx
+	-bibtex $*
+	@$(TEXPDFPROG4) $*
+	@$(TEXPDFPROG4) $*
 
 $(TEXPDFGLO): %.pdf : %.tex
 	@echo "TEXPDFGLO"
