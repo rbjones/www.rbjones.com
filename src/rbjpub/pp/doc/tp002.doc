@@ -798,9 +798,9 @@ To interpret a sentence we need to know:
 
 =GFT
 types
-	document_map = "document ´ string"
-	language_map = "language ´ string set"
-	program_map  = "program ´ (string list ´ string list)"
+	document_map = "document â‡’ string"
+	language_map = "language â‡’ string set"
+	program_map  = "program â‡’ (string list â‡’ string list)"
 =TEX
 \paws{}
 =GFT
@@ -815,21 +815,21 @@ record Sinterp =
 \frametitle{True Sentences}
 =GFT
 consts
-    truedoclist :: "[Sinterp, document list, language list] ´ bool"
+    truedoclist :: "[Sinterp, document list, language list] â‡’ bool"
 primrec
    "truedoclist i (h_d#t_d) l_l = (case l_l of
-      []        ´ False |
-      (h_l#t_l)	´ (docmap i h_d)  (langmap i h_l) & truedoclist i t_d t_l)"
-   "truedoclist i [] l_l = (case l_l of [] ´ True | (h_l#t_l) ´ False)"
+      []        â‡’ False |
+      (h_l#t_l)	â‡’ (docmap i h_d) âˆˆ (langmap i h_l) & truedoclist i t_d t_l)"
+   "truedoclist i [] l_l = (case l_l of [] â‡’ True | (h_l#t_l) â‡’ False)"
 =TEX
 \paws{}
 =GFT
 consts
-   truesen :: "Sinterp ´ sentence ´ bool"
+   truesen :: "Sinterp â‡’ sentence â‡’ bool"
 
 primrec
    "truesen i (TrueDocs dl ll)     = truedoclist i dl ll"
-   "truesen i (ProgSpec p ill oll) = (µ idl . truedoclist i idl ill
+   "truesen i (ProgSpec p ill oll) = (âˆ€ idl . truedoclist i idl ill
                                      --> truedoclist i (progmap i p idl) oll)"
    "truesen i (Compute p idl odl)  = (odl = progmap i p idl)"
 =TEX
@@ -852,7 +852,7 @@ To determine truth we therefore need to know what judgements have been asserted 
 \paws{}
 =GFT
 types
-	judgement_map = "authority ´ judgement set"
+	judgement_map = "authority â‡’ judgement set"
 =TEX
 \paws{}
 =GFT
@@ -884,28 +884,28 @@ Greater in this case means directly or indirectly endorsed by the authority in q
 \paws{}
 =GFT
 types
-	inftest = "authority ´ Jinterp ´ bool"
-	truthtest = "judgement ´ Jinterp ´ bool"
+	inftest = "authority â‡’ Jinterp â‡’ bool"
+	truthtest = "judgement â‡’ Jinterp â‡’ bool"
 =TEX
 \paws{}
 =GFT
 constdefs
-   authrel :: "judgement_map ´ (authority * authority)set"
-   "authrel jm == rtrancl {p. ¶as. snd p  as
-                             & Endorse (fst p) as  jm (fst p)}"
+   authrel :: "judgement_map â‡’ (authority * authority)set"
+   "authrel jm == rtrancl {p. âˆƒas. snd p âˆˆ as
+                             & Endorse (fst p) as âˆˆ jm (fst p)}"
 
    basett :: "truthtest"
-   "basett j ji == case j of (Endorse a as) ´ True |
-                                (Assert n as s) ´ truesen (sinterp ji) s"
+   "basett j ji == case j of (Endorse a as) â‡’ True |
+                                (Assert n as s) â‡’ truesen (sinterp ji) s"
 =TEX
 \paws{}
 =GFT
-   itrec :: "nat ´ (inftest * truthtest) ´ inftest"
-   "itrec n tsts auth ji == µa. (auth, a)  authrel (judgemap ji)
-         --> (µj. j  judgemap ji a & jstamp j < n --> snd tsts j ji)"
+   itrec :: "nat â‡’ (inftest * truthtest) â‡’ inftest"
+   "itrec n tsts auth ji == âˆ€a. (auth, a) âˆˆ authrel (judgemap ji)
+         --> (âˆ€j. j âˆˆ judgemap ji a & jstamp j < n --> snd tsts j ji)"
 
-   ttrec :: "(inftest * truthtest) ´ truthtest"
-   "ttrec tsts j ji == (µauth. auth  (jauths j) --> (fst tsts) auth ji)
+   ttrec :: "(inftest * truthtest) â‡’ truthtest"
+   "ttrec tsts j ji == (âˆ€auth. auth âˆˆ (jauths j) --> (fst tsts) auth ji)
                 --> basett j ji"
 =TEX
 \end{frame}
@@ -917,19 +917,19 @@ constdefs
 \paws{}
 =GFT
 consts
-   ittt :: "nat ´ (inftest * truthtest)"
+   ittt :: "nat â‡’ (inftest * truthtest)"
 
 primrec
-   "ittt 0       = ((Ìx y z. True), basett)"
+   "ittt 0       = ((Î»x y z. True), basett)"
    "ittt (Suc n) = (itrec (Suc n) (ittt n), ttrec (ittt n))"
 =TEX
 \paws{}
 =GFT
 constdefs
-   hitherto_infallible  :: "nat ´ authority ´ Jinterp ´ bool"
+   hitherto_infallible  :: "nat â‡’ authority â‡’ Jinterp â‡’ bool"
    "hitherto_infallible n == fst (ittt n)"
 
-   true_judgement  :: "judgement ´ Jinterp ´ bool"
+   true_judgement  :: "judgement â‡’ Jinterp â‡’ bool"
    "true_judgement j == snd (ittt (jstamp j)) j"
 =TEX
 
@@ -945,9 +945,9 @@ Inference preserves truth.
 \paws{}
 =GFT
 constdefs
-   sound ::"(judgement set ´ judgement set) ´ bool"
-   "sound f == µji js. (µj. j:js --> true_judgement j ji)
-               --> (µj. j:(f js) --> true_judgement j ji)"
+   sound ::"(judgement set â‡’ judgement set) â‡’ bool"
+   "sound f == âˆ€ji js. (âˆ€j. j:js --> true_judgement j ji)
+               --> (âˆ€j. j:(f js) --> true_judgement j ji)"
 =TEX
 
 \paws{} {\Large Assurance}
@@ -957,11 +957,11 @@ Lowly assured premises neither yield not influence highly assured conclusions.
 \paws{}
 =GFT
 constdefs
-   filter ::"authority  set ´ judgement set ´ judgement set"
-   "filter as js == {j . jauths j € Image (authr js) as}"
+   filter ::"authority  set â‡’ judgement set â‡’ judgement set"
+   "filter as js == {j . jauths j âŠ† Image (authr js) as}"
 
-   assured ::"(judgement set ´ judgement set) ´ bool"
-   "assured f == µjs1 js2 as. filter as js1 = filter as js2 -->
+   assured ::"(judgement set â‡’ judgement set) â‡’ bool"
+   "assured f == âˆ€js1 js2 as. filter as js1 = filter as js2 -->
                               filter as (f js1) = filter as (f js2)"
 =TEX
 
