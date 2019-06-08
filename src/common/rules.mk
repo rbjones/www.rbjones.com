@@ -201,7 +201,7 @@ $(TEXPDF2): %.pdf : %.tex
 	@echo "TEXPDF2"
 	@$(TEXPDFPROG) $*
 	@touch $*.ind
-	perl -n -e 'if (/\\indexentry{!/) {while (/([^"])([@!|])/) {s/([^"])([@!|])/$1"$2/g}; s/indexentry{"!/indexentry{/; s/"\|hyperpage/\|hyperpage/}; print;' < $*.idx \
+	perl -n -e 'if (/\\indexentry\{!/) {while (/([^"])([@!|])/) {s/([^"])([@!|])/$1"$2/g}; s/indexentry{"!/indexentry\{/; s/"\|hyperpage/\|hyperpage/}; print;' < $*.idx \
 	| makeindex -i -s rbjpp.ist -o $*.ind
 	sed -i -e 's/\\delimiter /\\delimiter "/' $*.ind
 	-bibtex $*

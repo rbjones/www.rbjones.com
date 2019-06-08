@@ -26,7 +26,7 @@ $Id: t054.doc $
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-A fresh start on the formalisation of the recursion theorem in HOL.
+A fresh start on the formalisation of the recursion theorem in ProofPower HOL.
 \end{abstract}
 
 \vfill

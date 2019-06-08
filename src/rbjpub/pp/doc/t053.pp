@@ -61,20 +61,20 @@ $ $Id: t053.doc 2016/08 $ $
 \section{INTRODUCTION}
 
 A tool such as {\Product} for constructing formal logical proofs is a good way to get an understanding of logic and set theory for discrete mathematics. 
-However, formal proofs, by comparison with ordinary mathematical proofs, are very detailed, long, complicated and contructing these manually is onerous.
-This is one of the reasons why in the construction of formal proofs, with the exception only of those for teaching logic in textbooks, is normally conducted using software which takes on lot of the detailed work and ensures that the proof is correct.
+However, formal proofs, by comparison with ordinary mathematical proofs, are very detailed, long, complicated and constructing these manually is onerous.
+This is one of the reasons why the construction of formal proofs, with the exception only of those for teaching logic in textbooks, is normally conducted using software which takes on lot of the detailed work and ensures that the proof is correct.
 
-In ordinary journal or text book mathematics proofs, the level of proofs is very much higher than that which be necessary for fully formal proofs, and mathematicians do not need to know the details of any formal deductive system to undertake such proofs.
+In ordinary journal or text book mathematics proofs, the level of proofs is very much higher than that which would be necessary for fully formal proofs, and mathematicians do not need to know the details of any formal deductive system to undertake such proofs.
 Primitive inference rules are simply not something that one needs to know about to do mathematics.
 
 Constructing formal proofs using sophisticated software is very different, but it shares the same characteristic.
 It is not necessary to know the primitive inference rules, and when constructinbg proofs in this way, the user will not often use primitive rules, and may not be aware of which of the rules he uses are primitive.
 
-Normally also, a primitive inference system provides for what Euclid would have called (\it synthetic} proofs (and we call {\it forward} proofs, in which the proof proceeds from the axioms of the system, using the rules, to the desired theorem.
+Normally also, a primitive inference system provides for what Euclid would have called (\it synthetic} proofs (and we call {\it forward} proofs), in which the proof proceeds from the axioms of the system, using the rules, to the desired theorem.
 In practice, it is usually easier to undertake a proof by what the Greeks would have called an {\it analytic} proof, in which we start with the conjecture to be proven, and work our way back to the axioms, at each stage reducing the problem to simpler subproblems from which the desired results can be derived.
 This is now often called (\it backward} or goal oriented proof, and may be undertaken using software called a goal package.
 The advantage of this is that is is easier for the human being to see how to construct a proof in this way, and it is also easier for the machine to assist in that process, because it knows at every stage what it is that the user of the sotware is trying to prove.
-Consequently, in a goal directed proof supported by software, the user has to type much less than he would in a forward proof, his task is easier and takes less time.
+Consequently, in a goal directed proof supported by software, the user has to type much less than he would in a forward proof; his task is easier and takes less time.
 
 An LCF style proof tool such as \Product{} has a rich collection of facilities for constructing such proofs, and it may be difficult for him to know what he needs to learn to become effective in constructing proofs.
 
@@ -143,8 +143,8 @@ Now 1 goal on the main goal stack
 
 (* ?⊢ *)⌜(∃ x y⦁ p (x, y)) ⇒ (∃ y x⦁ p (x, y))⌝
 =TEX
-The method involves indurect proof, also called proof by contradiction.
-To start such a proof one assumes the negation of the desired theorem and then tries to proof a contradiction, in this case the conjecture "false".
+The method involves ``indirect'' proof, also called proof by contradiction.
+To start such a proof one assumes the negation of the desired theorem and then tries to prove a contradiction, in this case the conjecture "false".
 This kind of proof is set up using the tactic {\it $contr\_tac$}, which not only assumes the negation of the desired theorem, but systematicall simplifies that negation as is shown by its action here:
 =SML
 a (contr_tac);
