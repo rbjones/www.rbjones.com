@@ -50,6 +50,7 @@ vars:
 
 PPHOME=$(shell echo $${PPHOME:-/usr/local/pp})
 PPCHARSET=utf8
+PPSVF=utf8svf
 PRODNAME=rbj
 SHORTNAME=rbj
 PRODUCT=$(PRODNAME)
@@ -76,16 +77,22 @@ HOLPPS1= t000.pp \
 	t008.pp t009.pp t010.pp t011.pp t012.pp t013.pp t014.pp \
 	t015.pp t016.pp t017.pp t018.pp t019.pp t020.pp t021.pp \
 	t022.pp t023.pp t024.pp t025.pp t026.pp t027.pp t031.pp \
-	t033.pp t042.pp t043.pp t051.pp
+	t033.pp t042.pp t043.pp
 
 HOLPPS2= t001.pp t028.pp t029.pp t030.pp t032.pp t037.pp t038.pp \
-	  t039.pp t040.pp t041.pp t044.pp t045.pp t046.pp t047.pp \
-	  t048.pp t049.pp t050.pp
+	  t039.pp t040.pp t041.pp t044.pp t045.pp t047.pp \
+	  t048.pp t049.pp
 
-HOLPPS=$(HOLPPS1) $(HOLPPS2)
+HOLPPS3= t046.pp t050.pp t055.pp
+
+HOLPPS4= t051.pp
+
+HOLPPS=$(HOLPPS1) $(HOLPPS2) $(HOLPPS3) $(HOLPPS4)
 
 HOLTEXS1=$(HOLPPS1:.pp=.tex)
 HOLTEXS2=$(HOLPPS2:.pp=.tex)
+HOLTEXS3=$(HOLPPS3:.pp=.tex)
+HOLTEXS4=$(HOLPPS4:.pp=.tex)
 
 TTEX= \
         t001a.tex t002.tex t003.tex t004.tex t005.tex t006.tex t007.tex \
@@ -94,12 +101,14 @@ TTEX= \
 	t022.tex t023.tex t024.tex t025.tex t026.tex t027.tex t028a.tex \
 	t029a.tex t030a.tex t031.tex t032a.tex t033.tex t037a.tex t038a.tex \
 	t039a.tex t040a.tex t041a.tex t042.tex t043.tex t044a.tex t045a.tex \
-	t046a.tex t047a.tex t048a.tex t049a.tex t050a.tex t051.tex
+	t046a.tex t047a.tex t048a.tex t049a.tex t050a.tex t051.tex t055.tex
 
 ATEXS=$(HOLPPS2:.pp=a.tex)
 ZTEXS=$(HOLPPS2:.pp=z.tex)
-ITEXS=t028i.tex t040i.tex t041i.tex t045i.tex t046i.tex t047i.tex t048i.tex t049i.tex t050i.tex
-IPDFS=$(ITEXS:i.tex=.pdf)
+IPDFS=t028.pdf t040.pdf t041.pdf t045.pdf t046.pdf t047.pdf t048.pdf t049.pdf t050.pdf t055.pdf
+ITEXS=t028i.tex t040i.tex t041i.tex t045i.tex t046i.tex t047i.tex t048i.tex \
+	t049i.tex t050i.tex t055i.tex
+ITEXS=$(IPDFS:.PDF=i.tex)
 
 ZEDPPS=
 
@@ -115,11 +124,13 @@ SMLFILES= $(SMLPPS:.pp=.sml)
 LDDFILES= $(SMLPPS:.pp=.ldd)
 PDFFILES1= $(HOLPPS1:.pp=.pdf) $(OTHERPPS:.pp=.pdf)
 PDFFILES2= $(HOLPPS2:.pp=.pdf)
-PDFFILES=$(PDFFILES1) $(PDFFILES2)
+PDFFILES3= $(HOLPPS3:.pp=.pdf)
+PDFFILES4= $(HOLPPS4:.pp=.pdf)
+PDFFILES=$(PDFFILES1) $(PDFFILES2) $(PDFFILES3) $(PDFFILES4)
 
 # packing list for a source release (target src)
-PACKINGLIST= $(SMLPPS) $(ATEXS) $(ZTEXS) $(OTHERPPS) rbj.bib rbj.mkf rbj.sty \
-	     rbjfmu.bst rbjpp.ist ProofPower.sty pppdf texpdf texindex2tex LICENSE list_na.sml list_wa.sml
+PACKINGLIST= $(SMLPPS) $(ATEXS) $(ZTEXS) $(OTHERPPS) rbj.bib rbj.mkf rbj.sty keywords \
+	     rbjfmu.bst rbjpp.ist pppdf texpdf texindex2tex LICENSE list_na.sml list_wa.sml
 # t000abs
 
 DISTPACKINGLIST=$(PACKINGLIST) README.txt
@@ -178,7 +189,7 @@ t051.ldd: t005.ldd t007.ldd t009.ldd t048.ldd
 
 # some variables and rules concerning document preparation
 
-$(PDFFILES): rbj.bib rbjfmu.bst rbjpp.ist ProofPower.sty rbj.sty pppdf texpdf
+$(PDFFILES): rbj.bib rbjfmu.bst rbjpp.ist rbj.sty pppdf texpdf
 
 README.txt:
 
@@ -220,14 +231,14 @@ THTEXSok=$(THEORIESok:.th=.th.tex)
 THTEXS=$(THEORIES:.th=.th.tex)
 THNATEXS=$(HTHNAS:.thna=.thna.tex)
 
-$(THTEXS): %.tex: %.pp
-	   pptex $*
+$(THTEXS): %.tex: %.pp keywords
+	   pptex -f utf8svf -k keywords $*
 	   @sed -i -e "/THE THEORY/s/THE THEORY/The Theory/" $*.tex
 	   @sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 #	   @sed -i -e "/\\+\t/s/\t/       /g" $*.tex
 
 $(THNATEXS): %.tex: %.pp
-	   pptex $*
+	   pptex -f utf8svf -k keywords $*
 	   @sed -i -e "/THE THEORY/s/THE THEORY\(.*\)/The Theory\1 (no aliases)/" $*.tex
 	   @sed -i -e "/underscoreoff/s/\([^_\]\)_/\1\\\\_/g" $*.tex
 #	   @sed -i -e "/\\+\t/s/\t/       /g" $*.tex
@@ -333,7 +344,7 @@ t027.pdf: infos.th.tex
 
 ariscat.th.pp modsyllog.th.pp syllog1.th.pp syllog2.th.pp syllog3.th.pp syllog4.th.pp syllog5.th.pp syllog6.th.pp syllmetap.th.pp gccon.th.pp: t028.ldd
 
-t028.pdf: ariscat.th.tex modsyllog.th.tex syllog1.th.tex syllog2.th.tex syllog3.th.tex syllog4.th.tex syllog5.th.tex syllog6.th.tex syllmetap.th.tex gccon.th.tex
+t028.pdf: ariscat.th.tex modsyllog.th.tex syllog1.th.tex syllog2.th.tex syllog3.th.tex syllog4.th.tex syllog5.th.tex syllog6.th.tex syllmetap.th.tex gccon.th.tex t028.sml
 
 fmphil.th.pp: t029.ldd
 
@@ -413,9 +424,7 @@ ordcard0.th.pp ordcard.th.pp: t051.ldd
 
 t051.pdf: ordcard0.th.tex ordcard.th.tex
 
-$(IPDFS): %.pdf: %i.tex
-
-$(ITEXS): %i.tex: %.sml
+$(IPDFS): %.pdf: %.sml
 
 ######################################################################
 #
@@ -530,7 +539,6 @@ doc:	docrel
 ######################################################################
 
 clean:
-	-rcsclean
 	rm -f $(SMLFILES) $(LDDFILES)
 	rm -f *.aux *.bbl *.blg *.idx *.log *.lot *.sid *.sml *.tex *.toc $(HOLDBNAME).ldd *.th.pp
 
@@ -543,13 +551,13 @@ clean:
 $(HOLLDD): %.ldd: %.sml
 	@rm -f $@ $*.err 2>/dev/null
 	@echo "Compiling (code)" $<
-	@pp -d $(HOLDBNAME) -f $< >$*.err
+	@PPCHARSET=utf8 pp -d $(HOLDBNAME) -f $< >$*.err
 	@mv $*.err $@
 
 $(ZEDLDD): %.ldd: %.sml
 	@rm -f $@ $*.err 2>/dev/null
 	@echo "Compiling (code)" $<
-	@pp -d $(ZEDDBNAME) -f $< >$*.err
+	@PPCHARSET=utf8 pp -d $(ZEDDBNAME) -f $< >$*.err
 	@mv $*.err $@
 
 $(HTHDOCS): %.th.doc: list_wa.sml
@@ -585,14 +593,19 @@ $(ZTHDOCS): %.th.doc:
 #%.sml: %.doc
 #	docsml -f sieveview $*
 
-%.sml: %.pp
-	sieve -u -f sieveview sml < $*.pp | pp_file_conv > $*.sml
+%.sml: %.pp keywords
+	ppsml -f $(PPSVF) -k keywords $*
 
-$(HOLTEXS1): %.tex: %.pp
-	pptex $*
+$(HOLTEXS1): %.tex: %.pp keywords
+	pptex -f $(PPSVF) -k keywords $*
 
-$(HOLTEXS2): %.tex: %a.tex %.pp %z.tex
-	pptex $*
+$(HOLTEXS2): %.tex: %a.tex %.pp %z.tex keywords
+	pptex -f $(PPSVF) -k keywords $*
+	mv $*.tex $*m.tex
+	cat $*a.tex $*m.tex $*z.tex > $*.tex
+
+$(HOLTEXS3): %.tex: %a.tex %.pp %z.tex keywords
+	pptex -f $(PPSVF) -K -k minkeys $*
 	mv $*.tex $*m.tex
 	cat $*a.tex $*m.tex $*z.tex > $*.tex
 
@@ -605,7 +618,7 @@ $(PDFFILES1): %.pdf: %.pp
 	TEXINPUTS=.:$(PPHOME)/tex: \
 	BSTINPUTS=.:$(PPHOME)/tex: \
 	BIBINPUTS=.:$(PPHOME)/tex: \
-	PATH=.:$(PATH) pppdf $*
+	PATH=.:$(PATH) pppdf -f $(PPSVF) $*
 
 $(PDFFILES2): %.pdf: %.tex
 	TEXINPUTS=.:$(PPHOME)/tex: \
@@ -619,6 +632,26 @@ $(PDFFILES2): %.pdf: %.tex
 	BSTINPUTS=.:$(PPHOME)/tex: \
 	BIBINPUTS=.:$(PPHOME)/tex: \
 	PATH=.:$(PATH) texpdf $*
+
+$(PDFFILES3): %.pdf: %.tex
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: \
+	PATH=.:$(PATH) texpdf -p lualatex $*
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: bibtex $*
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: \
+	PATH=.:$(PATH) texpdf -p lualatex $*
+
+$(PDFFILES4): %.pdf: %.pp
+	TEXINPUTS=.:$(PPHOME)/tex: \
+	BSTINPUTS=.:$(PPHOME)/tex: \
+	BIBINPUTS=.:$(PPHOME)/tex: \
+	PATH=.:$(PATH) pppdf -p lualatex -f $(PPSVF) -K -k minkeys $*
+
 
 #%.pdf: %.dvi
 #	dvipdf -sPAPERSIZE=a4 $*

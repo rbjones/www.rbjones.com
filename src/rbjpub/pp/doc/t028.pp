@@ -680,9 +680,9 @@ val c07 = ⌜∀A B⦁ A predicable_of B ⇔ (B izz A) ∨ ∃C⦁ B hazz C ∧ 
 val c08 = ⌜∀A⦁ A essentially_predicable_of B ⇔ B izz A⌝;
 val c09 = ⌜∀A⦁ A accidentally_predicable_of B ⇔ ∃C⦁ B hazz C ∧ C izz A⌝;
 val c10 = ⌜∀A B⦁ A = B ⇔ A izz B ∧ B izz A⌝;
-val c11 = ⌜∀A B⦁ individual A ⇔ ⦈(∀B⦁ B izz A ⇒ A izz B)⌝;
-val c12 = ⌜∀A⦁ particular A ⇔ ⦈(∀B⦁ A predicable_of B ⇒ A izz B ∧ B izz A)⌝;
-val c13 = ⌜∀A⦁ universal A ⇔ ⦇(∃B⦁ (A predicable_of B ∧ ¬(A izz B ∧ B izz A)))⌝;
+val c11 = ⌜∀A B⦁ individual A ⇔ □(∀B⦁ B izz A ⇒ A izz B)⌝;
+val c12 = ⌜∀A⦁ particular A ⇔ □(∀B⦁ A predicable_of B ⇒ A izz B ∧ B izz A)⌝;
+val c13 = ⌜∀A⦁ universal A ⇔ ♢(∃B⦁ (A predicable_of B ∧ ¬(A izz B ∧ B izz A)))⌝;
 =TEX
 
 \ignore{
@@ -3259,23 +3259,23 @@ First I define a constant (rather loosely) to be the actual world:
 Then the two modal judgement forms:
 
 ⓈHOLCONST
-│ ⦏⦇⦎ : (W → BOOL) → BOOL
+│ ⦏♢⦎ : (W → BOOL) → BOOL
 ├──────
-│ ∀s⦁ ⦇ s ⇔ ∃w⦁ s w
+│ ∀s⦁ ♢ s ⇔ ∃w⦁ s w
 ■
-
+□
 ⓈHOLCONST
-│ ⦏⦈⦎ : (W → BOOL) → BOOL
+│ ⦏□⦎ : (W → BOOL) → BOOL
 ├──────
-│ ∀s⦁ ⦈ s ⇔ ∀w⦁ s w
+│ ∀s⦁ □ s ⇔ ∀w⦁ s w
 ■
 
 Aristotle's other notion of possibility is:
 
 ⓈHOLCONST
-│ ⦏⦇⋎a⦎ : (W → BOOL) → BOOL
+│ ⦏♢⋎a⦎ : (W → BOOL) → BOOL
 ├──────
-│ ∀s⦁ ⦇⋎a s ⇔ ¬ (∀w⦁ s w) ∧ ¬ (∀w⦁ ¬ s w)
+│ ∀s⦁ ♢⋎a s ⇔ ¬ (∀w⦁ s w) ∧ ¬ (∀w⦁ ¬ s w)
 ■
 
 Finally the non-modal judgements also need a judgement forming constant.
@@ -3286,7 +3286,7 @@ Finally the non-modal judgements also need a judgement forming constant.
 │ ∀s⦁ Ξ s ⇔ s actual_world
 ■
 
-Special difficulties are raised by reasoning with $⦇⋎a$ and to help with these difficulties it is useful to have negation as a kind of propositional operator in this modal logic.
+Special difficulties are raised by reasoning with $♢⋎a$ and to help with these difficulties it is useful to have negation as a kind of propositional operator in this modal logic.
 
 =SML
 declare_prefix (350, "¬⋎m");
@@ -3310,48 +3310,48 @@ Before looking at the conversions there are some general rules which may be help
 
 \ignore{
 =SML
-set_goal([⌜⦈X⌝], ⌜⦇X⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜⦈⌝, get_spec ⌜⦇⌝, get_spec ⌜Ξ⌝]
+set_goal([⌜□X⌝], ⌜♢X⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜□⌝, get_spec ⌜♢⌝, get_spec ⌜Ξ⌝]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-val ⦈⦇_thm = save_pop_thm "⦈⦇_thm";
+val □♢_thm = save_pop_thm "□♢_thm";
 
-set_goal([⌜⦈X⌝], ⌜ΞX⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜⦈⌝, get_spec ⌜⦇⌝, get_spec ⌜Ξ⌝]
+set_goal([⌜□X⌝], ⌜ΞX⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜□⌝, get_spec ⌜♢⌝, get_spec ⌜Ξ⌝]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
-val ⦈Ξ_thm = save_pop_thm "⦈Ξ_thm";
+val □Ξ_thm = save_pop_thm "□Ξ_thm";
 
-set_goal([⌜ΞX⌝], ⌜⦇X⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜⦈⌝, get_spec ⌜⦇⌝, get_spec ⌜Ξ⌝]
+set_goal([⌜ΞX⌝], ⌜♢X⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜□⌝, get_spec ⌜♢⌝, get_spec ⌜Ξ⌝]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∃_tac ⌜actual_world⌝ THEN strip_tac);
-val Ξ⦇_thm = save_pop_thm "Ξ⦇_thm";
+val Ξ♢_thm = save_pop_thm "Ξ♢_thm";
 
-set_goal([⌜⦇⋎a X⌝], ⌜⦇X⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜⦈⌝, get_spec ⌜⦇⌝, get_spec ⌜⦇⋎a⌝, get_spec ⌜Ξ⌝]
+set_goal([⌜♢⋎a X⌝], ⌜♢X⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜□⌝, get_spec ⌜♢⌝, get_spec ⌜♢⋎a⌝, get_spec ⌜Ξ⌝]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∃_tac ⌜w'⌝ THEN strip_tac);
-val ⦇⋎a⦇_thm = save_pop_thm "⦇⋎a⦇_thm";
+val ♢⋎a♢_thm = save_pop_thm "♢⋎a♢_thm";
 
-set_goal([⌜⦇⋎a X⌝], ⌜¬⦈X⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜⦈⌝, get_spec ⌜⦇⌝, get_spec ⌜⦇⋎a⌝, get_spec ⌜Ξ⌝]
+set_goal([⌜♢⋎a X⌝], ⌜¬□X⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [get_spec ⌜□⌝, get_spec ⌜♢⌝, get_spec ⌜♢⋎a⌝, get_spec ⌜Ξ⌝]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 a (∃_tac ⌜w⌝ THEN strip_tac);
-val ⦇⋎a¬⦈_thm = save_pop_thm "⦇⋎a¬⦈_thm";
+val ♢⋎a¬□_thm = save_pop_thm "♢⋎a¬□_thm";
 
-set_goal([], ⌜⦇⋎a X ⇔ ⦇⋎a (¬⋎m X)⌝);
-a (rewrite_tac [get_spec ⌜⦇⋎a⌝, get_spec ⌜$¬⋎m⌝]
+set_goal([], ⌜♢⋎a X ⇔ ♢⋎a (¬⋎m X)⌝);
+a (rewrite_tac [get_spec ⌜♢⋎a⌝, get_spec ⌜$¬⋎m⌝]
 	THEN prove_tac[]);
-val ⦇⋎a¬⋎m_thm = save_pop_thm "⦇⋎a¬⋎m_thm";
+val ♢⋎a¬⋎m_thm = save_pop_thm "♢⋎a¬⋎m_thm";
 =TEX
 }%ignore
 
 =GFT
-⦈⦇_thm = 	⦈ X ⊢ ⦇ X
-⦈Ξ_thm = 		⦈ X ⊢ Ξ X
-Ξ⦇_thm = 		Ξ X ⊢ ⦇ X
-⦇⋎a⦇_thm =	⦇⋎a X ⊢ ⦇ X
-⦇⋎a¬⦈_thm =	⦇⋎a X ⊢ ¬ ⦈ X
-⦇⋎a¬⋎m_thm =	⊢ ⦇⋎a X ⇔ ⦇⋎a (¬⋎m X)
+□♢_thm = 	□ X ⊢ ♢ X
+□Ξ_thm = 		□ X ⊢ Ξ X
+Ξ♢_thm = 		Ξ X ⊢ ♢ X
+♢⋎a♢_thm =	♢⋎a X ⊢ ♢ X
+♢⋎a¬□_thm =	♢⋎a X ⊢ ¬ □ X
+♢⋎a¬⋎m_thm =	⊢ ♢⋎a X ⇔ ♢⋎a (¬⋎m X)
 =TEX
 
 \paragraph{Simple Conversion}
@@ -3370,44 +3370,44 @@ a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜Ξ⌝, ⌜$i⌝])
 a (asm_fc_tac[]);
 val i_conv_thm = save_pop_thm "i_conv_thm";
 
-set_goal([⌜⦈ (A e B)⌝], ⌜⦈(B e A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦈⌝, ⌜$e⌝])
+set_goal([⌜□ (A e B)⌝], ⌜□(B e A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜□⌝, ⌜$e⌝])
 	THEN contr_tac);
 a (asm_fc_tac[]);
-val ⦈e_conv_thm = save_pop_thm "⦈e_conv_thm";
+val □e_conv_thm = save_pop_thm "□e_conv_thm";
 
-set_goal([⌜⦈ (A i B)⌝], ⌜⦈(B i A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦈⌝, ⌜$i⌝])
+set_goal([⌜□ (A i B)⌝], ⌜□(B i A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜□⌝, ⌜$i⌝])
 	THEN contr_tac);
 a (asm_fc_tac[]);
 a (spec_nth_asm_tac 2 ⌜w⌝);
 a (asm_fc_tac[]);
-val ⦈i_conv_thm = save_pop_thm "⦈i_conv_thm";
+val □i_conv_thm = save_pop_thm "□i_conv_thm";
 
-set_goal([⌜⦇ (A e B)⌝], ⌜⦇(B e A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜$e⌝])
+set_goal([⌜♢ (A e B)⌝], ⌜♢(B e A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜$e⌝])
 	THEN contr_tac);
 a (spec_nth_asm_tac 1 ⌜w⌝);
 a (asm_fc_tac[]);
-val ⦇e_conv_thm = save_pop_thm "⦇e_conv_thm";
+val ♢e_conv_thm = save_pop_thm "♢e_conv_thm";
 
-set_goal([⌜⦇ (A i B)⌝], ⌜⦇(B i A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜$i⌝])
+set_goal([⌜♢ (A i B)⌝], ⌜♢(B i A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜$i⌝])
 	THEN contr_tac);
 a (spec_nth_asm_tac 1 ⌜w⌝);
 a (asm_fc_tac[]);
-val ⦇i_conv_thm = save_pop_thm "⦇i_conv_thm";
+val ♢i_conv_thm = save_pop_thm "♢i_conv_thm";
 
-set_goal([⌜⦇⋎a (A e B)⌝], ⌜⦇⋎a (B e A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦇⋎a⌝, ⌜⦈⌝, ⌜$e⌝])
+set_goal([⌜♢⋎a (A e B)⌝], ⌜♢⋎a (B e A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜♢⋎a⌝, ⌜□⌝, ⌜$e⌝])
 	THEN contr_tac);
 a (asm_fc_tac[]);
 a (spec_nth_asm_tac 1 ⌜w':W⌝);
 a (asm_fc_tac[]);
-val ⦇⋎a_e_conv_thm = save_pop_thm "⦇⋎a_e_conv_thm";
+val ♢⋎a_e_conv_thm = save_pop_thm "♢⋎a_e_conv_thm";
 
-set_goal([⌜⦇⋎a (A i B)⌝], ⌜⦇⋎a (B i A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦇⋎a⌝, ⌜$i⌝])
+set_goal([⌜♢⋎a (A i B)⌝], ⌜♢⋎a (B i A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜♢⋎a⌝, ⌜$i⌝])
 	THEN contr_tac);
 (* *** Goal "1" *** *)
 a (spec_nth_asm_tac 1 ⌜w:W⌝);
@@ -3415,54 +3415,54 @@ a (spec_nth_asm_tac 6 ⌜x'⌝);
 (* *** Goal "2" *** *)
 a (spec_nth_asm_tac 1 ⌜w':W⌝);
 a (spec_nth_asm_tac 1 ⌜x⌝);
-val ⦇⋎a_i_conv_thm = save_pop_thm "⦇⋎a_i_conv_thm";
+val ♢⋎a_i_conv_thm = save_pop_thm "♢⋎a_i_conv_thm";
 
-set_goal([], ⌜⦇⋎a (A a B) ⇔ ⦇⋎a (A u B)⌝);
-a (rewrite_tac (map get_spec [⌜⦇⋎a⌝, ⌜⦈⌝, ⌜$a⌝, ⌜$u⌝])
+set_goal([], ⌜♢⋎a (A a B) ⇔ ♢⋎a (A u B)⌝);
+a (rewrite_tac (map get_spec [⌜♢⋎a⌝, ⌜□⌝, ⌜$a⌝, ⌜$u⌝])
 	THEN prove_tac[]);
 (* *** Goal "1" *** *)
 a (∃_tac ⌜w':W⌝ THEN asm_prove_tac[]);
 (* *** Goal "2" *** *)
 a (∃_tac ⌜w:W⌝ THEN asm_prove_tac[]);
-val ⦇⋎a_ao_conv_thm = save_pop_thm "⦇⋎a_ao_conv_thm";
+val ♢⋎a_ao_conv_thm = save_pop_thm "♢⋎a_ao_conv_thm";
 
-set_goal([], ⌜⦇⋎a (A e B) ⇔ ⦇⋎a (A i B)⌝);
-a (rewrite_tac (map get_spec [⌜⦇⋎a⌝, ⌜⦈⌝, ⌜$e⌝, ⌜$i⌝])
+set_goal([], ⌜♢⋎a (A e B) ⇔ ♢⋎a (A i B)⌝);
+a (rewrite_tac (map get_spec [⌜♢⋎a⌝, ⌜□⌝, ⌜$e⌝, ⌜$i⌝])
 	THEN prove_tac[]);
 (* *** Goal "1" *** *)
 a (∃_tac ⌜w':W⌝ THEN asm_prove_tac[]);
 (* *** Goal "2" *** *)
 a (∃_tac ⌜w:W⌝ THEN asm_prove_tac[]);
-val ⦇⋎a_ei_conv_thm = save_pop_thm "⦇⋎a_ei_conv_thm";
+val ♢⋎a_ei_conv_thm = save_pop_thm "♢⋎a_ei_conv_thm";
 
-set_goal([⌜⦈ (A e B)⌝], ⌜⦇(B e A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜$e⌝])
+set_goal([⌜□ (A e B)⌝], ⌜♢(B e A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜$e⌝])
 	THEN contr_tac);
 a (spec_nth_asm_tac 1 ⌜w:W⌝);
 a (asm_fc_tac[]);
-val ⦈⦇e_conv_thm = save_pop_thm "⦈⦇e_conv_thm";
+val □♢e_conv_thm = save_pop_thm "□♢e_conv_thm";
 
-set_goal([⌜⦈ (A e B)⌝], ⌜Ξ(B e A)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜Ξ⌝, ⌜⦈⌝, ⌜$e⌝])
+set_goal([⌜□ (A e B)⌝], ⌜Ξ(B e A)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac (map get_spec [⌜Ξ⌝, ⌜□⌝, ⌜$e⌝])
 	THEN contr_tac);
 a (asm_fc_tac[]);
-val ⦈Ξe_conv_thm = save_pop_thm "⦈Ξe_conv_thm";
+val □Ξe_conv_thm = save_pop_thm "□Ξe_conv_thm";
 =TEX
 }%ignore
 
 =GFT
 e_conv_thm = Ξ (A e B) ⊢ Ξ (B e A)
 i_conv_thm = Ξ (A i B) ⊢ Ξ (B i A)
-⦈e_conv_thm = ⦈ (A e B) ⊢ ⦈ (B e A)
-⦈i_conv_thm = ⦈ (A i B) ⊢ ⦈ (B i A)
-⦇e_conv_thm = ⦇ (A e B) ⊢ ⦇ (B e A)
-⦇i_conv_thm = ⦇ (A i B) ⊢ ⦇ (B i A)
-⦇⋎a_e_conv_thm = ⦇⋎a (A e B) ⊢ ⦇⋎a (B e A)
-⦇⋎a_i_conv_thm = ⦇⋎a (A i B) ⊢ ⦇⋎a (B i A)
-⦇⋎a_ao_conv_thm = ⊢ ⦇⋎a (A a B) ⇔ ⦇⋎a (A o B)
-⦇⋎a_ei_conv_thm = ⊢ ⦇⋎a (A e B) ⇔ ⦇⋎a (A i B)
-⦈⦇e_conv_thm = ⦈ (A e B) ⊢ ⦇ (B e A)
-⦈Ξe_conv_thm = ⦈ (A e B) ⊢ Ξ (B e A)
+□e_conv_thm = □ (A e B) ⊢ □ (B e A)
+□i_conv_thm = □ (A i B) ⊢ □ (B i A)
+♢e_conv_thm = ♢ (A e B) ⊢ ♢ (B e A)
+♢i_conv_thm = ♢ (A i B) ⊢ ♢ (B i A)
+♢⋎a_e_conv_thm = ♢⋎a (A e B) ⊢ ♢⋎a (B e A)
+♢⋎a_i_conv_thm = ♢⋎a (A i B) ⊢ ♢⋎a (B i A)
+♢⋎a_ao_conv_thm = ⊢ ♢⋎a (A a B) ⇔ ♢⋎a (A o B)
+♢⋎a_ei_conv_thm = ⊢ ♢⋎a (A e B) ⇔ ♢⋎a (A i B)
+□♢e_conv_thm = □ (A e B) ⊢ ♢ (B e A)
+□Ξe_conv_thm = □ (A e B) ⊢ Ξ (B e A)
 =TEX
 
 In this version of the semantics, ``a'' and ``o'' conversion is neither provable nor refutable.
@@ -3474,43 +3474,43 @@ With this semantics there is no empty predicate, and we cannot know that there a
 \ignore{
 =SML
 set_goal([⌜Ξ (A a B)⌝], ⌜Ξ (B i A)⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
 	THEN contr_tac THEN asm_fc_tac[]);
 a (strip_asm_tac (list_∀_elim [⌜A⌝, ⌜actual_world⌝] p_∃_lemma));
 a (asm_fc_tac[]);
 val Ξai_conv_thm = save_pop_thm "Ξai_conv_thm";
 
 set_goal([⌜Ξ (A e B)⌝], ⌜Ξ (B u A)⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
 	THEN contr_tac THEN asm_fc_tac[]);
 a (strip_asm_tac (list_∀_elim [⌜B⌝, ⌜actual_world⌝] p_∃_lemma));
 a (spec_nth_asm_tac 2 ⌜v⌝);
 a (asm_fc_tac[]);
 val Ξeo_conv_thm = save_pop_thm "Ξeo_conv_thm";
 
-set_goal([⌜⦈ (A a B)⌝], ⌜⦇ (B i A)⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
+set_goal([⌜□ (A a B)⌝], ⌜♢ (B i A)⌝);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
 	THEN contr_tac THEN asm_fc_tac[]);
 a (strip_asm_tac (list_∀_elim [⌜A⌝, ⌜actual_world⌝] p_∃_lemma));
 a (asm_fc_tac[]);
-val ⦈⦇ai_conv_thm = save_pop_thm "⦈⦇ai_conv_thm";
+val □♢ai_conv_thm = save_pop_thm "□♢ai_conv_thm";
 
-set_goal([⌜⦈ (A e B)⌝], ⌜⦇ (B u A)⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
+set_goal([⌜□ (A e B)⌝], ⌜♢ (B u A)⌝);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜Ξ⌝, ⌜$a⌝, ⌜$e⌝, ⌜$i⌝, ⌜$u⌝])
 	THEN contr_tac THEN asm_fc_tac[]);
 a (strip_asm_tac (list_∀_elim [⌜B⌝, ⌜actual_world⌝] p_∃_lemma));
 a (spec_nth_asm_tac 2 ⌜actual_world⌝);
 a (spec_nth_asm_tac 1 ⌜v⌝);
 a (asm_fc_tac[]);
-val ⦈⦇eo_conv_thm = save_pop_thm "⦈⦇eo_conv_thm";
+val □♢eo_conv_thm = save_pop_thm "□♢eo_conv_thm";
 =TEX
 }%ignore
 
 =GFT
 Ξai_conv_thm = 	Ξ (A a B) ⊢ Ξ (B i A)
 Ξeo_conv_thm = 	Ξ (A e B) ⊢ Ξ (B o A)
-⦈⦇ai_conv_thm = 	⦈ (A a B) ⊢ ⦇ (B i A)
-⦈⦇eo_conv_thm = 	⦈ (A e B) ⊢ ⦇ (B o A)
+□♢ai_conv_thm = 	□ (A a B) ⊢ ♢ (B i A)
+□♢eo_conv_thm = 	□ (A e B) ⊢ ♢ (B o A)
 =TEX
 
 \subsubsection{The Valid Modal Syllogisms}
@@ -3583,13 +3583,13 @@ The result is a goal for proof.
 An example of its use is:
 
 =SML
-mk_modsyllp (⌜⦈⌝,⌜Ξ⌝,⌜⦇⌝) ("Barbara", 1);
+mk_modsyllp (⌜□⌝,⌜Ξ⌝,⌜♢⌝) ("Barbara", 1);
 =TEX
 
 which yields:
 
 =GFT
-val it = ([⌜⦈ (M a P)⌝, ⌜⦈ (𝕊 a M)⌝], ⌜⦈ (𝕊 a P)⌝) : TERM list * TERM
+val it = ([⌜□ (M a P)⌝, ⌜□ (𝕊 a M)⌝], ⌜□ (𝕊 a P)⌝) : TERM list * TERM
 =TEX
 
 \subsubsection{General Results}
@@ -3629,7 +3629,7 @@ fun AW_COND_T tac (asms, conc) =
 	else tac ⌜w:W⌝ (asms, conc);
 
 val mod_gen_tac = REPEAT ∀_tac
-	THEN rewrite_tac (map get_spec [⌜⦇⌝, ⌜⦈⌝, ⌜Ξ⌝])
+	THEN rewrite_tac (map get_spec [⌜♢⌝, ⌜□⌝, ⌜Ξ⌝])
 	THEN REPEAT strip_tac
 	THEN (AW_COND_T (fn x => REPEAT
 		(((SPEC_NTH_ASM_T 1 x ante_tac) ORELSE_T (GET_NTH_ASM_T 1 ante_tac))
@@ -3648,13 +3648,13 @@ Taking any valid syllogism and applying modal operators using one of the pattern
 
 =SML
 val mod_gen_params =
-	[(⌜⦈⌝, ⌜⦈⌝, ⌜⦈⌝),
-	 (⌜⦈⌝, ⌜⦈⌝, ⌜⦇⌝),
-	 (⌜⦈⌝, ⌜⦈⌝, ⌜Ξ⌝),
-	 (⌜⦇⌝, ⌜⦈⌝, ⌜⦇⌝),
-	 (⌜⦈⌝, ⌜⦇⌝, ⌜⦇⌝),
-	 (⌜⦈⌝, ⌜Ξ⌝, ⌜Ξ⌝),
-	 (⌜Ξ⌝, ⌜⦈⌝, ⌜Ξ⌝),
+	[(⌜□⌝, ⌜□⌝, ⌜□⌝),
+	 (⌜□⌝, ⌜□⌝, ⌜♢⌝),
+	 (⌜□⌝, ⌜□⌝, ⌜Ξ⌝),
+	 (⌜♢⌝, ⌜□⌝, ⌜♢⌝),
+	 (⌜□⌝, ⌜♢⌝, ⌜♢⌝),
+	 (⌜□⌝, ⌜Ξ⌝, ⌜Ξ⌝),
+	 (⌜Ξ⌝, ⌜□⌝, ⌜Ξ⌝),
 	 (⌜Ξ⌝, ⌜Ξ⌝, ⌜Ξ⌝)];
 =TEX
 
@@ -3677,13 +3677,13 @@ The set of general HOL theorems which facilitate the proofs of these modal syllo
 
 =GFT ProofPower Theorems
 val mod_gen_thms =
-   [⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦈ FP ∧ ⦈ SP ⇒ ⦈ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦈ FP ∧ ⦈ SP ⇒ ⦇ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦈ FP ∧ ⦈ SP ⇒ Ξ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦇ FP ∧ ⦈ SP ⇒ ⦇ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦈ FP ∧ ⦇ SP ⇒ ⦇ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ⦈ FP ∧ Ξ SP ⇒ Ξ CS,
-      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ Ξ FP ∧ ⦈ SP ⇒ Ξ CS,
+   [⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ □ FP ∧ □ SP ⇒ □ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ □ FP ∧ □ SP ⇒ ♢ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ □ FP ∧ □ SP ⇒ Ξ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ ♢ FP ∧ □ SP ⇒ ♢ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ □ FP ∧ ♢ SP ⇒ ♢ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ □ FP ∧ Ξ SP ⇒ Ξ CS,
+      ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ Ξ FP ∧ □ SP ⇒ Ξ CS,
       ⊢ ∀ FP SP CS⦁ (∀ w⦁ FP w ∧ SP w ⇒ CS w) ⇒ Ξ FP ∧ Ξ SP ⇒ Ξ CS]
 : THM list
 =TEX
@@ -3742,16 +3742,16 @@ The automated proof the yields the expected 192 modal syllogisms, of which we di
 
 =GFT
 val valid_G_modsylls =
-   [Ξ (P a M), Ξ (M e 𝕊) ⊢ Ξ (𝕊 o P), Ξ (P a M), ⦈ (M e 𝕊) ⊢ Ξ (𝕊 o P),
-      ⦈ (P a M), Ξ (M e 𝕊) ⊢ Ξ (𝕊 o P), ⦈ (P a M), ⦇ (M e 𝕊) ⊢ ⦇ (𝕊 o P),
-      ⦇ (P a M), ⦈ (M e 𝕊) ⊢ ⦇ (𝕊 o P), ⦈ (P a M), ⦈ (M e 𝕊) ⊢ Ξ (𝕊 o P),
-      ⦈ (P a M), ⦈ (M e 𝕊) ⊢ ⦇ (𝕊 o P), ⦈ (P a M), ⦈ (M e 𝕊) ⊢ ⦈ (𝕊 o P),
-      Ξ (P a M), Ξ (𝕊 e M) ⊢ Ξ (𝕊 o P), Ξ (P a M), ⦈ (𝕊 e M) ⊢ Ξ (𝕊 o P),
-      ⦈ (P a M), Ξ (𝕊 e M) ⊢ Ξ (𝕊 o P), ⦈ (P a M), ⦇ (𝕊 e M) ⊢ ⦇ (𝕊 o P),
-      ⦇ (P a M), ⦈ (𝕊 e M) ⊢ ⦇ (𝕊 o P), ⦈ (P a M), ⦈ (𝕊 e M) ⊢ Ξ (𝕊 o P),
-      ⦈ (P a M), ⦈ (𝕊 e M) ⊢ ⦇ (𝕊 o P), ⦈ (P a M), ⦈ (𝕊 e M) ⊢ ⦈ (𝕊 o P),
-      Ξ (P e M), Ξ (𝕊 a M) ⊢ Ξ (𝕊 o P), Ξ (P e M), ⦈ (𝕊 a M) ⊢ Ξ (𝕊 o P),
-      ⦈ (P e M), Ξ (𝕊 a M) ⊢ Ξ (𝕊 o P), ⦈ (P e M), ⦇ (𝕊 a M) ⊢ ⦇ (𝕊 o P),
+   [Ξ (P a M), Ξ (M e 𝕊) ⊢ Ξ (𝕊 o P), Ξ (P a M), □ (M e 𝕊) ⊢ Ξ (𝕊 o P),
+      □ (P a M), Ξ (M e 𝕊) ⊢ Ξ (𝕊 o P), □ (P a M), ♢ (M e 𝕊) ⊢ ♢ (𝕊 o P),
+      ♢ (P a M), □ (M e 𝕊) ⊢ ♢ (𝕊 o P), □ (P a M), □ (M e 𝕊) ⊢ Ξ (𝕊 o P),
+      □ (P a M), □ (M e 𝕊) ⊢ ♢ (𝕊 o P), □ (P a M), □ (M e 𝕊) ⊢ □ (𝕊 o P),
+      Ξ (P a M), Ξ (𝕊 e M) ⊢ Ξ (𝕊 o P), Ξ (P a M), □ (𝕊 e M) ⊢ Ξ (𝕊 o P),
+      □ (P a M), Ξ (𝕊 e M) ⊢ Ξ (𝕊 o P), □ (P a M), ♢ (𝕊 e M) ⊢ ♢ (𝕊 o P),
+      ♢ (P a M), □ (𝕊 e M) ⊢ ♢ (𝕊 o P), □ (P a M), □ (𝕊 e M) ⊢ Ξ (𝕊 o P),
+      □ (P a M), □ (𝕊 e M) ⊢ ♢ (𝕊 o P), □ (P a M), □ (𝕊 e M) ⊢ □ (𝕊 o P),
+      Ξ (P e M), Ξ (𝕊 a M) ⊢ Ξ (𝕊 o P), Ξ (P e M), □ (𝕊 a M) ⊢ Ξ (𝕊 o P),
+      □ (P e M), Ξ (𝕊 a M) ⊢ Ξ (𝕊 o P), □ (P e M), ♢ (𝕊 a M) ⊢ ♢ (𝕊 o P),
 ...
 =TEX
 
@@ -4139,15 +4139,15 @@ val All_are_not_lemma = save_pop_thm "All_are_not_lemma";
 In this model the model operators are operators over propositions.
 
 ⓈHOLCONST
-│ ⦏⦇⦎ : MPROP → MPROP
+│ ⦏♢⦎ : MPROP → MPROP
 ├──────
-│ ∀p⦁ ⦇ p = λw⦁ ∃w'⦁ p w' 
+│ ∀p⦁ ♢ p = λw⦁ ∃w'⦁ p w' 
 ■
 
 ⓈHOLCONST
-│ ⦏⦈⦎ : MPROP → MPROP
+│ ⦏□⦎ : MPROP → MPROP
 ├──────
-│ ∀p⦁ ⦈ p = λw⦁ ∀w'⦁ p w' 
+│ ∀p⦁ □ p = λw⦁ ∀w'⦁ p w' 
 ■
 
 \subsection{Propositional Operators}
@@ -4244,10 +4244,10 @@ declare_binder "∃⋎a";
 =SML
 declare_alias ("∃", ⌜$∃⋎a⌝);
 =TEX
-
+⊢
 \subsection{Judgements}
 
-I'm not yet clear what to offer here, so for the present I will define two kinds of sequent, which will be displayed with the symbols $Ξ$ asnd $Π$. the former being a kind of contingent material implication and the latter a necessary implication.
+I'm not yet clear what to offer here, so for the present I will define two kinds of sequent, which will be displayed with the symbols $⊢$ asnd $⊨$. the former being a kind of contingent material implication and the latter a necessary implication.
 
 Both form of judgement seem suitable for expressing the rules of the syllogism at first glance but which can also be used for conversions.
 
@@ -4256,25 +4256,25 @@ Since the consequence is material, and the premisses might be contingent, the co
 One might hope that if the rules of the syllogism are applied and the premises are necessary, then so will be the conclusions. 
 
 =SML
-declare_infix(100, "Ξ");
+declare_infix(100, "⊢");
 =TEX
 
 ⓈHOLCONST
-│ $⦏Ξ⦎ : MPROP LIST → MPROP → BOOL
+│ $⦏⊢⦎ : MPROP LIST → MPROP → BOOL
 ├──────
-│ ∀lp c⦁ lp Ξ c ⇔ Fold (λp t⦁ p actual_world ∧ t) lp T ⇒ c actual_world
+│ ∀lp c⦁ lp ⊢ c ⇔ Fold (λp t⦁ p actual_world ∧ t) lp T ⇒ c actual_world
 ■
 
 This one says that in every possible world the premises entail the conclusion (still material).
 
 =SML
-declare_infix(100, "Π");
+declare_infix(100, "⊨");
 =TEX
 
 ⓈHOLCONST
-│ $⦏Π⦎ : MPROP LIST → MPROP → BOOL
+│ $⦏⊨⦎ : MPROP LIST → MPROP → BOOL
 ├──────
-│ ∀lp c⦁ lp Π c ⇔ ∀w⦁ Fold (λp t⦁ p w ∧ t) lp T ⇒ c w
+│ ∀lp c⦁ lp ⊨ c ⇔ ∀w⦁ Fold (λp t⦁ p w ∧ t) lp T ⇒ c w
 ■
 
 In the present context the choice between the two is probably immaterial, since we know no more about the actual world than any other, so anything that we can prove to be true contingently, we can also prove to be true necessarily.
@@ -4311,13 +4311,13 @@ The second conversion embodies the u-p syllogisms.
 
 =GFT
 ⦏izz_conv1⦎ = ⊢
-	[All B (izz not) A] Π All A (izz not) B
+	[All B (izz not) A] ⊨ All A (izz not) B
 
 ⦏izz_conv2⦎ = ⊢
-	[All B izz A] Π Some A izz B
+	[All B izz A] ⊨ Some A izz B
 
 ⦏izz_conv3⦎ = ⊢
-	[Some B izz A] Π Some A izz B
+	[Some B izz A] ⊨ Some A izz B
 =TEX
 
 \ignore{
@@ -4339,21 +4339,21 @@ a (contr_tac);
 a (spec_nth_asm_tac 1 ⌜z⌝);
 val some_izz_lemma = save_pop_thm "some_izz_lemma";
 
-set_goal([], ⌜[All B (izz not) A] Π All A (izz not) B⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜$⇔⋎a⌝]));
+set_goal([], ⌜[All B (izz not) A] ⊨ All A (izz not) B⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜$⇔⋎a⌝]));
 a (strip_tac THEN rewrite_tac [get_spec ⌜Fold⌝, get_spec ⌜All⌝, izz_not_lemma]);
 val izz_conv1 = save_pop_thm "izz_conv1";
 
-set_goal([], ⌜[All B izz A] Π  Some A izz B⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝]));
+set_goal([], ⌜[All B izz A] ⊨  Some A izz B⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝]));
 a (strip_tac THEN rewrite_tac [get_spec ⌜Fold⌝, get_spec ⌜All⌝, get_spec ⌜Some⌝, get_spec ⌜izz⌝, get_spec ⌜$InTermM⌝]);
 a (REPEAT strip_tac);
 a (∃_tac ⌜(Fst B, MemOf (Snd B))⌝ THEN asm_rewrite_tac[]);
 a (SPEC_NTH_ASM_T 1 ⌜(Fst B, MemOf (Snd B))⌝ (rewrite_thm_tac o (rewrite_rule[])));
 val izz_conv2 = save_pop_thm "izz_conv2";
 
-set_goal([], ⌜[Some B izz A] Π  Some A izz B⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝]));
+set_goal([], ⌜[Some B izz A] ⊨  Some A izz B⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝]));
 a (strip_tac THEN rewrite_tac [get_spec ⌜Fold⌝, get_spec ⌜Some⌝, get_spec ⌜izz⌝, get_spec ⌜$InTermM⌝]);
 a (REPEAT strip_tac);
 a (∃_tac ⌜z⌝ THEN asm_rewrite_tac[]);
@@ -4379,7 +4379,7 @@ If we simplify by removing the final flip we get:
 
 =GFT
 ⦏hazz_conv2⦎ =
-	⊢ [All A hazz B] Π Some A hazz B
+	⊢ [All A hazz B] ⊨ Some A hazz B
 =TEX
 
 \ignore{
@@ -4406,8 +4406,8 @@ a (∃_tac ⌜(Category_of_Substance, MemOf(ε s⦁ T))⌝ THEN rewrite_tac [] T
 a (rewrite_tac [get_spec ⌜Category_of_Substance⌝]);
 val not_some_hazz_lemma = save_pop_thm "not_some_hazz_lemma";
 
-set_goal([], ⌜[All A hazz B] Π  Some A hazz B⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝]));
+set_goal([], ⌜[All A hazz B] ⊨  Some A hazz B⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝]));
 a (strip_tac THEN rewrite_tac [get_spec ⌜Fold⌝, get_spec ⌜All⌝, get_spec ⌜Some⌝, get_spec ⌜hazz⌝, get_spec ⌜$InTermM⌝]);
 a (REPEAT strip_tac);
 a (∃_tac ⌜(Fst A, MemOf (Snd A))⌝ THEN asm_rewrite_tac[]);
@@ -4438,42 +4438,42 @@ So in this section Aristotle only offers variants of the previous conversions wi
 We can prove generally that modal operators can be introduced into a conversion:
 
 =GFT
-⦏⦇_conv⦎ =
-	⊢ [P] Π Q ⇒ [⦇ P] Π ⦇ Q
+⦏♢_conv⦎ =
+	⊢ [P] ⊨ Q ⇒ [♢ P] ⊨ ♢ Q
 
-⦏⦈_conv⦎ =
-	⊢ [P] Π Q ⇒ [⦈ P] Π ⦈ Q
+⦏□_conv⦎ =
+	⊢ [P] ⊨ Q ⇒ [□ P] ⊨ □ Q
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜[P] Π Q ⇒ [⦇ P] Π ⦇ Q⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜⦇⌝]));
+set_goal([], ⌜[P] ⊨ Q ⇒ [♢ P] ⊨ ♢ Q⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜♢⌝]));
 a (REPEAT strip_tac);
 a (∃_tac ⌜w'⌝ THEN asm_fc_tac[]);
-val ⦇_conv = save_pop_thm "⦇_conv";
+val ♢_conv = save_pop_thm "♢_conv";
 
-set_goal([], ⌜[P] Π Q ⇒ [⦈ P] Π ⦈ Q⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜⦈⌝]));
+set_goal([], ⌜[P] ⊨ Q ⇒ [□ P] ⊨ □ Q⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜□⌝]));
 a (REPEAT strip_tac);
 a (asm_ufc_tac[] THEN asm_rewrite_tac[]);
-val ⦈_conv = save_pop_thm "⦈_conv";
+val □_conv = save_pop_thm "□_conv";
 =TEX
 }%ignore
 
 =GFT
-⦏⦈_izz_thm⦎ = ⊢ [⦈ (All A izz B)] Ξ All A izz B
-⦏⦈_hazz_thm⦎ = ⊢ [⦈ (All A hazz B)] Ξ All A izz B
-⦏izz_⦈_thm⦎ = ⊢ [All A izz B] Ξ ⦈ (All A izz B)
-⦏not_⦈_hazz_thm⦎ = ⊢ [] Ξ (¬ ⦈ (All A hazz B))
+⦏□_izz_thm⦎ = ⊢ [□ (All A izz B)] ⊢ All A izz B
+⦏□_hazz_thm⦎ = ⊢ [□ (All A hazz B)] ⊢ All A izz B
+⦏izz_□_thm⦎ = ⊢ [All A izz B] ⊢ □ (All A izz B)
+⦏not_□_hazz_thm⦎ = ⊢ [] ⊢ (¬ □ (All A hazz B))
 
-⦏⦈_izz_thm2⦎ = ⊢ [⦈ (All A izz B)] Π All A izz B
-⦏⦈_hazz_thm2⦎ = ⊢ [⦈ (All A hazz B)] Π All A izz B
-⦏izz_⦈_thm2⦎ = ⊢ [All A izz B] Π ⦈ (All A izz B)
-⦏not_⦈_hazz_thm2⦎ = ⊢ [] Π (¬ ⦈ (All A hazz B))
+⦏□_izz_thm2⦎ = ⊢ [□ (All A izz B)] ⊨ All A izz B
+⦏□_hazz_thm2⦎ = ⊢ [□ (All A hazz B)] ⊨ All A izz B
+⦏izz_□_thm2⦎ = ⊢ [All A izz B] ⊨ □ (All A izz B)
+⦏not_□_hazz_thm2⦎ = ⊢ [] ⊨ (¬ □ (All A hazz B))
 =TEX
 
-$⦈\_hazz\_thm$ is a bit odd.
+$□\_hazz\_thm$ is a bit odd.
 Really what I wanted to prove was that no accidental predication is necessary, but I have no negation in the syllogism, so I just proved that if an accidental predication were necessary then it would be essential.
 Then I went back and defined negation so permitting a direct denial that any accidental predication is necessary.
 
@@ -4486,88 +4486,88 @@ Some reflection is desirable on what the philosophical objectives are and what c
 
 \ignore{
 =SML
-set_goal([], ⌜[⦈ (All A izz B)] Ξ All A izz B⌝);
-a (rewrite_tac  (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝])
+set_goal([], ⌜[□ (All A izz B)] ⊢ All A izz B⌝);
+a (rewrite_tac  (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝])
 	THEN REPEAT strip_tac);
-val ⦈_izz_thm = save_pop_thm "⦈_izz_thm";
+val □_izz_thm = save_pop_thm "□_izz_thm";
 
-set_goal([], ⌜[⦈ (All A hazz B)] Ξ All A izz B⌝);
-a (rewrite_tac  (map get_spec [⌜$Ξ⌝, ⌜Fold⌝])
+set_goal([], ⌜[□ (All A hazz B)] ⊢ All A izz B⌝);
+a (rewrite_tac  (map get_spec [⌜$⊢⌝, ⌜Fold⌝])
 	THEN REPEAT strip_tac);
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac (map get_spec [⌜⦈⌝, ⌜All⌝, ⌜hazz⌝])
+a (rewrite_tac (map get_spec [⌜□⌝, ⌜All⌝, ⌜hazz⌝])
 	THEN strip_tac);
 a (∃_tac ⌜λw⦁ {}⌝ THEN rewrite_tac[get_spec ⌜$InTermM⌝] THEN strip_tac);
 a (lemma_tac ⌜∃d⦁ d ∈ PeSet (Snd A)⌝ THEN1 rewrite_tac[]);
 a (∃_tac ⌜(Fst A, d)⌝ THEN asm_rewrite_tac[]);
-val ⦈_hazz_thm = save_pop_thm "⦈_hazz_thm";
+val □_hazz_thm = save_pop_thm "□_hazz_thm";
 
-set_goal([], ⌜[All A izz B] Ξ ⦈ (All  A izz B)⌝);
-a (rewrite_tac  (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝])
+set_goal([], ⌜[All A izz B] ⊢ □ (All  A izz B)⌝);
+a (rewrite_tac  (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝])
 	THEN REPEAT strip_tac);
-val izz_⦈_thm = save_pop_thm "izz_⦈_thm";
+val izz_□_thm = save_pop_thm "izz_□_thm";
 
-set_goal([], ⌜[] Ξ ¬ ⦈ (All A hazz B)⌝);
-a (rewrite_tac  (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝, ⌜$¬⋎a⌝, ⌜hazz⌝]));
+set_goal([], ⌜[] ⊢ ¬ □ (All A hazz B)⌝);
+a (rewrite_tac  (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝, ⌜$¬⋎a⌝, ⌜hazz⌝]));
 a (REPEAT strip_tac);
 a (∃_tac ⌜λw⦁ {}⌝ THEN rewrite_tac[get_spec ⌜$InTermM⌝] THEN strip_tac);
 a (∃_tac ⌜(Fst A, MemOf(Snd A))⌝ THEN rewrite_tac[]);
-val not_⦈_hazz_thm = save_pop_thm "not_⦈_hazz_thm";
+val not_□_hazz_thm = save_pop_thm "not_□_hazz_thm";
 
-set_goal([], ⌜[⦈ (All A izz B)] Π All A izz B⌝);
-a (rewrite_tac  (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝])
+set_goal([], ⌜[□ (All A izz B)] ⊨ All A izz B⌝);
+a (rewrite_tac  (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝])
 	THEN REPEAT strip_tac);
-val ⦈_izz_thm2 = save_pop_thm "⦈_izz_thm2";
+val □_izz_thm2 = save_pop_thm "□_izz_thm2";
 
-set_goal([], ⌜[⦈ (All A hazz B)] Π All A izz B⌝);
-a (rewrite_tac  (map get_spec [⌜$Π⌝, ⌜Fold⌝])
+set_goal([], ⌜[□ (All A hazz B)] ⊨ All A izz B⌝);
+a (rewrite_tac  (map get_spec [⌜$⊨⌝, ⌜Fold⌝])
 	THEN REPEAT strip_tac);
 a (swap_nth_asm_concl_tac 1);
-a (rewrite_tac (map get_spec [⌜⦈⌝, ⌜All⌝, ⌜hazz⌝])
+a (rewrite_tac (map get_spec [⌜□⌝, ⌜All⌝, ⌜hazz⌝])
 	THEN strip_tac);
 a (∃_tac ⌜λw⦁ {}⌝ THEN rewrite_tac[get_spec ⌜$InTermM⌝] THEN strip_tac);
 a (lemma_tac ⌜∃d⦁ d ∈ PeSet (Snd A)⌝ THEN1 rewrite_tac[]);
 a (∃_tac ⌜(Fst A, d)⌝ THEN asm_rewrite_tac[]);
-val ⦈_hazz_thm2 = save_pop_thm "⦈_hazz_thm2";
+val □_hazz_thm2 = save_pop_thm "□_hazz_thm2";
 
-set_goal([], ⌜[All A izz B] Π ⦈ (All  A izz B)⌝);
-a (rewrite_tac  (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝])
+set_goal([], ⌜[All A izz B] ⊨ □ (All  A izz B)⌝);
+a (rewrite_tac  (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝])
 	THEN REPEAT strip_tac);
-val izz_⦈_thm2 = save_pop_thm "izz_⦈_thm2";
+val izz_□_thm2 = save_pop_thm "izz_□_thm2";
 
-set_goal([], ⌜[] Π ¬ ⦈ (All A hazz B)⌝);
-a (rewrite_tac  (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜⦈⌝, ⌜All⌝, ⌜izz⌝, ⌜$¬⋎a⌝, ⌜hazz⌝]));
+set_goal([], ⌜[] ⊨ ¬ □ (All A hazz B)⌝);
+a (rewrite_tac  (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜□⌝, ⌜All⌝, ⌜izz⌝, ⌜$¬⋎a⌝, ⌜hazz⌝]));
 a (REPEAT strip_tac);
 a (∃_tac ⌜λw⦁ {}⌝ THEN rewrite_tac[get_spec ⌜$InTermM⌝] THEN strip_tac);
 a (∃_tac ⌜(Fst A, MemOf(Snd A))⌝ THEN rewrite_tac[]);
-val not_⦈_hazz_thm2 = save_pop_thm "not_⦈_hazz_thm2";
+val not_□_hazz_thm2 = save_pop_thm "not_□_hazz_thm2";
 =TEX
 }%ignore
 
 Here are some general modal results which I have not noticed in Aristotle as yet.
 
 =GFT
-⦏⦈_elim_thm⦎ =
-	⊢ [⦈ P] Ξ P
-⦏⦇_intro_thm⦎ =
-	⊢ [P] Ξ ⦇ P
-⦏⦈_⦇_thm⦎ =
-	⊢ [⦈ P] Ξ ⦇ P
+⦏□_elim_thm⦎ =
+	⊢ [□ P] ⊢ P
+⦏♢_intro_thm⦎ =
+	⊢ [P] ⊢ ♢ P
+⦏□_♢_thm⦎ =
+	⊢ [□ P] ⊢ ♢ P
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜[⦈ P] Ξ P⌝);
-a (rewrite_tac (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜$⦈⌝]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-val ⦈_elim_thm = save_pop_thm "⦈_elim_thm";
+set_goal([], ⌜[□ P] ⊢ P⌝);
+a (rewrite_tac (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜$□⌝]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val □_elim_thm = save_pop_thm "□_elim_thm";
 
-set_goal([], ⌜[P] Ξ ⦇ P⌝);
-a (rewrite_tac (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜$⦇⌝]) THEN contr_tac THEN asm_fc_tac[]);
-val ⦇_intro_thm = save_pop_thm "⦈_intro_thm";
+set_goal([], ⌜[P] ⊢ ♢ P⌝);
+a (rewrite_tac (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜$♢⌝]) THEN contr_tac THEN asm_fc_tac[]);
+val ♢_intro_thm = save_pop_thm "□_intro_thm";
 
-set_goal([], ⌜[⦈ P] Ξ ⦇ P⌝);
-a (rewrite_tac (map get_spec [⌜$Ξ⌝, ⌜Fold⌝, ⌜$⦈⌝, ⌜$⦇⌝]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-val ⦈_⦇_thm = save_pop_thm "⦈_⦇_thm";
+set_goal([], ⌜[□ P] ⊢ ♢ P⌝);
+a (rewrite_tac (map get_spec [⌜$⊢⌝, ⌜Fold⌝, ⌜$□⌝, ⌜$♢⌝]) THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val □_♢_thm = save_pop_thm "□_♢_thm";
 =TEX
 }%ignore
 
@@ -4654,7 +4654,7 @@ The following functions construct a syllogism.
 
 =SML
 fun ⦏mk_izz_syll⦎ vt (a, b, c, d) (f1, f2, f3) =
-	⌜[ⓜf1 a b⌝; ⓜf2 c d⌝] Π
+	⌜[ⓜf1 a b⌝; ⓜf2 c d⌝] ⊨
 		ⓜf3 (mk_var("𝕊", vt)) (mk_var("P", vt))⌝⌝;
 
 fun ⦏mk_cop_syllp⦎ cop (s, n) =
@@ -4671,12 +4671,12 @@ fun ⦏mk_hazzizz_syllp⦎ (s, n) = mk_cop_syllp_cc (⌜hazz⌝, ⌜izz⌝) (s, 
 val ⦏syll_izz_tac2⦎ =
 	(MAP_EVERY (fn x => strip_asm_tac (∀_elim x interm_∃_lemma))
 		[⌜M:TermM⌝, ⌜P:TermM⌝, ⌜𝕊:TermM⌝, ⌜A:TermM⌝, ⌜B:TermM⌝])
-	THEN asm_prove_tac (map get_spec [⌜$Π⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜$not⌝, ⌜Fold⌝]);
+	THEN asm_prove_tac (map get_spec [⌜$⊨⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜$not⌝, ⌜Fold⌝]);
 
 val ⦏syll_izzhazz_tac⦎ =
 	(MAP_EVERY (fn x => strip_asm_tac (∀_elim x interm_∃_lemma))
 		[⌜M:TermM⌝, ⌜P:TermM⌝, ⌜𝕊:TermM⌝, ⌜A:TermM⌝, ⌜B:TermM⌝])
-	THEN rewrite_tac (map get_spec [⌜$Π⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜hazz⌝, ⌜$not⌝, ⌜Fold⌝])
+	THEN rewrite_tac (map get_spec [⌜$⊨⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜hazz⌝, ⌜$not⌝, ⌜Fold⌝])
 	THEN contr_tac;
 
 val ⦏syll_izzhazz_tac2⦎ = 	syll_izzhazz_tac
@@ -4750,11 +4750,11 @@ force_new_theory "gccon";
 The following results are now provable:
 
 =GFT
-⦏FP1⦎ =	⊢ [] Π All A izz A 
-⦏FP2⦎ =	⊢ [All A izz B; All B izz C] Π All A izz C
-⦏FP3⦎ =	⊢ [All A hazz B] Π ¬ (All A izz B)
-⦏FP4a⦎ =	⊢ [All A hazz B; All B izz C] Π All A hazz C
-⦏FP4⦎ =	⊢ [] Π All A hazz B ⇔ (∃⋎a C⦁ All A hazz C ∧ All C izz B)
+⦏FP1⦎ =	⊢ [] ⊨ All A izz A 
+⦏FP2⦎ =	⊢ [All A izz B; All B izz C] ⊨ All A izz C
+⦏FP3⦎ =	⊢ [All A hazz B] ⊨ ¬ (All A izz B)
+⦏FP4a⦎ =	⊢ [All A hazz B; All B izz C] ⊨ All A hazz C
+⦏FP4⦎ =	⊢ [] ⊨ All A hazz B ⇔ (∃⋎a C⦁ All A hazz C ∧ All C izz B)
 =TEX
 
 These are not very Aristotelian.
@@ -4762,26 +4762,26 @@ It would seem more Aristotelian to have:
 
 =GFT
 ⦏FP3b⦎ =
-	⊢ [All A hazz B] Π Some A (izz not) B
+	⊢ [All A hazz B] ⊨ Some A (izz not) B
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜[] Π All A izz A⌝);
+set_goal([], ⌜[] ⊨ All A izz A⌝);
 a (syll_izz_tac2);
 val FP1 = save_pop_thm "FP1";
 
-set_goal([], ⌜[All A izz B; All B izz C] Π All A izz C⌝);
+set_goal([], ⌜[All A izz B; All B izz C] ⊨ All A izz C⌝);
 a (syll_izz_tac2);
 val FP2 = save_pop_thm "FP2";
 
 val ⦏syll_hizz_tac⦎ =
 	(MAP_EVERY (fn x => strip_asm_tac (∀_elim x interm_∃_lemma))
 		[⌜M:TermM⌝, ⌜P:TermM⌝, ⌜𝕊:TermM⌝, ⌜A:TermM⌝, ⌜B:TermM⌝])
-	THEN asm_prove_tac (map get_spec [⌜$Π⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜hazz⌝, ⌜$not⌝, ⌜$¬⋎a⌝, ⌜Fold⌝]);
+	THEN asm_prove_tac (map get_spec [⌜$⊨⌝, ⌜All⌝, ⌜Some⌝, ⌜izz⌝, ⌜hazz⌝, ⌜$not⌝, ⌜$¬⋎a⌝, ⌜Fold⌝]);
 
 
-set_goal([], ⌜[All A hazz B] Π ¬ All A izz B⌝);
+set_goal([], ⌜[All A hazz B] ⊨ ¬ All A izz B⌝);
 a (syll_hizz_tac);
 a (asm_fc_tac[]);
 a (∃_tac ⌜j'''⌝ THEN asm_rewrite_tac[get_spec ⌜$InTermM⌝]);
@@ -4790,8 +4790,8 @@ val FP3 = save_pop_thm "FP3";
 
 val FP3b = save_thm("FP3b", rewrite_rule [all_∀_intro ¬_All_conv_thm] FP3);
 
-set_goal([], ⌜[All A hazz B; All B izz C] Π All A hazz C⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜All⌝, ⌜izz⌝, ⌜hazz⌝]) THEN REPEAT strip_tac);
+set_goal([], ⌜[All A hazz B; All B izz C] ⊨ All A hazz C⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜All⌝, ⌜izz⌝, ⌜hazz⌝]) THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
 (* *** Goal "2" *** *)
@@ -4807,10 +4807,10 @@ a (∃_tac ⌜b⌝ THEN (SYM_ASMS_T rewrite_tac));
 val FP4a = save_pop_thm "FP4a";
 
 
-set_goal([], ⌜[] Π (All A hazz B ⇔ ∃ C⦁ (All A hazz C) ∧ (All C izz B))⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜$⇔⋎a⌝, ⌜$∃⋎a⌝, ⌜$∧⋎a⌝]) THEN REPEAT_N 3 strip_tac);
+set_goal([], ⌜[] ⊨ (All A hazz B ⇔ ∃ C⦁ (All A hazz C) ∧ (All C izz B))⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜$⇔⋎a⌝, ⌜$∃⋎a⌝, ⌜$∧⋎a⌝]) THEN REPEAT_N 3 strip_tac);
 (* *** Goal "1" *** *)
-a (strip_tac THEN ∃_tac ⌜B⌝ THEN asm_rewrite_tac[all_∀_intro (rewrite_rule (map get_spec [⌜$Π⌝, ⌜Fold⌝]) FP1)]);
+a (strip_tac THEN ∃_tac ⌜B⌝ THEN asm_rewrite_tac[all_∀_intro (rewrite_rule (map get_spec [⌜$⊨⌝, ⌜Fold⌝]) FP1)]);
 (* *** Goal "2" *** *)
 a (rewrite_tac (map get_spec [⌜All⌝, ⌜izz⌝, ⌜hazz⌝]) THEN strip_tac);
 a (POP_ASM_T (strip_asm_tac o (rewrite_rule [get_spec ⌜$InTermM⌝])));
@@ -4851,7 +4851,7 @@ Since the above is a regular predicate, we need something to convert an ordinary
 The revised principle is then:
 
 =GFT
-FP4b = ?⊢ [] Π (All A hazz B ⇔ ∃ C⦁ Mp(individual C) ∧ (All A hazz C) ∧ (All C izz B))
+FP4b = ?⊢ [] ⊨ (All A hazz B ⇔ ∃ C⦁ Mp(individual C) ∧ (All A hazz C) ∧ (All C izz B))
 =TEX
 
 However, this is false in our model, since there need be no single attribute which is posessed by every substance which izz A.
@@ -4865,14 +4865,14 @@ If we require A to be an individual we get a result:
 =GFT
 ⦏FP4c⦎ =
    ⊢ [Mp (individual A)]
-       Π (All A hazz B
+       ⊨ (All A hazz B
          ⇔ (∃ C⦁ Mp (individual C) ∧ All A hazz C ∧ All C izz B))
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜[Mp(individual A)] Π (All A hazz B ⇔ ∃ C⦁ Mp(individual C) ∧ (All A hazz C) ∧ (All C izz B))⌝);
-a (rewrite_tac (map get_spec [⌜$Π⌝, ⌜Fold⌝, ⌜$⇔⋎a⌝, ⌜$∃⋎a⌝, ⌜$∧⋎a⌝, ⌜Mp⌝, ⌜individual⌝, ⌜hazz⌝, ⌜izz⌝, ⌜All⌝, ⌜$InTermM⌝]) 
+set_goal([], ⌜[Mp(individual A)] ⊨ (All A hazz B ⇔ ∃ C⦁ Mp(individual C) ∧ (All A hazz C) ∧ (All C izz B))⌝);
+a (rewrite_tac (map get_spec [⌜$⊨⌝, ⌜Fold⌝, ⌜$⇔⋎a⌝, ⌜$∃⋎a⌝, ⌜$∧⋎a⌝, ⌜Mp⌝, ⌜individual⌝, ⌜hazz⌝, ⌜izz⌝, ⌜All⌝, ⌜$InTermM⌝]) 
 	THEN REPEAT_N 5 strip_tac);
 (* *** Goal "1" *** *)
 a (SPEC_NTH_ASM_T 1 ⌜(Fst A, MemOf (Snd A))⌝ (strip_asm_tac o (rewrite_rule[])));
@@ -4916,7 +4916,7 @@ val FP4c = save_pop_thm "FP4c";
 ⓈHOLCONST
 │ ⦏Individual⦎ : TermM → MPROP
 ├──────
-│ ∀A⦁ Individual A = ⦈ ∀⋎a B⦁ All B izz A ⇒⋎a All A izz B
+│ ∀A⦁ Individual A = □ ∀⋎a B⦁ All B izz A ⇒⋎a All A izz B
 ■
 
 Now on the face of it, in the context of our present model, the modal operator in this definition is irrelevant.
@@ -4944,7 +4944,7 @@ Our own primitive definition is couched in terms of the underlying model, and so
 \ignore{
 =SML
 set_goal ([], ⌜∀A⦁ Individual A = ∀⋎a B⦁ All B izz A ⇒⋎a All A izz B⌝);
-a (rewrite_tac [get_spec ⌜Individual⌝, get_spec ⌜⦈⌝, ext_thm]);
+a (rewrite_tac [get_spec ⌜Individual⌝, get_spec ⌜□⌝, ext_thm]);
 a (REPEAT strip_tac THEN_TRY asm_rewrite_tac[] THEN POP_ASM_T ante_tac);
 a (rewrite_tac (map get_spec [⌜$⇒⋎a⌝, ⌜$∀⋎a⌝, ⌜All⌝, ⌜izz⌝]));
 val individual_lemma1 = save_pop_thm "individual_lemma1";
@@ -4996,7 +4996,7 @@ Now we come to the Code definition of particular:
 ⓈHOLCONST
 │ ⦏particular⦎ : TermM → MPROP
 ├──────
-│ ∀A⦁ particular A = ⦈ ∀⋎a B⦁ All B are A ⇒⋎a All A izz B ∧⋎a All B izz A
+│ ∀A⦁ particular A = □ ∀⋎a B⦁ All B are A ⇒⋎a All A izz B ∧⋎a All B izz A
 ■
 
 A particular is an individual substance and one would have thought that a definition closer to saying that directly might have been a good idea.
@@ -5008,7 +5008,7 @@ Code might have used a similar device to define substantial:
 ⓈHOLCONST
 │ ⦏substantial⦎ : TermM → MPROP
 ├──────
-│ ∀A⦁ substantial A = ⦈ ∀⋎a B⦁ All B are A ⇒⋎a All B izz A
+│ ∀A⦁ substantial A = □ ∀⋎a B⦁ All B are A ⇒⋎a All B izz A
 ■
 
 and then defined a particular as a substantial individual.
@@ -5020,11 +5020,11 @@ Code's definition of universal is:
 ⓈHOLCONST
 │ ⦏universal⦎ : TermM → MPROP
 ├──────
-│ ∀A⦁ universal A = ⦇ ∃⋎a B⦁ All B are A ∧⋎a ¬⋎a (All A izz B ∧⋎a All B izz A)
+│ ∀A⦁ universal A = ♢ ∃⋎a B⦁ All B are A ∧⋎a ¬⋎a (All A izz B ∧⋎a All B izz A)
 ■
 
 I think the intension is that a universal is anything except a particular, in which case that would be a better way to define it.
-However, in this model, this definition will be true of any non-individual, unless the $⌜⦇⌝$ is changed to $⌜⦈⌝$.
+However, in this model, this definition will be true of any non-individual, unless the $⌜♢⌝$ is changed to $⌜□⌝$.
 
 \paragraph{Ontological Theorems}
 

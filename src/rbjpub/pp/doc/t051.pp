@@ -2,11 +2,14 @@
 $Id: t051.doc,v 1.6 2014/08/17 16:07:53 rbj Exp $
 =TEX
 \documentclass[11pt,a4paper]{article}
-%\usepackage{latexsym}
+\usepackage{latexsym}
 %\usepackage{ProofPower}
 \usepackage{rbj}
 \ftlinepenalty=9999
 \usepackage{A4}
+
+\usepackage{fontspec}
+\setmainfont[Path=/Users/rbj/.fonts/]{ProofPowerSerif.ttf}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}

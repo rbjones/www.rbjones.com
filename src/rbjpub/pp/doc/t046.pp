@@ -105,9 +105,8 @@ new_type("⦏S⦎", 0);
 We then introduce some primitive constants for these types, without giving definitions.
 
 =SML
-new_const("⦏⤕⋎p⦎", ⓣ'a → ('a) PL → BOOL⌝);
-declare_infix(240, "⤕⋎p");
-declare_alias("⤕", ⌜$⤕⋎p⌝);
+new_const("⦏⋳⦎", ⓣ'a → ('a) PL → BOOL⌝);
+declare_infix(240, "⋳");
 new_const("⦏∈⋎s⦎", ⓣ S → S → BOOL⌝);
 declare_infix(230, "∈⋎s");
 declare_alias("∈", ⌜$∈⋎s⌝);
@@ -118,7 +117,7 @@ We are now in a position to define various notions which Linnebo uses.
 ⓈHOLCONST
 │ ⦏FORM⦎: S PL × S → BOOL
 ├──────
-│ ∀xx y⦁ FORM(xx, y) ⇔ ∀u⦁ u ⤕⋎p xx ⇔ u ∈⋎s y
+│ ∀xx y⦁ FORM(xx, y) ⇔ ∀u⦁ u ⋳ xx ⇔ u ∈⋎s y
 ■
 
 ⓈHOLCONST
@@ -138,7 +137,7 @@ It is the name of a boolean constant, which we will use as a hypothesis (on the 
 ⓈHOLCONST
 │ ⦏P_Comp⦎: BOOL
 ├──────
-│ P_Comp ⇔ ∀φ⦁ ∃xx:S PL⦁ ∀u:S⦁ u ⤕⋎p xx ⇔ φ u
+│ P_Comp ⇔ ∀φ⦁ ∃xx:S PL⦁ ∀u:S⦁ u ⋳ xx ⇔ φ u
 ■
 
 Linnebo then derives a contradiction, corresponding to which we have the theorem:
@@ -171,7 +170,7 @@ val COLLAPSE_contradiction_thm = save_pop_thm "COLLAPSE_contradiction_thm";
 Linnebo observes that this is normally taken as a refutation of COLLAPSE, but proposes to resolve the contradiction by some other means.
 
 To do this he needs to scrutinise carefully all the assumptions which participate in the derivation of the contradiction.
-Doing the proof formally gives us a strong basis for considering this matter, for it is clearer what the logical context of the proof is.
+Doing the proof formall⬜y gives us a strong basis for considering this matter, for it is clearer what the logical context of the proof is.
 
 This has involved some assumptions about the types of pluralities and sets which are not explicit in Linnebo (who is not working in a context in which these questions arise).
 We have also formulated a second order principle of plural abstraction, whereas Linnebo's is an axiom scheme.
@@ -320,30 +319,30 @@ declare_type_abbrev("PROP⋎m", [], ⓣS SET → BOOL⌝);
 The modal operators are defined as follows:
 
 ⓈHOLCONST
-│ ⦏⦈⋎m⦎ : PROP⋎m → PROP⋎m
+│ ⦏◇⋎m⦎ : PROP⋎m → PROP⋎m
 ├──────
-│ ∀s⦁ ⦈⋎m s = λw⦁ ∀v⦁ v ∈ Stages ∧ w ⊆ v ⇒ s v
+│ ∀s⦁ ◇⋎m s = λw⦁ ∀v⦁ v ∈ Stages ∧ w ⊆ v ⇒ s v
 ■
 
 ⓈHOLCONST
-│ ⦏⦇⋎m⦎ : PROP⋎m → PROP⋎m
+│ ⦏⬜⋎m⦎ : PROP⋎m → PROP⋎m
 ├──────
-│ ∀s⦁ ⦇⋎m s = ¬ ⦈⋎m (¬ s)
+│ ∀s⦁⬜⋎m s = ¬ ◇⋎m (¬ s)
 ■
 
 So that we need not use the subscript $⋎m$ unless ambiguity might otherwise arise, we introduce the un-subscripted modal operators as aliases:
 
 =SML
-declare_alias("⦈", ⌜⦈⋎m⌝);
-declare_alias("⦇", ⌜⦇⋎m⌝);
+declare_alias("◇", ⌜◇⋎m⌝);
+declare_alias("⬜", ⌜⬜⋎m⌝);
 =IGN
-declare_prefix(5, "⦇");
-declare_prefix(5, "⦇⋎m");
-declare_prefix(5, "⦈");
-declare_prefix(5, "⦈⋎m");
+declare_prefix(5, "⬜");
+declare_prefix(5, "⬜⋎m");
+declare_prefix(5, "◇");
+declare_prefix(5, "◇⋎m");
 =TEX
 
-Since modal propositions are not of type $ⓣBOOL⌝$ we need a way of asserting them, for which we use the symbol $Ξ$, which should be read as asserting `truth'.
+Since modal propositions are not of type $ⓣBOOL⌝$ we need a way of asserting them, for which we use the symbol $⊨$, which should be read as asserting `truth'.
 Though `truth' simpliciter in a modal logic should perhaps be construed as truth in ``this world'', and since worlds are stages we use the name \emph{ThisStage} and introduce this as a new constant.
 Linnebo says nothing about this, so nor do we, so we know nothing from this loose `definition' about \emph{ThisStage} other than that it is a \emph{Stage} (and we do already know that there is one, so the definition is conservative).
 
@@ -364,38 +363,38 @@ save_cs_∃_thm (pop_thm());
 ■
 
 ⓈHOLCONST
-│ $⦏Ξ⋎m⦎ : PROP⋎m → BOOL
+│ $⦏⊨⋎m⦎ : PROP⋎m → BOOL
 ├──────
-│ ∀p⦁ Ξ⋎m p ⇔ p ThisStage
+│ ∀p⦁ ⊨⋎m p ⇔ p ThisStage
 ■
 
 =SML
-declare_alias("Ξ", ⌜Ξ⋎m⌝);
-declare_prefix(5, "Ξ⋎m");
+declare_alias("⊨", ⌜⊨⋎m⌝);
+declare_prefix(5, "⊨⋎m");
 =TEX
 
 =GFT
-⦏⦇⦈⋎m_thm⦎ =	⊢ ∀ s p⦁ (⦈⋎m p s ⇔ (∀ s2⦁ s ⊆ s2 ⇒ p s2))
-		∧ (⦇⋎m p s ⇔ (∃ s2⦁ s ⊆ s2 ∧ p s2))
+⦏⬜◇⋎m_thm⦎ =	⊢ ∀ s p⦁ (◇⋎m p s ⇔ (∀ s2⦁ s ⊆ s2 ⇒ p s2))
+		∧ (⬜⋎m p s ⇔ (∃ s2⦁ s ⊆ s2 ∧ p s2))
 =TEX
 
 \ignore{
 =SML
 val ThisStage_def = get_spec ⌜ThisStage⌝;
-val ⦈⋎m_def = get_spec ⌜$⦈⋎m⌝;
-val ⦇⋎m_def = get_spec ⌜$⦇⋎m⌝;
+val ◇⋎m_def = get_spec ⌜$◇⋎m⌝;
+val ⬜⋎m_def = get_spec ⌜$⬜⋎m⌝;
 
-set_goal([], ⌜∀(s:S SET) p⦁ ((⦈⋎m p) s ⇔ ∀s2⦁ s2 ∈ Stages ∧ s ⊆ s2 ⇒  p s2)
-		∧	((⦇⋎m p) s ⇔ ∃s2⦁ s2 ∈ Stages ∧ s ⊆ s2 ∧  p s2)⌝);
-a (rewrite_tac [⦇⋎m_def, ⦈⋎m_def, l_defs]
+set_goal([], ⌜∀(s:S SET) p⦁ ((◇⋎m p) s ⇔ ∀s2⦁ s2 ∈ Stages ∧ s ⊆ s2 ⇒  p s2)
+		∧	((⬜⋎m p) s ⇔ ∃s2⦁ s2 ∈ Stages ∧ s ⊆ s2 ∧  p s2)⌝);
+a (rewrite_tac [⬜⋎m_def, ◇⋎m_def, l_defs]
 	THEN REPEAT strip_tac THEN_TRY asm_rewrite_tac[]);
 (* *** Goal "1" *** *)
 a (∃_tac ⌜v⌝ THEN asm_rewrite_tac[]);
 (* *** Goal "2" *** *)
 a (∃_tac ⌜s2⌝ THEN asm_rewrite_tac[]);
-val ⦇⦈⋎m_thm = save_pop_thm "⦇⦈⋎m_thm";
+val ⬜◇⋎m_thm = save_pop_thm "⬜◇⋎m_thm";
 
-add_pc_thms "'t046b" [⦇⦈⋎m_thm];
+add_pc_thms "'t046b" [⬜◇⋎m_thm];
 add_rw_thms [get_spec ⌜ThisStage⌝] "'t046b";
 add_sc_thms [get_spec ⌜ThisStage⌝] "'t046b";
 set_merge_pcs ["t045", "'t046b"];
@@ -405,64 +404,64 @@ set_merge_pcs ["t045", "'t046b"];
 We can now \emph{prove} as theorems the propositions which would normally be taken as axioms for this kind of modal logic.
 
 =GFT
-⦏distrib⋎m_thm⦎ =	⊢ Ξ ⦈ (A ⇒ B) ⇒ ⦈ A ⇒ ⦈ B
-⦏D⋎m_thm⦎ =		⊢ Ξ ⦈ A ⇒ ⦇ A
-⦏M⋎m_thm⦎ =		⊢ Ξ ⦈ A ⇒ A
-⦏A4⋎m_thm⦎ =		⊢ Ξ ⦈ A ⇒ ⦈ (⦈ A)
-⦏⦈M⋎m_thm⦎ =		⊢ Ξ ⦈ (⦈ A ⇒ A)
-⦏C4⋎m_thm⦎ =		⊢ Ξ ⦈ (⦈ A) ⇒ ⦈ A
-⦏C⋎m_thm⦎ =		⊢ Ξ ⦇ (⦈ A) ⇒ ⦈ (⦇ A)
+⦏distrib⋎m_thm⦎ =	⊢ ⊨ ◇ (A ⇒ B) ⇒ ◇ A ⇒ ◇ B
+⦏D⋎m_thm⦎ =		⊢ ⊨ ◇ A ⇒ ⬜ A
+⦏M⋎m_thm⦎ =		⊢ ⊨ ◇ A ⇒ A
+⦏A4⋎m_thm⦎ =		⊢ ⊨ ◇ A ⇒ ◇ (◇ A)
+⦏◇M⋎m_thm⦎ =		⊢ ⊨ ◇ (◇ A ⇒ A)
+⦏C4⋎m_thm⦎ =		⊢ ⊨ ◇ (◇ A) ⇒ ◇ A
+⦏C⋎m_thm⦎ =		⊢ ⊨ ⬜ (◇ A) ⇒ ◇ (⬜ A)
 =TEX
 
 =IGN
-⦏B⋎m_thm⦎ =		⊢ Ξ A ⇒ ⦈ (⦇ A)
-⦏A5⋎m_thm⦎ =		⊢ Ξ ⦇ A ⇒ ⦈ (⦇ A)
+⦏B⋎m_thm⦎ =		⊢ ⊨ A ⇒ ◇ (⬜ A)
+⦏A5⋎m_thm⦎ =		⊢ ⊨ ⬜ A ⇒ ◇ (⬜ A)
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜Ξ⋎m ⦈(A ⇒ B) ⇒ ⦈ A ⇒ ⦈ B⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN REPEAT strip_tac THEN REPEAT (all_asm_fc_tac[]));
+set_goal([], ⌜⊨⋎m ◇(A ⇒ B) ⇒ ◇ A ⇒ ◇ B⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN REPEAT strip_tac THEN REPEAT (all_asm_fc_tac[]));
 val distrib⋎m_thm = save_pop_thm "distrib⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m (⦈ A) ⇒ ⦇ A⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (◇ A) ⇒ ⬜ A⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (∃_tac ⌜ThisStage⌝);
 a (spec_nth_asm_tac 1 ⌜ThisStage⌝ THEN REPEAT strip_tac);
 a (asm_prove_tac[]);
 val D⋎m_thm = save_pop_thm "D⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m (⦈ A) ⇒ A⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (◇ A) ⇒ A⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (spec_nth_asm_tac 1 ⌜ThisStage⌝ THEN REPEAT strip_tac);
 a (asm_prove_tac[]);
 val M⋎m_thm = save_pop_thm "M⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m (⦈ A) ⇒ (⦈ (⦈ A))⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (◇ A) ⇒ (◇ (◇ A))⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (lemma_tac ⌜ThisStage ⊆ s2'⌝ THEN1 all_asm_fc_tac [⊆_trans_thm]);
 a (all_asm_fc_tac[]);
 val A4⋎m_thm = save_pop_thm "A4⋎m_thm";
 
 =IGN
-set_goal([], ⌜Ξ (⦇ A) ⇒ (⦈ (⦇ A))⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨ (⬜ A) ⇒ (◇ (⬜ A))⌝);
+a (rewrite_tac [get_spec ⌜$⊨⌝] THEN prove_tac[]);
 val A5_thm = save_pop_thm "A5_thm";
 =SML
 
-set_goal([], ⌜Ξ⋎m ⦈((⦈ A) ⇒ A)⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m ◇((◇ A) ⇒ A)⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (spec_nth_asm_tac 1 ⌜s2⌝);
-val ⦈M⋎m_thm = save_pop_thm "⦈M⋎m_thm";
+val ◇M⋎m_thm = save_pop_thm "◇M⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m (⦈ (⦈ A)) ⇒ (⦈ A)⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (◇ (◇ A)) ⇒ (◇ A)⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (asm_fc_tac[]);
 a (spec_nth_asm_tac 1 ⌜s2⌝);
 val C4⋎m_thm = save_pop_thm "C4⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m (⦇ (⦈ A)) ⇒ (⦈ (⦇ A))⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (⬜ (◇ A)) ⇒ (◇ (⬜ A))⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (all_fc_tac [Stages_fc_thm]);
 a (∃_tac ⌜z'⌝ THEN asm_fc_tac [] THEN REPEAT strip_tac);
 val C⋎m_thm = save_pop_thm "C⋎m_thm";
@@ -525,7 +524,7 @@ I have made plural quantification also sensitive to the stage, but in this case 
 ⓈHOLCONST
 │ ⦏∀⋎p⦎:(S PL → PROP⋎m) → PROP⋎m
 ├──────
-│  ∀f⦁ ∀⋎p f = λs⦁ ∀xx⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ⇒ f xx s
+│  ∀f⦁ ∀⋎p f = λs⦁ ∀xx⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ⇒ f xx s
 ■
 
 =SML
@@ -536,7 +535,7 @@ declare_binder "∀⋎p";
 ⓈHOLCONST
 │ ⦏∃⋎p⦎:(S PL → PROP⋎m) → PROP⋎m
 ├──────
-│  ∀f⦁ ∃⋎p f = λs⦁ ∃xx:S PL⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ∧ f xx s
+│  ∀f⦁ ∃⋎p f = λs⦁ ∃xx:S PL⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ∧ f xx s
 ■
 
 =SML
@@ -545,19 +544,19 @@ declare_binder "∃⋎p";
 =TEX
 
 =GFT
-⦏∃⋎p_thm⦎ = ⊢ ∀ f s⦁ $∃⋎p f s ⇔ (∃ xx⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ∧ f xx s)
-⦏∀⋎p_thm⦎ = ⊢ ∀ f s⦁ $∀⋎p f s ⇔ (∀ xx⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ⇒ f xx s)
+⦏∃⋎p_thm⦎ = ⊢ ∀ f s⦁ $∃⋎p f s ⇔ (∃ xx⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ∧ f xx s)
+⦏∀⋎p_thm⦎ = ⊢ ∀ f s⦁ $∀⋎p f s ⇔ (∀ xx⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ⇒ f xx s)
 =TEX
 
 \ignore{
 =SML
 val ∀⋎p_def = get_spec ⌜$∀⋎p⌝;
-set_goal([], ⌜∀f s⦁ $∀⋎p f s = ∀xx⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ⇒ f xx s⌝);
+set_goal([], ⌜∀f s⦁ $∀⋎p f s = ∀xx⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ⇒ f xx s⌝);
 a (REPEAT ∀_tac THEN rewrite_tac [∀⋎p_def]);
 val ∀⋎p_thm = save_pop_thm "∀⋎p_thm";
 
 val ∃⋎p_def = get_spec ⌜$∃⋎p⌝;
-set_goal([], ⌜∀f s⦁ $∃⋎p f s = ∃xx⦁ (∀z⦁ z ⤕⋎p xx ⇒ z ∈ s) ∧ f xx s⌝);
+set_goal([], ⌜∀f s⦁ $∃⋎p f s = ∃xx⦁ (∀z⦁ z ⋳ xx ⇒ z ∈ s) ∧ f xx s⌝);
 a (REPEAT ∀_tac THEN rewrite_tac [∃⋎p_def]);
 val ∃⋎p_thm = save_pop_thm "∃⋎p_thm";
 
@@ -570,21 +569,21 @@ We are now able to demonstrate the `converse Barcan' formula.
 The Barcan formula itself fails, because it infers from possible existence to actual existence which would only be possible if no stage actually added any extra sets.
 
 =IGN
-⦏BF⋎m_thm⦎ =	⊢ Ξ⋎m ⦇ (∃ x⦁ A x) ⇒ (∃⋎s x⦁ ⦇ A x)
+⦏BF⋎m_thm⦎ =	⊢ ⊨⋎m ⬜ (∃ x⦁ A x) ⇒ (∃⋎s x⦁ ⬜ A x)
 =GFT
-⦏CBF⋎m_thm⦎ =	⊢ Ξ⋎m (∃ x⦁ ⦇ A x) ⇒ ⦇ (∃⋎s x⦁ A x)
+⦏CBF⋎m_thm⦎ =	⊢ ⊨⋎m (∃ x⦁ ⬜ A x) ⇒ ⬜ (∃⋎s x⦁ A x)
 =TEX
 
 \ignore{
 =IGN
 stop;
-set_goal([], ⌜Ξ⋎m (⦇ ((∃ x⦁ A x))) ⇒ ((∃ x⦁ (⦇ (A x))))⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m (⬜ ((∃ x⦁ A x))) ⇒ ((∃ x⦁ (⬜ (A x))))⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 val BF⋎m_thm = save_pop_thm "BF⋎m_thm";
 
 =SML
-set_goal([], ⌜Ξ⋎m ((∃ x:S⦁ (⦇ (A x)))) ⇒ (⦇ ((∃ x:S⦁ A x)))⌝);
-a (rewrite_tac [get_spec ⌜$Ξ⋎m⌝] THEN prove_tac[]);
+set_goal([], ⌜⊨⋎m ((∃ x:S⦁ (⬜ (A x)))) ⇒ (⬜ ((∃ x:S⦁ A x)))⌝);
+a (rewrite_tac [get_spec ⌜$⊨⋎m⌝] THEN prove_tac[]);
 a (∃_tac ⌜s2⌝ THEN asm_rewrite_tac[]);
 a (∃_tac ⌜x⌝ THEN PC_T1 "hol1" asm_prove_tac[]);
 val CBF⋎m_thm = save_pop_thm "CBF⋎m_thm";
@@ -600,17 +599,17 @@ This reflects the rigidity of the values we quantify over, both sets an plurals.
 We need a similar constant at a different type.
 
 =SML
-declare_infix(240, "⤕⋎m");
+declare_infix(240, "⋲");
 =TEX
 
 ⓈHOLCONST
-│ $⦏⤕⋎m⦎: 'a → ('a) PL → PROP⋎m
+│ $⦏⋲⦎: 'a → ('a) PL → PROP⋎m
 ├──────
-│ ∀x yy s⦁ (x ⤕⋎m yy) s ⇔ x ⤕⋎p yy
+│ ∀x yy s⦁ (x ⋲ yy) s ⇔ x ⋳ yy
 ■
 
 =SML
-declare_alias("⤕", ⌜$⤕⋎m⌝);
+declare_alias("⋳", ⌜$⋲⌝);
 =TEX
 
 On my first pass I defined the modal set membership taking into account of the stage parameter so that it is false if the value of the variable does not exist.
@@ -636,23 +635,23 @@ We now restate the two contradictory principles using modal language (i.e. using
 ⓈHOLCONST
 │ ⦏FORM⋎m⦎: S PL × S → PROP⋎m
 ├──────
-│ ∀xx y⦁ FORM⋎m(xx, y) = ∀ u⦁ u ⤕⋎m xx ⇔ u ∈⋎m y
+│ ∀xx y⦁ FORM⋎m(xx, y) = ∀ u⦁ u ⋲ xx ⇔ u ∈⋎m y
 ■
 
 =GFT
-⦏FORM⋎m_thm⦎ = ⊢ ∀ xx y s⦁ FORM⋎m (xx, y) s ⇔ (∀ x⦁ x ∈ s ⇒ ((x ⤕ xx) s ⇔ (x ∈ y) s))
+⦏FORM⋎m_thm⦎ = ⊢ ∀ xx y s⦁ FORM⋎m (xx, y) s ⇔ (∀ x⦁ x ∈ s ⇒ ((x ⋳ xx) s ⇔ (x ∈ y) s))
 =TEX
 
 \ignore{
 =SML
 val FORM⋎m_def = get_spec ⌜$FORM⋎m⌝;
 
-set_goal([], ⌜∀xx y s⦁ FORM⋎m(xx, y) s ⇔ ∀x⦁ x ∈ s ⇒ ((x ⤕ xx) s ⇔ (x ∈ y) s)⌝);
+set_goal([], ⌜∀xx y s⦁ FORM⋎m(xx, y) s ⇔ ∀x⦁ x ∈ s ⇒ ((x ⋳ xx) s ⇔ (x ∈ y) s)⌝);
 a (rewrite_tac[FORM⋎m_def]);
 val FORM⋎m_thm = pop_thm ();
 
-(* add_pc_thms "'t046b" [get_spec ⌜$⤕⋎m⌝, get_spec ⌜$∈⋎m⌝, FORM⋎m_thm]; *)
-add_pc_thms "'t046b" [get_spec ⌜$⤕⋎m⌝, get_spec ⌜$∈⋎m⌝, FORM⋎m_thm];
+(* add_pc_thms "'t046b" [get_spec ⌜$⋲⌝, get_spec ⌜$∈⋎m⌝, FORM⋎m_thm]; *)
+add_pc_thms "'t046b" [get_spec ⌜$⋲⌝, get_spec ⌜$∈⋎m⌝, FORM⋎m_thm];
 set_merge_pcs ["t045", "'t046b"];
 =TEX
 }%ignore
@@ -661,7 +660,7 @@ set_merge_pcs ["t045", "'t046b"];
 ⓈHOLCONST
 │ ⦏COLLAPSE⋎m⦎: BOOL
 ├──────
-│ COLLAPSE⋎m ⇔ Ξ⋎m ∀⋎p xx:S PL⦁ ∃ y:S⦁ FORM⋎m(xx, y)
+│ COLLAPSE⋎m ⇔ ⊨⋎m ∀⋎p xx:S PL⦁ ∃ y:S⦁ FORM⋎m(xx, y)
 ■
 
 
@@ -670,7 +669,7 @@ We can now state the principle of plural comprehension:
 ⓈHOLCONST
 │ ⦏P_Comp⋎m⦎: BOOL
 ├──────
-│ P_Comp⋎m ⇔ ∀φ⦁ Ξ⋎m ∃⋎p xx:S PL⦁ ∀ u:S⦁ u ⤕⋎m xx ⇔ φ u
+│ P_Comp⋎m ⇔ ∀φ⦁ ⊨⋎m ∃⋎p xx:S PL⦁ ∀ u:S⦁ u ⋲ xx ⇔ φ u
 ■
 
 Since there are no modal operators, these principles speak only of the stage which is in context globally, of which we know nothing, except what the principles tell is (if they are assumed).
@@ -689,12 +688,12 @@ If it did the two principles as formalised above would not be contradicatory.
 
 \ignore{
 =SML
-val Ξ⋎m_def = get_spec ⌜$Ξ⋎m⌝;
+val ⊨⋎m_def = get_spec ⌜$⊨⋎m⌝;
 val COLLAPSE⋎m_def = get_spec ⌜COLLAPSE⋎m⌝;
 val P_Comp⋎m_def = get_spec ⌜P_Comp⋎m⌝;
 
 set_goal([⌜COLLAPSE⋎m⌝, ⌜P_Comp⋎m⌝], ⌜F⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [Ξ⋎m_def, COLLAPSE⋎m_def, P_Comp⋎m_def]
+a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [⊨⋎m_def, COLLAPSE⋎m_def, P_Comp⋎m_def]
 	THEN contr_tac);
 a (SPEC_NTH_ASM_T 2 ⌜λx:S⦁ λs:S SET⦁F⌝ (strip_asm_tac o (rewrite_rule[])));
 a (SPEC_NTH_ASM_T 4 ⌜λx:S⦁ ¬ x ∈⋎m x⌝ (strip_asm_tac o (rewrite_rule[])));
@@ -715,30 +714,30 @@ val COLLAPSE_contradiction_thm2 = save_pop_thm "COLLAPSE_contradiction_thm2";
 We now define the two properly modalised versions of plural comprehension and collapse (as given by Linnebo).
 
 ⓈHOLCONST
-│ ⦏COLLAPSE⋏⦇⦎: BOOL
+│ ⦏COLLAPSE⋏⬜⦎: BOOL
 ├──────
-│ COLLAPSE⋏⦇ ⇔ Ξ⋎m ⦈∀⋎p xx⦁ ⦇∃⋎s y⦁ FORM⋎m(xx, y)
+│ COLLAPSE⋏⬜ ⇔ ⊨⋎m ◇∀⋎p xx⦁ ⬜∃⋎s y⦁ FORM⋎m(xx, y)
 ■
 
 ⓈHOLCONST
-│ ⦏P_Comp⋏⦇⦎: BOOL
+│ ⦏P_Comp⋏⬜⦎: BOOL
 ├──────
-│ P_Comp⋏⦇ ⇔ ∀φ⦁ Ξ⋎m ⦇∃ xx⦁ ⦈∀⋎s u⦁ u ⤕⋎m xx ⇔ φ u
+│ P_Comp⋏⬜ ⇔ ∀φ⦁ ⊨⋎m ⬜∃ xx⦁ ◇∀⋎s u⦁ u ⋲ xx ⇔ φ u
 ■
 
 Once again the, a contradiction is derivable from these two principles.
 
 =GFT
-⦏COLLAPSE_contradiction_thm3⦎ = COLLAPSE⋏⦇, P_Comp⋏⦇ ⊢ F
+⦏COLLAPSE_contradiction_thm3⦎ = COLLAPSE⋏⬜, P_Comp⋏⬜ ⊢ F
 =TEX
 
 \ignore{
 =SML
-val COLLAPSE⋏⦇_def = get_spec ⌜COLLAPSE⋏⦇⌝;
-val P_Comp⋏⦇_def = get_spec ⌜P_Comp⋏⦇⌝;
+val COLLAPSE⋏⬜_def = get_spec ⌜COLLAPSE⋏⬜⌝;
+val P_Comp⋏⬜_def = get_spec ⌜P_Comp⋏⬜⌝;
 
-set_goal([⌜COLLAPSE⋏⦇⌝, ⌜P_Comp⋏⦇⌝], ⌜F⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [Ξ⋎m_def, COLLAPSE⋏⦇_def, P_Comp⋏⦇_def]
+set_goal([⌜COLLAPSE⋏⬜⌝, ⌜P_Comp⋏⬜⌝], ⌜F⌝);
+a (REPEAT (POP_ASM_T ante_tac) THEN pure_rewrite_tac [⊨⋎m_def, COLLAPSE⋏⬜_def, P_Comp⋏⬜_def]
 	THEN contr_tac);
 a (SPEC_NTH_ASM_T 2 ⌜λx:S⦁ ¬ x ∈⋎m x⌝ (strip_asm_tac o (rewrite_rule[])));
 a (ALL_ASM_FC_T (MAP_EVERY (strip_asm_tac o (rewrite_rule[])))[]);
@@ -758,9 +757,9 @@ Strangely, though taking this contradiction as establishing the need to weaken p
 One obvious `solution' is simply to restrict plural comprehension to some stage in the formation of sets, thus in effect downgrading it to separation.
 
 ⓈHOLCONST
-│ ⦏P_Comp⋎w⋏⦇⦎: BOOL
+│ ⦏P_Comp⋎w⋏⬜⦎: BOOL
 ├──────
-│ P_Comp⋎w⋏⦇ ⇔ ∀φ⦁ Ξ⋎m ⦇∃ xx⦁ ∀⋎s u⦁ u ⤕⋎m xx ⇔ φ u
+│ P_Comp⋎w⋏⬜ ⇔ ∀φ⦁ ⊨⋎m ⬜∃ xx⦁ ∀⋎s u⦁ u ⋲ xx ⇔ φ u
 ■
 
 I don't have the means in the present context to establish the consistency of this weakened comprehension with \emph{COLLAPSE} thought that does seem intuitively plausible.
@@ -813,10 +812,10 @@ declare_infix(240, "∉⋎m");
 The four required results (of which the last three are asserted by Linnebo as axioms) may then be proven, resulting in the following theorems:
 
 =GFT
-⦏eq∈⋎m_⦈_thm⦎ = 	⊢ Ξ x =⋎m y ⇒ ⦈ (x =⋎m y)
-⦏≠∈⋎m_⦈_thm⦎ = 	⊢ Ξ x ≠⋎m y ⇒ ⦈ (x ≠⋎m y)
-⦏∈⋎m_⦈_thm⦎ =		⊢ Ξ x ∈⋎m y ⇒ ⦈ (x ∈⋎m y)
-∉⋎m_⦈_thm =		⊢ Ξ x ∉⋎m y ⇒ ⦈ (x ∉⋎m y)
+⦏eq∈⋎m_◇_thm⦎ = 	⊢ ⊨ x =⋎m y ⇒ ◇ (x =⋎m y)
+⦏≠∈⋎m_◇_thm⦎ = 	⊢ ⊨ x ≠⋎m y ⇒ ◇ (x ≠⋎m y)
+⦏∈⋎m_◇_thm⦎ =		⊢ ⊨ x ∈⋎m y ⇒ ◇ (x ∈⋎m y)
+∉⋎m_◇_thm =		⊢ ⊨ x ∉⋎m y ⇒ ◇ (x ∉⋎m y)
 =TEX
 
 \ignore{
@@ -826,25 +825,25 @@ val ≠⋎m_def = get_spec ⌜$≠⋎m⌝;
 val ∈⋎m_def = get_spec ⌜$∈⋎m⌝;
 val ∉⋎m_def = get_spec ⌜$∉⋎m⌝;
 
-set_goal([], ⌜Ξ⋎m x =⋎m y ⇒ ⦈ (x =⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, eq⋎m_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
-val eq∈⋎m_⦈_thm = save_pop_thm "eq⋎m_⦈_thm";
+set_goal([], ⌜⊨⋎m x =⋎m y ⇒ ◇ (x =⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, eq⋎m_def] THEN REPEAT strip_tac THEN asm_rewrite_tac[]);
+val eq∈⋎m_◇_thm = save_pop_thm "eq⋎m_◇_thm";
 
-set_goal([], ⌜Ξ⋎m x ≠⋎m y ⇒ ⦈ (x ≠⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, ≠⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
-val ≠⋎m_⦈_thm = save_pop_thm "≠⋎m_⦈_thm";
+set_goal([], ⌜⊨⋎m x ≠⋎m y ⇒ ◇ (x ≠⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, ≠⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
+val ≠⋎m_◇_thm = save_pop_thm "≠⋎m_◇_thm";
 
-set_goal([], ⌜Ξ⋎m x ∈⋎m y ⇒ ⦈ (x ∈⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, ∈⋎m_def, sets_ext_clauses] THEN REPEAT strip_tac);
-val ∈⋎m_⦈_thm = save_pop_thm "∈⋎m_⦈_thm";
+set_goal([], ⌜⊨⋎m x ∈⋎m y ⇒ ◇ (x ∈⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, ∈⋎m_def, sets_ext_clauses] THEN REPEAT strip_tac);
+val ∈⋎m_◇_thm = save_pop_thm "∈⋎m_◇_thm";
 
-set_goal([], ⌜Ξ⋎m x ∉⋎m y ⇒ ⦈ (x ∉⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, ∉⋎m_def, ∈⋎m_def] THEN REPEAT strip_tac);
-val ∉⋎m_⦈_thm = save_pop_thm "∉⋎m_⦈_thm";
+set_goal([], ⌜⊨⋎m x ∉⋎m y ⇒ ◇ (x ∉⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, ∉⋎m_def, ∈⋎m_def] THEN REPEAT strip_tac);
+val ∉⋎m_◇_thm = save_pop_thm "∉⋎m_◇_thm";
 
-set_goal([], ⌜Ξ⋎m ⦇ (x =⋎m y) ⇒ ⦈ (x =⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
-val ⦇⦈∉⋎m_⦈_thm = save_pop_thm "⦇⦈∉⋎m_⦈_thm";
+set_goal([], ⌜⊨⋎m⬜ (x =⋎m y) ⇒ ◇ (x =⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
+val ⬜◇∉⋎m_◇_thm = save_pop_thm "⬜◇∉⋎m_◇_thm";
 =TEX
 }%ignore
 
@@ -853,47 +852,47 @@ This is needed by Linnebo to prove his \emph{Theorem 1}, instead of which we wil
 However, by way of checking that our definitions are consistent with Linnebo's system the following results, corresponding to steps in Linnebo's proof, have been proven.
 
 =GFT
-⦏⦇⦈eq⋎m_thm⦎ =
-	⊢ Ξ ⦇ (x =⋎m y) ⇒ ⦈ (x =⋎m y)
+⦏⬜◇eq⋎m_thm⦎ =
+	⊢ ⊨⬜ (x =⋎m y) ⇒ ◇ (x =⋎m y)
 
-⦏⦇⦈∈⋎m_thm⦎ =
-	⊢ Ξ ⦇ (x ∈ y) ⇒ ⦈ (x ∈ y)
+⦏⬜◇∈⋎m_thm⦎ =
+	⊢ ⊨⬜ (x ∈ y) ⇒ ◇ (x ∈ y)
 
-⦏⦇⦈¬_thm⦎ = Ξ ⦇ φ ⇒ ⦈ φ
-	⊢ Ξ ⦇ (¬ φ) ⇒ ⦈ (¬ φ)
+⦏⬜◇¬_thm⦎ = ⊨⬜ φ ⇒ ◇ φ
+	⊢ ⊨⬜ (¬ φ) ⇒ ◇ (¬ φ)
 
-⦏⦇⦈∧_thm⦎ = Ξ ⦇ φ ⇒ ⦈ φ, Ξ ⦇ ψ ⇒ ⦈ ψ
-	⊢ Ξ ⦇ (φ ∧ ψ) ⇒ ⦈ (φ ∧ ψ)
+⦏⬜◇∧_thm⦎ = ⊨⬜ φ ⇒ ◇ φ, ⊨⬜ ψ ⇒ ◇ ψ
+	⊢ ⊨⬜ (φ ∧ ψ) ⇒ ◇ (φ ∧ ψ)
 
-⦏⦇⦈⦇∃⋎p_thm⦎ = ∀ xx⦁ Ξ ⦇ (ψ xx) ⇒ ⦈ (ψ xx)
-	⊢ Ξ ⦇ (∃ xx⦁ ψ xx) ⇒ ⦈ (⦇ (∃ xx⦁ ψ xx))
+⦏⬜◇⬜∃⋎p_thm⦎ = ∀ xx⦁ ⊨⬜ (ψ xx) ⇒ ◇ (ψ xx)
+	⊢ ⊨⬜ (∃ xx⦁ ψ xx) ⇒ ◇ (⬜ (∃ xx⦁ ψ xx))
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜Ξ⋎m ⦇ (x =⋎m y) ⇒ ⦈ (x =⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
-val ⦇⦈eq⋎m_thm = save_pop_thm "⦇⦈eq⋎m_thm";
+set_goal([], ⌜⊨⋎m⬜ (x =⋎m y) ⇒ ◇ (x =⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, eq⋎m_def] THEN REPEAT strip_tac);
+val ⬜◇eq⋎m_thm = save_pop_thm "⬜◇eq⋎m_thm";
 
-set_goal([], ⌜Ξ⋎m ⦇ (x ∈⋎m y) ⇒ ⦈ (x ∈⋎m y)⌝);
-a (rewrite_tac[Ξ⋎m_def, ∈⋎m_def] THEN REPEAT strip_tac);
-val ⦇⦈∈⋎m_thm = save_pop_thm "⦇⦈∈⋎m_thm";
+set_goal([], ⌜⊨⋎m⬜ (x ∈⋎m y) ⇒ ◇ (x ∈⋎m y)⌝);
+a (rewrite_tac[⊨⋎m_def, ∈⋎m_def] THEN REPEAT strip_tac);
+val ⬜◇∈⋎m_thm = save_pop_thm "⬜◇∈⋎m_thm";
 
-set_goal([⌜Ξ⋎m ⦇ φ ⇒ ⦈ φ⌝], ⌜Ξ⋎m ⦇ (¬ φ) ⇒ ⦈ (¬ φ)⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac[Ξ⋎m_def] THEN REPEAT strip_tac);
+set_goal([⌜⊨⋎m⬜ φ ⇒ ◇ φ⌝], ⌜⊨⋎m⬜ (¬ φ) ⇒ ◇ (¬ φ)⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac[⊨⋎m_def] THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (spec_nth_asm_tac 6 ⌜s2'⌝);
 (* *** Goal "2" *** *)
 a (asm_fc_tac[]);
-val ⦇⦈¬_thm = save_pop_thm "⦇⦈¬_thm";
+val ⬜◇¬_thm = save_pop_thm "⬜◇¬_thm";
 
-set_goal([⌜Ξ⋎m ⦇ φ ⇒ ⦈ φ⌝, ⌜Ξ⋎m ⦇ ψ ⇒ ⦈ ψ⌝], ⌜Ξ⋎m ⦇ (φ ∧ ψ) ⇒ ⦈ (φ ∧ ψ)⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[Ξ⋎m_def] THEN REPEAT strip_tac
+set_goal([⌜⊨⋎m⬜ φ ⇒ ◇ φ⌝, ⌜⊨⋎m⬜ ψ ⇒ ◇ ψ⌝], ⌜⊨⋎m⬜ (φ ∧ ψ) ⇒ ◇ (φ ∧ ψ)⌝);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[⊨⋎m_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
-val ⦇⦈∧_thm = save_pop_thm "⦇⦈∧_thm";
+val ⬜◇∧_thm = save_pop_thm "⬜◇∧_thm";
 
-set_goal([⌜∀xx:S PL⦁ Ξ⋎m ⦇ (ψ xx) ⇒ ⦈ (ψ xx)⌝], ⌜Ξ⋎m ⦇(∃⋎p xx⦁ (ψ xx)) ⇒ ⦈(⦇∃⋎p xx⦁ (ψ xx))⌝);
-a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def] THEN REPEAT strip_tac);
+set_goal([⌜∀xx:S PL⦁ ⊨⋎m⬜ (ψ xx) ⇒ ◇ (ψ xx)⌝], ⌜⊨⋎m⬜(∃⋎p xx⦁ (ψ xx)) ⇒ ◇(⬜∃⋎p xx⦁ (ψ xx))⌝);
+a (REPEAT (POP_ASM_T ante_tac) THEN rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def] THEN REPEAT strip_tac);
 a (spec_nth_asm_tac 7 ⌜xx⌝);
 (* *** Goal "1" *** *)
 a (asm_fc_tac[]);
@@ -902,7 +901,7 @@ a (all_asm_fc_tac[Stages_fc_thm]);
 a (∃_tac ⌜z'⌝ THEN asm_rewrite_tac[]);
 a (∃_tac ⌜xx⌝);
 a (lemma_tac ⌜ThisStage ⊆ z'⌝ THEN PC_T1 "hol1" asm_prove_tac[]);
-val ⦇⦈⦇∃⋎p_thm = save_pop_thm "⦇⦈⦇∃⋎p_thm";
+val ⬜◇⬜∃⋎p_thm = save_pop_thm "⬜◇⬜∃⋎p_thm";
 =TEX
 }%ignore
 
@@ -912,7 +911,7 @@ Since this means that they quantify over all the sets in all the stages this can
 The following theorem comes close to that result:
 
 =GFT
-⦏⦇∃⋎p_lemma1⦎ = ⊢ ∀ φ⦁ (Ξ ⦇ (∃ x⦁ φ x))
+⦏⬜∃⋎p_lemma1⦎ = ⊢ ∀ φ⦁ (⊨⬜ (∃ x⦁ φ x))
 		⇔ (∃ s x⦁ s ∈ Stages ∧ ThisStage ⊆ s ∧ x ∈ s ∧ φ x s)
 =TEX
 
@@ -927,23 +926,23 @@ To get a more exact semantic correspondent to Linnebo's \emph{Theorem 1} it woul
 
 \ignore{
 =SML
-set_goal([], ⌜∀φ⦁ (Ξ⋎m ⦇ (∃⋎s x⦁ φ x)) ⇔ ∃(s:S SET) (x:S)⦁ s ∈ Stages ∧ ThisStage ⊆ s ∧ x ∈ s ∧ φ x s⌝);
-a (rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def] THEN REPEAT strip_tac
+set_goal([], ⌜∀φ⦁ (⊨⋎m⬜ (∃⋎s x⦁ φ x)) ⇔ ∃(s:S SET) (x:S)⦁ s ∈ Stages ∧ ThisStage ⊆ s ∧ x ∈ s ∧ φ x s⌝);
+a (rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 (* *** Goal "1" *** *)
 a (∃_tac ⌜s2⌝ THEN ∃_tac ⌜x⌝ THEN REPEAT strip_tac);
 (* *** Goal "2" *** *)
 a (∃_tac ⌜s⌝ THEN REPEAT strip_tac);
 a (∃_tac ⌜x⌝ THEN REPEAT strip_tac);
-val ⦇∃⋎p_lemma1 = save_pop_thm "⦇∃⋎p_lemma1";
+val ⬜∃⋎p_lemma1 = save_pop_thm "⬜∃⋎p_lemma1";
 
 =IGN
-set_goal([], ⌜∀φ⦁ (Ξ⋎m ⦇ (∃⋎s x⦁ φ x))⌝);
-a (rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def] THEN REPEAT strip_tac
+set_goal([], ⌜∀φ⦁ (⊨⋎m⬜ (∃⋎s x⦁ φ x))⌝);
+a (rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 
-set_goal([], ⌜∀φ⦁ (Ξ⋎m ⦇ (∃⋎s x⦁ φ x)) ⇔ ∃s x⦁ s ∈ Stages ∧ x ∈ s ∧ φ x s⌝);
-a (rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def] THEN REPEAT strip_tac
+set_goal([], ⌜∀φ⦁ (⊨⋎m⬜ (∃⋎s x⦁ φ x)) ⇔ ∃s x⦁ s ∈ Stages ∧ x ∈ s ∧ φ x s⌝);
+a (rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 (* *** Goal "1" *** *)
 a (∃_tac ⌜s2⌝ THEN ∃_tac ⌜x⌝ THEN REPEAT strip_tac);
@@ -953,18 +952,18 @@ a (all_fc_tac [set_reachability_thm]);
 a (∃_tac ⌜s3⌝ THEN REPEAT strip_tac);
 a (all_fc_tac []);
 a (∃_tac ⌜x⌝ THEN REPEAT strip_tac);
-val ⦇∃⋎p_lemma1 = save_pop_thm "⦇∃⋎p_lemma1";
+val ⬜∃⋎p_lemma1 = save_pop_thm "⬜∃⋎p_lemma1";
 
-set_goal([], ⌜∀φ⦁ (Ξ⋎m ⦇ (∃⋎p x⦁ φ x)) ⇔ ∃(s:S SET) (x:S)⦁ s ∈ Stages ∧ ThisStage ⊆ s ∧ φ x s⌝);
-a (rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def] THEN REPEAT strip_tac
+set_goal([], ⌜∀φ⦁ (⊨⋎m⬜ (∃⋎p x⦁ φ x)) ⇔ ∃(s:S SET) (x:S)⦁ s ∈ Stages ∧ ThisStage ⊆ s ∧ φ x s⌝);
+a (rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 a (∃_tac ⌜s2⌝ THEN ∃_tac ⌜x⌝ THEN REPEAT strip_tac);
 a (∃_tac ⌜s⌝ THEN REPEAT strip_tac);
 a (∃_tac ⌜x⌝ THEN REPEAT strip_tac);
-val ⦇∃⋎p_lemma1 = save_pop_thm "⦇∃⋎p_lemma1";
+val ⬜∃⋎p_lemma1 = save_pop_thm "⬜∃⋎p_lemma1";
 
-set_goal([], ⌜∀φ⦁ (⦇ (∃⋎p x⦁ φ x)) = λs⦁ ∃x⦁ x ∈ ⋃ Stages ∧ φ x s⌝);
-a (rewrite_tac[Ξ⋎m_def, ⦈⋎m_def, ⦇⋎m_def, ext_thm] THEN REPEAT strip_tac
+set_goal([], ⌜∀φ⦁ (⬜ (∃⋎p x⦁ φ x)) = λs⦁ ∃x⦁ x ∈ ⋃ Stages ∧ φ x s⌝);
+a (rewrite_tac[⊨⋎m_def, ◇⋎m_def,⬜⋎m_def, ext_thm] THEN REPEAT strip_tac
 	THEN asm_fc_tac[]);
 
 =TEX

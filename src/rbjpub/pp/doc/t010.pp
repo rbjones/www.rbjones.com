@@ -1463,7 +1463,7 @@ will prove the goal:
 {p x, ∀x⦁p x ⇒ q x, ∀x⦁q x ⇒ r x} r x.
 =TEX
 
-The variants with $⇔$ in the name use $fc_⇔_canon$ instead of $fc_canon$ for processing the rules so that a concluding equivalence is not broken into implications and the results of forward chaining can be used for rewriting (however, this still won't work unless there are outer quantifiers to prevent the equivalence from being broken up when stripped into the assumptions).
+The variants with $⇔$ in the name use $fc\_⇔\_canon$ instead of $fc\_canon$ for processing the rules so that a concluding equivalence is not broken into implications and the results of forward chaining can be used for rewriting (however, this still won't work unless there are outer quantifiers to prevent the equivalence from being broken up when stripped into the assumptions).
 
 All of these tactics add the results into the assumptions using $strip_asms_tac1$ and therefore fail if no new assumptions are added (unless the goal is discharged), except the ones whose name includes $rewrite$ which attempt the rewrite the conclusion of the goal with the results instead of stripping them into the assumptions.
 

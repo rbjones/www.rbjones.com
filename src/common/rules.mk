@@ -305,6 +305,7 @@ THISINSTALL= installdata installbins installlibs installperllibs installsmllibs 
 ppthds: $(PPTHD) $(PPPPTHD)
 
 buildxmlt: $(SUBBUILDXMLT) $(XMLT) $(ENTFILES)
+	@echo "buildxmlt complete"
 
 buildother: $(BUILDFIRST) $(SUBBUILDOTHER) $(BINFILES) $(DATAFILES) $(LIBFILES) $(PERLLIBFILES) \
 	$(SMLLIBFILES) $(WEBFILES) $(BUILDEXTRAS)
