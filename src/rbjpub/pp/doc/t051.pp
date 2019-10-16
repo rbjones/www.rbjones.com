@@ -461,9 +461,9 @@ The axiom is intended to state:
 \item that the universe is the set of 'a ordinals less than some regular 'a ordinal
 \end{enumerate}
 
-Thus $γ$ in the axiom is the name used for this supposedly inaccessible 'a ordinal, but note that the least such $γ$ will not be inaccessible, but will be $ω$, the first limit 'a ordinal.
-Adding the requirement that $γ$ be uncountable does not strengthen the axiom which still entails that every 'a ordinal is less than some inaccessible 'a ordinal.
-What we assert of $γ$ is first that it is a strong limit 'a ordinal and then that it (and the universe as a whole) is regular.
+Thus γ in the axiom is the name used for this supposedly inaccessible 'a ordinal, but note that the least such γ will not be inaccessible, but will be ω, the first limit 'a ordinal.
+Adding the requirement that γ be uncountable does not strengthen the axiom which still entails that every 'a ordinal is less than some inaccessible 'a ordinal.
+What we assert of γ is first that it is a strong limit 'a ordinal and then that it (and the universe as a whole) is regular.
 These concepts are given formal definitions later, but the axiom is presented in concise form rather than through the definitions of the concepts.
 
 It will be a while before any use is made of this axiom at all.
@@ -978,7 +978,7 @@ val lt⋎o_zero⋎o_thm = save_thm ("lt⋎o_zero⋎o_thm",
 In order to define operators over the 'a ordinals (without undesirable complications) the 'a ordinals must be closed under the operations.
 If we want to use such operations in formulating our strong axiom of infinity, then we would need to assert sufficiently strong closure conditions in advance of our axiom of infinity.
 
-The basis for the closure principle one which definitions of functions like 'a ordinal addition is based is a related to the axiom of replacement in set theory.
+The basis for the closure principle on which definitions of functions like 'a ordinal addition are based is a related to the axiom of replacement in set theory.
 In talking of 'a ordinals the corresponding notion is that or regularity, which we can define without any kind of axiom of infinity as follows.
 
 First the notion of cofinality.

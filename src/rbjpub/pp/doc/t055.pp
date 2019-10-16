@@ -1,4 +1,89 @@
 =TEX
+% $Id: t055a.tex $
+
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{rbj}
+
+\usepackage{fontspec}
+\setmainfont{ProofPowerSerif.ttf}
+
+\ftlinepenalty=9999
+\usepackage{A4}
+
+% the following two modal operators come from the amsfonts package
+%\def\PrKI{\Diamond}	%Modify printing for \250
+%\def\PrKJ{\Box}		%Modify printing for \251
+
+%\def\PrIO{\notin}
+
+%\def\PrJA{\|-}		%Modify printing for  (syntactic consequence)
+%\def\PrJI{\models}	%Modify printing for  (semantic entailment)
+%\def\PrJO{\prec}	%Modify printing for \236 (semantic entailment)
+
+\tabstop=0.4in
+\newcommand{\ignore}[1]{}
+
+\def\thyref#1{Appendix \ref{#1}}
+
+%\def\ExpName{\mbox{{\sf exp}}}
+%\def\Exp#1{\ExpName(#1)}
+
+\title{Unicode Characters in ProofPower through Lualatex}
+\makeindex
+\usepackage[unicode]{hyperref}
+\hypersetup{pdfauthor={Roger Bishop Jones}, pdffitwindow=false, pdfkeywords=RogerBishopJones}
+\hypersetup{colorlinks=true, urlcolor=red, citecolor=blue, filecolor=blue, linkcolor=blue}
+\author{Roger Bishop Jones}
+\date{\ }
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\begin{abstract}
+This document serves to establish what characters render like in utf8 ProofPower documents prepared using lualatex.
+\end{abstract}
+\vfill
+
+\begin{centering}
+{\footnotesize
+
+Created 2011/02/24
+
+\input{t046i.tex}
+
+\href{http://www.rbjones.com/rbjpub/pp/doc/t055.pdf}
+{http://www.rbjones.com/rbjpub/pp/doc/t055.pdf}
+
+\copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
+
+}%footnotesize
+\end{centering}
+
+\thispagestyle{empty}
+\end{titlepage}
+
+\newpage
+\addtocounter{page}{1}
+{\parskip=0pt\tableofcontents}
+
+\section{Prelude}
+
+
+\section{Changes}
+
+\subsection{Recent Changes}
+
+
+\subsection{Changes Under Consideration}
+
+
+\subsection{Issues}
+
+See also Section \ref{POSTSCRIPT}.
+
+\section{Introduction}
+
 \ignore{
 =VDUMP t046i.tex
 Last Change $ $Date: 2011/05/16 21:40:17 $ $
@@ -587,5 +672,24 @@ Mathematical Markup Language (MathML) W3C Recommendation. 3.0 (2nd ed.). W3C. 10
 Images of glyphs in section 6.3.3 of the Mathematical Markup Language (MathML) W3C Recommendation. 2.0 (2nd ed.). W3C. 21 February 2001.
 
 =TEX
+% $Id: t055z.tex $
+
+\section{Postscript}\label{POSTSCRIPT}
 
 
+\pagebreak
+
+%\section*{Bibliography}\label{BIBLIOGRAPHY}
+%\addcontentsline{toc}{section}{Bibliography}
+
+%{\def\section*#1{\ignore{#1}}
+%\raggedright
+%\bibliographystyle{rbjfmu}
+%\bibliography{rbj,fmu}
+%} %\raggedright
+
+{\twocolumn[\section*{Index}\label{INDEX}]
+\addcontentsline{toc}{section}{Index}
+{\small\printindex}}
+
+\end{document}
