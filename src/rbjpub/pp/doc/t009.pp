@@ -1,5 +1,5 @@
 =IGN
-$Id: t009.doc,v 1.20 2014/08/17 16:07:53 rbj Exp $
+$Id: t009.doc $
 =TEX
 \documentclass[12pt]{article}
 %\usepackage{ProofPower}
@@ -23,7 +23,7 @@ $Id: t009.doc,v 1.20 2014/08/17 16:07:53 rbj Exp $
 \newcommand{\ignore}[1]{}
 
 \title{Well-orderings and Well-foundedness}
-\date{$ $Date: 2014/08/17 16:07:53 $ $}
+\date{$ $Date: 2019/12/07$ $}
 \author{R.D. Arthan and R.B. Jones}
 \vfill
 \makeindex
@@ -45,12 +45,10 @@ The second is material on well-foundedness, mainly consisting in the proof of th
 
 Created 2004/10/03
 
-Last Change $ $Date: 2014/08/17 16:07:53 $ $
+Last Change 2019/12/07
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t009.pdf}
-
-$ $Id: t009.doc,v 1.20 2014/08/17 16:07:53 rbj Exp $ $
 
 \copyright\ Rob Arthan and Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -322,18 +320,18 @@ We will almost invariably use this formulation in the sequel.
 Well-foundedness can be rendered similarly, in this case expression of the minimality condition is simplified by the fact that well-founded relations are by definition irreflexive.
 
 =GFT
-min_cond_def_thm = ⊢ ∀X $<<⦁ MinCond(X, $<<) ⇔
+⦏min_cond_def_thm⦎ = ⊢ ∀X $<<⦁ MinCond(X, $<<) ⇔
 	(∀ A⦁	A ⊆ X ∧ ¬ A = {}
 		⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ ¬ y << x)))
 
-well_founded_thm = ⊢ ∀X $<<⦁ WellFounded(X, $<<) ⇔
+⦏well_founded_thm⦎ = ⊢ ∀X $<<⦁ WellFounded(X, $<<) ⇔
 	(∀ A⦁	A ⊆ X ∧ ¬ A = {}
 		⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ⇒ ¬ y << x)))
 =TEX
 
 \ignore{
 =SML
-val ⦏min_cond_def_thm⦎ = (
+val min_cond_def_thm = (
 set_goal([], ⌜∀X $<<⦁
 		MinCond(X, $<<)
 	⇔	(∀ A⦁	A ⊆ X ∧ ¬ A = {}
@@ -367,7 +365,7 @@ save_pop_thm "min_cond_def_thm"
 =TEX
 
 =SML
-val ⦏well_founded_thm⦎ = (
+val well_founded_thm = (
 set_goal([], ⌜∀X $<<⦁
 		WellFounded(X, $<<)
 	⇔	(∀ A⦁	A ⊆ X ∧ ¬ A = {}
@@ -395,13 +393,13 @@ save_pop_thm "well_founded_thm"
 The following is intended for use in conjunction with {\it min\_cond\_thm}.
 
 =GFT
-well_ordering_def_thm = ⊢ ∀X $<<⦁ WellOrdering(X, $<<)
+⦏well_ordering_def_thm⦎ = ⊢ ∀X $<<⦁ WellOrdering(X, $<<)
 	⇔ LinearOrder(X, $<<) ∧ MinCond(X, $<<)
 =TEX
 
 \ignore{
 =SML
-val ⦏well_ordering_def_thm⦎ = (
+val well_ordering_def_thm = (
 set_goal([], ⌜∀X $<<⦁
 		WellOrdering(X, $<<)
 	⇔	LinearOrder(X, $<<) ∧ MinCond(X, $<<)⌝);
@@ -412,70 +410,13 @@ save_pop_thm "well_ordering_def_thm"
 =TEX
 
 =SML
-val ⦏def_thms⦎ = [
+val def_thms = [
 	refl_def, partial_order_def, linear_order_def,
 	weak_min_cond_def, min_cond_def_thm,
 	well_ordering_def_thm, well_founded_thm]
 	@ existing_defs;
 =TEX
 }%
-
-\subsection{Order Morphisms}
-
-An order morphism is an order preserving map between partial orders.
-The existence of such morphisms determines a partial pre-order over partial orders (the equivalence classes being order-types), and a pre-well-order over well-orderings.
-
-=SML
-declare_infix(210, "<<<");
-declare_infix(210, "≤⋎o⋎t");
-=TEX
-
-ⓈHOLCONST
-│ ⦏OrderMorphism⦎ : ('a SET × ('a → 'a → BOOL))
-│		→ ('b SET × ('b → 'b → BOOL))
-│		→ ('a → 'b)
-│		→ BOOL
-├──────
-│ ∀ m (X, $<<) (Y, $<<<)⦁
-│	OrderMorphism (X, $<<) (Y, $<<<) m
-│ ⇔	∀x1 x2⦁ x1 ∈ X ∧ x2 ∈ X ⇒ m x1 ∈ Y ∧ m x2 ∈ Y
-│		∧ (x1 << x2 ⇔ m x1 <<< m x2)
-■
-
-When considering the collection of orderings of a single domain the followng notion of morphism might be used.
-
-ⓈHOLCONST
-│ $⦏OrdMorph⦎ : 'a SET
-│		→ ('a → 'a → BOOL)
-│		→ ('a → 'a → BOOL)
-│		→ BOOL
-├──────
-│ ∀ X $<< $<<<⦁
-│	OrdMorph X $<< $<<<
-│ =	∃m⦁ OrderMorphism (X, $<<) (X, $<<<) m
-■
-
-The existence of order morphisms induces the following relation over order types.
-
-ⓈHOLCONST
-│ $⦏≤⋎o⋎t⦎ : ('a SET × ('a → 'a → BOOL))
-│		→ ('b SET × ('b → 'b → BOOL))
-│		→ BOOL
-├──────
-│ ∀ (X, $<<) (Y, $<<<)⦁
-│	(X, $<<) ≤⋎o⋎t (Y, $<<<)
-│ ⇔	∃m⦁ OrderMorphism (X, $<<) (Y, $<<<) m
-■
-
-My main reason for introducing these is that I want to be able to use least well-orderings.
-Ideally this would be supported by a theorem to the effect that the above is a well-founded ordering of order types, but I can't just now see how to prove that, and may instead settle for showing that the well-orderings of a set are well-founded.
-
-\ignore{
-=SML
-val ≤⋎o⋎t_def = get_spec ⌜$≤⋎o⋎t⌝;
-=TEX
-}%ignore
-
 
 \section{WELL-ORDERING}\label{WELL-ORDERING}
 
@@ -487,21 +428,38 @@ relation is inclusion). We just need to ``interface'' with that theorem
 by looking at the chains contained in an arbitrary relation.
 
 =GFT
-zorn_thm2 = ⊢ ∀X $<<⦁
+⦏zorn_thm2⦎ = ⊢ ∀X $<<⦁
 		Trans(X, $<<)
 	∧	Antisym(X, $<<)
 	∧	(∀C⦁	C ⊆ X ∧ Trich(C, $<<)
 		⇒	∃x⦁x ∈ X ∧ UpperBound(C, $<<, x))
 	⇒	∃x⦁	x ∈ X ∧ ∀y⦁ y ∈ X ∧ ¬y = x ⇒ ¬x << y
 =TEX
-
+=GFT
+⦏chain_singleton_extension_thm⦎ = ⊢ ∀X $<< C x⦁
+		Trans(X, $<<)
+	∧	C ⊆ X
+	∧	Trich(C, $<<)
+	∧	x ∈ X
+	∧	(∀y⦁y ∈ C ⇒ y << x)
+	⇒	Trich(C ∪ {x}, $<<)
+=TEX
+=GFT
+⦏chain_singleton_extension_thm⦎ = ⊢ ∀X $<< C x⦁
+		Trans(X, $<<)
+	∧	C ⊆ X
+	∧	Trich(C, $<<)
+	∧	x ∈ X
+	∧	(∀y⦁y ∈ C ⇒ y << x)
+	⇒	Trich(C ∪ {x}, $<<)
+=TEX
 \ignore{
 =SML
 val _ = set_merge_pcs["'sets_alg", "predicates", "'savedthm_cs_∃_proof"];
 =TEX
 
 =SML
-val ⦏chain_extension_thm⦎ = (
+val chain_extension_thm = (
 set_goal([], ⌜
 	∀X $<< C D⦁
 		Trans(X, $<<)
@@ -519,7 +477,7 @@ save_pop_thm"chain_extension_thm"
 =TEX
 
 =SML
-val ⦏chain_singleton_thm⦎ = (
+val chain_singleton_thm = (
 set_goal([], ⌜
 	∀$<< x⦁ Trich({x}, $<<)
 ⌝);
@@ -530,7 +488,7 @@ save_pop_thm"chain_singleton_thm"
 =TEX
 
 =SML
-val ⦏chain_singleton_extension_thm⦎ = (
+val chain_singleton_extension_thm = (
 set_goal([], ⌜
 	∀X $<< C x⦁
 		Trans(X, $<<)
@@ -550,7 +508,7 @@ save_pop_thm"chain_singleton_extension_thm"
 =TEX
 
 =SML
-val ⦏zorn_thm2⦎ = (
+val zorn_thm2 = (
 set_goal([], ⌜
 	∀X $<<⦁
 		Trans(X, $<<)
@@ -641,6 +599,15 @@ subrel_refl_thm =
 
 \ignore{
 =SML
+val ⦏subrel_refl_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Refl(X, $<<) ⇒ Refl(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN PC_T "hol1" contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_refl_thm"
+);
+
 val ⦏subrel_irrefl_thm⦎ = (
 set_goal([], ⌜∀X Y $<<⦁
 	Y ⊆ X ∧ Irrefl(X, $<<) ⇒ Irrefl(Y, $<<)
@@ -650,17 +617,6 @@ a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
 save_pop_thm "subrel_irrefl_thm"
 );
 
-val ⦏subrel_refl_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Refl(X, $<<) ⇒ Refl(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN PC_T "hol1" contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_refl_thm"
-);
-=TEX
-
-=SML
 val ⦏subrel_antisym_thm⦎ = (
 set_goal([], ⌜∀X Y $<<⦁
 	Y ⊆ X ∧ Antisym(X, $<<) ⇒ Antisym(Y, $<<)
@@ -752,7 +708,7 @@ that extending a well-ordering by adding an extra element above all the existing
 elements gives a well-ordering.
 
 =GFT
-well_ordering_extension_lemma = ⊢ ∀A x y z $<<<⦁
+⦏well_ordering_extension_lemma⦎ = ⊢ ∀A x y z $<<<⦁
 	WellOrdering(A, $<<<)
 ∧	¬x ∈ A
 ⇒	WellOrdering(
@@ -762,7 +718,7 @@ well_ordering_extension_lemma = ⊢ ∀A x y z $<<<⦁
 
 \ignore{
 =SML
-val ⦏well_ordering_extension_lemma⦎ = (
+val ⦏well_ordering_extension_lemma = (
 set_goal([], ⌜∀A x y z $<<<⦁
 	WellOrdering(A, $<<<)
 ∧	¬x ∈ A
@@ -876,7 +832,7 @@ the whole set. Most of the work for this has been done in the previous theorem a
 single element extensions of well-orderings.
 
 =GFT
-well_ordering_thm = ⊢ ∀X :'a SET⦁ ∃ $<<⦁ WellOrdering(X, $<<)
+⦏well_ordering_thm⦎ = ⊢ ∀X :'a SET⦁ ∃ $<<⦁ WellOrdering(X, $<<)
 =TEX
 
 \ignore{
@@ -1061,73 +1017,6 @@ save_pop_thm "well_ordering_thm"
 );
 =TEX
 }%ignore
-
-
-
-
-\subsection{Lemmas About Well-Orderings}
-
-
-
-
-
-
-
-\subsection{Least Well-Orderings}
-
-There will be several distinct well-orderings of any given set.
-The order morphisms between these well-orderings well-order the order types of the well-orderings, and there will therefore be least well-orderings under this ordering.
-These least well-orderings correspond to enumerations by the initial ordinal corresponding to the cardinality of the set.
-
-If we directly formalised the above sketch then we would be involved in developing parts of the theory of ordinals and cardinals to obtain the result that each set has a least well-ordering.
-However, once the basic idea is in place it can be re-engineered with less equipment.
-
-The elements of any set, together with an arbitrary well-ordering of the set, will serve as surrogates for the ordinals sufficient for our purposes.
-If this arbitrary well-ordering is not the least, then all shorter well-orderings will be order-isomorpic to an initial segment of the given well-ordering, each of which may be represented by its strict supremum in the set.
-Such an inital segment of the well-ordering will be isomorphic to a well-ordering of the whole if it has the same cardinality as the whole, i.e. if there is an injection from the whole into the subset.
-The ordering of the whole can be obtained from the ordering of the part through the injection.
-
-If we take the subset of elements of our original well-ordered set which have the same cardinality as the whole, then this subset will have a minimal element under the well-ordering, and the subset determined by that minimal element will yield a minimal well-ordering of the whole.
-
-The purpose of this section is to prove the existence of such a minimal well-ordering of any set.
-
-
-ⓈHOLCONST
-│ ⦏MinimalWellOrdering⦎ : ('a SET × ('a → 'a → BOOL))
-│		→ BOOL
-├──────
-│ ∀ (X, $<<)⦁
-│	MinimalWellOrdering (X, $<<)
-│ ⇔	∀$<<<⦁ WellOrdering (X, $<<<) ⇒ (X, $<<) ≤⋎o⋎t (X, $<<<)
-■
-
-\ignore{
-=IGN
-val MinimalWellOrdering_def = get_spec ⌜MinimalWellOrdering⌝;
-
-push_pc "sets_ext1";
-pop_pc();
-
-set_goal([], ⌜∀X:'a SET⦁ ∃$<<<⦁ MinimalWellOrdering (X, $<<<)⌝);
-a (strip_tac);
-a (strip_asm_tac well_ordering_thm);
-a (spec_nth_asm_tac 1 ⌜X⌝);
-a (lemma_tac ⌜∃s⦁ s = {x | ∃f⦁ OneOne f ∧ FunImage f X = {y | y ∈ X ∧ y << x}  }⌝
-	THEN1 prove_∃_tac);
-a (cases_tac ⌜s = {}⌝);
-(* *** Goal "1" *** *)
-a (∃_tac ⌜$<<⌝);
-a (all_var_elim_asm_tac);
-a (POP_ASM_T ante_tac THEN PC_T1 "sets_ext1" asm_rewrite_tac[MinimalWellOrdering_def, ≤⋎o⋎t_def] THEN REPEAT strip_tac);
-
-a (GET_NTH_ASM_T 2 ante_tac THEN rewrite_tac[sets_clauses]);
-
-
-type_of ⌜$FunImage⌝;
-=TEX
-}%ignore
-
-
 
 \section{WELL-FOUNDEDNESS}\label{WELL-FOUNDEDNESS}
 
@@ -2571,73 +2460,6 @@ a (DROP_NTH_ASM_T 2 ante_tac THEN rewrite_tac[ext_thm] THEN strip_tac
 val tf_rec_thm2 = save_pop_thm "tf_rec_thm2";
 =TEX
 }%ignore
-
-
-\subsection{Minimal Well Orderings}
-
-The term \emph{InitialWellOrdering} is used here for a function which returns the least well-ordering of some set.
-Every set has a least well-ordering, and the order type is that of an initial ordinal, hence the choice of name.
-
-However, this fact has not yet been proven, so the definition is couched in such a way as to avoid making that assumption.
-
-ⓈHOLCONST
-│ ⦏MinWellOrdering⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
-├──────
-│ ∀ X R⦁ MinWellOrdering (X, R) ⇔ WellOrdering (X, R)
-	∧	∀(Y,S:('a → 'a → BOOL))⦁ WellOrdering (Y, S)
-			⇒ (X, R) ≤⋎o⋎t (Y,S)
-■
-
-The following definition is written so that from it one can establish that
-the {\it InitialStrictWellOrdering} of a set is a well-founded well-ordering 
-without having to prove the existence of least or initial well-orderings.
-
-
-ⓈHOLCONST
-│ ⦏InitialStrictWellOrdering⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
-├──────
-│ ∀ X R⦁ InitialStrictWellOrdering (X, R) ⇔
-│		WellOrdering (X, R) ∧ WellFounded (X, R)
-│		∧ ((∃S⦁ MinWellOrdering (X, S)) ⇒ MinWellOrdering (X, R))
-■
-
-
-We now obtain the somewhat fraudulent theorem that every non-empty set has an InitialStrictWellOrdering:
-
-\ignore{
-=SML
-val MinWellOrdering_def = get_spec ⌜MinWellOrdering⌝;
-val InitialStrictWellOrdering_def = get_spec ⌜InitialStrictWellOrdering⌝;
-
-set_goal([], ⌜∀X⦁ ¬ X={} ⇒ ∃R⦁ InitialStrictWellOrdering (X,R)⌝);
-a (REPEAT strip_tac);
-a (rewrite_tac[InitialStrictWellOrdering_def]);
-a (cases_tac ⌜∃ S⦁ MinWellOrdering (X, S)⌝);
-(* *** Goal "1" *** *)
-a (fc_tac [MinWellOrdering_def]);
-=TEX
-}%ignore
-
-
-ⓈHOLCONST
-│ ⦏AnInitialStrictWellOrdering⦎ : 'a SET → ('a → 'a → BOOL)
-├──────
-│ ∀ X⦁ AnInitialStrictWellOrdering X =
-│	εR⦁	InitialStrictWellOrdering (X, R)
-■
-
-We can now define a constant which is an initial strict well-ordering of its type.
-
-=SML
-declare_infix(210, "<⋎i⋎w⋎o");
-=TEX
-
-ⓈHOLCONST
-│ ⦏$<⋎i⋎w⋎o⦎ : ('a → 'a → BOOL)
-├──────
-│ InitialStrictWellOrdering(Universe, $<⋎i⋎w⋎o)
-■
-
 
 
 \section{RELATIONS OVER A TYPE}\label{RELATIONSOVERATYPE}

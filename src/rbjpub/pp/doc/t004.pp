@@ -120,10 +120,12 @@ Set theory is considered here primarily as a candidate universal foundation for 
 Logical truth in its broadest sense I take to be {\it analyticity} which I also closely associate with necessary truth.
 Very briefly my rationale in this is as follows.
 In the first identification I am simply disinclined to follow the novelty of the twentieth century in using the notion of logical truth in as narrow and arbitrary a manner as has become common.
-You may regard this if you like as an terminological eccentricity (which is how I regard modern usage in this matter).
-On the relationship between of analyticity with necessity I have more interesting reasons for rejecting the possibility of necessity {\it de re} (which I take to be any necessity which is not {\it de dicto}, necessity de dicto being analyticity).
+You may regard this if you like as a terminological eccentricity (which is how I regard modern usage in this matter).
+
+On the relationship between analyticity with necessity I have more interesting reasons for rejecting the possibility of necessity {\it de re} (which I take to be any necessity which is not {\it de dicto}, necessity de dicto being analyticity).
 If we were free to take any account of the semantics of a language, including some otherwise correct but substantively incomplete account, as the basis for defining the notion of analyticity then we could of course easily contrive examples of necessity {\it de re}.
-Take for example the content free semantics for a language, which tells us nothing about which sentences are true or false, and relative to the notion of analyticity (or necessity {\it de dicto}) which flows from that account all necessity is {\it de re}.
+Take for example the content free semantics for a language, which tells us nothing about which sentences are true or false.
+Relative to the notion of analyticity (or necessity {\it de dicto}) which flows from that account all necessity is {\it de re}.
 This is of course absurd.
 To make a judgement about kinds of necessity one must of course judge necessity {\it de dicto} against a semantics which is complete, at least in its account of the truth conditions for a language.
 A necessary proposition must however be true {\it under all conditions}.
@@ -162,7 +164,7 @@ Thus, the interest is not so much in sets as they appear in some theory, but on 
 
 Formalistic fallacies (of the kind which concern us here) are a species of sceptical fallacy, so I will begin with a few words about sceptical fallacies.
 Scepticism in radical but consistent forms is a philosophy of doubt, an anti-dogmatic philosophy.
-In practice is it very common for those of sceptical inclinations not to slip into negative dogmatism, of which the most obvious and extreme form is to assert that nothing can be known.
+In practice it is very common for those of sceptical inclinations to slip into negative dogmatism, of which the most obvious and extreme form is to assert that nothing can be known.
 
 Formalism was in Hilbert a symptom of naive overenthusiasm about the expressiveness of formal axiomatic systems.
 He believed that all meaning (at least for mathematics) could be captured axiomatically, and therefore should be.
