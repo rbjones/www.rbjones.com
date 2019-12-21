@@ -10,7 +10,7 @@ This is conceived of as the application of formal techniques to design automatio
 
 \subsection{Provoking Problem}
 
-This document is the result of a though process provoked by a problem in the design of languages for hardware or co-design, i.e. one relevant to the design of a possible successor to languages like \emph{verilog} and \emph{VHDL}.
+This document is the result of a thought process provoked by a problem in the design of languages for hardware or co-design, i.e. one relevant to the design of a possible successor to languages like \emph{verilog} and \emph{VHDL}.
 
 I am not myself interested in undertaking such a design, but am interested in the applicability of formal methods to such a design process.
 
@@ -38,7 +38,6 @@ If the design of a hardware description language were to be undertaken in this w
 
 For this domain, because of my own limited experience in hardware verification, I though of the definition of circuits from components (or subsystems) using something likem a netlist, which one might hope to model as a system of equations.
 This is unlike the programming language situation in which one is not typically allowed to define a procedure by some arbitrary set of equations, and gives rise to a particular problem with consistency (that the system of equations might have no solution).
-
 
 \emph{[HERE]}
 

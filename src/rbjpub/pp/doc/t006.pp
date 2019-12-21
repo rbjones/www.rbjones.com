@@ -90,6 +90,22 @@ open UnifyForwardChain; open RbjTactics1;
  ■─────────────────────────
 }%ignore
 
+\section{Functions}
+
+
+=GFT
+⦏OneOne_o_thm⦎ = ⊢ ∀ f g⦁ OneOne f ∧ OneOne g ⇒ OneOne (f o g)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ f g⦁ OneOne f ∧ OneOne g ⇒ OneOne (f o g)⌝);
+a (rewrite_tac [one_one_def, o_def] THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[]));
+val OneOne_o_thm = save_pop_thm "OneOne_o_thm";
+=TEX
+}%ignore
+
 \section{Combinators}
 
 ⓈHOLCONST

@@ -374,7 +374,7 @@ a(rewrite_tac [well_founded_def, irrefl_def, min_cond_def_thm]
 	THEN REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a(all_asm_ufc_tac[]);
-a(∃_tac⌜x⌝ THEN REPEAT strip_tac THEN all_asm_ufc_tac[]);
+a(∃_tac ⌜x⌝ THEN REPEAT strip_tac THEN all_asm_ufc_tac[]);
 a(cases_tac ⌜¬y = x⌝ THEN1 all_asm_ufc_tac[]);
 a(rename_tac[(⌜x⌝, "a")] THEN lemma_tac⌜y ∈ X⌝ THEN
 	PC_T1 "sets_ext1" asm_prove_tac[]);
@@ -418,7 +418,642 @@ val def_thms = [
 =TEX
 }%
 
+
+\subsection{Lemmas about Subsets of Ordered Sets}\label{Lemmas about Subsets of Ordered Sets}
+
+These lemmas build up to the fact that a subset of a well-ordered set is
+well-ordered (which we use in the proof of the well-ordering principle).
+
+=GFT
+⦏subrel_refl_thm⦎ =
+	⊢ ∀ X Y $<<⦁ Y ⊆ X ∧ Refl (X, $<<) ⇒ Refl (Y, $<<)
+
+⦏subrel_irrefl_thm⦎ =⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+		    Irrefl (X, $<<) ⇒ Irrefl (Y, $<<)
+
+⦏subrel_antisym_thm⦎ = ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+		     Antisym (X, $<<) ⇒ Antisym (Y, $<<)
+
+⦏subrel_trans_thm⦎ = ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+		   Trans (X, $<<) ⇒ Trans (Y, $<<)
+
+⦏subrel_trich_thm⦎ = ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+		   Trich (X, $<<) ⇒ Trich (Y, $<<)
+
+⦏subrel_partial_order_thm⦎ = ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+			   PartialOrder (X, $<<) ⇒ PartialOrder (Y, $<<)
+
+⦏subrel_linear_order_thm⦎ =  ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+			  LinearOrder (X, $<<) ⇒ LinearOrder (Y, $<<)
+
+⦏subrel_min_cond_thm⦎ =  ⊢ ∀ X Y $<<⦁ Y ⊆ X ∧
+		      MinCond (X, $<<) ⇒ MinCond (Y, $<<)
+
+⦏subrel_well_ordering_thm⦎ = ⊢ ∀X Y $<<⦁ Y ⊆ X ∧
+			   WellOrdering(X, $<<) ⇒ WellOrdering(Y, $<<)
+=TEX
+
+\ignore{
+=SML
+val _ = set_merge_pcs["basic_hol", "'sets_ext", "'savedthm_cs_∃_proof"];
+
+val subrel_refl_thm = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Refl(X, $<<) ⇒ Refl(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN PC_T "hol1" contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_refl_thm"
+);
+
+val subrel_irrefl_thm = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Irrefl(X, $<<) ⇒ Irrefl(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_irrefl_thm"
+);
+
+val ⦏subrel_antisym_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Antisym(X, $<<) ⇒ Antisym(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_antisym_thm"
+);
+
+val ⦏subrel_trans_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Trans(X, $<<) ⇒ Trans(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_trans_thm"
+);
+
+val ⦏subrel_trich_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ Trich(X, $<<) ⇒ Trich(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN contr_tac);
+a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
+save_pop_thm "subrel_trich_thm"
+);
+
+val ⦏subrel_partial_order_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ PartialOrder(X, $<<) ⇒ PartialOrder(Y, $<<)
+⌝);
+a(rewrite_tac [partial_order_def] THEN contr_tac
+	THEN all_ufc_tac[subrel_antisym_thm, subrel_trans_thm]);
+save_pop_thm "subrel_partial_order_thm"
+);
+
+val ⦏subrel_linear_order_thm⦎ = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ LinearOrder(X, $<<) ⇒ LinearOrder(Y, $<<)
+⌝);
+a(rewrite_tac [linear_order_def] THEN contr_tac
+	THEN all_ufc_tac[subrel_partial_order_thm, subrel_trich_thm]);
+save_pop_thm "subrel_linear_order_thm"
+);
+
+val subrel_min_cond_thm = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ MinCond(X, $<<) ⇒ MinCond(Y, $<<)
+⌝);
+a(rewrite_tac def_thms THEN contr_tac);
+a(lemma_tac⌜∀x⦁x ∈ A ⇒ x ∈ X⌝
+ THEN1 (REPEAT strip_tac)
+ THEN REPEAT (all_asm_ufc_tac[]));
+save_pop_thm "subrel_min_cond_thm"
+);
+
+val subrel_well_ordering_thm = (
+set_goal([], ⌜∀X Y $<<⦁
+	Y ⊆ X ∧ WellOrdering(X, $<<) ⇒ WellOrdering(Y, $<<)
+⌝);
+a(rewrite_tac [well_ordering_def_thm] THEN contr_tac
+	THEN all_ufc_tac[subrel_linear_order_thm, subrel_min_cond_thm]);
+save_pop_thm "subrel_well_ordering_thm"
+);
+
+val _ = set_merge_pcs["'sets_alg", "basic_hol", "'savedthm_cs_∃_proof"];
+=TEX
+
+}%ignore
+
+\subsection{Subtype Theorems}
+
+An injection into an ordering may be used to define an ordering over the domain of the injection.
+The resulting ordering inherits some properties of the target ordering.
+These are the properties which are preserved by the subset relationship over ordinals (since the resulting ordering is isomorphic with the ordering over range of the injection).
+
+In this section we formalise this.
+The ultimate aim is to show that an injection into a strict well-ordering will define a strict well-ordering over its domain, which is used to prove the existence of initial strict well-orderings.
+
+
+=GFT
+⦏order_injection_properties_thm⦎ = ⊢ ∀P f W $<< V $<<<⦁
+	(∀X Y $<<⦁ X ⊆ Y ∧ P(Y, $<<) ⇒ P(X, $<<))
+	       ∧ OneOne f
+               ∧ W = {w|∃ v⦁ v ∈ V ∧ w = f v}
+               ∧ $<<< = (λ x y⦁ f x << f y)
+	       ∧ P (W, $<<)
+	       ⇒ P (V, $<<<)⌝
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ⌜∀P f L M N $<< $<<<⦁
+	(∀X Y r⦁ X ⊆ Y ∧ P(Y, r) ⇒ P(X, r))
+	∧ OneOne f
+	∧ M = {w | %exists%v%spot% v ∈ S ∧ w = f v}
+	∧ M ⊆ N
+	∧ P(N, $<<<)
+	∧ $<< = (%lambda% x y %spot% (f x) <<< (f y))
+	⇒ P(L, $<<)⌝);
+a (REPEAT strip_tac);
+a (all_asm_fc_tac[]);
+
+=TEX
+}%ignore
+
+
+\subsection{Minimal Elements}
+
+It is useful to have a function which delivers minimal elements of a set under some relation which has such elements.
+The definition below is couched to deliver something even if the relationship only satisfies the weak minimum condition.
+
+ⓈHOLCONST
+│ ⦏Mins⦎ : ('a SET × ('a → 'a → BOOL)) → 'a SET → 'a SET
+├──────
+│ ∀ (X, $<<) Y⦁
+│   Mins(X, $<<) Y =
+    {x | x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y
+       ⇒ x << y ∨ x = y ∨ ¬ y << x}
+■
+
+The following theorems facilitate the use of the function.
+
+=GFT
+mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+	x ∈ Mins (X, $<<) Y ⇔
+	(x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y
+	   ⇒ x << y ∨ x = y ∨ ¬ y << x)
+	
+weak_mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+	WeakMinCond (X, $<<) ⇒
+	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ¬ Mins (X, $<<) Y  = {}
+	
+weak_mins_thm2 = ⊢ ∀ (X, $<<) Y x⦁
+	WeakMinCond (X, $<<) ⇒
+	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ∃x⦁ x ∈ Mins (X, $<<) Y
+	
+full_mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+	MinCond (X, $<<) ⇒
+	(x ∈ Mins (X, $<<) Y ⇔
+	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ y << x ⇒ y = x)
+=TEX
+\ignore{
+=SML
+val mins_def = get_spec ⌜Mins⌝;
+
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	x ∈ Mins (X, $<<) Y ⇔
+	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ x << y ∨ x = y ∨ ¬ y << x⌝); 
+a (rewrite_tac [weak_min_cond_def, mins_def]
+  THEN REPEAT ∀_tac THEN strip_tac);
+val mins_thm = save_pop_thm "mins_thm";
+
+set_goal([], ⌜∀ (X, $<<)⦁ WeakMinCond (X, $<<) ⇒
+	     ∀ Y x⦁ Y ⊆ X ∧ ¬ Y = {} ⇒  ¬ Mins (X, $<<) Y  = {}⌝); 
+a (PC_T1 "sets_ext" rewrite_tac [weak_min_cond_def, mins_def]
+  THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 3 ⌜Y⌝);
+a (asm_fc_tac[]);
+a (asm_fc_tac[]);
+a (∃_tac ⌜x'⌝ THEN REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (spec_nth_asm_tac 5 ⌜y⌝);
+a (asm_rewrite_tac[]);
+val weak_mins_thm = save_pop_thm "weak_mins_thm";
+
+set_goal([], ⌜∀ (X, $<<)⦁ WeakMinCond (X, $<<) ⇒
+	     ∀ Y x⦁ Y ⊆ X ∧ ¬ Y = {} ⇒  ∃x⦁ x ∈ Mins (X, $<<) Y⌝); 
+a (REPEAT_N 7 strip_tac THEN all_fc_tac[weak_mins_thm]);
+a (POP_ASM_T ante_tac
+  THEN PC_T1 "sets_ext" rewrite_tac[]
+  THEN REPEAT strip_tac);
+a (∃_tac ⌜x⌝ THEN REPEAT strip_tac);
+val weak_mins_thm2 = save_pop_thm "weak_mins_thm2";
+
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	MinCond (X, $<<) ⇒
+	(x ∈ Mins (X, $<<) Y ⇔
+	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ∧ y << x ⇒ y = x)⌝); 
+a (rewrite_tac [min_cond_def, mins_def]
+  THEN REPEAT ∀_tac THEN strip_tac);
+a (fc_tac[antisym_def]
+  THEN REPEAT strip_tac
+  THEN all_asm_fc_tac[]
+  THEN_TRY asm_rewrite_tac[]);
+a (spec_nth_asm_tac 4 ⌜y⌝);
+(* *** Goal "1" *** *)
+a (list_spec_nth_asm_tac 8 [⌜x⌝,⌜y⌝]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+val full_mins_thm = save_pop_thm "full_mins_thm";
+=TEX
+}%ignore
+
+ⓈHOLCONST
+│ ⦏Minr⦎ : ('a SET × ('a → 'a → BOOL)) → 'a SET → 'a
+├──────
+│ ∀ (X, $<<) Y⦁
+│   Minr(X, $<<) Y = εx⦁ x ∈ X ∧ x ∈ Y ∧
+│    	    ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ x << y ∨ x = y ∨ ¬ y << x
+■
+
+=GFT
+⦏weak_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	WeakMinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ∧ y << x ∧ ¬ y = x ⇒ x << y
+=TEX
+
+\ignore{
+=SML
+val minr_def = get_spec ⌜Minr⌝ ;
+
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	WeakMinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ∧ y << x ∧ ¬ y = x ⇒ x << y⌝); 
+a (rewrite_tac [weak_min_cond_def, minr_def]
+  THEN REPEAT ∀_tac THEN strip_tac);
+a (spec_nth_asm_tac 4 ⌜Y⌝);
+a (ε_tac ⌜ε x⦁ x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ x << y ∨ x = y ∨ ¬ y << x⌝);
+(* *** Goal "1" *** *)
+a (∃_tac ⌜x'⌝ THEN asm_rewrite_tac[] THEN strip_tac);
+(* *** Goal "1.1" *** *)
+a (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac THEN PC_T1 "sets_ext" rewrite_tac[]);
+a (strip_tac THEN asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a (REPEAT strip_tac);
+a (spec_nth_asm_tac 5 ⌜y⌝ );
+a (POP_ASM_T rewrite_thm_tac);
+(* *** Goal "2" *** *)
+a (REPEAT_N 3 (POP_ASM_T ante_tac));
+a (GET_NTH_ASM_T 3 (rewrite_thm_tac o eq_sym_rule));
+a (REPEAT strip_tac);
+a (lemma_tac ⌜¬ x = y⌝ THEN1 (contr_tac THEN all_var_elim_asm_tac));
+a (lemma_tac ⌜y ∈ X⌝);
+(* *** Goal "2.1" *** *)
+a (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac THEN PC_T1 "sets_ext" rewrite_tac[]);
+a (REPEAT strip_tac THEN asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (spec_nth_asm_tac 6 ⌜y⌝);
+val weak_minr_thm = save_pop_thm "weak_minr_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	MinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	     MinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x⌝); 
+a (rewrite_tac [min_cond_def] THEN REPEAT ∀_tac THEN strip_tac);
+a (all_fc_tac[weak_minr_thm] THEN REPEAT strip_tac);
+a (fc_tac[weak_minr_thm]);
+a (fc_tac[antisym_def]);
+a (lemma_tac ⌜x ∈ X ∧ y ∈ X⌝
+  THEN1 (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac
+  	THEN PC_T1 "sets_ext" rewrite_tac[]
+  	THEN strip_tac
+	THEN asm_fc_tac[]
+	THEN REPEAT strip_tac));
+a (list_spec_nth_asm_tac 3 [⌜x⌝,⌜y⌝]
+  THEN1 asm_rewrite_tac[]);
+a (list_spec_nth_asm_tac 6 [⌜Y⌝,⌜x⌝,⌜y⌝]);
+val minr_thm = save_pop_thm "minr_thm";
+=TEX
+}%ignore
+
+\subsection{Injections into Orderings}
+
+=GFT
+⦏irf_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	Irrefl (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Irrefl (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	Irrefl (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Irrefl (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[irrefl_def, one_one_def]);
+a (contr_tac);
+a (REPEAT (all_asm_fc_tac[]));
+val irf_injection_thm = save_pop_thm "irf_injection_thm";
+=TEX
+}%ignore
+
+
+=GFT
+⦏as_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	Antisym (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Antisym (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	Antisym (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Antisym (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[antisym_def, one_one_def]);
+a (contr_tac);
+a (all_asm_fc_tac[]);
+a (list_spec_nth_asm_tac 10 [⌜f x⌝, ⌜f y⌝]);
+a (all_asm_fc_tac[]);
+val as_injection_thm = save_pop_thm "as_injection_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏tr_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	Trans (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Trans (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	Trans (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Trans (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[trans_def, one_one_def]);
+a (contr_tac);
+a (all_asm_fc_tac[]);
+a (list_spec_nth_asm_tac 12 [⌜f x⌝, ⌜f y⌝, ⌜f z⌝]);
+val tr_injection_thm = save_pop_thm "tr_injection_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏po_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	PartialOrder (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	PartialOrder (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	PartialOrder (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	PartialOrder (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[partial_order_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[as_injection_thm]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[tr_injection_thm]);
+val po_injection_thm = save_pop_thm "po_injection_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏tri_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	Trich (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Trich (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	Trich (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	Trich (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[trich_def, one_one_def]);
+a (contr_tac);
+a (all_asm_fc_tac[]);
+a (list_spec_nth_asm_tac 10 [⌜f x⌝, ⌜f y⌝]);
+a (all_asm_fc_tac[]);
+val tri_injection_thm = save_pop_thm "tri_injection_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏lo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	LinearOrder (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	LinearOrder (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	LinearOrder (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	LinearOrder (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[linear_order_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[po_injection_thm]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[tri_injection_thm]);
+val lo_injection_thm = save_pop_thm "lo_injection_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏wmc_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	WeakMinCond (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	WeakMinCond (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	WeakMinCond (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	WeakMinCond (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[weak_min_cond_def, one_one_def]);
+a (REPEAT strip_tac);
+a (list_spec_nth_asm_tac 5 [⌜{z | ∃ x⦁ x ∈ A ∧ z = f x}⌝]);
+(* *** Goal "1" *** *)
+a (POP_ASM_T ante_tac
+  THEN PC_T1 "sets_ext" rewrite_tac[]
+  THEN strip_tac);
+a (asm_fc_tac[]);
+a (lemma_tac ⌜x' ∈ X⌝
+  THEN1 (GET_ASM_T ⌜A ⊆ X⌝ ante_tac
+  	THEN PC_T1 "sets_ext" rewrite_tac[]
+  	THEN strip_tac
+	THEN asm_fc_tac[]
+	THEN REPEAT strip_tac));
+a (list_spec_nth_asm_tac 9 [⌜x'⌝]);
+a (var_elim_asm_tac ⌜x = f x'⌝);
+(* *** Goal "2" *** *)
+a (GET_ASM_T ⌜¬ A = {}⌝ ante_tac
+  THEN PC_T1 "sets_ext" rewrite_tac[]
+  THEN strip_tac);
+a (GET_NTH_ASM_T 2 ante_tac
+  THEN PC_T1 "sets_ext" rewrite_tac[]
+  THEN strip_tac);
+a (spec_nth_asm_tac 1 ⌜f x⌝);
+a (spec_nth_asm_tac 1 ⌜x⌝);
+(* *** Goal "3" *** *)
+a (∃_tac ⌜x'⌝ THEN REPEAT strip_tac);
+(* *** Goal "3.2" *** *)
+a (list_spec_nth_asm_tac 10 [⌜y⌝, ⌜x'⌝]);
+a (var_elim_asm_tac ⌜x = f x'⌝);
+a (list_spec_nth_asm_tac 5 [⌜f y⌝]);
+a (list_spec_nth_asm_tac 1 [⌜y⌝]);
+val wmc_injection_thm = save_pop_thm "wmc_injection_thm";
+=TEX
+}%ignore
+
+
+=GFT
+⦏wo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	WellOrdering (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	WellOrdering (X, λ x y⦁ f x << f y)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	WellOrdering (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	WellOrdering (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[well_ordering_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[lo_injection_thm]);
+(* *** Goal "2" *** *)
+a (all_fc_tac[wmc_injection_thm]);
+val wo_injection_thm = save_pop_thm "wo_injection_thm";
+=TEX
+}%ignore
+
 \section{WELL-ORDERING}\label{WELL-ORDERING}
+
+\subsection{Minimal Elements}
+
+=GFT
+⦏antisym_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	MinCond (X, $<<) ∧
+	Antisym (X, $<<) ∧
+	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	     MinCond (X, $<<) ∧
+	     Antisym (X, $<<) ∧
+	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x⌝); 
+a (rewrite_tac [antisym_def]
+  THEN REPEAT ∀_tac THEN strip_tac);
+a (all_fc_tac[minr_thm] THEN REPEAT strip_tac);
+a (lemma_tac ⌜x ∈ X ∧ y ∈ X⌝
+  THEN1 (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac
+  	THEN PC_T1 "sets_ext" rewrite_tac[]
+  	THEN strip_tac
+	THEN asm_fc_tac[]
+	THEN REPEAT strip_tac));
+a (all_fc_tac[minr_thm] THEN REPEAT strip_tac);
+val antisym_minr_thm = save_pop_thm "strict_minr_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏wo_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	    WellOrdering (X, $<<) ∧
+	    Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	    x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ x << y ∨ y = x)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	     WellOrdering (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ x << y ∨ y = x⌝); 
+a (rewrite_tac [well_ordering_def]
+  THEN REPEAT ∀_tac THEN strip_tac
+  THEN fc_tac[weak_minr_thm]);
+a (list_spec_nth_asm_tac 1 [⌜Y⌝,⌜x⌝]);
+a (REPEAT_N 3 strip_tac);
+a (fc_tac[linear_order_def]);
+a (fc_tac[trich_def]);
+a (REPEAT strip_tac);
+a (conv_tac eq_sym_conv);
+a (contr_tac);
+a (lemma_tac ⌜x ∈ X ∧ y ∈ X⌝
+  THEN1 (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac
+  	THEN PC_T1 "sets_ext" rewrite_tac[]
+  	THEN strip_tac
+	THEN asm_fc_tac[]
+	THEN REPEAT strip_tac));
+a (list_spec_nth_asm_tac 5 [⌜x⌝,⌜y⌝]);
+a (list_spec_nth_asm_tac 12 [⌜Y⌝,⌜x⌝,⌜y⌝]);
+a (contr_tac);
+a (var_elim_asm_tac ⌜y = x⌝ );
+val wo_minr_thm = save_pop_thm "wo_minr_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏wo_minr_thm2⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	WellOrdering (X, $<<) ∧
+	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	WellOrdering (X, $<<) ∧
+	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x⌝);
+a (REPEAT ∀_tac THEN strip_tac);
+a (lemma_tac ⌜MinCond (X, $<<) ∧ Antisym (X, $<<)⌝);
+(* *** Goal "1" *** *)
+a (rewrite_tac [min_cond_def]);
+a (fc_tac [well_ordering_def]);
+a (fc_tac [linear_order_def]);
+a (fc_tac [partial_order_def]);
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a ( REPEAT strip_tac THEN all_fc_tac[antisym_minr_thm]);
+val wo_minr_thm2 = save_pop_thm "wo_minr_thm2";
+=TEX
+}%ignore
 
 \subsection{Zorn's Lemma for Properties of Relations}
 
@@ -503,7 +1138,7 @@ a(∃_tac⌜X⌝ THEN rewrite_tac[chain_singleton_thm]);
 a(all_asm_ante_tac);
 a(PC_T1 "sets_ext1" REPEAT strip_tac THEN_TRY all_var_elim_asm_tac
 	THEN all_asm_ufc_tac[]);
-save_pop_thm"chain_singleton_extension_thm"
+save_pop_thm "chain_singleton_extension_thm"
 );
 =TEX
 
@@ -583,124 +1218,6 @@ save_pop_thm "zorn_thm2"
 val _ = set_pc "sets_ext1";
 =TEX
 }%ignore
-
-\subsection{Lemmas about Subsets of Ordered Sets}\label{Lemmas about Subsets of Ordered Sets}
-
-These lemmas build up to the fact that a subset of a well-ordered set is
-well-ordered (which we use in the proof of the well-ordering principle).
-
-=GFT
-subrel_well_ordering_thm = ⊢ ∀X Y $<<⦁
-	Y ⊆ X ∧ WellOrdering(X, $<<) ⇒ WellOrdering(Y, $<<)
-
-subrel_refl_thm =
-	⊢ ∀ X Y $<<⦁ Y ⊆ X ∧ Refl (X, $<<) ⇒ Refl (Y, $<<)
-=TEX
-
-\ignore{
-=SML
-val ⦏subrel_refl_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Refl(X, $<<) ⇒ Refl(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN PC_T "hol1" contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_refl_thm"
-);
-
-val ⦏subrel_irrefl_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Irrefl(X, $<<) ⇒ Irrefl(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_irrefl_thm"
-);
-
-val ⦏subrel_antisym_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Antisym(X, $<<) ⇒ Antisym(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_antisym_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_trans_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Trans(X, $<<) ⇒ Trans(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_trans_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_trich_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ Trich(X, $<<) ⇒ Trich(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN contr_tac);
-a(all_asm_ufc_tac[] THEN all_asm_ufc_tac[]);
-save_pop_thm "subrel_trich_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_partial_order_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ PartialOrder(X, $<<) ⇒ PartialOrder(Y, $<<)
-⌝);
-a(rewrite_tac [partial_order_def] THEN contr_tac
-	THEN all_ufc_tac[subrel_antisym_thm, subrel_trans_thm]);
-save_pop_thm "subrel_partial_order_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_linear_order_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ LinearOrder(X, $<<) ⇒ LinearOrder(Y, $<<)
-⌝);
-a(rewrite_tac [linear_order_def] THEN contr_tac
-	THEN all_ufc_tac[subrel_partial_order_thm, subrel_trich_thm]);
-save_pop_thm "subrel_linear_order_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_min_cond_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ MinCond(X, $<<) ⇒ MinCond(Y, $<<)
-⌝);
-a(rewrite_tac def_thms THEN contr_tac);
-a(lemma_tac⌜∀x⦁x ∈ A ⇒ x ∈ X⌝
- THEN1 (REPEAT strip_tac)
- THEN REPEAT (all_asm_ufc_tac[]));
-save_pop_thm "subrel_min_cond_thm"
-);
-=TEX
-
-=SML
-val ⦏subrel_well_ordering_thm⦎ = (
-set_goal([], ⌜∀X Y $<<⦁
-	Y ⊆ X ∧ WellOrdering(X, $<<) ⇒ WellOrdering(Y, $<<)
-⌝);
-a(rewrite_tac [well_ordering_def_thm] THEN contr_tac
-	THEN all_ufc_tac[subrel_linear_order_thm, subrel_min_cond_thm]);
-save_pop_thm "subrel_well_ordering_thm"
-);
-=TEX
-
-=SML
-val _ = set_merge_pcs["'sets_alg", "basic_hol", "'savedthm_cs_∃_proof"];
-=TEX
-
-}%ignore
-
 \subsection{The Well-Ordering Principle}
 
 The following lemma is needed in the proof of the well-ordering principle. It shows
@@ -782,6 +1299,8 @@ To do this we define $U$ to be the set of all relations that well-order their fi
 are reflexive on their field:
 
 =SML
+val _ = set_merge_pcs["'sets_alg", "basic_hol", "'savedthm_cs_∃_proof"];
+
 val u_def = ⌜∃U⦁
 	U =
 	{	R : 'a → 'a → BOOL
@@ -1018,7 +1537,39 @@ save_pop_thm "well_ordering_thm"
 =TEX
 }%ignore
 
-\section{WELL-FOUNDEDNESS}\label{WELL-FOUNDEDNESS}
+\subsection{Initial Well-Orderings}
+
+We have the result that every set can be well-ordered.
+There will be many.
+
+There is a partial order over these well-orderings which arises from the fact that each well-prdering corresponds to an ordinal number, and the is therefore a least such ordinal and a corresponding set of well-orderings.
+The least ordinal will be an {\it initial} ordinal, and we therefore call the corresponding well-orderings {\it intial well-orderings} and in this section prove that every set has an intial well-ordering.
+
+An initial well-ordering can be obtained in the following way.
+First, chose an arbitrary well-ordering of the set.
+Then consider the initial segments of that well-ordering which have a cardinality the same as the whole.
+Since these are well-ordered we can chose the least of this set, which will correspond to an initial ordinal.
+By hypothesis there is a bijection between that intial segment and the whole, using which an initial well-ordering of the whole can be constructed.
+
+The folllowing definition of the property {\it Initial} is intended to make sense only for well-orderings, but is expressed as a property of relations in general.
+It corresponds to the notion of intial ordinal only when applied to well-orderings.
+
+\ignore{
+ ⓈHOLCONST
+│ ⦏Initial⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
+ ├──────
+│ ∀ (X, $<<)⦁
+│   Initial (X, $<<) Y = 
+ ■
+}%ignore
+
+=GFT
+
+=TEX
+
+
+
+\section{STRICT WELL-ORDERINGS}\label{STRICT WELL-ORDERINGS}
 
 \subsection{Strictness}
 
@@ -1063,14 +1614,6 @@ A few lemmas for proving properties of strict relations:
 		⇒ MinCond (Strict (X, $<<))
 ⦏WellFoundedStrict_thm⦎ =
 	⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ WellFounded (Strict (X, $<<))
-=TEX
-
-
-Then a wrinkle on the well-ordering theorem:
-
-=GFT
-⦏wf_well_ordering_thm⦎ =
-	⊢ ∀X :'a SET⦁ ∃ $<<⦁ WellOrdering(X, $<<) ∧ WellFounded(X, $<<)
 =TEX
 
 \ignore{
@@ -1151,7 +1694,18 @@ a (POP_ASM_T ante_tac THEN rewrite_tac [well_founded_def, strict_def]
 	THEN REPEAT strip_tac);
 a (rewrite_tac[rewrite_rule[strict_def]IrreflStrict_thm]);
 val WellFoundedStrict_thm = save_pop_thm "WellFoundedStrict_thm";
+=TEX
+}%ignore
 
+Then a wrinkle on the well-ordering theorem:
+
+=GFT
+⦏wf_well_ordering_thm⦎ =
+	⊢ ∀X :'a SET⦁ ∃ $<<⦁ WellOrdering(X, $<<) ∧ WellFounded(X, $<<)
+=TEX
+
+\ignore{
+=SML
 set_goal([], ⌜∀X :'a SET⦁ ∃ $<<⦁ WellOrdering(X, $<<) ∧ WellFounded(X, $<<)⌝);
 a (strip_tac);
 a (strip_asm_tac well_ordering_thm THEN spec_nth_asm_tac 1 ⌜X⌝);
@@ -1164,39 +1718,230 @@ val wf_well_ordering_thm = save_pop_thm "wf_well_ordering_thm";
 =TEX
 }%ignore
 
+\subsection{Strict Well Orderings}
+
 We might as well have the concept of strict well-ordering.
 
 ⓈHOLCONST
 │ ⦏StrictWellOrdering⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
 ├──────
-│ ∀ (X, $<<)⦁ StrictWellOrdering (X, $<<)
+│ ∀(X, $<<)⦁ StrictWellOrdering (X, $<<)
 │	⇔ Irrefl (X, $<<) ∧ WellOrdering (X, $<<)
 ■
 
 =GFT
 ⦏StrictWellOrdering_thm1⦎ =
-   ⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))
+	⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))
+   
+⦏SWO_WellFounded_thm⦎ =
+  	⊢ ∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)
+
+⦏strict_well_ordering_thm⦎ =
+	⊢ ∀X :'a SET⦁ ∃ $<<⦁ StrictWellOrdering(X, $<<)
+=TEX
+
+\ignore{
+=SML
+val strict_well_ordering_def = get_spec ⌜StrictWellOrdering⌝;
+
+set_goal([], ⌜∀(X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))⌝);
+a (REPEAT strip_tac);
+a (once_rewrite_tac [prove_rule [] ⌜Strict (X, $<<)=(Fst (Strict (X, $<<)):'a SET, Snd (Strict (X, $<<)))⌝, strict_well_ordering_def, IrreflStrict_thm]);
+a (pure_rewrite_tac[strict_well_ordering_def]);
+a (asm_rewrite_tac [IrreflStrict_thm, WellFoundedStrict_thm]);
+a (fc_tac [WellOrderingStrict_thm]);
+val StrictWellOrdering_thm1 = save_pop_thm "StrictWellOrdering_thm1";
+
+set_goal([], ⌜∀(X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)⌝);
+a (strip_tac THEN rewrite_tac[strict_well_ordering_def, well_ordering_def, well_founded_def, min_cond_def, weak_min_cond_def, linear_order_def, partial_order_def]);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+a (∃_tac ⌜x⌝ THEN asm_rewrite_tac[]);
+val SWO_WellFounded_thm = save_pop_thm "SWO_WellFounded_thm";
+
+set_goal([], ⌜∀X :'a SET⦁ ∃ $<<⦁ StrictWellOrdering(X, $<<)⌝);
+a (strip_tac THEN strip_asm_tac well_ordering_thm);
+a (spec_asm_tac ⌜∀ X⦁ ∃ $<<⦁ WellOrdering (X, $<<)⌝ ⌜X⌝);
+a (∃_tac ⌜Snd (Strict (X, $<<))⌝ THEN asm_fc_tac [StrictWellOrdering_thm1]);
+a (LEMMA_T ⌜(X, Snd (Strict (X, $<<))) = Strict(X, $<<)⌝ rewrite_thm_tac
+  THEN1 rewrite_tac [strict_def]);
+a strip_tac;
+val strict_well_ordering_thm = save_pop_thm "strict_well_ordering_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏swo_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+	StrictWellOrdering (X, $<<) ∧
+	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ (¬x = y ⇔ x << y)
 =TEX
 
 \ignore{
 =SML
 val StrictWellOrdering_def = get_spec ⌜StrictWellOrdering⌝;
 
-set_goal([], ⌜∀(X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))⌝);
-a (REPEAT strip_tac);
-a (once_rewrite_tac [prove_rule [] ⌜Strict (X, $<<)=(Fst (Strict (X, $<<)):'a SET, Snd (Strict (X, $<<)))⌝, StrictWellOrdering_def, IrreflStrict_thm]);
-a (pure_rewrite_tac[StrictWellOrdering_def]);
-a (asm_rewrite_tac [IrreflStrict_thm, WellFoundedStrict_thm]);
-a (fc_tac [WellOrderingStrict_thm]);
-val StrictWellOrdering_thm1 = save_pop_thm "StrictWellOrdering_thm1";
-
-set_goal([], ⌜∀(X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)⌝);
-
+set_goal([], ⌜∀ (X, $<<) Y x⦁
+	StrictWellOrdering (X, $<<) ∧
+	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
+	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ (¬x = y ⇔ x << y)⌝);
+a (REPEAT ∀_tac THEN strip_tac);
+a (fc_tac[StrictWellOrdering_def]);
+a (fc_tac[irrefl_def]);
+a (lemma_tac ⌜x ∈ Y⌝ THEN1 all_asm_fc_tac [wo_minr_thm]);
+a (lemma_tac ⌜x ∈ X⌝
+  THEN1 (GET_ASM_T ⌜Y ⊆ X⌝ ante_tac
+  	THEN PC_T1 "sets_ext" rewrite_tac[]
+  	THEN strip_tac
+	THEN asm_fc_tac[]
+	THEN REPEAT strip_tac));
+a (lemma_tac ⌜¬ x << x⌝ THEN1 all_asm_fc_tac []);
+a (contr_tac
+  THEN all_asm_fc_tac [wo_minr_thm]
+  THEN all_var_elim_asm_tac);
+val swo_minr_thm = save_pop_thm "swo_minr_thm";
 =TEX
 }%ignore
 
+=GFT
+⦏swo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+	StrictWellOrdering (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	StrictWellOrdering (X, λ x y⦁ f x << f y)
+=TEX
 
-\subsection{The Minimum Conditions and Well-Founded Relations}
+\ignore{
+=SML
+set_goal([], ⌜∀ (X, $<<) f⦁
+	StrictWellOrdering (X, $<<) ∧
+	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
+	StrictWellOrdering (X, λ x y⦁ f x << f y)⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[StrictWellOrdering_def]);
+a (REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (all_fc_tac[irf_injection_thm]);
+(* *** Goal "1" *** *)
+a (all_fc_tac[wo_injection_thm]);
+val swo_injection_thm = save_pop_thm "swo_injection_thm";
+=TEX
+}%ignore
+
+Unwinding the layers of definition we get down to te five primitives: irrefl, antisym, trans, trich, weak mind cond.
+=GFT
+⦏swo_clauses⦎ = ⊢ ∀ (X, $<<) f⦁
+	StrictWellOrdering (X, $<<) ⇔
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ y << x ∧ ¬ y = x ⇒ x << y)))⌝);
+=TEX
+
+\ignore{
+=SML
+set_goal([],⌜∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇔
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ y << x ∧ ¬ y = x ⇒ x << y)))⌝);
+a (rewrite_tac[strict_well_ordering_def, irrefl_def, well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def, trich_def, antisym_def, trans_def]);
+a (REPEAT strip_tac);
+val swo_clauses = save_pop_thm "swo_clauses";
+=TEX
+}%ignore
+
+\subsection{Initial Strict WellOrderings}
+
+The concept of initial ordinal is not straightforward to defined outside the context of a theory of ordinals, but we may use arbitrary well-orderings as surrogates for ordinals and it is useful to have the result that any set has a well-ordering which is then the surrogate for an initial ordinal before we get into a theory of ordinals.
+
+This can be expressed without defining the notion of initial ordinal in the following way:
+
+ⓈHOLCONST
+│ ⦏InitialStrictWellOrdering⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
+├──────
+│ ∀ (X, $<<)⦁ InitialStrictWellOrdering (X, $<<)
+│	⇔ StrictWellOrdering(X, $<<) ∧
+│	  ¬ ∃f y⦁ y ∈ X ∧ OneOne f ∧ ∀z⦁ z ∈ X ⇒ f z ∈ X ∧ f z << y 
+■
+
+We can then prove:
+
+=GFT
+⦏InitialStrictWellOrdering_thm⦎ =
+	⊢ ∀X :'a SET⦁ ∃ $<<⦁ InitialStrictWellOrdering(X, $<<)
+=TEX
+
+\ignore{
+=SML
+val InitialStrictWellOrdering_def = get_spec ⌜InitialStrictWellOrdering⌝;
+
+set_goal([], ⌜∀X :'a SET⦁ ∃ $<<⦁ InitialStrictWellOrdering(X, $<<)⌝);
+a (strip_tac THEN rewrite_tac[InitialStrictWellOrdering_def]);
+a (strip_asm_tac strict_well_ordering_thm);
+a (spec_asm_tac ⌜∀ X⦁ ∃ $<<⦁ StrictWellOrdering (X, $<<)⌝ ⌜X⌝);
+a (cases_tac ⌜(∃ f y⦁ y ∈ X ∧ OneOne f ∧ (∀ z⦁ z ∈ X ⇒ f z ∈ X ∧ f z << y))⌝);
+(* *** Goal "1" *** *)
+a (lemma_tac ⌜∃ Y⦁ Y = 
+  {y | y ∈ X ∧ (∃ f⦁ OneOne f ∧ (∀ z⦁ z ∈ X ⇒ f z ∈ X ∧ f z << y))}⌝
+  THEN1 prove_∃_tac);
+a (lemma_tac ⌜Y ⊆ X⌝ THEN1 (
+  PC_T1 "sets_ext" asm_rewrite_tac[]
+  THEN REPEAT strip_tac
+  ));
+a (lemma_tac ⌜¬ Y = {}⌝ THEN1 (
+  PC_T1 "sets_ext" asm_rewrite_tac[]
+  THEN REPEAT strip_tac
+  THEN (∃_tac ⌜y⌝)
+  THEN asm_rewrite_tac[]
+  THEN REPEAT strip_tac
+  THEN ∃_tac ⌜f⌝
+  THEN asm_rewrite_tac[]
+  ));
+a (lemma_tac ⌜∃ x⦁ x = Minr(X,$<<) Y⌝
+  THEN1 prove_∃_tac);
+a (all_fc_tac[swo_minr_thm]);
+a (POP_ASM_T ante_tac);
+a (GET_NTH_ASM_T 4 rewrite_thm_tac THEN strip_tac);
+a (lemma_tac ⌜∃ $<<<⦁ $<<< = (λ x y:'a⦁ f' x << f' y)⌝
+  THEN prove_∃_tac);
+a (∃_tac ⌜$<<<⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+(* *** Goal "1.1" *** *)
+a (fc_tac[swo_injection_thm]);
+a (lemma_tac ⌜∀ x⦁ x ∈ X ⇒ f' x ∈ X⌝
+  THEN1 (REPEAT strip_tac THEN asm_fc_tac[]));
+a (spec_nth_asm_tac 2 ⌜f'⌝ THEN1 asm_fc_tac[]);
+(* *** Goal "1.2" *** *)
+a contr_tac;
+a (strip_asm_tac(list_∀_elim [⌜(X, $<<)⌝, ⌜Y⌝, ⌜x⌝] swo_minr_thm));
+a (lemma_tac ⌜f' y' ∈ Y⌝ THEN1 asm_rewrite_tac[]);
+(* *** Goal "1.2.1" *** *)
+a (spec_nth_asm_tac 7 ⌜y'⌝);
+a (lemma_tac ⌜OneOne(f' o f'')⌝ THEN1 all_fc_tac[OneOne_o_thm]);
+a (REPEAT strip_tac THEN ∃_tac ⌜f' o f''⌝ THEN asm_rewrite_tac[o_def] THEN REPEAT strip_tac);
+(* *** Goal "1.2.1.1" *** *)
+a (lemma_tac ⌜f'' z ∈ X⌝ THEN1 all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+(* *** Goal "1.2.1.2" *** *)
+a (DROP_ASM_T ⌜∀ z⦁ z ∈ X ⇒ f'' z ∈ X ∧ f'' z <<< y'⌝ ante_tac
+  THEN GET_ASM_T ⌜$<<< = (λ x y⦁ f' x << f' y)⌝ rewrite_thm_tac THEN strip_tac);
+a (all_asm_fc_tac[]);
+(* *** Goal "1.2.2" *** *)
+a (spec_nth_asm_tac 2 ⌜f' y'⌝);
+(* *** Goal "1.2.2.1" *** *)
+a (spec_nth_asm_tac 10 ⌜y'⌝);
+a (var_elim_asm_tac ⌜x = f' y'⌝);
+(* *** Goal "1.2.2.2" *** *)
+a (spec_nth_asm_tac 10 ⌜y'⌝);
+a (all_fc_tac [swo_clauses]);
+(* *** Goal "2" *** *)
+a (∃_tac ⌜$<<⌝ THEN asm_rewrite_tac[]);
+val InitialStrictWellOrdering_thm = save_pop_thm "InitialStrictWellOrdering_thm";
+=TEX
+}%ignore
+
+\subsection{The Minimum Conditions}
 
 In this section we show the equivalence of our definitions with some other useful
 conditions. This selection of equivalences is currently just a sample. We could,
@@ -1282,102 +2027,6 @@ a(asm_rewrite_tac[]);
 (* *** Goal "2.2.3" *** *)
 a(∃_tac⌜m+1⌝ THEN asm_rewrite_tac[]);
 save_pop_thm "min_cond_descending_sequence_thm"
-);
-=TEX
-}%ignore
-
-A relation is well-founded iff. there are no infinite descending sequences:
-
-=GFT
-well_founded_descending_sequence_thm = ⊢ ∀X $<<⦁
-		WellFounded(X, $<<)
-	⇔	¬∃f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)
-=TEX
-
-\ignore{
-=SML
-val ⦏well_founded_descending_sequence_thm⦎ = (
-set_goal([], ⌜∀X $<<⦁
-		WellFounded(X, $<<)
-	⇔	¬∃f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)⌝);
-a(REPEAT_UNTIL is_⇒ strip_tac);
-(* *** Goal "1" *** *)
-a(rewrite_tac [well_founded_def, irrefl_def] THEN contr_tac);
-a(all_ufc_tac[min_cond_descending_sequence_thm]);
-a(lemma_tac⌜f(m+1) = f m⌝ THEN1
-	(POP_ASM_T bc_thm_tac THEN REPEAT strip_tac));
-a(lemma_tac⌜f m∈ X ∧ f(m+1) << f m⌝ THEN1 asm_rewrite_tac[]);
-a(POP_ASM_T ante_tac THEN GET_NTH_ASM_T 2 rewrite_thm_tac);
-a(all_asm_ufc_tac[]);
-(* *** Goal "2" *** *)
-a(rewrite_tac[well_founded_def] THEN REPEAT strip_tac);
-(* *** Goal "2.1" *** *)
-a(rewrite_tac[irrefl_def] THEN contr_tac);
-a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
-a(∃_tac⌜λm:ℕ⦁x⌝ THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a(POP_ASM_T ante_tac THEN rewrite_tac
-	[min_cond_descending_sequence_thm]);
-a(REPEAT strip_tac);
-a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
-a(∃_tac⌜f⌝ THEN asm_rewrite_tac[]);
-save_pop_thm "well_founded_descending_sequence_thm"
-);
-=TEX
-}%ignore
-
-A relation is well-founded iff. it enjoys the Noetherian(?) induction principle:
-
-=GFT
-well_founded_induction_thm = ⊢ ∀X $<<⦁
-		WellFounded(X, $<<)
-	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
-			⇒ (∀x⦁x ∈ X ⇒ p x)
-=TEX
-
-\ignore{
-=SML
-val ⦏well_founded_induction_thm⦎ = (
-set_goal([], ⌜∀X $<<⦁
-		WellFounded(X, $<<)
-	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
-			⇒ (∀x⦁x ∈ X ⇒ p x)⌝);
-a(REPEAT_UNTIL is_⇒ strip_tac);
-(* *** Goal "1" *** *)
-a(rewrite_tac [well_founded_def, min_cond_def_thm, irrefl_def] THEN contr_tac);
-a(lemma_tac ⌜{x | x ∈ X ∧ ¬p x} ⊆ X⌝ THEN1
-	PC_T1 "sets_ext1"prove_tac[]);
-a(lemma_tac ⌜¬{x | x ∈ X ∧ ¬p x} = {}⌝ THEN1
-	PC_T1 "sets_ext1" asm_prove_tac[]);
-a(all_asm_ufc_tac[]);
-a(lemma_tac⌜∀ y⦁ y ∈ X ∧ y << x' ⇒ p y⌝ THEN contr_tac);
-(* *** Goal "1.1" *** *)
-a(cases_tac⌜y = x'⌝ THEN1 (all_var_elim_asm_tac THEN asm_prove_tac[]));
-a(all_asm_ufc_tac[]);
-(* *** Goal "1.2" *** *)
-a(all_asm_ufc_tac[]);
-(* *** Goal "2" *** *)
-a( rewrite_tac[well_founded_descending_sequence_thm] THEN contr_tac);
-a(LEMMA_T ⌜∀x⦁
-	x ∈ X
-⇒	(λa⦁	 a ∈ X
-	∧	∀g⦁ g 0 = a
-	∧	(∀y ⦁g y ∈ X)
-	⇒	∃m⦁¬g(m+1)  << g m)
-	x
-⌝ ante_tac);
-(* *** Goal "2.1" *** *)
-a(DROP_NTH_ASM_T 3 bc_thm_tac);
-a(rewrite_tac[] THEN contr_tac);
-a(SPEC_NTH_ASM_T 1 ⌜0⌝ (strip_asm_tac o rewrite_rule[]));
-a(DROP_NTH_ASM_T 5 (ante_tac o ∀_elim⌜g 1⌝) THEN 
-	all_var_elim_asm_tac1 THEN asm_rewrite_tac[] THEN strip_tac);
-a(∃_tac⌜λm⦁g(m+1)⌝ THEN asm_rewrite_tac[]);
-(* *** Goal "2.2" *** *)
-a(rewrite_tac[] THEN REPEAT strip_tac);
-a(∃_tac⌜f 0⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
-a(∃_tac⌜f⌝ THEN asm_rewrite_tac[]);
-save_pop_thm "well_founded_induction_thm"
 );
 =TEX
 }%ignore
@@ -1477,7 +2126,103 @@ save_pop_thm "refl_well_ordering_lower_bounds_thm"
 =TEX
 }%ignore
 
-\subsection{Transitive Closure}
+
+A relation is well-founded iff. there are no infinite descending sequences:
+
+=GFT
+well_founded_descending_sequence_thm = ⊢ ∀X $<<⦁
+		WellFounded(X, $<<)
+	⇔	¬∃f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)
+=TEX
+
+\ignore{
+=SML
+val ⦏well_founded_descending_sequence_thm⦎ = (
+set_goal([], ⌜∀X $<<⦁
+		WellFounded(X, $<<)
+	⇔	¬∃f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)⌝);
+a(REPEAT_UNTIL is_⇒ strip_tac);
+(* *** Goal "1" *** *)
+a(rewrite_tac [well_founded_def, irrefl_def] THEN contr_tac);
+a(all_ufc_tac[min_cond_descending_sequence_thm]);
+a(lemma_tac⌜f(m+1) = f m⌝ THEN1
+	(POP_ASM_T bc_thm_tac THEN REPEAT strip_tac));
+a(lemma_tac⌜f m∈ X ∧ f(m+1) << f m⌝ THEN1 asm_rewrite_tac[]);
+a(POP_ASM_T ante_tac THEN GET_NTH_ASM_T 2 rewrite_thm_tac);
+a(all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a(rewrite_tac[well_founded_def] THEN REPEAT strip_tac);
+(* *** Goal "2.1" *** *)
+a(rewrite_tac[irrefl_def] THEN contr_tac);
+a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
+a(∃_tac⌜λm:ℕ⦁x⌝ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a(POP_ASM_T ante_tac THEN rewrite_tac
+	[min_cond_descending_sequence_thm]);
+a(REPEAT strip_tac);
+a(swap_nth_asm_concl_tac 3 THEN REPEAT strip_tac);
+a(∃_tac⌜f⌝ THEN asm_rewrite_tac[]);
+save_pop_thm "well_founded_descending_sequence_thm"
+);
+=TEX
+}%ignore
+
+A relation is well-founded iff. it enjoys the Noetherian(?) induction principle:
+
+=GFT
+well_founded_induction_thm = ⊢ ∀X $<<⦁
+		WellFounded(X, $<<)
+	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
+			⇒ (∀x⦁x ∈ X ⇒ p x)
+=TEX
+
+\ignore{
+=SML
+val ⦏well_founded_induction_thm⦎ = (
+set_goal([], ⌜∀X $<<⦁
+		WellFounded(X, $<<)
+	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
+			⇒ (∀x⦁x ∈ X ⇒ p x)⌝);
+a(REPEAT_UNTIL is_⇒ strip_tac);
+(* *** Goal "1" *** *)
+a(rewrite_tac [well_founded_def, min_cond_def_thm, irrefl_def] THEN contr_tac);
+a(lemma_tac ⌜{x | x ∈ X ∧ ¬p x} ⊆ X⌝ THEN1
+	PC_T1 "sets_ext1"prove_tac[]);
+a(lemma_tac ⌜¬{x | x ∈ X ∧ ¬p x} = {}⌝ THEN1
+	PC_T1 "sets_ext1" asm_prove_tac[]);
+a(all_asm_ufc_tac[]);
+a(lemma_tac⌜∀ y⦁ y ∈ X ∧ y << x' ⇒ p y⌝ THEN contr_tac);
+(* *** Goal "1.1" *** *)
+a(cases_tac⌜y = x'⌝ THEN1 (all_var_elim_asm_tac THEN asm_prove_tac[]));
+a(all_asm_ufc_tac[]);
+(* *** Goal "1.2" *** *)
+a(all_asm_ufc_tac[]);
+(* *** Goal "2" *** *)
+a( rewrite_tac[well_founded_descending_sequence_thm] THEN contr_tac);
+a(LEMMA_T ⌜∀x⦁
+	x ∈ X
+⇒	(λa⦁	 a ∈ X
+	∧	∀g⦁ g 0 = a
+	∧	(∀y ⦁g y ∈ X)
+	⇒	∃m⦁¬g(m+1)  << g m)
+	x
+⌝ ante_tac);
+(* *** Goal "2.1" *** *)
+a(DROP_NTH_ASM_T 3 bc_thm_tac);
+a(rewrite_tac[] THEN contr_tac);
+a(SPEC_NTH_ASM_T 1 ⌜0⌝ (strip_asm_tac o rewrite_rule[]));
+a(DROP_NTH_ASM_T 5 (ante_tac o ∀_elim⌜g 1⌝) THEN 
+	all_var_elim_asm_tac1 THEN asm_rewrite_tac[] THEN strip_tac);
+a(∃_tac⌜λm⦁g(m+1)⌝ THEN asm_rewrite_tac[]);
+(* *** Goal "2.2" *** *)
+a(rewrite_tac[] THEN REPEAT strip_tac);
+a(∃_tac⌜f 0⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a(∃_tac⌜f⌝ THEN asm_rewrite_tac[]);
+save_pop_thm "well_founded_induction_thm"
+);
+=TEX
+}%ignore
+\section{TRANSITIVE CLOSURE}
 
 First the definition:
 
@@ -1926,7 +2671,8 @@ val wf_part_wf_thm = save_pop_thm "wfpart_wf_thm";
 =TEX
 }%ignore
 
-\subsection{The Recursion Theorem}
+\section{RECURSIVE DEFINITIONS}
+
 
 The recursion theorem asserts the existence of fixed points of functionals under certain circumstances.
 This is helpful in establishing the consistency of inductive or recursive definitions of functions.
@@ -2598,6 +3344,11 @@ turns out to be the hardest property to prove in the examples; the following lem
 in all but one case (viz. weak minimum condition and not antisymmetry, for which, happily,
 the relation that relates any two natural numbers does the job).
 
+=SML
+open_theory "ordered_sets";
+new_theory "ordered_sets_i";
+=TEX
+
 \ignore{
 =SML
 val weak_min_cond_≤_lemma = (
@@ -2945,6 +3696,12 @@ val ⦏independence_clauses⦎ = save_thm
 \newpage
 {%\HOLindexOff
 \small
+\include{ordered_sets_i.th}
+}
+
+\newpage
+{%\HOLindexOff
+\small
 \include{U_orders.th}
 }
 
@@ -2957,8 +3714,11 @@ val ⦏independence_clauses⦎ = save_thm
 =SML
 val use_alias_flag_value = set_flag ("pp_use_alias", true);
 val was_line_len = set_int_control("thl_line_width", 14);
-output_theory{out_file="ordered_sets.th.doc", theory="ordered_sets"};
-output_theory{out_file="U_orders.th.doc", theory="U_orders"};
+output_theory{out_file="ordered_sets.th.pp", theory="ordered_sets"};
+open_theory "U_orders";
+output_theory{out_file="U_orders.th.pp", theory="U_orders"};
+open_theory "ordered_sets_i";
+output_theory{out_file="ordered_sets_i.th.pp", theory="ordered_sets_i"};
 val _ = set_int_control("thl_line_width", was_line_len);
 val _ = set_flag ("pp_use_alias", use_alias_flag_value);
 =TEX
