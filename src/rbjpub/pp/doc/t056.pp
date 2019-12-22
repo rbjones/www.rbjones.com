@@ -92,6 +92,9 @@ set_merge_pcs ["rbjmisc", "'pre-ord"];
 The material in this section is moved here en-block from t009 \cite{rbjt009}, and was not therefore originally undertaken for the purposes in hand.
 However, since I did not make use of it for any other purpose I now propose to use some of it here, expand the useful aspects, and discard some of the more obviously otiose material.
 
+
+\subsection{Cardinality}
+
 It is a treatment of cardinality as a property of sets which does not get so far as establishing types of 'a Ords or cardinals.
 The definitions and theorems here and now considered as preliminaries to the establishment of 'a Ord and cardinal numbers in a way not originally envisages, in the following sections.
 
@@ -283,6 +286,37 @@ pop_pc();
 =TEX
 }%ignore
 
+\subsection{Initial Well-Orderings}
+
+We first here define the notion of an {\it initial} well-ordering, and then prove the existence of initial well-orderings.
+
+ⓈHOLCONST
+│ ⦏Initial⦎: ('a → 'a → BOOL) → BOOL
+├───────────
+│ 	∀r⦁ Initial r  ⇔ ¬ ∃x (f:'a → 'a)⦁ OneOne f ∧ ∀y⦁ r (f y) x ∧ ¬ f y = x
+■
+
+ⓈHOLCONST
+│ ⦏InitialStrictWellOrdering⦎: ('a → 'a → BOOL) → BOOL
+├───────────
+│ 	∀r⦁ InitialStrictWellOrdering r  ⇔ StrictWellOrdering (Universe, r) ∧ Initial r 
+■
+
+=GFT
+
+=TEX
+
+
+\ignore{
+=SML
+val InitialStrictWellOrdering_def = get_spec⌜InitialStrictWellOrdering⌝;
+
+set_goal([], ⌜∃r:'a → 'a → BOOL⦁ UStrictWellOrdering r ∧ Initial r⌝);
+
+
+=TEX
+
+
 
 =SML
 commit_pc "'pre-ord";
@@ -293,6 +327,7 @@ force_new_pc "pre-ord1";
 merge_pcs ["rbjmisc1", "'pre-ord"] "pre-ord1";
 commit_pc "pre-ord1";
 =TEX
+}%ignore
 
 \section{ORDINALS}
 

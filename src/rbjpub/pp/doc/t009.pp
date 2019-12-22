@@ -85,7 +85,11 @@ This preface contains my notes on what I have done to it:
 \item Messed about with the section structure.
 \item Put material on relations over a whole type and the independence proofs into a separate theory.
 \item Added the material on transitive closure, the well-founded part of a relationship, and the recursion theorem.
+\item A variety of material leading up to the concept of initial strict well-ordering and the proof that every set has such an ordering.
+\item Transfer of the independence results into a separate theory.
 \end{enumerate}
+
+Note that theory {\tt rbjmisc}\cite{rbjt006} is now a parent, so an attempt to incorporate any of this into {\Product} would need to uncouple that dependency.
 
 \section{INTRODUCTION}\label{INTRODUCTION}
 
@@ -179,12 +183,10 @@ In terms of these primitives we define derived notions such as well-foundedness.
 
 =SML
 open_theory "orders";
-force_new_theory "ordered_sets";
+force_new_theory "⦏ordered_sets⦎";
 new_parent "set_thms";
 new_parent "rbjmisc";
-
 val existing_defs = map get_spec (get_consts "orders");
-
 set_merge_pcs["basic_hol", "'sets_alg", "'savedthm_cs_∃_proof"];
 =TEX
 
@@ -418,7 +420,6 @@ val def_thms = [
 =TEX
 }%
 
-
 \subsection{Lemmas about Subsets of Ordered Sets}\label{Lemmas about Subsets of Ordered Sets}
 
 These lemmas build up to the fact that a subset of a well-ordered set is
@@ -599,20 +600,20 @@ The definition below is couched to deliver something even if the relationship on
 The following theorems facilitate the use of the function.
 
 =GFT
-mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+⦏mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
 	x ∈ Mins (X, $<<) Y ⇔
 	(x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y
 	   ⇒ x << y ∨ x = y ∨ ¬ y << x)
 	
-weak_mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+⦏weak_mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
 	WeakMinCond (X, $<<) ⇒
 	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ¬ Mins (X, $<<) Y  = {}
 	
-weak_mins_thm2 = ⊢ ∀ (X, $<<) Y x⦁
+⦏weak_mins_thm2⦎ = ⊢ ∀ (X, $<<) Y x⦁
 	WeakMinCond (X, $<<) ⇒
 	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ∃x⦁ x ∈ Mins (X, $<<) Y
 	
-full_mins_thm = ⊢ ∀ (X, $<<) Y x⦁
+⦏full_mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
 	MinCond (X, $<<) ⇒
 	(x ∈ Mins (X, $<<) Y ⇔
 	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ y << x ⇒ y = x)
@@ -1069,8 +1070,7 @@ by looking at the chains contained in an arbitrary relation.
 	∧	(∀C⦁	C ⊆ X ∧ Trich(C, $<<)
 		⇒	∃x⦁x ∈ X ∧ UpperBound(C, $<<, x))
 	⇒	∃x⦁	x ∈ X ∧ ∀y⦁ y ∈ X ∧ ¬y = x ⇒ ¬x << y
-=TEX
-=GFT
+
 ⦏chain_singleton_extension_thm⦎ = ⊢ ∀X $<< C x⦁
 		Trans(X, $<<)
 	∧	C ⊆ X
@@ -1078,8 +1078,7 @@ by looking at the chains contained in an arbitrary relation.
 	∧	x ∈ X
 	∧	(∀y⦁y ∈ C ⇒ y << x)
 	⇒	Trich(C ∪ {x}, $<<)
-=TEX
-=GFT
+
 ⦏chain_singleton_extension_thm⦎ = ⊢ ∀X $<< C x⦁
 		Trans(X, $<<)
 	∧	C ⊆ X
@@ -1536,39 +1535,6 @@ save_pop_thm "well_ordering_thm"
 );
 =TEX
 }%ignore
-
-\subsection{Initial Well-Orderings}
-
-We have the result that every set can be well-ordered.
-There will be many.
-
-There is a partial order over these well-orderings which arises from the fact that each well-prdering corresponds to an ordinal number, and the is therefore a least such ordinal and a corresponding set of well-orderings.
-The least ordinal will be an {\it initial} ordinal, and we therefore call the corresponding well-orderings {\it intial well-orderings} and in this section prove that every set has an intial well-ordering.
-
-An initial well-ordering can be obtained in the following way.
-First, chose an arbitrary well-ordering of the set.
-Then consider the initial segments of that well-ordering which have a cardinality the same as the whole.
-Since these are well-ordered we can chose the least of this set, which will correspond to an initial ordinal.
-By hypothesis there is a bijection between that intial segment and the whole, using which an initial well-ordering of the whole can be constructed.
-
-The folllowing definition of the property {\it Initial} is intended to make sense only for well-orderings, but is expressed as a property of relations in general.
-It corresponds to the notion of intial ordinal only when applied to well-orderings.
-
-\ignore{
- ⓈHOLCONST
-│ ⦏Initial⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
- ├──────
-│ ∀ (X, $<<)⦁
-│   Initial (X, $<<) Y = 
- ■
-}%ignore
-
-=GFT
-
-=TEX
-
-
-
 \section{STRICT WELL-ORDERINGS}\label{STRICT WELL-ORDERINGS}
 
 \subsection{Strictness}
@@ -1718,7 +1684,7 @@ val wf_well_ordering_thm = save_pop_thm "wf_well_ordering_thm";
 =TEX
 }%ignore
 
-\subsection{Strict Well Orderings}
+\subsection{Strict Well-Orderings}
 
 We might as well have the concept of strict well-ordering.
 
@@ -1825,38 +1791,62 @@ val swo_injection_thm = save_pop_thm "swo_injection_thm";
 =TEX
 }%ignore
 
-Unwinding the layers of definition we get down to te five primitives: irrefl, antisym, trans, trich, weak mind cond.
+
+Unwinding the layers of definition we get down to the five primitives: irrefl, antisym, trans, trich, weak mind cond.
+However, its convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
 =GFT
 ⦏swo_clauses⦎ = ⊢ ∀ (X, $<<) f⦁
-	StrictWellOrdering (X, $<<) ⇔
+	StrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
              ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
              ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
              ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
-                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ y << x ∧ ¬ y = x ⇒ x << y)))⌝);
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ x << y)))⌝);
 =TEX
 
 \ignore{
 =SML
-set_goal([],⌜∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇔
+set_goal([],⌜∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
              ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
              ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
              ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
-                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ y << x ∧ ¬ y = x ⇒ x << y)))⌝);
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ x << y)))⌝);
 a (rewrite_tac[strict_well_ordering_def, irrefl_def, well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def, trich_def, antisym_def, trans_def]);
-a (REPEAT strip_tac);
+a (REPEAT_N 4 strip_tac THEN asm_rewrite_tac[]);
+a (contr_tac THEN asm_fc_tac[]);
+a (spec_nth_asm_tac 3 ⌜x⌝);
+a (spec_nth_asm_tac 4 ⌜y⌝);
+a (lemma_tac ⌜x ∈ X ∧ y ∈ X⌝ THEN1 (PC_T1 "sets_ext" all_asm_fc_tac[] THEN REPEAT strip_tac));
+a (list_spec_nth_asm_tac 13 [⌜y⌝, ⌜x⌝]);
 val swo_clauses = save_pop_thm "swo_clauses";
 =TEX
 }%ignore
 
-\subsection{Initial Strict WellOrderings}
+\subsection{Initial Strict Well-Orderings}
 
-The concept of initial ordinal is not straightforward to defined outside the context of a theory of ordinals, but we may use arbitrary well-orderings as surrogates for ordinals and it is useful to have the result that any set has a well-ordering which is then the surrogate for an initial ordinal before we get into a theory of ordinals.
+\ignore{
+We have the result that every set can be well-ordered.
+There will be many.
 
-This can be expressed without defining the notion of initial ordinal in the following way:
+There is a partial order over these well-orderings which arises from the fact that each well-prdering corresponds to an ordinal number, and the is therefore a least such ordinal and a corresponding set of well-orderings.
+The least ordinal will be an {\it initial} ordinal, and we therefore call the corresponding well-orderings {\it intial well-orderings} and in this section prove that every set has an intial well-ordering.
+
+An initial well-ordering can be obtained in the following way.
+First, chose an arbitrary well-ordering of the set.
+Then consider the initial segments of that well-ordering which have a cardinality the same as the whole.
+Since these are well-ordered we can chose the least of this set, which will correspond to an initial ordinal.
+By hypothesis there is a bijection between that intial segment and the whole, using which an initial well-ordering of the whole can be constructed.
+
+The folllowing definition of the property {\it Initial} is intended to make sense only for well-orderings, but is expressed as a property of relations in general.
+It corresponds to the notion of intial ordinal only when applied to well-orderings.
+}%ignore
+
+The concept of initial ordinal is not straightforward to defined outside the context of a theory of ordinals, but we may use arbitrary well-orderings as surrogates for ordinals and it is useful to have the result that any set has an initial well-ordering, which is then the surrogate for an initial ordinal, before we get into a theory of ordinals.
+
+This can be expressed without explicitly defining the notion of initial ordinal in the following way:
 
 ⓈHOLCONST
 │ ⦏InitialStrictWellOrdering⦎ : ('a SET × ('a → 'a → BOOL)) → BOOL
@@ -1941,6 +1931,40 @@ val InitialStrictWellOrdering_thm = save_pop_thm "InitialStrictWellOrdering_thm"
 =TEX
 }%ignore
 
+
+Unwinding the layers of definition we get down to the five primitives: irrefl, antisym, trans, trich, weak mind cond.
+However, its convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
+=GFT
+⦏iswo_clauses⦎ = ⊢ ∀ (X, $<<) f⦁
+	InitialStrictWellOrdering (X, $<<) ⇒
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ x << y)))⌝);
+=TEX
+
+\ignore{
+=SML
+set_goal([],⌜∀ (X, $<<)⦁ InitialStrictWellOrdering (X, $<<) ⇒
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ x << y)))⌝);
+a (rewrite_tac[InitialStrictWellOrdering_def, strict_well_ordering_def, irrefl_def, well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def, trich_def, antisym_def, trans_def]);
+a (REPEAT_N 4 strip_tac THEN asm_rewrite_tac[]);
+a (contr_tac THEN asm_fc_tac[]);
+a (spec_nth_asm_tac 3 ⌜x⌝);
+a (spec_nth_asm_tac 4 ⌜y⌝);
+a (lemma_tac ⌜x ∈ X ∧ y ∈ X⌝ THEN1 (PC_T1 "sets_ext" all_asm_fc_tac[] THEN REPEAT strip_tac));
+a (list_spec_nth_asm_tac 14 [⌜y⌝, ⌜x⌝]);
+val iswo_clauses = save_pop_thm "iswo_clauses";
+=TEX
+}%ignore
+
 \subsection{The Minimum Conditions}
 
 In this section we show the equivalence of our definitions with some other useful
@@ -1950,7 +1974,7 @@ for example, come up with induction principles characterising the minimum condit
 A relation has the minimum condition iff. every descending sequence stabilises:
 
 =GFT
-min_cond_descending_sequence_thm = ⊢ ∀X $<<⦁
+⦏min_cond_descending_sequence_thm⦎ = ⊢ ∀X $<<⦁
 		MinCond(X, $<<)
 	⇔	∀f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)
 			⇒ ∃m⦁∀n⦁m < n ⇒ f n = f m
@@ -2034,7 +2058,7 @@ save_pop_thm "min_cond_descending_sequence_thm"
 A relation is a reflexive well-ordering iff. every non-empty subset has a unique lower bound:
 
 =GFT
-refl_well_ordering_lower_bounds_thm = ⊢ ∀X $<<⦁
+⦏refl_well_ordering_lower_bounds_thm⦎ = ⊢ ∀X $<<⦁
 		Refl(X, $<<)
 	∧	WellOrdering(X, $<<)
 	⇔	∀A⦁A ⊆ X ∧ ¬A = {} ⇒ ∃⋎1 x⦁ x ∈ A ∧ ∀y⦁y ∈ A ⇒ x << y
@@ -2130,7 +2154,7 @@ save_pop_thm "refl_well_ordering_lower_bounds_thm"
 A relation is well-founded iff. there are no infinite descending sequences:
 
 =GFT
-well_founded_descending_sequence_thm = ⊢ ∀X $<<⦁
+⦏well_founded_descending_sequence_thm⦎ = ⊢ ∀X $<<⦁
 		WellFounded(X, $<<)
 	⇔	¬∃f⦁ (∀n⦁f n ∈ X) ∧ (∀n⦁f(n+1) << f n)
 =TEX
@@ -2170,7 +2194,7 @@ save_pop_thm "well_founded_descending_sequence_thm"
 A relation is well-founded iff. it enjoys the Noetherian(?) induction principle:
 
 =GFT
-well_founded_induction_thm = ⊢ ∀X $<<⦁
+⦏well_founded_induction_thm⦎ = ⊢ ∀X $<<⦁
 		WellFounded(X, $<<)
 	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
 			⇒ (∀x⦁x ∈ X ⇒ p x)
@@ -2243,25 +2267,25 @@ First the definition:
 The following elementary facts about transitive closure prove useful:
 
 =GFT
-trans_tc_thm = 	⊢ ∀ (X, $<<)⦁ Trans (TranClsr (X, $<<))
+⦏trans_tc_thm⦎ = 	⊢ ∀ (X, $<<)⦁ Trans (TranClsr (X, $<<))
 
-trans_tc_thm2 = 	⊢ ∀ (X, $<<) x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
+⦏trans_tc_thm2⦎ = 	⊢ ∀ (X, $<<) x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
 	∧ Snd(TranClsr (X, $<<)) x y
 	∧ Snd(TranClsr (X, $<<)) y z
 	⇒ Snd(TranClsr (X, $<<)) x z
 
-tc_incr_thm2 =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
+⦏tc_incr_thm2⦎ =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
 	∧ x << y
 	⇒ Snd(TranClsr (X, $<<)) x y
 
-tc_decompose_thm =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
+⦏tc_decompose_thm⦎ =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
 	∧ Snd (TranClsr (X, $<<)) x y
 	∧ ¬ x << y
 	⇒ ∃z⦁ z ∈ X
 	∧ Snd (TranClsr (X, $<<)) x z
 	∧ z << y
 
-tc_mono_thm = ⊢ ∀ (X, r1) (X, r2)⦁
+⦏tc_mono_thm⦎ = ⊢ ∀ (X, r1) (X, r2)⦁
 	  (∀ x y⦁ x ∈ X ∧ y ∈ X
            ∧ r1 x y 
 	  ⇒ r2 x y)
@@ -2417,16 +2441,16 @@ declare_infix (300, "⊆⋎r");
 Allowing us to state concisely (and prove) that a relation is contained in its transitive closure:
 
 =GFT
-r_⊆⋎r_tcr_thm =	⊢ ∀r⦁ r ⊆⋎r TranClsr r
+⦏r_⊆⋎r_tcr_thm⦎ =	⊢ ∀r⦁ r ⊆⋎r TranClsr r
 =TEX
 
 And that various properties of relations also hold of their subrelations:
 
 =GFT
-subrel_irrefl_thm2 =		⊢ ∀r s⦁ s ⊆⋎r r ∧ Irrefl r ⇒ Irrefl s
-subrel_antisym_thm2 =		⊢ ∀r s⦁ s ⊆⋎r r ∧ Antisym r ⇒ Antisym s
-subrel_min_cond_thm2 =		⊢ ∀r s⦁ s ⊆⋎r r ∧ MinCond r ⇒ MinCond s
-subrel_well_founded_thm2 =	⊢ ∀r s⦁ s ⊆⋎r r ∧ WellFounded r ⇒ WellFounded s
+⦏subrel_irrefl_thm2⦎ =		⊢ ∀r s⦁ s ⊆⋎r r ∧ Irrefl r ⇒ Irrefl s
+⦏subrel_antisym_thm2⦎ =		⊢ ∀r s⦁ s ⊆⋎r r ∧ Antisym r ⇒ Antisym s
+⦏subrel_min_cond_thm2⦎ =		⊢ ∀r s⦁ s ⊆⋎r r ∧ MinCond r ⇒ MinCond s
+⦏subrel_well_founded_thm2⦎ =	⊢ ∀r s⦁ s ⊆⋎r r ∧ WellFounded r ⇒ WellFounded s
 =TEX
 
 \ignore{
@@ -2525,7 +2549,7 @@ In the right to left direction the result follows from the fact that a relation 
 In the left to right direction the proof involves showing by well-founded induction that there is no descending sequence in the transitive closure.
 
 =GFT
-wf_iff_wftc_thm =	⊢ ∀ (X, $<<)⦁
+⦏wf_iff_wftc_thm⦎ =	⊢ ∀ (X, $<<)⦁
 	WellFounded (X, $<<) ⇔ WellFounded (TranClsr (X, $<<))
 =TEX
 
@@ -2634,7 +2658,7 @@ val wf_iff_wftc_thm = save_pop_thm "wf_iff_wftc_thm";
 =TEX
 }%ignore
 
-\subsection{The Well-founded Part of a Relation}
+\subsection{The Well-Founded Part of a Relation}
 
 Relations which are not well-founded may have useful well-founded subrelations.
 
@@ -2651,7 +2675,7 @@ The well-founded part of a relation is the restriction of the relation to the su
 The well-founded part of a relation is of course, well-founded.
 
 =GFT
-wf_part_wf_thm = ⊢ ∀r⦁ WellFounded (WfPart r)
+⦏wf_part_wf_thm⦎ = ⊢ ∀r⦁ WellFounded (WfPart r)
 =TEX
 
 \ignore{
@@ -2729,7 +2753,7 @@ To express a recursion theorem giving partial fixed points of a functional we de
 
 which has the elementary property:
 =GFT
-part_fun_equiv_lemma1 = ⊢ ∀X Y f g⦁
+⦏part_fun_equiv_lemma1⦎ = ⊢ ∀X Y f g⦁
 	PartFunEquiv X f g ∧ Y ⊆ X ⇒ PartFunEquiv Y f g
 =TEX
 
@@ -2757,10 +2781,10 @@ The following variant of reflexive transitive closure (yielding a set from an el
 ■
 
 =GFT
-tcupto_inc_lemma1 = ⊢ ∀(X, $<<) x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
+⦏tcupto_inc_lemma1⦎ = ⊢ ∀(X, $<<) x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
 	⇒ (TcUpTo (X, $<<) y) ⊆ (TcUpTo (X, $<<) x)
 
-tcupto_inc_lemma2 = ⊢ ∀(X, $<<) x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
+⦏tcupto_inc_lemma2⦎ = ⊢ ∀(X, $<<) x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
 	⇒ (TcUpTo (X, $<<) x) ⊆ (TcUpTo (X, $<<) y)
 =TEX
 
@@ -2802,12 +2826,12 @@ val tcupto_inc_lemma2 = save_pop_thm "tcupto_inc_lemma2";
 The following two lemmas about {\it PartFunEquiv} are then immediate:
 
 =GFT
-part_fun_equiv_lemma2 = ⊢ ∀X f g x y⦁ x ∈ X ∧ y ∈ X
+⦏part_fun_equiv_lemma2⦎ = ⊢ ∀X f g x y⦁ x ∈ X ∧ y ∈ X
 	∧ PartFunEquiv (TcUpTo (X, $<<) y) f g
 	∧ x << y
 	⇒ PartFunEquiv (TcUpTo (X, $<<) x) f g
 
-part_fun_equiv_lemma3 = ⊢ ∀X Y f g x y⦁ y ∈ X
+⦏part_fun_equiv_lemma3⦎ = ⊢ ∀X Y f g x y⦁ y ∈ X
 	∧ PartFunEquiv (TcUpTo (X, $<<) y) f g
 	∧ x ∈ (TcUpTo (X, $<<) y)
 	⇒ PartFunEquiv (TcUpTo (X, $<<) x) f g
@@ -2884,7 +2908,7 @@ The proof of the recursion theorem is by well-founded induction on the transitiv
 The induction hypothesis is exposed in the following lemma:
 
 =GFT
-recursion_theorem_lemma1 = ⊢ ∀G (X, $<<)⦁
+⦏recursion_theorem_lemma1⦎ = ⊢ ∀G (X, $<<)⦁
 	FunctRespects G (X, $<<) ∧ WellFounded (X, $<<)
 	⇒ ∀x⦁ x ∈ X ⇒ UniquePartFixp (TcUpTo (X, $<<) x) G
 =TEX
@@ -3084,7 +3108,7 @@ val recursion_theorem_lemma1 = save_pop_thm "recursion_theorem_lemma1";
 The recursion theorem follows:
 
 =GFT
-recursion_theorem = ⊢ ∀(X, $<<) G⦁
+⦏recursion_theorem⦎ = ⊢ ∀(X, $<<) G⦁
 	FunctRespects G (X, $<<) ∧ WellFounded (X, $<<) ⇒ UniquePartFixp X G
 =TEX
 
@@ -3138,7 +3162,7 @@ val recursion_theorem = save_pop_thm "recursion_theorem";
 from which is readily obtained the specialisation to total functions:
 
 =GFT
-tf_recursion_thm = ⊢ ∀$<< G⦁
+⦏tf_recursion_thm⦎ = ⊢ ∀$<< G⦁
 	FunctRespects G (Universe, $<<) ∧ WellFounded (Universe, $<<)
 	⇒ ∃f⦁ (G f) = f
 =TEX
@@ -3214,7 +3238,7 @@ The material in the next two sections is placed in a new theory {\it U\_orders}.
 
 \ignore{
 =SML
-new_theory "U_orders";
+new_theory "⦏U_orders⦎";
 =TEX
 }%ignore
 
@@ -3346,7 +3370,7 @@ the relation that relates any two natural numbers does the job).
 
 =SML
 open_theory "ordered_sets";
-new_theory "ordered_sets_i";
+new_theory "⦏ordered_sets_i⦎";
 =TEX
 
 \ignore{

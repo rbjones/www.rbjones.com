@@ -48,7 +48,7 @@ This document serves to establish what characters render like in utf8 ProofPower
 \begin{centering}
 {\footnotesize
 
-Created 2011/02/24
+Created 2019
 
 \input{t046i.tex}
 
@@ -86,9 +86,6 @@ See also Section \ref{POSTSCRIPT}.
 
 \ignore{
 =VDUMP t046i.tex
-Last Change $ $Date: 2011/05/16 21:40:17 $ $
-
-$ $Id: t046.doc,v 1.8 2011/05/16 21:40:17 rbj Exp $ $
 =TEX
 }%ignore
 
