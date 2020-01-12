@@ -415,7 +415,8 @@ save_pop_thm "well_ordering_def_thm"
 val def_thms = [
 	refl_def, partial_order_def, linear_order_def,
 	weak_min_cond_def, min_cond_def_thm,
-	well_ordering_def_thm, well_founded_thm]
+	well_ordering_def_thm, well_founded_thm
+	]
 	@ existing_defs;
 =TEX
 }%
@@ -600,20 +601,20 @@ The definition below is couched to deliver something even if the relationship on
 The following theorems facilitate the use of the function.
 
 =GFT
-⦏mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏mins_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	x ∈ Mins (X, $<<) Y ⇔
 	(x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y
 	   ⇒ x << y ∨ x = y ∨ ¬ y << x)
 	
-⦏weak_mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏weak_mins_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	WeakMinCond (X, $<<) ⇒
 	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ¬ Mins (X, $<<) Y  = {}
 	
-⦏weak_mins_thm2⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏weak_mins_thm2⦎ = ⊢ ∀ X $<< Y x⦁
 	WeakMinCond (X, $<<) ⇒
 	∀ Y⦁ Y ⊆ X ∧ ¬ Y = {} ⇒ ∃x⦁ x ∈ Mins (X, $<<) Y
 	
-⦏full_mins_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏full_mins_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	MinCond (X, $<<) ⇒
 	(x ∈ Mins (X, $<<) Y ⇔
 	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ y << x ⇒ y = x)
@@ -622,14 +623,14 @@ The following theorems facilitate the use of the function.
 =SML
 val mins_def = get_spec ⌜Mins⌝;
 
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	x ∈ Mins (X, $<<) Y ⇔
 	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ⇒ x << y ∨ x = y ∨ ¬ y << x⌝); 
 a (rewrite_tac [weak_min_cond_def, mins_def]
   THEN REPEAT ∀_tac THEN strip_tac);
 val mins_thm = save_pop_thm "mins_thm";
 
-set_goal([], ⌜∀ (X, $<<)⦁ WeakMinCond (X, $<<) ⇒
+set_goal([], ⌜∀ X $<<⦁ WeakMinCond (X, $<<) ⇒
 	     ∀ Y x⦁ Y ⊆ X ∧ ¬ Y = {} ⇒  ¬ Mins (X, $<<) Y  = {}⌝); 
 a (PC_T1 "sets_ext" rewrite_tac [weak_min_cond_def, mins_def]
   THEN REPEAT strip_tac);
@@ -642,16 +643,16 @@ a (spec_nth_asm_tac 5 ⌜y⌝);
 a (asm_rewrite_tac[]);
 val weak_mins_thm = save_pop_thm "weak_mins_thm";
 
-set_goal([], ⌜∀ (X, $<<)⦁ WeakMinCond (X, $<<) ⇒
+set_goal([], ⌜∀ X $<<⦁ WeakMinCond (X, $<<) ⇒
 	     ∀ Y x⦁ Y ⊆ X ∧ ¬ Y = {} ⇒  ∃x⦁ x ∈ Mins (X, $<<) Y⌝); 
-a (REPEAT_N 7 strip_tac THEN all_fc_tac[weak_mins_thm]);
+a (REPEAT_N 6 strip_tac THEN all_fc_tac[weak_mins_thm]);
 a (POP_ASM_T ante_tac
   THEN PC_T1 "sets_ext" rewrite_tac[]
   THEN REPEAT strip_tac);
 a (∃_tac ⌜x⌝ THEN REPEAT strip_tac);
 val weak_mins_thm2 = save_pop_thm "weak_mins_thm2";
 
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	MinCond (X, $<<) ⇒
 	(x ∈ Mins (X, $<<) Y ⇔
 	x ∈ X ∧ x ∈ Y ∧ ∀ y⦁ y ∈ X ∧ y ∈ Y ∧ y << x ⇒ y = x)⌝); 
@@ -680,7 +681,7 @@ val full_mins_thm = save_pop_thm "full_mins_thm";
 ■
 
 =GFT
-⦏weak_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏weak_minr_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	WeakMinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ∧ y << x ∧ ¬ y = x ⇒ x << y
 =TEX
@@ -689,7 +690,7 @@ val full_mins_thm = save_pop_thm "full_mins_thm";
 =SML
 val minr_def = get_spec ⌜Minr⌝ ;
 
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	WeakMinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ∧ y << x ∧ ¬ y = x ⇒ x << y⌝); 
 a (rewrite_tac [weak_min_cond_def, minr_def]
@@ -721,14 +722,14 @@ val weak_minr_thm = save_pop_thm "weak_minr_thm";
 }%ignore
 
 =GFT
-⦏minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏minr_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	MinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	     MinCond (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x⌝); 
 a (rewrite_tac [min_cond_def] THEN REPEAT ∀_tac THEN strip_tac);
@@ -751,7 +752,7 @@ val minr_thm = save_pop_thm "minr_thm";
 \subsection{Injections into Orderings}
 
 =GFT
-⦏irf_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏irf_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	Irrefl (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Irrefl (X, λ x y⦁ f x << f y)
@@ -760,7 +761,7 @@ val minr_thm = save_pop_thm "minr_thm";
 \ignore{
 
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	Irrefl (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Irrefl (X, λ x y⦁ f x << f y)⌝);
@@ -773,7 +774,7 @@ val irf_injection_thm = save_pop_thm "irf_injection_thm";
 
 
 =GFT
-⦏as_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏as_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	Antisym (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Antisym (X, λ x y⦁ f x << f y)
@@ -782,7 +783,7 @@ val irf_injection_thm = save_pop_thm "irf_injection_thm";
 \ignore{
 
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	Antisym (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Antisym (X, λ x y⦁ f x << f y)⌝);
@@ -796,7 +797,7 @@ val as_injection_thm = save_pop_thm "as_injection_thm";
 }%ignore
 
 =GFT
-⦏tr_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏tr_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	Trans (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Trans (X, λ x y⦁ f x << f y)
@@ -805,7 +806,7 @@ val as_injection_thm = save_pop_thm "as_injection_thm";
 \ignore{
 
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	Trans (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Trans (X, λ x y⦁ f x << f y)⌝);
@@ -818,7 +819,7 @@ val tr_injection_thm = save_pop_thm "tr_injection_thm";
 }%ignore
 
 =GFT
-⦏po_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏po_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	PartialOrder (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	PartialOrder (X, λ x y⦁ f x << f y)
@@ -827,7 +828,7 @@ val tr_injection_thm = save_pop_thm "tr_injection_thm";
 \ignore{
 
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	PartialOrder (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	PartialOrder (X, λ x y⦁ f x << f y)⌝);
@@ -842,7 +843,7 @@ val po_injection_thm = save_pop_thm "po_injection_thm";
 }%ignore
 
 =GFT
-⦏tri_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏tri_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	Trich (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Trich (X, λ x y⦁ f x << f y)
@@ -851,7 +852,7 @@ val po_injection_thm = save_pop_thm "po_injection_thm";
 \ignore{
 
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	Trich (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	Trich (X, λ x y⦁ f x << f y)⌝);
@@ -865,7 +866,7 @@ val tri_injection_thm = save_pop_thm "tri_injection_thm";
 }%ignore
 
 =GFT
-⦏lo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏lo_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	LinearOrder (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	LinearOrder (X, λ x y⦁ f x << f y)
@@ -873,7 +874,7 @@ val tri_injection_thm = save_pop_thm "tri_injection_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	LinearOrder (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	LinearOrder (X, λ x y⦁ f x << f y)⌝);
@@ -888,7 +889,7 @@ val lo_injection_thm = save_pop_thm "lo_injection_thm";
 }%ignore
 
 =GFT
-⦏wmc_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏wmc_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	WeakMinCond (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	WeakMinCond (X, λ x y⦁ f x << f y)
@@ -896,7 +897,7 @@ val lo_injection_thm = save_pop_thm "lo_injection_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	WeakMinCond (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	WeakMinCond (X, λ x y⦁ f x << f y)⌝);
@@ -938,7 +939,7 @@ val wmc_injection_thm = save_pop_thm "wmc_injection_thm";
 
 
 =GFT
-⦏wo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏wo_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	WellOrdering (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	WellOrdering (X, λ x y⦁ f x << f y)
@@ -946,7 +947,7 @@ val wmc_injection_thm = save_pop_thm "wmc_injection_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	WellOrdering (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	WellOrdering (X, λ x y⦁ f x << f y)⌝);
@@ -965,7 +966,7 @@ val wo_injection_thm = save_pop_thm "wo_injection_thm";
 \subsection{Minimal Elements}
 
 =GFT
-⦏antisym_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏antisym_minr_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	MinCond (X, $<<) ∧
 	Antisym (X, $<<) ∧
 	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
@@ -974,7 +975,7 @@ val wo_injection_thm = save_pop_thm "wo_injection_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	     MinCond (X, $<<) ∧
 	     Antisym (X, $<<) ∧
 	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
@@ -994,7 +995,7 @@ val antisym_minr_thm = save_pop_thm "strict_minr_thm";
 }%ignore
 
 =GFT
-⦏wo_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏wo_minr_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	    WellOrdering (X, $<<) ∧
 	    Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	    x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ x << y ∨ y = x)
@@ -1002,7 +1003,7 @@ val antisym_minr_thm = save_pop_thm "strict_minr_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	     WellOrdering (X, $<<) ∧ Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ x << y ∨ y = x⌝); 
 a (rewrite_tac [well_ordering_def]
@@ -1030,7 +1031,7 @@ val wo_minr_thm = save_pop_thm "wo_minr_thm";
 }%ignore
 
 =GFT
-⦏wo_minr_thm2⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏wo_minr_thm2⦎ = ⊢ ∀ X $<< Y x⦁
 	WellOrdering (X, $<<) ∧
 	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x
@@ -1038,7 +1039,7 @@ val wo_minr_thm = save_pop_thm "wo_minr_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	WellOrdering (X, $<<) ∧
 	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ y << x ⇒ y = x⌝);
@@ -1562,68 +1563,68 @@ A few lemmas for proving properties of strict relations:
 
 =GFT
 ⦏IrreflStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ Irrefl (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ Irrefl (Strict (X, $<<))
 ⦏PartialOrderStrict_thm⦎ = 
-	⊢ ∀ (X, $<<)⦁ PartialOrder (X, $<<) ⇒ PartialOrder (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ PartialOrder (X, $<<) ⇒ PartialOrder (Strict (X, $<<))
 ⦏TrichStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ Trich (X, $<<) ⇒ Trich (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ Trich (X, $<<) ⇒ Trich (Strict (X, $<<))
 ⦏LinearOrderStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ LinearOrder (X, $<<) ⇒ LinearOrder (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ LinearOrder (X, $<<) ⇒ LinearOrder (Strict (X, $<<))
 ⦏AntisymStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ Antisym (X, $<<) ⇒ Antisym (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ Antisym (X, $<<) ⇒ Antisym (Strict (X, $<<))
 ⦏WeakMinCondStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ WeakMinCond (X, $<<) ⇒ WeakMinCond (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ WeakMinCond (X, $<<) ⇒ WeakMinCond (Strict (X, $<<))
 ⦏WellOrderingStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ WellOrdering (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ WellOrdering (X, $<<) ⇒ WellOrdering (Strict (X, $<<))
 ⦏MinCondStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ LinearOrder (X, $<<) ∧ WeakMinCond (X, $<<)
+	⊢ ∀ X $<<⦁ LinearOrder (X, $<<) ∧ WeakMinCond (X, $<<)
 		⇒ MinCond (Strict (X, $<<))
 ⦏WellFoundedStrict_thm⦎ =
-	⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ WellFounded (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ WellOrdering (X, $<<) ⇒ WellFounded (Strict (X, $<<))
 =TEX
 
 \ignore{
 =SML
 val strict_def = get_spec ⌜Strict⌝;
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ Irrefl (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:('a → 'a → BOOL))⦁ Irrefl (Strict (X, $<<))⌝);
 a (rewrite_tac[irrefl_def, strict_def] THEN REPEAT strip_tac);
 val IrreflStrict_thm = save_pop_thm "IrreflStrict_thm";
 
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ PartialOrder (X, $<<) ⇒ PartialOrder (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) $<<⦁ PartialOrder (X, $<<) ⇒ PartialOrder (Strict (X, $<<))⌝);
 a (strip_tac THEN rewrite_tac[partial_order_def, trans_def, antisym_def, strict_def]
 	THEN contr_tac THEN all_asm_fc_tac[]);
 a (all_var_elim_asm_tac);
 a (all_asm_fc_tac[]);
 val PartialOrderStrict_thm = save_pop_thm "PartialOrderStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ Trich (X, $<<) ⇒ Trich (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ Trich (X, $<<) ⇒ Trich (Strict (X, $<<))⌝);
 a (strip_tac THEN rewrite_tac[trich_def, strict_def]
 	THEN contr_tac THEN all_asm_fc_tac[]);
 a (all_var_elim_asm_tac);
 val TrichStrict_thm = save_pop_thm "TrichStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ LinearOrder (X, $<<) ⇒ LinearOrder (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ LinearOrder (X, $<<) ⇒ LinearOrder (Strict (X, $<<))⌝);
 a (REPEAT ∀_tac THEN rewrite_tac[linear_order_def]);
 a (strip_tac THEN fc_tac [PartialOrderStrict_thm, TrichStrict_thm]);
 a (REPEAT_N 2 (POP_ASM_T ante_tac) THEN rewrite_tac [strict_def, linear_order_def]
 	THEN REPEAT strip_tac);
 val LinearOrderStrict_thm = save_pop_thm "LinearOrderStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ Antisym (X, $<<) ⇒ Antisym (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ Antisym (X, $<<) ⇒ Antisym (Strict (X, $<<))⌝);
 a (REPEAT ∀_tac THEN rewrite_tac[strict_def, antisym_def]);
 a (contr_tac THEN all_asm_fc_tac[]);
 val AntisymStrict_thm = save_pop_thm "AntisymStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ WeakMinCond (X, $<<) ⇒ WeakMinCond (Strict(X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ WeakMinCond (X, $<<) ⇒ WeakMinCond (Strict(X, $<<))⌝);
 a (REPEAT ∀_tac THEN rewrite_tac[strict_def, weak_min_cond_def]);
 a (contr_tac THEN all_asm_fc_tac[]);
 a (spec_nth_asm_tac 3 ⌜x⌝ THEN1 all_asm_fc_tac[]);
 a (all_var_elim_asm_tac);
 val WeakMinCondStrict_thm = save_pop_thm "WeakMinCondStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ WellOrdering (X, $<<) ⇒ WellOrdering (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ WellOrdering (X, $<<) ⇒ WellOrdering (Strict (X, $<<))⌝);
 a (REPEAT ∀_tac THEN rewrite_tac[well_ordering_def]
 	THEN strip_tac
 	THEN asm_fc_tac [LinearOrderStrict_thm, WeakMinCondStrict_thm]
@@ -1632,7 +1633,7 @@ a (REPEAT ∀_tac THEN rewrite_tac[well_ordering_def]
 	THEN REPEAT strip_tac);
 val WellOrderingStrict_thm = save_pop_thm "WellOrderingStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁
 	LinearOrder (X, $<<) ∧ WeakMinCond (X, $<<)
                ⇒ MinCond (Strict (X, $<<))⌝);
 a (rewrite_tac[weak_min_cond_def, min_cond_def, strict_def, antisym_def]
@@ -1651,7 +1652,7 @@ a (all_asm_fc_tac[]);
 a (all_var_elim_asm_tac);
 val MinCondStrict_thm = save_pop_thm "MinCondStrict_thm";
 
-set_goal([], ⌜∀(X, $<<):'a SET × ('a → 'a → BOOL)⦁ WellOrdering (X, $<<) ⇒ WellFounded (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ (X:'a SET) ($<<:'a → 'a → BOOL)⦁ WellOrdering (X, $<<) ⇒ WellFounded (Strict (X, $<<))⌝);
 a (rewrite_tac[
 	well_ordering_def, well_founded_def,
 	rewrite_rule[strict_def] IrreflStrict_thm]);
@@ -1697,10 +1698,10 @@ We might as well have the concept of strict well-ordering.
 
 =GFT
 ⦏StrictWellOrdering_thm1⦎ =
-	⊢ ∀ (X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))
+	⊢ ∀ X $<<⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))
    
 ⦏SWO_WellFounded_thm⦎ =
-  	⊢ ∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)
+  	⊢ ∀ X $<<⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)
 
 ⦏strict_well_ordering_thm⦎ =
 	⊢ ∀X :'a SET⦁ ∃ $<<⦁ StrictWellOrdering(X, $<<)
@@ -1710,7 +1711,7 @@ We might as well have the concept of strict well-ordering.
 =SML
 val strict_well_ordering_def = get_spec ⌜StrictWellOrdering⌝;
 
-set_goal([], ⌜∀(X, $<<)⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))⌝);
+set_goal([], ⌜∀ X $<<⦁ WellOrdering (X, $<<) ⇒ StrictWellOrdering (Strict (X, $<<))⌝);
 a (REPEAT strip_tac);
 a (once_rewrite_tac [prove_rule [] ⌜Strict (X, $<<)=(Fst (Strict (X, $<<)):'a SET, Snd (Strict (X, $<<)))⌝, strict_well_ordering_def, IrreflStrict_thm]);
 a (pure_rewrite_tac[strict_well_ordering_def]);
@@ -1718,7 +1719,7 @@ a (asm_rewrite_tac [IrreflStrict_thm, WellFoundedStrict_thm]);
 a (fc_tac [WellOrderingStrict_thm]);
 val StrictWellOrdering_thm1 = save_pop_thm "StrictWellOrdering_thm1";
 
-set_goal([], ⌜∀(X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)⌝);
+set_goal([], ⌜∀ X $<<⦁ StrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)⌝);
 a (strip_tac THEN rewrite_tac[strict_well_ordering_def, well_ordering_def, well_founded_def, min_cond_def, weak_min_cond_def, linear_order_def, partial_order_def]);
 a (REPEAT strip_tac THEN all_asm_fc_tac[]);
 a (∃_tac ⌜x⌝ THEN asm_rewrite_tac[]);
@@ -1736,7 +1737,7 @@ val strict_well_ordering_thm = save_pop_thm "strict_well_ordering_thm";
 }%ignore
 
 =GFT
-⦏swo_minr_thm⦎ = ⊢ ∀ (X, $<<) Y x⦁
+⦏swo_minr_thm⦎ = ⊢ ∀ X $<< Y x⦁
 	StrictWellOrdering (X, $<<) ∧
 	Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ (¬x = y ⇔ x << y)
@@ -1746,12 +1747,12 @@ val strict_well_ordering_thm = save_pop_thm "strict_well_ordering_thm";
 =SML
 val StrictWellOrdering_def = get_spec ⌜StrictWellOrdering⌝;
 
-set_goal([], ⌜∀ (X, $<<) Y x⦁
+set_goal([], ⌜∀ X $<< Y x⦁
 	StrictWellOrdering (X, $<<) ∧
 	     Y ⊆ X ∧ ¬Y = {} ∧ x = Minr (X, $<<) Y ⇒ 
 	     x ∈ Y ∧ ∀ y⦁ y ∈ Y ⇒ (¬x = y ⇔ x << y)⌝);
 a (REPEAT ∀_tac THEN strip_tac);
-a (fc_tac[StrictWellOrdering_def]);
+a (fc_tac[strict_well_ordering_def]);
 a (fc_tac[irrefl_def]);
 a (lemma_tac ⌜x ∈ Y⌝ THEN1 all_asm_fc_tac [wo_minr_thm]);
 a (lemma_tac ⌜x ∈ X⌝
@@ -1769,7 +1770,7 @@ val swo_minr_thm = save_pop_thm "swo_minr_thm";
 }%ignore
 
 =GFT
-⦏swo_injection_thm⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏swo_injection_thm⦎ = ⊢ ∀ X $<< f⦁
 	StrictWellOrdering (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	StrictWellOrdering (X, λ x y⦁ f x << f y)
@@ -1777,11 +1778,11 @@ val swo_minr_thm = save_pop_thm "swo_minr_thm";
 
 \ignore{
 =SML
-set_goal([], ⌜∀ (X, $<<) f⦁
+set_goal([], ⌜∀ X $<< f⦁
 	StrictWellOrdering (X, $<<) ∧
 	OneOne f ∧ (∀ x⦁ x ∈ X ⇒ f x ∈ X) ⇒
 	StrictWellOrdering (X, λ x y⦁ f x << f y)⌝);
-a (REPEAT ∀_tac THEN rewrite_tac[StrictWellOrdering_def]);
+a (REPEAT ∀_tac THEN rewrite_tac[strict_well_ordering_def]);
 a (REPEAT strip_tac);
 (* *** Goal "1" *** *)
 a (all_fc_tac[irf_injection_thm]);
@@ -1795,7 +1796,7 @@ val swo_injection_thm = save_pop_thm "swo_injection_thm";
 Unwinding the layers of definition we get down to the five primitives: irrefl, antisym, trans, trich, weak mind cond.
 However, its convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
 =GFT
-⦏swo_clauses⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏swo_clauses⦎ = ⊢ ∀ X $<< f⦁
 	StrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
@@ -1807,7 +1808,7 @@ However, its convenient not to ignore the strengthening of the minimum condition
 
 \ignore{
 =SML
-set_goal([],⌜∀ (X, $<<)⦁ StrictWellOrdering (X, $<<) ⇒
+set_goal([],⌜∀ X $<<⦁ StrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
              ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
@@ -1859,16 +1860,16 @@ This can be expressed without explicitly defining the notion of initial ordinal 
 We can then prove:
 
 =GFT
-⦏InitialStrictWellOrdering_thm⦎ =
+⦏initial_strict_well_ordering_thm⦎ =
 	⊢ ∀X :'a SET⦁ ∃ $<<⦁ InitialStrictWellOrdering(X, $<<)
 =TEX
 
 \ignore{
 =SML
-val InitialStrictWellOrdering_def = get_spec ⌜InitialStrictWellOrdering⌝;
+val initial_strict_well_ordering_def = get_spec ⌜InitialStrictWellOrdering⌝;
 
 set_goal([], ⌜∀X :'a SET⦁ ∃ $<<⦁ InitialStrictWellOrdering(X, $<<)⌝);
-a (strip_tac THEN rewrite_tac[InitialStrictWellOrdering_def]);
+a (strip_tac THEN rewrite_tac[initial_strict_well_ordering_def]);
 a (strip_asm_tac strict_well_ordering_thm);
 a (spec_asm_tac ⌜∀ X⦁ ∃ $<<⦁ StrictWellOrdering (X, $<<)⌝ ⌜X⌝);
 a (cases_tac ⌜(∃ f y⦁ y ∈ X ∧ OneOne f ∧ (∀ z⦁ z ∈ X ⇒ f z ∈ X ∧ f z << y))⌝);
@@ -1904,7 +1905,7 @@ a (lemma_tac ⌜∀ x⦁ x ∈ X ⇒ f' x ∈ X⌝
 a (spec_nth_asm_tac 2 ⌜f'⌝ THEN1 asm_fc_tac[]);
 (* *** Goal "1.2" *** *)
 a contr_tac;
-a (strip_asm_tac(list_∀_elim [⌜(X, $<<)⌝, ⌜Y⌝, ⌜x⌝] swo_minr_thm));
+a (strip_asm_tac(list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜Y⌝, ⌜x⌝] swo_minr_thm));
 a (lemma_tac ⌜f' y' ∈ Y⌝ THEN1 asm_rewrite_tac[]);
 (* *** Goal "1.2.1" *** *)
 a (spec_nth_asm_tac 7 ⌜y'⌝);
@@ -1927,7 +1928,7 @@ a (spec_nth_asm_tac 10 ⌜y'⌝);
 a (all_fc_tac [swo_clauses]);
 (* *** Goal "2" *** *)
 a (∃_tac ⌜$<<⌝ THEN asm_rewrite_tac[]);
-val InitialStrictWellOrdering_thm = save_pop_thm "InitialStrictWellOrdering_thm";
+val initial_strict_well_ordering_thm = save_pop_thm "initial_strict_well_ordering_thm";
 =TEX
 }%ignore
 
@@ -1935,7 +1936,7 @@ val InitialStrictWellOrdering_thm = save_pop_thm "InitialStrictWellOrdering_thm"
 Unwinding the layers of definition we get down to the five primitives: irrefl, antisym, trans, trich, weak mind cond.
 However, its convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
 =GFT
-⦏iswo_clauses⦎ = ⊢ ∀ (X, $<<) f⦁
+⦏iswo_clauses⦎ = ⊢ ∀ X $<< f⦁
 	InitialStrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
@@ -1947,14 +1948,14 @@ However, its convenient not to ignore the strengthening of the minimum condition
 
 \ignore{
 =SML
-set_goal([],⌜∀ (X, $<<)⦁ InitialStrictWellOrdering (X, $<<) ⇒
+set_goal([],⌜∀ X $<<⦁ InitialStrictWellOrdering (X, $<<) ⇒
 		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
              ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
              ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
              ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
              ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
                  ⇒ (∃ x⦁ x ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ x << y)))⌝);
-a (rewrite_tac[InitialStrictWellOrdering_def, strict_well_ordering_def, irrefl_def, well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def, trich_def, antisym_def, trans_def]);
+a (rewrite_tac[initial_strict_well_ordering_def, strict_well_ordering_def, irrefl_def, well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def, trich_def, antisym_def, trans_def]);
 a (REPEAT_N 4 strip_tac THEN asm_rewrite_tac[]);
 a (contr_tac THEN asm_fc_tac[]);
 a (spec_nth_asm_tac 3 ⌜x⌝);
@@ -1964,6 +1965,78 @@ a (list_spec_nth_asm_tac 14 [⌜y⌝, ⌜x⌝]);
 val iswo_clauses = save_pop_thm "iswo_clauses";
 =TEX
 }%ignore
+
+=GFT
+⦏iswo_clauses2⦎ = ⊢ ∀ X $<< f⦁
+	InitialStrictWellOrdering (X, $<<) ⇒
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (Minr X A ∈ A ∧ (∀ y⦁ y ∈ A ∧ ¬ y = x ⇒ Minr X A << y)))⌝);
+=TEX
+
+\ignore{
+=SML
+set_goal([],⌜∀ X $<< f⦁
+	InitialStrictWellOrdering (X, $<<) ⇒
+		(∀ x⦁ x ∈ X ⇒ ¬ x << x)
+             ∧	(((∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ ¬ (x << y ∧ y << x))
+             ∧	(∀ x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X ∧ x << y ∧ y << z ⇒ x << z))
+             ∧	(∀ x y⦁ x ∈ X ∧ y ∈ X ∧ ¬ x = y ⇒ x << y ∨ y << x))
+             ∧	(∀ A⦁ A ⊆ X ∧ ¬ A = {}
+                 ⇒ (Minr (X,$<<) A ∈ A ∧ (∀ y⦁ y ∈ A ⇒ y = Minr (X,$<<) A ∨ Minr (X,$<<) A << y)))⌝);
+a (REPEAT_N 4 strip_tac
+  THEN REPEAT (ufc_tac
+       [initial_strict_well_ordering_def,strict_well_ordering_def, irrefl_def,
+       well_ordering_def, linear_order_def, weak_min_cond_def, partial_order_def,
+       trich_def, antisym_def, trans_def, swo_minr_thm]));
+a strip_tac;
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (strip_tac);
+(* *** Goal "2.1" *** *)
+a (strip_tac);
+(* *** Goal "2.1.1" *** *)
+a (strip_tac);
+(* *** Goal "2.1.1.1" *** *)
+a (contr_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2.1.1.2" *** *)
+a (contr_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2.1.2" *** *)
+a (contr_tac THEN all_asm_fc_tac[]);
+(* *** Goal "2.2" *** *)
+a (REPEAT_N 3 strip_tac);
+(* *** Goal "2.2.1" *** *)
+a (list_spec_nth_asm_tac 16 [⌜Minr (X, $<<) A⌝, ⌜A⌝]);
+(* *** Goal "2.2.2" *** *)
+a (REPEAT_N 2 strip_tac);
+a (list_spec_nth_asm_tac 18 [⌜y⌝, ⌜Minr (X, $<<) A⌝, ⌜A⌝]);
+(* *** Goal "2.2.2.1" *** *)
+a (POP_ASM_T rewrite_thm_tac);
+(* *** Goal "2.2.2.2" *** *)
+a (POP_ASM_T rewrite_thm_tac);
+val iswo_clauses2 = save_pop_thm "iswo_clauses2";
+=TEX
+}%ignore
+
+=GFT
+⦏ISWO_WellFounded_thm⦎ =
+  	⊢ ∀ X $<<⦁ InitialStrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ X $<<⦁ InitialStrictWellOrdering (X, $<<) ⇒ WellFounded (X, $<<)⌝);
+a (REPEAT strip_tac
+  THEN fc_tac[initial_strict_well_ordering_def]
+  THEN fc_tac[SWO_WellFounded_thm]);
+val ISWO_WellFounded_thm = save_pop_thm "ISWO_WellFounded_thm";
+=TEX
+}%ignore
+
 
 \subsection{The Minimum Conditions}
 
@@ -2198,6 +2271,10 @@ A relation is well-founded iff. it enjoys the Noetherian(?) induction principle:
 		WellFounded(X, $<<)
 	⇔	∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
 			⇒ (∀x⦁x ∈ X ⇒ p x)
+⦏ISWO_Induction_thm⦎ = ⊢ ∀ X $<<⦁
+	InitialStrictWellOrdering (X, $<<) ⇒
+		∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
+		    ⇒ (∀x⦁x ∈ X ⇒ p x)
 =TEX
 
 \ignore{
@@ -2244,6 +2321,16 @@ a(∃_tac⌜f 0⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
 a(∃_tac⌜f⌝ THEN asm_rewrite_tac[]);
 save_pop_thm "well_founded_induction_thm"
 );
+
+set_goal([], ⌜∀ X $<<⦁
+	InitialStrictWellOrdering (X, $<<) ⇒
+		∀p⦁ (∀x⦁x ∈ X ∧ (∀y⦁y ∈ X ∧ y << x ⇒ p y) ⇒ p x)
+		    ⇒ (∀x⦁x ∈ X ⇒ p x)⌝);
+a (REPEAT_N 3 strip_tac THEN fc_tac [initial_strict_well_ordering_def]);
+a (fc_tac [SWO_WellFounded_thm]);
+a (fc_tac [well_founded_induction_thm]);
+a (REPEAT strip_tac THEN all_asm_fc_tac[]);
+val ISWO_Induction_thm = save_pop_thm "ISWO_Induction_thm";
 =TEX
 }%ignore
 \section{TRANSITIVE CLOSURE}
@@ -2267,18 +2354,18 @@ First the definition:
 The following elementary facts about transitive closure prove useful:
 
 =GFT
-⦏trans_tc_thm⦎ = 	⊢ ∀ (X, $<<)⦁ Trans (TranClsr (X, $<<))
+⦏trans_tc_thm⦎ = 	⊢ ∀ X $<<⦁ Trans (TranClsr (X, $<<))
 
-⦏trans_tc_thm2⦎ = 	⊢ ∀ (X, $<<) x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
+⦏trans_tc_thm2⦎ = 	⊢ ∀ X $<< x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
 	∧ Snd(TranClsr (X, $<<)) x y
 	∧ Snd(TranClsr (X, $<<)) y z
 	⇒ Snd(TranClsr (X, $<<)) x z
 
-⦏tc_incr_thm2⦎ =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
+⦏tc_incr_thm2⦎ =	⊢ ∀ X $<< x y⦁ x ∈ X ∧ y ∈ X
 	∧ x << y
 	⇒ Snd(TranClsr (X, $<<)) x y
 
-⦏tc_decompose_thm⦎ =	⊢ ∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
+⦏tc_decompose_thm⦎ =	⊢ ∀ X $<< x y⦁ x ∈ X ∧ y ∈ X
 	∧ Snd (TranClsr (X, $<<)) x y
 	∧ ¬ x << y
 	⇒ ∃z⦁ z ∈ X
@@ -2300,7 +2387,7 @@ val tran_clsr_def = get_spec ⌜TranClsr⌝;
 val ref_tran_clsr_def = get_spec ⌜RefTranClsr⌝;
 
 =SML
-set_goal ([], ⌜∀ (X, $<<)⦁ Trans (TranClsr (X, $<<))⌝);
+set_goal ([], ⌜∀ X $<<⦁ Trans (TranClsr (X, $<<))⌝);
 a (rewrite_tac [tran_clsr_def, trans_def]
 	THEN REPEAT strip_tac
 	THEN REPEAT (all_asm_ufc_tac[]));
@@ -2308,7 +2395,7 @@ val trans_tc_thm = save_pop_thm "trans_tc_thm";
 =TEX
 
 =SML
-set_goal ([], ⌜∀ (X, $<<)⦁ Fst (TranClsr (X, $<<)) = X⌝);
+set_goal ([], ⌜∀ X $<<⦁ Fst (TranClsr (X, $<<)) = X⌝);
 a (rewrite_tac [tran_clsr_def]
 	THEN REPEAT strip_tac);
 val fst_tc_lemma = save_pop_thm "fst_tc_lemma";
@@ -2325,7 +2412,7 @@ val tran_clsr_thm = save_pop_thm "tran_clsr_thm";
 =TEX
 
 =SML
-set_goal ([], ⌜∀ (X, $<<) x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
+set_goal ([], ⌜∀ X $<< x y z⦁ x ∈ X ∧ y ∈ X ∧ z ∈ X
 	∧ Snd(TranClsr (X, $<<)) x y ∧ Snd(TranClsr (X, $<<)) y z ⇒ Snd(TranClsr (X, $<<)) x z⌝);
 a (rewrite_tac [tran_clsr_thm]
 	THEN REPEAT strip_tac
@@ -2335,7 +2422,7 @@ val trans_tc_thm2 = save_pop_thm "trans_tc_thm2";
 =TEX
 
 =SML
-set_goal([], ⌜∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X
+set_goal([], ⌜∀ X $<< x y⦁ x ∈ X ∧ y ∈ X
 	∧ x << y ⇒ Snd(TranClsr (X, $<<)) x y⌝);
 a (rewrite_tac [tran_clsr_def]
 	THEN REPEAT strip_tac
@@ -2344,7 +2431,7 @@ val tc_incr_thm2 = save_pop_thm "tc_incr_thm2";
 =TEX
 
 =SML
-set_goal([],⌜∀ (X, $<<) x y⦁ x ∈ X ∧ y ∈ X ∧ Snd (TranClsr (X, $<<)) x y ∧ ¬ x << y ⇒
+set_goal([],⌜∀ X $<< x y⦁ x ∈ X ∧ y ∈ X ∧ Snd (TranClsr (X, $<<)) x y ∧ ¬ x << y ⇒
 	∃z⦁ z ∈ X ∧ Snd (TranClsr (X, $<<)) x z ∧ z << y⌝);
 a (REPEAT strip_tac);
 a (GET_NTH_ASM_T 2 (strip_asm_tac o (rewrite_rule [tran_clsr_thm])));
@@ -2549,13 +2636,13 @@ In the right to left direction the result follows from the fact that a relation 
 In the left to right direction the proof involves showing by well-founded induction that there is no descending sequence in the transitive closure.
 
 =GFT
-⦏wf_iff_wftc_thm⦎ =	⊢ ∀ (X, $<<)⦁
+⦏wf_iff_wftc_thm⦎ =	⊢ ∀ X $<<⦁
 	WellFounded (X, $<<) ⇔ WellFounded (TranClsr (X, $<<))
 =TEX
 
 \ignore{
 =SML
-set_goal ([], ⌜∀(X, $<<)⦁ WellFounded (X, $<<) ⇒ WellFounded (TranClsr (X, $<<))⌝);
+set_goal ([], ⌜∀ X $<<⦁ WellFounded (X, $<<) ⇒ WellFounded (TranClsr (X, $<<))⌝);
 a (REPEAT strip_tac);
 a (GET_NTH_ASM_T 1 (fn x => asm_tac (rewrite_rule [well_founded_induction_thm] x)));
 a (spec_nth_asm_tac 1 ⌜λv⦁ v ∈ X ⇒ ¬ (∃ f⦁
@@ -2625,7 +2712,7 @@ val wf_wftc_lemma = pop_thm ();
 =TEX
 
 =SML
-set_goal([], ⌜∀(X, $<<) x y⦁ WellFounded (X, $<<) ∧ x ∈ X ⇒ ¬ Snd (TranClsr (X, $<<)) x x⌝);
+set_goal([], ⌜∀ X $<< x y⦁ WellFounded (X, $<<) ∧ x ∈ X ⇒ ¬ Snd (TranClsr (X, $<<)) x x⌝);
 a (contr_tac);
 a (ALL_FC_T (MAP_EVERY ante_tac) [wf_wftc_lemma]);
 a (split_pair_rewrite_tac [⌜TranClsr (X, $<<)⌝] [well_founded_descending_sequence_thm]
@@ -2781,10 +2868,10 @@ The following variant of reflexive transitive closure (yielding a set from an el
 ■
 
 =GFT
-⦏tcupto_inc_lemma1⦎ = ⊢ ∀(X, $<<) x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
+⦏tcupto_inc_lemma1⦎ = ⊢ ∀ X $<< x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
 	⇒ (TcUpTo (X, $<<) y) ⊆ (TcUpTo (X, $<<) x)
 
-⦏tcupto_inc_lemma2⦎ = ⊢ ∀(X, $<<) x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
+⦏tcupto_inc_lemma2⦎ = ⊢ ∀ X $<< x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
 	⇒ (TcUpTo (X, $<<) x) ⊆ (TcUpTo (X, $<<) y)
 =TEX
 
@@ -2793,13 +2880,13 @@ The following variant of reflexive transitive closure (yielding a set from an el
 val tc_up_to_def = get_spec ⌜TcUpTo⌝;
 =TEX
 =SML
-set_goal([], ⌜∀(X, $<<) x⦁ x ∈ X ⇒ TcUpTo (X, $<<) x = {y | Snd (RefTranClsr (X, $<<)) y x}⌝);
+set_goal([], ⌜∀ X $<< x⦁ x ∈ X ⇒ TcUpTo (X, $<<) x = {y | Snd (RefTranClsr (X, $<<)) y x}⌝);
 a (rewrite_tac [sets_ext_clauses, tc_up_to_def, ref_tran_clsr_def]
 	THEN REPEAT strip_tac
 	THEN all_var_elim_asm_tac);
 val tc_up_to_eq_thm = save_pop_thm "tc_up_to_eq_thm";
 
-set_goal ([], ⌜∀(X, $<<) x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
+set_goal ([], ⌜∀ X $<< x y⦁ x ∈ X ∧ y ∈ X ∧ y << x
 	⇒ (TcUpTo (X, $<<) y) ⊆ (TcUpTo (X, $<<) x)⌝);
 a (rewrite_tac [tc_up_to_def, sets_ext_clauses]
 	THEN REPEAT strip_tac
@@ -2808,12 +2895,12 @@ a (rewrite_tac [tc_up_to_def, sets_ext_clauses]
 (* *** Goal "1" *** *)
 a (all_ufc_tac [tran_clsr_lemma1]);
 (* *** Goal "2" *** *)
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x⌝] tc_incr_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x⌝] tc_incr_thm2));
 a (all_asm_ufc_tac [tran_clsr_lemma1]);
 a (all_ufc_tac [trans_tc_thm2]);
 val tcupto_inc_lemma1 = save_pop_thm "tcupto_inc_lemma1";
 
-set_goal ([], ⌜∀(X, $<<) x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
+set_goal ([], ⌜∀ X $<< x y⦁ y ∈ X ∧ x ∈ (TcUpTo (X, $<<) y)
 	⇒ (TcUpTo (X, $<<) x) ⊆ (TcUpTo (X, $<<) y)⌝);
 a (rewrite_tac [tc_up_to_def, sets_ext_clauses]
 	THEN REPEAT strip_tac
@@ -2845,7 +2932,7 @@ set_goal ([], ⌜∀X f g x y⦁ x ∈ X ∧ y ∈ X
 	⇒ PartFunEquiv (TcUpTo (X, $<<) x) f g⌝);
 a (rewrite_tac [part_fun_equiv_def, sets_ext_clauses]
 	THEN REPEAT strip_tac);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x⌝] tcupto_inc_lemma1));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x⌝] tcupto_inc_lemma1));
 a (POP_ASM_T (asm_tac o (rewrite_rule [sets_ext_clauses])));
 a (all_asm_ufc_tac[]);
 a (all_asm_ufc_tac[]);
@@ -2857,7 +2944,7 @@ set_goal ([], ⌜∀X Y f g x y⦁ y ∈ X
 	⇒ PartFunEquiv (TcUpTo (X, $<<) x) f g⌝);
 a (rewrite_tac [part_fun_equiv_def, sets_ext_clauses]
 	THEN REPEAT strip_tac);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜x⌝, ⌜y⌝] tcupto_inc_lemma2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜x⌝, ⌜y⌝] tcupto_inc_lemma2));
 a (POP_ASM_T (asm_tac o (rewrite_rule [sets_ext_clauses])));
 a (all_asm_ufc_tac[]);
 a (all_asm_ufc_tac[]);
@@ -2879,7 +2966,7 @@ val unique_part_fixp_def = get_spec ⌜UniquePartFixp⌝;
 =SML
 set_goal([],⌜∃UniqueVal:('a SET × ('a → 'a → BOOL))
 		→ (('a → 'b) → ('a → 'b)) → 'a → 'b⦁
-	∀(X, $<<) G x⦁ x ∈ X
+	∀ X $<< G x⦁ x ∈ X
 	∧ UniquePartFixp (TcUpTo (X, $<<) x) G
 	⇒ ∀ f⦁ PartFunEquiv (TcUpTo (X, $<<) x) (G f) f
 	       ⇒ UniqueVal (X, $<<) G x = f x⌝);
@@ -2958,8 +3045,8 @@ a (list_spec_nth_asm_tac 15 [
 a (CONTR_T discard_tac
 	THEN POP_ASM_T ante_tac
 	THEN rewrite_tac[]);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝, ⌜x'⌝] trans_tc_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝, ⌜x'⌝] trans_tc_thm2));
 a (asm_rewrite_tac[]);
 a (spec_nth_asm_tac 15 ⌜y⌝);
 a (list_spec_nth_asm_tac 15 [⌜X⌝, ⌜$<<⌝, ⌜G⌝, ⌜y⌝]);
@@ -2972,7 +3059,7 @@ a (list_spec_nth_asm_tac 7 [⌜λ x
                    then UniqueVal (X, $<<) G x
                    else G (UniqueVal (X, $<<) G) x⌝, ⌜UniqueVal (X, $<<) G⌝, ⌜x''⌝]);
 a (CONTR_T discard_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[]);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2)
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2)
 	THEN POP_ASM_T rewrite_thm_tac);
 (* *** Goal "2" *** *)
 a (rewrite_tac [part_fun_equiv_def] THEN REPEAT strip_tac);
@@ -2991,7 +3078,7 @@ a (DROP_NTH_ASM_T 2 ante_tac
 	THEN all_var_elim_asm_tac);
 a (list_spec_nth_asm_tac 8 [⌜UniqueVal (X, $<<) G⌝, ⌜g⌝, ⌜x''⌝]);
 (* *** Goal "2.2.1" *** *)
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
 a (spec_nth_asm_tac 8 ⌜y⌝);
 a (list_spec_nth_asm_tac 8 [⌜X⌝, ⌜$<<⌝, ⌜G⌝, ⌜y⌝]);
 a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜G g⌝, ⌜g⌝, ⌜y⌝, ⌜x''⌝] part_fun_equiv_lemma2));
@@ -3058,8 +3145,8 @@ a (list_spec_nth_asm_tac 15 [
 a (CONTR_T discard_tac
 	THEN POP_ASM_T ante_tac
 	THEN rewrite_tac[]);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝, ⌜x'⌝] trans_tc_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝, ⌜x'⌝] trans_tc_thm2));
 a (asm_rewrite_tac[]);
 a (spec_nth_asm_tac 15 ⌜y⌝);
 a (list_spec_nth_asm_tac 15 [⌜X⌝, ⌜$<<⌝, ⌜G⌝, ⌜y⌝]);
@@ -3072,7 +3159,7 @@ a (list_spec_nth_asm_tac 7 [⌜λ x
                    then UniqueVal (X, $<<) G x
                    else G (UniqueVal (X, $<<) G) x⌝, ⌜UniqueVal (X, $<<) G⌝, ⌜x''⌝]);
 a (CONTR_T discard_tac THEN POP_ASM_T ante_tac THEN rewrite_tac[]);
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2)
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2)
 	THEN POP_ASM_T rewrite_thm_tac);
 (* *** Goal "2" *** *)
 a (rewrite_tac [part_fun_equiv_def] THEN REPEAT strip_tac);
@@ -3091,7 +3178,7 @@ a (DROP_NTH_ASM_T 2 ante_tac
 	THEN all_var_elim_asm_tac);
 a (list_spec_nth_asm_tac 8 [⌜UniqueVal (X, $<<) G⌝, ⌜g⌝, ⌜x''⌝]);
 (* *** Goal "2.2.1" *** *)
-a (strip_asm_tac (list_∀_elim [⌜(X, $<<)⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
+a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜$<<⌝, ⌜y⌝, ⌜x''⌝] tc_incr_thm2));
 a (spec_nth_asm_tac 8 ⌜y⌝);
 a (list_spec_nth_asm_tac 8 [⌜X⌝, ⌜$<<⌝, ⌜G⌝, ⌜y⌝]);
 a (strip_asm_tac (list_∀_elim [⌜X⌝, ⌜G g⌝, ⌜g⌝, ⌜y⌝, ⌜x''⌝] part_fun_equiv_lemma2));
@@ -3108,7 +3195,7 @@ val recursion_theorem_lemma1 = save_pop_thm "recursion_theorem_lemma1";
 The recursion theorem follows:
 
 =GFT
-⦏recursion_theorem⦎ = ⊢ ∀(X, $<<) G⦁
+⦏recursion_theorem⦎ = ⊢ ∀ X $<< G⦁
 	FunctRespects G (X, $<<) ∧ WellFounded (X, $<<) ⇒ UniquePartFixp X G
 =TEX
 
@@ -3261,7 +3348,9 @@ The relevant definitions may be given concisely as follows:
 │	UWeakMinCond : ('a  → 'a → BOOL) → BOOL;
 │	UMinCond : ('a  → 'a → BOOL) → BOOL;
 │	UWellOrdering : ('a  → 'a → BOOL) → BOOL;
-│	UWellFounded : ('a  → 'a → BOOL) → BOOL
+│	UWellFounded : ('a  → 'a → BOOL) → BOOL;
+│	UStrictWellOrdering : ('a  → 'a → BOOL) → BOOL;
+│	UInitialStrictWellOrdering : ('a  → 'a → BOOL) → BOOL
 ├
 │	UIrrefl = Curry Irrefl Universe 
 │ ∧	UAntisym = Curry Antisym Universe
@@ -3277,6 +3366,8 @@ The relevant definitions may be given concisely as follows:
 │ ∧	UMinCond = Curry MinCond Universe
 │ ∧	UWellOrdering = Curry WellOrdering Universe
 │ ∧	UWellFounded = Curry WellFounded Universe
+│ ∧	UStrictWellOrdering = Curry StrictWellOrdering Universe
+│ ∧	UInitialStrictWellOrdering = Curry InitialStrictWellOrdering Universe
 ■
 
 Now we automatically derive the defining properties of all of these constants
@@ -3286,7 +3377,11 @@ in terms of primitive notions or other constants in the set.
 =SML
 val ext_thm_x = prove_rule[ext_thm]⌜∀ f g⦁ f = g ⇔ (∀ $<<⦁ f $<< = g $<<) ⌝;
 val u_thm1 = (rewrite_rule[ext_thm_x] o get_spec)⌜UIrrefl⌝;
-val u_thm2 =  (rewrite_rule[] o once_rewrite_rule def_thms) u_thm1;
+val u_thm2 =  (rewrite_rule[] o once_rewrite_rule
+    	(def_thms@[
+		strict_well_ordering_def,
+		initial_strict_well_ordering_def]))
+	u_thm1;
 val u_thm3 = conv_rule (ONCE_MAP_C eq_sym_conv) u_thm1;
 val u_thm4 = rewrite_rule [u_thm3] u_thm2;
 
@@ -3304,7 +3399,10 @@ val [
 ⦏u_weak_min_cond_def_thm⦎,
 ⦏u_min_cond_def_thm⦎,
 ⦏u_well_ordering_def_thm⦎,
-⦏u_well_founded_def_thm⦎] = strip_∧_rule u_thm4;
+⦏u_well_founded_def_thm⦎,
+⦏u_strict_well_ordering_def_thm⦎,
+⦏u_initial_strict_well_ordering_def_thm⦎
+] = strip_∧_rule u_thm4;
 val _ = map save_thm [
 	("u_irrefl_def_thm", u_irrefl_def_thm),
 	("u_antisym_def_thm", u_antisym_def_thm),
@@ -3319,7 +3417,10 @@ val _ = map save_thm [
 	("u_weak_min_cond_def_thm", u_weak_min_cond_def_thm),
 	("u_min_cond_def_thm", u_min_cond_def_thm),
 	("u_well_ordering_def_thm", u_well_ordering_def_thm),
-	("u_well_founded_def_thm", u_well_founded_def_thm)];
+	("u_well_founded_def_thm", u_well_founded_def_thm),
+	("u_strict_well_ordering_def_thm", u_strict_well_ordering_def_thm),
+	("u_initial_strict_well_ordering_def_thm", u_initial_strict_well_ordering_def_thm)
+	];
 =TEX
 
 The following code translates the relevant instances of the main theorems:
@@ -3333,6 +3434,34 @@ val ⦏u_well_ordering_thm⦎ = save_thm
 	("u_well_ordering_thm",
 	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
 		well_ordering_thm));
+val ⦏u_strict_well_ordering_thm⦎ = save_thm
+	("u_strict_well_ordering_thm",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		strict_well_ordering_thm));
+val ⦏u_swo_clauses⦎ = save_thm
+	("u_swo_clauses",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		swo_clauses));
+val ⦏u_initial_strict_well_ordering_thm⦎ = save_thm
+	("u_initial_strict_well_ordering_thm",
+	rewrite_rule[u_thm3](∀_elim ⌜Universe:'a SET⌝
+		initial_strict_well_ordering_thm));
+val ⦏u_iswo_clauses⦎ = save_thm
+	("u_iswo_clauses",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		iswo_clauses));
+val ⦏u_iswo_clauses2⦎ = save_thm
+	("u_iswo_clauses2",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		iswo_clauses2));
+val ⦏u_iswo_well_founded_thm⦎ = save_thm
+	("u_iswo_well_founded_thm",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		ISWO_WellFounded_thm));
+val ⦏u_iswo_induction_thm⦎ = save_thm
+	("u_iswo_induction_thm",
+	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
+		ISWO_Induction_thm));
 val ⦏u_min_cond_descending_sequence_thm⦎ = save_thm
 	("u_min_cond_descending_sequence_thm",
 	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
@@ -3350,7 +3479,7 @@ val ⦏u_refl_well_ordering_lower_bounds_thm⦎ = save_thm
 	rewrite_rule[u_thm3](∀_elim⌜Universe:'a SET⌝
 		refl_well_ordering_lower_bounds_thm));
 =IGN
-set_goal([], ⌜∀ r s⦁ (∀x y⦁ r x y ⇒ s x y) ∧ UWellFounded r ⇒ UWellFounded s⌝);
+set_goal([], ⌜⌝);
 =TEX
 }%ignore
 
