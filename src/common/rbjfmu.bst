@@ -47,6 +47,7 @@ ENTRY
     title
     type
     url				    % RBJ
+    url2			    % RBJ
     version			    % RBJ
     volume
     year
@@ -375,11 +376,7 @@ FUNCTION {format.isbn}
 FUNCTION {format.url}
 { url empty$
     { "" }
-    { output.state mid.sentence =
-	{ "URL " url "l" change.case$ tie.or.space.connect }
-	{ "URL " url "t" change.case$ tie.or.space.connect }
-      if$
-    }
+    { "\\\url{" url "}" * *}
   if$
 }
 
@@ -923,6 +920,19 @@ FUNCTION {webpublished}
   new.block
   format.url output
   format.date output
+  fin.entry
+}
+ 
+FUNCTION {webpage}
+{ output.bibitem
+  format.authors "author" output.check
+  format.title "title" output.check
+  format.date "year" output.check
+  format.edition output
+  format.version output
+  new.block
+  format.date output
+  format.url output
   fin.entry
 }
 

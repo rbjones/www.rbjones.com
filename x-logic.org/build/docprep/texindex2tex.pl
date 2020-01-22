@@ -15,7 +15,7 @@ $title=""; $abstract=""; $bibref="";
 print "\\section{Abstracts}\n";
 
 while (<ARGV>) {
-    if (/\\title\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/) {$title=$1}
+    if (/title=\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/) {$title=$1}
     elsif (/bibref\{([^}]*)\}/) {$bibref=$1}
     elsif (/\\begin\{abstract\}/) {
 	$abstract="";
