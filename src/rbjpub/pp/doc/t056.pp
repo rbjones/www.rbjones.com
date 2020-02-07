@@ -1263,13 +1263,13 @@ val Ub⋎o_Image⋎o_thm = save_pop_thm "Ub⋎o_Image⋎o_thm";
 
 set_goal([], ⌜∀f γ⦁ γ ∈ Ub⋎o(Image⋎o (f, 0⋎o))⌝);
 a (rewrite_tac[Ub⋎o_thm, Ub⋎o_Image⋎o_thm, Image⋎o_zero⋎o_thm]);
-val Ub⋎o_Image⋎o_zero⋎o = save_pop_thm "Ub⋎o_Image⋎o_zero⋎o";
+val Ub⋎o_Image⋎o_zero⋎o_thm = save_pop_thm "Ub⋎o_Image⋎o_zero⋎o_thm";
 
-set_goal([], ⌜∀f (β:'a ordinal)⦁ ∃γ:'a ordinal⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
+set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
 a (REPEAT ∀_tac);
-a (strip_asm_tac (strong_infinity));
+a (strip_asm_tac (strong_infinity_axiom));
 a (spec_nth_asm_tac 1 ⌜β⌝);
-a (spec_nth_asm_tac 1 ⌜β⌝);
+a (spec_nth_asm_tac 1 ⌜f⌝);
 a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
 a (POP_ASM_T discard_tac);
 a (rewrite_tac[SUb⋎o_def]);
@@ -1283,7 +1283,7 @@ val SUb⋎o_Image⋎o_thm = save_pop_thm "SUb⋎o_Image⋎o_thm";
 
 set_goal([], ⌜∀f β γ⦁ γ ∈ SUb⋎o(Image⋎o (f, 0⋎o))⌝);
 a (rewrite_tac[SUb⋎o_Image⋎o_thm, Image⋎o_zero⋎o_thm]);
-val SUb⋎o_Image⋎o_zero⋎o = save_pop_thm "SUb⋎o_Image⋎o_zero⋎o";
+val SUb⋎o_Image⋎o_zero⋎o_thm = save_pop_thm "SUb⋎o_Image⋎o_zero⋎o_thm";
 
 add_rw_thms [Image⋎o_thm, zero⋎o_thm, lt⋎o_zero⋎o_thm, Ub⋎o_Image⋎o_zero⋎o,
 	SUb⋎o_Image⋎o_zero⋎o] "'ordcard";
