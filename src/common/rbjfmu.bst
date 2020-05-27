@@ -712,10 +712,11 @@ FUNCTION {incollection}
   if$
   new.block
   note output
+  howpublished output
   fin.entry
 }
 
-FUNCTION {inproceedings}
+FUNCTION {insep}
 { output.bibitem
   format.authors "author" output.check
   new.block
@@ -748,8 +749,6 @@ FUNCTION {inproceedings}
   note output
   fin.entry
 }
-
-FUNCTION {conference} { inproceedings }
 
 FUNCTION {manual}
 { output.bibitem
@@ -924,6 +923,19 @@ FUNCTION {webpublished}
 }
  
 FUNCTION {webpage}
+{ output.bibitem
+  format.authors "author" output.check
+  format.title "title" output.check
+  format.date "year" output.check
+  format.edition output
+  format.version output
+  new.block
+  format.date output
+  format.url output
+  fin.entry
+}
+ 
+FUNCTION {sep}
 { output.bibitem
   format.authors "author" output.check
   format.title "title" output.check
