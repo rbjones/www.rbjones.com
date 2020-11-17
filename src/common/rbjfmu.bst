@@ -917,6 +917,7 @@ FUNCTION {webpublished}
   format.edition output
   format.version output
   new.block
+  note "note" output.check
   format.url output
   format.date output
   fin.entry
@@ -925,12 +926,12 @@ FUNCTION {webpublished}
 FUNCTION {webpage}
 { output.bibitem
   format.authors "author" output.check
-  format.title "title" output.check
+  format.btitle "title" output.check
   format.date "year" output.check
   format.edition output
   format.version output
   new.block
-  format.date output
+  note "note" output.check
   format.url output
   fin.entry
 }

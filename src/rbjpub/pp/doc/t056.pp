@@ -1764,9 +1764,9 @@ a (spec_nth_asm_tac 1 ⌜β +⋎o v⌝);
 a (asm_rewrite_tac[≤⋎o_def]);
 a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎o_trich));
 (* *** Goal "1.2" *** *)
+=IGN
 a (lemma_tac ⌜∃α⦁ α ∈ set⌝
 	THEN1 (∃_tac ⌜0⋎o⌝ THEN asm_rewrite_tac[]));
-
 
 a (∃_tac ⌜SSup⋎o set⌝ THEN strip_tac);
 (* *** Goal "1.2.1" *** *)
