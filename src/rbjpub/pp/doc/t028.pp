@@ -1283,7 +1283,7 @@ The interpretation is then evaluated by proving the soundness of various laws an
 
 Of these three shallow embeddings, the first two are based upon Strawson \cite{strawson52}.
 The third benefits from discussion on the \emph{phil-logic} mailing list, and in particular on advice on the interpretation of Aristotle from Drake O'Brien supported by textual references which convinced me that neither of the Strawsonian interpretations could be correct.%
-\footnote{This seems to be the accepted interpretation among contemporary scholars, and is described bt Terence Parsons in his ``Overview of Aristotle's Logic'' \cite{parsonsBMFL} available from his website.}
+\footnote{This seems to be the accepted interpretation among contemporary scholars, and was described bt Terence Parsons in his online ``Overview of Aristotle's Logic'' (no longer available).}
 These two points are firstly that Aristotle cannot be construed as presuming non-emptyness of terms (or as committing an existential fallacy), and that existential import is associated with the quality of the proposition, attaching to affirmative but not to negative propositions.
 
 To facilitate comparison between the different interpretations the following list of `features' will be checked.

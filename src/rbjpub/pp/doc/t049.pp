@@ -16,7 +16,7 @@ My own interest is primarily methodological, and it quickly became clear that th
 
 \subsection{A brief history of Axiomatic Method}
 
-The axiomatic method begins in the mathematics of ancient Greece and is most famously exemplified in Euclid's "Elements" \cite{euclidEL1}.
+The axiomatic method begins in the mathematics of ancient Greece and is most famously exemplified in Euclid's ``Elements'' \cite{euclidEL1}.
 Euclid's Elements exemplify the method but do not describe them, it is usual to refer to Aristotle's Posterior Analytics for accounts of the methods.%
 \footnote{\href{http://www.texts.rbjones.com/rbjpub/philos/classics/aristotl/o4110c.htm}{Posterior Analytics, Book 1 Part 10}}
 
@@ -85,7 +85,7 @@ We may note also that the language is intended for \emph{use} in expressing and 
 
 By contrast, Hilbert takes geometry into new territory primarily by instigating metatheory as a part of mathematics.
 His ``Foundations of Geomtry'' \cite{hilbertFG} not only advances the content of axiomatic geometry, but also demonstrated results about the axiom systems in use, such as the consistency and independence of the axioms.
-In order to prove independence results it is necessary to consider different intepretations of the language of geometry, and it therefore becomes natural to regard axiomatic geometry in a more abstract way, as concerned with any mathematical structure which satisfies the axioms rather than with some particular structure of which the axioms are true.
+In order to prove independence results it is necessary to consider different interpretations of the language of geometry, and it therefore becomes natural to regard axiomatic geometry in a more abstract way, as concerned with any mathematical structure which satisfies the axioms rather than with some particular structure of which the axioms are true.
 
 Frege's logicist foundationalism provides a different perspective on the development of mathematics, which emphasises the formality and deprecates the use of axioms of a non-logical character.
 The idea here is that one establishes, once and for all, axioms for logic independent of any particular mathematical subject matter, and that it then suffices to introduce new subject matters by defining the relevant concepts are reasoning logically about them.
@@ -291,7 +291,7 @@ If two planes have one point in common, then they have another in common.
 val ⦏I6⦎ = new_axiom(["I6"], ⌜∀α β A⦁ A in⋎p α ∧ A in⋎p β
 			⇒ ∃B⦁ ¬ A = B ∧ B in⋎p α ∧ B in⋎p β⌝);
 =TEX
-On every straight line there are at least two points, on every plain at least three non-co-linear points and "in space" at least four points not in a plain.
+On every straight line there are at least two points, on every plain at least three non-co-linear points and ``in space'' at least four points not in a plain.
 
 =SML
 val ⦏I7⦎ = new_axiom(["I7"], ⌜(∀a⦁ ∃ x y⦁ x on a ∧ y on a ∧ ¬ x = y)

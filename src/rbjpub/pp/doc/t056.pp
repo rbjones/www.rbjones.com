@@ -1239,11 +1239,11 @@ val ⦏strong_infinity_axiom⦎ = new_axiom(["strong_infinity_axiom"], ⌜
 Most of the functions we will want to define will be continuous, i.e. the value at a limit ordinal will be the limit of the values at points below that ordinal.
 For the function to be defined at those limit ordinals, the limits in the range must exist,
 The requirenent that they always do exist is similar in character and strength to the set theoretic axiom of replacement.
-In set theory this asserts that and collection which is the same size as a set will also be a set.
+In set theory this asserts that any collection which is the same size as a set will also be a set.
 
 In the theory of ordinals it is the notion of cofinality which plays this role, and the theorems which we need to establish that recursive definitions of functions over the ordinals do indeed coherently define functions will depend upon the assumption that the ordinal types are {\it regular}.
 
-We therefore now provide some vocabulary appropriate both to that limited requirement and to stronger axioms of infinity yielding theories comparable or greater in strenght to ZFC set theory.
+We therefore now provide some vocabulary appropriate both to that limited requirement and to stronger axioms of infinity yielding theories comparable or greater in strength to ZFC set theory.
 
 \ignore{
 =SML
@@ -1271,6 +1271,7 @@ a (strip_asm_tac (strong_infinity_axiom));
 a (spec_nth_asm_tac 1 ⌜β⌝);
 a (spec_nth_asm_tac 1 ⌜f⌝);
 a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
+(* a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (asm_tac))); *)
 a (POP_ASM_T discard_tac);
 a (rewrite_tac[SUb⋎o_def]);
 a (∃_tac ⌜ρ⌝
