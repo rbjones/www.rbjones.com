@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # for extracting titles and abstracts from a collection of LaTeX
-# documents and creating an list of abstracts in XML.
+# documents and creating a list of abstracts in tex.
 
 # parameters: input files names
 # output to standard output.
@@ -15,7 +15,7 @@ $title=""; $abstract=""; $bibref="";
 print "\\section{Abstracts}\n";
 
 while (<ARGV>) {
-    if (/title=\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/) {$title=$1}
+    if (/title=\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/){if($title eq ""){$title=$1}}
     elsif (/bibref\{([^}]*)\}/) {$bibref=$1}
     elsif (/\\begin\{abstract\}/) {
 	$abstract="";
