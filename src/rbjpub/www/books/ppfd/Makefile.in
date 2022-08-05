@@ -18,10 +18,10 @@ RELWEBDIR=rbjpub/www/books/ppfd
 SUBDIRS=
 
 BODYTEX=preface.tex intro.tex
-BOOKTEX=booktop.tex $(BODYTEX) bookend.tex
-PAMTEX=pamtop.tex $(BODYTEX) pamend.tex
-OLDSTUFF=booktop.tex attik.tex bookend.tex
-ALLTEX=$(BOOKTEX) pamtop.tex pamend.tex attik.tex
+BOOKTEX=booktopd.tex $(BODYTEX) bookend.tex
+PAMTEX=pamtopd.tex $(BODYTEX) pamend.tex
+OLDSTUFF=booktopd.tex attik.tex bookend.tex
+ALLTEX=$(BODYTEX) booktop.tex bookend.tex pamtop.tex pamend.tex attik.tex
 
 SRCDIRBIB=
 
@@ -67,11 +67,19 @@ SHELL = /bin/sh
 
 # Specific rules
 
-ppfdbook.tex: $(BOOKTEX) 
-	cat $^ >$@
+ppfdbook.tex: $(BOOKTEX) rbj.bib
+	cat $(BOOKTEX) >$@
 
-ppfdpam.tex: $(PAMTEX) 
-	cat $^ >$@
+booktopd.tex: booktop.tex
+	export DESCRIPTION=`$$(git describe)`
+	echo $$DESCRIPTION
+	sed -e "s|CURRENT-GIT-DESCRIPTION|$$DESCRIPTION|g" booktop.tex > booktopd.tex
+
+ppfdpam.tex: $(PAMTEX) rbj.bib
+	cat $(PAMTEX) >$@
+
+pamtopd.tex: pamtop.tex
+	sed -e "s|CURRENT-GIT-DESCRIPTION|`git describe`|g" pamtop.tex > pamtopd.tex
 
 oldstuff.tex: $(OLDSTUFF) 
 	cat $^ >$@
