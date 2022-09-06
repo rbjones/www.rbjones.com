@@ -197,6 +197,14 @@ $(TEXPDF): %.pdf : %.tex
 	@$(TEXPDFPROG) $*
 	@$(TEXPDFPROG) $*
 
+$(TEXPDFB): %.pdf : %.tex
+	@echo "TEXPDF"
+	@$(TEXPDFPROG) $*
+	-makeindex $*.idx
+	-bibtex $*
+	@$(TEXPDFPROG) $*
+	@$(TEXPDFPROG) $*
+
 $(TEXPDF2): %.pdf : %.tex
 	@echo "TEXPDF2"
 	@$(TEXPDFPROG) $*
