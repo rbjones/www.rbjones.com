@@ -860,6 +860,7 @@ FUNCTION {webpublished}
 { output.bibitem
   format.authors "author" output.check
   author format.key output
+  output.year.check
   format.title "title" output.check
   new.block
   url "URL" output.check
