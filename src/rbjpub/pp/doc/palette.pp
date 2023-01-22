@@ -2,7 +2,7 @@
 \documentclass[11pt]{article}
 \usepackage{rbj}
 \usepackage{fontspec}
-\setmainfont[Path=/Users/rbj/.fonts/]{ProofPowerSerif.ttf}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 \ftlinepenalty=9999
 \begin{document}
 \section{Mathematical operators and symbols in Unicode}

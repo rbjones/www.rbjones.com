@@ -8,14 +8,17 @@ $Id: t054.doc $
 \ftlinepenalty=9999
 \usepackage{A4}
 
+\usepackage{fontspec}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
+
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\title{Well Foundedness and Recursion}
+\title{Formal Synthetic Epistemology}
 \makeindex
-\usepackage[unicode,pdftex]{hyperref}
+\usepackage[unicode]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
 \hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
 
@@ -26,7 +29,10 @@ $Id: t054.doc $
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-A fresh start on the formalisation of the recursion theorem in ProofPower HOL.
+Some formal modelling intended to provide precision to ideas on how to contruct an epistemological theory.
+The idea here is that the most abstract stages in the design of cognitive systems are essemtially epistemological, and that consideration of these matters in the context of cognitive systems as they might be, rather than in that rather special cognitive system which we call homo sapiens, may therefore be an interesting and useful way of progressing the theory of knowledge.
+A second aspect of the work is the status it gives to logical truth as a basis for all other kinds of propositional or declarative knowledge.
+This is an aspect which is substantially informed by very recent advances in logic and its application.
 \end{abstract}
 
 \vfill
@@ -35,9 +41,9 @@ A fresh start on the formalisation of the recursion theorem in ProofPower HOL.
 
 {\footnotesize
 
-Created 2016/09/04
+Created 2020/01/20
 
-Last Change $ $Date: 2016/09/04 $ $
+Last Change $ $Date: 2020/01/20 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t054.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t054.pdf}
@@ -60,53 +66,25 @@ $ $Id: t054.doc 2016/08 $ $
 
 \section{INTRODUCTION}
 
+The ancient Greeks invented mathematics as a theoretical discipline, i.e. one on proving general theorems about mathematical structures which underpin the applications of mathematics which use those structures, and achieved very early in this new enterprise standards of rigour which wouid not be exceeded for the next two millenia.
+
+Mathematics in modern times began to see advances such as Cartesian geometry, and became the foundation for the blossoming of science and engineering with the invention of the differential and integral calculus by Newton and Leibniz.
+The practical utility of these new methods lead to an explosion in the mathematics which payed no more heed to rigour than was needed for the application, despite the calcuus being founded on novel mathematial concepts such as infinitesimals which were wreathed in obscurity.
+
+By the beginning of the nineteenth century rumours of discontent were being heard from some mathematicians about the apparent lack of rigour in the establishment of mathematical theorems, and a number of mathematicians began to pay attention to the foundations with a view to rebuilding on a more solid base.
+
+The first fruit of this was the elimination of infinitesimals from the definitions of the calculus, and the reduction of the necessary theory of real numbers to the whole numbers with the help of set theory.
+
 =SML
 open_theory "hol";
 force_new_theory "t054";
 set_pc "hol";
 =TEX
 
-\section{SOME PROPERTIES OF RELATIONS}
-
-
-
-\section{WELL FOUNDEDNESS AND INDUCTION}
-
-A relation is well-founded if every subset of its domain contains a minimal element.
-Here we work with total relations over some type, so the subsets here are subsets of a HOL type.
-
-ⓈHOLCONST
-│ WellFounded: ('a → 'a → BOOL) → BOOL
-├────────
-│ ∀r:'a → 'a → BOOL⦁ WellFounded r ⇔
-│	∀p:'a → BOOL; x:'a⦁ p x ⇒ ∃e⦁ p e ∧ ∀f⦁ p f ⇒ ¬ r f e
-■
 
 \ignore{
 =SML
-val WellFounded_def = get_spec ⌜WellFounded⌝;
-val Antisym_def = get_spec Antisym⌝;
-set_goal([],⌜∀r⦁ Inductive r ⇒ AntiSym Universe r⌝);
-a (rewrite_tac [Antisym_def, WellFounded_def]);
 
-=TEX
-}%ignore
-
-ⓈHOLCONST
-│ Inductive: ('a → 'a → BOOL) → BOOL
-├────────
-│ ∀r:'a → 'a → BOOL⦁ Inductive r ⇔
-│	∀p:'a → BOOL⦁ (∀x⦁ (∀y⦁ r y x ⇒ p y) ⇒ p x) ⇒ (∀x⦁ p x)
-■
-
-\ignore{
-=SML
-val WellFounded_def = get_spec ⌜WellFounded⌝;
-val Inductive_def = get_spec ⌜Inductive⌝;
-set_goal([],⌜∀r⦁ Inductive r ⇒ WellFounded r⌝);
-a (rewrite_tac[WellFounded_def, Inductive_def]
-	THEN REPEAT strip_tac);
-a (lemma_tac ⌜∀p⦁ ⌝);
 =TEX
 }%ignore
 

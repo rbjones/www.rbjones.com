@@ -1,5 +1,5 @@
 =IGN
-$Id: t056.doc 2019/12/03 $
+$Id: t056.doc$
 
 set_flag("pp_show_HOL_types", true);
 =TEX
@@ -11,7 +11,7 @@ set_flag("pp_show_HOL_types", true);
 \usepackage{A4}
 
 \usepackage{fontspec}
-\setmainfont[Path=/Users/rbj/.fonts/]{ProofPowerSerif.ttf}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
@@ -35,7 +35,6 @@ This document provides support for a kind of ordinals in {\Product}.
 \end{abstract}
 
 \vfill
-
 \begin{centering}
 
 {\footnotesize
@@ -247,7 +246,7 @@ val ≤⋎s_lt⋎s_trans = save_pop_thm "≤⋎s_lt⋎s_trans";
 
 =GFT
 ⦏card_equiv_lemma⦎ =
-	⊢ ∀ x y z⦁ x ~⋎c x ∧ (x ~⋎c y ⇔ y ~⋎c x) ∧ (x ~⋎c y ∧ y ~⋎c z ⇒ x ~⋎c z)
+	⊢ ∀ x y z⦁ x ~⋎s x ∧ (x ~⋎s y ⇔ y ~⋎s x) ∧ (x ~⋎s y ∧ y ~⋎s z ⇒ x ~⋎s z)
 =TEX
 
 \ignore{
@@ -1270,6 +1269,7 @@ a (REPEAT ∀_tac);
 a (strip_asm_tac (strong_infinity_axiom));
 a (spec_nth_asm_tac 1 ⌜β⌝);
 a (spec_nth_asm_tac 1 ⌜f⌝);
+=IGN
 a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
 (* a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (asm_tac))); *)
 a (POP_ASM_T discard_tac);

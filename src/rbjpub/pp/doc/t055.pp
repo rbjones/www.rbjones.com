@@ -1,12 +1,12 @@
 =TEX
-% $Id: t055a.tex $
+% $Id: t055.tex $
 
 \documentclass[11pt]{article}
 \usepackage{latexsym}
 \usepackage{rbj}
 
 \usepackage{fontspec}
-\setmainfont{ProofPowerSerif.ttf}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 
 \ftlinepenalty=9999
 \usepackage{A4}

@@ -1,7 +1,7 @@
 # $Id: Makefile.in,v 1.4 2010-04-14 21:54:11 rbj Exp $
 # Makefile.  Generated from Makefile.in by configure.
 
-.PHONY : ibuild icommon iinstall uninstall $(UNINSTALL)
+.PHONY : ibuild icommon iinstall uninstall vars $(UNINSTALL)
 
 TOPSRCDIR=.
 
@@ -32,6 +32,10 @@ help:
 	@echo "Makefile		-	make Makefile using config.status"
 	@echo "config.status	-	update config.status to reflect any changes in configure"
 	@echo "every invocation of make will update Makefile (if out of date)"
+
+vars:
+	@echo "WEBDIR=$(WEBDIR)"
+	@echo "XBDIR=$(XBDIR)"
 
 configure: configure.in
 	autoconf

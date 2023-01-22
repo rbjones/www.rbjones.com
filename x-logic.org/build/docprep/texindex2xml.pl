@@ -25,7 +25,7 @@ fileloop: while ($ssc <= $filecount) {
     $pdfname=$filename;
     $pdfname=~s/\.tex/\.pdf/;
     while(<INPUT>){
-        if (/title=\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/) {if($title eq "") {$title=$1}}
+	if (/title\{([^}]*)\}/) {if($title eq "") {$title=$1}}
         elsif (/pdfname\{([^}]*)\}/) {$pdfname="$1\.pdf"}
         elsif (/\\begin\{abstract\}/) {
 	    $abstract="";

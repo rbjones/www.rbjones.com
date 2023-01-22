@@ -2,11 +2,14 @@
 $Id: t053.doc $
 =TEX
 \documentclass[11pt,a4paper]{article}
-%\usepackage{latexsym}
+\usepackage{latexsym}
 %\usepackage{ProofPower}
 \usepackage{rbj}
 \ftlinepenalty=9999
 \usepackage{A4}
+
+\usepackage{fontspec}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
@@ -15,7 +18,7 @@ $Id: t053.doc $
 
 \title{Simple Predicate Calculus Proof Methods for HOL and Z}
 \makeindex
-\usepackage[unicode,pdftex]{hyperref}
+\usepackage[unicode]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
 \hypersetup{colorlinks=true, urlcolor=black, citecolor=black, filecolor=black, linkcolor=black}
 
@@ -70,9 +73,9 @@ Primitive inference rules are simply not something that one needs to know about 
 Constructing formal proofs using sophisticated software is very different, but it shares the same characteristic.
 It is not necessary to know the primitive inference rules, and when constructinbg proofs in this way, the user will not often use primitive rules, and may not be aware of which of the rules he uses are primitive.
 
-Normally also, a primitive inference system provides for what Euclid would have called (\it synthetic} proofs (and we call {\it forward} proofs), in which the proof proceeds from the axioms of the system, using the rules, to the desired theorem.
+Normally also, a primitive inference system provides for what Euclid would have called {\it synthetic} proofs (and we call {\it forward} proofs), in which the proof proceeds from the axioms of the system, using the rules, to the desired theorem.
 In practice, it is usually easier to undertake a proof by what the Greeks would have called an {\it analytic} proof, in which we start with the conjecture to be proven, and work our way back to the axioms, at each stage reducing the problem to simpler subproblems from which the desired results can be derived.
-This is now often called (\it backward} or goal oriented proof, and may be undertaken using software called a goal package.
+This is now often called {\it backward} or goal oriented proof, and may be undertaken using software called a goal package.
 The advantage of this is that is is easier for the human being to see how to construct a proof in this way, and it is also easier for the machine to assist in that process, because it knows at every stage what it is that the user of the sotware is trying to prove.
 Consequently, in a goal directed proof supported by software, the user has to type much less than he would in a forward proof; his task is easier and takes less time.
 
@@ -251,16 +254,11 @@ set_goal([], ⌜(∃ x y⦁ p (x, y)) ⇒ (∃ y x⦁ p (x, y))⌝);
 (* ?⊢ *)⌜(∃ x y⦁ p (x, y)) ⇒ (∃ y x⦁ p (x, y))⌝
 =SML
 a strip_tac;
-=GET ProofPower Output
+=GFT ProofPower Output
 (*  1 *)⌜p (x, y)⌝
 
 (* ?⊢ *)⌜∃ y x⦁ p (x, y)⌝
 =SML
-
-
-
-
-
 
 \section{Predicate Calculus in Z}
 
@@ -304,8 +302,6 @@ Tactic produced 0 subgoals:
 Current and main goal achieved
 =TEX
 
-\section{A }
-
 \section{The two-tactic method for Z}
 
 =SML
@@ -320,7 +316,6 @@ a (REPEAT strip_tac);
 a (z_∃_tac ⓩ(y ≜ y, x ≜ x)⌝);
 a (REPEAT strip_tac);
 =TEX
-
 
 \appendix
 
