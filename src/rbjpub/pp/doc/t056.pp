@@ -127,16 +127,16 @@ set_merge_pcs ["rbjmisc", "'ordinals"];
 
 This is a treatment of cardinality as a property of sets, not a theory of cardinal numbers.
 
-The original motivation is in fact not far removed from the present motivation, which is nice ways of expressing strong axioms of infinity.
-Of course, the niceness which is most desirable is in the application of such axioms rather than in the aesthetics of their statement, and at the time when I starting the material in this section I didn't have much clue about the application.
+The original motivation was not far removed from the present motivation, which is nice ways of expressing strong axioms of infinity.
+Of course, the niceness which is most desirable is in the application of such axioms rather than in the aesthetics of their statement, and at the time when I started the material in this section I didn't have much clue about the application.
 
-The document as a whole reflects my present feeling that the applications (at least those of particular interest to me, but possible more generally) are best mediated by types of infinitary sequences and infinitary trees, and that other aspects of the set theories in which strong axioms are usually placed are less important in this context.
+The document as a whole reflects my present feeling that the applications (at least those of particular interest to me, but possibly more generally) are best mediated by types of infinitary sequences and infinitary trees, and that other aspects of the set theories in which strong axioms are usually placed are less important in this context.
 In particular, whereas I had at times felt that the development of the treatment of functions was important, I now feel that it is not, and that the notion of function already available in HOL is sufficient.
 So the whole business of coding up functions as graphs of ordered pairs in set theory now seems unnecessary ({\it in this context}).
 
 From here on in we have the original commentary (at least, {\it pro-tem}), which may not be entirely appropriate here.
 
-The relations defined here with subscript \emph{s} on their names are cardinality comparisons on sets.
+The relations defined here with subscript `s' on their names are cardinality comparisons on sets.
 
 =SML
 declare_infix(300, "≤⋎s");
@@ -432,7 +432,7 @@ We can then assert initiality as follows:
 
 =GFT
 ⦏initial⋎o_thm⦎ = ⊢ ¬ (∃ f y⦁ OneOne f ∧ (∀ z⦁ f z <⋎o y))
-⦏initial⋎o_thm2⦎ = ⊢ ¬ (∃x⦁ {x | T} ≤⋎s X x)
+⦏initial⋎o_thm2⦎ = ⊢ ¬ (∃x:'a⦁ {y:'a| T} ≤⋎s X⋎o x)
 =TEX
 
 \ignore{
@@ -1799,6 +1799,8 @@ a (∃_tac ⌜SSupIm⋎o((λν⦁ ευ⦁ υ <⋎o γ ∧ ν = β +⋎o ν ∨ v
 }%ignore
 
 \appendix
+
+
 
 {\raggedright
 \bibliographystyle{fmu}

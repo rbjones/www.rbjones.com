@@ -5081,12 +5081,6 @@ However, in this application, where we are filtering out all but categories and 
 
 Once co-induction occurs as an alternative non-well-foundedness preserving definitional method, the question arised whether there is a similar dual to psuedo-well foundedness, and how this `pseudo-co-induction' differs from pseduo- and co-induction, if at all.
 
-=IGN
-open_theory "rbjmisc";
-force_new_theory "PI";
-set_merge_pcs["hol1", "'fixp"];
-=TEX
-
 \subsection{Well Foundedness and Hereditarily Collections}
 
 It would be a good idea eventually to define these first and check back that they are special cases of the pseudo versions and that the well-founded functor/category collections are contained in the pseudo-well-founded collections.
@@ -6144,6 +6138,8 @@ force_new_pc "⦏fixp1⦎";
 merge_pcs ["rbjmisc1", "'fixp"] "fixp1";
 commit_pc "fixp1";
 =TEX
+
+\appendix
 
 {\let\Section\section
 \def\section#1{\Section{#1}\label{TheoryListing}}

@@ -69,9 +69,6 @@ So this approach is limited to theories which say nothing about the cardinality 
 
 So I have this further idea, that if instead of using an arbitrary type as carrier, we use a 
 
-
-
-
 \subsubsection{Points Specific to \cite{LEMMA1/HOL/WRK080,LEMMA1/HOL/WRK081}}
 
 The construction of a new type seems to me in the wrong place.
@@ -84,8 +81,6 @@ However I am also considering the possibility of a generalised notion of structu
 I don't see the need of a distinguished element.
 
 The arguments in favour of numeric indexes seem weak to me, so I shall go with strings.
-
-
 
 \section{Preliminaries}
 

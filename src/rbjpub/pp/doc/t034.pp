@@ -26,7 +26,7 @@ $Id: t034.doc,v 1.1 2009/12/16 21:55:38 rbj Exp $
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-Discussion of ``a semantics'' for first order set theory which is definable in set theory construed by this semantics.
+Discussion of ``a semantics'' for first order set theory which is definable in the set theory construed by this semantics.
 Most of the literature in this area is related to the Liar paradox, which is of interest here only insofar as it has been supposed that the Liar paradox renders impossible this kind of construction (though the situation is now known to be rather complex).
 \end{abstract}
 
@@ -38,12 +38,12 @@ Most of the literature in this area is related to the Liar paradox, which is of 
 
 Created 2009/11/19
 
-Last Change $ $Date: 2009/12/16 21:55:38 $ $
+Last Change $ $Date: 2023/01/23 $ $
 
 \href{http://www.rbjones.com/rbjpub/pp/doc/t034.pdf}
 {http://www.rbjones.com/rbjpub/pp/doc/t034.pdf}
 
-$ $Id: t034.doc,v 1.1 2009/12/16 21:55:38 rbj Exp $ $
+$ $Id: t034.doc,v $ $
 
 \copyright\ Roger Bishop Jones; Licenced under Gnu LGPL
 
@@ -98,8 +98,37 @@ Powerful techniques were devised for proving independence results, and many logi
 
 
 \newpage
-\section{}
+\section{POSTSCRIPT}
 
+On returning to this fragment which I never progresssed any further, I am concerned to give a concise characterisation of what I then intended, which is tricky!
+
+First of all let me say that the foundational project of identifying a language suitable to act as ultimate foundation for the definition of abstract semantics inevitably runs into a problem of infinite regress.
+A relevant split in the options for addressing this is as follows:
+
+The first is to devise a system which is self-defining.
+There are obvious disadvantages in this, since such a reflexive definition may be ambiguous in important ways, as was shown a very lomg time ago for the LISP programming language.
+Nevertheless, such a self-definition would be a good starting point which when supplemented by other kinds of explanation, especially in areas of ambiguity, might prove valuable.
+
+The second is to accept the usual (shall I say Tarkian) view that a heirarchy of languages is necessary and that any language of this sort can only be given a semantics by a language which is strictly stronger.
+This is not so bad as it sounds, if the stronger language is essentially the same except that its semantics is bolstered by some stronger principles of infinity.
+
+For the most convincing foundational effort, one might consider doing both of these things.
+
+If one is interested in this foundational project, then clearly, whether the first is a genuine option is significant, and it was the purpose of this false start to give an example to show that the first possibility could not be summarrily dismissed (even if not a credible semantics in my mind).
+
+The notion of semantics I had in mind was simply to give the truth conditions, and since these languages do not make empirical claims the sentences take the same truth value in every possible world, and hence is suffices to identify the set of sentences which are true.
+The simeplest imaginable semantics which has this character is to take an axiomatic set theory and identify truth with provability.
+The set of true sentences will then be effectievly enumerable, and such sets are definable in any reasonable set theory, and hence any reasonable axiomatic set theory has a minimalistic semantics obtained by identifying truth and provability which is definable im that language interpreted according to that semantics.
+
+In discussion of this idea it was rejected because it does not comply with some of the conditions stipulated by Tarski in his paper on defining truth \cite{tarski31,tarski56} (I think it was comdition T).
+However, in relation to the foundational project I touched upon above, I don't see that the objection is important.
+
+The example I spoke of above is not a real contender for a semantics for set theory taking set theory as a universal foundation for abstract semantics, since it is far too weak, but it served to eliminate, pro-tem, arguments against seeking reflxive semantics.
+I was then more interested than I am now in non-well founded set theories and I antifipated that a strong non-well founded system might have similar lack of conformance to Tarski's principles (since he basically didn't address languages in which some sentences might not have truth values).
+Though I still find the restraint to well foundedness irksome and restrictive, I believe that it is acceptable in the foundational role, if not ideal in more practical application.
+For this reason, when I comes to addressing the foundations of abstract semantics, I now no longer consider anything other than well-founded set theories.
+
+For those wondering why I do not consider constructive type theories or homotopy type theory, this is not the place for any explanation I might give.
 
 =SML
 open_theory "misc2";
@@ -111,17 +140,19 @@ set_merge_pcs ["misc21", "'savedthm_cs_∃_proof"];
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{rbj,fmu}
+\bibliography{rbj2,fmu}
 } %\raggedright
 
 \appendix
 
+\ignore{
 {\let\Section\section
 \newcounter{ThyNum}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{semfos.th}
 }  %\let
+}%ignore
 
 \twocolumn[\section{INDEX}\label{index}]
 {\small\printindex}
