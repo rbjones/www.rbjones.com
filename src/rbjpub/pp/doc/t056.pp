@@ -1008,13 +1008,13 @@ To do this we must first introduce some terminology.
 The significance of this section to the purposes of this work is moot, since the strong axiom of infinity, which implicitly asserts the existence of inaccessible 'a ordinals, does not depend upon an explicit definition.
 
 The purpose of this section is therefore as a kind of check on the formulation of that axiom.
-This check could go as far as defining inaccessible and proving the equivalence of the give axiom with a formulation based on the defined concept.
+This check could go as far as defining inaccessible and proving the equivalence of the given axiom with a formulation based on the defined concept.
 However, to serve that pupose this material would have to come before the axiom, since in the context of that axiom we cannot distinguish between equivalence and entailment of the new formulation by the old.
 
 Co-finality is usually a relation between increasing $β$ sequences (β a limit 'a ordinal) and some limit 'a ordinal $α$.
 I don't yet have sequences, so its convenient to give a slightly broader definition.
 Instead of increasing sequences I allow the image of any 'a ordinal under a function (which need not be increasing).
-At this point I don't actually understand why an increasing sequence is 
+At this point I don't actually understand why an increasing sequence is asked for in the usual definition.
 
 Such an image is ``cofinal'' in an 'a ordinal if:
 
@@ -1154,7 +1154,7 @@ However, without further validation I now proceed to establish that it can be us
 
 The first step in this is to define a couple of functions using our axiom of infinity.
 
-The first is a function which give an infinite 'a ordinal will deliver the least inaccessible 'a ordinal greater than that 'a ordinal, given a finite 'a ordinal it returns $ω$.
+The first is a function which, given an infinite 'a ordinal, will deliver the least inaccessible 'a ordinal greater than that 'a ordinal, given a finite 'a ordinal it returns $ω$.
 I will call this $Lio$.
 
 \ignore{
@@ -1240,7 +1240,7 @@ For the function to be defined at those limit ordinals, the limits in the range 
 The requirenent that they always do exist is similar in character and strength to the set theoretic axiom of replacement.
 In set theory this asserts that any collection which is the same size as a set will also be a set.
 
-In the theory of ordinals it is the notion of cofinality which plays this role, and the theorems which we need to establish that recursive definitions of functions over the ordinals do indeed coherently define functions will depend upon the assumption that the ordinal types are {\it regular}.
+In the theory of ordinals it is the notion of regularity which plays this role, and the theorems which we need to establish that recursive definitions of functions over the ordinals do indeed coherently define functions will depend upon the assumption that the ordinal types are {\it regular}.
 
 We therefore now provide some vocabulary appropriate both to that limited requirement and to stronger axioms of infinity yielding theories comparable or greater in strength to ZFC set theory.
 
@@ -1374,7 +1374,12 @@ set_merge_pcs ["ordcard01", "'ordcard"];
 
 \subsection{Defining Functions over the Ordinals}
 
+
+\ignore{
 [THIS WHOLE SECTION IS BROKEN AND NEEDS RE-THINKING AND RE-WRITING]
+
+I have no idea why I wrote this, so I'm leaving it here to remind me, but hiding it.
+}%ignore
 
 Often functions over \emph{'a ordinals} are defined by cases in a manner analogous to primitive recursive definitions over the natural numbers (in which the cases are zero and successors) by adding a further case for limit 'a ordinals.
 Its not clear whether such an approach would work for us, because there is some difficulty in dealing with the limit case.
@@ -1435,11 +1440,11 @@ A further step allows the well-foundedness of the recursion to be made more obvi
 	∀β γ⦁ ($+⋎o β) γ = SSup⋎o (Image⋎o ($+⋎o β) γ)
 =TEX
 
-It is a feature of $SSupIm⋎o (\$+⋎o β) γ$ that it accessed values of $\$+⋎o β$ only for 'a ordinals less than $γ$.
+It is a feature of $SSupIm⋎o (\$+⋎o β) γ$ that it accesses values of $\$+⋎o β$ only for 'a ordinals less than $γ$.
 A suitable recursion theorem is necessary to permit definitions in this form to be accepted.
 
 There is a question in formulating such a recursion theorem as to what access to the function is required.
-A maximally general theorem will allow access to a restricted version of the function, an intermediate version to the image of the values below some 'a ordinal through the map, and a minimal version to the supremum of strict supremum of the values.
+A maximally general theorem will allow access to a restricted version of the function, an intermediate version to the image of the values below some 'a ordinal through the map, and a minimal version to the supremum or strict supremum of the values.
 At this point it is not clear to me what is likely to be most useful.
 
 On considering this I came to the conclusion that a general principle should be provided elsewhere, and have put one ($tf\_rec\_thm2$) in t009 \cite{rbjt009}.
@@ -1498,7 +1503,7 @@ To get automatic consistency proofs we need to add a dummy constructor, so:
 
 
 \ignore{
- =SML
+=SML
 val ◁⋎o_def = get_spec ⌜$◁⋎o⌝;
 
 set_goal([], ⌜∀γ f β⦁ β <⋎o γ ⇒ (γ ◁⋎o f) β = f β⌝);
@@ -1512,11 +1517,10 @@ a (REPEAT ∀_tac THEN rewrite_tac [ord_ext_thm]
 	THEN POP_ASM_T ante_tac
 	THEN_TRY UFC_T rewrite_tac [◁⋎o_fc]
 	THEN strip_tac
-	THEN ∃_tac ⌜η:'a ordinal⌝
+	THEN ∃_tac ⌜η:'a O⌝
 	THEN REPEAT strip_tac
 	THEN asm_fc_tac[]
 	);
-(*
 (* *** Goal "1" *** *)
 a (SYM_ASMS_T (fc_tac));
 (* *** Goal "2" *** *)
