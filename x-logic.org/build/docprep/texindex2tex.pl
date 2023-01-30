@@ -15,7 +15,7 @@ $title=""; $abstract=""; $bibref="";
 print "\\section{Abstracts}\n";
 
 while (<ARGV>) {
-    if (/title\{([^}]*)\}/) {if($title eq "") {$title=$1}}
+    if (/(pdftitle=|title)\{([^}]*)\}/) {if($title eq "") {$title=$2}}
     elsif (/bibref\{([^}]*)\}/) {$bibref=$1}
     elsif (/\\begin\{abstract\}/) {
 	$abstract="";
