@@ -1,5 +1,18 @@
-s=IGN
+=IGN
 $Id: t056.doc$
+
+Greek Letters
+	Γ Δ Θ Λ Ξ Π Σ Υ Φ Ψ Ω
+	α β γ δ ε ζ η θ ι κ λ μ ν ξ π ρ σ τ υ φ χ ψ ω
+Logic: 	∧ ∨ ¬ ∀ ∃ ⦁ × ≤ ≠ ≥ ∈ ∉ ⇔ ⇒
+Set symbols: 𝔹 ℂ 𝔽 ℕ ℙ ℚ ℝ 𝕊 𝕌 ℤ ⊆ ∅ ⊂ ∩ ⋂ ∪ ⋃ ⊖
+Arrows: → ⤖ ⤕ ⇻ ↔ ⤀ ⇸ ↣ ↦ ↠ ⤔
+Formal Text Brackets: ⌜ ⌝ ⓣ ⓜ ⓩ Ⓢ ■ ┌ └ ╒ ├
+Padding symbols	│ ─ ═  Index Brackets ⦏ ⦎
+Bracketing symbols: ⟨ ⟩ ⟦ ⟧ ⦇ ⦈
+Subscription adn Superscription: ⋎ ⋏ ↗ ↘ ↕ Underlining: ⨽ ⨼
+Relation, Sequence and Bag Symbols:  ⩥ ▷ ⩤ ◁ ⁀ ↾ ↿ ⊕ ⊎ ⨾ ∘
+Miscellaneous: ⊢ ⦂ ≜ ⊥ ⊖
 
 set_flag("pp_show_HOL_types", true);
 =TEX
@@ -9,6 +22,7 @@ set_flag("pp_show_HOL_types", true);
 \usepackage{rbj}
 \ftlinepenalty=9999
 \usepackage{A4}
+
 
 \usepackage{fontspec}
 \setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
@@ -62,7 +76,6 @@ Last Change 2019/12/03
 
 \section{INTRODUCTION}
 
-
 \ignore{
 My broader aim, to which this document is intended to contribute, is foundational, and is in the spirit of H.B.Curry and his various collaboratorson Illative Combinatory Logic.
 The approach I am exploring is to create a foundational ontology consisting of infinitary combinators with an equivalence relation determined by a reduction relation.
@@ -72,12 +85,22 @@ In this document my aim is to approach the formal definition of this foundationa
 The machinery developed for this purpose may possibly have broader applications for inductive data-types in {\Product}.
 }%ignore
 
+This document is derived from a previous document nominally on infinitary  induction \cite{rbjt051}, and I have not updated all the commentary to keep it in step with the formal text.
+To tell the truth, because there was a long gap after starting this document before I recently resumed it, I'm not at all clear what innovations persuaded my that a new start was desirable.
+One unimportant innovation was that I decided to express the strong infinity axiom using the terminology of the theory of ordinals (regular, strong limit), rather than going straight for it and possibly later proving those properties.
+A second minor point I think was that I wanted to do as much as possible without using the strong infinity, since most HOL datatypes can be constructed on the basis of the weak countable infinity axiom which comes with HOL.
+I'm not convinced of the merits of the split which is thereby created.
+
+I find it hard to beleive that those two points sufficed to warrant this new approach, but anyway, here it is.
+In the process, quite a lot of \cite{rbjt051} was discarded and has been redone from scratch in a very different way.
+That includes all the work on the mechanisms for defining inductive datatypes, the new material formalising enumerations, and the set theory construction.
+
 We begin here from the theory {\tt ordered\_sets}\cite{rbjt009} in which the theorem that over any set there exists an {\em initial strict well-ordering} is proven.
 This enables us to define a polymorphic constant which denotes such an ordering over any type to which it is instantiated.
 Each type is thereby made isomorphic to a initial segment of the ordinals, permitting a theory of ordinals to be developed without introducing any new types.
 To get a rich theory of ordinals we would need a strong axiom of infinity, but the theory can be developed in the first instance using claims about the cardinality of the type as conditions or assumptions.
 
-In a subsequent document a new type constructor will be defined with an axiom which ensures that the resulting type is strictly larger (in cardinality) than the parameter type, and is at least inaccessible.
+In a section \ref{LARGEORDINALS} creates the theory "ord" in which a new type constructor will be defined with an axiom which ensures that the resulting type is strictly larger (in cardinality) than the parameter type, and is at least inaccessible.
 This is placed in a separate theory and document so that any results here which may prove useful  in a strictly conservative development need not feel tainted by an unnecessary axiomatic extension.
 
 In this document the development takes place in the following rough stages.
@@ -421,9 +444,6 @@ val lt⋎o_induction_thm = save_thm ("lt⋎o_induction_thm",
      ⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_induction_thm) lt⋎o_def);
 =TEX
 }%ignore
-
-
-
 
 \subsection{Initiality}
 
@@ -1111,6 +1131,122 @@ set_merge_pcs ["rbjmisc", "'ordinals"];
 =TEX
 }%ignore
 
+\subsection{Enumerations}
+
+When we come to the applications of these ordinals enumerations will be central, and in order to define enumerations recursively it will be necessary to form limits.
+
+This section introduces the chosen representation of enumerations, defining also the notion of directed set of enumerations and limits of directed sets.
+
+An enumeration for present purposes is a function from an initial segment of any type considered as ordinals to some other type.
+The strict supremum of the domain of the enumeration serves to identify the domain (since it must be an initial segment), and a HOL total function between the type of ordinals and the type of values being enumerated provides the details of the enumeration.
+The values assigned to that function beyond the domain of the enumeration are irrelevant but in order to achieve uniqueness in the representation of the sequences we expect that they will always take the same value, viz ⌜Choose \{\}⌝ (the member of the empty set!).
+
+The type abbreviation PEN is used, an acronym for Partial ENumeration.
+=SML
+declare_type_abbrev("PEN", ["'a", "'b"], ⓣ'a ×  ('a → 'b)⌝);
+=TEX
+
+There is a difficulty here arising from the intended use of enumerations for the representation of foundational ontologies, in which case the enumeration will be total over the ordinal type selected and no type of ordinals will yield a fixed point.
+For such enumerations the type above won't work since there will not be an ordinal whose extension is the whole type.
+
+The required limit operation will therefore yield a disjoint union.
+Either the ordinal/map pair, or just the map, the domain for which will then be the whole type of ordinals.
+
+There is some doubt in my mind about the extent to which partial and total enumerations should be treated together so initially I am going to do both combined operations and separate operation of partial enumerations.
+Hence the following type abbreviation for the total or partial case:
+
+The type abbreviation POTEN is used, an acronym for Partial Or Total ENumeration.
+=SML
+declare_type_abbrev("POTEN", ["'a", "'b"], ⓣ(ONE + 'a) ×  ('a → 'b)⌝);
+=TEX
+
+The first limit operation defined below gives the upper bound of a set of compatible PENs, and we therefore need to define first an ordering over compatible PENs.
+
+=SML
+declare_infix(400, "<⋎p");
+=TEX
+
+ⓈHOLCONST
+│ $⦏<⋎p⦎: ('a,'b)PEN → ('a,'b)PEN → BOOL
+├───────────
+│ ∀x y f g⦁ (x, f) <⋎p (y, g) ⇔ x <⋎o y ∧ (∀z⦁ z <⋎o x ⇒ f z = g z)
+■
+
+=SML
+declare_infix(400, "<⋎q");
+=TEX
+
+ⓈHOLCONST
+│ $⦏<⋎q⦎: ('a,'b)POTEN → ('a,'b)POTEN → BOOL
+├───────────
+│ ∀x y f g⦁ (x, f) <⋎q (y, g) ⇔
+│     (IsR x
+│      	   ∧ (((IsR y ∧ (OutR x) <⋎o (OutR y)) ∨ IsL y)
+│	     ∧ (∀z⦁ z <⋎o (OutR x) ⇒ f z = g z))
+│      	       ∨ IsL y ∧ (∀z⦁ z <⋎o (OutR x) ⇒ f z = g z))
+│     ∨ (IsL x ∧ IsL y ∧ (∀z⦁ f z = g z))
+■
+
+A directed set is:
+
+ⓈHOLCONST
+│ ⦏Directed⋎p⦎: ('a,'b)PEN ℙ → BOOL
+├───────────
+│ ∀fs⦁ Directed⋎p fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎p q ∨ q <⋎p p ∨ q = p
+■
+
+ⓈHOLCONST
+│ ⦏Directed⋎q⦎: ('a,'b)POTEN ℙ → BOOL
+├───────────
+│ ∀fs⦁ Directed⋎q fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎q q ∨ q <⋎q p ∨ q = p
+■
+
+The required limit operation is then defined:
+
+ⓈHOLCONST
+│ ⦏LimitFun⋎p⦎: ('a,'b)PEN ℙ → ('a → 'b)
+├───────────
+│ ∀fs⦁ LimitFun⋎p fs = λx⦁ εz⦁
+│      		  (∃(y, f)⦁ (y, f) ∈ fs ∧ x <⋎o y ∧ z = f y)
+│       ∨	  ((∀(y, f)⦁ (y, f) ∈ fs ⇒ ¬ x <⋎o y) ∧ z = Choose{})
+■
+
+ⓈHOLCONST
+│ ⦏LimitOrd⋎p⦎: ('a,'b)PEN ℙ → ONE + 'a
+├───────────
+│ ∀fs⦁ LimitOrd⋎p fs =
+│       let ords = {x | ∃f⦁ (x, f) ∈ fs}
+│       in if Ub⋎o ords = {}
+│          then InL One
+│	   else InR (⋃⋎o ords)
+■
+
+The q versions are a bit odd, since if there is total function in a directed set, then it is the limit.
+
+However, a set of partial enumerations may have a total enumeration as its limit (as hinted by the type above for $⌜LimitOrd⋎p⌝$).
+
+Combining the previous two functions we get.
+
+ⓈHOLCONST
+│ ⦏LimitPen⋎p⦎: ('a,'b)PEN ℙ → ('a,'b)POTEN
+├───────────
+│ ∀fs⦁ LimitPen⋎p fs = (LimitOrd⋎p fs, LimitFun⋎p fs)
+■
+
+\subsubsection{Converting Well Orderings to Enumerations}
+
+The type of the following function determines the type of ordinals over which the enumeration is to be constructed.
+Of course, the function won't work if this is too small.
+Nor will it deliver the intended result if the relationship supplied is not a well-ordering.
+
+\ignore{
+ ⓈHOLCONST
+│ ⦏Wo2Poten⦎: ('a SET × 'a → 'a → BOOL) → ('b,'a)POTEN
+ ├───────────
+│ ∀w2p⦁ Wo2Poten wtp = (LimitOrd⋎p fs, LimitFun⋎p fs)
+ ■
+}%ignore
+
 \section{STRONG INFINITY}
 
 When we come to define functions over ordinals we become dependent on closure properties of the ordinals.
@@ -1225,7 +1361,10 @@ a (rewrite_tac[ω⋎o_def]);
 ⓈHOLCONST
 │ ⦏Inaccessible⋎o⦎: 'a → BOOL
 ├───────────
-│ ∀β⦁ Inaccessible⋎o β ⇔ Regular⋎o β ∧ StrongLimit⋎o β ∧ ∃ η⦁ η <⋎o β ∧ Limit⋎o β
+│ ∀β⦁ Inaccessible⋎o β ⇔
+│       	     Regular⋎o β
+│ 		     ∧ StrongLimit⋎o β
+│ 		     ∧ ∃ η⦁ η <⋎o β ∧ Limit⋎o η
 ■
 
 \ignore{
@@ -1363,7 +1502,6 @@ To make this conspicuous we can rewrite the definition, first:
 =GFT
 	∀β γ⦁ β +⋎o γ = SSup⋎o {η | η <⋎o β ∨ ∃ρ⦁ ρ <⋎o γ ∧ η = β +⋎o ρ}
 =TEX
-
 
 This first step overcomes the first problem (the dependence on establishing that the formula `downward closed', the set in the second formulation does not need to be downward closed).
 The smaller values become irrelevant, and this could be simplified to:
@@ -1530,8 +1668,7 @@ add_∃_cd_thms [ord_rec_thm3] "'ordinals-rec";
 add_∃_cd_thms [Image⋎o_recursion_thm] "'ordinals-rec";
 =TEX
 
-
-\section{LARGE ORDINALS}
+\section{LARGE ORDINALS}\label{LARGEORDINALS}
 
 This is realised by introducing a new type constructor for the type ``O'', which is introduced by axiomatic extension.
 
@@ -1641,6 +1778,28 @@ The sum of two 'a ordinals is the strict supremum of the set of 'a ordinals less
 	⊢ ∀ β⦁ β +⋎o 0⋎o = β
 =TEX
 
+=SML
+declare_infix(400, "-⋎o");
+=TEX
+
+=SML
+set_goal([], ⌜∃$-⋎o:'a O → 'a O → 'a O⦁
+		∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)⌝);
+a (LEMMA_T ⌜∃$-⋎o:'a O → 'a O → 'a O⦁
+		∀β γ⦁ β -⋎o (CombI γ) = if β ≤⋎o γ then 0⋎o else SupIm⋎o (γ ◁⋎o ($-⋎o β), γ)⌝
+	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
+	THEN1 basic_prove_∃_tac);
+val minus⋎o_consistent = save_cs_∃_thm (pop_thm());
+=TEX
+
+ⓈHOLCONST
+│ $⦏-⋎o⦎: 'a O → 'a O → 'a O
+├───────────
+│ ∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)
+■
+
+The development of ordinal arthmetic will continue here but will be confined to those results which are needed by the applications of ordinals which follow, particularly to the construction and application of inductive data types.
+
 \ignore{
 =SML
 val plus⋎o_def = get_spec ⌜$+⋎o⌝;
@@ -1698,6 +1857,195 @@ a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎
 =TEX
 }%ignore
 
+\section{INDUCTIVE DATA TYPES}
+
+=SML
+open_theory "ordinals";
+force_new_theory "⦏idt⦎";
+new_parent "ord";
+force_new_pc "⦏'idt⦎";
+merge_pcs ["'savedthm_cs_∃_proof"] "'idt";
+set_merge_pcs ["rbjmisc", "'ordinals", "'ord", "'idt"];
+=TEX
+
+This section provides machinery to support two kinds of inductive data type construction.
+
+The general pattern is to use an ordinal type as the representation and to give an inductive definition of the function over the ordinals which is the generalised projection function, i.e. the inverse of the generalised constructor which is to be used for making objects of the new type.
+The generalised projection and constructor operate with disjoint unions each partition correponding to one of the intended new data types.
+These are then used to partition the ordinals to give representation sets for each if the new types.
+
+There are two quite distinct cases here, according to whether the constructions eventually yield a set closed under the constructions.
+The representations are then a subset of the rekevant ordinals, and the closure properties are then amount the theorems characterising the new types,
+In the second case, which occurs if the constructors invariably raise the cardinality (perhaps because invoving the power set or function space constructors) and the iteration continues until the ordinals are exhausted without realising closure.
+These are what I call foundational ontologies.
+
+The development of this machinery is driven by two simple examples included in this document just for that purpose.
+For the first case the example is the syntax of HOL terms.
+For the second, the simplest construction is to use the power set to create a set theory.
+
+
+
+\subsection{The Projection Iterator}
+
+We required a function to be provided which given a set of representatives (in fact an initial segment, or the whole, of some ordinal type) identify the things which can be constructed from them.
+This is done by exhibiting the constructions which yield the particular representative, so the map from a represetative to its manner of construction is the projection from the required abstract data types.
+
+An induction data type is generated from the empty set by iterating certain defined methods of constructing new entities of the inductively defined types from the entities already constructed (getting of the ground by use of some constructors which require no existing members of those types.
+This is defined by a map which, given some existing set of representattions of the types, delivers the ways in which new values can be constructed, i.e. the constructors to be used and the values required by those constructors.
+These are the things which one would expect to obtain from the inverses of the constructor functions, which are called projections.
+
+The iteration of this process of construction therefore cumulatively defines a compound projection function (there would normally be a distinct projection corresponding to each of the ways in which values of the inductive types can be constructed, but these can all be bundled into one projection which yields a disjoint union of the parameter types required by the constructor functions, 
+
+At each step in this process the set of representatives grows larger until perhaps there are no new values of the types to be created, and we may say that a fixed point has been reached.
+This does not always happen, in some cases, notably where the constructors always increase the cardinality of the representatives (e.g. when constructing the cumulative heirarchy in well-founded set theories) amd in that case the process terminates when the type of representatives is exhausted and the result is still not closed under the constructions.
+
+This composite projection function is a map from a type of ordinals, and is constructed by sucessively allocating to the ordinals constructions, so that the projection function is in effect an enumeration of the ways in which values of the new types can be constructed.
+So we are here concerned with how such enumerations can be defined, and of course with inductive definitions of such enumerations.
+This makes use of the type abnreviated as ('a,'b)PEN (for partial enumeration), in which the first variable is the type of ordinals which are to be the representatives of the new values, and the type 'b is the disjoint union of the types of the parameters to the construction functions (which would normally be more complex types in which the type 'a appears whenever a value of the new types is used in constructing a more complex value of the new types.
+
+I therefore expect that the designer of the new types will supply a function which when given a set of supposed representatives will return a set of ways in which new values can be constructed from those representatives.
+I define below a function which given that function will deliver the resulting enumeration of all the values in the inductive data type.
+
+???????
+We then apply to that a function which augments the set of represenatatives to include those new entities immediately constructible from the originals.
+This is done by filtering out duplicates, well-ordering the result, and appending this to the original projection.
+The projection is represented by a function over the ordinals together with a specific ordinal which determines the set of representatives so far assigned values.
+
+This yields is a sanitised generalised constructor, and we then need a function which will iterate the augmentation until a fixed point is reached or the ordinals are exhausted.
+
+So this is what one needs to provide for a new type construction:
+Usually the 'a parameter will be ONE, but if there are type variables in 'b  then they will have to be passed through in the value for 'a to ensure that the ordinals used for enumeration (and representation) are sufficiently numerous.
+
+In defining such an enumeration, we need to be able to add some new set of 'b values on to the end of the enuneration.
+
+Note the use of ⌜Choose\{\}⌝ to fix the values of the function beyond the intended range of the enumeration, with the purpose of ensuring uniqueness of representation.
+The definition of limit for these entities depends on this feature.
+
+To define the effect of one new generation of constructions, we first have to apply the defining function to the range of the existing enumeration, giving a new set of projection values to be added to the enumeration.
+Then we remove anything already in the range so that the projection function remains injective.
+
+To add this new set I first define separately the adding of a single new value, and then adding a set in two cases according to whether there is a greatest element in the set.
+
+Adding a single element first:
+
+ⓈHOLCONST
+│ $⦏extprf⦎: ('a, 'b) PEN → 'b → ('a, 'b) PEN
+├───────────
+│ ∀f x w⦁ extprf (x, f) w  =
+│       (Succ⋎o x,
+│       λp⦁ (if p = x then w else if p <⋎o x then f p else (Choose{})))
+■
+
+
+=IGN
+get_spec ⌜Choose⌝;
+ =SML
+set_goal([], ⌜∃ sextprf: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN⦁
+	     ∀f x w⦁ sextprf (x, f) w  =
+     	     	if w = {}
+	     	then (x,f)
+	     	else let e = choose w in sextprf (extprf (x, f) e)  (w\{e})⌝
+);
+
+a (lemma_tac ⌜∃ sextprf: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN⦁
+	     ∀f x w⦁ sextprf (x, f) (Combi w)  =
+     	     	if w = {}
+	     	then (x,f)
+	     	else let e = choose w
+		in sextprf (extprf (x, f) e)  (w\{e})    ⌝);
+
+
+a (basic_prove_∃_tac);
+
+a (lemma_tac ⌜∃ f⦁ ∀ x⦁ f (CombI x) = λg y⦁ if x < (x ◁⋎o f) x⌝;
+
+
+
+ord_rec_thm3  = ⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (CombI x) = af (x ◁⋎o f) x: THM
+
+evaluate_∃_cd_thm ord_rec_thm3 ;
+	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
+	THEN1 basic_prove_∃_tac);
+=TEX
+
+To achieve the recursion here we have to form the limit of directed collections of enumerations using $⌜FunLimit⋎o⌝$ and $⌜OrdLimit⋎o⌝$.
+
+ⓈHOLCONST
+│ $⦏sextprf⦎: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN
+├───────────
+│ ∀f x w⦁ sextprf (x, f) (CombI w)  =
+     	 if w = {}
+	 then (x,f)
+	 else   let e = Choose w
+		in sextprf (extprf (x, f) e)  (w\{e})    
+■	      
+
+=SML
+declare_type_abbrev("PRI", ["'a", "'b"], ⓣ('a, 'b)PEN → 'b SET⌝);
+=TEX
+
+We need an operation to extend
+
+\section{SET THEORY}
+
+This is the simpler example insofar as there is only one constructor, and there is no closure, so we just take the entire type of ordinals as the representatives.
+
+There are many choices in constructing an ontology of sets, and we will adopt the simplest solution here which is the pure well-founded heirarchy naturally thought of as the intended model of ZFC.
+
+So no urelements, and no polymorphism.
+
+The only constructor takes a (HOL) set of these sets and makes a new set from them.
+The projection function therefore maps ordinals to (HOL) sets of ordinals.
+
+ⓈHOLCONST
+│ $⦏setpr⦎: (ONE O, ONE O ℙ) PEN → (ONE O) ℙ ℙ
+├───────────
+│ ∀f x⦁ setpr (x, f)  = ℙ (X⋎o x)
+■
+
+\section{HOL TYPES AND TERMS}
+
+The constructors are:
+
+\begin{itemize}
+
+\item Types
+\begin{itemize}
+\item mk\_tvar string
+\item mk\_tcon string × TYPE list
+\end{itemize}
+
+\item Terms
+\begin{itemize}
+\item mk\_var string × TYPE
+\item mk\_const string × TYPE
+\item mk\_app TERM × TERM
+\item mk\_abs string × TYPE × TERM
+\end{itemize}
+
+\end{itemize}
+
+A generic projection function would therefore yield the following type:
+
+=SML
+declare_type_abbrev("TyTmCt", [], 
+ⓣ((	   STRING
+	+ (STRING × ONE O LIST))
+
++ (	  (STRING × ONE O)
+	+ (STRING × ONE O)
+	+ (ONE O × ONE O)
+	+ (STRING × ONE O × ONE O)))⌝);
+=TEX
+
+\ignore{
+ ⓈHOLCONST
+│ $⦏tytmpr⦎: (ONE, TyTmCt) PRI
+ ├───────────
+│ ∀(g,h):TYTMPR⦁ tytmpr (g,h)  = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)
+ ■
+}%ignore
+
 \appendix
 
 
@@ -1715,6 +2063,9 @@ a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{ord.th}
+\def\section#1{\Section{#1}
+\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
+\include{idt.th}
 }%\let
 
 \twocolumn[\section{INDEX}\label{index}]
