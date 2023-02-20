@@ -23,7 +23,6 @@ set_flag("pp_show_HOL_types", true);
 \ftlinepenalty=9999
 \usepackage{A4}
 
-
 \usepackage{fontspec}
 \setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 
@@ -32,7 +31,7 @@ set_flag("pp_show_HOL_types", true);
 \tabstop=0.4in
 \newcommand{\ignore}[1]{}
 
-\title{Ordinals}
+\title{Ordinals and Enumerations}
 \makeindex
 \usepackage[unicode]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
@@ -45,7 +44,7 @@ set_flag("pp_show_HOL_types", true);
 \begin{titlepage}
 \maketitle
 \begin{abstract}
-This document provides support for a kind of ordinals in {\Product}.
+This document provides support for a kind of ordinals in {\Product}, and for enumerations intended to support inductive definitions of recursive datatypes and foundational ontologies.
 \end{abstract}
 
 \vfill
@@ -86,7 +85,7 @@ The machinery developed for this purpose may possibly have broader applications 
 }%ignore
 
 This document is derived from a previous document nominally on infinitary  induction \cite{rbjt051}, and I have not updated all the commentary to keep it in step with the formal text.
-To tell the truth, because there was a long gap after starting this document before I recently resumed it, I'm not at all clear what innovations persuaded my that a new start was desirable.
+To tell the truth, because there was a long gap after starting this document before I recently resumed it, I'm not at all clear what innovations persuaded me that a new start was desirable.
 One unimportant innovation was that I decided to express the strong infinity axiom using the terminology of the theory of ordinals (regular, strong limit), rather than going straight for it and possibly later proving those properties.
 A second minor point I think was that I wanted to do as much as possible without using the strong infinity, since most HOL datatypes can be constructed on the basis of the weak countable infinity axiom which comes with HOL.
 I'm not convinced of the merits of the split which is thereby created.
@@ -371,6 +370,8 @@ The cardinality uniquely determines the {\it order-type} of the defined ordering
 │	∀ x y⦁ x ≤⋎o y ⇔ x <⋎o y ∨ x = y
 ■
 
+Though this does provide a well-ordering over sets the following which orders sets by the supremum of ther elements will also prove useful.
+
 In axiomatic set theory the least ordinal of a set of ordinals is the distributed intersection over that set, for which a large cap symbol is often used.
 Though these ordinals are not sets, a similar notation seems reasonable.
 
@@ -417,6 +418,15 @@ val lt⋎o_clauses = save_thm ("lt⋎o_clauses", rewrite_rule [
 val [irrefl⋎o_thm, antisym⋎o_thm, trans⋎o_thm, linear⋎o_thm, ⋂⋎o_thm] = map save_thm
     (combine ["irrefl⋎o_thm", "antisym⋎o_thm", "trans⋎o_thm", "linear⋎o_thm", "⋂⋎o_thm"]
     	     (strip_∧_rule lt⋎o_clauses));
+
+=IGN
+set_goal([], ⌜∀α β γ⦁ α ⊂ β ⇒ ⋂⋎o α <⋎o ⋂⋎o β⌝);
+a (rewrite_tac[⋂⋎o_def]);
+
+
+set_goal([], ⌜$<⋎o⌝);
+set_goal([], ⌜$<⋎o⌝);
+set_goal([], ⌜$<⋎o⌝);
 =TEX
 }%ignore
 
@@ -493,11 +503,10 @@ set_flag("pp_show_HOL_types", false);
 
 The significance of this feature is not expected to be apparent for some time, probably not in this document.
 
-
 \subsection{Recursion}
 
-
 \ignore{
+=IGN
 commit_pc "'ordinals";
 force_new_pc "pre-ord";
 merge_pcs ["rbjmisc", "'ordinals"] "pre-ord";
@@ -508,7 +517,6 @@ merge_pcs ["rbjmisc1", "'ordinals"] "pre-ord1";
 commit_pc "pre-ord1";
 =TEX
 }%ignore
-
 
 =GFT
 ⦏lt⋎o_trich⦎ =
@@ -617,7 +625,7 @@ undo 1;
 =TEX
 }%ignore
 
-\subsection{Extensionality}
+\subsection{Extensionality and Transitivity}
 
 A useful principle for reasoning about the 'a ordinals is the following analogue of set theoretic extensionality:
 
@@ -626,7 +634,7 @@ A useful principle for reasoning about the 'a ordinals is the following analogue
 	⊢ ∀ β γ⦁ β = γ ⇔ (∀ δ⦁ δ <⋎o β ⇔ δ <⋎o γ)
 =TEX
 
-We we later make use of quasi extensional characterisations of operations over 'a ordinals, in which an 'a ordinal expression is characterised by a statement of the conditions under which 'a ordinals are less than the value of the expression.
+We will later make use of quasi extensional characterisations of operations over 'a ordinals, in which an 'a ordinal expression is characterised by a statement of the conditions under which 'a ordinals are less than the value of the expression.
 This facilitates proofs about 'a ordinals in which the complexity is on the right of an inequality, or in which such can be obtained by the extesionality principle above.
 
 This leaves an awkwardness where our goal has an expression on the left of an inequality which the following rule is intended to ameliorate.
@@ -707,6 +715,7 @@ val ≤⋎o_ext_thm = save_pop_thm "≤⋎o_ext_thm";
 =TEX
 }%ignore
 
+\subsection{Bounds and Suprema}
 
 ... and for the supremum of a set of 'a ordinals.
 
@@ -735,9 +744,8 @@ val ≤⋎o_ext_thm = save_pop_thm "≤⋎o_ext_thm";
 ■
 
 =GFT
-⦏⋂⋎o_thm2⦎ =
-	⊢ ∀ so β⦁ β ∈ so ⇒
-		(∀ γ⦁ γ <⋎o Least⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ γ <⋎o η))
+⦏⋂⋎o_thm2⦎ = ⊢ ∀ so β⦁
+	   β ∈ so ⇒ (∀ γ⦁ γ <⋎o ⋂⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ γ <⋎o η)): 
 ⦏Ub⋎o_thm⦎ =
 	⊢ ∀ so γ⦁ γ ∈ Ub⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ η ≤⋎o γ)
 ⦏Ub⋎o_X⋎o_thm⦎ =
@@ -950,6 +958,8 @@ set_merge_pcs ["rbjmisc", "'ordinals"];
 =TEX
 }%ignore
 
+\subsection{Images and Limits}
+
 In order to define operators over the 'a ordinals (without undesirable complications) the 'a ordinals must be closed under the operations.
 If we want to use such operations in formulating our strong axiom of infinity, then we would need to assert sufficiently strong closure conditions in advance of our axiom of infinity.
 
@@ -1031,8 +1041,6 @@ Sometimes where such a limit is used in the literature there is no apparent bene
 ├───────────
 │ ∀x⦁ SupIm⋎o x = ⋃⋎o (Image⋎o x)
 ■
-
-\subsection{Results Not Dependent on Ontology}
 
 Most of the functions we will want to define will be continuous, i.e. the value at a limit ordinal will be the limit of the values at points below that ordinal.
 For the function to be defined at those limit ordinals, the limits in the range must exist,
@@ -1131,13 +1139,100 @@ set_merge_pcs ["rbjmisc", "'ordinals"];
 =TEX
 }%ignore
 
-\subsection{Enumerations}
+\subsection{Ordering Sets of Ordinals}
+
+Though we get an arbitrary well-ordering of sets as $⌜$$<⋎o⌝$, the particular order of sets by the supremum of their members (under $⌜$$<⋎o⌝$) is useful. 
+
+=SML
+declare_infix(400, "<⋎u");
+=TEX
+
+ⓈHOLCONST
+│ ⦏$<⋎u⦎: 'a SET → 'a SET → BOOL
+├───────────
+│ ∀s t⦁ s <⋎u t ⇔ (SSup⋎o s) <⋎o (SSup⋎o t)
+■
+=GFT
+⦏lt⋎u_well_founded_thm⦎  ⊢ UWellFounded $<⋎u:
+=IGN
+⦏lt⋎u_well_founded_thm2⦎  ⊢ WellFounded $<⋎U:
+=GFT
+⦏lt⋎u_well_founded_thm3⦎  ⊢ well_founded $<⋎u:
+
+⦏lt⋎u_induction_thm⦎ = ⊢ ∀ p⦁ (∀ x⦁ (∀ y⦁ y <⋎u x ⇒ p y) ⇒ p x) ⇒ (∀ x⦁ p x)
+=TEX
+
+\ignore{
+=SML
+val lt⋎u_def = get_spec ⌜$<⋎u⌝;
+
+set_goal([], ⌜UWellFounded $<⋎u⌝);
+a (lemma_tac ⌜$<⋎u = λs t⦁ SSup⋎o s <⋎o SSup⋎o t⌝);
+(* *** Goal "1" *** *)
+a (once_rewrite_tac [ext_thm]);
+a (once_rewrite_tac [ext_thm]);
+a (rewrite_tac [lt⋎u_def]);
+(* *** Goal "2" *** *)
+a (asm_rewrite_tac[]);
+a (rewrite_tac[
+⇒_elim (list_∀_elim [⌜SSup⋎o:'a SET → 'a⌝, ⌜$<⋎o:'a → 'a → BOOL⌝] u_well_founded_pullback_thm) lt⋎o_well_founded_thm]);
+val lt⋎u_well_founded_thm = save_pop_thm ("lt⋎u_well_founded_thm");
+
+val lt⋎u_well_founded_thm3 = save_thm ("lt⋎u_well_founded_thm3",
+    rewrite_rule [tac_proof(([], ⌜∀$<<⦁ UWellFounded $<< ⇔ well_founded $<<⌝), rewrite_tac [get_spec ⌜well_founded⌝, u_well_founded_induction_thm])] lt⋎u_well_founded_thm);
+
+val lt⋎u_induction_thm = save_thm ("lt⋎u_induction_thm",
+     rewrite_rule[∀_elim ⌜$<⋎u⌝ u_well_founded_induction_thm] lt⋎u_well_founded_thm);
+=TEX
+}%ignore
+
+ⓈHOLCONST
+│ ⦏X⋎u⦎: 'a SET → 'a SET SET
+├───────────
+│	∀x:'a SET⦁ X⋎u x  = {y:'a SET| y <⋎u x}
+■
+
+ⓈHOLCONST
+│ ⦏I⋎u⦎: 'a → 'a
+├───────────
+│	∀x⦁ I⋎u x  =  x
+■
+
+ⓈHOLCONST
+│ ⦏Image⋎u⦎: ('a SET → 'b) × 'a SET  → 'b SET
+├───────────
+│	∀(f:'a SET → 'b) (w:'a SET)⦁ Image⋎u (f, w) =
+│	       {x:'b | ∃y:'a SET⦁ y <⋎u w ∧ x = f (y ∩ w)}
+■
+
+=GFT
+	?⊢  ∀ α β⦁ α <⋎u β ⇒ (α ∩ β) <⋎u β
+=TEX
+
+\ignore{
+=SML
+
+(* GOAL*2 *)
+set_flag("pp_show_HOL_types", true);
+
+set_goal ([], ⌜∀ α β⦁ α <⋎u β ⇒ (α ∩ β) <⋎u β⌝);
+a (rewrite_tac[lt⋎u_def]);
+a (rewrite_tac[lt⋎u_def, SSup⋎o_def]);
+=TEX
+}%ignore
+
+\subsection{Enumerations and Limits}
 
 When we come to the applications of these ordinals enumerations will be central, and in order to define enumerations recursively it will be necessary to form limits.
 
 This section introduces the chosen representation of enumerations, defining also the notion of directed set of enumerations and limits of directed sets.
+The representation of these enumerations is determined by the primary application intended, which is the definition of new types (usually recursive datatypes) in HOL.
+For this purpose we need a sufficiently large type of ordinals to act as represetatives, and we construct a ``projection function'' from those representatives which is the inverse of the composite of the constructor functions which allow new values of the type to be constructed from existing values together with additional information.
+The projection returns the information used to construct the object whose representative it is applied to.
 
-An enumeration for present purposes is a function from an initial segment of any type considered as ordinals to some other type.
+In addition to the typical recursive datatype definition, in which a set of representatives which is closed under the constructors is sought, very similar methods may be used in constructing what I refer to here as foundational ontologies, in which case closure may not be possible because the constructors in some cases will effect an increasing cardinality at each rank.
+
+An enumeration for present purposes is therefore a function from an initial segment of any type considered as ordinals to some other type.
 The strict supremum of the domain of the enumeration serves to identify the domain (since it must be an initial segment), and a HOL total function between the type of ordinals and the type of values being enumerated provides the details of the enumeration.
 The values assigned to that function beyond the domain of the enumeration are irrelevant but in order to achieve uniqueness in the representation of the sequences we expect that they will always take the same value, viz ⌜Choose \{\}⌝ (the member of the empty set!).
 
@@ -1181,10 +1276,8 @@ declare_infix(400, "<⋎q");
 ├───────────
 │ ∀x y f g⦁ (x, f) <⋎q (y, g) ⇔
 │     (IsR x
-│      	   ∧ (((IsR y ∧ (OutR x) <⋎o (OutR y)) ∨ IsL y)
-│	     ∧ (∀z⦁ z <⋎o (OutR x) ⇒ f z = g z))
-│      	       ∨ IsL y ∧ (∀z⦁ z <⋎o (OutR x) ⇒ f z = g z))
-│     ∨ (IsL x ∧ IsL y ∧ (∀z⦁ f z = g z))
+│      	   ∧ (IsR y ∧ (OutR x) <⋎o (OutR y) ∨ IsL y)
+│      	   ∧ (∀z⦁ z <⋎o (OutR x) ⇒ f z = g z))
 ■
 
 A directed set is:
@@ -1192,13 +1285,13 @@ A directed set is:
 ⓈHOLCONST
 │ ⦏Directed⋎p⦎: ('a,'b)PEN ℙ → BOOL
 ├───────────
-│ ∀fs⦁ Directed⋎p fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎p q ∨ q <⋎p p ∨ q = p
+│ ∀fs⦁ Directed⋎p fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎p q ∨ q <⋎p p ∨ p = q
 ■
 
 ⓈHOLCONST
 │ ⦏Directed⋎q⦎: ('a,'b)POTEN ℙ → BOOL
 ├───────────
-│ ∀fs⦁ Directed⋎q fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎q q ∨ q <⋎q p ∨ q = p
+│ ∀fs⦁ Directed⋎q fs ⇔ ∀p q⦁ p ∈ fs ∧ q ∈ fs ⇒ p <⋎q q ∨ q <⋎q p ∨ p = q
 ■
 
 The required limit operation is then defined:
@@ -1206,9 +1299,15 @@ The required limit operation is then defined:
 ⓈHOLCONST
 │ ⦏LimitFun⋎p⦎: ('a,'b)PEN ℙ → ('a → 'b)
 ├───────────
-│ ∀fs⦁ LimitFun⋎p fs = λx⦁ εz⦁
-│      		  (∃(y, f)⦁ (y, f) ∈ fs ∧ x <⋎o y ∧ z = f y)
-│       ∨	  ((∀(y, f)⦁ (y, f) ∈ fs ⇒ ¬ x <⋎o y) ∧ z = Choose{})
+│ ∀fs⦁ LimitFun⋎p fs = λx⦁ Choose
+│      {z | ∃(y, f)⦁ (y, f) ∈ fs ∧ x <⋎o y ∧ z = f y}
+■
+
+ⓈHOLCONST
+│ ⦏LimitFun⋎q⦎: ('a,'b)POTEN ℙ → ('a → 'b)
+├───────────
+│ ∀fs:('a,'b)POTEN ℙ⦁ LimitFun⋎q fs = λx:'a⦁ Choose
+│      {z | ∃(y, f)⦁ (y, f) ∈ fs ∧ (IsR y ∧ x <⋎o OutR y ∨ IsL y) ∧ z = f x}
 ■
 
 ⓈHOLCONST
@@ -1221,6 +1320,18 @@ The required limit operation is then defined:
 │	   else InR (⋃⋎o ords)
 ■
 
+ⓈHOLCONST
+│ ⦏LimitOrd⋎q⦎: ('a,'b)POTEN ℙ → ONE + 'a
+├───────────
+│ ∀fs⦁ LimitOrd⋎q fs =
+│       if (∃f x⦁ (x, f) ∈ fs ∧ IsL x) then InL One
+│       else
+│       let ords = {x | ∃f⦁ (InR x, f) ∈ fs}
+│       in if Ub⋎o ords = {}
+│          then InL One
+│	   else InR (⋃⋎o ords)
+■
+
 The q versions are a bit odd, since if there is total function in a directed set, then it is the limit.
 
 However, a set of partial enumerations may have a total enumeration as its limit (as hinted by the type above for $⌜LimitOrd⋎p⌝$).
@@ -1228,34 +1339,52 @@ However, a set of partial enumerations may have a total enumeration as its limit
 Combining the previous two functions we get.
 
 ⓈHOLCONST
-│ ⦏LimitPen⋎p⦎: ('a,'b)PEN ℙ → ('a,'b)POTEN
+│ ⦏LimitPen⋎p⦎: ('a,'b)PEN SET → ('a,'b)POTEN
 ├───────────
 │ ∀fs⦁ LimitPen⋎p fs = (LimitOrd⋎p fs, LimitFun⋎p fs)
 ■
 
-\subsubsection{Converting Well Orderings to Enumerations}
+ⓈHOLCONST
+│ ⦏LimitPen⋎q⦎: ('a,'b)POTEN SET → ('a,'b)POTEN
+├───────────
+│ ∀fs⦁ LimitPen⋎q fs = (LimitOrd⋎q fs, LimitFun⋎q fs)
+■
 
-The type of the following function determines the type of ordinals over which the enumeration is to be constructed.
-Of course, the function won't work if this is too small.
-Nor will it deliver the intended result if the relationship supplied is not a well-ordering.
+Typically the limit will be formed of a set which is the image of a set under a function which creates partial or total enumerations.
+
+ⓈHOLCONST
+│ ⦏LimPenIm⋎u⦎: ('a SET → ('b, 'c)POTEN) → 'a SET  → ('b, 'c) POTEN
+├───────────
+│	∀f s⦁ LimPenIm⋎u f s = LimitPen⋎q (Image⋎u (f,s)) 
+■
 
 \ignore{
- ⓈHOLCONST
-│ ⦏Wo2Poten⦎: ('a SET × 'a → 'a → BOOL) → ('b,'a)POTEN
- ├───────────
-│ ∀w2p⦁ Wo2Poten wtp = (LimitOrd⋎p fs, LimitFun⋎p fs)
- ■
+=SML
+val LimPenIm⋎u_def = get_spec ⌜LimPenIm⋎u⌝;
+val LimitPen⋎q⦎_def = get_spec ⌜LimitPen⋎q⦎⌝;
+val LimitPen⋎p_def = get_spec ⌜LimitPen⋎p⌝;
+val LimitOrd⋎q_def = get_spec ⌜LimitOrd⋎q⌝;
+val LimitOrd⋎p_def = get_spec ⌜LimitOrd⋎p⌝;
+val LimitFun⋎p_def = get_spec ⌜LimitFun⋎p⌝;
+val LimitFun⋎q_def = get_spec ⌜LimitFun⋎q⌝;
+val Directed⋎p⦎_def = get_spec ⌜Directed⋎p⦎⌝;
+val Directed⋎q_def = get_spec ⌜Directed⋎q⌝;
+val Lt⋎p_def = get_spec ⌜$<⋎p⌝;
+val Lt⋎q_def = get_spec ⌜$<⋎q⌝;
+val Image⋎u_def = get_spec ⌜Image⋎u⌝;
+val X⋎u⦎_def = get_spec ⌜X⋎u⦎⌝;
+val I⋎u⦎_def = get_spec ⌜I⋎u⦎⌝;
+=TEX
 }%ignore
 
-\section{STRONG INFINITY}
+\subsection{Defining Inaccessibility}
 
 When we come to define functions over ordinals we become dependent on closure properties of the ordinals.
 
 To obtain convenient closure properties we constrain the theory to operate over types of sufficient cardinality and other properties.
+We will also introduce a type constructor which creates types characterised by a strong axiom of infinity, with good closure properties, for example, closed under dependent function space construction, and having inacessible cardinality.
 
 To do this we must first introduce some terminology.
-
-\subsection{Defining Inaccessibility}
 
 The significance of this section to the purposes of this work is moot, since the strong axiom of infinity, which implicitly asserts the existence of inaccessible 'a ordinals, does not depend upon an explicit definition.
 
@@ -1503,17 +1632,19 @@ To make this conspicuous we can rewrite the definition, first:
 	∀β γ⦁ β +⋎o γ = SSup⋎o {η | η <⋎o β ∨ ∃ρ⦁ ρ <⋎o γ ∧ η = β +⋎o ρ}
 =TEX
 
-This first step overcomes the first problem (the dependence on establishing that the formula `downward closed', the set in the second formulation does not need to be downward closed).
+This first step overcomes the first problem (the dependence on establishing that the formula is `downward closed', the set in the second formulation does not need to be downward closed).
 The smaller values become irrelevant, and this could be simplified to:
 
 =GFT
-	∀β γ⦁ β +⋎o γ = SSup⋎o {η | ∃ρ⦁ ρ <⋎o γ ∧ η = β +⋎o ρ}
+	∀β γ⦁ β +⋎o γ = SSup⋎o ({η | ∃ρ⦁ ρ <⋎o γ ∧ η = β +⋎o ρ} ∪ {β})
 =TEX
+
+(Well it was simpler till I realised I had to add the $⌜∪ {β}⌝$)
 
 A further step allows the well-foundedness of the recursion to be made more obvious.
 
 =GFT
-	∀β γ⦁ ($+⋎o β) γ = SSup⋎o (Image⋎o ($+⋎o β) γ)
+	∀β γ⦁ ($+⋎o β) γ = SSup⋎o ((Image⋎o ($+⋎o β) γ) ∪ {β})
 =TEX
 
 It is a feature of $SSupIm⋎o (\$+⋎o β) γ$ that it accesses values of $\$+⋎o β$ only for 'a ordinals less than $γ$.
@@ -1661,92 +1792,171 @@ val Image⋎o_recursion_thm = save_pop_thm "Image⋎o_recursion_thm";
 
 Rather than having specific recursion theorems for definitions involving SupIm or SSupIm, we apply the required domain restriction to the function being defined wherever it is used on the right of the definition.
 
-=SML
-force_new_pc "'ordinals-rec";
-add_∃_cd_thms [ord_rec_thm3] "'ordinals-rec";
-=IGN
-add_∃_cd_thms [Image⋎o_recursion_thm] "'ordinals-rec";
-=TEX
-
-\section{LARGE ORDINALS}\label{LARGEORDINALS}
-
-This is realised by introducing a new type constructor for the type ``O'', which is introduced by axiomatic extension.
+For functions to be defined over sets:
 
 =SML
-open_theory "ordinals";
-force_new_theory "⦏ord⦎";
-force_new_pc "⦏'ord⦎";
-merge_pcs ["'savedthm_cs_∃_proof"] "'ord";
-set_merge_pcs ["'ordinals", "'ord", "rbjmisc"];
+declare_infix(400, "◁⋎u");
 =TEX
 
-=SML
-new_type ("⦏O⦎", 1);
-new_const("⦏Mk_O⦎", ⓣ'a → 'a O⌝);
+ⓈHOLCONST
+│ $⦏◁⋎u⦎: 'a SET → ('a SET → 'b) → ('a SET → 'b)
+├───────────
+│ ∀x f⦁ x ◁⋎u f = (x, $<⋎u) ⟨◁ f
+■
 
-val ⦏Mk_O_ax⦎ = new_axiom(["Mk_O_axiom"], ⌜
-	OneOne Mk_O ∧ ∃α:'a O⦁ ∀β:'a⦁ Mk_O β <⋎o α
-⌝);
-
-val ⦏strong_infinity_axiom⦎ = new_axiom(["strong_infinity_axiom"], ⌜
-∀β:'a O⦁ 	(∃γ:'a O⦁ β <⋎o γ ∧ Inaccessible⋎o γ)
-    ∧	(∀f⦁ (∃ρ:'a O⦁ (∀ν:'a O⦁ ν <⋎o β ⇒ f ν <⋎o ρ)))
-⌝);
-=TEX
+We want to know that recursive definitions done in this way are well-founded.
 
 =GFT
-⦏Ub⋎o_Image⋎o_thm⦎ =
-	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ Ub⋎o (Image⋎o (f, β))
-⦏SUb⋎o_Image⋎o_thm⦎ =
-	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ SUb⋎o (Image⋎o (f, β))
+⦏◁⋎u_fc⦎ =
+	⊢ ∀γ f β⦁ β <⋎u γ ⇒ (γ ◁⋎u f) β = f β
+⦏Image⋎u_◁⋎u_thm⦎ =
+	? ⊢ ∀ γ f⦁ Image⋎u (γ ◁⋎u f, γ) = Image⋎u (f, γ)
+⦏LimIm⋎u_◁⋎u_thm⦎ =
+	? ⊢ ∀ γ f⦁ SupIm⋎u (γ ◁⋎u f, γ) = SupIm⋎u (f, γ)
+⦏LimitPen⋎u_◁⋎u_thm⦎ =
+	? ⊢ ∀γ f⦁ LimitPen⋎u (γ ◁⋎u f, γ) = LimitPen⋎u  (f, γ)
 =TEX
 
 \ignore{
 =SML
-set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ Ub⋎o(Image⋎o (f, β))⌝);
-a (REPEAT ∀_tac);
-a (strip_asm_tac (strong_infinity_axiom));
-a (spec_nth_asm_tac 1 ⌜β⌝);
-a (spec_nth_asm_tac 1 ⌜f⌝);
-a (∃_tac ⌜ρ⌝
-	THEN rewrite_tac[Image⋎o_thm]
-	THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[≤⋎o_def]
-	THEN asm_fc_tac[]
-	THEN contr_tac);
-val Ub⋎o_Image⋎o_thm = save_pop_thm "Ub⋎o_Image⋎o_thm";
-=TEX
+val ◁⋎u_def = get_spec ⌜$◁⋎u⌝;
+
+set_goal([], ⌜∀f β γ ⦁ β <⋎u γ ⇒ (γ ◁⋎u f) β = f β⌝);
+a (REPEAT ∀_tac THEN rewrite_tac [◁⋎u_def] THEN REPEAT strip_tac
+	THEN FC_T rewrite_tac [⟨◁_fc_thm]); 
+val ◁⋎u_fc = save_pop_thm "◁⋎u_fc";
 
 =IGN
-set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
-a (strip_asm_tac (strong_infinity_axiom));
-Minr_def;
-set_goal([], ⌜∀f β⦁ ∃γ:'a⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
-a (REPEAT ∀_tac);
-a (rewrite_tac[SUb⋎o_def, Image⋎o_def]);
-a (spec_nth_asm_tac 1 ⌜β⌝);
-a (spec_nth_asm_tac 1 ⌜f⌝);
+stop;
 
+set_flag("pp_show_HOL_types", true);
+set_flag("pp_show_HOL_types", false);
 
-a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
-(* a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (asm_tac))); *)
-a (POP_ASM_T discard_tac);
-a (rewrite_tac[SUb⋎o_def]);
-a (∃_tac ⌜ρ⌝
-	THEN rewrite_tac[Image⋎o_thm]
-	THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[≤⋎o_def]
-	THEN asm_fc_tac[]
-	THEN contr_tac);
-val SUb⋎o_Image⋎o_thm = save_pop_thm "SUb⋎o_Image⋎o_thm";
+stop;
+(* GOAL*1 *)
+set_goal([], ⌜∀α f⦁ Image⋎u (α ◁⋎u f, α) = Image⋎u (f, α)⌝);
+a (REPEAT ∀_tac
+  	THEN rewrite_tac [Image⋎u_def, sets_ext_clauses]
+	THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (lemma_tac ⌜(y ∩ α) <⋎u α⌝);
+
+(* *** Goal "1.1" *** *)
+a (rewrite_tac[lt⋎u_def, SSup⋎o_def, SUb⋎o_def]);
+a (fc_tac [◁⋎u_fc]);
+a (∃_tac ⌜y: 'b ℙ⌝ THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [◁⋎o_fc]);
+a (∃_tac ⌜η⌝ THEN asm_rewrite_tac[]);
+val Image⋎o_◁⋎o_thm = save_pop_thm "Image⋎o_◁⋎o_thm";
+=SML
+new_conjecture(["SupIm⋎u_◁⋎u_thm"], ⌜∀γ f⦁ SupIm⋎u (γ ◁⋎u f, γ) = SupIm⋎u (f, γ)⌝);
+=IGN
+set_goal([], ⌜∀γ f⦁ SupIm⋎u (γ ◁⋎u f, γ) = SupIm⋎u (f, γ)⌝);
+a (REPEAT strip_tac THEN rewrite_tac [SupIm⋎u_def, Image⋎u_◁⋎u_thm]);
+val SupIm⋎u_◁⋎u_thm = save_pop_thm "SupIm⋎u_◁⋎u_thm";
+
+new_conjecture(["SSupIm⋎o_◁⋎o_thm"], ⌜∀γ f⦁ SSupIm⋎o (γ ◁⋎o f, γ) = SSupIm⋎o (f, γ)⌝);
+
+set_goal([], ⌜∀γ f⦁ SSupIm⋎o (γ ◁⋎o f, γ) = SSupIm⋎o (f, γ)⌝);
+a (REPEAT strip_tac THEN rewrite_tac [SSupIm⋎u_def, Image⋎u_◁⋎u_thm]);
+val SSupIm⋎o_◁⋎o_thm = save_pop_thm "SSupIm⋎o_◁⋎o_thm";
+
+new_conjecture([""], );
+=IGN
+val ord_rec_thm = save_thm("ord_rec_thm",
+	rewrite_rule [lt⋎o_well_founded_thm2] (∀_elim ⌜$<⋎o: 'a → 'a → BOOL⌝ tf_rec_thm2));
+
+set_goal([], ⌜∀ af⦁ ∃ f:'a → 'a⦁ ∀ x⦁ f x = af (x ◁⋎o f) x⌝);
+a (rewrite_tac[◁⋎o_def, ord_rec_thm]);
+val ord_rec_thm2 = save_pop_thm "ord_rec_thm2";
+
+set_goal ([], ⌜∀ af⦁ ∃ f:'a → 'a⦁ ∀ x⦁ f (CombI x) = af (x ◁⋎o f) x⌝);
+a (strip_tac);
+a (strip_asm_tac (∀_elim ⌜af⌝ ord_rec_thm2));
+a (∃_tac ⌜f⌝ THEN asm_rewrite_tac [get_spec ⌜CombI⌝]);
+val ord_rec_thm3 = save_pop_thm "ord_rec_thm3";
+
+=IGN
+set_flag ("pp_show_HOL_types", true);
+set_flag ("pp_show_HOL_types", false);
+
+set_goal([], ⌜∀af⦁ (λ(f:'a → 'a) (x:'a)⦁ af (Image⋎o (f, x)) x) respects $<⋎o⌝);
+a (rewrite_tac [get_spec ⌜$respects⌝] THEN REPEAT strip_tac);
+a (LEMMA_T ⌜Image⋎o (g, x) = Image⋎o (h, x)⌝ rewrite_thm_tac);
+a (rewrite_tac[sets_ext_clauses, Image⋎o_thm] THEN REPEAT strip_tac);
+(* *** Goal "1" *** *)
+a (∃_tac ⌜η⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac);
+a (lemma_tac ⌜tc $<⋎o η x⌝ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T (rewrite_tac o list_map_eq_sym_rule) []);
+(* *** Goal "2" *** *)
+a (∃_tac ⌜η⌝ THEN asm_rewrite_tac[] THEN REPEAT strip_tac);
+a (POP_ASM_T ante_tac);
+a (lemma_tac ⌜tc $<⋎o η x⌝ THEN1 fc_tac [tc_incr_thm]);
+a (ASM_FC_T rewrite_tac []);
+val Image⋎o_respects_lt⋎o_thm = save_pop_thm "Image⋎o_respects_lt⋎o_thm";
+
+set_goal([], ⌜∀ af:'a ℙ → 'a → 'a⦁ ∃ f⦁ ∀x:'a⦁ f (CombI x) = af (Image⋎o (f, x)) x⌝);
+a (REPEAT strip_tac THEN_TRY rewrite_tac[get_spec ⌜CombI⌝]);
+a (∃_tac ⌜fix (λf x⦁ af (Image⋎o (f, x)) x)⌝);
+a (asm_tac Image⋎o_respects_lt⋎o_thm);
+a (asm_tac lt⋎o_well_founded_thm3);
+a (spec_nth_asm_tac 2 ⌜af⌝);
+a (all_fc_tac [get_spec ⌜fix⌝]);
+a (swap_nth_asm_concl_tac 1);
+a (rewrite_tac[ext_thm]);
+a (swap_nth_asm_concl_tac 1);
+a (asm_rewrite_tac []);
+val Image⋎o_recursion_thm = save_pop_thm "Image⋎o_recursion_thm";
+=TEX
+}%ignore
+
+=GFT
+⦏ord_rec⋎u_thm3⦎ =
+	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x
 =TEX
 
+
+\ignore{
+=SML
+val ord_rec⋎u_thm = save_thm("ord_rec⋎u_thm",
+	rewrite_rule [rewrite_rule [get_spec ⌜UWellFounded ⌝] lt⋎u_well_founded_thm] (∀_elim ⌜$<⋎u: 'a SET → 'a SET → BOOL⌝ tf_rec_thm2));
+
+set_goal([], ⌜∀ af⦁ ∃ f:'a SET → 'a⦁ ∀ x⦁ f x = af (x ◁⋎u f) x⌝);
+a (rewrite_tac[◁⋎u_def, ord_rec⋎u_thm]);
+val ord_rec⋎u_thm2 = save_pop_thm "ord_rec⋎u_thm2";
+
+set_goal ([], ⌜∀ af⦁ ∃ f:'a SET → 'a⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x⌝);
+a (strip_tac);
+a (strip_asm_tac (∀_elim ⌜af⌝ ord_rec⋎u_thm2));
+a (∃_tac ⌜f⌝ THEN asm_rewrite_tac [get_spec ⌜I⋎u⌝]);
+val ord_rec⋎u_thm3 = save_pop_thm "ord_rec⋎u_thm3";
+
+force_new_pc "'ordinals-rec";
+add_∃_cd_thms [ord_rec_thm3] "'ordinals-rec";
+add_∃_cd_thms [ord_rec⋎u_thm3] "'ordinals-rec";
+=IGN
+add_∃_cd_thms [Image⋎o_recursion_thm] "'ordinals-rec";
+=TEX
+}%ignore
+
+=GFT
+	?⊢  ∀ f s⦁ LimitPenIm⋎u (s ◁⋎u f) s = LimitPenIm⋎u f s
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ f s⦁ LimitPenIm⋎u (s ◁⋎u f) s = LimitPenIm⋎u f s⌝);
+=TEX
 }%ignore
 
 \subsection{Ordinal Arithmetic}
 
-Ordinal arithmetic can only be conducted over types which have sufficiently good closure properties.
+Ordinal arithmetic can only be conducted over types which have sufficiently good closure properties, but some preliminary work is possible with no or modest ontological assumptions.
 
+The following definitions are good over any type of ordinals, however small, but the theory which flows from them does not get very far.
+The full theory will work when they are instantiated to large types.
 =SML
 declare_infix(400, "+⋎o");
 =TEX
@@ -1755,12 +1965,18 @@ declare_infix(400, "+⋎o");
 =SML
 set_merge_pcs ["rbjmisc", "'ordinals", "'ordinals-rec"];
 
-set_goal([], ⌜∃$+⋎o:'a O → 'a O → 'a O⦁
+set_goal([], ⌜∃$+⋎o:'a → 'a → 'a⦁
 		∀β γ⦁ β +⋎o γ = if γ = 0⋎o then β else SupIm⋎o ($+⋎o β, γ)⌝);
-a (LEMMA_T ⌜∃$+⋎o:'a O → 'a O → 'a O⦁
+a (LEMMA_T ⌜∃$+⋎o:'a → 'a → 'a⦁
 		∀β γ⦁ β +⋎o (CombI γ) = if γ = 0⋎o then β else SupIm⋎o (γ ◁⋎o ($+⋎o β), γ)⌝
 	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
 	THEN1 basic_prove_∃_tac);
+=IGN
+a (lemma_tac ⌜∃$+⋎o:'a → 'a → 'a⦁
+		∀β γ⦁ β +⋎o (CombI γ) = if γ = 0⋎o then β else SupIm⋎o (γ ◁⋎o ($+⋎o β), γ)⌝);
+a (pure_rewrite_tac [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]);
+a (accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]));
+=SML
 val plus⋎o_consistent = save_cs_∃_thm (pop_thm());
 =TEX
 }%ignore
@@ -1768,7 +1984,7 @@ val plus⋎o_consistent = save_cs_∃_thm (pop_thm());
 The sum of two 'a ordinals is the strict supremum of the set of 'a ordinals less than the second operand under the function which adds each 'a ordinal to the first operand.
 
 ⓈHOLCONST
-│ $⦏+⋎o⦎: 'a O → 'a O → 'a O
+│ $⦏+⋎o⦎: 'a → 'a → 'a
 ├───────────
 │ ∀β γ⦁ β +⋎o γ = if γ = 0⋎o then β else SupIm⋎o ($+⋎o β, γ)
 ■
@@ -1783,9 +1999,9 @@ declare_infix(400, "-⋎o");
 =TEX
 
 =SML
-set_goal([], ⌜∃$-⋎o:'a O → 'a O → 'a O⦁
+set_goal([], ⌜∃$-⋎o:'a → 'a → 'a⦁
 		∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)⌝);
-a (LEMMA_T ⌜∃$-⋎o:'a O → 'a O → 'a O⦁
+a (LEMMA_T ⌜∃$-⋎o:'a → 'a → 'a⦁
 		∀β γ⦁ β -⋎o (CombI γ) = if β ≤⋎o γ then 0⋎o else SupIm⋎o (γ ◁⋎o ($-⋎o β), γ)⌝
 	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
 	THEN1 basic_prove_∃_tac);
@@ -1793,7 +2009,7 @@ val minus⋎o_consistent = save_cs_∃_thm (pop_thm());
 =TEX
 
 ⓈHOLCONST
-│ $⦏-⋎o⦎: 'a O → 'a O → 'a O
+│ $⦏-⋎o⦎: 'a → 'a → 'a
 ├───────────
 │ ∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)
 ■
@@ -1857,15 +2073,64 @@ a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎
 =TEX
 }%ignore
 
+=IGN
+⦏Ub⋎o_Image⋎o_thm⦎ =
+	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ Ub⋎o (Image⋎o (f, β))
+⦏SUb⋎o_Image⋎o_thm⦎ =
+	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ SUb⋎o (Image⋎o (f, β))
+=TEX
+
+\ignore{
+=IGN
+set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ Ub⋎o(Image⋎o (f, β))⌝);
+a (REPEAT ∀_tac);
+a (strip_asm_tac (strong_infinity_axiom));
+a (spec_nth_asm_tac 1 ⌜β⌝);
+a (spec_nth_asm_tac 1 ⌜f⌝);
+a (∃_tac ⌜ρ⌝
+	THEN rewrite_tac[Image⋎o_thm]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[≤⋎o_def]
+	THEN asm_fc_tac[]
+	THEN contr_tac);
+val Ub⋎o_Image⋎o_thm = save_pop_thm "Ub⋎o_Image⋎o_thm";
+=TEX
+
+=IGN
+set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
+a (strip_asm_tac (strong_infinity_axiom));
+Minr_def;
+
+set_goal([], ⌜∀f β⦁ ∃γ:'a⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
+a (REPEAT ∀_tac);
+a (rewrite_tac[SUb⋎o_def, Image⋎o_def]);
+a (spec_nth_asm_tac 1 ⌜β⌝);
+a (spec_nth_asm_tac 1 ⌜f⌝);
+
+
+a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
+(* a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (asm_tac))); *)
+a (POP_ASM_T discard_tac);
+a (rewrite_tac[SUb⋎o_def]);
+a (∃_tac ⌜ρ⌝
+	THEN rewrite_tac[Image⋎o_thm]
+	THEN REPEAT strip_tac
+	THEN asm_rewrite_tac[≤⋎o_def]
+	THEN asm_fc_tac[]
+	THEN contr_tac);
+val SUb⋎o_Image⋎o_thm = save_pop_thm "SUb⋎o_Image⋎o_thm";
+=TEX
+
+}%ignore
+
 \section{INDUCTIVE DATA TYPES}
 
 =SML
 open_theory "ordinals";
 force_new_theory "⦏idt⦎";
-new_parent "ord";
 force_new_pc "⦏'idt⦎";
 merge_pcs ["'savedthm_cs_∃_proof"] "'idt";
-set_merge_pcs ["rbjmisc", "'ordinals", "'ord", "'idt"];
+set_merge_pcs ["rbjmisc", "'ordinals", "'idt"];
 =TEX
 
 This section provides machinery to support two kinds of inductive data type construction.
@@ -1883,30 +2148,32 @@ The development of this machinery is driven by two simple examples included in t
 For the first case the example is the syntax of HOL terms.
 For the second, the simplest construction is to use the power set to create a set theory.
 
-
-
 \subsection{The Projection Iterator}
 
 We required a function to be provided which given a set of representatives (in fact an initial segment, or the whole, of some ordinal type) identify the things which can be constructed from them.
 This is done by exhibiting the constructions which yield the particular representative, so the map from a represetative to its manner of construction is the projection from the required abstract data types.
 
-An induction data type is generated from the empty set by iterating certain defined methods of constructing new entities of the inductively defined types from the entities already constructed (getting of the ground by use of some constructors which require no existing members of those types.
-This is defined by a map which, given some existing set of representattions of the types, delivers the ways in which new values can be constructed, i.e. the constructors to be used and the values required by those constructors.
+An inductive data type is generated from the empty set by iterating certain defined methods of constructing new entities of the inductively defined types from the entities already constructed (getting off the ground by the use of some constructors which require no existing members of those types).
+This is defined as a map which, given some existing set of representatives of the types, delivers the ways in which new values can be constructed, i.e. the constructors to be used and the values to which those constructors are to be applied.
 These are the things which one would expect to obtain from the inverses of the constructor functions, which are called projections.
 
-The iteration of this process of construction therefore cumulatively defines a compound projection function (there would normally be a distinct projection corresponding to each of the ways in which values of the inductive types can be constructed, but these can all be bundled into one projection which yields a disjoint union of the parameter types required by the constructor functions, 
+The iteration of this process of construction therefore cumulatively defines a compound projection function (there would eventually be a distinct projection corresponding to each of the ways in which values of the inductive types can be constructed, but at this stage these are all be bundled into one projection which yields a disjoint union of the parameter types required by the various constructor functions, 
 
-At each step in this process the set of representatives grows larger until perhaps there are no new values of the types to be created, and we may say that a fixed point has been reached.
+At each step in this process the set of representatives grows larger until perhaps there are no new values of the types to be created, and we may say that a fixed point has been reached over which the constructors are closed.
+
 This does not always happen, in some cases, notably where the constructors always increase the cardinality of the representatives (e.g. when constructing the cumulative heirarchy in well-founded set theories) amd in that case the process terminates when the type of representatives is exhausted and the result is still not closed under the constructions.
 
 This composite projection function is a map from a type of ordinals, and is constructed by sucessively allocating to the ordinals constructions, so that the projection function is in effect an enumeration of the ways in which values of the new types can be constructed.
 So we are here concerned with how such enumerations can be defined, and of course with inductive definitions of such enumerations.
+
 This makes use of the type abnreviated as ('a,'b)PEN (for partial enumeration), in which the first variable is the type of ordinals which are to be the representatives of the new values, and the type 'b is the disjoint union of the types of the parameters to the construction functions (which would normally be more complex types in which the type 'a appears whenever a value of the new types is used in constructing a more complex value of the new types.
 
-I therefore expect that the designer of the new types will supply a function which when given a set of supposed representatives will return a set of ways in which new values can be constructed from those representatives.
+I therefore expect that the designer of the new types will supply a function which when given a set of supposed representatives will return a set of ways in which values can be constructed from those representatives.
+Its not necessary to filter out duplicates, that will be done later.
 I define below a function which given that function will deliver the resulting enumeration of all the values in the inductive data type.
 
 ???????
+
 We then apply to that a function which augments the set of represenatatives to include those new entities immediately constructible from the originals.
 This is done by filtering out duplicates, well-ordering the result, and appending this to the original projection.
 The projection is represented by a function over the ordinals together with a specific ordinal which determines the set of representatives so far assigned values.
@@ -1931,31 +2198,34 @@ Adding a single element first:
 ⓈHOLCONST
 │ $⦏extprf⦎: ('a, 'b) PEN → 'b → ('a, 'b) PEN
 ├───────────
-│ ∀f x w⦁ extprf (x, f) w  =
-│       (Succ⋎o x,
-│       λp⦁ (if p = x then w else if p <⋎o x then f p else (Choose{})))
+│ ∀f x w⦁ extprf (x, f) w  = (Succ⋎o x,
+│       λp⦁ (if p = x then w
+│	    else if p <⋎o x then f p
+│	    else (Choose{})))
 ■
 
-
+\ignore{
 =IGN
-get_spec ⌜Choose⌝;
- =SML
-set_goal([], ⌜∃ sextprf: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN⦁
-	     ∀f x w⦁ sextprf (x, f) w  =
-     	     	if w = {}
-	     	then (x,f)
-	     	else let e = choose w in sextprf (extprf (x, f) e)  (w\{e})⌝
+stop;
+set_goal([], ⌜∃ sextprf: ('a, 'b) POTEN → ('b) SET → ('a, 'b) POTEN⦁
+	 ∀f x w⦁ sextprf (x, f) w  =
+     	 if (w = {} ∨ IsL x)
+	 then (x,f)
+	 else LimitPen⋎q{v | ∃u⦁
+	 	    u ∈ w ∧ v = sextprf (x,f) (w ∩ X⋎o u)}⌝
 );
 
-a (lemma_tac ⌜∃ sextprf: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN⦁
-	     ∀f x w⦁ sextprf (x, f) (Combi w)  =
-     	     	if w = {}
-	     	then (x,f)
-	     	else let e = choose w
-		in sextprf (extprf (x, f) e)  (w\{e})    ⌝);
+a (lemma_tac ⌜∃ sextprf: ('a, 'b) POTEN → ('b) ℙ → ('a, 'b) POTEN⦁
+  ∀f x w⦁ sextprf (x, f) (I⋎u w)  =
+     	 if (w = {} ∨ IsL x)
+	 then (x,f)
+	 else LimitPen⋎q{v | ∃u⦁
+	 	    u ∈ w ∧ v = (w ◁⋎u (sextprf (x,f))) (w ∩ X⋎o u)}⌝);
 
 
 a (basic_prove_∃_tac);
+
+a (prove_∃_tac);
 
 a (lemma_tac ⌜∃ f⦁ ∀ x⦁ f (CombI x) = λg y⦁ if x < (x ◁⋎o f) x⌝;
 
@@ -1967,88 +2237,37 @@ evaluate_∃_cd_thm ord_rec_thm3 ;
 	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
 	THEN1 basic_prove_∃_tac);
 =TEX
+}%ignore
 
 To achieve the recursion here we have to form the limit of directed collections of enumerations using $⌜FunLimit⋎o⌝$ and $⌜OrdLimit⋎o⌝$.
 
 ⓈHOLCONST
-│ $⦏sextprf⦎: ('a, 'b) PEN → ('b) ℙ → ('a, 'b) PEN
+│ $⦏sextprf⦎: ('a, 'b) POTEN → ('b) SET → ('a, 'b) POTEN
 ├───────────
-│ ∀f x w⦁ sextprf (x, f) (CombI w)  =
-     	 if w = {}
+│ ∀f x w⦁ sextprf (x, f) w  =
+     	 if w = {} ∨ IsL x
 	 then (x,f)
-	 else   let e = Choose w
-		in sextprf (extprf (x, f) e)  (w\{e})    
+	 else LimitPen⋎q{v | ∃ u⦁
+	 	    u ∈ w ∧ v = sextprf (x,f) (w ∩ X⋎o u)}
 ■	      
 
-=SML
+=IGN
 declare_type_abbrev("PRI", ["'a", "'b"], ⓣ('a, 'b)PEN → 'b SET⌝);
 =TEX
-
-We need an operation to extend
-
-\section{SET THEORY}
-
-This is the simpler example insofar as there is only one constructor, and there is no closure, so we just take the entire type of ordinals as the representatives.
-
-There are many choices in constructing an ontology of sets, and we will adopt the simplest solution here which is the pure well-founded heirarchy naturally thought of as the intended model of ZFC.
-
-So no urelements, and no polymorphism.
-
-The only constructor takes a (HOL) set of these sets and makes a new set from them.
-The projection function therefore maps ordinals to (HOL) sets of ordinals.
-
-ⓈHOLCONST
-│ $⦏setpr⦎: (ONE O, ONE O ℙ) PEN → (ONE O) ℙ ℙ
-├───────────
-│ ∀f x⦁ setpr (x, f)  = ℙ (X⋎o x)
-■
-
-\section{HOL TYPES AND TERMS}
-
-The constructors are:
-
-\begin{itemize}
-
-\item Types
-\begin{itemize}
-\item mk\_tvar string
-\item mk\_tcon string × TYPE list
-\end{itemize}
-
-\item Terms
-\begin{itemize}
-\item mk\_var string × TYPE
-\item mk\_const string × TYPE
-\item mk\_app TERM × TERM
-\item mk\_abs string × TYPE × TERM
-\end{itemize}
-
-\end{itemize}
-
-A generic projection function would therefore yield the following type:
-
-=SML
-declare_type_abbrev("TyTmCt", [], 
-ⓣ((	   STRING
-	+ (STRING × ONE O LIST))
-
-+ (	  (STRING × ONE O)
-	+ (STRING × ONE O)
-	+ (ONE O × ONE O)
-	+ (STRING × ONE O × ONE O)))⌝);
-=TEX
-
 \ignore{
- ⓈHOLCONST
-│ $⦏tytmpr⦎: (ONE, TyTmCt) PRI
- ├───────────
-│ ∀(g,h):TYTMPR⦁ tytmpr (g,h)  = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)
- ■
+=SML
+set_flag ("pp_show_HOL_types", false);
+=TEX
 }%ignore
 
 \appendix
 
+\section{PROOFS IN PROGRESS}
 
+=GFT
+GOAL*1 ⌜∀α f⦁ Image⋎u (α ◁⋎u f, α) = Image⋎u (f, α)⌝
+GOAL*2 ⌜∀ y α⦁ y <⋎u α ⇒ (y ∩ α) <⋎u α⌝
+=TEX
 
 {\raggedright
 \bibliographystyle{fmu}
@@ -2060,9 +2279,6 @@ declare_type_abbrev("TyTmCt", [],
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{ordinals.th}
-\def\section#1{\Section{#1}
-\addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
-\include{ord.th}
 \def\section#1{\Section{#1}
 \addtocounter{ThyNum}{1}\label{Theory\arabic{ThyNum}}}
 \include{idt.th}

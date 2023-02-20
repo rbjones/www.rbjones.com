@@ -749,6 +749,7 @@ val minr_thm = save_pop_thm "minr_thm";
 =TEX
 }%ignore
 
+
 \subsection{Injections into Orderings}
 
 =GFT
@@ -1934,7 +1935,7 @@ val initial_strict_well_ordering_thm = save_pop_thm "initial_strict_well_orderin
 
 
 Unwinding the layers of definition we get down to the five primitives: irrefl, antisym, trans, trich, weak mind cond.
-However, its convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
+However, it's convenient not to ignore the strengthening of the minimum condition so this gives a strict min cond instead of weak min cond.
 =GFT
 ⦏iswo_clauses⦎ = ⊢ ∀ X $<< f⦁
 	InitialStrictWellOrdering (X, $<<) ⇒
@@ -3318,7 +3319,6 @@ val tf_rec_thm2 = save_pop_thm "tf_rec_thm2";
 =TEX
 }%ignore
 
-
 \section{RELATIONS OVER A TYPE}\label{RELATIONSOVERATYPE}
 
 The material in the next two sections is placed in a new theory {\it U\_orders}.
@@ -3480,6 +3480,43 @@ val ⦏u_refl_well_ordering_lower_bounds_thm⦎ = save_thm
 		refl_well_ordering_lower_bounds_thm));
 =IGN
 set_goal([], ⌜⌝);
+=TEX
+}%ignore
+
+\subsection{Miscellanea}
+
+I place here some results which are proven only over orders over the whole type.
+
+\subsubsection{Properties pulled back from a map}
+
+When a function whose codomain is well-founded is used to define an order over its domain type, then that order will be well-founded.
+
+=GFT
+u_well_founded_pullback_thm =
+   ⊢ ∀ f r⦁ UWellFounded r ⇒ UWellFounded (λ x y⦁ r (f x) (f y)):
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀(f:'a → 'b) (r:'b → 'b → BOOL)⦁ UWellFounded r
+	     ⇒ UWellFounded (λx y⦁ r (f x)(f y)) ⌝);
+a (REPEAT ∀_tac THEN rewrite_tac [u_well_founded_def_thm]
+  THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 2 ⌜{y | ∃z⦁ z ∈ A ∧ y = f z} ⌝);
+(* *** Goal "1" *** *)
+a (GET_NTH_ASM_T 2 (fn x => strip_asm_tac (rewrite_rule[sets_ext_clauses] x)));
+a (GET_NTH_ASM_T 2 ante_tac);
+a (rewrite_tac[sets_ext_clauses]);
+a (strip_tac);
+a (spec_nth_asm_tac 1 ⌜f x⌝);
+a (spec_nth_asm_tac 1 ⌜x⌝);
+(* *** Goal "2" *** *)
+a (∃_tac ⌜z⌝ THEN asm_rewrite_tac[] THEN strip_tac);
+a (SYM_ASMS_T rewrite_tac);
+a (spec_nth_asm_tac 1 ⌜f y⌝ THEN asm_rewrite_tac[]);
+a (strip_tac);
+a (spec_nth_asm_tac 2 ⌜y⌝);
+val u_well_founded_pullback_thm = save_pop_thm "u_well_founded_pullback_thm";
 =TEX
 }%ignore
 
