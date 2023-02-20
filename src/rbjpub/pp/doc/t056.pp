@@ -99,7 +99,7 @@ This enables us to define a polymorphic constant which denotes such an ordering 
 Each type is thereby made isomorphic to a initial segment of the ordinals, permitting a theory of ordinals to be developed without introducing any new types.
 To get a rich theory of ordinals we would need a strong axiom of infinity, but the theory can be developed in the first instance using claims about the cardinality of the type as conditions or assumptions.
 
-In a section \ref{LARGEORDINALS} creates the theory "ord" in which a new type constructor will be defined with an axiom which ensures that the resulting type is strictly larger (in cardinality) than the parameter type, and is at least inaccessible.
+In \cite{rbjt058} I create the theory "ord" in which a new type constructor is defined with an axiom ensuring that the resulting type is strictly larger (in cardinality) than the parameter type, and is at least inaccessible.
 This is placed in a separate theory and document so that any results here which may prove useful  in a strictly conservative development need not feel tainted by an unnecessary axiomatic extension.
 
 In this document the development takes place in the following rough stages.
@@ -2271,7 +2271,7 @@ GOAL*2 ⌜∀ y α⦁ y <⋎u α ⇒ (y ∩ α) <⋎u α⌝
 
 {\raggedright
 \bibliographystyle{fmu}
-\bibliography{rbj,fmu}
+\bibliography{rbj2,fmu}
 } %\raggedright
 
 {\let\Section\section
