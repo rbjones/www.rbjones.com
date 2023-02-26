@@ -32,7 +32,7 @@ This theory is for miscellanea which cannot be put in theory ``rbjmisc'' because
 It consists primarily of things required in the documents on non well-founded set theories, but not specific to that work, which make use of galactic set theory or fixed point theory.
 Since I moved my non-well-founded foundational work back from set theory to combinatory logic using version of well-founded set theory with urelements it has been necessary to replicate those definitions required which depend upon well-founded set theory in the context of this other version of well founded set theory.
 For that reason this document is in the process of being restructured as three theories, one of material which does not depend on the well founded set theory, and one for materials dependent respectively on each of the two versions of well-founded set theory.
-These are the theories misc1, misc2 and misc3.
+These are the theories misc1, and misc2.
 \end{abstract}
 
 \vfill
@@ -86,12 +86,10 @@ This was originally material which used to be in t024 and is moved here so that 
 It should only contain material which cannot be put in ``rbjmisc'' because it depends on other theories, at this point GS or GSU and fixp.
 Some of it should therefore be moved up to ``rbjmisc''.
 
-Three theories are created $misc1$, $misc2$, $misc3$.
+Two theories are created $misc1$ and $misc2$.
 
-$misc2$ depends on GS, $misc3$ on GSU.
-Both depend on $misc1$ which depends on neither version of set theory.
-Ultimately all that depends on neither GS nor GSU should migrate upwards into misc1, but this process has not yet been completed.
-
+$misc2$ depends on GS and $misc1$.
+Ultimately all that does not depend GS should migrate upwards into misc1, but this process has not yet been completed.
 
 =SML
 open_theory "rbjmisc";

@@ -16,7 +16,7 @@ They are:
 \item Modal operators.
 \end{itemize}
 
-At this stage the document is little more than a partial formalisation materials from Linnebo's paper.
+At this stage the document is little more than a partial formalisation of materials from Linnebo's paper.
 
 \section{Methods}
 

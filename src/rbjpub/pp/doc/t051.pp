@@ -9,7 +9,7 @@ $Id: t051.doc,v 1.6 2014/08/17 16:07:53 rbj Exp $
 \usepackage{A4}
 
 \usepackage{fontspec}
-\setmainfont[Path=/Users/rbj/.fonts/]{ProofPowerSerif.ttf}
+\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
@@ -2077,8 +2077,8 @@ val cardinal_def =
 =TEX
 
 There are various functions between the 'a ordinals and cardinals which may be used in formulating a strong axiom of infinity.
-The type definition defines the new type as having the same cardinality as the initial 'a ordinals, and we use this bijection to determine the correspondence between cardinals and their alephs.
-The abstraction function would normally be determined only over the alephs, but it will be more useful to have an abstraction function which yields the cardinality of any 'a ordinal.
+The type definition defines the new type as having the same cardinality as the initial 'a ordinals, and we use this bijection to determine the correspondence between cardinals and the initial ordinal of the same cardinality.
+The abstraction function might normally be determined only over the initial ordinals, but it will be more useful to have an abstraction function which yields the cardinality of any 'a ordinal.
 
 These two maps can be defined thus:
 
@@ -2164,6 +2164,7 @@ save_cs_∃_thm (pop_thm());
 │	∧ (∀ β⦁ InitialOrdinal (Ord⋎c β))
 │	∧ (∀β γ⦁ β ~⋎o⋎c γ ⇒ Card⋎o β = Card⋎o γ)
 ■
+
 
 
 \section{INFINITARY SEQUENCES}

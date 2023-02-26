@@ -1822,12 +1822,15 @@ set_merge_pcs ["hol", "'memfunct"];
 =TEX
 
 
+\appendix
 
 %%%%
 %%%%
 {\let\Section\section
 \def\section#1{\Section{#1}\label{membership.th}}
 \include{membership.th}
+\def\section#1{\Section{#1}\label{fba.th}}
+\include{fba.th}
 \def\section#1{\Section{#1}\label{ba.th}}
 \include{ba.th}
 \def\section#1{\Section{#1}\label{bvi.th}}

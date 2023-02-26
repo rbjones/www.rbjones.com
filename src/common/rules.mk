@@ -139,6 +139,8 @@ $(PPDOC): %.doc : %.xml
 
 $(PPDOCSML): %.sml: %.doc
 	docsml -f $(DOCPREPDATA)/sieveview $*
+	pp_file_conv <$*.sml >$*.sml.tmp
+	mv $*.sml.tmp $*.sml
 
 $(PPDOCXDOC): %.xdoc:
 	ppdoc2xml <$*.doc >$(SRCDIR)/$*.xml

@@ -98,7 +98,7 @@ For this purpose the metalanguage {\it standard ML} (SML) is used and an SML sec
 and will print in the document as:
 
 =SML
-open_theory"z_library";
+open_theory "z_library";
 new_theory "wrk050";
 =TEX
 
@@ -196,5 +196,9 @@ val ⦏le_dots_lemma1⦎ = save_pop_thm "le_dots_lemma1";
 \bibliographystyle{fmu}
 \bibliography{rbj,fmu}
 } %\raggedright
+
+\appendix
+
+
 
 \end{document}

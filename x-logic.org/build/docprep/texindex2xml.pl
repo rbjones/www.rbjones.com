@@ -23,16 +23,16 @@ fileloop: while ($ssc <= $filecount) {
     $filename=$ARGV[$ssc];
     open INPUT, $filename || die "unable to open file $filename";
     $pdfname=$filename;
-    $pdfname=~s/\.tex/\.pdf/;
+    $pdfname=~s/\.tex//;
     while(<INPUT>){
-        if (/title=\{(([^{}]*(\{[^}]*\}))*[^}]*)[^}]*\}/) {if($title eq "") {$title=$1}}
-        elsif (/pdfname\{([^}]*)\}/) {$pdfname="$1\.pdf"}
+	if (/(pdftitle=|title)\{([^}]*)\}/) {if($title eq "") {$title=$2}}
+        elsif (/pdfname\{([^}]*)\}/) {$pdfname=$1}
         elsif (/\\begin\{abstract\}/) {
 	    $abstract="";
 	    $_=<INPUT>;
 	    until (/\\end\{abstract\}/) {s/^\%(.*)$/$1/; $abstract.=$_; $_=<INPUT>};
-	    print "<subsec title=\"$title\"";
-            if ($pdfname) {print " href=\"$pdfprefix$pdfname\"\n"};
+	    print "<subsec title=\"$pdfname - $title\"";
+            if ($pdfname) {print " href=\"$pdfprefix$pdfname\.pdf\"\n"};
 	    print ">\n";
             print "$abstract";
             print "</subsec>\n";
