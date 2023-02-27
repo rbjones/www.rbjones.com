@@ -13,7 +13,7 @@ $Id: t006.doc,v 1.44 2013/01/03 17:12:44 rbj Exp $
 
 \title{Miscellanea}
 \author{Roger Bishop Jones}
-\date{\ }
+\date{2022-02-24}
 
 \usepackage[unicode]{hyperref}
 \hypersetup{pdfauthor={Roger Bishop Jones}}
@@ -2527,6 +2527,26 @@ Prove that $TopologyFrom$ yields a topology.
 }%ignore
 
 \section{Disjoint Unions (Sum)}
+
+Another cases theorem.
+
+=GFT
+sum_cases_thm2 =	⊢ ∀ x⦁ IsL x ∨ IsR x
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀x⦁ IsL x ∨ IsR x⌝);
+a (strip_tac);
+a (strip_asm_tac (∀_elim ⌜x⌝ sum_cases_thm));
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[sum_clauses]);
+(* *** Goal "1" *** *)
+a (asm_rewrite_tac[sum_clauses]);
+val sum_cases_thm2 = save_pop_thm "sum_cases_thm2";
+=TEX
+}%ignore
+
 
 Two ways of constructing functions over disjoint unions.
 

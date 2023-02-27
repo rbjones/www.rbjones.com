@@ -10,7 +10,7 @@ Arrows: → ⤖ ⤕ ⇻ ↔ ⤀ ⇸ ↣ ↦ ↠ ⤔
 Formal Text Brackets: ⌜ ⌝ ⓣ ⓜ ⓩ Ⓢ ■ ┌ └ ╒ ├
 Padding symbols	│ ─ ═  Index Brackets ⦏ ⦎
 Bracketing symbols: ⟨ ⟩ ⟦ ⟧ ⦇ ⦈
-Subscription adn Superscription: ⋎ ⋏ ↗ ↘ ↕ Underlining: ⨽ ⨼
+Subscription and Superscription: ⋎ ⋏ ↗ ↘ ↕ Underlining: ⨽ ⨼
 Relation, Sequence and Bag Symbols:  ⩥ ▷ ⩤ ◁ ⁀ ↾ ↿ ⊕ ⊎ ⨾ ∘
 Miscellaneous: ⊢ ⦂ ≜ ⊥ ⊖
 
@@ -164,19 +164,16 @@ declare_infix(300, "~⋎s");
 =TEX
 
 ⓈHOLCONST
-│ $⦏≤⋎s⦎ : 'a SET → 'b SET → BOOL
+│ $⦏≤⋎s⦎ : 'a ℙ → 'b ℙ → BOOL
 ├──────
 │ ∀ A B⦁ A ≤⋎s B ⇔ ∃f⦁
 │	∀x y⦁ x ∈ A ∧ y ∈ A ⇒ f x ∈ B ∧ f y ∈ B ∧ (f x = f y ⇒ x = y)
 ■
 
 =GFT
-⦏≤⋎s_refl⦎ =
-	⊢ ∀ A⦁ A ≤⋎s A
-⦏⊆_≤⋎s_thm⦎ =
-	⊢ ∀ A B⦁ A ⊆ B ⇒ A ≤⋎s B
-⦏≤⋎s_trans⦎ =
-	⊢ ∀ A B C⦁ A ≤⋎s B ∧ B ≤⋎s C ⇒ A ≤⋎s C
+⦏≤⋎s_refl⦎ =		⊢ ∀ A⦁ A ≤⋎s A
+⦏⊆_≤⋎s_thm⦎ =	⊢ ∀ A B⦁ A ⊆ B ⇒ A ≤⋎s B
+⦏≤⋎s_trans⦎ =	⊢ ∀ A B C⦁ A ≤⋎s B ∧ B ≤⋎s C ⇒ A ≤⋎s C
 =TEX
 
 \ignore{
@@ -209,20 +206,16 @@ set_merge_pcs ["basic_hol", "'ordinals"];
 
 
 ⓈHOLCONST
-│ $⦏<⋎s⦎ : 'a SET → 'b SET → BOOL
+│ $⦏<⋎s⦎ : 'a ℙ → 'b ℙ → BOOL
 ├──────
 │ ∀ A B⦁ A <⋎s B ⇔ A ≤⋎s B ∧ ¬ B ≤⋎s A
 ■
 
 =GFT
-⦏lt⋎s_irrefl⦎ =
-	⊢ ∀ A⦁ ¬ A <⋎s A
-⦏lt⋎s_trans⦎ =
-	⊢ ∀ A B C⦁ A <⋎s B ∧ B <⋎s C ⇒ A <⋎s C
-⦏lt⋎s_≤⋎s_trans⦎ =
-	⊢ ∀ A B C⦁ A <⋎s B ∧ B ≤⋎s C ⇒ A <⋎s C
-⦏≤⋎s_lt⋎s_trans⦎ =
-	⊢ ∀ A B C⦁ A ≤⋎s B ∧ B <⋎s C ⇒ A <⋎s C
+⦏lt⋎s_irrefl⦎ =		⊢ ∀ A⦁ ¬ A <⋎s A
+⦏lt⋎s_trans⦎ =	  	⊢ ∀ A B C⦁ A <⋎s B ∧ B <⋎s C ⇒ A <⋎s C
+⦏lt⋎s_≤⋎s_trans⦎ =	   ⊢ ∀ A B C⦁ A <⋎s B ∧ B ≤⋎s C ⇒ A <⋎s C
+⦏≤⋎s_lt⋎s_trans⦎ =	   ⊢ ∀ A B C⦁ A ≤⋎s B ∧ B <⋎s C ⇒ A <⋎s C
 =TEX
 
 \ignore{
@@ -255,7 +248,7 @@ val ≤⋎s_lt⋎s_trans = save_pop_thm "≤⋎s_lt⋎s_trans";
 }%ignore
 
 ⓈHOLCONST
-│ $⦏~⋎s⦎ : 'a SET → 'b SET → BOOL
+│ $⦏~⋎s⦎ : 'a ℙ → 'b ℙ → BOOL
 ├──────
 │ ∀ A B⦁
 │	A ~⋎s B ⇔ ∃f g⦁
@@ -264,8 +257,8 @@ val ≤⋎s_lt⋎s_trans = save_pop_thm "≤⋎s_lt⋎s_trans";
 ■
 
 =GFT
-⦏card_equiv_lemma⦎ =
-	⊢ ∀ x y z⦁ x ~⋎s x ∧ (x ~⋎s y ⇔ y ~⋎s x) ∧ (x ~⋎s y ∧ y ~⋎s z ⇒ x ~⋎s z)
+⦏card_equiv_lemma⦎ =	⊢ ∀ x y z⦁ x ~⋎s x
+		   ∧ (x ~⋎s y ⇔ y ~⋎s x) ∧ (x ~⋎s y ∧ y ~⋎s z ⇒ x ~⋎s z)
 =TEX
 
 \ignore{
@@ -347,7 +340,6 @@ The existence of initial strict well-orderings has been established in \cite{rbj
 set_merge_pcs ["rbjmisc", "'ordinals"];
 
 declare_infix(300, "<⋎o");
-declare_infix(300, "≤⋎o");
 set_goal([], ⌜∃ $<⋎o:'a → 'a → BOOL⦁ UInitialStrictWellOrdering $<⋎o⌝);
 a (strip_asm_tac u_initial_strict_well_ordering_thm);
 a (∃_tac ⌜$<<⌝ THEN asm_rewrite_tac[]);
@@ -364,173 +356,47 @@ save_cs_∃_thm (pop_thm());
 This is a polymorphic constant each instance of which is an initial strict well-ordering over the instance type, which may have any cardinality greater than zero.
 The cardinality uniquely determines the {\it order-type} of the defined ordering over that type, which are in one to one correspondence with initial ordinals or cardinals.
 
-ⓈHOLCONST
-│ ⦏$≤⋎o⦎: 'a → 'a → BOOL
-├───────────
-│	∀ x y⦁ x ≤⋎o y ⇔ x <⋎o y ∨ x = y
-■
-
-Though this does provide a well-ordering over sets the following which orders sets by the supremum of ther elements will also prove useful.
-
-In axiomatic set theory the least ordinal of a set of ordinals is the distributed intersection over that set, for which a large cap symbol is often used.
-Though these ordinals are not sets, a similar notation seems reasonable.
-
-ⓈHOLCONST
-│ ⦏⋂⋎o⦎: 'a SET → 'a
-├───────────
-│	∀s⦁ ⋂⋎o s = Minr(Universe, $<⋎o) s
-■
-
 =GFT
-⦏lt⋎o_clauses⦎ = ⊢
-	  (∀ x⦁ ¬ x <⋎o x)
+⦏lt⋎o_clauses⦎ =	⊢ (∀ x⦁ ¬ x <⋎o x)
        ∧ (((∀ x y⦁ ¬ x = y ⇒ ¬ (x <⋎o y ∧ y <⋎o x))
        ∧ (∀ x y z⦁ x <⋎o y ∧ y <⋎o z ⇒ x <⋎o z))
-       ∧ (∀ x y⦁ ¬ x = y ⇒ x <⋎o y ∨ y <⋎o x))
-       ∧ (∀ A⦁ ¬ A = {} ⇒ ⋂⋎o A ∈ A ∧ (∀ y⦁ y ∈ A ⇒ y = ⋂⋎o A ∨ ⋂⋎o A <⋎o y))
+       ∧ (∀ x y⦁ ¬ x = y ⇒ x <⋎o y ∨ y <⋎o x)))
+       ∧ (∀ A
+       ⦁ ¬ A = {}
+           ⇒ Minr (Universe, $<⋎o) A ∈ A
+             ∧ (∀ y⦁ y ∈ A
+                 ⇒ y = Minr (Universe, $<⋎o) A
+		   ∨ Minr (Universe, $<⋎o) A <⋎o y))
 
-⦏irrefl⋎o_thm⦎ = ⊢ ∀ x⦁
-	       ¬ x <⋎o x
-⦏antisym⋎o_thm⦎ = ⊢ ∀ x y⦁
-		  ¬ x = y ⇒ ¬ (x <⋎o y ∧ y <⋎o x)
-⦏trans⋎o_thm⦎ = ⊢ ∀ x y z⦁
-	      	x <⋎o y ∧ y <⋎o z ⇒ x <⋎o z
-⦏linear⋎o_thm⦎ = ⊢ ∀ x y⦁
-	       	 ¬ x = y ⇒ x <⋎o y ∨ y <⋎o x
-⦏⋂⋎o_thm⦎ = ⊢ ∀ A⦁
-	    ¬ A = {} ⇒ ⋂⋎o A ∈ A ∧ (∀ y⦁ y ∈ A ⇒ y = ⋂⋎o A ∨ ⋂⋎o A <⋎o y)
+⦏irrefl⋎o_thm⦎ =     ⊢ ∀ x⦁ ¬ x <⋎o x
+⦏antisym⋎o_thm⦎ =  ⊢ ∀ x y⦁ ¬ x = y ⇒ ¬ (x <⋎o y ∧ y <⋎o x)
+⦏trans⋎o_thm⦎ =      ⊢ ∀ x y z⦁ x <⋎o y ∧ y <⋎o z ⇒ x <⋎o z
+⦏linear⋎o_thm⦎ =     ⊢ ∀ x y⦁ ¬ x = y ⇒ x <⋎o y ∨ y <⋎o x
+⦏wf_lt⋎o_thmm⦎ =     ⊢ ∀ A⦁ ¬ A = {}
+           ⇒ Minr (Universe, $<⋎o) A ∈ A
+             ∧ (∀ y⦁ y ∈ A
+                 ⇒ y = Minr (Universe, $<⋎o) A
+		   ∨ Minr (Universe, $<⋎o) A <⋎o y)
 =TEX
-
 \ignore{
 =SML
 val lt⋎o_def = get_spec ⌜$<⋎o⌝;
-val ≤⋎o_def = get_spec ⌜$≤⋎o⌝;
-val ⋂⋎o_def = get_spec ⌜$⋂⋎o⌝;
-=TEX
-}%ignore
 
-\ignore{
-=SML
-val lt⋎o_clauses = save_thm ("lt⋎o_clauses", rewrite_rule [
-     all_%forall%_intro(eq_sym_rule (all_%forall%_elim ⋂⋎o_def))
-     ] (⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_clauses2) lt⋎o_def));
+val lt⋎o_clauses = save_thm ("lt⋎o_clauses", (* (rewrite_rule [
+     ]*) (⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_clauses2) lt⋎o_def));
 
-val [irrefl⋎o_thm, antisym⋎o_thm, trans⋎o_thm, linear⋎o_thm, ⋂⋎o_thm] = map save_thm
-    (combine ["irrefl⋎o_thm", "antisym⋎o_thm", "trans⋎o_thm", "linear⋎o_thm", "⋂⋎o_thm"]
-    	     (strip_∧_rule lt⋎o_clauses));
-
-=IGN
-set_goal([], ⌜∀α β γ⦁ α ⊂ β ⇒ ⋂⋎o α <⋎o ⋂⋎o β⌝);
-a (rewrite_tac[⋂⋎o_def]);
-
-
-set_goal([], ⌜$<⋎o⌝);
-set_goal([], ⌜$<⋎o⌝);
-set_goal([], ⌜$<⋎o⌝);
-=TEX
-}%ignore
-
-\subsection{Well-Foundedness and Induction}
-=GFT
-⦏lt⋎o_well_founded_thm⦎  ⊢ UWellFounded $<⋎o:
-⦏lt⋎o_well_founded_thm2⦎  ⊢ WellFounded $<⋎o:
-⦏lt⋎o_well_founded_thm3⦎  ⊢ well_founded $<⋎o:
-
-⦏lt⋎o_induction_thm⦎ = ⊢ ∀ p⦁ (∀ x⦁ (∀ y⦁ y <⋎o x ⇒ p y) ⇒ p x) ⇒ (∀ x⦁ p x)
-=TEX
-
-\ignore{
-=SML
-val lt⋎o_well_founded_thm = save_thm ("lt⋎o_well_founded_thm",
-    ⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_well_founded_thm) lt⋎o_def);
-
-val lt⋎o_well_founded_thm2 = save_thm ("lt⋎o_well_founded_thm2",
-    rewrite_rule [get_spec ⌜UWellFounded⌝] lt⋎o_well_founded_thm);
-
-val lt⋎o_well_founded_thm3 = save_thm ("lt⋎o_well_founded_thm3",
-    rewrite_rule [tac_proof(([], ⌜∀$<<⦁ UWellFounded $<< ⇔ well_founded $<<⌝), rewrite_tac [get_spec ⌜well_founded⌝, u_well_founded_induction_thm])] lt⋎o_well_founded_thm);
-
-val lt⋎o_induction_thm = save_thm ("lt⋎o_induction_thm",
-     ⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_induction_thm) lt⋎o_def);
-=TEX
-}%ignore
-
-\subsection{Initiality}
-
-To talk about initiality is is useful to have a function which yields the `extension' of an ordinal:
-
-ⓈHOLCONST
-│ ⦏X⋎o⦎: 'a → 'a SET
-├───────────
-│	∀x⦁ X⋎o x  = {y | y <⋎o x}
-■
-
-We can then assert initiality as follows:
-
-=GFT
-⦏initial⋎o_thm⦎ = ⊢ ¬ (∃ f y⦁ OneOne f ∧ (∀ z⦁ f z <⋎o y))
-⦏initial⋎o_thm2⦎ = ⊢ ¬ (∃x:'a⦁ {y:'a| T} ≤⋎s X⋎o x)
-=TEX
-
-\ignore{
-=SML
-val X⋎o_def = get_spec ⌜X⋎o⌝;
-
-set_goal([], ⌜¬∃(f:'a → 'a)  y⦁ OneOne f ∧ (∀ z⦁ f z <⋎o y)⌝);
-a (asm_tac lt⋎o_def);
-a (fc_tac[u_initial_strict_well_ordering_def_thm]);
-a contr_tac;
-a (asm_fc_tac[]);
-val initial⋎o_thm = save_pop_thm "initial⋎o_thm";;
-
-set_goal([], ⌜¬ (∃x:'a⦁ {y:'a| T} ≤⋎s X⋎o x)⌝);
-a (rewrite_tac[≤⋎s_def]);
-a (REPEAT strip_tac);
-a (strip_asm_tac initial⋎o_thm);
-a (spec_nth_asm_tac 1 ⌜f:'a → 'a⌝);
-a (spec_nth_asm_tac 1 ⌜x⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [one_one_def] THEN strip_tac);
-(* *** Goal "1" *** *)
-a (∃_tac ⌜x1⌝ THEN strip_tac THEN ∃_tac ⌜x2⌝ THEN contr_tac);
-(* *** Goal "2" *** *)
-a (∃_tac ⌜z⌝ THEN strip_tac THEN ∃_tac ⌜v⌝);
-a (POP_ASM_T ante_tac THEN rewrite_tac [X⋎o_def] THEN contr_tac);
-val initial⋎o_thm2 = save_pop_thm "initial⋎o_thm2";
-=IGN
-set_flag("pp_show_HOL_types", false);
-=TEX
-}%ignore
-
-The significance of this feature is not expected to be apparent for some time, probably not in this document.
-
-\subsection{Recursion}
-
-\ignore{
-=IGN
-commit_pc "'ordinals";
-force_new_pc "pre-ord";
-merge_pcs ["rbjmisc", "'ordinals"] "pre-ord";
-=IGN
-commit_pc "pre-ord";
-force_new_pc "pre-ord1";
-merge_pcs ["rbjmisc1", "'ordinals"] "pre-ord1";
-commit_pc "pre-ord1";
+val [irrefl⋎o_thm, antisym⋎o_thm, trans⋎o_thm, linear⋎o_thm, wf_lt⋎o_thm]
+    = map save_thm
+      	  (combine ["irrefl⋎o_thm", "antisym⋎o_thm", "trans⋎o_thm",
+	  "linear⋎o_thm", "wf_lt⋎o_thm"]
+    	  (strip_∧_rule lt⋎o_clauses));
 =TEX
 }%ignore
 
 =GFT
-⦏lt⋎o_trich⦎ =
-	⊢ ∀ β γ⦁ β <⋎o γ ∨ γ <⋎o β ∨ β = γ
-⦏lt⋎o_trich_fc⦎ =
-	⊢ ∀ β γ⦁ ¬ β <⋎o γ ∧ ¬ γ <⋎o β ⇒ β = γ
-⦏lt⋎o_trich_fc2⦎ =
-	⊢ ∀ β γ⦁ ¬ (¬ β <⋎o γ ∧ ¬ γ <⋎o β ∧ ¬ β = γ)
-⦏≤⋎o_refl⦎ =
-	⊢ ∀ β⦁ β ≤⋎o β
-⦏≤⋎o_lt⋎o⦎ =
-	⊢ ∀ β γ⦁ β ≤⋎o γ ⇔ ¬ γ <⋎o β
-⦏¬⋎o_clauses⦎ =
-	⊢ ∀ β γ⦁ (¬ β <⋎o γ ⇔ γ ≤⋎o β) ∧ (¬ γ ≤⋎o β ⇔ β <⋎o γ)
+⦏lt⋎o_trich⦎ =	⊢ ∀ β γ⦁ β <⋎o γ ∨ γ <⋎o β ∨ β = γ
+⦏lt⋎o_trich_fc⦎ =	⊢ ∀ β γ⦁ ¬ β <⋎o γ ∧ ¬ γ <⋎o β ⇒ β = γ
+⦏lt⋎o_trich_fc2⦎ =	⊢ ∀ β γ⦁ ¬ (¬ β <⋎o γ ∧ ¬ γ <⋎o β ∧ ¬ β = γ)
 =TEX
 
 \ignore{
@@ -549,7 +415,81 @@ set_goal([], ⌜∀β γ⦁ ¬ (¬ β <⋎o γ ∧ ¬ γ <⋎o β ∧ ¬ β = γ
 a contr_tac;
 a (strip_asm_tac (list_∀_elim [⌜β⌝, ⌜γ⌝] lt⋎o_trich));
 val lt⋎o_trich_fc2 = save_pop_thm "lt⋎o_trich_fc2";
+=TEX
+}%ignore
 
+In axiomatic set theory the least ordinal of a set of ordinals is the distributed intersection over that set, for which a large cap symbol is often used.
+Though these ordinals are not sets, a similar notation seems reasonable.
+
+ⓈHOLCONST
+│ ⦏⋂⋎o⦎: 'a ℙ → 'a
+├───────────
+│	∀s⦁ ⋂⋎o s = Minr(Universe, $<⋎o) s
+■
+
+=GFT
+⦏⋂⋎o_thm⦎ = ⊢ ∀ A⦁ ¬ A = {} ⇒ ⋂⋎o A ∈ A ∧ (∀ y⦁ y ∈ A ⇒ y = ⋂⋎o A ∨ ⋂⋎o A <⋎o y)
+⦏⋂⋎o_thm2⦎ = ⊢ ∀ so β⦁ β ∈ so ⇒ (∀ γ⦁ γ <⋎o ⋂⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ γ <⋎o η)): 
+=TEX
+
+\ignore{
+=SML
+val ⋂⋎o_def = get_spec ⌜$⋂⋎o⌝;
+
+val ⋂⋎o_thm = save_thm("⋂⋎o_thm", rewrite_rule
+    	     [all_%forall%_intro(eq_sym_rule (all_%forall%_elim ⋂⋎o_def))] wf_lt⋎o_thm);
+
+push_pc "hol1";
+set_goal([], ⌜∀so β⦁ β ∈ so ⇒
+	(∀γ⦁ γ <⋎o ⋂⋎o so ⇔ ∀η⦁ η ∈ so ⇒ γ <⋎o η)⌝);
+a (REPEAT_N 4 strip_tac);
+a (LEMMA_T ⌜¬ so = {}⌝ asm_tac THEN1 (rewrite_tac[] THEN contr_tac THEN asm_fc_tac[]));
+a (ufc_tac [⋂⋎o_thm]);
+a contr_tac; 
+(* *** Goal "1" *** *)
+a (spec_asm_tac ⌜∀ y⦁ y ∈ so ⇒ ¬ y = ⋂⋎o so ⇒ ⋂⋎o so <⋎o y⌝ ⌜η⌝);
+a (var_elim_asm_tac ⌜η = ⋂⋎o so⌝);
+a (all_ufc_tac [trans⋎o_thm]);
+(* *** Goal "2" *** *)
+a (spec_asm_tac ⌜∀ η⦁ η ∈ so ⇒ γ <⋎o η⌝ ⌜⋂⋎o so⌝);
+val ⋂⋎o_thm2 = save_pop_thm "⋂⋎o_thm2";
+
+pop_pc();
+=TEX
+}%ignore
+
+=SML
+declare_infix(300, "≤⋎o");
+=TEX
+
+ⓈHOLCONST
+│ ⦏$≤⋎o⦎: 'a → 'a → BOOL
+├───────────
+│	∀ x y⦁ x ≤⋎o y ⇔ x <⋎o y ∨ x = y
+■
+
+=GFT
+⦏≤⋎o_refl⦎ =		⊢ ∀ β⦁ β ≤⋎o β
+⦏≤⋎o_lt⋎o⦎ =			⊢ ∀ β γ⦁ β ≤⋎o γ ⇔ ¬ γ <⋎o β
+⦏¬⋎o_clauses⦎ =	⊢ ∀ β γ⦁ (¬ β <⋎o γ ⇔ γ ≤⋎o β) ∧ (¬ γ ≤⋎o β ⇔ β <⋎o γ)
+=TEX
+
+\ignore{
+=SML
+val ≤⋎o_def = get_spec ⌜$≤⋎o⌝;
+
+=IGN
+set_goal([], ⌜∀α β γ⦁ α ⊂ β ⇒ ⋂⋎o α <⋎o ⋂⋎o β⌝);
+a (rewrite_tac[⋂⋎o_def]);
+
+set_goal([], ⌜$<⋎o⌝);
+set_goal([], ⌜$<⋎o⌝);
+set_goal([], ⌜$<⋎o⌝);
+=TEX
+}%ignore
+
+\ignore{
+=SML
 set_goal([], ⌜∀β⦁ β ≤⋎o β⌝);
 a (rewrite_tac[≤⋎o_def]);
 val ≤⋎o_refl = save_pop_thm "≤⋎o_refl";
@@ -570,104 +510,52 @@ a (rewrite_tac[≤⋎o_def] THEN contr_tac
 	THEN_TRY all_fc_tac [lt⋎o_trich_fc, trans⋎o_thm]
 	THEN asm_prove_tac [irrefl⋎o_thm]);
 val ¬⋎o_clauses = save_pop_thm "¬⋎o_clauses";
+=TEX
+}%ignore
 
+=GFT
+⦏⋂⋎o_mono_thm⦎ =	⊢ ∀ s t⦁ ¬ s = {} ∧ s ⊆ t ⇒ ⋂⋎o t ≤⋎o ⋂⋎o s
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ s t⦁ ¬ s = {} ∧ s ⊆ t ⇒ ⋂⋎o t ≤⋎o ⋂⋎o s⌝);
+a (REPEAT strip_tac
+  THEN fc_tac [⋂⋎o_thm]);
+a (lemma_tac ⌜¬ t = {}⌝);
+(* *** Goal "1" *** *)
+a (DROP_ASM_T ⌜s ⊆ t⌝ ante_tac
+  THEN rewrite_tac [sets_ext_clauses]);
+a (DROP_ASM_T ⌜¬ s = {}⌝ ante_tac
+  THEN rewrite_tac [sets_ext_clauses]);
+a (contr_tac THEN all_asm_fc_tac[]);
+a (asm_fc_tac[]);
+(* *** Goal "2" *** *)
+a (fc_tac [⋂⋎o_thm]);
+a (DROP_ASM_T ⌜s ⊆ t⌝ ante_tac THEN rewrite_tac [sets_ext_clauses]
+  THEN REPEAT strip_tac
+  THEN all_asm_fc_tac[]);
+a (rewrite_tac[≤⋎o_def]);
+a (asm_fc_tac[] THEN asm_rewrite_tac[]);
+val ⋂⋎o_mono_thm = save_pop_thm "⋂⋎o_mono_thm";
+=TEX
+}%ignore
+
+\ignore{
+=SML
 add_rw_thms [irrefl⋎o_thm, ≤⋎o_refl] "'ordinals";
 add_sc_thms [irrefl⋎o_thm, ≤⋎o_refl] "'ordinals";
 add_st_thms [irrefl⋎o_thm] "'ordinals";
-set_merge_pcs ["basic_hol", "'ordinals"];
-=TEX
-}%ignore
-
-\subsection{Zero}
-
-Zero ($0⋎o$) is the smallest ordinal.
-Every type has one.
-
-ⓈHOLCONST
-│ ⦏0⋎o⦎: 'a
-├───────────
-│	0⋎o = ⋂⋎o {x|T}
-■
-
-=GFT
-⦏zero⋎o_thm⦎ =
-	⊢ ∀ β⦁ 0⋎o ≤⋎o β
-⦏lt⋎o_zero⋎o_thm⦎ =
-	⊢ ∀ β⦁ ¬ β <⋎o 0⋎o
-⦏zero⋎o_thm2⦎ = ⊢ ∀ β⦁ 0⋎o <⋎o β ∨ 0⋎o = β
-=TEX
-
-\ignore{
-=SML
-val zero⋎o_def = get_spec ⌜0⋎o⌝;
-
-set_goal([], ⌜∀ β⦁ 0⋎o ≤⋎o β⌝);
-a (strip_tac THEN rewrite_tac[zero⋎o_def, ≤⋎o_def]);
-a (LEMMA_T ⌜⋂⋎o {x:'a|T} ∈ {x:'a|T}⌝ asm_tac
-  THEN1 PC_T1 "sets_ext" rewrite_tac[]);
-a (lemma_tac ⌜¬ {x:'a|T} = {}⌝
-  THEN1 PC_T1 "sets_ext" rewrite_tac[]);
-a (strip_asm_tac lt⋎o_clauses);
-a (spec_nth_asm_tac 1 ⌜{x:'a|T}⌝);
-push_pc "sets_ext";
-a (spec_nth_asm_tac 1 ⌜β⌝
-  THEN_TRY asm_rewrite_tac[]);
-val zero⋎o_thm = save_pop_thm "zero⋎o_thm";
-pop_pc();
-
-val lt⋎o_zero⋎o_thm = save_thm ("lt⋎o_zero⋎o_thm",
-	rewrite_rule [≤⋎o_lt⋎o] zero⋎o_thm);
-
-val zero⋎o_thm2 = save_thm ("zero⋎o_thm2", rewrite_rule [≤⋎o_def] zero⋎o_thm);
-=IGN
-set_flag("pp_show_HOL_types", false);
-undo 1;
-=TEX
-}%ignore
-
-\subsection{Extensionality and Transitivity}
-
-A useful principle for reasoning about the 'a ordinals is the following analogue of set theoretic extensionality:
-
-=GFT
-⦏ord_ext_thm⦎ =
-	⊢ ∀ β γ⦁ β = γ ⇔ (∀ δ⦁ δ <⋎o β ⇔ δ <⋎o γ)
-=TEX
-
-We will later make use of quasi extensional characterisations of operations over 'a ordinals, in which an 'a ordinal expression is characterised by a statement of the conditions under which 'a ordinals are less than the value of the expression.
-This facilitates proofs about 'a ordinals in which the complexity is on the right of an inequality, or in which such can be obtained by the extesionality principle above.
-
-This leaves an awkwardness where our goal has an expression on the left of an inequality which the following rule is intended to ameliorate.
-
-=GFT
-⦏≤⋎o_ext_thm⦎ =
-	⊢ ∀ β γ⦁ β ≤⋎o γ ⇔ (∀ δ⦁ δ <⋎o β ⇒ δ <⋎o γ)
-=TEX
-
-\ignore{
-=SML
-set_goal([], ⌜∀β γ⦁ β = γ ⇔ ∀δ⦁ δ <⋎o β ⇔ δ <⋎o γ⌝);
-a (REPEAT_N 5 strip_tac THEN_TRY asm_rewrite_tac[] THEN contr_tac);
-a (spec_nth_asm_tac 2 ⌜β⌝
-	THEN spec_nth_asm_tac 4 ⌜γ⌝
-	THEN all_fc_tac [lt⋎o_trich_fc2]);
-val ord_ext_thm = save_pop_thm "ord_ext_thm";
-
-(* skip to end of next section for ≤⋎o_ext_thm *)
+set_merge_pcs ["rbjmisc", "'ordinals"];
 =TEX
 }%ignore
 
 =GFT
-⦏lt⋎o_≤⋎o⦎ =
-	⊢ ∀ β γ η⦁ β <⋎o γ ⇒ β ≤⋎o γ
-⦏≤⋎o_trans⦎ =
-	⊢ ∀ β γ η⦁ β ≤⋎o γ ∧ γ ≤⋎o η ⇒ β ≤⋎o η
-⦏≤⋎o_lt⋎o_trans⦎ =
-	⊢ ∀ β γ η⦁ β ≤⋎o γ ∧ γ <⋎o η ⇒ β <⋎o η
-⦏lt⋎o_≤⋎o_trans⦎ =
-	⊢ ∀ β γ η⦁ β <⋎o γ ∧ γ ≤⋎o η ⇒ β <⋎o η
-⦏≤⋎o_cases⦎ =
-	⊢ ∀ β γ⦁ β ≤⋎o γ ∨ γ ≤⋎o β
+⦏lt⋎o_≤⋎o⦎ =	⊢ ∀ β γ η⦁ β <⋎o γ ⇒ β ≤⋎o γ
+⦏≤⋎o_trans⦎ =	⊢ ∀ β γ η⦁ β ≤⋎o γ ∧ γ ≤⋎o η ⇒ β ≤⋎o η
+⦏≤⋎o_lt⋎o_trans⦎ =	⊢ ∀ β γ η⦁ β ≤⋎o γ ∧ γ <⋎o η ⇒ β <⋎o η
+⦏lt⋎o_≤⋎o_trans⦎ =	⊢ ∀ β γ η⦁ β <⋎o γ ∧ γ ≤⋎o η ⇒ β <⋎o η
+⦏≤⋎o_cases⦎ =	⊢ ∀ β γ⦁ β ≤⋎o γ ∨ γ ≤⋎o β
 =TEX
 
 \ignore{
@@ -715,6 +603,152 @@ val ≤⋎o_ext_thm = save_pop_thm "≤⋎o_ext_thm";
 =TEX
 }%ignore
 
+\subsection{Well-Foundedness and Induction}
+=GFT
+⦏lt⋎o_well_founded_thm⦎  ⊢ UWellFounded $<⋎o:
+⦏lt⋎o_well_founded_thm2⦎  ⊢ WellFounded $<⋎o:
+⦏lt⋎o_well_founded_thm3⦎  ⊢ well_founded $<⋎o:
+
+⦏lt⋎o_induction_thm⦎ = ⊢ ∀ p⦁ (∀ x⦁ (∀ y⦁ y <⋎o x ⇒ p y) ⇒ p x) ⇒ (∀ x⦁ p x)
+=TEX
+
+\ignore{
+=SML
+val lt⋎o_well_founded_thm = save_thm ("lt⋎o_well_founded_thm",
+    ⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_well_founded_thm) lt⋎o_def);
+
+val lt⋎o_well_founded_thm2 = save_thm ("lt⋎o_well_founded_thm2",
+    rewrite_rule [get_spec ⌜UWellFounded⌝] lt⋎o_well_founded_thm);
+
+val lt⋎o_well_founded_thm3 = save_thm ("lt⋎o_well_founded_thm3",
+    rewrite_rule [tac_proof(([], ⌜∀$<<⦁ UWellFounded $<< ⇔ well_founded $<<⌝), rewrite_tac [get_spec ⌜well_founded⌝, u_well_founded_induction_thm])] lt⋎o_well_founded_thm);
+
+val lt⋎o_induction_thm = save_thm ("lt⋎o_induction_thm",
+     ⇒_elim (∀_elim ⌜$<⋎o⌝ u_iswo_induction_thm) lt⋎o_def);
+=TEX
+}%ignore
+
+\subsection{Extension and Initiality}
+
+Having a notation for the ``extension'' of an ordinal (i.e. set of smaller ordinals) will be handy.
+
+ⓈHOLCONST
+│ ⦏X⋎o⦎: 'a → 'a ℙ
+├───────────
+│	∀x⦁ X⋎o x  = {y | y <⋎o x}
+■
+
+We can then assert initiality (of any type ordered by $<⋎o$) as follows:
+
+=GFT
+⦏initial⋎o_thm⦎ = ⊢ ¬ (∃ f y⦁ OneOne f ∧ (∀ z⦁ f z <⋎o y))
+⦏initial⋎o_thm2⦎ = ⊢ ¬ (∃x:'a⦁ {y:'a| T} ≤⋎s X⋎o x)
+=TEX
+
+\ignore{
+=SML
+val X⋎o_def = get_spec ⌜X⋎o⌝;
+
+set_goal([], ⌜¬∃(f:'a → 'a)  y⦁ OneOne f ∧ (∀ z⦁ f z <⋎o y)⌝);
+a (asm_tac lt⋎o_def);
+a (fc_tac[u_initial_strict_well_ordering_def_thm]);
+a contr_tac;
+a (asm_fc_tac[]);
+val initial⋎o_thm = save_pop_thm "initial⋎o_thm";;
+
+set_goal([], ⌜¬ (∃x:'a⦁ {y:'a| T} ≤⋎s X⋎o x)⌝);
+a (rewrite_tac[≤⋎s_def]);
+a (REPEAT strip_tac);
+a (strip_asm_tac initial⋎o_thm);
+a (spec_nth_asm_tac 1 ⌜f:'a → 'a⌝);
+a (spec_nth_asm_tac 1 ⌜x⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [one_one_def] THEN strip_tac);
+(* *** Goal "1" *** *)
+a (∃_tac ⌜x1⌝ THEN strip_tac THEN ∃_tac ⌜x2⌝ THEN contr_tac);
+(* *** Goal "2" *** *)
+a (∃_tac ⌜z⌝ THEN strip_tac THEN ∃_tac ⌜v⌝);
+a (POP_ASM_T ante_tac THEN rewrite_tac [X⋎o_def] THEN contr_tac);
+val initial⋎o_thm2 = save_pop_thm "initial⋎o_thm2";
+=IGN
+set_flag("pp_show_HOL_types", false);
+=TEX
+}%ignore
+
+\subsection{Zero}
+
+Zero ($0⋎o$) is the smallest ordinal.
+Every type has one.
+
+ⓈHOLCONST
+│ ⦏0⋎o⦎: 'a
+├───────────
+│	0⋎o = ⋂⋎o {x|T}
+■
+
+=GFT
+⦏zero⋎o_thm⦎ =	⊢ ∀ β⦁ 0⋎o ≤⋎o β
+⦏lt⋎o_zero⋎o_thm⦎ =	⊢ ∀ β⦁ ¬ β <⋎o 0⋎o
+⦏zero⋎o_thm2⦎ = ⊢ ∀ β⦁ 0⋎o <⋎o β ∨ 0⋎o = β
+=TEX
+
+\ignore{
+=SML
+val zero⋎o_def = get_spec ⌜0⋎o⌝;
+
+set_goal([], ⌜∀ β⦁ 0⋎o ≤⋎o β⌝);
+a (strip_tac THEN rewrite_tac[zero⋎o_def, ≤⋎o_def]);
+a (LEMMA_T ⌜⋂⋎o {x:'a|T} ∈ {x:'a|T}⌝ asm_tac
+  THEN1 PC_T1 "sets_ext" rewrite_tac[]);
+a (LEMMA_T ⌜¬ {x:'a|T} = {}⌝  asm_tac
+  THEN1 PC_T1 "sets_ext" rewrite_tac[]);
+a (strip_asm_tac ⋂⋎o_thm);
+push_pc "sets_ext";
+a (spec_nth_asm_tac 1 ⌜{x:'a|T}⌝
+  THEN spec_nth_asm_tac 1 ⌜β⌝
+  THEN_TRY asm_rewrite_tac[]);
+val zero⋎o_thm = save_pop_thm "zero⋎o_thm";
+pop_pc();
+
+val lt⋎o_zero⋎o_thm = save_thm ("lt⋎o_zero⋎o_thm",
+	rewrite_rule [≤⋎o_lt⋎o] zero⋎o_thm);
+
+val zero⋎o_thm2 = save_thm ("zero⋎o_thm2", rewrite_rule [≤⋎o_def] zero⋎o_thm);
+=IGN
+set_flag("pp_show_HOL_types", false);
+undo 1;
+=TEX
+}%ignore
+
+\subsection{Extensionality and Transitivity}
+
+A useful principle for reasoning about the 'a ordinals is the following analogue of set theoretic extensionality:
+
+=GFT
+⦏ord_ext_thm⦎ =	⊢ ∀ β γ⦁ β = γ ⇔ (∀ δ⦁ δ <⋎o β ⇔ δ <⋎o γ)
+=TEX
+
+We will later make use of quasi extensional characterisations of operations over 'a ordinals, in which an 'a ordinal expression is characterised by a statement of the conditions under which 'a ordinals are less than the value of the expression.
+This facilitates proofs about 'a ordinals in which the complexity is on the right of an inequality, or in which such can be obtained by the extesionality principle above.
+
+This leaves an awkwardness where our goal has an expression on the left of an inequality which the following rule is intended to ameliorate.
+
+=GFT
+⦏≤⋎o_ext_thm⦎ =	⊢ ∀ β γ⦁ β ≤⋎o γ ⇔ (∀ δ⦁ δ <⋎o β ⇒ δ <⋎o γ)
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀β γ⦁ β = γ ⇔ ∀δ⦁ δ <⋎o β ⇔ δ <⋎o γ⌝);
+a (REPEAT_N 5 strip_tac THEN_TRY asm_rewrite_tac[] THEN contr_tac);
+a (spec_nth_asm_tac 2 ⌜β⌝
+	THEN spec_nth_asm_tac 4 ⌜γ⌝
+	THEN all_fc_tac [lt⋎o_trich_fc2]);
+val ord_ext_thm = save_pop_thm "ord_ext_thm";
+
+(* skip to end of next section for ≤⋎o_ext_thm *)
+=TEX
+}%ignore
+
 \subsection{Bounds and Suprema}
 
 ... and for the supremum of a set of 'a ordinals.
@@ -725,78 +759,16 @@ val ≤⋎o_ext_thm = save_pop_thm "≤⋎o_ext_thm";
 │ ∀so⦁ Ub⋎o so = {β | ∀η⦁ η ∈ so ⇒ η ≤⋎o β}
 ■
 
-ⓈHOLCONST
-│ ⦏SUb⋎o⦎: 'a ℙ → 'a ℙ
-├───────────
-│ ∀so⦁ SUb⋎o so = {β | ∀η⦁ η ∈ so ⇒ η <⋎o β}
-■
-
-ⓈHOLCONST
-│ ⦏⋃⋎o⦎: 'a ℙ → 'a
-├───────────
-│ ∀so⦁ ⋃⋎o so = ⋂⋎o (Ub⋎o so)
-■
-
-ⓈHOLCONST
-│ ⦏SSup⋎o⦎: 'a ℙ → 'a
-├───────────
-│ ∀so⦁ SSup⋎o so = ⋂⋎o (SUb⋎o so)
-■
-
 =GFT
-⦏⋂⋎o_thm2⦎ = ⊢ ∀ so β⦁
-	   β ∈ so ⇒ (∀ γ⦁ γ <⋎o ⋂⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ γ <⋎o η)): 
-⦏Ub⋎o_thm⦎ =
-	⊢ ∀ so γ⦁ γ ∈ Ub⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ η ≤⋎o γ)
-⦏Ub⋎o_X⋎o_thm⦎ =
-	⊢ ∀ α⦁ α ∈ Ub⋎o (X⋎o α)
-⦏Ub⋎o_X⋎o_thm2⦎ =
-	⊢ ∀ α⦁ α ∈ Ub⋎o {β|β <⋎o α}
-⦏SUb⋎o_thm⦎ =
-	⊢ ∀ so γ⦁ γ ∈ SUb⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ η <⋎o γ)
-⦏SUb⋎o_X⋎o_thm⦎ =
-	⊢ ∀ α⦁ α ∈ SUb⋎o (X⋎o α)
-⦏SUb⋎o_X⋎o_thm2⦎ =
-	⊢ ∀ α⦁ α ∈ SUb⋎o {β|β <⋎o α}
-⦏lt⋎o_⋃⋎o⦎ =
-	⊢ ∀ so α⦁ α ∈ Ub⋎o so ⇒
-		(∀γ⦁ γ <⋎o ⋃⋎o so ⇔ (∃η⦁ η ∈ so ∧ γ <⋎o η))
-⦏lt⋎o_⋃⋎o2⦎ =
-	⊢ ∀ α γ⦁ γ <⋎o ⋃⋎o {β|β <⋎o α} ⇔ (∃ η⦁ η <⋎o α ∧ γ <⋎o η)
-⦏lt⋎o_SSup⋎o⦎ =
-	⊢ ∀ so α⦁ α ∈ SUb⋎o so ⇒
-		(∀ γ⦁ γ <⋎o SSup⋎o so ⇔ (∃ η⦁ η ∈ so ∧ γ ≤⋎o η))
-⦏SSup⋎o_lt⋎o⦎ =
-	⊢ ∀ α⦁ SSup⋎o {β|β <⋎o α} = α
-⦏SSup⋎o_lt⋎o2⦎ =
-	⊢ ∀ so α β⦁ β ∈ so ∧ β ∈ SUb⋎o so ⇒
-		(SSup⋎o so <⋎o α ⇔ (∃ β⦁ β ∈ SUb⋎o so ∧ β <⋎o α))
-⦏SSup⋎o_X⋎o⦎ =
-	⊢ ∀ α⦁ SSup⋎o (X⋎o α) = α
+⦏Ub⋎o_thm⦎ =	⊢ ∀ so γ⦁ γ ∈ Ub⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ η ≤⋎o γ)
+⦏Ub⋎o_X⋎o_thm⦎ = ⊢ ∀ α⦁ α ∈ Ub⋎o (X⋎o α)
+⦏Ub⋎o_X⋎o_thm2⦎ =  ⊢ ∀ α⦁ α ∈ Ub⋎o {β|β <⋎o α}
 =TEX
-
 \ignore{
 =SML
 val Ub⋎o_def = get_spec ⌜Ub⋎o⌝;
-val SUb⋎o_def = get_spec ⌜SUb⋎o⌝;
-val ⋃⋎o_def = get_spec ⌜⋃⋎o⌝;
-val SSup⋎o_def = get_spec ⌜SSup⋎o⌝;
 
 push_pc "hol1";
-
-set_goal([], ⌜∀so β⦁ β ∈ so ⇒
-	(∀γ⦁ γ <⋎o ⋂⋎o so ⇔ ∀η⦁ η ∈ so ⇒ γ <⋎o η)⌝);
-a (REPEAT_N 4 strip_tac);
-a (LEMMA_T ⌜¬ so = {}⌝ asm_tac THEN1 (rewrite_tac[] THEN contr_tac THEN asm_fc_tac[]));
-a (ufc_tac [⋂⋎o_thm]);
-a contr_tac; 
-(* *** Goal "1" *** *)
-a (spec_asm_tac ⌜∀ y⦁ y ∈ so ⇒ ¬ y = ⋂⋎o so ⇒ ⋂⋎o so <⋎o y⌝ ⌜η⌝);
-a (var_elim_asm_tac ⌜η = ⋂⋎o so⌝);
-a (all_ufc_tac [trans⋎o_thm]);
-(* *** Goal "2" *** *)
-a (spec_asm_tac ⌜∀ η⦁ η ∈ so ⇒ γ <⋎o η⌝ ⌜⋂⋎o so⌝);
-val ⋂⋎o_thm2 = save_pop_thm "⋂⋎o_thm2";
 
 set_goal([], ⌜∀so γ⦁ γ ∈ Ub⋎o so ⇔ ∀η⦁ η ∈ so ⇒ η ≤⋎o γ⌝);
 a (rewrite_tac[Ub⋎o_def]);
@@ -812,6 +784,30 @@ a (strip_tac THEN rewrite_tac[Ub⋎o_thm, ≤⋎o_def]
 	THEN REPEAT strip_tac);
 val Ub⋎o_X⋎o_thm2 = save_pop_thm "Ub⋎o_X⋎o_thm2";
 
+pop_pc();
+=TEX
+}%ignore
+
+ⓈHOLCONST
+│ ⦏SUb⋎o⦎: 'a ℙ → 'a ℙ
+├───────────
+│ ∀so⦁ SUb⋎o so = {β | ∀η⦁ η ∈ so ⇒ η <⋎o β}
+■
+
+=GFT
+⦏SUb⋎o_thm⦎ =	⊢ ∀ so γ⦁ γ ∈ SUb⋎o so ⇔ (∀ η⦁ η ∈ so ⇒ η <⋎o γ)
+⦏SUb⋎o_X⋎o_thm⦎ =	⊢ ∀ α⦁ α ∈ SUb⋎o (X⋎o α)
+⦏SUb⋎o_X⋎o_thm2⦎ =	⊢ ∀ α⦁ α ∈ SUb⋎o {β|β <⋎o α}
+⦏SUb⋎o_mono⦎ = 	 	⊢ ∀ s t⦁ s ⊆ t ⇒ SUb⋎o t ⊆ SUb⋎o s
+⦏SUb⋎o_mono2⦎ = 	⊢ ∀ s t⦁ (SUb⋎o s) ⊆ (SUb⋎o (s ∩ t))
+=TEX
+
+\ignore{
+=SML
+val SUb⋎o_def = get_spec ⌜SUb⋎o⌝;
+
+push_pc "hol1";
+
 set_goal([], ⌜∀so γ⦁ γ ∈ SUb⋎o so ⇔ ∀η⦁ η ∈ so ⇒ η <⋎o γ⌝);
 a (rewrite_tac[SUb⋎o_def]);
 val SUb⋎o_thm = save_pop_thm "SUb⋎o_thm";
@@ -825,6 +821,40 @@ set_goal([], ⌜∀α⦁ α ∈ SUb⋎o {β | β <⋎o α}⌝);
 a (strip_tac THEN rewrite_tac[SUb⋎o_thm, ≤⋎o_def]
 	THEN REPEAT strip_tac);
 val SUb⋎o_X⋎o_thm2 = save_pop_thm "SUb⋎o_X⋎o_thm2";
+
+set_goal([], ⌜∀ s t⦁ s ⊆ t ⇒ (SUb⋎o t) ⊆ (SUb⋎o s)⌝);
+a (rewrite_tac[SUb⋎o_def, sets_ext_clauses] THEN REPEAT strip_tac);
+a (REPEAT (asm_fc_tac[]));
+val SUb⋎o_mono = save_pop_thm "SUb⋎o_mono";
+
+set_goal([], ⌜∀ s t⦁ (SUb⋎o s) ⊆ (SUb⋎o (s ∩ t))⌝);
+a (rewrite_tac[SUb⋎o_def, sets_ext_clauses] THEN REPEAT strip_tac);
+a (spec_nth_asm_tac 3 ⌜η⌝);
+val SUb⋎o_mono2 = save_pop_thm "SUb⋎o_mono2";
+
+pop_pc();
+=TEX
+}%ignore
+
+ⓈHOLCONST
+│ ⦏⋃⋎o⦎: 'a ℙ → 'a
+├───────────
+│ ∀so⦁ ⋃⋎o so = ⋂⋎o (Ub⋎o so)
+■
+
+=GFT
+⦏lt⋎o_⋃⋎o⦎ =
+	⊢ ∀ so α⦁ α ∈ Ub⋎o so ⇒
+		(∀γ⦁ γ <⋎o ⋃⋎o so ⇔ (∃η⦁ η ∈ so ∧ γ <⋎o η))
+⦏lt⋎o_⋃⋎o2⦎ =
+	⊢ ∀ α γ⦁ γ <⋎o ⋃⋎o {β|β <⋎o α} ⇔ (∃ η⦁ η <⋎o α ∧ γ <⋎o η)
+=TEX
+
+\ignore{
+=SML
+val ⋃⋎o_def = get_spec ⌜⋃⋎o⌝;
+
+push_pc "hol1";
 
 set_goal([], ⌜∀so α⦁ α ∈ Ub⋎o so ⇒
 	(∀γ⦁ γ <⋎o ⋃⋎o so ⇔ ∃η⦁ η ∈ so ∧ γ <⋎o η)⌝);
@@ -871,7 +901,31 @@ a (rewrite_tac[⋃⋎o_def]
 	THEN REPEAT strip_tac);
 
 pop_pc();
+=TEX
+}%ignore
+
+ⓈHOLCONST
+│ ⦏SSup⋎o⦎: 'a ℙ → 'a
+├───────────
+│ ∀so⦁ SSup⋎o so = ⋂⋎o (SUb⋎o so)
+■
+
+
+=GFT
+⦏lt⋎o_SSup⋎o⦎ =		⊢ ∀ so α⦁ α ∈ SUb⋎o so ⇒
+	      			(∀ γ⦁ γ <⋎o SSup⋎o so ⇔ (∃ η⦁ η ∈ so ∧ γ ≤⋎o η))
+⦏SSup⋎o_lt⋎o⦎ =	   ⊢ ∀ α⦁ SSup⋎o {β|β <⋎o α} = α
+⦏SSup⋎o_lt⋎o2⦎ =	⊢ ∀ so α β⦁ β ∈ so ∧ β ∈ SUb⋎o so ⇒
+	       			(SSup⋎o so <⋎o α ⇔ (∃ β⦁ β ∈ SUb⋎o so ∧ β <⋎o α))
+⦏SSup⋎o_X⋎o⦎ =		⊢ ∀ α⦁ SSup⋎o (X⋎o α) = α
+=TEX
+
+\ignore{
 =SML
+val SSup⋎o_def = get_spec ⌜SSup⋎o⌝;
+
+push_pc "hol1";
+
 set_merge_pcs ["rbjmisc", "'ordinals"];
 
 set_goal([], ⌜∀so α⦁ α ∈ SUb⋎o so ⇒
@@ -946,8 +1000,35 @@ a (DROP_NTH_ASM_T 2 ante_tac
 	THEN SYM_ASMS_T rewrite_tac
 	THEN strip_tac);
 a (all_fc_tac [≤⋎o_lt⋎o_trans]);
-val 
+=TEX
+}%ignore
 
+=GFT
+⦏SSup⋎o_mono⦎ =		⊢ ∀ s t⦁ ¬ SUb⋎o s = {} ⇒ SSup⋎o (s ∩ t) ≤⋎o SSup⋎o s
+⦏SSup⋎o_mono2⦎ =  ⊢ ∀ s t⦁ ¬ SUb⋎o s = {} ∧ ¬ SUb⋎o t = {}
+         ⇒ SSup⋎o s <⋎o SSup⋎o t ⇒ SSup⋎o (s ∩ t) <⋎o SSup⋎o t
+=TEX
+
+\ignore{
+=SML
+set_goal([], ⌜∀ s t⦁ ¬ SUb⋎o s = {} ⇒ SSup⋎o (s ∩ t) ≤⋎o SSup⋎o s⌝);
+a (rewrite_tac [SSup⋎o_def] THEN REPEAT strip_tac);
+a (asm_tac (list_∀_elim [⌜s:'a ℙ⌝, ⌜t:'a ℙ⌝ ] SUb⋎o_mono2));
+a (rewrite_tac [≤⋎o_def] THEN contr_tac);
+a (cases_tac ⌜SUb⋎o s = SUb⋎o (s ∩ t)⌝ );
+(* *** Goal "1" *** *)
+a (swap_nth_asm_concl_tac 2 THEN asm_rewrite_tac[]);
+(* *** Goal "2" *** *)
+a (all_fc_tac [⋂⋎o_mono_thm]);
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule [≤⋎o_def])));
+val SSup⋎o_mono = save_pop_thm "SSup⋎o_mono";
+
+set_goal([], ⌜∀s t⦁ ¬ SUb⋎o s = {} ∧ ¬ SUb⋎o t = {} ⇒ SSup⋎o s <⋎o SSup⋎o t ⇒ SSup⋎o (s ∩ t) <⋎o SSup⋎o t⌝);
+a (REPEAT strip_tac);
+a (all_fc_tac [SSup⋎o_mono]);
+a (spec_nth_asm_tac 1  ⌜t⌝);
+a (all_fc_tac [≤⋎o_lt⋎o_trans]);
+val SSup⋎o_mono2 = save_pop_thm "SSup⋎o_mono2";
 =SML
 add_rw_thms [Ub⋎o_thm, SUb⋎o_thm, Ub⋎o_X⋎o_thm, SUb⋎o_X⋎o_thm,
 	Ub⋎o_X⋎o_thm2, SUb⋎o_X⋎o_thm2, lt⋎o_⋃⋎o2, SSup⋎o_lt⋎o, SSup⋎o_X⋎o] "'ordinals";
@@ -980,16 +1061,11 @@ By the image of an 'a `ordinal' through a map, I mean the image of the set of 'a
 ■
 
 =GFT
-⦏Image⋎o_thm⦎ =
-	⊢ ∀ f β γ⦁ γ ∈ Image⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ = f η)
-⦏Image⋎o_zero⋎o_thm⦎ =
-	⊢ ∀ f⦁ Image⋎o (f, 0⋎o) = {}
-⦏Image⋎o_mono_thm⦎ =
-	⊢ ∀ f α β⦁ α ≤⋎o β ⇒ Image⋎o (f, α) ⊆ Image⋎o (f, β)
-⦏Ub⋎o_Image⋎o_zero⋎o_thm⦎ =
-	⊢ ∀ f γ⦁ γ ∈ Ub⋎o (Image⋎o (f, 0⋎o))
-⦏SUb⋎o_Image⋎o_zero⋎o_thm⦎ =
-	⊢ ∀ f γ⦁ γ ∈ SUb⋎o (Image⋎o (f, 0⋎o))
+⦏Image⋎o_thm⦎ =	⊢ ∀ f β γ⦁ γ ∈ Image⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ = f η)
+⦏Image⋎o_zero⋎o_thm⦎ =	⊢ ∀ f⦁ Image⋎o (f, 0⋎o) = {}
+⦏Image⋎o_mono_thm⦎ =	⊢ ∀ f α β⦁ α ≤⋎o β ⇒ Image⋎o (f, α) ⊆ Image⋎o (f, β)
+⦏Ub⋎o_Image⋎o_zero⋎o_thm⦎ =	⊢ ∀ f γ⦁ γ ∈ Ub⋎o (Image⋎o (f, 0⋎o))
+⦏SUb⋎o_Image⋎o_zero⋎o_thm⦎ =	⊢ ∀ f γ⦁ γ ∈ SUb⋎o (Image⋎o (f, 0⋎o))
 =TEX
 
 \ignore{
@@ -1074,14 +1150,11 @@ By analogy with replacement in set theory, which tells us that the image of a se
 This enables us to prove the following results about $SupIm⋎o$ and $SSupIm⋎o$.
 
 =GFT
-⦏lt⋎o_SupIm⋎o⦎ =
-	⊢ ∀ f β γ⦁ γ <⋎o SupIm⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ <⋎o f η)
-⦏SupIm⋎o_zero⋎o⦎ =
-	⊢ ∀ f β γ⦁ ¬ γ <⋎o SupIm⋎o (f, 0⋎o)
-⦏lt⋎o_SSupIm⋎o⦎ =
-	⊢ ∀ f β γ⦁ γ <⋎o SSupIm⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ ≤⋎o f η)
-⦏SSupIm⋎o_zero⋎o⦎ =
-	⊢ ∀ f β γ⦁ ¬ γ <⋎o SSupIm⋎o (f, 0⋎o)
+Ub⋎o_Image⋎o_thm	?⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ Ub⋎o (Image⋎o (f, β))
+⦏lt⋎o_SupIm⋎o⦎ =		?⊢ ∀ f β γ⦁ γ <⋎o SupIm⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ <⋎o f η)
+⦏SupIm⋎o_zero⋎o⦎ =	?⊢ ∀ f β γ⦁ ¬ γ <⋎o SupIm⋎o (f, 0⋎o)
+⦏lt⋎o_SSupIm⋎o⦎ =	  ⊢ ∀ f β γ⦁ γ <⋎o SSupIm⋎o (f, β) ⇔ (∃ η⦁ η <⋎o β ∧ γ ≤⋎o f η)
+⦏SSupIm⋎o_zero⋎o⦎ =	?⊢ ∀ f β γ⦁ ¬ γ <⋎o SSupIm⋎o (f, 0⋎o)
 =TEX
 
 \ignore{
@@ -1090,6 +1163,8 @@ val SupIm⋎o_def = get_spec ⌜SupIm⋎o⌝;
 val SSupIm⋎o_def = get_spec ⌜SSupIm⋎o⌝;
 
 =IGN
+stop;
+
 set_goal([], ⌜∀f β γ⦁ γ <⋎o SupIm⋎o (f, β) ⇔ ∃η⦁ η <⋎o β ∧ γ <⋎o f η⌝);
 a (REPEAT ∀_tac
 	THEN rewrite_tac [SupIm⋎o_def]);
@@ -1104,15 +1179,14 @@ a (∃_tac ⌜f η⌝ THEN asm_rewrite_tac[Image⋎o_thm]);
 a (∃_tac ⌜η⌝ THEN asm_rewrite_tac[]);
 val lt⋎o_SupIm⋎o = save_pop_thm "lt⋎o_SupIm⋎o";
 
-set_goal([], ⌜∀f β γ⦁ ¬ γ <⋎o SupIm⋎o (f, 0⋎o)⌝);
-a (rewrite_tac[lt⋎o_SupIm⋎o]);
-a (rewrite_tac[SupIm⋎o_def]);
+=IGN
+set_goal([], ⌜∀f γ⦁ ¬ γ <⋎o SupIm⋎o (f, 0⋎o)⌝);
+a (rewrite_tac[SupIm⋎o_def, ⋃⋎o_def]);
 val SupIm⋎o_zero⋎o = save_pop_thm "SupIm⋎o_zero⋎o";
 
 =IGN
 set_goal([], ⌜∀f α β⦁ α ≤⋎o β ⇒ SupIm⋎o (f, α) ≤⋎o SupIm⋎o (f, β)⌝);
 a (REPEAT ∀_tac THEN rewrite_tac[SupIm⋎o_def] THEN REPEAT strip_tac);
- =SML
 
 set_goal([], ⌜∀f β γ⦁ γ <⋎o SSupIm⋎o (f, β) ⇔ ∃η⦁ η <⋎o β ∧ γ ≤⋎o f η⌝);
 a (REPEAT ∀_tac
@@ -1143,31 +1217,52 @@ set_merge_pcs ["rbjmisc", "'ordinals"];
 
 Though we get an arbitrary well-ordering of sets as $⌜$$<⋎o⌝$, the particular order of sets by the supremum of their members (under $⌜$$<⋎o⌝$) is useful. 
 
+The following function yeilds the downward closure of a set.
+
+ⓈHOLCONST
+│ ⦏Dcl⋎o⦎: 'a ℙ → 'a ℙ
+├───────────
+│ ∀s⦁ Dcl⋎o s = {x | ∃y⦁ y ∈ s ∧ x ≤⋎o y}
+■
+
+
 =SML
 declare_infix(400, "<⋎u");
 =TEX
 
 ⓈHOLCONST
-│ ⦏$<⋎u⦎: 'a SET → 'a SET → BOOL
+│ ⦏$<⋎u⦎: 'a ℙ → 'a ℙ → BOOL
 ├───────────
-│ ∀s t⦁ s <⋎u t ⇔ (SSup⋎o s) <⋎o (SSup⋎o t)
+│ ∀s t⦁ s <⋎u t ⇔ Dcl⋎o s ⊂ Dcl⋎o t
 ■
+
+=GFT
+⦏lt⋎u_∩_mono⦎ = 	⊢ ∀ α β⦁ α <⋎u β ⇒ (α ∩ β) <⋎u β
+=TEX
+
+\ignore{
+=SML
+val Dcl⋎o_def = get_spec ⌜$Dcl⋎o⌝;
+val lt⋎u_def = get_spec ⌜$<⋎u⌝;
+
+set_goal([], ⌜∀ α β⦁ β <⋎u α ⇒ (β ∩ α) <⋎u α⌝);
+a (REPEAT ∀_tac THEN rewrite_tac[lt⋎u_def, Dcl⋎o_def, sets_ext_clauses]);
+a (contr_tac THEN all_asm_fc_tac[]);
+a (all_asm_fc_tac[]);
+val lt⋎u_mono = save_pop_thm "lt⋎u_mono";
+=TEX
+}%ignore
+
 =GFT
 ⦏lt⋎u_well_founded_thm⦎  ⊢ UWellFounded $<⋎u:
-=IGN
-⦏lt⋎u_well_founded_thm2⦎  ⊢ WellFounded $<⋎U:
-=GFT
 ⦏lt⋎u_well_founded_thm3⦎  ⊢ well_founded $<⋎u:
-
 ⦏lt⋎u_induction_thm⦎ = ⊢ ∀ p⦁ (∀ x⦁ (∀ y⦁ y <⋎u x ⇒ p y) ⇒ p x) ⇒ (∀ x⦁ p x)
 =TEX
 
 \ignore{
 =SML
-val lt⋎u_def = get_spec ⌜$<⋎u⌝;
-
 set_goal([], ⌜UWellFounded $<⋎u⌝);
-a (lemma_tac ⌜$<⋎u = λs t⦁ SSup⋎o s <⋎o SSup⋎o t⌝);
+a (lemma_tac ⌜$<⋎u = λs t⦁ Dcl⋎o s ⊂ Dcl⋎o t⌝);
 (* *** Goal "1" *** *)
 a (once_rewrite_tac [ext_thm]);
 a (once_rewrite_tac [ext_thm]);
@@ -1175,7 +1270,7 @@ a (rewrite_tac [lt⋎u_def]);
 (* *** Goal "2" *** *)
 a (asm_rewrite_tac[]);
 a (rewrite_tac[
-⇒_elim (list_∀_elim [⌜SSup⋎o:'a SET → 'a⌝, ⌜$<⋎o:'a → 'a → BOOL⌝] u_well_founded_pullback_thm) lt⋎o_well_founded_thm]);
+⇒_elim (list_∀_elim [⌜Dcl⋎o:'a ℙ → 'a ℙ⌝, ⌜$⊂:'a  ℙ → 'a ℙ → BOOL⌝] u_well_founded_pullback_thm) lt⋎o_well_founded_thm]);
 val lt⋎u_well_founded_thm = save_pop_thm ("lt⋎u_well_founded_thm");
 
 val lt⋎u_well_founded_thm3 = save_thm ("lt⋎u_well_founded_thm3",
@@ -1187,9 +1282,9 @@ val lt⋎u_induction_thm = save_thm ("lt⋎u_induction_thm",
 }%ignore
 
 ⓈHOLCONST
-│ ⦏X⋎u⦎: 'a SET → 'a SET SET
+│ ⦏X⋎u⦎: 'a ℙ → 'a ℙ ℙ
 ├───────────
-│	∀x:'a SET⦁ X⋎u x  = {y:'a SET| y <⋎u x}
+│	∀x:'a ℙ⦁ X⋎u x  = {y:'a ℙ| y <⋎u x}
 ■
 
 ⓈHOLCONST
@@ -1199,27 +1294,11 @@ val lt⋎u_induction_thm = save_thm ("lt⋎u_induction_thm",
 ■
 
 ⓈHOLCONST
-│ ⦏Image⋎u⦎: ('a SET → 'b) × 'a SET  → 'b SET
+│ ⦏Image⋎u⦎: ('a ℙ → 'b) × 'a ℙ  → 'b ℙ
 ├───────────
-│	∀(f:'a SET → 'b) (w:'a SET)⦁ Image⋎u (f, w) =
-│	       {x:'b | ∃y:'a SET⦁ y <⋎u w ∧ x = f (y ∩ w)}
+│	∀(f:'a ℙ → 'b) (w:'a ℙ)⦁ Image⋎u (f, w) =
+│	       {x:'b | ∃y:'a ℙ⦁ y <⋎u w ∧ x = f (y ∩ w)}
 ■
-
-=GFT
-	?⊢  ∀ α β⦁ α <⋎u β ⇒ (α ∩ β) <⋎u β
-=TEX
-
-\ignore{
-=SML
-
-(* GOAL*2 *)
-set_flag("pp_show_HOL_types", true);
-
-set_goal ([], ⌜∀ α β⦁ α <⋎u β ⇒ (α ∩ β) <⋎u β⌝);
-a (rewrite_tac[lt⋎u_def]);
-a (rewrite_tac[lt⋎u_def, SSup⋎o_def]);
-=TEX
-}%ignore
 
 \subsection{Enumerations and Limits}
 
@@ -1339,13 +1418,13 @@ However, a set of partial enumerations may have a total enumeration as its limit
 Combining the previous two functions we get.
 
 ⓈHOLCONST
-│ ⦏LimitPen⋎p⦎: ('a,'b)PEN SET → ('a,'b)POTEN
+│ ⦏LimitPen⋎p⦎: ('a,'b)PEN ℙ → ('a,'b)POTEN
 ├───────────
 │ ∀fs⦁ LimitPen⋎p fs = (LimitOrd⋎p fs, LimitFun⋎p fs)
 ■
 
 ⓈHOLCONST
-│ ⦏LimitPen⋎q⦎: ('a,'b)POTEN SET → ('a,'b)POTEN
+│ ⦏LimitPen⋎q⦎: ('a,'b)POTEN ℙ → ('a,'b)POTEN
 ├───────────
 │ ∀fs⦁ LimitPen⋎q fs = (LimitOrd⋎q fs, LimitFun⋎q fs)
 ■
@@ -1353,7 +1432,7 @@ Combining the previous two functions we get.
 Typically the limit will be formed of a set which is the image of a set under a function which creates partial or total enumerations.
 
 ⓈHOLCONST
-│ ⦏LimPenIm⋎u⦎: ('a SET → ('b, 'c)POTEN) → 'a SET  → ('b, 'c) POTEN
+│ ⦏LimPenIm⋎u⦎: ('a ℙ → ('b, 'c)POTEN) → 'a ℙ  → ('b, 'c) POTEN
 ├───────────
 │	∀f s⦁ LimPenIm⋎u f s = LimitPen⋎q (Image⋎u (f,s)) 
 ■
@@ -1462,6 +1541,19 @@ To get inaccessibilty we need also to express the notion of a strong limit.
 │ ⦏ω⋎o⦎: 'a
 ├───────────
 │ ω⋎o = ⋂⋎o {β | Limit⋎o β}
+■
+
+As well as asking for a universe with inaccessibles, it is desirable to have good closure properties for the universe.
+Asserting that ever ordinal is followed by an inaccessible does a lot of that, but does not entail global replacement, so I express the ordinal analogue of replacement as a property of classes of ordinals so that it can be asserted of the whole type of ordinals.
+
+It is then possible to check the definitions by reasoning about the relationship between replacement and regularity.
+
+ⓈHOLCONST
+│ ⦏Rc⦎: 'a ℙ → BOOL
+├───────────
+│ ∀A⦁ Rc A ⇔ ∀β f⦁ β ∈ A
+│      ∧ (∀ν:'a⦁ ν <⋎o β ⇒ f ν ∈ A)
+│      ⇒ ∃ρ⦁ ρ ∈ A ∧ (∀ν⦁ ν <⋎o β ⇒ f ν <⋎o ρ)
 ■
 
 =GFT
@@ -1660,8 +1752,7 @@ This provides a recursion theorem for use with any well-founded relation.
 When we specialise that to the ordering over the 'a ordinals we get:
 
 =GFT
-⦏ord_rec_thm⦎ =
-	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f x = af ((x, $<⋎o) ⟨◁ f) x
+⦏ord_rec_thm⦎ =	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f x = af ((x, $<⋎o) ⟨◁ f) x
 =TEX
 
 In which the operator $⟨◁$ restricts the domain of function $f$ hiding information about values for arguments not lower in the ordering than $x$.
@@ -1678,37 +1769,28 @@ declare_infix(400, "◁⋎o");
 ■
 
 =GFT
-⦏◁⋎o_fc⦎ =
-	⊢ ∀γ f β⦁ β <⋎o γ ⇒ (γ ◁⋎o f) β = f β
-⦏Image⋎o_◁⋎o_thm⦎ =
-	⊢ ∀ γ f⦁ Image⋎o (γ ◁⋎o f, γ) = Image⋎o (f, γ)
-⦏SupIm⋎o_◁⋎o_thm⦎ =
-	⊢ ∀ γ f⦁ SupIm⋎o (γ ◁⋎o f, γ) = SupIm⋎o (f, γ)
-⦏SSupIm⋎o_◁⋎o_thm⦎ =
-	⊢ ∀γ f⦁ SSupIm⋎o (γ ◁⋎o f, γ) = SSupIm⋎o (f, γ)
+⦏◁⋎o_fc⦎ =	⊢ ∀γ f β⦁ β <⋎o γ ⇒ (γ ◁⋎o f) β = f β
+⦏Image⋎o_◁⋎o_thm⦎ =	⊢ ∀ γ f⦁ Image⋎o (γ ◁⋎o f, γ) = Image⋎o (f, γ)
+⦏SupIm⋎o_◁⋎o_thm⦎ =	⊢ ∀ γ f⦁ SupIm⋎o (γ ◁⋎o f, γ) = SupIm⋎o (f, γ)
+⦏SSupIm⋎o_◁⋎o_thm⦎ =	⊢ ∀γ f⦁ SSupIm⋎o (γ ◁⋎o f, γ) = SSupIm⋎o (f, γ)
 =TEX
 
 Hence:
 
 =GFT
-⦏ord_rec_thm2⦎ =
-	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f x = af (x ◁⋎o f) x
+⦏ord_rec_thm2⦎ =	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f x = af (x ◁⋎o f) x
 =TEX
 
 Unfortunately this will not work with the ProofPower consistency prover, which requires a constructor (as if we were defining a function by pattern matching over a recursive data type).
 To get automatic consistency proofs we need to add a dummy constructor, so:
 
 =GFT
-⦏ord_rec_thm3⦎ =
-	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (CombI x) = af (x ◁⋎o f) x
+⦏ord_rec_thm3⦎ =	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (CombI x) = af (x ◁⋎o f) x
 =TEX
 
 =GFT
-⦏Image⋎o_respects_lt⋎o⦎ =
-   ⊢ ∀ af⦁ (λ f x⦁ af (Image⋎o (f, x)) x) respects $<⋎o
-   
-⦏Image⋎o_recursion_thm⦎ =
-	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (CombI x) = af (Image⋎o (f, x)) x
+⦏Image⋎o_respects_lt⋎o⦎ =   ⊢ ∀ af⦁ (λ f x⦁ af (Image⋎o (f, x)) x) respects $<⋎o
+⦏Image⋎o_recursion_thm⦎ =	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (CombI x) = af (Image⋎o (f, x)) x
 =TEX
 
 
@@ -1799,7 +1881,7 @@ declare_infix(400, "◁⋎u");
 =TEX
 
 ⓈHOLCONST
-│ $⦏◁⋎u⦎: 'a SET → ('a SET → 'b) → ('a SET → 'b)
+│ $⦏◁⋎u⦎: 'a ℙ → ('a ℙ → 'b) → ('a ℙ → 'b)
 ├───────────
 │ ∀x f⦁ x ◁⋎u f = (x, $<⋎u) ⟨◁ f
 ■
@@ -1807,14 +1889,10 @@ declare_infix(400, "◁⋎u");
 We want to know that recursive definitions done in this way are well-founded.
 
 =GFT
-⦏◁⋎u_fc⦎ =
-	⊢ ∀γ f β⦁ β <⋎u γ ⇒ (γ ◁⋎u f) β = f β
-⦏Image⋎u_◁⋎u_thm⦎ =
-	? ⊢ ∀ γ f⦁ Image⋎u (γ ◁⋎u f, γ) = Image⋎u (f, γ)
-⦏LimIm⋎u_◁⋎u_thm⦎ =
-	? ⊢ ∀ γ f⦁ SupIm⋎u (γ ◁⋎u f, γ) = SupIm⋎u (f, γ)
-⦏LimitPen⋎u_◁⋎u_thm⦎ =
-	? ⊢ ∀γ f⦁ LimitPen⋎u (γ ◁⋎u f, γ) = LimitPen⋎u  (f, γ)
+⦏◁⋎u_fc⦎ =	⊢ ∀γ f β⦁ β <⋎u γ ⇒ (γ ◁⋎u f) β = f β
+⦏Image⋎u_◁⋎u_thm⦎ =	? ⊢ ∀γ f⦁ Image⋎u (γ ◁⋎u f, γ) = Image⋎u (f, γ)
+⦏LimIm⋎u_◁⋎u_thm⦎ =	? ⊢ ∀γ f⦁ SupIm⋎u (γ ◁⋎u f, γ) = SupIm⋎u (f, γ)
+⦏LimitPen⋎u_◁⋎u_thm⦎ =	? ⊢ ∀γ f⦁ LimitPen⋎u (γ ◁⋎u f, γ) = LimitPen⋎u  (f, γ)
 =TEX
 
 \ignore{
@@ -1832,14 +1910,24 @@ stop;
 set_flag("pp_show_HOL_types", true);
 set_flag("pp_show_HOL_types", false);
 
+=SML
 stop;
 (* GOAL*1 *)
-set_goal([], ⌜∀α f⦁ Image⋎u (α ◁⋎u f, α) = Image⋎u (f, α)⌝);
-a (REPEAT ∀_tac
-  	THEN rewrite_tac [Image⋎u_def, sets_ext_clauses]
-	THEN REPEAT strip_tac);
+set_goal([], ⌜∀α f⦁¬ SUb⋎o α = {} ⇒  Image⋎u (α ◁⋎u f, α) = Image⋎u (f, α)⌝);
+a (REPEAT strip_tac);
+a (rewrite_tac [Image⋎u_def, sets_ext_clauses]
+	THEN (REPEAT strip_tac));
+a (rewrite_tac [Image⋎u_def]);
+	THEN (REPEAT strip_tac));
 (* *** Goal "1" *** *)
-a (lemma_tac ⌜(y ∩ α) <⋎u α⌝);
+a (∃_tac ⌜y⌝ THEN asm_rewrite_tac[]
+  THEN all_fc_tac[◁⋎u_fc]);
+  
+a (asm_rewrite_tac[]);
+
+lt⋎u_mono;
+
+a (lemma_tac ⌜y <⋎u α ⇒ (y ∩ α) <⋎u α⌝);
 
 (* *** Goal "1.1" *** *)
 a (rewrite_tac[lt⋎u_def, SSup⋎o_def, SUb⋎o_def]);
@@ -1862,7 +1950,6 @@ set_goal([], ⌜∀γ f⦁ SSupIm⋎o (γ ◁⋎o f, γ) = SSupIm⋎o (f, γ)⌝
 a (REPEAT strip_tac THEN rewrite_tac [SSupIm⋎u_def, Image⋎u_◁⋎u_thm]);
 val SSupIm⋎o_◁⋎o_thm = save_pop_thm "SSupIm⋎o_◁⋎o_thm";
 
-new_conjecture([""], );
 =IGN
 val ord_rec_thm = save_thm("ord_rec_thm",
 	rewrite_rule [lt⋎o_well_founded_thm2] (∀_elim ⌜$<⋎o: 'a → 'a → BOOL⌝ tf_rec_thm2));
@@ -1913,21 +2000,19 @@ val Image⋎o_recursion_thm = save_pop_thm "Image⋎o_recursion_thm";
 }%ignore
 
 =GFT
-⦏ord_rec⋎u_thm3⦎ =
-	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x
+⦏ord_rec⋎u_thm3⦎ =	⊢ ∀ af⦁ ∃ f⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x
 =TEX
-
 
 \ignore{
 =SML
 val ord_rec⋎u_thm = save_thm("ord_rec⋎u_thm",
-	rewrite_rule [rewrite_rule [get_spec ⌜UWellFounded ⌝] lt⋎u_well_founded_thm] (∀_elim ⌜$<⋎u: 'a SET → 'a SET → BOOL⌝ tf_rec_thm2));
+	rewrite_rule [rewrite_rule [get_spec ⌜UWellFounded ⌝] lt⋎u_well_founded_thm] (∀_elim ⌜$<⋎u: 'a ℙ → 'a ℙ → BOOL⌝ tf_rec_thm2));
 
-set_goal([], ⌜∀ af⦁ ∃ f:'a SET → 'a⦁ ∀ x⦁ f x = af (x ◁⋎u f) x⌝);
+set_goal([], ⌜∀ af⦁ ∃ f:'a ℙ → 'a⦁ ∀ x⦁ f x = af (x ◁⋎u f) x⌝);
 a (rewrite_tac[◁⋎u_def, ord_rec⋎u_thm]);
 val ord_rec⋎u_thm2 = save_pop_thm "ord_rec⋎u_thm2";
 
-set_goal ([], ⌜∀ af⦁ ∃ f:'a SET → 'a⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x⌝);
+set_goal ([], ⌜∀ af⦁ ∃ f:'a ℙ → 'a⦁ ∀ x⦁ f (I⋎u x) = af (x ◁⋎u f) x⌝);
 a (strip_tac);
 a (strip_asm_tac (∀_elim ⌜af⌝ ord_rec⋎u_thm2));
 a (∃_tac ⌜f⌝ THEN asm_rewrite_tac [get_spec ⌜I⋎u⌝]);
@@ -1949,178 +2034,6 @@ add_∃_cd_thms [Image⋎o_recursion_thm] "'ordinals-rec";
 =SML
 set_goal([], ⌜∀ f s⦁ LimitPenIm⋎u (s ◁⋎u f) s = LimitPenIm⋎u f s⌝);
 =TEX
-}%ignore
-
-\subsection{Ordinal Arithmetic}
-
-Ordinal arithmetic can only be conducted over types which have sufficiently good closure properties, but some preliminary work is possible with no or modest ontological assumptions.
-
-The following definitions are good over any type of ordinals, however small, but the theory which flows from them does not get very far.
-The full theory will work when they are instantiated to large types.
-=SML
-declare_infix(400, "+⋎o");
-=TEX
-
-\ignore{
-=SML
-set_merge_pcs ["rbjmisc", "'ordinals", "'ordinals-rec"];
-
-set_goal([], ⌜∃$+⋎o:'a → 'a → 'a⦁
-		∀β γ⦁ β +⋎o γ = if γ = 0⋎o then β else SupIm⋎o ($+⋎o β, γ)⌝);
-a (LEMMA_T ⌜∃$+⋎o:'a → 'a → 'a⦁
-		∀β γ⦁ β +⋎o (CombI γ) = if γ = 0⋎o then β else SupIm⋎o (γ ◁⋎o ($+⋎o β), γ)⌝
-	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
-	THEN1 basic_prove_∃_tac);
-=IGN
-a (lemma_tac ⌜∃$+⋎o:'a → 'a → 'a⦁
-		∀β γ⦁ β +⋎o (CombI γ) = if γ = 0⋎o then β else SupIm⋎o (γ ◁⋎o ($+⋎o β), γ)⌝);
-a (pure_rewrite_tac [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]);
-a (accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]));
-=SML
-val plus⋎o_consistent = save_cs_∃_thm (pop_thm());
-=TEX
-}%ignore
-
-The sum of two 'a ordinals is the strict supremum of the set of 'a ordinals less than the second operand under the function which adds each 'a ordinal to the first operand.
-
-ⓈHOLCONST
-│ $⦏+⋎o⦎: 'a → 'a → 'a
-├───────────
-│ ∀β γ⦁ β +⋎o γ = if γ = 0⋎o then β else SupIm⋎o ($+⋎o β, γ)
-■
-
-=GFT
-⦏plus⋎o_0⋎o⦎ =
-	⊢ ∀ β⦁ β +⋎o 0⋎o = β
-=TEX
-
-=SML
-declare_infix(400, "-⋎o");
-=TEX
-
-=SML
-set_goal([], ⌜∃$-⋎o:'a → 'a → 'a⦁
-		∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)⌝);
-a (LEMMA_T ⌜∃$-⋎o:'a → 'a → 'a⦁
-		∀β γ⦁ β -⋎o (CombI γ) = if β ≤⋎o γ then 0⋎o else SupIm⋎o (γ ◁⋎o ($-⋎o β), γ)⌝
-	(accept_tac o (pure_rewrite_rule [get_spec ⌜CombI⌝, SupIm⋎o_◁⋎o_thm]))
-	THEN1 basic_prove_∃_tac);
-val minus⋎o_consistent = save_cs_∃_thm (pop_thm());
-=TEX
-
-ⓈHOLCONST
-│ $⦏-⋎o⦎: 'a → 'a → 'a
-├───────────
-│ ∀β γ⦁ β -⋎o γ = if β ≤⋎o γ then 0⋎o else SupIm⋎o ($-⋎o β, γ)
-■
-
-The development of ordinal arthmetic will continue here but will be confined to those results which are needed by the applications of ordinals which follow, particularly to the construction and application of inductive data types.
-
-\ignore{
-=SML
-val plus⋎o_def = get_spec ⌜$+⋎o⌝;
-
-set_goal([], ⌜∀β⦁ β +⋎o 0⋎o = β⌝);
-a (REPEAT ∀_tac);
-a (once_rewrite_tac [plus⋎o_def]);
-a (rewrite_tac[]);
-val plus⋎o_0⋎o = save_pop_thm "plus⋎o_0⋎o";
-=IGN
-
-set_goal([], ⌜∀α β γ⦁ α ≤⋎o β ⇔ γ +⋎o α ≤⋎o γ +⋎o β⌝);
-a (REPEAT ∀_tac
-	THEN ord_induction_tac ⌜γ:'a ordinal⌝
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (rewrite_tac[≤⋎o_ext_thm, plus⋎o_def] THEN REPEAT ∀_tac);
-a (cond_cases_tac ⌜β = 0⋎o⌝);
-a (lemma_tac ⌜α = 0⋎o⌝ 
-
-a (once_rewrite_tac[plus⋎o_def]);
-
-set_goal([], ⌜∀β γ η⦁ η <⋎o β +⋎o γ ⇔ η <⋎o β ∨ ∃ρ⦁ ρ <⋎o γ ∧ η = β +⋎o ρ⌝);
-a (REPEAT ∀_tac
-	THEN ord_induction_tac ⌜η:'a ordinal⌝
-	THEN REPEAT strip_tac);
-(* *** Goal "1" *** *)
-a (LEMMA_T ⌜∃set⦁ set = {υ | ∃ ρ⦁ ρ <⋎o t ∧ ρ = β +⋎o υ}⌝
-	(STRIP_THM_THEN asm_tac) THEN1 prove_∃_tac);
-a (lemma_tac ⌜∀v⦁ v ∈ SUb⋎o set ⇔ t ≤⋎o β +⋎o v⌝ 
-	THEN1 (asm_rewrite_tac[] THEN REPEAT strip_tac));
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ⌜v⌝);
-a (spec_nth_asm_tac 1 ⌜β +⋎o v⌝);
-a (asm_rewrite_tac[≤⋎o_def]);
-a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎o_trich));
-(* *** Goal "1.2" *** *)
-a (var_elim_asm_tac ⌜ρ = β +⋎o η⌝);
-a (LEMMA_T ⌜β +⋎o η <⋎o β +⋎o v⌝ ante_tac
-	THEN1 (all_ufc_tac [lt⋎o_≤⋎o_trans]));
-a (rewrite_tac[plus⋎o_def]);
-
-
-
-a (lemma_tac ⌜∀v⦁ v ∈ SUb⋎o set ⇒ t ≤⋎o β +⋎o v⌝ 
-	THEN1 (asm_rewrite_tac[] THEN REPEAT strip_tac));
-(* *** Goal "1.1" *** *)
-a (spec_nth_asm_tac 1 ⌜v⌝);
-a (spec_nth_asm_tac 1 ⌜β +⋎o v⌝);
-a (asm_rewrite_tac[≤⋎o_def]);
-a (contr_tac THEN strip_asm_tac (list_∀_elim [⌜t⌝, ⌜β +⋎o v⌝] lt⋎o_trich));
-(* *** Goal "1.2" *** *)
-=IGN
-
-=TEX
-}%ignore
-
-=IGN
-⦏Ub⋎o_Image⋎o_thm⦎ =
-	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ Ub⋎o (Image⋎o (f, β))
-⦏SUb⋎o_Image⋎o_thm⦎ =
-	⊢ ∀ f β⦁ ∃ γ⦁ γ ∈ SUb⋎o (Image⋎o (f, β))
-=TEX
-
-\ignore{
-=IGN
-set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ Ub⋎o(Image⋎o (f, β))⌝);
-a (REPEAT ∀_tac);
-a (strip_asm_tac (strong_infinity_axiom));
-a (spec_nth_asm_tac 1 ⌜β⌝);
-a (spec_nth_asm_tac 1 ⌜f⌝);
-a (∃_tac ⌜ρ⌝
-	THEN rewrite_tac[Image⋎o_thm]
-	THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[≤⋎o_def]
-	THEN asm_fc_tac[]
-	THEN contr_tac);
-val Ub⋎o_Image⋎o_thm = save_pop_thm "Ub⋎o_Image⋎o_thm";
-=TEX
-
-=IGN
-set_goal([], ⌜∀f (β:'a O)⦁ ∃γ:'a O⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
-a (strip_asm_tac (strong_infinity_axiom));
-Minr_def;
-
-set_goal([], ⌜∀f β⦁ ∃γ:'a⦁ γ ∈ SUb⋎o(Image⋎o (f, β))⌝);
-a (REPEAT ∀_tac);
-a (rewrite_tac[SUb⋎o_def, Image⋎o_def]);
-a (spec_nth_asm_tac 1 ⌜β⌝);
-a (spec_nth_asm_tac 1 ⌜f⌝);
-
-
-a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (STRIP_THM_THEN asm_tac)));
-(* a (SPEC_NTH_ASM_T 1 ⌜f⌝ (STRIP_THM_THEN (asm_tac))); *)
-a (POP_ASM_T discard_tac);
-a (rewrite_tac[SUb⋎o_def]);
-a (∃_tac ⌜ρ⌝
-	THEN rewrite_tac[Image⋎o_thm]
-	THEN REPEAT strip_tac
-	THEN asm_rewrite_tac[≤⋎o_def]
-	THEN asm_fc_tac[]
-	THEN contr_tac);
-val SUb⋎o_Image⋎o_thm = save_pop_thm "SUb⋎o_Image⋎o_thm";
-=TEX
-
 }%ignore
 
 \section{INDUCTIVE DATA TYPES}
@@ -2207,7 +2120,7 @@ Adding a single element first:
 \ignore{
 =IGN
 stop;
-set_goal([], ⌜∃ sextprf: ('a, 'b) POTEN → ('b) SET → ('a, 'b) POTEN⦁
+set_goal([], ⌜∃ sextprf: ('a, 'b) POTEN → ('b) ℙ → ('a, 'b) POTEN⦁
 	 ∀f x w⦁ sextprf (x, f) w  =
      	 if (w = {} ∨ IsL x)
 	 then (x,f)
@@ -2242,7 +2155,7 @@ evaluate_∃_cd_thm ord_rec_thm3 ;
 To achieve the recursion here we have to form the limit of directed collections of enumerations using $⌜FunLimit⋎o⌝$ and $⌜OrdLimit⋎o⌝$.
 
 ⓈHOLCONST
-│ $⦏sextprf⦎: ('a, 'b) POTEN → ('b) SET → ('a, 'b) POTEN
+│ $⦏sextprf⦎: ('a, 'b) POTEN → ('b) ℙ → ('a, 'b) POTEN
 ├───────────
 │ ∀f x w⦁ sextprf (x, f) w  =
      	 if w = {} ∨ IsL x
@@ -2252,7 +2165,7 @@ To achieve the recursion here we have to form the limit of directed collections 
 ■	      
 
 =IGN
-declare_type_abbrev("PRI", ["'a", "'b"], ⓣ('a, 'b)PEN → 'b SET⌝);
+declare_type_abbrev("PRI", ["'a", "'b"], ⓣ('a, 'b)PEN → 'b ℙ⌝);
 =TEX
 \ignore{
 =SML
@@ -2266,7 +2179,9 @@ set_flag ("pp_show_HOL_types", false);
 
 =GFT
 GOAL*1 ⌜∀α f⦁ Image⋎u (α ◁⋎u f, α) = Image⋎u (f, α)⌝
-GOAL*2 ⌜∀ y α⦁ y <⋎u α ⇒ (y ∩ α) <⋎u α⌝
+GOAL*2 ⌜∀α β⦁ α <⋎u β ⇒ α ∩ β <⋎u β⌝
+GOAL*3 ⌜⌝
+GOAL*4 ⌜⌝
 =TEX
 
 {\raggedright

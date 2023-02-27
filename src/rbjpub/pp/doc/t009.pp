@@ -3520,6 +3520,47 @@ val u_well_founded_pullback_thm = save_pop_thm "u_well_founded_pullback_thm";
 =TEX
 }%ignore
 
+\subsubsection{Combining Orders}
+
+The sum of two orders may be defined thus:
+
+=SML
+declare_infix(400, "+⋎r");
+=TEX
+
+ⓈHOLCONST
+│ $⦏+⋎r⦎:  ('a → 'a → BOOL) → ('b → 'b → BOOL) → ('a + 'b → 'a + 'b → BOOL)
+├──────
+│ ∀ r s⦁ r +⋎r s = λx y⦁
+    (IsL x ∧ IsL y ∧ r (OutL x) (OutL y))
+ ∨   (IsR x ∧ IsR y ∧ s (OutR x) (OutR y)) 
+ ∨   (IsL x ∧ IsR y) 
+■
+
+=GFT
+   
+=TEX
+
+\ignore{
+=IGN
+val plus⋎r_def = get_spec ⌜$+⋎r⌝;
+stop;
+set_goal([], ⌜∀ r s⦁UWellFounded r ∧ UWellFounded s ⇒ UWellFounded (r +⋎r s)⌝);
+a (rewrite_tac[u_well_founded_def_thm, plus⋎r_def]
+  THEN REPEAT strip_tac);
+a (POP_ASM_T (strip_asm_tac o (rewrite_rule[sets_ext_clauses])));
+a (cases_tac ⌜{v | IsL v} ∩ A = {}⌝);
+(* *** Goal "1" *** *)
+a (spec_nth_asm_tac 3 ⌜{ v | ∃ w⦁ w ∈ A ∧ v = OutR w}⌝);
+(* *** Goal "1.1" *** *)
+a (POP_ASM_T ante_tac THEN POP_ASM_T ante_tac
+  THEN rewrite_tac[sets_ext_clauses]);
+a (REPEAT strip_tac);
+a (asm_fc_tac[]);
+a (strip_asm_tac (∀_elim ⌜x⌝ sum_cases_thm2));
+=TEX
+}%ignore
+
 \section{INDEPENDENCE}\label{Independence}
 
 We want to show that for any pair of the primitive notions, $P$ and $Q$,
