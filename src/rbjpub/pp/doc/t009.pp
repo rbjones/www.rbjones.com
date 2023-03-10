@@ -3532,9 +3532,9 @@ declare_infix(400, "+⋎r");
 │ $⦏+⋎r⦎:  ('a → 'a → BOOL) → ('b → 'b → BOOL) → ('a + 'b → 'a + 'b → BOOL)
 ├──────
 │ ∀ r s⦁ r +⋎r s = λx y⦁
-    (IsL x ∧ IsL y ∧ r (OutL x) (OutL y))
- ∨   (IsR x ∧ IsR y ∧ s (OutR x) (OutR y)) 
- ∨   (IsL x ∧ IsR y) 
+│    (IsL x ∧ IsL y ∧ r (OutL x) (OutL y))
+│ ∨   (IsR x ∧ IsR y ∧ s (OutR x) (OutR y)) 
+│ ∨   (IsL x ∧ IsR y) 
 ■
 
 =GFT
