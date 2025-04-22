@@ -9,7 +9,7 @@ $Id: t053.doc $
 \usepackage{A4}
 
 \usepackage{fontspec}
-\setmainfont[Path=/Users/rbjones/.fonts/]{ProofPowerSerif.ttf}
+\setmainfont[]{ProofPowerSerif}
 
 \def\ExpName{\mbox{{\sf exp}}}
 \def\Exp#1{\ExpName(#1)}
